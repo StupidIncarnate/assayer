@@ -230,6 +230,9 @@ Task 2.2: Parse and handle different parameter types
     * Required param: `name: string` → `{ name: "name", type: "string", optional: false }`
     * Optional param: `age?: number` → `{ name: "age", type: "number", optional: true }`
     * Default param: `count = 0` → `{ name: "count", type: "number", optional: true, defaultValue: "0" }`
+  - **Add arrow function parsing**: Parse arrow functions like `export const multiply = (a: number, b: number): number => a * b;`
+  - Extract arrow function metadata using same ParamMetadata format
+  - Handle arrow function variations: `const fn = (x) => x`, `const fn = x => x`, `const fn = () => 42`
   - For each pattern, immediately generate appropriate test case
   - Store parsed metadata for use in test generation
   
@@ -274,7 +277,26 @@ Task 3.1: Parse if/else statements inside functions
     * `it('returns negative when x <= 0', () => { // Function: check, Params: 0, TODO: Test implementation });`
   - Success: Generated tests cover both branches
 
-Task 3.2: Implement file change detection
+Task 3.2: Parse private/internal functions for test context analysis
+  - Parse non-exported functions alongside exported ones for dependency analysis
+  - Create InternalFunctionMetadata: `{ name: string; params: ParamMetadata[]; returnType: string; calledBy: string[]; calls: string[]; }`
+  - For code like:
+    ```
+    function internal(x: number): number {
+      return x * 2;
+    }
+    
+    export function public(x: number): number {
+      return internal(x);
+    }
+    ```
+  - Extract both functions and their relationship: `internal` called by `public`
+  - Generate test comments that reference internal logic:
+    * `it('calls internal function with parameter', () => { // Function: public, Params: 5, Calls: internal(5), TODO: Test implementation });`
+  - Don't generate standalone tests for internal functions, but use them to understand test scenarios
+  - Store internal function metadata for use in generating more comprehensive test cases
+
+Task 3.3: Implement file change detection
   - Calculate MD5 hash of source file content
   - Store in cache.json: `{ "src/math.ts": { "hash": "abc123", "lastGenerated": "2024-01-01T10:30:00.000Z" } }`
   - On rerun: Compare current hash vs cached hash
@@ -282,7 +304,7 @@ Task 3.2: Implement file change detection
   - If changed: Regenerate tests and update cache.json
   - Test by running twice - second run should skip generation
 
-Task 3.3: Parse nested and compound conditions
+Task 3.4: Parse nested and compound conditions
   - Handle nested if: `if (x > 0) { if (y > 0) { ... } }`
   - Generate test combinations: x > 0 AND y > 0, x > 0 AND y <= 0, etc.
   - Handle compound conditions: `if (x > 0 && y < 10)`
@@ -290,7 +312,7 @@ Task 3.3: Parse nested and compound conditions
   - Generate boundary tests: `(1, 9)` for true branch, `(0, 9)` for false branch
   - Maximum 4 test cases for && conditions, 3 for || conditions
   
-Task 3.4: Parse ternary operators
+Task 3.5: Parse ternary operators
   - Find ternary expressions: `const result = x > 0 ? "positive" : "negative"`
   - Extract into same BranchMetadata format as if/else
   - Generate two tests: one for true condition, one for false
@@ -300,7 +322,7 @@ Task 3.4: Parse ternary operators
     * `it('returns Error when isValid is false', () => { // Condition: isValid = false, TODO: Test implementation });`
   - For nested ternaries, limit to 4 test cases total
 
-Task 3.5: Parse switch statements
+Task 3.6: Parse switch statements
   - Handle various switch patterns:
     * With returns: `case 'A': return 1;`
     * With breaks: `case 'A': result = 1; break;`
@@ -313,7 +335,7 @@ Task 3.5: Parse switch statements
     * `it('returns 2 when type is B', () => { // Function: fn, Params: 'B', TODO: Test implementation });`
     * `it('returns 0 for default case', () => { // Function: fn, Params: 'unknown', TODO: Test implementation });`
 
-Task 3.6: Parse basic loops (for/while/for-of/for-in)
+Task 3.7: Parse basic loops (for/while/for-of/for-in)
   - Focus on loop boundary conditions only (not loop body)
   - Classic for: `for (let i = 0; i < arr.length; i++) { sum += arr[i]; }`
   - For-of: `for (const item of items) { sum += item; }`
@@ -327,7 +349,7 @@ Task 3.6: Parse basic loops (for/while/for-of/for-in)
   - For object iteration (for-in), test: empty object, single property, multiple properties
   - For while loops, test: never enters (false condition), enters once, enters multiple times
 
-Task 3.7: Parse try/catch blocks
+Task 3.8: Parse try/catch blocks
   - Find try/catch: `try { return JSON.parse(input); } catch (e) { return null; }`
   - Generate two test paths: success case and error case
   - Success test: `it('parses valid JSON', () => { // Function: parseJSON, Params: '{"a":1}', TODO: Test implementation });`
