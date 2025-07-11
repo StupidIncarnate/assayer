@@ -4,10 +4,16 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "refresh-agents": "cd ../codex-of-consentient-craft && npm link && cd ../assayer && npm link questmaestro && npx questmaestro",
+    "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "eslint": "^9.30.1",
+    "jest": "^30.0.4",
     "typescript": "^5.5.3"
   }
 }
