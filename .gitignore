@@ -1,6 +1,8 @@
 /tmp
 /out-tsc
 .idea
+/dist
+/coverage
 
 /node_modules
 npm-debug.log*
@@ -10,3 +12,4 @@ yarn-error.log*
 .pnp.js
 
 .vscode/*
+!/package.json

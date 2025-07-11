@@ -7,13 +7,22 @@
     "build": "tsc",
     "refresh-agents": "cd ../codex-of-consentient-craft && npm link && cd ../assayer && npm link questmaestro && npx questmaestro",
     "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "ward": "npm run lint -- $FILE && npm run test -- $FILE",
+    "ward:all": "npm run lint && npm run build && npm run test"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.13",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
     "eslint": "^9.30.1",
     "jest": "^30.0.4",
+    "ts-jest": "^29.4.0",
+    "ts-morph": "^26.0.0",
     "typescript": "^5.5.3"
   }
 }
