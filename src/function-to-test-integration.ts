@@ -2,11 +2,11 @@
  * FunctionToTestIntegration - Generate working tests from simple functions
  * 
  * This component provides an end-to-end workflow for converting TypeScript functions
- * into executable Jest test files. It integrates the SimpleFunctionParser with
+ * into executable Jest test files. It integrates the FunctionParser with
  * JestTestStubGenerator to create comprehensive test coverage.
  */
 
-import { SimpleFunctionParser } from './parser/simple-function-parser';
+import { FunctionParser } from './parser/function-parser';
 import { JestTestStubGenerator } from './generator/jest-test-stub-generator';
 import { FunctionMetadata } from './types/metadata';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
@@ -46,11 +46,12 @@ export interface IntegrationOptions {
  * Main integration class that orchestrates the parsing and test generation process
  */
 export class FunctionToTestIntegration {
-  private parser: SimpleFunctionParser;
+  private parser: FunctionParser;
   private generator: JestTestStubGenerator;
 
   constructor() {
-    this.parser = new SimpleFunctionParser();
+    // Use FunctionParser with includePrivate=false to match SimpleFunctionParser behavior
+    this.parser = new FunctionParser({ includePrivate: false });
     this.generator = new JestTestStubGenerator();
   }
 
@@ -81,7 +82,9 @@ export class FunctionToTestIntegration {
         console.log(`Parsing ${sourcePath}...`);
       }
 
-      const functions = this.parser.parse(sourcePath);
+      const sourceFile = this.parser.createSourceFileFromPath(sourcePath);
+      const functions = this.parser.parse(sourceFile);
+      this.parser.getProject().removeSourceFile(sourceFile);
       result.functions = functions;
 
       if (functions.length === 0) {
@@ -93,8 +96,8 @@ export class FunctionToTestIntegration {
       } else {
         if (options.verbose) {
           console.log(`Found ${functions.length} exported functions:`);
-          functions.forEach(fn => {
-            console.log(`  - ${fn.name}(${fn.params.map(p => `${p.name}: ${p.type}`).join(', ')}): ${fn.returnType}`);
+          functions.forEach((fn: FunctionMetadata) => {
+            console.log(`  - ${fn.name}(${fn.params.map((p: any) => `${p.name}: ${p.type}`).join(', ')}): ${fn.returnType}`);
           });
         }
 
@@ -135,7 +138,9 @@ export class FunctionToTestIntegration {
    * @returns Test content string
    */
   generateTestsFromCode(sourceCode: string, fileName: string = 'temp.ts'): string {
-    const functions = this.parser.parseSourceCode(sourceCode, fileName);
+    const sourceFile = this.parser.createSourceFileFromCode(sourceCode, fileName);
+    const functions = this.parser.parse(sourceFile);
+    this.parser.getProject().removeSourceFile(sourceFile);
     return this.generator.generateTestFile(functions, fileName);
   }
 
@@ -250,7 +255,10 @@ export class FunctionToTestIntegration {
    * @returns Array of function metadata
    */
   extractFunctionMetadata(sourcePath: string): FunctionMetadata[] {
-    return this.parser.parse(sourcePath);
+    const sourceFile = this.parser.createSourceFileFromPath(sourcePath);
+    const functions = this.parser.parse(sourceFile);
+    this.parser.getProject().removeSourceFile(sourceFile);
+    return functions;
   }
 
   /**
@@ -261,7 +269,10 @@ export class FunctionToTestIntegration {
    * @returns Array of function metadata
    */
   extractFunctionMetadataFromCode(sourceCode: string, fileName: string = 'temp.ts'): FunctionMetadata[] {
-    return this.parser.parseSourceCode(sourceCode, fileName);
+    const sourceFile = this.parser.createSourceFileFromCode(sourceCode, fileName);
+    const functions = this.parser.parse(sourceFile);
+    this.parser.getProject().removeSourceFile(sourceFile);
+    return functions;
   }
 }
 

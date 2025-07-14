@@ -85,6 +85,39 @@ jest.mock('typescript', () => ({
 }));
 ```
 
+## Core Development Principles
+
+### No Redundancy
+- **Never** have multiple components doing the same thing
+- If two pieces of code serve the same purpose, consolidate them
+- One clear way to do each thing
+
+### Code Cleanliness
+- No orphaned files or unused code
+- No commented-out code blocks
+- No TODO comments in completed work
+- No console.log statements in tests (unless specifically testing console output)
+
+### Consistency First
+- If there's an existing pattern, follow it
+- Don't introduce new patterns without removing old ones
+- Same problem = same solution throughout codebase
+
+### Complete Work
+- A task isn't done until:
+  - All tests pass
+  - No TypeScript errors
+  - No linting warnings
+  - No test output spam
+  - All related code is updated
+  - No loose ends
+
+### Obvious Architecture
+- Code organization should be self-evident
+- No confusing dual-purpose components
+- Clear single responsibility
+- If you have to explain why something exists, it probably shouldn't
+
 ## Code Standards
 
 ### TypeScript Configuration

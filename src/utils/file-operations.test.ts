@@ -43,8 +43,6 @@ describe('file-operations', () => {
         const result = readSourceFile('/path/to/unicode.ts');
 
         expect(result).toBe(unicodeContent);
-        expect(result).toContain('日本語');
-        expect(result).toContain('🚀');
       });
 
       it('should read large files without issues', () => {
@@ -65,7 +63,6 @@ describe('file-operations', () => {
         const result = readSourceFile('/path/to/windows.ts');
 
         expect(result).toBe(windowsContent);
-        expect(result).toContain('\r\n');
         expect(result.split('\r\n')).toHaveLength(4); // 3 lines + empty string after last \r\n
       });
 
@@ -76,7 +73,7 @@ describe('file-operations', () => {
         const result = readSourceFile('/path/to/unix.ts');
 
         expect(result).toBe(unixContent);
-        expect(result).not.toContain('\r\n');
+        expect(result).not.toBe('line1\r\nline2\r\nline3\r\n');
         expect(result.split('\n')).toHaveLength(4); // 3 lines + empty string after last \n
       });
 
@@ -280,7 +277,7 @@ describe('file-operations', () => {
         writeTestFile('/path/to/unicode.ts', unicodeContent);
 
         expect(mockFs.writeFileSync).toHaveBeenCalledWith('/path/to/unicode.ts', unicodeContent, 'utf-8');
-        expect(mockFs.writeFileSync.mock.calls[0][1]).toContain('🚀');
+        expect(mockFs.writeFileSync.mock.calls[0][1]).toBe('// 日本語\nconst emoji = "🚀🌎🎉";\n');
       });
 
       it('should handle content with various line endings', () => {
@@ -297,8 +294,7 @@ describe('file-operations', () => {
 
         expect(mockFs.writeFileSync).toHaveBeenCalledWith('/path/to/mixed.ts', mixedLineEndings, 'utf-8');
         const writtenContent = mockFs.writeFileSync.mock.calls[0][1] as string;
-        expect(writtenContent).toContain('\r\n');
-        expect(writtenContent).toContain('\n');
+        expect(writtenContent).toBe('line1\r\nline2\nline3\r\nline4');
       });
 
       it('should create parent directories if they do not exist', () => {
@@ -733,8 +729,6 @@ export class TestComponent {
       const readContent = readSourceFile('/src/app/test.component.ts');
       
       expect(readContent).toBe(tsContent);
-      expect(readContent).toContain('@Component');
-      expect(readContent).toContain('export class TestComponent');
     });
 
     it('should work with test files containing special Jest syntax', () => {
@@ -786,9 +780,7 @@ describe('MyService', () => {
       const readContent = readSourceFile('/src/services/my-service.test.ts');
       
       expect(readContent).toBe(testContent);
-      expect(readContent).toContain('jest.mock');
-      expect(readContent).toContain('it.each');
-      expect(readContent).toContain('beforeEach');
+      expect(readContent).toBe(testContent);
     });
   });
 });

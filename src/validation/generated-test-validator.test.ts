@@ -120,7 +120,7 @@ describe('GeneratedTestValidator', () => {
       // Assert
       expect(result.success).toBe(false);
       expect(result.fileExists).toBe(false);
-      expect(result.error).toContain('Test file does not exist');
+      expect(result.error).toBe(`Test file does not exist: ${nonExistentPath}`);
     });
 
     it('should detect syntax errors in test files', async () => {
@@ -145,7 +145,7 @@ describe('GeneratedTestValidator', () => {
       expect(result.success).toBe(false);
       expect(result.fileExists).toBe(true);
       expect(result.syntaxValid).toBe(false);
-      expect(result.error).toContain('Unbalanced parentheses');
+      expect(result.error).toBe('Syntax validation failed: Unbalanced parentheses in test file');
     });
 
     it('should handle Jest execution failures', async () => {
@@ -197,7 +197,7 @@ describe('GeneratedTestValidator', () => {
       expect(result.fileExists).toBe(true);
       expect(result.syntaxValid).toBe(true);
       expect(result.failingTests).toBe(1);
-      expect(result.error).toContain('Test execution failed');
+      expect(result.error).toBe('Test execution failed with exit code 1');
     });
 
     it('should handle test execution timeout', async () => {
@@ -234,7 +234,7 @@ describe('GeneratedTestValidator', () => {
 
       // Assert
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Test execution timed out');
+      expect(result.error).toBe('Test execution timed out after 100ms');
     });
 
     it('should collect coverage information when requested', async () => {
@@ -360,7 +360,7 @@ describe('GeneratedTestValidator', () => {
           stdout: {
             on: jest.fn((event, callback) => {
               if (event === 'data') {
-                callback('Test Suites: 1 passed, 1 total\nTests: 3 passed, 3 total\nTime: 2.1s\n');
+                callback('Test Suites: 1 passed, 1 total\nTests: 1 passed, 1 total\nTime: 2.1s\n');
               }
             }),
           },
@@ -383,7 +383,7 @@ describe('GeneratedTestValidator', () => {
       expect(result.sourcePath).toBe(tempSourceFile);
       expect(result.integrationResult.success).toBe(true);
       expect(result.validationResult.success).toBe(true);
-      expect(result.summary).toContain('End-to-end validation successful');
+      expect(result.summary).toBe('✅ End-to-end validation successful: Generated 1 tests in 1 suites, 1 passed, 0 failed, executed in ' + result.validationResult.executionTime + 'ms');
       expect(result.totalTime).toBeGreaterThan(0);
     });
 
@@ -398,7 +398,7 @@ describe('GeneratedTestValidator', () => {
       expect(result.success).toBe(false);
       expect(result.integrationResult.success).toBe(false);
       expect(result.validationResult.success).toBe(false);
-      expect(result.summary).toContain('Test generation failed');
+      expect(result.summary).toBe(`Test generation failed: ${result.integrationResult.error}`);
     });
   });
 
@@ -453,8 +453,11 @@ describe('GeneratedTestValidator', () => {
       // Assert
       expect(result.valid).toBe(true);
       expect(result.warnings).toBeDefined();
-      expect(result.warnings).toContain('No assertions found - tests may not be verifying behavior');
-      expect(result.warnings).toContain('TODO comments found - tests may need completion');
+      expect(result.warnings).toEqual([
+        'No assertions found - tests may not be verifying behavior',
+        'TODO comments found - tests may need completion',
+        'AAA pattern comments not found - consider adding for clarity'
+      ]);
     });
 
     it('should detect missing test structure', () => {
@@ -472,7 +475,7 @@ describe('GeneratedTestValidator', () => {
 
       // Assert
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('No test suites found');
+      expect(result.error).toBe('No test suites found (missing describe blocks)');
     });
   });
 
@@ -509,7 +512,7 @@ describe('GeneratedTestValidator', () => {
 
       // Assert
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to execute test');
+      expect(result.error).toBe('Failed to execute test: Spawn failed');
     });
 
     it('should handle invalid JSON in Jest output', async () => {

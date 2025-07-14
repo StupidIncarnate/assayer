@@ -40,8 +40,8 @@ describe('End-to-End Integration Tests', () => {
   describe('Complete Workflow Integration', () => {
     it('should parse math.ts and generate executable Jest tests', async () => {
       // Arrange
-      const mathPath = join(__dirname, 'examples', 'math.ts');
-      const tempTestPath = join(__dirname, 'examples', 'math.integration.test.ts');
+      const mathPath = join(__dirname, 'test-stubs', 'math.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'math.integration.test.ts');
       tempTestFiles.push(tempTestPath);
 
       // Act
@@ -59,24 +59,21 @@ describe('End-to-End Integration Tests', () => {
 
       // Verify specific functions are found
       const functionNames = result.functions.map(f => f.name);
-      expect(functionNames).toContain('add');
-      expect(functionNames).toContain('subtract');
-      expect(functionNames).toContain('multiply');
-      expect(functionNames).toContain('divide');
+      expect(functionNames).toEqual(['add', 'subtract', 'multiply', 'divide']);
 
       // Verify test content includes all expected test structures
       const testContent = result.testContent;
-      expect(testContent).toContain('describe(\'add\'');
-      expect(testContent).toContain('describe(\'subtract\'');
-      expect(testContent).toContain('describe(\'multiply\'');
-      expect(testContent).toContain('describe(\'divide\'');
-      expect(testContent).toContain('import { add, subtract, multiply, divide }');
+      expect(testContent.includes('describe(\'add\'')).toBe(true);
+      expect(testContent.includes('describe(\'subtract\'')).toBe(true);
+      expect(testContent.includes('describe(\'multiply\'')).toBe(true);
+      expect(testContent.includes('describe(\'divide\'')).toBe(true);
+      expect(testContent.startsWith('import { add, subtract, multiply, divide } from \'./math\';')).toBe(true);
     });
 
     it('should generate test file with proper Jest structure', async () => {
       // Arrange
-      const mathPath = join(__dirname, 'examples', 'math.ts');
-      const tempTestPath = join(__dirname, 'examples', 'math.structure.test.ts');
+      const mathPath = join(__dirname, 'test-stubs', 'math.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'math.structure.test.ts');
       tempTestFiles.push(tempTestPath);
 
       // Act
@@ -91,26 +88,26 @@ describe('End-to-End Integration Tests', () => {
       const testContent = result.testContent;
       
       // Verify DAMP principles are followed
-      expect(testContent).toContain('// Arrange');
-      expect(testContent).toContain('// Act');
-      expect(testContent).toContain('// Assert');
+      expect(testContent.includes('// Arrange')).toBe(true);
+      expect(testContent.includes('// Act')).toBe(true);
+      expect(testContent.includes('// Assert')).toBe(true);
       
       // Verify proper test naming
-      expect(testContent).toContain('should execute successfully with valid inputs');
-      expect(testContent).toContain('should handle boundary value');
+      expect(testContent.includes('should execute successfully with valid inputs')).toBe(true);
+      expect(testContent.includes('should handle boundary value')).toBe(true);
       
       // Verify proper imports and exports
-      expect(testContent).toMatch(/import\s+\{.*\}\s+from\s+['"].*math['"];/);
+      expect(testContent.match(/import\s+\{.*\}\s+from\s+['"].*math['"];/)).toBeTruthy();
       
       // Verify proper function calls
-      expect(testContent).toContain('const result = add(a, b);');
-      expect(testContent).toContain('const result = divide(a, b);');
+      expect(testContent.includes('const result = add(a, b);')).toBe(true);
+      expect(testContent.includes('const result = divide(a, b);')).toBe(true);
     });
 
     it('should include tests for divide function error branch', async () => {
       // Arrange
-      const mathPath = join(__dirname, 'examples', 'math.ts');
-      const tempTestPath = join(__dirname, 'examples', 'math.error.test.ts');
+      const mathPath = join(__dirname, 'test-stubs', 'math.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'math.error.test.ts');
       tempTestFiles.push(tempTestPath);
 
       // Act
@@ -125,19 +122,19 @@ describe('End-to-End Integration Tests', () => {
       const testContent = result.testContent;
       
       // Verify divide function has boundary value test for zero
-      expect(testContent).toContain('describe(\'divide\'');
-      expect(testContent).toContain('should handle boundary value (0) for b');
+      expect(testContent.includes('describe(\'divide\'')).toBe(true);
+      expect(testContent.includes('should handle boundary value (0) for b')).toBe(true);
       
       // Check that the test uses zero as a boundary value
-      expect(testContent).toMatch(/const b = 0;/);
+      expect(testContent.includes('const b = 0;')).toBe(true);
     });
   });
 
   describe('Meta-Testing: Generated Test Execution', () => {
     it('should generate tests that can be executed and pass', async () => {
       // Arrange
-      const mathPath = join(__dirname, 'examples', 'math.ts');
-      const tempTestPath = join(__dirname, 'examples', 'math.executable.test.ts');
+      const mathPath = join(__dirname, 'test-stubs', 'math.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'math.executable.test.ts');
       tempTestFiles.push(tempTestPath);
 
       // Generate the test file
@@ -160,7 +157,7 @@ describe('End-to-End Integration Tests', () => {
         });
 
         // Assert
-        expect(jestResult.stdout).toContain('PASS');
+        expect(jestResult.stdout.includes('PASS')).toBe(true);
         expect(jestResult.stderr).toBe('');
         
       } catch (error: any) {
@@ -168,7 +165,7 @@ describe('End-to-End Integration Tests', () => {
         console.log('Jest execution error:', error.stdout || error.stderr);
         
         // The test should still be syntactically valid even if it fails
-        expect(error.stdout || error.stderr).toContain(tempTestPath);
+        expect((error.stdout || error.stderr).includes(tempTestPath)).toBe(true);
         
         // For now, we'll accept that the generated tests might need refinement
         // but they should at least be parseable by Jest
@@ -178,8 +175,8 @@ describe('End-to-End Integration Tests', () => {
 
     it('should validate generated test file syntax', () => {
       // Arrange
-      const mathPath = join(__dirname, 'examples', 'math.ts');
-      const tempTestPath = join(__dirname, 'examples', 'math.syntax.test.ts');
+      const mathPath = join(__dirname, 'test-stubs', 'math.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'math.syntax.test.ts');
       tempTestFiles.push(tempTestPath);
 
       // Generate test file synchronously for validation
@@ -198,8 +195,8 @@ describe('End-to-End Integration Tests', () => {
 
     it('should handle edge cases in meta-testing', async () => {
       // Arrange - Create a TypeScript file with challenging edge cases
-      const edgeCasePath = join(__dirname, 'examples', 'edge-cases.ts');
-      const tempTestPath = join(__dirname, 'examples', 'edge-cases.test.ts');
+      const edgeCasePath = join(__dirname, 'test-stubs', 'edge-cases.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'edge-cases.test.ts');
       tempTestFiles.push(edgeCasePath);
       tempTestFiles.push(tempTestPath);
 
@@ -239,7 +236,7 @@ export function simpleFunction(): string {
       const complexFunction = result.functions.find(f => f.name === 'complexFunction');
       if (complexFunction) {
         expect(complexFunction.params.length).toBe(3);
-        expect(complexFunction.returnType).toContain('Promise');
+        expect(complexFunction.returnType.includes('Promise')).toBe(true);
       }
       
       // Verify both functions are parsed
@@ -247,16 +244,16 @@ export function simpleFunction(): string {
       expect(simpleFunction).toBeDefined();
       
       // Verify test content includes at least basic test structure
-      expect(result.testContent).toContain('describe(');
-      expect(result.testContent).toContain('it(');
-      expect(result.testContent).toContain('expect(');
+      expect(result.testContent.includes('describe(')).toBe(true);
+      expect(result.testContent.includes('it(')).toBe(true);
+      expect(result.testContent.includes('expect(')).toBe(true);
     });
   });
 
   describe('Exception Path Coverage', () => {
     it('should generate tests that cover divide by zero exception', async () => {
       // Arrange
-      const mathPath = join(__dirname, 'examples', 'math.ts');
+      const mathPath = join(__dirname, 'test-stubs', 'math.ts');
       
       // Act
       const functions = integration.extractFunctionMetadata(mathPath);
@@ -273,13 +270,13 @@ export function simpleFunction(): string {
       const testContent = generator.generateTestStub(divideFunction!, mathPath);
 
       // Verify boundary value test for zero divisor
-      expect(testContent).toContain('should handle boundary value (0) for b');
-      expect(testContent).toContain('const b = 0;');
+      expect(testContent.includes('should handle boundary value (0) for b')).toBe(true);
+      expect(testContent.includes('const b = 0;')).toBe(true);
     });
 
     it('should create executable test that properly handles exceptions', async () => {
       // Arrange
-      const tempTestPath = join(__dirname, 'examples', 'divide-exception.test.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'divide-exception.test.ts');
       tempTestFiles.push(tempTestPath);
 
       // Create a focused test for divide exception handling
@@ -333,10 +330,10 @@ describe('divide exception handling', () => {
         });
 
         // Assert
-        expect(jestResult.stdout).toContain('PASS');
-        expect(jestResult.stdout).toContain('should throw error when dividing by zero');
-        expect(jestResult.stdout).toContain('should handle valid division');
-        expect(jestResult.stdout).toContain('should handle negative divisor');
+        expect(jestResult.stdout.includes('PASS')).toBe(true);
+        expect(jestResult.stdout.includes('should throw error when dividing by zero')).toBe(true);
+        expect(jestResult.stdout.includes('should handle valid division')).toBe(true);
+        expect(jestResult.stdout.includes('should handle negative divisor')).toBe(true);
         
       } catch (error: any) {
         // Log the error for debugging but don't fail the test
@@ -344,7 +341,7 @@ describe('divide exception handling', () => {
         
         // The test should at least be syntactically valid
         if (error.stdout || error.stderr) {
-          expect(error.stdout || error.stderr).toContain('divide-exception.test.ts');
+          expect((error.stdout || error.stderr).includes('divide-exception.test.ts')).toBe(true);
         } else {
           // If no output, just verify that an error occurred
           expect(error).toBeDefined();
@@ -356,8 +353,8 @@ describe('divide exception handling', () => {
   describe('Integration Result Validation', () => {
     it('should provide comprehensive integration result', async () => {
       // Arrange
-      const mathPath = join(__dirname, 'examples', 'math.ts');
-      const tempTestPath = join(__dirname, 'examples', 'math.result.test.ts');
+      const mathPath = join(__dirname, 'test-stubs', 'math.ts');
+      const tempTestPath = join(__dirname, 'test-stubs', 'math.result.test.ts');
       tempTestFiles.push(tempTestPath);
 
       // Act
@@ -397,7 +394,7 @@ describe('divide exception handling', () => {
 
       // Assert
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Source file not found');
+      expect(result.error).toBe('Source file not found: ' + invalidPath);
       expect(result.functions).toHaveLength(0);
       expect(result.testContent).toBe('');
     });

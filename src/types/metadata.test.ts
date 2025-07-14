@@ -93,10 +93,10 @@ describe('FunctionMetadata Interface', () => {
         returnType: 'ComplexResult<T>'
       };
 
-      expect(complexTypesMetadata.params[0].type).toContain('|');
-      expect(complexTypesMetadata.params[1].type).toContain('&');
-      expect(complexTypesMetadata.params[2].type).toContain('<');
-      expect(complexTypesMetadata.params[2].type).toContain('>');
+      expect(complexTypesMetadata.params[0].type).toBe('string | number | boolean');
+      expect(complexTypesMetadata.params[1].type).toBe('User & { id: string }');
+      expect(complexTypesMetadata.params[2].type).toBe('Array<User>');
+      expect(complexTypesMetadata.params[2].type).toBe('Array<User>');
     });
 
     it('should accept params with special characters in type strings', () => {
@@ -117,11 +117,11 @@ describe('FunctionMetadata Interface', () => {
       };
 
       // Verify special characters are preserved in type strings
-      expect(specialCharsMetadata.params[0].type).toContain('[]');
-      expect(specialCharsMetadata.params[1].type).toContain('<');
-      expect(specialCharsMetadata.params[2].type).toContain('[');
-      expect(specialCharsMetadata.params[5].type).toContain('=>');
-      expect(specialCharsMetadata.params[7].type).toContain('${');
+      expect(specialCharsMetadata.params[0].type).toBe('string[]');
+      expect(specialCharsMetadata.params[1].type).toBe('Record<string, any>');
+      expect(specialCharsMetadata.params[2].type).toBe('{ [key: string]: number }');
+      expect(specialCharsMetadata.params[5].type).toBe('(x: number) => string');
+      expect(specialCharsMetadata.params[7].type).toBe('`prefix-${string}`');
     });
   });
 
@@ -141,9 +141,7 @@ describe('FunctionMetadata Interface', () => {
 
       // Test that the interface structure is enforced
       const keys = Object.keys(metadata);
-      expect(keys).toContain('name');
-      expect(keys).toContain('params');
-      expect(keys).toContain('returnType');
+      expect(keys).toEqual(['name', 'params', 'returnType']);
     });
 
     it('should allow creation of FunctionMetadata arrays', () => {
@@ -211,7 +209,7 @@ describe('FunctionMetadata Interface', () => {
 
       expect(reactComponentMetadata.name).toBe('UserProfile');
       expect(reactComponentMetadata.returnType).toBe('JSX.Element');
-      expect(reactComponentMetadata.params[0].type).toContain('onUpdate');
+      expect(reactComponentMetadata.params[0].type).toBe('{ userId: string; onUpdate: (user: User) => void }');
 
       // Test React hooks
       const hookMetadata: FunctionMetadata = {
@@ -224,7 +222,7 @@ describe('FunctionMetadata Interface', () => {
       };
 
       expect(hookMetadata.name).toMatch(/^use/);
-      expect(hookMetadata.returnType).toContain('loading');
+      expect(hookMetadata.returnType).toBe('{ data: User | null; loading: boolean; error: Error | null }');
     });
 
     it('should handle async function metadata', () => {
@@ -239,7 +237,7 @@ describe('FunctionMetadata Interface', () => {
       };
 
       expect(asyncMetadata.returnType).toMatch(/^Promise</);
-      expect(asyncMetadata.returnType).toContain('User');
+      expect(asyncMetadata.returnType).toBe('Promise<User>');
 
       // Test async function with complex Promise types
       const complexAsyncMetadata: FunctionMetadata = {
@@ -251,9 +249,9 @@ describe('FunctionMetadata Interface', () => {
         returnType: 'Promise<{ results: R[]; errors: Error[] }>'
       };
 
-      expect(complexAsyncMetadata.params[1].type).toContain('Promise');
-      expect(complexAsyncMetadata.returnType).toContain('results');
-      expect(complexAsyncMetadata.returnType).toContain('errors');
+      expect(complexAsyncMetadata.params[1].type).toBe('(item: T) => Promise<R>');
+      expect(complexAsyncMetadata.returnType).toBe('Promise<{ results: R[]; errors: Error[] }>');
+      expect(complexAsyncMetadata.returnType).toBe('Promise<{ results: R[]; errors: Error[] }>');
     });
 
     it('should handle generic function metadata', () => {
@@ -268,8 +266,8 @@ describe('FunctionMetadata Interface', () => {
       };
 
       expect(genericMetadata.params[0].type).toBe('T[]');
-      expect(genericMetadata.params[1].type).toContain('T');
-      expect(genericMetadata.params[1].type).toContain('R');
+      expect(genericMetadata.params[1].type).toBe('(item: T, index: number) => R');
+      expect(genericMetadata.params[1].type).toBe('(item: T, index: number) => R');
       expect(genericMetadata.returnType).toBe('R[]');
 
       // Test with constrained generics
@@ -284,7 +282,7 @@ describe('FunctionMetadata Interface', () => {
       };
 
       expect(constrainedGenericMetadata.params).toHaveLength(3);
-      expect(constrainedGenericMetadata.params[1].type).toContain('=>');
+      expect(constrainedGenericMetadata.params[1].type).toBe('(item: T) => K');
     });
   });
 });

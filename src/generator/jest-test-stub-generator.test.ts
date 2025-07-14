@@ -31,13 +31,62 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain("import { add } from '../math/calculator';");
-      expect(result).toContain("describe('add', () => {");
-      expect(result).toContain('should execute successfully with valid inputs');
-      expect(result).toContain('const a = 42;');
-      expect(result).toContain('const b = 42;');
-      expect(result).toContain('const result = add(a, b);');
-      expect(result).toContain("expect(typeof result).toBe('number');");
+      // Verify import statement
+      expect(result).toMatch(/^import \{ add \} from '\.\.\/math\/calculator';/m);
+      
+      // Verify complete test structure with exact format
+      const expectedStructure = `import { add } from '../math/calculator';
+
+describe('add', () => {
+  it('should execute successfully with valid inputs', () => {
+    // Arrange
+    const a = 42;
+    const b = 42;
+    
+    // Act
+    const result = add(a, b);
+    
+    // Assert
+    expect(typeof result).toBe('number');
+  });
+
+  it('should handle missing required parameters gracefully', () => {
+    // Arrange
+    const invalidCall = () => add(undefined as any, undefined as any);
+    
+    // Act & Assert
+    // TODO: Adjust assertion based on function's error handling
+    expect(invalidCall).toThrow();
+  });
+
+  it('should handle boundary value (0) for a', () => {
+    // Arrange
+    const a = 0;
+    const b = 42;
+    
+    // Act
+    const result = add(a, b);
+    
+    // Assert
+    // TODO: Verify expected behavior with boundary value
+    expect(result).toBeDefined();
+  });
+
+  it('should handle boundary value (0) for b', () => {
+    // Arrange
+    const a = 42;
+    const b = 0;
+    
+    // Act
+    const result = add(a, b);
+    
+    // Assert
+    // TODO: Verify expected behavior with boundary value
+    expect(result).toBeDefined();
+  });
+});`;
+      
+      expect(result).toEqual(expectedStructure);
     });
 
     it('should generate test stub for function with no parameters', () => {
@@ -53,9 +102,22 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain("import { getCurrentTime } from '../utils/time';");
-      expect(result).toContain('const result = getCurrentTime();');
-      expect(result).toContain('// No parameters to arrange');
+      // Verify import statement
+      expect(result).toMatch(/^import \{ getCurrentTime \} from '\.\.\/utils\/time';/m);
+      
+      // Parse the test structure to verify it programmatically
+      const lines = result.split('\n');
+      const describeLineIndex = lines.findIndex(line => line.includes("describe('getCurrentTime'"));
+      const itLineIndex = lines.findIndex(line => line.includes("it('should execute successfully"));
+      
+      expect(describeLineIndex).toBeGreaterThan(0);
+      expect(itLineIndex).toBeGreaterThan(describeLineIndex);
+      
+      // Verify the test contains expected comments and function call
+      const testBody = lines.slice(itLineIndex).join('\n');
+      expect(testBody).toMatch(/\/\/ No parameters to arrange/);
+      expect(testBody).toMatch(/const result = getCurrentTime\(\);/);
+      expect(testBody).toMatch(/expect\(result\)\.toBeDefined\(\);/);
     });
 
     it('should generate test stub for void function', () => {
@@ -71,8 +133,17 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('// Function returns void - verify no errors thrown');
-      expect(result).toContain("const message = 'test-message';");
+      // Use snapshot for full structure verification
+      expect(result).toMatchSnapshot();
+      
+      // Additional specific verifications
+      expect(result).toMatch(/\/\/ Function returns void - verify no errors thrown/);
+      expect(result).toMatch(/const message = 'test-message';/);
+      expect(result).toMatch(/logMessage\(message\);/);
+      
+      // Verify edge case for empty string using exact pattern
+      const emptyStringTestRegex = /it\('should handle empty string for message', \(\) => \{\s*\/\/ Arrange\s*const message = '';/m;
+      expect(result).toMatch(emptyStringTestRegex);
     });
 
     it('should generate test stub for async function', () => {
@@ -88,9 +159,21 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle async operation correctly');
-      expect(result).toContain('async () => {');
-      expect(result).toContain('const result = await fetchUser(');
+      // Verify async function structure using regex patterns
+      const asyncTestPattern = /it\('should handle async operation correctly', async \(\) => \{[\s\S]*?const result = await fetchUser\(id\);[\s\S]*?expect\(result\)\.toBeDefined\(\);[\s\S]*?\}\);/m;
+      expect(result).toMatch(asyncTestPattern);
+      
+      // Verify the async test has proper structure
+      const asyncTestMatch = result.match(/it\('should handle async operation correctly'[\s\S]*?\}\);/m);
+      expect(asyncTestMatch).toBeTruthy();
+      
+      const asyncTestContent = asyncTestMatch![0];
+      // Count async keywords - there should be two: one in the main test and one in the async test
+      const fullResultAsyncCount = (result.match(/\basync\b/g) || []).length;
+      const awaitKeywordCount = (asyncTestContent.match(/await/g) || []).length;
+      
+      expect(fullResultAsyncCount).toBe(2);
+      expect(awaitKeywordCount).toBe(1);
     });
 
     it('should generate test stub for function returning array', () => {
@@ -106,8 +189,18 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should return an array');
-      expect(result).toContain('expect(Array.isArray(result)).toBe(true);');
+      // Verify array test structure with relaxed pattern matching for formatting
+      const arrayTestPattern = /it\('should return an array', \(\) => \{[\s\S]*?const result = getItems\(\);[\s\S]*?expect\(Array\.isArray\(result\)\)\.toBe\(true\);[\s\S]*?\/\/ TODO: Add assertions for array contents[\s\S]*?\}\);/m;
+      expect(result).toMatch(arrayTestPattern);
+      
+      // Parse and verify test structure
+      const testBlocks = result.match(/it\([^)]+\)[^{]*\{[\s\S]*?\}\);/gm) || [];
+      const arrayTest = testBlocks.find(block => block.includes('should return an array'));
+      
+      expect(arrayTest).toBeDefined();
+      expect(arrayTest).toMatch(/const result = getItems\(\);/);
+      expect(arrayTest).toMatch(/expect\(Array\.isArray\(result\)\)\.toBe\(true\);/);
+      expect(arrayTest).toMatch(/\/\/ TODO: Add assertions for array contents/);
     });
   });
 
@@ -138,9 +231,21 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestFile(functionsMetadata, modulePath);
 
       // Assert
-      expect(result).toContain("import { add, subtract } from '../math';");
-      expect(result).toContain("describe('add', () => {");
-      expect(result).toContain("describe('subtract', () => {");
+      // Verify combined import statement
+      expect(result).toMatch(/^import \{ add, subtract \} from '\.\.\/math';/m);
+      
+      // Verify both function test suites are generated with proper structure
+      const addTestPattern = /describe\('add', \(\) => \{[\s\S]*?it\('should execute successfully with valid inputs', \(\) => \{[\s\S]*?\}\);[\s\S]*?\}\);/m;
+      const subtractTestPattern = /describe\('subtract', \(\) => \{[\s\S]*?it\('should execute successfully with valid inputs', \(\) => \{[\s\S]*?\}\);[\s\S]*?\}\);/m;
+      
+      expect(result).toMatch(addTestPattern);
+      expect(result).toMatch(subtractTestPattern);
+      
+      // Verify the order: add comes before subtract
+      const addIndex = result.indexOf("describe('add'");
+      const subtractIndex = result.indexOf("describe('subtract'");
+      expect(addIndex).toBeLessThan(subtractIndex);
+      expect(addIndex).toBeGreaterThan(0);
     });
 
     it('should generate empty test file when no functions provided', () => {
@@ -152,9 +257,16 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestFile(functionsMetadata, modulePath);
 
       // Assert
-      expect(result).toContain('No functions found in src/empty.ts');
-      expect(result).toContain("describe('empty', () => {");
-      expect(result).toContain('should have testable functions');
+      // Verify exact structure for empty file
+      expect(result).toEqual(`// No functions found in src/empty.ts
+// Add functions to generate test stubs
+
+describe('empty', () => {
+  it('should have testable functions', () => {
+    // TODO: Add functions to the module and regenerate tests
+    expect(true).toBe(true);
+  });
+});`);
     });
   });
 
@@ -172,8 +284,9 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle empty string for text');
-      expect(result).toContain("const text = '';");
+      // Verify complete edge case test structure
+      const emptyStringTestPattern = /it\('should handle empty string for text', \(\) => \{\s*\/\/ Arrange[\s\S]*?const text = '';[\s\S]*?\/\/ Act[\s\S]*?const result = processText\(text\);[\s\S]*?\/\/ Assert[\s\S]*?\/\/ TODO: Verify expected behavior with empty string[\s\S]*?expect\(result\)\.toBeDefined\(\);[\s\S]*?\}\);/m;
+      expect(result).toMatch(emptyStringTestPattern);
     });
 
     it('should generate edge case tests for number parameters', () => {
@@ -189,8 +302,9 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle boundary value (0) for value');
-      expect(result).toContain('const value = 0;');
+      // Use exact matching for boundary value test
+      const boundaryTestPattern = /it\('should handle boundary value \(0\) for value', \(\) => \{\s*\/\/ Arrange[\s\S]*?const value = 0;[\s\S]*?\/\/ Act[\s\S]*?const result = calculate\(value\);[\s\S]*?\/\/ Assert[\s\S]*?\/\/ TODO: Verify expected behavior with boundary value[\s\S]*?expect\(result\)\.toBeDefined\(\);[\s\S]*?\}\);/m;
+      expect(result).toMatch(boundaryTestPattern);
     });
 
     it('should generate edge case tests for array parameters', () => {
@@ -206,8 +320,9 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle empty array for items');
-      expect(result).toContain('const items = [];');
+      // Verify empty array edge case with exact structure
+      const emptyArrayTestPattern = /it\('should handle empty array for items', \(\) => \{\s*\/\/ Arrange[\s\S]*?const items = \[\];[\s\S]*?\/\/ Act[\s\S]*?const result = processItems\(items\);[\s\S]*?\/\/ Assert[\s\S]*?\/\/ TODO: Verify expected behavior with empty array[\s\S]*?expect\(result\)\.toBeDefined\(\);[\s\S]*?\}\);/m;
+      expect(result).toMatch(emptyArrayTestPattern);
     });
   });
 
@@ -225,8 +340,9 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle null value for data');
-      expect(result).toContain('const data = null;');
+      // Verify null handling test structure
+      const nullTestPattern = /it\('should handle null value for data', \(\) => \{\s*\/\/ Arrange[\s\S]*?const data = null;[\s\S]*?\/\/ Act[\s\S]*?const result = maybeProcess\(data\);[\s\S]*?\/\/ Assert[\s\S]*?\/\/ TODO: Verify expected behavior with null data[\s\S]*?expect\(result\)\.toBeDefined\(\);[\s\S]*?\}\);/m;
+      expect(result).toMatch(nullTestPattern);
     });
 
     it('should handle optional types', () => {
@@ -242,7 +358,9 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle null value for options');
+      // Verify null handling for optional/undefined types
+      const nullTestPattern = /it\('should handle null value for options', \(\) => \{[\s\S]*?const options = null;[\s\S]*?\}\);/m;
+      expect(result).toMatch(nullTestPattern);
     });
 
     it('should handle custom object types', () => {
@@ -258,7 +376,9 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('const userData = {} as UserData;');
+      // Verify custom object type initialization with relaxed pattern
+      const mainTestPattern = /it\('should execute successfully with valid inputs', \(\) => \{[\s\S]*?const userData = \{\} as UserData;[\s\S]*?const result = createUser\(userData\);[\s\S]*?expect\(result\)\.toBeDefined\(\);[\s\S]*?\}\);/m;
+      expect(result).toMatch(mainTestPattern);
     });
 
     it('should handle boolean parameters', () => {
@@ -274,7 +394,12 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('const isActive = true;');
+      // Verify boolean parameter initialization - check for the specific test
+      const mainTest = result.match(/it\('should execute successfully with valid inputs'[\s\S]*?\}\);/m);
+      expect(mainTest).toBeTruthy();
+      expect(mainTest![0]).toMatch(/const isActive = true;/);
+      expect(mainTest![0]).toMatch(/toggle\(isActive\);/);
+      expect(mainTest![0]).toMatch(/\/\/ Function returns void - verify no errors thrown/);
     });
   });
 
@@ -292,7 +417,12 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain("import { deepFunction } from '../deep/nested/module';");
+      // Verify correct relative import path generation
+      expect(result).toMatch(/^import \{ deepFunction \} from '\.\.\/deep\/nested\/module';/m);
+      
+      // Verify the import is at the beginning of the file
+      const lines = result.split('\n');
+      expect(lines[0]).toBe("import { deepFunction } from '../deep/nested/module';");
     });
 
     it('should handle root level files', () => {
@@ -308,7 +438,12 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain("import { rootFunction } from 'index';");
+      // Verify root level import with relative path
+      expect(result).toMatch(/^import \{ rootFunction \} from '\.\/index';/m);
+      
+      // Ensure relative path is used for root files
+      expect(result).toMatch(/from ['"]\.\/index['"]/);
+      expect(result).not.toMatch(/from ['"]\.\.\/index['"]/);
     });
   });
 
@@ -326,9 +461,28 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('// Arrange');
-      expect(result).toContain('// Act');
-      expect(result).toContain('// Assert');
+      // Verify Arrange-Act-Assert pattern is properly structured
+      const mainTest = result.match(/it\('should execute successfully with valid inputs'[\s\S]*?\}\);/m);
+      expect(mainTest).toBeTruthy();
+      
+      const testContent = mainTest![0];
+      const arrangeIndex = testContent.indexOf('// Arrange');
+      const actIndex = testContent.indexOf('// Act');
+      const assertIndex = testContent.indexOf('// Assert');
+      
+      // Verify order
+      expect(arrangeIndex).toBeGreaterThan(0);
+      expect(actIndex).toBeGreaterThan(arrangeIndex);
+      expect(assertIndex).toBeGreaterThan(actIndex);
+      
+      // Verify each section has specific content using exact patterns
+      const arrangeSection = testContent.substring(arrangeIndex, actIndex);
+      const actSection = testContent.substring(actIndex, assertIndex);
+      const assertSection = testContent.substring(assertIndex);
+      
+      expect(arrangeSection).toMatch(/const input = 'test-input';/);
+      expect(actSection).toMatch(/const result = testFunction\(input\);/);
+      expect(assertSection).toMatch(/expect\(typeof result\)\.toBe\('string'\);/);
     });
 
     it('should generate descriptive test names', () => {
@@ -344,9 +498,14 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should execute successfully with valid inputs');
-      expect(result).toContain('should handle empty string for email');
-      expect(result).toContain('should handle missing required parameters gracefully');
+      // Verify descriptive test names are generated
+      const testNames = [...result.matchAll(/it\('([^']+)'/g)].map(m => m[1]);
+      
+      expect(testNames).toEqual([
+        'should execute successfully with valid inputs',
+        'should handle missing required parameters gracefully',
+        'should handle empty string for email'
+      ]);
     });
   });
 
@@ -364,8 +523,12 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should return an array');
-      expect(result).toContain('expect(Array.isArray(result)).toBe(true);');
+      // Verify generic array type handling - look for the test in the result
+      const arrayTest = result.match(/it\('should return an array'[\s\S]*?\}\);/m);
+      expect(arrayTest).toBeTruthy();
+      expect(arrayTest![0]).toMatch(/const result = getUsers\(\);/);
+      expect(arrayTest![0]).toMatch(/expect\(Array\.isArray\(result\)\)\.toBe\(true\);/);
+      expect(arrayTest![0]).toMatch(/\/\/ TODO: Add assertions for array contents/);
     });
 
     it('should handle union return types', () => {
@@ -381,7 +544,12 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('expect(result).toBeDefined();');
+      // Verify union return type handling with structured verification
+      const mainTest = result.match(/it\('should execute successfully with valid inputs'[\s\S]*?\}\);/m);
+      expect(mainTest).toBeTruthy();
+      expect(mainTest![0]).toMatch(/const id = 'test-id';/);
+      expect(mainTest![0]).toMatch(/const result = findItem\(id\);/);
+      expect(mainTest![0]).toMatch(/expect\(result\)\.toBeDefined\(\);/);
     });
 
     it('should handle promise with complex types', () => {
@@ -397,8 +565,12 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle async operation correctly');
-      expect(result).toContain('await fetchData()');
+      // Verify Promise with complex return type - look for the async test
+      const asyncTest = result.match(/it\('should handle async operation correctly', async \(\) => \{[\s\S]*?\}\);/m);
+      expect(asyncTest).toBeTruthy();
+      expect(asyncTest![0]).toMatch(/const result = await fetchData\(\);/);
+      expect(asyncTest![0]).toMatch(/expect\(result\)\.toBeDefined\(\);/);
+      expect(asyncTest![0]).toMatch(/\/\/ TODO: Add specific assertions for the resolved value/);
     });
   });
 
@@ -419,9 +591,15 @@ describe('JestTestStubGenerator', () => {
       const result = generator.generateTestStub(functionMeta, modulePath);
 
       // Assert
-      expect(result).toContain('should handle missing required parameters gracefully');
-      expect(result).toContain('const invalidCall = () => requiresParams(undefined as any, undefined as any);');
-      expect(result).toContain('expect(invalidCall).toThrow();');
+      // Verify error handling test generation - look for the specific test
+      const errorTest = result.match(/it\('should handle missing required parameters gracefully'[\s\S]*?\}\);/m);
+      expect(errorTest).toBeTruthy();
+      expect(errorTest![0]).toMatch(/const invalidCall = \(\) => requiresParams\(undefined as any, undefined as any\);/);
+      expect(errorTest![0]).toMatch(/expect\(invalidCall\)\.toThrow\(\);/);
+      
+      // Verify it's testing both parameters as undefined
+      const undefinedMatches = result.match(/undefined as any/g);
+      expect(undefinedMatches).toHaveLength(2);
     });
   });
 });

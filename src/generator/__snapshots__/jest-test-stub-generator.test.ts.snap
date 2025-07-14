@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`JestTestStubGenerator generateTestStub should generate test stub for void function 1`] = `
+"import { logMessage } from '../logger';
+
+describe('logMessage', () => {
+  it('should execute successfully with valid inputs', () => {
+    // Arrange
+    const message = 'test-message';
+    
+    // Act
+    const result = logMessage(message);
+    
+    // Assert
+    // Function returns void - verify no errors thrown
+  });
+
+  it('should handle missing required parameters gracefully', () => {
+    // Arrange
+    const invalidCall = () => logMessage(undefined as any);
+    
+    // Act & Assert
+    // TODO: Adjust assertion based on function's error handling
+    expect(invalidCall).toThrow();
+  });
+
+  it('should handle empty string for message', () => {
+    // Arrange
+    const message = '';
+    
+    // Act
+    const result = logMessage(message);
+    
+    // Assert
+    // TODO: Verify expected behavior with empty string
+    expect(result).toBeDefined();
+  });
+});"
+`;

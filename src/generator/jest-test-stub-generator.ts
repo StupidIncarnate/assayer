@@ -3,47 +3,105 @@
  * 
  * Generates Jest test stubs from function metadata following DAMP principles.
  * Creates comprehensive test structures with proper setup, action, and assertion phases.
+ * Refactored to use extracted JestTemplates for improved maintainability and customization.
  */
 
 import { FunctionMetadata } from '../types/metadata';
+import { Generator, GeneratorConfig } from '../types/generator';
+import { JestTemplates } from '../templates/jest-templates';
 
-export class JestTestStubGenerator {
+export class JestTestStubGenerator implements Generator {
+  private templates: JestTemplates;
+  private config?: GeneratorConfig;
+
+  constructor(config?: GeneratorConfig, templates?: JestTemplates) {
+    this.config = config;
+    this.templates = templates || new JestTemplates();
+  }
+
   /**
-   * Generates a complete Jest test stub for a given function
-   * @param functionMeta - The function metadata to generate tests for
-   * @param modulePath - The path to the module containing the function
-   * @returns The generated test stub as a string
+   * Generate a single test stub for a function
+   * @param func Function metadata
+   * @param modulePath Path to the module being tested
+   * @param options Optional configuration for test generation
+   * @returns Generated test stub
    */
-  generateTestStub(functionMeta: FunctionMetadata, modulePath: string): string {
-    const testContent = this.buildTestContent(functionMeta, modulePath);
+  generateTestStub(func: FunctionMetadata, modulePath: string, options?: GeneratorConfig): string {
+    const effectiveConfig = options || this.config;
+    const testContent = this.buildTestContent(func, modulePath, effectiveConfig);
     return testContent;
   }
 
   /**
-   * Generates multiple test stubs for an array of functions
-   * @param functionsMetadata - Array of function metadata
-   * @param modulePath - The path to the module containing the functions
-   * @returns The complete test file content
+   * Generate a test file from function metadata
+   * @param functions Array of function metadata
+   * @param modulePath Path to the module being tested
+   * @param options Optional configuration for test generation
+   * @returns Generated test file content
    */
-  generateTestFile(functionsMetadata: FunctionMetadata[], modulePath: string): string {
-    if (functionsMetadata.length === 0) {
+  generateTestFile(functions: FunctionMetadata[], modulePath: string, options?: GeneratorConfig): string {
+    if (functions.length === 0) {
       return this.generateEmptyTestFile(modulePath);
     }
 
-    const imports = this.generateImports(functionsMetadata, modulePath);
-    const testSuites = functionsMetadata
-      .map(func => this.generateTestSuite(func))
+    const effectiveConfig = options || this.config;
+    const imports = this.generateImports(functions, modulePath);
+    const testSuites = functions
+      .map(func => this.generateTestSuite(func, effectiveConfig))
       .join('\n\n');
 
     return `${imports}\n\n${testSuites}`;
   }
 
   /**
+   * Get the output path for a test file
+   * @param sourcePath Path to the source file
+   * @param options Optional configuration for test generation
+   * @returns Path where the test file should be written
+   */
+  getTestFilePath(sourcePath: string, options?: GeneratorConfig): string {
+    const effectiveConfig = options || this.config;
+    const pattern = effectiveConfig?.testFilePattern || '.test';
+    const lastSlashIndex = sourcePath.lastIndexOf('/');
+    
+    if (lastSlashIndex === -1) {
+      // Handle root level files (no directory)
+      const baseFileName = sourcePath.replace(/\.(ts|tsx|js|jsx)$/, '');
+      return `${baseFileName}${pattern}.ts`;
+    }
+    
+    const directory = sourcePath.substring(0, lastSlashIndex);
+    const fileName = sourcePath.substring(lastSlashIndex + 1);
+    const baseFileName = fileName.replace(/\.(ts|tsx|js|jsx)$/, '');
+    
+    return `${directory}/${baseFileName}${pattern}.ts`;
+  }
+
+  /**
+   * Validate that generated test content is syntactically correct
+   * @param testContent The test content to validate
+   * @returns True if the test content is valid
+   */
+  validateTestContent(testContent: string): boolean {
+    // Check for required elements
+    const hasImports = testContent.includes('import');
+    const hasDescribe = testContent.includes('describe(');
+    const hasTests = testContent.includes('it(') || testContent.includes('test(');
+    
+    // Check for balanced braces
+    const openBraces = (testContent.match(/\{/g) || []).length;
+    const closeBraces = (testContent.match(/\}/g) || []).length;
+    
+    return hasImports && hasDescribe && hasTests && 
+           openBraces === closeBraces;
+  }
+
+  /**
    * Builds the complete test content for a single function
    */
-  private buildTestContent(functionMeta: FunctionMetadata, modulePath: string): string {
+  private buildTestContent(functionMeta: FunctionMetadata, modulePath: string, options?: GeneratorConfig): string {
     const imports = this.generateImports([functionMeta], modulePath);
-    const testSuite = this.generateTestSuite(functionMeta);
+    const testSuite = this.generateTestSuite(functionMeta, options);
     
     return `${imports}\n\n${testSuite}`;
   }
@@ -55,7 +113,7 @@ export class JestTestStubGenerator {
     const functionNames = functions.map(f => f.name).join(', ');
     const importPath = this.getImportPath(modulePath);
     
-    return `import { ${functionNames} } from '${importPath}';`;
+    return this.templates.getImportTemplate(functionNames, importPath);
   }
 
   /**
@@ -65,30 +123,42 @@ export class JestTestStubGenerator {
     // Remove .ts extension and adjust path for test file location
     const pathWithoutExt = modulePath.replace(/\.ts$/, '');
     
+    // If it's just a filename without path, return it with './'
+    if (!pathWithoutExt.includes('/')) {
+      return './' + pathWithoutExt;
+    }
+    
     // If the path starts with src/, replace with relative path
     if (pathWithoutExt.startsWith('src/')) {
       return '../' + pathWithoutExt.substring(4);
     }
     
-    return pathWithoutExt;
+    // For other paths, determine relative path based on directory depth
+    const lastSlashIndex = pathWithoutExt.lastIndexOf('/');
+    if (lastSlashIndex !== -1) {
+      // Get just the filename
+      const filename = pathWithoutExt.substring(lastSlashIndex + 1);
+      return './' + filename;
+    }
+    
+    return './' + pathWithoutExt;
   }
 
   /**
    * Generates a complete test suite for a function
    */
-  private generateTestSuite(functionMeta: FunctionMetadata): string {
+  private generateTestSuite(functionMeta: FunctionMetadata, options?: GeneratorConfig): string {
     const { name } = functionMeta;
     
     const testCases = [
       this.generateBasicTest(functionMeta),
       ...this.generateParameterTests(functionMeta),
-      ...this.generateReturnTypeTests(functionMeta),
-      ...this.generateEdgeCaseTests(functionMeta)
+      ...(options?.includeAsyncTests !== false ? this.generateReturnTypeTests(functionMeta) : []),
+      ...(options?.includeEdgeCases !== false ? this.generateEdgeCaseTests(functionMeta) : [])
     ].filter(Boolean);
 
-    return `describe('${name}', () => {
-${testCases.join('\n\n')}
-});`;
+    const testCasesContent = testCases.join('\n\n');
+    return this.templates.getDescribeTemplate(name, testCasesContent);
   }
 
   /**
@@ -100,16 +170,11 @@ ${testCases.join('\n\n')}
     const paramNames = params.map(p => p.name);
     const callExpression = this.generateFunctionCall(name, paramNames);
     
-    return `  it('should execute successfully with valid inputs', () => {
-    // Arrange
-${this.generateArrangeSection(params, paramValues)}
-    
-    // Act
-    const result = ${callExpression};
-    
-    // Assert
-${this.generateAssertSection(returnType)}
-  });`;
+    return this.templates.getBasicTestTemplate({
+      arrangeSection: this.generateArrangeSection(params, paramValues),
+      callExpression,
+      assertSection: this.generateAssertSection(returnType)
+    });
   }
 
   /**
@@ -142,14 +207,12 @@ ${this.generateAssertSection(returnType)}
     
     if (params.length === 0) return '';
 
-    return `  it('should handle missing required parameters gracefully', () => {
-    // Arrange
-    const invalidCall = () => ${name}(${params.map(() => 'undefined as any').join(', ')});
+    const invalidCall = `${name}(${params.map(() => 'undefined as any').join(', ')})`;
     
-    // Act & Assert
-    // TODO: Adjust assertion based on function's error handling
-    expect(invalidCall).toThrow();
-  });`;
+    return this.templates.getRequiredParameterTestTemplate({
+      functionName: name,
+      invalidCall
+    });
   }
 
   /**
@@ -163,17 +226,11 @@ ${this.generateAssertSection(returnType)}
     const paramNames = params.map(p => p.name);
     const callExpression = this.generateFunctionCall(name, paramNames);
 
-    return `  it('should handle null value for ${param.name}', () => {
-    // Arrange
-${this.generateArrangeSection(params, paramValues)}
-    
-    // Act
-    const result = ${callExpression};
-    
-    // Assert
-    // TODO: Verify expected behavior with null ${param.name}
-    expect(result).toBeDefined();
-  });`;
+    return this.templates.getNullParameterTestTemplate({
+      paramName: param.name,
+      arrangeSection: this.generateArrangeSection(params, paramValues),
+      callExpression
+    });
   }
 
   /**
@@ -203,17 +260,10 @@ ${this.generateArrangeSection(params, paramValues)}
     const paramNames = params.map(p => p.name);
     const callExpression = this.generateFunctionCall(name, paramNames);
 
-    return `  it('should handle async operation correctly', async () => {
-    // Arrange
-${this.generateArrangeSection(params, paramValues)}
-    
-    // Act
-    const result = await ${callExpression};
-    
-    // Assert
-    expect(result).toBeDefined();
-    // TODO: Add specific assertions for the resolved value
-  });`;
+    return this.templates.getAsyncTestTemplate({
+      arrangeSection: this.generateArrangeSection(params, paramValues),
+      callExpression
+    });
   }
 
   /**
@@ -225,17 +275,10 @@ ${this.generateArrangeSection(params, paramValues)}
     const paramNames = params.map(p => p.name);
     const callExpression = this.generateFunctionCall(name, paramNames);
 
-    return `  it('should return an array', () => {
-    // Arrange
-${this.generateArrangeSection(params, paramValues)}
-    
-    // Act
-    const result = ${callExpression};
-    
-    // Assert
-    expect(Array.isArray(result)).toBe(true);
-    // TODO: Add assertions for array contents
-  });`;
+    return this.templates.getArrayTestTemplate({
+      arrangeSection: this.generateArrangeSection(params, paramValues),
+      callExpression
+    });
   }
 
   /**
@@ -272,17 +315,11 @@ ${this.generateArrangeSection(params, paramValues)}
     const paramNames = params.map(p => p.name);
     const callExpression = this.generateFunctionCall(name, paramNames);
 
-    return `  it('should handle empty string for ${paramName}', () => {
-    // Arrange
-${this.generateArrangeSection(params, paramValues)}
-    
-    // Act
-    const result = ${callExpression};
-    
-    // Assert
-    // TODO: Verify expected behavior with empty string
-    expect(result).toBeDefined();
-  });`;
+    return this.templates.getEmptyStringTestTemplate({
+      paramName,
+      arrangeSection: this.generateArrangeSection(params, paramValues),
+      callExpression
+    });
   }
 
   /**
@@ -298,17 +335,11 @@ ${this.generateArrangeSection(params, paramValues)}
     const paramNames = params.map(p => p.name);
     const callExpression = this.generateFunctionCall(name, paramNames);
 
-    return `  it('should handle boundary value (0) for ${paramName}', () => {
-    // Arrange
-${this.generateArrangeSection(params, paramValues)}
-    
-    // Act
-    const result = ${callExpression};
-    
-    // Assert
-    // TODO: Verify expected behavior with boundary value
-    expect(result).toBeDefined();
-  });`;
+    return this.templates.getBoundaryValueTestTemplate({
+      paramName,
+      arrangeSection: this.generateArrangeSection(params, paramValues),
+      callExpression
+    });
   }
 
   /**
@@ -324,17 +355,11 @@ ${this.generateArrangeSection(params, paramValues)}
     const paramNames = params.map(p => p.name);
     const callExpression = this.generateFunctionCall(name, paramNames);
 
-    return `  it('should handle empty array for ${paramName}', () => {
-    // Arrange
-${this.generateArrangeSection(params, paramValues)}
-    
-    // Act
-    const result = ${callExpression};
-    
-    // Assert
-    // TODO: Verify expected behavior with empty array
-    expect(result).toBeDefined();
-  });`;
+    return this.templates.getEmptyArrayTestTemplate({
+      paramName,
+      arrangeSection: this.generateArrangeSection(params, paramValues),
+      callExpression
+    });
   }
 
   /**
@@ -424,15 +449,10 @@ ${this.generateArrangeSection(params, paramValues)}
    * Generates an empty test file when no functions are found
    */
   private generateEmptyTestFile(modulePath: string): string {
-    return `// No functions found in ${modulePath}
-// Add functions to generate test stubs
-
-describe('${this.extractModuleName(modulePath)}', () => {
-  it('should have testable functions', () => {
-    // TODO: Add functions to the module and regenerate tests
-    expect(true).toBe(true);
-  });
-});`;
+    return this.templates.getEmptyTestFileTemplate({
+      modulePath,
+      moduleName: this.extractModuleName(modulePath)
+    });
   }
 
   /**

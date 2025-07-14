@@ -9,7 +9,6 @@
     "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
     "ward": "npm run lint -- $FILE && npm run test -- $FILE",
     "ward:all": "npm run lint && npm run build && npm run test"
   },
