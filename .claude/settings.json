@@ -1,0 +1,188 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-pre-edit-lint"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-pre-bash"
+          }
+        ]
+      },
+      {
+        "matcher": "Grep|Glob|Search|Find",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-pre-search"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-post-ask-question"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet discover"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet searchStrategy"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet folderTypes"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet modifyingCodeGuidance"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet ward"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet packages"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet discover"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet searchStrategy"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet folderTypes"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet modifyingCodeGuidance"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet ward"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet packages"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-subagent-stop"
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-worktree-create"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "mcp__dungeonmaster__discover",
+      "mcp__dungeonmaster__get-architecture",
+      "mcp__dungeonmaster__get-folder-detail",
+      "mcp__dungeonmaster__get-syntax-rules",
+      "mcp__dungeonmaster__get-testing-patterns",
+      "mcp__dungeonmaster__get-quest",
+      "mcp__dungeonmaster__modify-quest",
+      "mcp__dungeonmaster__signal-back",
+      "mcp__dungeonmaster__start-quest",
+      "mcp__dungeonmaster__get-quest-status",
+      "mcp__dungeonmaster__list-quests",
+      "mcp__dungeonmaster__list-guilds",
+      "mcp__dungeonmaster__get-agent-prompt",
+      "mcp__dungeonmaster__get-project-map",
+      "mcp__dungeonmaster__get-quest-planning-notes",
+      "mcp__dungeonmaster__get-project-inventory",
+      "mcp__dungeonmaster__create-quest",
+      "mcp__dungeonmaster__get-next-step",
+      "mcp__dungeonmaster__run-ward",
+      "mcp__dungeonmaster__get-server-config"
+    ]
+  }
+}
