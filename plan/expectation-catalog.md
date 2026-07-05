@@ -218,9 +218,16 @@ through" tests are unnecessary by construction.
   supplier's file.
 - **Callback passthrough (wiring down, firing up)** → downward wiring proven
   statically like any plumbing; the FIRING is tested at the interaction site
-  (child: "interaction ⇒ callback observed with args"); the handler's BEHAVIOR
-  is tested at its owning file. Wrapped callbacks are transforms (see purity
-  boundary).
+  (child: "interaction ⇒ callback observed with args", per branch-selecting
+  boundary arrange — success: called with derived args; failure: called zero
+  times); the handler's BEHAVIOR is tested at its owning file. Wrapped
+  callbacks are transforms (see purity boundary).
+  - **Trigger-path derivation (how the owner's behavior case gets its
+    stimulus):** the C2 reverse map computes the minimal REAL chain from the
+    handler back to the nearest user interaction — parent case = mount parent
+    with real child, arrange the boundaries the chain crosses (derivable:
+    the chain knows them), act the child's interactions, assert the PARENT's
+    effects. Never "call the prop directly" — that's mocking app code.
 - **Boundary-terminated chains** → a value passed into an npm/external call has
   its consumption site AT the boundary: the case is the boundary observation
   (called with exact args), per D5. Chains never dangle — they end at a

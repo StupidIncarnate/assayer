@@ -52,12 +52,13 @@ map-ordering nondeterminism in any derived output.
 
 **Ownership split (D12) — never blur it.** Machine-owned: assembled test files
 in `.assayer/cache/` (never committed, never colocated, no manual edits, NO
-representable skip). Authored + committed: harnesses (the SINGLE authored
-home: surface, readiness, correlations, state wiring, AND declarations as
-config-shaped custom cases — closed vocabulary, never raw asserts), named
-states (`assayer/states/` — hand-authored fixtures for when auto-generated
-data isn't good enough; harnesses wire them in by name), config/policies,
-repo-local plugins. No blessed/baseline images: visual diffs RUN both refs and
+representable skip). Authored + committed: harnesses — which are SPARSE,
+LINT-INVOICED GAP-FILL (D19: the surface derives from the AST — selectors
+from JSX, interactions from handlers, readiness from guards; a harness file
+exists only where derivation provably fails: canvas interactions, selector
+overrides, state wiring, correlations, and declarations as config-shaped
+custom cases — closed vocabulary, never raw asserts) — plus named states
+(`assayer/states/`), config/policies, repo-local plugins. No blessed/baseline images: visual diffs RUN both refs and
 capture side-by-side at diff time. **No per-site waivers exist** —
 the only don't-care is a GLOBAL rule/obligation toggle in config (per-site
 suppression is an LLM abuse vector; if you don't care somewhere, you care

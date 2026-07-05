@@ -145,9 +145,11 @@ loss and travels with branches," nothing more.
    raw test asserts. This is where the config format lives (user ruling):
    the no-code-anchor invariants (live/replay ordering, transient-flash) are
    authored here as config cases, not in separate data files.
-3. **States** (`assayer/states/` folder) — named, hand-authored state fixtures
-   for when C3's auto-generated data isn't good enough (a user record:
-   auto-generatable from contracts; a three.js model JSON: hand-authored).
+3. **States** (`assayer/states/` folder) — named state fixtures for when C3's
+   auto-generated data isn't good enough: static JSON for simple shapes AND
+   `.state.ts` parameterized BUILDER functions for state families with
+   internal invariants (D20 — e.g. a valid multi-file nested-session for any
+   params; a three.js model JSON).
    Keyed by USER-CHOSEN NAMES — never by map-node IDs (node IDs are unstable
    by design and NEVER key committed artifacts; they live cache-internal
    only). Harnesses import states by name to override state loading for
@@ -545,6 +547,12 @@ the discipline plugin brings its lint family; every rule toggleable):
   else render (blank, `"null"`/`"undefined"`, and `{count && ...}` → `0` leaks).
 - Date/format family: no raw Date-to-string in render paths; formatting must be
   explicit (TS cannot type the format).
+- **Foreign test infrastructure (added from the step-4 guardrail pass):** stray
+  raw test files (`*.test.ts`, `*.spec.ts`) or runner configs/dependencies
+  (jest.config, direct jest/playwright deps) appearing in a consumer repo →
+  error: "tests are generated; declare in the harness instead." Without this,
+  an LLM's trained instinct to write raw Jest silently bypasses the whole
+  system while appearing to add coverage.
 - Dead contract surface: a declared prop (esp. optional) never consumed by the
   component body → unused/untested-prop error. TS's unused checks miss this
   (the prop is "used" by the type and by passing parents); Assayer's consumption
@@ -746,6 +754,17 @@ executed live, diffed on failure):
 - Desktop rendering: the failed run IS the flow diagram with the failure step
   highlighted — click a step, see its artifacts.
 
+### R22 — Shared diagnostics & error-rendering subsystem
+(Added from the features-doc pass: P1 states the standard everywhere; this
+names the owner.) One shared framework composes and renders every error in the
+system — CLI, desktop, reporters — in a uniform register, because errors are
+the LLM's corrective instruction surface:
+- Error shape: mechanism + site + evidence + satisfying action.
+- P3 nudge support (suggest modeling, never require it).
+- Did-you-mean rendering for load-time surface validation (D17).
+- Exact error strings are asserted in Assayer's own fixture tests (R16) — the
+  case-studies error texts are the quality bar.
+
 ## Non-goals / Deferred
 
 - **v2 — Record-inspection UX:** a record-centric verification surface ("did my
@@ -773,6 +792,12 @@ executed live, diffed on failure):
   matching Assayer plugin packages — nobody assembles the plugin set by hand.
   Plus `smoketest` (D16): boots the declared environment and verifies every
   process readiness check and every configured plugin's connectivity.
+  Plus states visibility (user requirement): list the states a given test
+  uses and what exists globally (generated + named), so state gaps are
+  findable from the CLI as well as the UX.
+  Plus pipeline-mode output (D15/D18): in PR runs, emit the ref-to-ref
+  semantic-diff REPORT as a pipeline artifact alongside pass/fail exit codes —
+  the report the human reads is produced by the run, not assembled by hand.
 - **D3 — Scaffolding: ABSORBED by D12 + artifact inventory.** (Historical entry;
   originally "tabled, leaning yes.") Resolution: skeletons and fill-holes are
   always generated (D12); tier-2 fills derive from models; tier-1/3 fills are
@@ -791,7 +816,26 @@ executed live, diffed on failure):
   external systems) are declared explicitly — a config array/structure — with
   per-mode execution policy. Example: unit mocks everything at I/O boundaries; e2e
   keeps the db driver REAL but still mocks external systems (LLM APIs, third-party
-  services). The policy is data, not convention.
+  services). The policy is data, not convention. Extensions (from the
+  mocking-detail pass):
+  - **Boundary CLASSIFICATION:** not every npm import is a boundary. Probes
+    classify their packages as I/O; node built-ins (fs/http/child_process) are
+    inherently I/O; pure-compute libraries (lodash/zod/date-fns) run REAL —
+    mocking them is forbidden and meaningless. An UNCLASSIFIED third-party
+    import on a tested chain is a lint: "classify `some-sdk` as io|pure in
+    config, or install its probe."
+  - **Everything else runs REAL — as Assayer's own rule, not dungeonmaster
+    inheritance:** app code (components, brokers, transformers) and pure deps
+    are never mockable; no vocabulary exists to mock them (unrepresentable,
+    not discouraged). Mocking is exhausted by the declared boundary set.
+  - **Boundary behavior is mode-polymorphically realized (mirrors D20):** a
+    case's boundary declaration ("vendor POST resolves with X") realizes as a
+    derived in-process mock feed in unit, and as a queued response on the
+    probe's SHIPPED MOCK RUNTIME in e2e (fake server / fake binary with
+    response queue, env-wired at boot per D16 — the codex
+    wardMock.queueResponse pattern, productized). Probes ship BOTH realizers.
+  - **Harnesses never mock anything.** No mock wiring is harness content;
+    there is no invoice for it.
 - **D6 — Route-config parsing for e2e reachability.** Assayer parses the repo's
   React route config to tie browser state (URLs) to component entry points, then
   chains drivers down the import graph from route entry through all potentially
@@ -901,6 +945,65 @@ executed live, diffed on failure):
     diagram breaks the security model, not just the UX.
   - No mandatory scenario/observable coverage floors; enforcement applies
     only to what is declared, and declarations are as revisable as code.
+- **D20 — Mode-polymorphic state realization + parameterized state builders
+  (from reading codex's real harnesses/proxies).** One semantic state must
+  MATERIALIZE differently per mode — that is the arrange-side crosser:
+  - **Unit realization (derived):** feed the state through mocked boundaries —
+    the broker's boundary-crossing ORDER is in the code, so mock queueing
+    derives (kills codex-proxy-style hand-maintained queue bookkeeping);
+    sink inspection = probe tap capture (kills hand-written inspectors).
+  - **E2E realization (derived-first, escalating):** invert the app's own
+    READ paths via the reverse map (the code that reads
+    `<guild>/sessions/<id>.jsonl` tells us where to write) → probe seeders
+    (db rows via the store plugin) → entry-API creation → builder/harness
+    gap-fill, lint-invoiced per D19.
+  - **State BUILDERS are an authored artifact kind:** `assayer/states/*.state.ts`
+    parameterized, invariant-preserving generators (codex's
+    createNestedSubagentSessionFiles: monotonic timestamps across files,
+    prompt-verbatim-line-0, completion-pairing) — state FAMILIES static JSON
+    cannot express. P4-legal: they encode third-party FORMAT knowledge, not
+    expected outputs. This is also where fixture-provenance risk concentrates
+    (case-studies §1 residue 4).
+  - Largely answers the open "E2E arrange model" question: seed through real
+    channels (derived-first) + navigate; props emerge from the real app.
+- **D19 — The surface is DERIVED; the harness is a sparse, lint-invoiced
+  gap-fill layer (user re-evaluation).** The analyzer + plugins derive the
+  default surface from the implementation itself: interactions from JSX
+  handlers/elements (selector, testid, text, event type are IN the code),
+  observations from render sinks + their enclosing element paths, readiness
+  predicates from the guards/conditions gating each handler. Nobody hand-writes
+  what the AST already contains.
+  - **A harness file exists ONLY when its gap-fill content is non-empty**, and
+    every entry in it is traceable to a specific derivation-gap lint error:
+    1. No stable handle on a testable element → error with
+       IMPLEMENTATION-FIRST remedy ("add data-testid — preferred, stays
+       derivable — or declare an observation override").
+    2. Non-DOM interaction surface (canvas/scene/gesture) → "expose a handle
+       hook or declare interaction X" (amalga's __poseEdit dev hooks are this
+       pattern, productized via the domain plugin).
+    3. Named-state wiring where C3 data is insufficient.
+    4. Custom cases (no-code-anchor truths, D18 — rare).
+    5. Correlations not visible in code.
+  - **Handle derivation is CROSS-COMPONENT data-flow, not per-file syntax:**
+    an in-repo wrapper (`<Button name="approve">` where Button renders
+    `data-testid={\`btn-${name}\`}`) derives via C1 chain-following into the
+    wrapper — prop → transform hops → attribute sink — at arbitrary depth.
+    Only genuinely dynamic, domain-unresolvable values fall to the lint.
+  - **Third-party components (vendor DOM invisible to the AST) — three-tier
+    escalation:** (1) component-library ADAPTERS (`@assayer/ui-mui`-style —
+    the seam pattern's next instance, generalizing R14's form-lib adapters):
+    per-component interaction vocabulary, observation anchors from the
+    vendor's documented role/aria contract, readiness semantics; (2)
+    wrap-with-handle LINT ("wrap it in a repo component carrying a stable
+    handle, or install/author an adapter") — converts the problem to the
+    in-repo wrapper case and invoices good architecture; (3) harness gap-fill
+    override as last resort.
+  - **Harness-completeness lint** is the driving mechanism: derivation gaps
+    are named build errors saying exactly "need this, add this" — the LLM
+    never guesses what a harness requires. Inverse lint already exists (stale
+    surface references, D10).
+  - Supersedes the "every file gets a harness" phrasing in D12/R7: every file
+    gets a derived SURFACE; harness files are the exception, not the unit.
 - **D17 — No human-facing config format; the map is the test definition (user
   ruling).** Nobody reads test artifacts — humans use the CLI/UX, LLMs are
   mediated by schemas and errors — so file ergonomics is NOT a design input.
@@ -1061,6 +1164,15 @@ executed live, diffed on failure):
   depend on resolving this. Likely shape: declared models at bus/wire
   boundaries (event-type contract + emitter/subscriber registration as
   declarations). Must be designed before the analyzer epic is carved.
+- **Q9 — Parallel-worker isolation & world reset (raised in the D16
+  discussion, never ruled).** Full-stack e2e under parallel runners needs
+  per-worker isolation (ports, store namespaces/databases, tmp dirs) and a
+  fast, reliable reset-between-tests strategy per store tech (truncate vs
+  re-provision vs snapshot) — "each test owns its state" at full-stack scale.
+  Codex dodges via file-based tmp dirs; a postgres-backed repo can't. Likely
+  home: the D16 environment contract (per-repo config), but the strategy and
+  what Assayer ships vs demands are undesigned. Without it, parallel e2e is a
+  flake generator.
 - **Q4 — Schema holes: lint vs generated tests.** For db concerns (write path
   with no conflict handling, missing constraint handling), when is the hole a
   STATIC lint callout vs a GENERATED test case asserting runtime behavior?
@@ -1147,10 +1259,11 @@ executed live, diffed on failure):
      NOTHING; only consumer nodes delta.
   10. Identical condition text at two sites in one scope → cache-internal IDs
       still unique (disambiguation rule needed).
-- **E2E arrange model (needs confirmation):** with D5+D6, e2e arrange appears to
-  be: seed state at the real-but-controllable boundaries (db fixtures, mocked
-  external responses) + navigate to the route; component props then EMERGE from
-  the real app rather than being set directly. Unit arrange sets props directly.
-  Same logical case, two arrange expressions — schema must hold both.
+- **E2E arrange model (largely answered by D20; confirm the residue):** e2e
+  arrange = realize the semantic state through real channels (read-path
+  inversion → probe seeders → entry-API creation → builders) + navigate; props
+  EMERGE from the real app. Unit arrange = the SAME state realized as derived
+  mock-boundary feeds. One semantic state, two derived realizations — the
+  schema holds one state reference, not two arrange expressions.
 - (Router question RESOLVED by D7: pluggable seam, v1 = react-router + express
   + hono; only the non-static-routes manifest escape hatch remains tabled.)
