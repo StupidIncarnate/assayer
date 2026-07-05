@@ -26,14 +26,17 @@ All current thinking lives in `plan/`:
 - npm package installed per-repo; TypeScript projects only.
 - Owns and fully wraps its test runners (Jest for unit/integration, Playwright
   for e2e) — consumers never touch raw runner APIs.
-- Tests are declarative config structures, not `it()` blocks; one test file
-  drives multiple execution modes.
-- Coverage enforcement is rule-driven (ESLint-style architecture): a base rule
-  set plus pluggable per-tech packages, with build-error output written for LLM
-  consumption.
-- Generated tests are machine-owned and locked; humans and LLMs author only
-  harnesses, declared observables/requirements, and expectation values.
-- Review surfaces (model projections, semantic diffs, state/endpoint explorers)
-  let a human verify requirement-level changes without reading test files.
+- Tests are generated from execution maps derived off the implementation and
+  run by an interpreter through the wrapped runners — no test files are
+  authored or committed; unit/integration/e2e modes derive from one analysis.
+- Coverage enforcement is rule-driven (ESLint-style architecture): discipline
+  and per-tech plugin packages carry all rules (core ships the engine, no
+  opinions), with build-error output written for LLM consumption.
+- Generated tests are machine-owned, cache-resident, and locked; humans and
+  LLMs author only harnesses (including declarative custom cases), named state
+  fixtures, and config.
+- Review surfaces (flow-diagram deltas, ref-to-ref semantic diffs, model
+  projections, state/endpoint explorers) let a human verify high-level changes
+  without reading tests or code.
 
 None of the above exists as code yet.

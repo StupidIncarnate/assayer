@@ -8,8 +8,9 @@
 > Living document. Classifies concrete implementation examples into three buckets:
 >
 > - **A — Implicit:** always tested because of how the code is written. These become
->   Assayer's BAKED-IN base rules (trigger syntax → generated cases). This bucket is
->   the base rule set backlog.
+>   the DISCIPLINE PLUGINS' rule content (trigger syntax → generated cases —
+>   `@assayer/web`, `@assayer/cli`, per-tech probes; core ships no opinions, R17).
+>   This bucket is the plugin rule-set backlog.
 > - **B — User-expected:** nothing functionally wrong, but wrong to the user. Cannot
 >   be derived from code; must be a declared observable. Each entry names the
 >   TOOLING CONCEPT that would prove to a human their requirement is met.
@@ -43,8 +44,8 @@ Format: `trigger (what the analyzer sees)` → `generated expectation(s)`
   enforces explicit formatting at the implementation (no raw Date-to-string). Auto
   cases: formatted value renders (unit + e2e in browser); e2e timezone-variation
   cases where the format is timezone-sensitive. The format choice itself is spec
-  (statics) — human approves once via the review surface, not by repeated
-  eyeballing ("do I like the format").
+  (statics) — format changes surface as ref-diff deltas the human reviews once
+  per change, not by repeated eyeballing ("do I like the format").
   - OPEN QUESTION (tracked in requirements): the boundary between testing OUR
     formatting logic vs the browser/Intl platform behavior; timezone matrix scope.
 - **Conditional render** `{isOpen && <Modal/>}`, ternaries → case per side: renders
@@ -440,8 +441,8 @@ Format: example → why tests pass while the user is unhappy → observable decl
 - **Eyelid visibly closes (amalga; full record: `plan/case-studies.md` §2)** →
   SDF math correct, discretization destroyed the signal → observable `{layer: rendered-geometry, control: lid-handle, effect:
   socket-region geometry changes; occlusion increases}` → three.js plugin
-  perturbation test + state-render deck for human approval; approved renders become
-  baselines.
+  perturbation test + state-render deck for human perceptual review (runtime
+  ref-to-ref side-by-side captures — no committed baselines, per D15/R12).
   - User confirmation: the catching declaration is the HARNESS BINDING — "data
     point x = handle `#data-test`" declared in the harness ties the control to
     its test handle; the perturbation obligation then has a concrete grip.
@@ -499,7 +500,9 @@ Format: example → why tests pass while the user is unhappy → observable decl
 ### The B-review loop (what the human actually inspects)
 1. Observable ledger: every B entry above is a row — verified/unverified/orphaned.
 2. Semantic diff: additions/changes/WEAKENING of any observable is a headline.
-3. Render decks: perceptual rows carry a deck link; approval = baseline.
+3. Render decks: perceptual rows carry a deck link; the visual diff runs both
+   refs and shows captures side-by-side — the human's eyes at diff time are
+   the check; nothing is blessed or stored.
 4. Green gate + empty semantic diff = nothing to look at.
 
 ## Bucket C — Repo-specific (custom declaration mechanisms)

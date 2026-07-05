@@ -8,8 +8,9 @@ ESLint-style architecture), diffs that against what IS tested, and fails like a
 build error. It owns and fully wraps its runners (Jest = unit/integration,
 Playwright = e2e); tests are declarative config structures, not `it()` blocks.
 The key move: intelligence lives in deterministic AST/type-graph analysis, not
-in the LLM — the LLM only fills pre-structured expectation values and authors
-declared intent (observables), and build errors tell it exactly what to fix.
+in the LLM — expectations are DERIVED (from inputs, source literals, declared
+models, consumer demands); the LLM authors only harnesses, named states, and
+config, and build errors tell it exactly what to fix.
 
 **Status: planning. No implementation exists.** Source of truth is `plan/`:
 `requirements.md` (principles/requirements/decisions/glossary/artifact
@@ -44,15 +45,30 @@ timeout knobs must never exist); (3) last resort, a new WRAPPED capability.
 Every leaked raw control is an LLM escape hatch and blocks runner swapping.
 
 **Determinism is load-bearing everywhere.** Same code ⇒ same derived artifacts,
-same hashes, byte-identical serialization. Baselines (approval records), the
-content-hash cache, semantic diffs, and CI cold-start all depend on it. No
-timestamps, randomness, or map-ordering nondeterminism in any derived output.
+same hashes, byte-identical serialization. The content-hash cache, ref-to-ref
+semantic diffs (any ref's maps are recomputed from git blobs on demand — never
+persisted), and CI cold-start all depend on it. No timestamps, randomness, or
+map-ordering nondeterminism in any derived output.
 
 **Ownership split (D12) — never blur it.** Machine-owned: assembled test files
 in `.assayer/cache/` (never committed, never colocated, no manual edits, NO
-representable skip). Authored + committed: harnesses, observables/scenarios,
-expectation fills (keyed by coverage ID), waivers, config/policies, baseline
-records, repo-local plugins. Everything in `.assayer/` commits EXCEPT `cache/`.
+representable skip). Authored + committed: harnesses (the SINGLE authored
+home: surface, readiness, correlations, state wiring, AND declarations as
+config-shaped custom cases — closed vocabulary, never raw asserts), named
+states (`assayer/states/` — hand-authored fixtures for when auto-generated
+data isn't good enough; harnesses wire them in by name), config/policies,
+repo-local plugins. No blessed/baseline images: visual diffs RUN both refs and
+capture side-by-side at diff time. **No per-site waivers exist** —
+the only don't-care is a GLOBAL rule/obligation toggle in config (per-site
+suppression is an LLM abuse vector; if you don't care somewhere, you care
+nowhere). Everything in
+`.assayer/` commits EXCEPT `cache/`. **Map-node IDs NEVER key committed
+artifacts** — they are cache-internal; committed things key on user-chosen
+names + file paths. Expectations are DERIVED (inputs, source literals, models,
+consumer demands) — there is no authored "answers" artifact. **There is NO approval workflow:** the semantic diff is a ref-to-ref
+review view (local default: merge-base with the default branch; pipeline:
+explicit refs); the only gate is whether checks pass. Humans act on diffs by
+directing the LLM, never by blessing records.
 
 **Obligations key off consumption, never declaration.** Chain-follow to
 consumption sites; declared-but-unconsumed surface is a lint error, not a test.
@@ -100,5 +116,7 @@ assert outputs (generated skeletons, EXACT error text, coverage reports).
 - Enforcing an invariant via comment or doc instead of a rule.
 - Per-test/per-harness tuning knobs (timeouts, retries) instead of global
   config.
+- Per-site suppressions/waivers of any kind — don't-cares are global rule
+  config only.
 - Testing tier-2 derivable logic through full-browser e2e (floor-ordering
   lesson: model-derived matrices run at unit speed; ONE e2e proves rendering).

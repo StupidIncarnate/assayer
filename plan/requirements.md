@@ -17,12 +17,15 @@
 1. **Q3 (v1-blocking):** non-lexical data-flow edges (event bus, WS, stores,
    context) must be DESIGNED before the analyzer epic is carved — the target
    repos' core flows cross these hops.
-2. **Config test format (ACTIVE DISCUSSION below):** gates the format epic and
-   D3-style scaffolding; the artifact inventory (below) constrains it but the
-   schema itself is undrafted.
+2. **Interface contract (ACTIVE DISCUSSION below; reshaped by D17):** the
+   authored-data persistence schemas + harness authoring API + runtime
+   contract (interpreter/reporter). Gates the format epic; the artifact
+   inventory constrains it but the draft doesn't exist yet. (Formerly "config
+   test format" — D17 killed human-facing config files.)
 3. **Coverage-ID scheme (ACTIVE DISCUSSION below):** "coverage ID" is used as
-   settled vocabulary throughout — it is NOT yet designed. Gates regeneration
-   (D10), the lock (D12), baselines (R12), and C1's cross-file presumption.
+   settled vocabulary throughout — it is NOT yet designed. Cache-internal only;
+   gates case addressing, diff-view correspondence quality (D18), and C1's
+   cross-file presumption.
 4. **Q7 (below):** R12 lists many product surfaces + D14's desktop app with no
    v1 partition — scope must be ruled before the tooling epic.
 5. **Q4 / db section:** the database obligation family is TO-FILL; a db-probe
@@ -36,10 +39,16 @@
   numbers as graceful-degradation levels: semantics declared as data get tier-2
   generation; undeclared semantics fall back to tier-1 branch skeletons. Same
   axis, both senses.
-- **Observable (D9/R11; "tier-3 observable" = "D9 observable" = same thing):** a
-  declared requirement artifact — "state S + trigger T ⇒ effects E" — carrying a
-  LAYER (computed-value, dom, request, rendered-geometry, visual, perf, copy…).
-  The layer list is OPEN (plugins add layers); the core set ships with Assayer.
+- **Observable (D9/R11; "tier-3 observable" = "declaration" = same thing):** a
+  declared requirement — "state S + trigger T ⇒ effects E" — carrying a LAYER
+  (computed-value, dom, request, rendered-geometry, visual, perf, copy…). The
+  layer list is OPEN — layers arrive with the plugins that own them (web brings
+  dom/request; three.js brings rendered-geometry), consistent with "core ships
+  the engine, not opinions" (R17).
+  **Authored as a config-shaped custom case INSIDE the relevant harness**
+  (closed vocabulary against the surface — never raw asserts), not as a
+  separate data file. Exists only where no code anchor supplies the truth
+  (D18).
 - **Harness (a.k.a. driver — ONE artifact, two historical names):** the per-file
   authored companion (D4 merged dungeonmaster's proxy+harness). It exposes the
   **surface**: **interactions** (do) + **observations** (read) per D8, carries
@@ -57,12 +66,20 @@
   ABSTRACT vocabulary; per-tech ADAPTERS supply detection (analyzer side) and
   observation/instrumentation (runtime side). Instances: D7 routers, R11
   observation vocabularies, R14 form vocabularies, R15 effect probes.
-- **Coverage ID:** the stable identifier of a testable item that cases reference
-  via `covers`. THE SCHEME IS NOT YET DESIGNED (see Blockers #3) — every use in
-  this doc is a placeholder for that design.
-- **Waiver:** a committed declaration (with reason) that a specific generated
-  obligation/case (referenced by coverage ID) is a false positive or
-  intentionally unmet. Surfaces in the semantic diff. Schema TBD in format epic.
+- **Coverage ID / map-node ID:** the identifier of a testable item, INTERNAL TO
+  THE CACHE GENERATION it belongs to — used for case addressing, run results,
+  and diff computation, always regenerated with the maps. **NEVER a key in any
+  committed artifact** (user ruling: node IDs are unstable by design and
+  unreliable machine-to-machine). Committed artifacts key on user-chosen names
+  (states, declared cases) and file paths (harnesses). The ID grammar
+  still needs design (Blockers #3) but only for cache-internal addressing and
+  diff-correspondence quality.
+- **Waiver: DOES NOT EXIST per-site (user ruling).** The only "deliberately
+  unmet" mechanism is GLOBAL rule/obligation configuration — a kind is on, off,
+  or severity-adjusted for the whole repo (at most section-scoped like R14
+  policies). Rejected because caring is not site-local and per-site
+  suppression is an LLM abuse vector. Misfires are rule bugs or code smells,
+  never exemptions. Config changes headline in the semantic diff.
 - **Statics:** dungeonmaster's folder-type for immutable declared constants —
   the "no magic numbers" home. Assayer requires declared values (scales, delays,
   budgets) to live in analyzable constant declarations; the dungeonmaster folder
@@ -72,9 +89,10 @@
   point). Referenced as prior art for D2's bundled CLI and R21's
   `detail <runId>` pattern.
 - **Buckets A/B/C:** the expectation-catalog's classification — A: always tested
-  based on code (auto-derivable; ships as base rules), B: user-expected (right
-  code, wrong for the user — needs declared observables), C: repo-specific
-  (needs custom declarations/plugins). Defined fully in the catalog preamble.
+  based on code (auto-derivable; ships inside discipline plugins per R17), B:
+  user-expected (right code, wrong for the user — the human's diagram-review
+  territory, plus rare harness-declared cases), C: repo-specific (custom
+  declarations/plugins). Defined fully in the catalog preamble.
 - **Verified pair / demanded pair / registry (R19):** verified = (input ⇒
   output state + effects) proven by a downstream layer's own suite; demanded =
   a pair an upstream consumer declares it relies on; registry = the reconciled
@@ -104,29 +122,106 @@
   (endpoint → responder), #3 package function entries (exported fn with
   effects).
 
-## Artifact inventory (who writes it, does it commit — resolves D10/D12 interplay)
+## Artifact inventory — what commits to git vs what lives in cache (line-by-line)
 
-| Artifact | Authored by | Committed | Home |
-|---|---|---|---|
-| Harness (surface, bindings, custom tests) | human/LLM | yes | next to source file |
-| Observables / scenarios (tier 3) | human/LLM (scaffolded by Assayer) | yes | TBD format epic (colocated or `.assayer/declarations/`) |
-| **Expectation fills** (tier-1 expected values, keyed by coverage ID) | LLM/human | **yes** | committed companion artifact — location TBD format epic |
-| Waivers | LLM/human with reason | yes | with declarations |
-| Config, R14 policies, D5 mock policy | human/LLM | yes | `.assayer/config` |
-| Baseline approval records | human approval act | yes | `.assayer/baseline/` (sharded per artifact) |
-| Repo-local plugins | human/LLM | yes | `.assayer/plugins/` |
-| **Assembled test files** (skeletons ⊕ fills) | machine | **no** | `.assayer/cache/` |
-| Registry (pairs + verification) | machine, run-scoped | no | `.assayer/cache/` |
-| Graphs (C2), projections, run artifacts | machine | no | `.assayer/cache/` |
+**The rule generating this list:** git holds SOURCE and AUTHORED INTENT (things
+the machine cannot rebuild); cache holds everything DERIVABLE (things the
+machine rebuilds deterministically from git content). Nothing else exists.
+No artifact is a protection mechanism (D18) — committed means "survives machine
+loss and travels with branches," nothing more.
 
-**The D10/D12 resolution stated plainly:** D10's "author-owned zones" are the
-committed EXPECTATION-FILL artifacts (and tier-3 declarations); D12's locked
-"generated test files" are the ASSEMBLED cache artifacts (structure from
-implementation ⊕ fills from the committed artifacts). The LLM fills expected
-values in the committed companion, never in the cache; regeneration re-assembles;
-orphaned fills (coverage ID gone) error per D10. D3 is hereby ABSORBED: "should
-Assayer scaffold" is answered — skeletons and fill-holes are always generated
-(D12); what remained of D3 was only where fills live, answered above.
+### Committed to git
+
+1. **The repo's own source code** — the root input. Maps derive from it at any
+   ref; it is the spec (D18).
+2. **Harness files** (`*.harness.ts`, colocated with source) — the ONLY
+   authored Assayer artifact, and the single home for ALL authored test
+   content. Contains: the surface (interactions = how to do things;
+   observations = how to read things — ALL testid/selector/scene-hook
+   knowledge lives here and nowhere else), semantic readiness predicates,
+   correlation bindings (control ↔ affected region), named-state wiring, and
+   **declarations: custom test cases expressed as CONFIG** — declarative
+   closed-vocabulary case structures (act/assert against the surface), NEVER
+   raw test asserts. This is where the config format lives (user ruling):
+   the no-code-anchor invariants (live/replay ordering, transient-flash) are
+   authored here as config cases, not in separate data files.
+3. **States** (`assayer/states/` folder) — named, hand-authored state fixtures
+   for when C3's auto-generated data isn't good enough (a user record:
+   auto-generatable from contracts; a three.js model JSON: hand-authored).
+   Keyed by USER-CHOSEN NAMES — never by map-node IDs (node IDs are unstable
+   by design and NEVER key committed artifacts; they live cache-internal
+   only). Harnesses import states by name to override state loading for
+   specific tests or globally; the UX shows which states each test uses and
+   what exists globally so gaps are visible. Expectations themselves are NOT
+   authored — they derive from inputs, source literals, declared models, and
+   consumer demands. There is no committed "answers/fills" artifact.
+4. *(Declarations are not a separate artifact — they live in harnesses as
+   config-shaped custom cases; see item 2. They exist ONLY where no code
+   anchor can supply the truth; rare by design (D18); never ceremonial.)*
+5. **Global don't-cares (rule/obligation config — there are NO per-site
+   waivers, user ruling).** "If you don't care about delay-on-key in one
+   place, you care nowhere" — don't-cares are GLOBAL toggles/severities on a
+   rule or obligation KIND, living in config (item 6), at most scoped per
+   app section like R14 policies. Per-site/per-test waivers were rejected
+   outright: LLMs would overuse them (the `eslint-disable-next-line` abuse
+   pattern). A rule that misfires on one site is a rule bug (ratchet a fix)
+   or evidence the code should change — never a site exemption.
+6. **`.assayer/config`** — environment contract (processes + launch + readiness,
+   D16), plugin registrations WITH their required connection configs (mongo
+   port/user/password — unconfigured plugin = invisible), D5 mock policy
+   defaults + scoped overrides, R14 interaction policies, R2 rule
+   selections/severities ("I care about ternaries, not static text").
+7. *(Expected-render/blessed-image artifacts DO NOT EXIST — user ruling.
+   Harnesses expose a CAPTURE capability (screenshot / scene render) as an
+   observation kind; the visual diff RUNS both refs — boots source and target,
+   captures each, shows the two images side by side. Because the diff range is
+   arbitrary (any ref vs any ref), the comparison target is always computed at
+   diff time from the target ref, never stored. Renders are cache/run
+   artifacts like everything derived.)*
+8. **Repo-local plugins** (`.assayer/plugins/`) — custom probes/rules/adapters
+   the LLM authored for this repo (R15 contract, not published as packages).
+9. **The `.gitignore` entry** for `.assayer/cache/` (written by init).
+
+### Generated into `.assayer/cache/` (gitignored, disposable, rebuilt on demand)
+
+1. **Maps** — the execution-roadmap graphs per source file (testable nodes per
+   rule config) plus the repo-level C2 graphs (type/contract "mind map";
+   bidirectional data-flow graph). Keyed by content hash; a map for ANY git
+   ref recomputes from that ref's blobs (never persisted historically).
+2. **Assembled test artifacts** — the runnable output: trivial Jest/Playwright
+   shim files (exist only so runners have discoverable entries) + assembled
+   case sets (map skeleton ⊕ derived expectations ⊕ C3 data or named states
+   where the harness wires them) that the D1 interpreter executes. Locked: no manual edits, no skips (D12);
+   being cache-resident, they can never merge-conflict and never tempt the
+   LLM.
+3. **The registry (R19)** — verified pairs + demanded pairs + their
+   reconciliation, run-scoped: pair definitions derive statically; verified
+   status is produced by dependency-ordered execution within the run.
+4. **Run artifacts** — per-runId results, effect-chain traces (R21), captured
+   boundary data (http headers/request/response, db rows, redis keys, mock
+   captures) powering `assayer detail <runId>` and failure chain-diffs.
+5. **Projections** — rendered flow diagrams, model diagrams, ledger views,
+   ref-to-ref semantic diffs. Pure views over maps; regenerated per request.
+6. **Derived state presets (C3)** — salient state matrices per entry, feeding
+   explorer state lists, needed-state gap reports, and registry pair
+   inventories. Hand-authored states (committed, named) OVERRIDE these where
+   wired in the harness.
+
+**Pipeline note (D15):** CI may persist/restore `cache/` between runs purely as
+an accelerator; a cold cache reproduces byte-identical artifacts (D13
+determinism), so cache loss is never a correctness event.
+
+**The D10/D12 resolution restated (supersedes the "fills" framing):** the
+author-owned zone is STATES + declarations + harness wiring — all keyed by
+user-chosen names and file paths, never by map-node IDs. The machine-owned zone
+is everything assembled in cache: structure from implementation, arrange data
+from C3 (or named states where the harness wires them), expected values derived
+from inputs/source literals/models/consumer demands. Node IDs exist only inside
+the cache generation they belong to (case addressing, run results, diff
+computation) — regenerated together, never persisted, never a git key. D3
+remains ABSORBED: generation always produces the cases; the only authored
+inputs are states (when auto-data is insufficient), declarations (when no code
+anchor exists), and harness code.
 
 ## Vision
 
@@ -134,11 +229,13 @@ Assayer is an npm package installed into TypeScript repos (like ESLint) that:
 
 1. Statically identifies every piece of syntax that **should** be tested, according to
    configurable rules.
-2. Compares that against what the file's tests **actually** cover, and fails like a
-   build error when something testable is uncovered — catching new code written after
-   the tests were.
-3. Defines a **config-structure test format** (not traditional `it()` blocks) so a
-   single test file drives both Jest (unit) and Playwright (e2e) runners.
+2. Generates and executes the tests itself from derived execution maps, failing
+   like a build error when something testable is uncovered or broken — catching
+   new code written after tests existed.
+3. Runs everything through fully wrapped runners (Jest unit/integration,
+   Playwright e2e) driven by the maps — **no test files are authored or
+   committed**; humans author only harnesses, named states, and config
+   (D17/D18).
 
 ## Design Principles
 
@@ -213,15 +310,15 @@ requirement stayed unmet).
 ### R2 — Rule-based testable-syntax detection
 - Reads source code and identifies all syntax that needs testing.
 - Driven by a repo-level config of "I care about this, not this" — ESLint-model:
-  a base rule set ships with Assayer, and the architecture allows new rules to be
-  added as separate packages later.
-- **Now:** base rule set + the groundwork/plugin seams for configurability.
+  rules ship as DISCIPLINE plugins (`@assayer/web`, `@assayer/cli` — see R17;
+  core ships the engine, not opinions), with new rules addable as packages.
+- **Now:** the discipline plugins' initial rule sets + the plugin seams.
 - **Later:** full third-party rule/package extensibility (not needed for v1, but the
   architecture must not preclude it).
 
 ### R3 — Coverage enforcement as a build-style error
-- For each source file, look at its test file and determine what is covered versus
-  what R2 says should be covered.
+- For each source file, compare what its map says should be covered (R2 rules)
+  against what the assembled cases + harness-declared cases actually cover.
 - If something that should be covered isn't, **error like a build error**.
 - Purpose: catch new/changed code after tests were originally written. Enforcement is
   continuous, not one-time generation.
@@ -229,13 +326,14 @@ requirement stayed unmet).
 ### R4 — TypeScript only
 No plans for plain JS or other languages.
 
-### R5 — Config-structure test format
-- Test cases are declarative config structures, not traditional Jest `it()` commands.
-- One test file serves as the source of truth for **both** execution systems:
-  - "Unit" tests executed via Jest
-  - E2E tests executed via Playwright
-- The format must support per-system instructions within a single test case, since
-  the same logical test may need different mechanics per runner.
+### R5 — Declarative test cases (REFRAMED by D17: the map is the test definition)
+- Test cases are declarative structures interpreted at runtime — never
+  traditional Jest `it()` code, never authored/committed test files.
+- One DERIVATION serves all execution systems (Jest unit/integration,
+  Playwright e2e); mode assignment per R6.
+- The only authored case form is the config-shaped custom case inside a
+  harness (closed vocabulary against the surface); it must support per-mode
+  instructions where one logical case needs different mechanics per runner.
 
 ### R6 — Per-test execution-mode classification
 - Each test case is classified as: unit-only, e2e-only, or both.
@@ -276,19 +374,19 @@ pipeline, same build-error enforcement. LLMs must not need to REMEMBER security 
 perf cases; Assayer demands them.
 
 ### R9 — Test provenance: three tiers
-1. **Syntax-derived** — analyzer generates the case skeletons deterministically
-   (value renders, conditional renders, branches). LLM fills expected values only,
-   inside the constrained assertion vocabulary.
+1. **Syntax-derived** — analyzer generates the cases deterministically (value
+   renders, conditional renders, branches), with expectations DERIVED from
+   inputs/source literals and arrange data from C3 — overridable by named
+   states wired in the harness. Nothing is hand-filled.
 2. **Model-derived** — when high-level behavior is declared as data (state
    machines / transition maps, allowlists, route configs, Zod contracts), Assayer
    derives obligations from the model: every edge tested, every non-edge rejected,
    every gate's missing-content case covered.
-3. **Intent scenarios** — workflow tests encoding requirements and regressions
-   ("state S + trigger T ⇒ effects E"). Not derivable. Guardrailed structurally
-   (see `case-studies.md` §1/§3 for the incidents behind this): scenario configs
-   with schema-enforced completeness rules, linked to declared requirement
-   artifacts (observables), with expectation-weakening surfaced as requirement
-   diffs.
+3. **Intent scenarios** — workflow cases encoding truths no code anchor can
+   supply ("state S + trigger T ⇒ effects E"; see `case-studies.md` §1/§3).
+   Not derivable. Authored as CONFIG-SHAPED CUSTOM CASES inside harnesses
+   (D17/D18) with schema-enforced completeness rules; rare by design; any
+   weakening/removal surfaces in the ref-diff for the human's diagram review.
 
 ### R10 — Canonical semantic models (single source of truth, enforced)
 Requirements like "only terminal statuses can be deleted" are only testable if their
@@ -341,54 +439,52 @@ THE HUMAN that make code/test reading unnecessary. Segmentation rule: **humans
 review declarations and their diffs; machines review conformance.**
 - **Model projections:** deterministic renderings of declared models (state
   diagram from transition map, flag tables from Record<Union, Meta>) — derived
-  from the declaration, so they're truth, not LLM claims. Human approves a
-  projection; semantic changes to the model error until re-approved. (Replaces
-  the "redraw the map across 5 sessions" loop with: review one diagram, once.)
+  from the declaration, so they're truth, not LLM claims. Model changes show up
+  in the ref-to-ref semantic diff as projection diffs; the human reviews the
+  diagram delta and directs the LLM if it's wrong. (Replaces the "redraw the
+  map across 5 sessions" loop with: review one diagram delta per change.)
 - **Observable ledger:** every requirement with status — verified (layer, cases),
   unverified, orphaned.
 - **Semantic diff report:** per change, in requirement-space only — model edges
   added/removed, observables added/changed/WEAKENED (headline, never buried),
   coverage delta, obligations delta, **new/removed boundaries per flow** ("flow
   save-quest now writes to redis" — catches wrong-tech choices no test can),
-  and waivers added. Empty semantic diff + green gate = nothing to review.
-- **State-render decks (plugin capability):** render declared states for human
-  perceptual comparison (three.js: model + lid positions + camera presets).
-  Human approval converts a render into a baseline — P4-legal because the human
-  is the oracle; the tool captures the verdict. Subsequent regressions diff
-  mechanically against approved baselines.
-- **Semantic-diff mechanics (baseline lockfile):** the diff is NOT a git text
-  diff. Assayer derives the requirement-space model from the working tree and
-  graph-diffs it against the **last human-approved baseline**, stored as a
-  committed lockfile artifact (deterministic serialization; git carries it,
-  the UI renders it). Anchoring to approval beats git-ref diffing: N commits
-  that swap tech and swap it back still reconcile against what the human last
-  signed off. Approving updates the lockfile — a visible, committed act.
-  - **UI: only-changed queue** — default view lists ONLY artifacts whose
-    subgraph changed (flows, models, boundaries); unchanged diagrams never
-    appear. Each renders as a CHANGE DIFF: added nodes/edges marked new (a
-    redis boundary appears green with a callout), removals marked, changed
-    attributes highlighted, before/after toggle to pinpoint the exact delta.
-  - **Gate:** unapproved baseline delta = build error ("unapproved semantic
-    change: flow save-quest: boundary added redis") — green is impossible
-    without the change passing through the human's queue.
-  - **Concurrency & merge semantics (sharded, content-addressed records):** the
-    baseline is one small file PER ARTIFACT (`.assayer/baseline/flows/<id>`,
-    `/models/<id>`), each holding the approved subgraph's content hash +
-    author/when. Consequences:
-    - Unrelated PRs touch disjoint records → conflict-free merges.
-    - Same-artifact approvals on two branches → a git conflict that is CORRECT
-      (two humans approved different versions of one promise);
-      `assayer approve --resolve` re-derives the merged state for fresh
-      approval.
-    - Merging main in brings main's records with main's code → content hashes
-      match → approved changes NEVER reappear in the branch queue.
-    - Two individually-approved changes that INTERACT in the same flow derive
-      a composite matching neither record → surfaces as unapproved showing the
-      interaction delta: semantic merge conflicts git can't see, the key
-      review under multi-agent parallel branches.
-    - Preconditions (load-bearing): deterministic derivation/serialization
-      (same code ⇒ same hash) and stable artifact IDs (entry points /
-      declaration symbols, same philosophy as coverage IDs).
+  and global don't-care config changes (a rule turned off is a headline).
+  Empty semantic diff + green checks = nothing to review.
+- **State-render decks (plugin capability) — runtime-diffed, never committed:**
+  harnesses expose CAPTURE (screenshot / scene render) as an observation; decks
+  render declared/named states for human perceptual review. The visual diff is
+  a RUNTIME ref-to-ref diff: boot the app at source ref and target ref
+  (worktree + D16 environment), capture the same states at each, show the
+  images side by side. On-demand only (booting two refs is expensive);
+  correctness depends on render determinism per state — tolerance comparators
+  (R11) absorb GPU-level noise. No blessed/baseline images exist anywhere;
+  the human's eyes on the side-by-side ARE the perceptual check, same
+  attention channel as diagram deltas (D18).
+- **Semantic-diff mechanics (ref-to-ref comparison — NO approval machinery,
+  user ruling):** the diff is NOT a git text diff and NOT a gate. Assayer
+  derives the requirement-space model at two git refs (determinism: any ref's
+  map recomputes on demand from its blobs) and graph-diffs them. **There is no
+  "approve" action anywhere** — if the human dislikes something in the diff,
+  they direct the LLM to change the code. The ONLY enforcement is: do the
+  tests/coverage/lint checks pass on the compared state.
+  - **Ref resolution:** local/LLM runs default to comparing against the
+    MERGE-BASE with the default branch (what this branch branched off);
+    pipeline runs pass refs explicitly; ON the default branch there is no
+    implicit comparison — but the UI/CLI supports arbitrary "compare ref A vs
+    ref B" (webstorm/github-style), e.g. reviewing a week of main.
+  - **UI: only-changed view** — lists ONLY artifacts whose subgraph changed
+    between the two refs; each renders as a CHANGE DIFF (added nodes/edges
+    marked — a redis boundary appears with a callout; removals marked;
+    before/after toggle). A wrong-tech swap is caught by the human READING the
+    PR's semantic-diff report, not by a block.
+  - **Branch isolation is free:** the committed authored surface (harnesses,
+    named states, config) travels with each branch, and diffs anchor to
+    merge-base — so a branch is always compared against what it branched
+    from, never a sibling. Two branches' INTERACTING changes surface
+    naturally in the post-merge state's diff vs its merge-base.
+  - Preconditions (load-bearing): deterministic derivation/serialization and
+    stable artifact IDs (same philosophy as coverage IDs).
 - **Flow projections:** derived diagrams of scenario chains — "test ensures X then
   Y happens" as an event/causality graph, generated from scenario configs (and
   handler effect enumeration), so the human spot-checks the claimed causality
@@ -441,9 +537,10 @@ review declarations and their diffs; machines review conformance.**
   R11 layers).
 
 ### R13 — Companion implementation-side lint layer
-Assayer ships a bundled lint ruleset (its own rules + curated third-party rules)
+Assayer's discipline plugins (R17) carry lint rules (own + curated third-party)
 enforcing testability preconditions on IMPLEMENTATION code — constraints that make
-the generated tests meaningful and the failure modes representable:
+the generated tests meaningful and the failure modes representable (installing
+the discipline plugin brings its lint family; every rule toggleable):
 - Leaked-render family: nullable values in JSX require explicit `??` fallback /
   else render (blank, `"null"`/`"undefined"`, and `{count && ...}` → `0` leaks).
 - Date/format family: no raw Date-to-string in render paths; formatting must be
@@ -542,6 +639,14 @@ SEPARATE published packages (`@assayer/probe-postgres`, `@assayer/form-rhf`,
 depends on any consumer tech. Core owns: analyzer, config schema, runners
 (Jest/Playwright per R1), rule engine, review surfaces, and the R15 plugin
 contract the packages implement.
+- **Even the "base rule set" ships as DISCIPLINE plugins (user ruling):**
+  `@assayer/web` (leaked-render, forms, routes, DOM obligations), `@assayer/cli`
+  (stdout/exit-code/args obligations), etc. — each declares the common tests of
+  its discipline, every obligation kind individually turn-offable. **Installing
+  a plugin IS the implicit declaration of what you care about**; the global
+  don't-cares (see artifact inventory) are per-obligation toggles WITHIN
+  installed plugins ("mongo: pk checks off"). Core ships the engine, not
+  opinions — all opinions arrive via plugins and are config-toggleable.
 - **`assayer init` (D2):** reads package.json(s), detects the repo's tech, and
   auto-installs + wires the matching plugin packages into Assayer config. Manual
   plugin assembly is the escape hatch, not the onboarding path.
@@ -599,8 +704,9 @@ function entries — D7). Each layer's OWN e2e suite verifies its entries as
 
 ### R20 — `assayer init` spec (accumulating tracked list)
 Everything install/onboarding does, consolidated (grows as decisions land):
-1. **Home dir:** create `.assayer/` (committed: config, baseline/, plugins/,
-   declarations) + `.assayer/cache/` with the .gitignore entry (D13 layout).
+1. **Home dir:** create `.assayer/` (committed: config, plugins/) +
+   `assayer/states/` + `.assayer/cache/` with the .gitignore entry (D13
+   layout).
 2. **Config file:** `.assayer/config` — scopes, mock policy defaults, R14
    policies, plugin registrations.
 3. **Tech detection:** scan package.json(s), install + wire matching plugin
@@ -613,9 +719,11 @@ Everything install/onboarding does, consolidated (grows as decisions land):
    what to fix). The hook content ships with the package and versions with it,
    same guarantee as R18.
 5. **Optional git warmers:** husky post-merge/post-checkout cache warm +
-   surface the unapproved queue (D13) — offered, not required.
-6. **Baseline init:** derive the initial model, present it as the first
-   approval queue (nothing is pre-approved silently).
+   surface the fresh semantic-diff view (D13) — offered, not required.
+6. **Initial derivation:** build the repo's first maps/graphs and present the
+   derived model (projections, coverage report) as onboarding output — the
+   human's first look at what Assayer sees. No approval step exists; gaps
+   surface as ordinary coverage errors.
 
 ### R21 — Flow-anchored execution & step-pinpointed diagnostics
 Scenario tests EXECUTE as the flow graph (user's unification: the runner walks
@@ -663,6 +771,8 @@ executed live, diffed on failure):
   Plus `init` (see R17): scans the repo's package.json(s), detects the tech in
   play (pg/mongo/prisma, form libs, routers), and installs + configures the
   matching Assayer plugin packages — nobody assembles the plugin set by hand.
+  Plus `smoketest` (D16): boots the declared environment and verifies every
+  process readiness check and every configured plugin's connectivity.
 - **D3 — Scaffolding: ABSORBED by D12 + artifact inventory.** (Historical entry;
   originally "tabled, leaning yes.") Resolution: skeletons and fill-holes are
   always generated (D12); tier-2 fills derive from models; tier-1/3 fills are
@@ -701,56 +811,146 @@ executed live, diffed on failure):
   click, type, submit) and **observations** (things a test reads — text, presence,
   emitted calls). Together: the driver's **surface**. Replaces the earlier "op"
   shorthand.
-- **D9 — Assayer owns the observable/requirement format.** Forced by P3: since no
-  external framework can be assumed, the tier-3 requirement artifact (observables:
-  "state S + trigger T ⇒ effects E") is a first-class Assayer format. External
-  systems (e.g. dungeonmaster quests) map INTO it via the pluggable seam.
+- **D9 — Assayer owns the declaration schema.** Forced by P3: since no external
+  framework can be assumed, the declared-case form ("state S + trigger T ⇒
+  effects E" — authored as config-shaped custom cases inside harnesses per
+  D17/D18) is Assayer's own schema. External systems (e.g. dungeonmaster
+  quests) map INTO it via the pluggable seam.
 - **D11 — Timer compression in test runtimes.** Because delays/timeouts must live
   in statics (no magic numbers), the Assayer runners auto-inject environment
   overrides for declared time values — a 60s inactivity timeout runs as
   milliseconds under test. Tests never wait wall-clock for declared delays; the
   runner provides expected-timeout handholding. Applies to e2e (env injection)
   and unit (fake timers) alike; another payoff of R10's declare-as-data pressure.
-- **D12 — Tests are locked and generated; harness + observables are the authored
-  surface (RESOLVES Q2).** Every file gets a harness (authored; may be
+- **D12 — Tests are locked and generated; harness/states/config are the
+  authored surface (RESOLVES Q2).** Every file gets a harness (authored; may be
   empty/default for pure files) and a generated test file — **generated into
   `.assayer/cache/`, NOT colocated with source and NOT committed (D14)**: the
-  committed surface is harness + observables/scenarios + custom tests + waivers
-  + baselines; generated cases rebuild deterministically from those plus the
-  implementation. Manual changes or additions to generated test files are build
+  committed surface is harness (incl. its config-declared custom cases) +
+  named states + config; generated cases rebuild deterministically from those
+  plus the implementation. Manual changes or additions to generated test files are build
   errors (and being cache-resident, they're also out of the LLM's line of
   temptation and can never merge-conflict). Rules that make the lock
   safe:
-  - Expectations are always sourced from something OTHER than the file being
-    regenerated (consumer code, declared models, observables, demanded pairs,
-    prior locked values via D10 orphan flow) — same-file regeneration ratifies
-    same-file bugs otherwise. Implicit breakage is caught exactly when the
-    expectation's source and the change live in different places.
+  - Expectations are always sourced from something OTHER than pure execution
+    of the changed code (consumer code, declared models, source literals,
+    named states, demanded pairs) — same-file regeneration ratifies same-file
+    bugs otherwise. Implicit breakage is caught exactly when the expectation's
+    source and the change live in different places; same-file intent changes
+    are the human's diagram-delta review (D18).
   - Leaf code with no in-repo consumers is the exposed class → tier-3
     observables + review surface are load-bearing there.
   - "Explicit" changes are safe because R10 forces the semantics into
     declarations whose diffs headline for human approval — generation itself
     cannot distinguish intent from accident.
-  - Carve-outs: tier-3 observables/scenarios are authored, never locked;
-    WAIVE-WITH-REASON declarations are the legal move against analyzer false
-    positives (surface in semantic diff); extra desired cases route to
-    observables or new rules (ratchet), never manual test edits.
+  - Carve-outs: declarations are authored, never locked; against analyzer
+    false positives the ONLY legal moves are global — turn the rule/obligation
+    kind off/down in config (headlines in the diff) or fix the rule (ratchet).
+    No per-site suppression exists. Extra desired cases route to declarations
+    or new rules, never manual test edits.
   - **Harness-declared custom tests (user addition):** for truly unique cases
     no generator can bake in (e.g. drag responsiveness measured through a
     pointer sequence), the HARNESS may declare custom tests — authored,
     isolated from generated files, therefore easy to review in isolation.
-    Constraints: config-vocabulary-first with measured escape hatches; must
-    link coverage IDs / observables so they appear in the ledger (an unlinked
-    custom test is invisible to enforcement and review).
+    Constraints: config-vocabulary-first with measured escape hatches; named
+    (user-chosen, stable) so they appear in the ledger and diffs — never
+    linked by machine IDs (cache-internal only).
   - Residual risk lives in the authored harness (an observation wrong the same
     way as the implementation co-signs the bug) → harness ops stay constrained
     to closed vocabulary / plugin primitives.
   - **No representable skip:** generated tests cannot be skipped; retiring a
-    flow/architecture must pass through a WAIVER or an orphaned observable —
-    both semantic-diff-visible. (Motivating find: a codex e2e suite sitting at
+    flow/architecture surfaces as map deltas + declaration removals + global
+    config changes in the ref-diff — all diagram-visible, never a silent
+    `.skip`. (Motivating find: a codex e2e suite sitting at
     `describe.skip` for a retired architecture, "re-enable once a harness
     exists" — silently unverified observables with nothing forcing the return.
     Case-studies §4.)
+- **D15 — Two operating modes; comparison is always ref-to-ref (user ruling).**
+  - **Local (LLM loop):** run anytime, committed or not; Assayer auto-resolves
+    the comparison origin as the merge-base with the default branch. On the
+    default branch itself: no implicit comparison; tests/coverage still run.
+  - **Pipeline (PR):** refs passed explicitly (base/head); the pipeline may
+    persist/restore `.assayer/cache/` between runs; no cache ⇒ full regen,
+    always correct (D13 determinism).
+  - **Ad-hoc:** UI/CLI accept arbitrary ref A vs ref B for historical review
+    ("what changed in main this week").
+  - Maps for any ref are recomputed from git blobs on demand (never
+    persisted); the cache retains per-content-hash entries, so multiple
+    refs' maps coexist naturally.
+  - **No approval workflow exists.** The semantic diff informs; tests enforce.
+- **D18 — The implementation is the spec; the DIAGRAM is the human's contract
+  (user ruling).** Derived-from-implementation is the default truth: code says
+  POST ⇒ map says POST ⇒ tests assert POST. Intent is protected by exactly one
+  mechanism: **the human reading high-level code-flow/testing-flow diagram
+  DELTAS** — not harnesses, not files, not committed "pins."
+  - **No committed artifact is a protection mechanism.** The LLM can remove or
+    rewrite ANY committed declaration with a plausible justification; a
+    removed declaration is just another diff line. Pretending commitment =
+    enforcement is self-deception. Declarations (observables, correlations)
+    exist where derivation needs them (no-code-anchor invariants like
+    live/replay ordering), never as safety devices.
+  - **The safety chain is:** (1) diagram delta review — the human evaluates
+    HIGH-LEVEL flow changes, deliberately low-information; (2) implicit drift
+    caught by tests whose expectation source is unchanged code elsewhere
+    (D12); (3) manual testing via the explorer as backstop; (4) fix-forward —
+    if all three miss (H-1 style), it ships and gets fixed when found.
+  - **Design consequence (product requirement):** diagram/diff
+    signal-to-noise is P1-grade core product — the review surface must stay
+    small, high-level, changes-only, drill-down on demand, because HUMAN
+    ATTENTION IS THE SCARCE RESOURCE the entire model budgets around. A noisy
+    diagram breaks the security model, not just the UX.
+  - No mandatory scenario/observable coverage floors; enforcement applies
+    only to what is declared, and declarations are as revisable as code.
+- **D17 — No human-facing config format; the map is the test definition (user
+  ruling).** Nobody reads test artifacts — humans use the CLI/UX, LLMs are
+  mediated by schemas and errors — so file ergonomics is NOT a design input.
+  Consequences:
+  - Authored persistence: named states (`assayer/states/`, data) and config
+    (incl. global don't-cares) — keyed by user-chosen names and file paths,
+    NEVER node IDs — plus the harness, which carries declarations as
+    config-shaped custom cases (closed vocabulary, no raw asserts). The UX is
+    the pretty rendering for all of it.
+  - The HARNESS is the only authored code artifact (it contains
+    implementations). Everything else is data.
+  - Runner integration: trivial generated shims in `.assayer/cache/` exist
+    only so Jest/Playwright have discoverable files; they hand off to the D1
+    interpreter (map + named states + harness, incl. its declared cases, at
+    runtime). Custom reporters map results back to map nodes (R21) — runner
+    output is never shown raw.
+  - D4's "type-checked claim" RELOCATES: surface-reference validation moves
+    from tsc to Assayer load-time validation against the derived surface
+    (P1-grade "unknown interaction `clickAprove`, did you mean
+    `clickApprove`" beats a squiggle in a file nobody opens).
+  - The pre-epic deliverable is accordingly an INTERFACE-CONTRACT draft, not a
+    config-format doc: (a) authored-data persistence schemas, (b) the harness
+    authoring API, (c) the runtime contract (interpreter + reporter). Churn
+    matrix + two worked rewrites remain its acceptance tests.
+- **D16 — Environment contract: declared processes + smoketest; plugins
+  participate only when configured (user ruling — resolves the "who boots the
+  world" question before it needed a Q-number).**
+  - **Playwright-webServer-style lifecycle:** the repo's Assayer config
+    declares its processes (launch command + readiness check per process —
+    same model as Playwright's `webServer` and codex's existing e2e launch).
+    Assayer OWNS the launching (required for D5 env wiring, D11 timer
+    compression, and R15 tap injection into consumer processes) but does NOT
+    provision infrastructure — stores exist because the repo/dev/CI made them
+    exist (docker-compose, local install, whatever).
+  - **`assayer smoketest` (D2):** validates the declared environment — boots
+    processes per config, runs readiness checks, verifies each configured
+    plugin can reach its target (mongo answers on the declared port, etc.).
+    P1-grade errors name exactly which piece of the world is missing.
+    Required per-repo configuration is acceptable.
+  - **Plugin participation is config-gated:** adding a probe plugin (e.g.
+    mongo) REQUIRES its config (port/user/password/…) — schema-validated at
+    config load with P1-grade errors on missing fields. An unconfigured/
+    unloaded plugin is INVISIBLE: no obligations, no taps, no logs, no
+    verification calls. (Generic D5 boundary handling still applies to
+    unprobed boundaries — the mock policy must cover them; only the
+    probe-specific richness is absent.)
+  - **Target-repo scope assumption (v1):** consumer repos are npm monorepos
+    with `packages/*` layout, single human operator. Environment configs are
+    authored per-repo without apology; generalization beyond this shape is
+    not a v1 concern.
 - **D14 — Tooling vehicles: CLI + desktop app (Electron/Tauri-class, no
   browser-tab workflow — explicit user preference, not a technical derivation).**
   Because generated tests aren't colocated, the tooling must make them browsable:
@@ -758,7 +958,7 @@ executed live, diffed on failure):
     tests, pull run artifacts (`assayer detail <runId>` — ward-style).
   - **Desktop app:** repo file/folder tree → click a file → its case list,
     launch its tests, or jump into manual testing from its entry points; hosts
-    the review surfaces (semantic-diff queue, projections, explorer, decks).
+    the review surfaces (semantic-diff view, projections, explorer, decks).
 - **D13 — Cache: content-hash incremental; git hooks are warmers, never the
   correctness mechanism.** Every derivation input is hashed (file contents,
   Assayer version, plugin versions, config); any invocation recomputes exactly
@@ -766,19 +966,21 @@ executed live, diffed on failure):
   handling. Invalidation propagates along C2 dependency edges (the impact-
   analysis machinery doubles as cache invalidation). Optional husky post-merge/
   post-checkout hooks warm the cache in the background and surface the
-  unapproved-delta queue immediately after a merge — skipping them costs
+  fresh semantic-diff view immediately after a merge — skipping them costs
   latency, never correctness. **Layout: everything lives under `.assayer/`,
-  committed — baseline approval records, repo-local plugins/custom
-  declarations, config — EXCEPT `.assayer/cache/`, which is the only
-  gitignored path (derived, disposable).** Cold CI cache reproduces identical
-  hashes by determinism.
-- **D10 — Regeneration policy: merge by stable coverage ID, orphans error.**
-  Config files have machine-owned zones (skeletons, covers IDs, holes) and
-  author-owned zones (filled expectations, scenario content). Regeneration merges
-  by ID: new items → new skeletons (error until filled); unchanged items →
-  untouched; vanished IDs → orphaned case = build error demanding remap-or-delete
-  with the requirement question asked explicitly. Never silent deletion, never
-  silent retention, never full-file rewrite.
+  committed — repo-local plugins, config — EXCEPT `.assayer/cache/`, which is
+  the only gitignored path (derived, disposable); named states live in
+  `assayer/states/`; harnesses colocate with source.** Cold CI cache reproduces identical hashes by
+  determinism; the pipeline MAY persist/restore the cache between runs as an
+  optimization (D15), with cold full-regen always correct.
+- **D10 — Regeneration is total and free (SUPERSEDED FRAMING — original
+  merge-by-ID/orphaned-fills machinery retired with fills, D17/D18).** Maps and
+  cases regenerate wholesale from source; nothing committed keys on them. New
+  testable item → new generated case (coverage error only if its data can't
+  derive and no named state is wired); removed item → its cases vanish with the
+  map node; every change surfaces as a diagram/ref-diff delta for the human.
+  Harness custom cases referencing surface members that no longer exist fail
+  load-time validation with P1-grade errors — that's the only "orphan" left.
 
 ## Tracked Questions / Constraints / Blockers (from catalog walk)
 
@@ -834,8 +1036,8 @@ executed live, diffed on failure):
     matter, so x/y/z randoms suffice.
   Result: a generated, minimal-but-complete test-state matrix per entry, driven
   by what callers actually care about — this is what populates registry pairs
-  (R19), explorer state presets, and arrange fills. Salience is computed, not
-  guessed.
+  (R19), explorer state presets, and generated arrange data (overridable by
+  named states wired in harnesses). Salience is computed, not guessed.
 - **Q7 — R12/D14 v1 partition (Blocker #4):** R12 accumulates many product
   surfaces (projections, ledger, semantic-diff queue, render decks, state
   explorer + flow stepping, endpoint explorer, full-stack live tracing) plus
@@ -846,12 +1048,10 @@ executed live, diffed on failure):
   library export (consumers outside the repo). Exemption mechanism
   (entry-point/public-surface config) undesigned. Raised in catalog
   Passthroughs; must ship WITH the rule or the rule can't ship.
-- **Q6 — Approval authority under agent autonomy:** `assayer approve` updates
-  the baseline lockfile; an autonomous agent could run it blindly. In-package
-  mitigations: approve requires ENUMERATING the specific deltas being accepted
-  (the acknowledgment is visible in the lockfile commit); repo-level: protect
-  `.assayer/baseline/` via CODEOWNERS/branch rules. Full prevention is outside
-  Assayer's control — how far do we go?
+- **Q6 — RESOLVED BY REMOVAL (user ruling):** there is no approval
+  functionality, so approval authority is moot. The semantic diff is a review
+  VIEW; the only gate anywhere is the pipeline's "do all checks pass on the
+  committed changes." Humans act on diffs by directing the LLM.
 - **Q3 — Non-lexical data-flow edges (PROMOTED TO V1-BLOCKING, codex case
   study):** context Provider→useContext, store-mediated flows, AND in-process
   event buses + WS wires (`orchestrationEventsState.emit` → server handler →
@@ -872,17 +1072,19 @@ executed live, diffed on failure):
   layers ⇒ full-flow; everything else glue + registry. Open: is the heuristic
   auto-detectable (analyzer sees the WS subscription in the reaction path) or
   purely user-declared, and what's the default when ambiguous?
-- **Q2 — RESOLVED by D12:** tests are locked + auto-regenerated; manual
-  edits/additions to generated files are build errors; authored surface =
-  harness + observables/scenarios; expectations sourced externally to the
-  regenerated file; waivers for false positives.
+- **Q2 — RESOLVED by D12 (as later refined by D17/D18):** tests are locked +
+  auto-regenerated; manual edits/additions to generated files are build
+  errors; authored surface = harness (incl. declared cases) + named states +
+  config; expectations derived, never authored; false positives handled by
+  GLOBAL rule toggles only.
 
 ## Open Questions (to flesh out before epics)
 
-- **Config test format (ACTIVE DISCUSSION — Blocker #2):** how a config-structure
-  test expresses arrange/act/assert across the three execution contexts (see
-  Glossary: unit / integration / e2e). Constrained by the artifact inventory
-  (fills committed separately from assembled cache files).
+- **Interface contract (ACTIVE DISCUSSION — Blocker #2):** the harness
+  authoring API (surface, wiring, custom-case schema — the only config format
+  left, D17), the states/config schemas, and the runtime contract
+  (interpreter + reporter) across the three execution contexts (see Glossary:
+  unit / integration / e2e). Constrained by the artifact inventory.
 - **Coverage-ID scheme (ACTIVE DISCUSSION — Blocker #3, single question):** the
   stable identifier linking a case to the testable item it covers. Current lean
   (recorded earlier in discussion): IDs derived from condition source text within
@@ -890,6 +1092,61 @@ executed live, diffed on failure):
   reordering, breaks exactly when the logic changes, which is the desired "is the
   requirement still true?" prompt. Backend branch code is the hard case; React
   is easier. Also gates C1's cross-file presumption.
+  **Architecture ruling (user, sanity-checked): two-stage invalidation; IDs are
+  map-node identities.** Pipeline: file/config content hash (cheap gate, D13) →
+  rebuild maps (C2) → map DIFF (semantic gate) → test regen only on map delta.
+  Consequences: coverage IDs contain NO line/position information ever — lines
+  are presentation-only, resolved node→location at report time; formatting
+  churn is structurally incapable of touching tests; invalidation cascades
+  cross-file along C2 edges (enum change regens consumers' maps without their
+  hashes changing). What remains hard: MAP-NODE CORRESPONDENCE across
+  generations (changed node vs deleted+added) — the churn matrix below now
+  applies to map diffing, not source text.
+  **Correspondence mechanics (user-designed; PURPOSE REVISED by the no-fills
+  ruling): three-bucket matcher + git as evidence, not identity. Correspondence
+  now serves DIFF-VIEW QUALITY ONLY — no committed data migrates.**
+  - Map-vs-map diff with exact-match nodes as anchors. Buckets: (a) exact
+    node-key match → unchanged, shows NOTHING in the delta; (b) unambiguous
+    1:1 correlation within a changed region → shown as a MODIFIED node;
+    (c) ambiguous → the region is shown as an old-vs-new block — bounded,
+    well-presented uncertainty IS good diff output, not a matcher failure.
+    The churn matrix grades how often common edits land in (a)/(b) — i.e.
+    diagram-delta signal-to-noise, which D18 makes a core product property.
+  - Git integration: line-hunk mapping and git rename/similarity detection are
+    CORRELATION HINTS for bucket (b) (and cross-file moves) — never identity
+    (formatting produces hunks with no map change; working-tree edits
+    accumulate between commits).
+  - Old maps are NEVER persisted: determinism (same content ⇒ same map) means
+    any historical map is recomputed on demand from the git blob at the
+    reference commit. Cache stays disposable.
+  - ONE "old" anchor: the resolved comparison ref (D15: merge-base locally,
+    explicit in pipeline, arbitrary ad-hoc). No fill-migration anchor exists —
+    fills don't. Branch isolation is free: authored artifacts (harnesses,
+    states, config) are committed and travel with the branch, and diffs anchor
+    to merge-base — never a sibling branch.
+  **Acceptance rubric — the churn matrix (REPURPOSED: grades diff-view
+  signal-to-noise, since no committed data migrates).** Walk these
+  implementation-change scenarios on paper; required outcome per scenario is
+  now about what the DIAGRAM DELTA shows (nothing / a clean modified node / a
+  clean old-vs-new region — never noise, never a silently-absorbed semantic
+  change):
+  1. Formatting/whitespace-only change → delta shows NOTHING (IDs must not
+     hash raw text).
+  2. Sibling branch added → delta shows exactly one new node.
+  3. Branches reordered → delta shows NOTHING.
+  4. Condition edited (`>limit` → `>=limit`) → delta shows that node modified,
+     old vs new condition.
+  5. Variable renamed within a condition → DECIDE: nothing (C2 rename
+     tracking) or modified-node; pick one and justify.
+  6. Function renamed (scope path changes) → DECIDE: nothing (symbol tracking)
+     or a rename-suggested delta.
+  7. Logic extracted to a same-file helper → delta shows a move, not a
+     delete+add pair.
+  8. Logic moved to another file → delta shows a cross-file move suggestion.
+  9. Consumer changes while producer doesn't → producer's subgraph shows
+     NOTHING; only consumer nodes delta.
+  10. Identical condition text at two sites in one scope → cache-internal IDs
+      still unique (disambiguation rule needed).
 - **E2E arrange model (needs confirmation):** with D5+D6, e2e arrange appears to
   be: seed state at the real-but-controllable boundaries (db fixtures, mocked
   external responses) + navigate to the route; component props then EMERGE from

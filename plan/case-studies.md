@@ -1,5 +1,23 @@
 # Case Studies — the real incidents behind the requirements
 
+> **⚠ SUPERSEDED-TERMINOLOGY NOTE (read before trusting mechanism details):**
+> these studies were written mid-session and narrate the design AS IT EVOLVED.
+> Later rulings (D15–D18) changed several mechanisms referenced below. Where a
+> study says any of the following, substitute the final model:
+> - "declared observable / tier-3 observable file / linked to the observable's
+>   ID" → a config-shaped CUSTOM CASE inside the relevant harness (no separate
+>   observable artifacts, no ID linking).
+> - "approval / approved renders become baselines / unapproved delta" → NO
+>   approval workflow exists; diffs are ref-to-ref views; visual comparisons
+>   are runtime captures of both refs shown side-by-side; the only gate is
+>   pipeline pass/fail.
+> - "expectation fills / scaffolded fills" → fills DO NOT exist; expectations
+>   derive from inputs/literals/models/consumer demands; humans author only
+>   harnesses, named states, config.
+> - "waiver (per-case)" → only GLOBAL rule/obligation toggles in config.
+> The INCIDENTS, root causes, and error-message examples remain accurate — only
+> the artifact/workflow vocabulary drifted.
+
 > Purpose: `requirements.md` and `expectation-catalog.md` reference these incidents
 > by shorthand ("the codex parity case", "the amalga eyelid", "H-1"). This document
 > is the full, self-contained record so a session with no prior context can
