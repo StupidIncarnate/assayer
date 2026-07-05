@@ -501,7 +501,7 @@ Format: example → why tests pass while the user is unhappy → observable decl
   - Everything else: generated (R3 branch holes on fallback cascades) or
     REFUSED (R10 on prefix + twin contracts; prose invariants ratcheted into
     R2 custom rules).
-  - Caveat: chains cross event-bus + WS hops → Q3 (v1-blocking) must resolve
+  - Caveat: chains cross event-bus + WS hops → Q3 (blocking) must resolve
     for the demanded-pair machinery to bite at those seams.
 
 ### The B-review loop (what the human actually inspects)

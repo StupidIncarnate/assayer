@@ -14,9 +14,11 @@
 
 ## ⛔ Blockers before epic carving (do not split epics past these)
 
-1. **Q3 (v1-blocking):** non-lexical data-flow edges (event bus, WS, stores,
+1. **Q3 (blocking):** non-lexical data-flow edges (event bus, WS, stores,
    context) must be DESIGNED before the analyzer epic is carved — the target
-   repos' core flows cross these hops.
+   repos' core flows cross these hops. **(RESOLVED at design level 2026-07-05 —
+   see D24: plugins elaborate the core map with channels; dark spots + package
+   classification cover the rest. Per-tech plugin internals remain implementation.)**
 2. **Interface contract (ACTIVE DISCUSSION below; reshaped by D17):** the
    authored-data persistence schemas + harness authoring API + runtime
    contract (interpreter/reporter). Gates the format epic; the artifact
@@ -26,8 +28,10 @@
    settled vocabulary throughout — it is NOT yet designed. Cache-internal only;
    gates case addressing, diff-view correspondence quality (D18), and C1's
    cross-file presumption.
-4. **Q7 (below):** R12 lists many product surfaces + D14's desktop app with no
-   v1 partition — scope must be ruled before the tooling epic.
+4. **Q7 (below):** R12 lists many product surfaces + D14's desktop app — which
+   subset to build was in question. **(RESOLVED BY REMOVAL — there is no
+   phasing/subset; every review surface and tooling piece is core functionality,
+   so there is no partition to rule. See Q7 below.)**
 5. **Q4 / db section:** the database obligation family is TO-FILL; a db-probe
    epic cannot be scoped yet (same status as Q3 for the analyzer, stated here
    explicitly).
@@ -233,7 +237,9 @@ Assayer is an npm package installed into TypeScript repos (like ESLint) that:
    configurable rules.
 2. Generates and executes the tests itself from derived execution maps, failing
    like a build error when something testable is uncovered or broken — catching
-   new code written after tests existed.
+   new code written after tests existed. (D21 scopes what "broken" means:
+   structural/flow reachability and consumption in the assembled system — never
+   the isolated value-correctness of a typed pure function.)
 3. Runs everything through fully wrapped runners (Jest unit/integration,
    Playwright e2e) driven by the maps — **no test files are authored or
    committed**; humans author only harnesses, named states, and config
@@ -314,9 +320,9 @@ requirement stayed unmet).
 - Driven by a repo-level config of "I care about this, not this" — ESLint-model:
   rules ship as DISCIPLINE plugins (`@assayer/web`, `@assayer/cli` — see R17;
   core ships the engine, not opinions), with new rules addable as packages.
-- **Now:** the discipline plugins' initial rule sets + the plugin seams.
-- **Later:** full third-party rule/package extensibility (not needed for v1, but the
-  architecture must not preclude it).
+- **Initial focus:** the discipline plugins' initial rule sets + the plugin seams.
+- **Extension point:** full third-party rule/package extensibility — the
+  architecture must not preclude it.
 
 ### R3 — Coverage enforcement as a build-style error
 - For each source file, compare what its map says should be covered (R2 rules)
@@ -344,8 +350,8 @@ No plans for plain JS or other languages.
   - Values rendering correctly in a component → unit **and** e2e
   - Button/interaction tests → unit **and** e2e
   - Display variations driven by a parent-provided value → potentially unit-only
-- The granular classification rules will be worked through case-by-case later; the
-  test-case config schema must support per-mode instructions **now**.
+- The granular classification rules will be worked through case-by-case; the
+  test-case config schema must support per-mode instructions **regardless**.
 - **Classification heuristics (accumulating from catalog walk):**
   1. Rendered value: ONE e2e for the happy path (state funnels end-to-end, value
      visible in browser); all branch/variant/negative cases unit-only.
@@ -361,6 +367,15 @@ No plans for plain JS or other languages.
      probably need NO duplicate unit test. Tilts R6 away from "both by default"
      toward each case having ONE owning mode, support cases only where they add
      distinct value. Firm up as the catalog walk accumulates categories.
+  5. **(RULED — D23) Execution enumeration policy.** e2e is salient-shrunk by
+     DEFAULT: a flow is not run against members of a value set it does not
+     branch on (a role-indifferent flow is not run per-role); a per-HARNESS
+     override forces full-collection runs where extra assurance is wanted. unit
+     is salient by default with an OPT-IN full-collection "battle-test" mode.
+     unit's dedicated high-value role is PERF; e2e owns holistic reachability.
+     Per-member completeness lives in the MAP (D22), not in execution — so
+     shrinking execution loses no review signal. Firms the single-owner
+     direction.
 
 ### R7 — Harness / page-driver enforcement per file
 - Enforce a harness / page-driver-style setup on a file-by-file basis.
@@ -674,8 +689,8 @@ LLM at it and have it build repo-specific pieces case by case:
   get-architecture/get-testing-patterns MCP tools.
 - **Versioned with the package:** instructions always match the installed
   Assayer version — no drift between what the docs say and what the schema
-  accepts. (Candidate later: expose the same topics over MCP; CLI is the v1
-  requirement.)
+  accepts. (Candidate later: expose the same topics over MCP; the CLI is the
+  required surface.)
 - Symmetry with P1: build errors are the LLM's corrective instructions; this
   surface is its constructive ones. Both are product surfaces, not afterthought
   docs.
@@ -767,13 +782,15 @@ the LLM's corrective instruction surface:
 
 ## Non-goals / Deferred
 
-- **v2 — Record-inspection UX:** a record-centric verification surface ("did my
-  records do what I needed them to, across operations") beyond the endpoint
-  explorer's per-request expected-vs-actual effects panel. User wants to
-  manually spot-check records even knowing tests exist; UX shape unclear —
-  explicitly deferred to v2 by user.
-- Third-party rule packages (groundwork only for v1) — R2
-- Granular unit-vs-e2e classification ruleset (schema support only for v1) — R6
+- **Deferred (owner-chosen): record-inspection UX** — a record-centric
+  verification surface ("did my records do what I needed them to, across
+  operations") beyond the endpoint explorer's per-request expected-vs-actual
+  effects panel. User wants to manually spot-check records even knowing tests
+  exist; UX shape unclear — explicitly deferred by user.
+- Third-party rule packages (initial build lays groundwork only; the architecture
+  must not preclude full extensibility) — R2
+- Granular unit-vs-e2e classification ruleset (initial focus is schema support;
+  the full ruleset is still to be designed) — R6
 - Non-TypeScript languages — R4
 
 ## Decisions
@@ -849,7 +866,7 @@ the LLM's corrective instruction surface:
     enumeration → route → responder/handler chain: powers the backend-e2e
     obligations ("every endpoint has coverage"), the endpoint explorer's list,
     and entry-point mapping for the flow projections.
-  v1 set: react-router, express, hono. Manifest escape hatch for
+  Initial set: react-router, express, hono. Manifest escape hatch for
   non-statically-analyzable routes: still tabled.
 - **D8 — Terminology:** drivers expose **interactions** (things a test does —
   click, type, submit) and **observations** (things a test reads — text, presence,
@@ -1050,10 +1067,10 @@ the LLM's corrective instruction surface:
     verification calls. (Generic D5 boundary handling still applies to
     unprobed boundaries — the mock policy must cover them; only the
     probe-specific richness is absent.)
-  - **Target-repo scope assumption (v1):** consumer repos are npm monorepos
+  - **Target-repo scope assumption:** consumer repos are npm monorepos
     with `packages/*` layout, single human operator. Environment configs are
     authored per-repo without apology; generalization beyond this shape is
-    not a v1 concern.
+    out of scope.
 - **D14 — Tooling vehicles: CLI + desktop app (Electron/Tauri-class, no
   browser-tab workflow — explicit user preference, not a technical derivation).**
   Because generated tests aren't colocated, the tooling must make them browsable:
@@ -1084,6 +1101,242 @@ the LLM's corrective instruction surface:
   map node; every change surfaces as a diagram/ref-diff delta for the human.
   Harness custom cases referencing surface members that no longer exist fail
   load-time validation with P1-grade errors — that's the only "orphan" left.
+
+- **D21 — The implementation is the documentation; generated tests verify
+  STRUCTURE/FLOW, not isolated value-correctness (sharpens D18; scopes the
+  Vision's "broken", P2, P4).** Traditional tests are hand-authored documentation
+  of expected outputs — a blind stab from chosen input angles. Assayer inverts
+  this: the analyzer derives the execution map FROM the implementation, and that
+  map — the total compendium of states and flows the system needs to function —
+  IS the documentation the human reviews for holes. Consequences:
+  - **What a generated test asserts is structural/flow, never the isolated
+    value-correctness of a typed pure function.** TypeScript already guarantees
+    the return type, and a side-effect-free function is a static value that
+    cannot cause harm until it flows somewhere. "Broken" means: a declared path
+    is unreachable in the ASSEMBLED system, a consumer fails to consume an
+    effect, or a salient flow does not execute. (The amalga eyelid and the H-1
+    endpoint are flow/layer failures, not arithmetic failures — case-studies
+    §2/§3b.)
+  - **Value-correctness is a HUMAN-REVIEW concern, not a generated assertion.**
+    The human catches "the discount rate is wrong" / "the new status falls into
+    the wrong else" by reading the MAP delta and by driving states through the
+    explorer (D18's diagram-delta + manual backstop) — never by a red test.
+    This is WHY P4 forbids deriving expected values from the code: generated
+    tests do not assert computed values at all, so there is no authored
+    "answers" artifact to protect.
+  - A generated test failing therefore means "the code disagrees with itself
+    across the assembled system" (e.g. a guard elsewhere hides a modal this
+    handler renders). Which side is correct is the human's/LLM's call; Assayer
+    surfaces the conflict, it does not adjudicate it.
+- **D22 — Two decoupled shrink policies: the MAP is per-member complete;
+  EXECUTION is salient-shrunk; and the map declares its own blind spots.** The
+  map/compendium and the runnable case set are separate artifacts with OPPOSITE
+  enumeration policies, on purpose:
+  - **Map/compendium (C2 type-graph + dataflow) — enumerated PER-MEMBER.** Every
+    member of a bounded value set is its own node; a new member (new enum value,
+    or a new value-distinction minted by new branch logic anywhere) is a NEW node
+    whose flow is traced to whatever branch consumes or swallows it. This
+    GUARANTEES a visible diagram delta on the review surface when a
+    value-distinction appears — exactly where the human catches "new value
+    swallowed by an existing else / one side of the system not updated"
+    (case-studies §1, §3a). Cheap: static derivation, not execution.
+  - **Test-case generation (execution) — salient-shrunk per C3** (one
+    representative per consuming-conditional equivalence class; randomized fill
+    for don't-care fields). The map must NOT reuse C3's collapsed output: if the
+    map collapsed members the way execution does, a new member could land inside
+    an existing equivalence class and produce NO delta, silently hiding the very
+    bug the review exists to catch.
+  - **"Surfaced to the human" ≠ "executed as a test."** Review completeness lives
+    in the per-member map; execution minimality lives in salient case
+    generation. Governed independently.
+  - **Map blind-spot honesty (HARD requirement — the map is the product).** Where
+    the analyzer cannot trace a flow (a non-lexical hop — Q3; dynamic dispatch;
+    an unresolvable spread), the map must VISIBLY MARK "not followed here," never
+    silently omit the edge. A map that looks complete but dropped a flow is worse
+    than none: the human spot-checks it, sees no hole, and wrongly trusts it.
+    This promotes Q3 to a completeness property of the PRODUCT (not an analyzer
+    nicety) and extends the analyzer's graceful degradation from "unparseable
+    files" to "parsed-but-unprovable flows."
+- **D23 — Execution enumeration policy + unit/e2e role split (firms R6's
+  single-owner direction).** Because per-member completeness lives in the map
+  (D22), running every value against every flow adds cost, not signal:
+  - **e2e: salient-shrunk by DEFAULT** — a flow is not executed against members
+    of a value set it does not branch on (a role-indifferent flow is not run
+    per-role). A per-HARNESS override forces full-collection runs where a human
+    wants extra assurance on a specific surface.
+  - **unit: salient-shrunk by default,** with an OPT-IN "battle-test" mode that
+    runs components against the full derived state collection — an assurance
+    dial, not a necessity (the map is built regardless). Its exact cross-product
+    scoping is an assurance-mode detail, not epic-gating.
+  - **Role split:** e2e owns holistic reachability ("can every declared path
+    execute in the assembled system" — where LLMs err most). unit's dedicated
+    high-value role is PERF (plugin-dependent), plus cheap exhaustive exercise of
+    tier-2 model matrices and the DSL rule. Confirms R6: most side-effecting
+    categories are e2e-owned, unit as support only where it adds distinct value.
+
+- **D24 — Non-lexical edge resolution (RESOLVES Q3 at the design level,
+  2026-07-05).** Runtime-mediated hops (WebSocket/SSE wires, in-process event
+  buses, stores, React context) break lexical chain-following. Resolution:
+  - **Core builds the base implementation map; plugins ELABORATE it.** A
+    plugin's minimum new power is adding CHANNELS — a link between an
+    emit/write/publish site and its subscribe/read site (WS server↔web,
+    provider→useContext, store write→read), keyed on the channel's discriminant
+    (event name / message type / action type / slice) and payload contract.
+    More generally a plugin may add domain "color" to the map where core cannot
+    derive it. Plugins do NOT build maps wholesale — core still parses, owns all
+    node/edge IDs, and does every downstream chain-follow THROUGH the
+    plugin-supplied edge; the plugin supplies only the domain join-rule, core
+    materializes and traverses. (Widens the R15 plugin contract from
+    cases/obligations/taps/display to ALSO include graph/channel contributions.)
+  - **Dark spots are marked by default; the mark is globally hideable, never
+    deleted.** Where a flow's next hop cannot be traced (no plugin bridges the
+    channel, or the target is genuinely opaque), the map records a DARK SPOT
+    ("end of connection flow") and shows it by default. A global config toggle
+    can hide dark spots visually for a repo that doesn't care — the data stays
+    in the map (blind-spot honesty, D22), only the display is suppressed.
+    TypeScript input/output types at the dark spot are still known, so the
+    boundary shape is never lost.
+  - **Package classification: curated defaults + repo list + error on the
+    unknown.** Assayer ships a CURATED pre-classification of common packages
+    (pure — lodash/zod/date-fns run real; io — mocked boundary) so users don't
+    start from zero. The repo config maintains its own list. A newly-seen import
+    on NEITHER list is a HARD ERROR the LLM must reconcile ("classify `some-sdk`
+    as mock (io boundary) or real (pure)"). Keeps the mock/boundary policy (D5)
+    complete without a plugin per package.
+  - **When a plugin is needed vs not:** a plugin is required ONLY to (a) bridge a
+    non-lexical edge, (b) richly probe/instrument an effect, or (c) supply a
+    domain observation vocabulary. Everything else is a typed BLACK BOX — the
+    chain terminates at its input and resumes at its typed output, no plugin and
+    no dark spot beyond the ordinary boundary. (Lodash never gets a plugin.)
+  - **Instance scope:** a channel/provider/store is assumed to be a single
+    module-global per token. Multiple live instances (nested providers,
+    per-render stores) are a dark spot rather than fully tree-resolved.
+  - **Twin contracts for one wire** (two payload contracts for the same channel)
+    → refusal: reconcile to one shared contract (same canonical-model pressure
+    as R10). Ambiguity is a build error, not a suppressible dark spot.
+
+- **D25 — Plugin architecture: TypeScript is core; a layered seam/adapter stack
+  enriches the base map (2026-07-05).**
+  - **TypeScript analysis is CORE, not a plugin.** Core parses TS/TSX and builds
+    the base map (code routing, types, data-flow, base metadata). There is no
+    "language plugin" — Assayer is TS-only (R4), so the language is not a
+    swappable seam. (Drops the earlier abstract-language / language-typescript
+    idea.)
+  - **Plugins enrich the base map in layers, each running after core:**
+    - **System plugins** = execution/rendering PARADIGMS that define entry
+      points and the flow model. `react` (web system), `hono` (server
+      system). Multiple systems coexist in one repo (codex is both).
+    - **Library plugins** = extensions within/around a system. NOT one seam —
+      several seam KINDS, all running in the library layer:
+      - *router* (entry enumeration): `react-router`
+      - *component-library* (stable handles + interaction/observation vocab for
+        vendor components whose DOM core can't see): `mantine`
+      - *effect probe* (detect effect site → obligations + tap + assertion
+        vocabulary + display): `redis`, `postgres`
+      - *cross-system wire* (join emit↔subscribe across two systems into one
+        channel): `websockets`
+  - **Entry/connection points, two sources.** Core enumerates PACKAGE FUNCTION
+    ENTRIES (a package's exported functions, via its exports/index) as
+    connection points through pure exports analysis — no plugin needed, it is
+    part of core TS processing. Framework-specific entries are plugin-supplied:
+    server endpoints ← hono, browser routes ← react-router. All three are the
+    SAME kind of node in the map — a place the outside enters the system, with
+    effects flowing out — so flows, effects, and the verified/demanded contract
+    tracking key off them uniformly. (Refines the entry-kinds glossary + D7:
+    kind #3 is core; #1/#2 are plugins.)
+  - **Naming — seam + adapter (existing vocabulary):** the abstract contract is
+    a SEAM (web-system seam, server-system seam, effect-probe seam, …); the
+    concrete implementation is an ADAPTER (react, hono, postgres, …).
+  - **Plugins self-declare when they run** — "every file" or "when you see this
+    syntax shape" — NOT per-plugin glob config (explicitly not the ESLint
+    model). Core decides which files are dirty (change detection); the plugin
+    decides whether it cares.
+  - **Two-phase engine (consequence of the architecture):** per-file passes MARK
+    nodes and channel ENDPOINTS; core JOINS endpoints across files/packages
+    (`websockets` is the canonical cross-package join); a final pass RESOLVES
+    flow/reachability/consumption over the COMPLETED graph — because cross-file
+    channels complete flows no single-file pass can see.
+  - **"Layer" (ordering) and "contribution kind" are separate axes.** A plugin's
+    layer sets when it enriches the map; a plugin may contribute several kinds
+    (map structure, channels, test-case definitions, instrumentation,
+    observations). The react plugin building structure and the web test-opinions
+    (blank-render leaks, list edge cases) are different jobs even if co-shipped.
+  - **Plugin set to build (codex's stack):** react, react-router, hono,
+    mantine, redis, postgres, websockets. Abstract seams are EXTRACTED from
+    building these, not designed up-front (build-first). Other domains (e.g.
+    three.js/geometry) are additional adapters on the same contracts.
+
+- **D26 — Layered verification is a QUERY OVER THE MAPS; only its policy is
+  fixable before the maps exist (2026-07-05 owner ruling; refines R19).** What
+  links to what, what a change regenerates, and what may be reused vs. must
+  rerun are all DERIVED FROM the implementation maps — the registry (R19) is not
+  a separately-designed subsystem, it is a read over the map's cross-layer
+  dependency edges. Its mechanics therefore cannot be designed before the maps.
+  What CAN be fixed now (and constrains what the maps must expose):
+  - **Reuse / coherence:** an upper layer reuses a lower layer's PROVEN
+    (input ⇒ result + effects) pair as a stub; a stub may ONLY be a pair the
+    lower layer actually proved; when the lower layer's proven set changes,
+    every upper consumer of a now-stale pair breaks loudly.
+  - **Both directions:** upper layers also publish what they DEMAND; a demand
+    nothing lower proves is a build error.
+  - **Ordering:** lower-layer suites run before the upper-layer glue that reuses
+    them.
+  - **Glue vs full-flow:** reuse-a-proven-pair (glue) is the default; run the
+    whole chain only where an upper layer reacts to something a lower layer
+    emits ASYNCHRONOUSLY (a live push, a timing-dependent reaction).
+  - **"Proven"** = a passing lower-layer assertion of an input ⇒ result +
+    effects pair.
+  - **Forward requirement on the maps:** they must expose cross-layer dependency
+    edges, entry-point input ⇒ result + effects pairs, and which entries react
+    to async emissions — otherwise the registry cannot be computed. This is the
+    only part of layered verification worth working before the maps exist.
+- **D27 — Incremental adoption via glob-scoped enforcement (2026-07-05 owner
+  ruling).** The CLI MUST support glob-based running so Assayer can be introduced
+  one sub-package at a time on an existing repo. The scoping applies to ALL
+  enforcement — coverage gaps, lints, AND the stray-hand-written-test detection —
+  not just which tests execute; a package outside the active glob is simply
+  not-yet-governed (like an uninstalled plugin), consistent with the global-
+  toggle model and NOT a per-site waiver. Target-repo assumption stays npm
+  packages/monorepo (D16); other monorepo shapes are a deferred scope concern.
+  OPEN (Q12): whether a within-package "enforce only new/changed code" ratchet is
+  also offered, so enabling a package doesn't surface its entire existing
+  coverage backlog on day one.
+
+- **D28 — Base map contents (DIRECTIONAL working model; finalized line-by-line
+  in implementation, NOT frozen on paper — owner ruling 2026-07-05).** The
+  per-file map is a typed data-flow + effect graph rooted at that file's
+  connection points. Core (TypeScript) writes the connections; plugins
+  elaborate. Directional vocabulary:
+  - **Nodes:** connection points (entries + typed inputs); values (with the
+    specific per-member distinctions the code makes on them); transforms
+    (mutate / map / model-lookup / construct / narrow); branches & exits
+    (partition a value; return/throw); effects (boundary crossings, ordered,
+    plugin-owned); outputs (typed, per exit).
+  - **Edges:** data-flow (value → transform → sink/effect/output); links (where
+    inputs come from / where outputs + effects go — cross-file, channel, or a
+    dark spot when unresolved); consumption (which downstream sites actually use
+    a value).
+  The map must be QUERYABLE IN BOTH DIRECTIONS, because two concrete jobs need
+  it:
+  - **Arrange derivation (forward walk):** from an entry, walk the transitive set
+    of things it calls plus the condition on each hop, and compute the input
+    STATE STUBS needed to drive the full flow / exercise its conditions. Stubs
+    are built from file-by-file usages of the data types (the distinctions each
+    file makes), unioned along the flow. Requires links + per-hop branch
+    conditions stored as first-class, queryable data.
+  - **Consumer-demand / inverse contract (reconcile across a link):** a consumer
+    that branches on a response's distinctions (e.g. a form: 200 → reads `{a,b}`,
+    does X; 400 → reads `{error}`, does Y) records those distinctions as DEMANDS;
+    the map reconciles them against what the producer (the endpoint) can actually
+    return — "does the server return everything the web connection needs?"
+    Mismatch = build error. This is the concrete grounding of the
+    demanded-vs-proven pairs (D26 / R19).
+  - **Pipeline (confirmed):** build full maps → on change, regen only the changed
+    files' map pieces → run static PRECHECKS (build-error-style signaling) → run
+    tests/etc. per the CLI command.
+  The precise node/edge schema is discovered by going logic-line-by-logic-line
+  with real cases during implementation; this entry is the directional target,
+  not a spec.
 
 ## Tracked Questions / Constraints / Blockers (from catalog walk)
 
@@ -1141,11 +1394,15 @@ the LLM's corrective instruction surface:
   by what callers actually care about — this is what populates registry pairs
   (R19), explorer state presets, and generated arrange data (overridable by
   named states wired in harnesses). Salience is computed, not guessed.
-- **Q7 — R12/D14 v1 partition (Blocker #4):** R12 accumulates many product
+  - **Scope (D22):** C3 governs EXECUTION state generation ONLY (minimal
+    runnable cases). It does NOT govern the map/compendium, which enumerates
+    every bounded member per-member so a new member always produces a review
+    delta. The two artifacts carry opposite, decoupled shrink policies.
+- **Q7 — RESOLVED BY REMOVAL (Blocker #4):** R12 accumulates many product
   surfaces (projections, ledger, semantic-diff queue, render decks, state
   explorer + flow stepping, endpoint explorer, full-stack live tracing) plus
-  D14's desktop app. Which subset is v1? Unruled — needs the user's cut line
-  before the tooling epic.
+  D14's desktop app. There is no phasing/subset — every one of these surfaces is
+  core functionality, so there is no partition to rule.
 - **Q8 — Public-API exemption for dead-surface rules:** the R13 unused/
   untested-prop and transitive-dead-surface flags false-positive on every
   library export (consumers outside the repo). Exemption mechanism
@@ -1155,7 +1412,7 @@ the LLM's corrective instruction surface:
   functionality, so approval authority is moot. The semantic diff is a review
   VIEW; the only gate anywhere is the pipeline's "do all checks pass on the
   committed changes." Humans act on diffs by directing the LLM.
-- **Q3 — Non-lexical data-flow edges (PROMOTED TO V1-BLOCKING, codex case
+- **Q3 — Non-lexical data-flow edges (PROMOTED TO BLOCKING, codex case
   study):** context Provider→useContext, store-mediated flows, AND in-process
   event buses + WS wires (`orchestrationEventsState.emit` → server handler →
   WS → web binding) break lexical chain-following. The codex session-message
@@ -1164,6 +1421,15 @@ the LLM's corrective instruction surface:
   depend on resolving this. Likely shape: declared models at bus/wire
   boundaries (event-type contract + emitter/subscriber registration as
   declarations). Must be designed before the analyzer epic is carved.
+  **RESOLVED (design level, 2026-07-05) — see D24.** Shape: non-lexical edges are
+  bridged by per-tech PLUGINS that elaborate the core-built map with CHANNELS
+  (emit/write site ↔ subscribe/read site, keyed on discriminant + payload
+  contract); core owns IDs and all traversal through the plugin-supplied edge.
+  Unbridged hops become MARKED dark spots (default-visible, globally hideable,
+  data retained); packages get curated/repo-listed classification with a hard
+  error on the unknown; twin wire contracts are a refusal. The design assumes a single
+  module-global instance per channel/provider/store. Per-tech plugin internals
+  and full multi-instance/tree resolution remain implementation detail.
 - **Q9 — Parallel-worker isolation & world reset (raised in the D16
   discussion, never ruled).** Full-stack e2e under parallel runners needs
   per-worker isolation (ports, store namespaces/databases, tmp dirs) and a
@@ -1172,7 +1438,8 @@ the LLM's corrective instruction surface:
   Codex dodges via file-based tmp dirs; a postgres-backed repo can't. Likely
   home: the D16 environment contract (per-repo config), but the strategy and
   what Assayer ships vs demands are undesigned. Without it, parallel e2e is a
-  flake generator.
+  flake generator. **(Owner ruling 2026-07-05: DEFERRED to implementation time —
+  designed when the execution layer is built, not before epic carving.)**
 - **Q4 — Schema holes: lint vs generated tests.** For db concerns (write path
   with no conflict handling, missing constraint handling), when is the hole a
   STATIC lint callout vs a GENERATED test case asserting runtime behavior?
@@ -1189,6 +1456,28 @@ the LLM's corrective instruction surface:
   errors; authored surface = harness (incl. declared cases) + named states +
   config; expectations derived, never authored; false positives handled by
   GLOBAL rule toggles only.
+
+- **Q10 — Declared state-space constraints & impossible-path flagging (RAISED
+  2026-07-05, undesigned).** A user/LLM may constrain the state space (e.g. "a
+  user whose email ends in bork.net can never be admin"); Assayer should then
+  FLAG implementation that no legal state can reach (a dead branch / a
+  contradiction between the declared constraint and the code). Open: WHERE such
+  cross-field state-space constraints live (Zod refinement / D20 state-builder
+  invariant / config) and the D18 tension (the constraint is an authored
+  declaration an LLM can delete, taking the flag with it). Downstream of the D22
+  map model. Not resolved this session.
+
+- **Q11 — Does map-delta review stay legible at scale? (owner ruling 2026-07-05:
+  not determinable on paper; validated when built.)** The safety story leans on a
+  human reading map/diagram deltas. Whether that stays high-signal on a large,
+  honest change (e.g. a 40-file refactor) is a build-time validation, not a paper
+  design question — recorded so it is not forgotten during implementation.
+- **Q12 — Within-package adoption ratchet? (raised 2026-07-05, from D27.)**
+  Glob-scoping (D27) governs WHICH packages Assayer enforces; within a
+  newly-enabled package, day one still surfaces that package's entire coverage
+  backlog. Open: whether Assayer also offers an "enforce only new/changed code,
+  grandfather the rest" ratchet for a gentler on-ramp, or whether "enable a
+  package, clear its gaps" is the intended discipline.
 
 ## Open Questions (to flesh out before epics)
 
@@ -1265,5 +1554,5 @@ the LLM's corrective instruction surface:
   EMERGE from the real app. Unit arrange = the SAME state realized as derived
   mock-boundary feeds. One semantic state, two derived realizations — the
   schema holds one state reference, not two arrange expressions.
-- (Router question RESOLVED by D7: pluggable seam, v1 = react-router + express
+- (Router question RESOLVED by D7: pluggable seam, initial set = react-router + express
   + hono; only the non-static-routes manifest escape hatch remains tabled.)

@@ -182,7 +182,8 @@
       "mcp__dungeonmaster__create-quest",
       "mcp__dungeonmaster__get-next-step",
       "mcp__dungeonmaster__run-ward",
-      "mcp__dungeonmaster__get-server-config"
+      "mcp__dungeonmaster__get-server-config",
+      "mcp__dungeonmaster__ask-user-question"
     ]
   }
 }

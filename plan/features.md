@@ -121,6 +121,15 @@ Property reference (illustrative ranges; the binding schema is Blocker #2):
 
 (`mockPolicy.classify` added to match D5's classification rule.)
 
+**Update (2026-07-05 — D24):** package classification is curated-defaults +
+repo-list + error-on-unknown. Assayer ships a CURATED pre-classification of
+common packages (pure: lodash/zod/date-fns run real; io: mocked boundary) so
+repos don't start from zero; the config's classify list is the repo's own
+additions; a newly-seen import on NEITHER list is a HARD ERROR the LLM must
+reconcile ("mock or real?"). Dark spots from unbridged non-lexical hops are
+marked by default with a global config toggle to hide them visually (data
+retained either way).
+
 Named state (one file per state, name = user-chosen key):
 
 ```jsonc
@@ -178,7 +187,7 @@ Main capabilities:
   rule sets, R13 lint families, and their domain obligation checklists;
   installing a plugin IS the declaration of care (R17).
 - Per-tech adapter packages: router adapters (D7: react-router, express,
-  hono for v1), form-lib adapters (R14), domain observation vocabularies
+  hono), form-lib adapters (R14), domain observation vocabularies
   (R11 — e.g. three.js), probe packages that SHIP their payload corpora and
   obligation checklists.
 - Layer vocabularies define their COMPARATORS (exact for dom/request/
@@ -198,6 +207,32 @@ comparator/settlement side), R14 (adapter side), R2 (rules as plugins);
 constrained by D16 (config-gated participation), P3 (no framework
 prerequisite), Q4 (db probe obligation family TO-FILL); catalog Bucket A is
 the discipline-plugin backlog.
+
+**Update (2026-07-05 — D24):** the plugin contract is WIDENED beyond
+cases/obligations/taps/display to also let a plugin ELABORATE the core-built
+map — at minimum adding CHANNELS (linking an emit/write/publish site to its
+subscribe/read site across a non-lexical hop: WS server↔web, provider→
+useContext, store write→read), keyed on discriminant + payload contract. Core
+still parses, owns all node/edge IDs, and traverses; the plugin supplies only
+the domain join-rule. Plugins are required ONLY to bridge a non-lexical edge,
+richly probe an effect, or supply a domain observation vocabulary — everything
+else is a typed black box (no plugin, e.g. lodash).
+
+**Update (2026-07-05 — D25):** TypeScript is CORE, not a plugin (no language
+plugin). Plugins enrich the core-built base map in layers: SYSTEM plugins
+(paradigms defining entries + flow model — react/web, hono/server; coexist) →
+LIBRARY plugins (several seam KINDS: router = react-router; component-library =
+mantine; effect probe = redis/postgres; cross-system wire = websockets). Abstract
+contract = SEAM, concrete = ADAPTER. Plugins self-declare when they run (every
+file / on a syntax shape) — NOT glob config. Engine is two-phase: per-file
+passes MARK nodes + channel endpoints, core JOINS endpoints across files
+(websockets is the canonical join), a final pass RESOLVES flow over the complete
+graph. Plugin set = react, react-router, hono, mantine, redis, postgres,
+websockets (codex stack); seams extracted from building these (build-first).
+Core also enumerates PACKAGE FUNCTION ENTRIES (a package's exported functions)
+as connection points via pure exports analysis — no plugin; server endpoints
+(hono) and browser routes (react-router) are the plugin-supplied entry kinds.
+All three are the same kind of entry node in the map.
 
 Dependencies: Configuration Subsystem, AST Analyzer Core (delivers the
 detect callbacks), Effect-Chain Instrumentation (hosts taps), Diagnostics &
@@ -286,7 +321,7 @@ Main capabilities:
   ordinary coverage errors.
 
 Cross-references: implements R20 (all items), the init halves of R17 and D2;
-constrained by D13 (layout), D16 (v1 monorepo scope assumption), R18 (prehook
+constrained by D13 (layout), D16 (monorepo scope assumption), R18 (prehook
 points at docs).
 
 Dependencies: Configuration Subsystem, Plugin System & Seam Contract, AST
@@ -363,7 +398,7 @@ the analyzer also feeds it), Cache Subsystem, Diagnostics & Error Rendering.
 
 Materializes the two persistent, queryable repo-level graph artifacts that
 the whole system references — not ad-hoc queries. This is where Q3
-(non-lexical edges — v1-blocking) must be designed: event bus, WS, stores,
+(non-lexical edges — blocking) must be designed: event bus, WS, stores,
 and context hops break lexical chain-following, and the target repos' core
 flows cross them.
 
@@ -387,8 +422,17 @@ Main capabilities:
   hops.
 
 Cross-references: implements C2, the cross-module half of C1; constrained by
-Q3 (v1-blocking, undesigned), P3 (type-graph detection), D13 (invalidation
+Q3 (blocking, undesigned), P3 (type-graph detection), D13 (invalidation
 consumer); powers C3 and R19 pair derivation.
+
+**Update (2026-07-05 — D22):** the two graph artifacts ARE the per-member
+complete MAP — every bounded value-set member is its own node, so a new member
+always produces a review delta (execution stays salient-shrunk per C3, a
+separate artifact with the opposite policy). HARD requirement: where a flow
+cannot be traced (Q3 non-lexical hops, dynamic dispatch, opaque spreads) the
+map MARKS "not followed here" rather than silently omitting the edge — this
+makes Q3 a completeness property of the PRODUCT (the map is the deliverable the
+human spot-checks), not an analyzer nicety.
 
 Dependencies: AST Analyzer Core, Cache Subsystem, Configuration Subsystem.
 
@@ -453,6 +497,12 @@ Cross-references: implements C3, artifact inventory committed item 3 and
 cache item 6; feeds R9 tier-1 arrange data, R19 pair inventories, R12
 explorer state lists; constrained by the no-node-ID-keys ruling, D17
 (states are data, name-keyed).
+
+**Update (2026-07-05 — D22/D23):** C3 salience governs EXECUTION state
+generation ONLY; the MAP (bucket 8) enumerates every bounded member per-member.
+Execution policy (D23): e2e salient-shrunk by default + per-harness override;
+unit salient + opt-in full-collection "battle-test" mode; unit's dedicated role
+= perf.
 
 Dependencies: Repo Graph Builder, AST Analyzer Core, Cache Subsystem;
 Harness System wires named states in.
@@ -707,8 +757,8 @@ Main capabilities:
 - R6 mode classification across the three execution contexts (unit /
   integration / e2e), including the DSL rule (SQL/regex/ESLint-selector
   logic validated by the real engine, integration mode) and the emerging
-  single-owner allocation heuristics; schema supports per-mode instructions
-  NOW, full ruleset later.
+  single-owner allocation heuristics; schema supports per-mode instructions;
+  the full ruleset is still to be designed.
 - Dual arrange expression for the same logical case (open question): unit
   sets props directly; e2e seeds boundaries + navigates and lets props
   emerge.
@@ -750,6 +800,13 @@ Cross-references: implements R5, R6, R9, P2, P4, the assembly line of the
 artifact inventory (cache item 2), the plumbing principle; absorbs D3
 (generation always produces the cases); constrained by D10, D12, D17, Q1,
 the E2E-arrange open question; catalog Bucket A is its derivation spec.
+
+**Update (2026-07-05 — D21/D23):** generated tests verify STRUCTURE/FLOW —
+reachability of declared paths in the assembled system and consumer
+consumption — never the isolated value-correctness of a typed pure function
+(D21). Enumeration is salient-shrunk for execution (D23); per-member
+completeness is the MAP's job (D22, bucket 8), reviewed by the human, not
+asserted by a generated test.
 
 Dependencies: AST Analyzer Core, Repo Graph Builder, State Data System,
 Rule & Obligation Engine (obligation-driven cases), Harness System (declared
@@ -857,7 +914,7 @@ Main capabilities:
   overrides, R15 tap injection into launched processes.
 - Boot arbitrary refs (via git worktrees) for the runtime visual diff and
   ad-hoc review.
-- v1 scope: npm monorepos with `packages/*`, single operator; per-repo env
+- Target-repo scope: npm monorepos with `packages/*`, single operator; per-repo env
   config without apology.
 - Parallel-worker isolation + world reset (Q9 — UNDESIGNED): per-worker
   ports/store namespaces/tmp dirs and fast reset-between-tests per store
@@ -865,7 +922,7 @@ Main capabilities:
 
 Cross-references: implements D16, the smoketest line of D2; enables D5, D11,
 R15 (tap side), R12 (visual-diff/explorer boots); constrained by the
-no-provisioning ruling and the v1 target-repo scope assumption.
+no-provisioning ruling and the target-repo scope assumption.
 
 Dependencies: Configuration Subsystem, Plugin System & Seam Contract
 (connectivity checks, taps), Git Integration (worktrees), Diagnostics &
@@ -1056,13 +1113,13 @@ Main capabilities:
   position is addressable — state name + entry + flow step — and copyable, so
   "state X is wrong" is a precise handle the human pastes to the LLM, not a
   description. (R12 promises "precise LLM feedback"; this is its mechanism.)
-- v2 boundary: record-centric inspection UX beyond the per-request
-  effects panel is explicitly deferred.
+- Deferred (owner-chosen): record-centric inspection UX beyond the per-request
+  effects panel.
 
 Cross-references: implements the explorer paragraphs of R12 (state,
 endpoint, full-stack ruling, live log); powered by C3 (state lists), D5/D16
-(real stack semantics), R15 display members; scoped by Q7 (v1 partition
-unruled) and the v2 deferral.
+(real stack semantics), R15 display members; scoped by Q7 (partition moot —
+all surfaces are core) and the owner-chosen record-inspection deferral.
 
 Dependencies: Harness System, State Data System, Environment Orchestration &
 Smoketest, Effect-Chain Instrumentation, Entry-Point & Route Resolution,
@@ -1078,6 +1135,12 @@ Main capabilities:
 - Execution commands: `check`, `unit`, `e2e` — bundle-capable, scopeable by
   file paths/globs (D2), plus a changed-scope shortcut (working tree vs
   comparison ref — the map invalidation already knows the changed slice).
+  - **Incremental adoption (D27):** the file/glob scoping is ALSO how Assayer is
+    introduced onto an existing repo — point it at one sub-package at a time. The
+    scope applies to ALL enforcement (coverage gaps, lints, stray-hand-written-
+    test detection), not just which tests run; a package outside the active glob
+    is simply not-yet-governed (not a per-site waiver). Open (Q12): a
+    within-package "enforce only new/changed code" ratchet.
 - `check` runs a STATIC VALIDATION phase before anything executes (gap
   filled, pass 3b): config schema, harness surface references (did-you-mean),
   plugin shapes, state references — so an LLM that only touched a harness
@@ -1118,8 +1181,9 @@ Diagnostics & Error Rendering.
 The Electron/Tauri-class application (explicit user preference — no
 browser-tab workflow) that hosts every human-facing surface. Because
 generated tests aren't colocated with source, the app is how a human
-browses, runs, reviews, and manually tests. Q7 (which surfaces are v1) is
-the open cut line.
+browses, runs, reviews, and manually tests. Every review surface is core
+functionality — Q7's partition question is resolved by removal, so there is no
+cut line to draw.
 
 Main routes/views (each named by the docs):
 - **Repo tree / file view:** file/folder tree → click a file → its case
@@ -1152,7 +1216,7 @@ review/diff view → only-changed diagrams listed → clicks a changed flow node
 chain log → if wrong, copies the state/step reference and directs the LLM.
 
 Cross-references: implements D14 and the hosting requirements of R12 and
-R21; constrained by Q7 (v1 partition), D18 (review ergonomics are the
+R21; constrained by Q7 (resolved by removal — no partition), D18 (review ergonomics are the
 security model), D15 (ad-hoc ref comparison).
 
 Dependencies: Review Projections & Observable Ledger, Interactive Explorers,
@@ -1177,7 +1241,7 @@ Main capabilities:
   alone).
 - Versioned with the package — docs always match the installed schema.
 - Supplies the session-prehook content Init installs (R20 item 4).
-- Later candidate: same topics over MCP; CLI is the v1 requirement.
+- Later candidate: same topics over MCP; the CLI is the required surface.
 
 Cross-references: implements R18, the docs half of R15's authorability
 constraint, content for R20 item 4; symmetry with P1.
@@ -1236,7 +1300,7 @@ the item; secondary owners in parentheses.
 | R3 (coverage as build error) | Coverage Enforcement | |
 | R4 (TypeScript only) | AST Analyzer Core | |
 | R5 (declarative cases; map is the definition) | Test Case Derivation & Assembly (Interpreter & Wrapped Runners, Harness System) | Only authored form: harness config cases |
-| R6 (per-case mode classification) | Test Case Derivation & Assembly | Schema support now; ruleset later (deferred list) |
+| R6 (per-case mode classification) | Test Case Derivation & Assembly | Schema supported; granular ruleset still to be designed (see non-goals) |
 | R7 (harness per file; composition) | Harness System (Entry-Point & Route Resolution) | |
 | R8 (categorical obligations) | Rule & Obligation Engine (Plugin System) | Corpora ship with probe/rule packages |
 | R9 (three provenance tiers) | Test Case Derivation & Assembly (Harness System for tier 3) | |
@@ -1275,11 +1339,11 @@ the item; secondary owners in parentheses.
 | D18 (implementation is spec; diagram is contract) | Ref-to-Ref Semantic Diff Engine (Review Projections & Observable Ledger; Interactive Explorers as backstop) | Signal-to-noise = core product property |
 | Q1 (our logic vs platform/Intl) | Test Case Derivation & Assembly | Open; ruled at derivation time |
 | Q2 (RESOLVED by D12/D17/D18) | Test Case Derivation & Assembly, Harness System | Resolution recorded; no residual work beyond D12 owners |
-| Q3 (non-lexical edges — v1-BLOCKING) | Repo Graph Builder | Must be designed before analyzer epic |
+| Q3 (non-lexical edges — BLOCKING) | Repo Graph Builder | Must be designed before analyzer epic |
 | Q4 (db holes: lint vs test) | Rule & Obligation Engine (Plugin System — db probe family TO-FILL) | |
 | Q5 (full-flow selection rule) | Contract Registry & Layered Verification | |
 | Q6 (RESOLVED by removal — no approval) | Ref-to-Ref Semantic Diff Engine | Diff is a view; only gate is pipeline pass/fail |
-| Q7 (R12/D14 v1 partition — BLOCKER) | Desktop App (Interactive Explorers, Review Projections & Observable Ledger) | Needs the user's cut line |
+| Q7 (R12/D14 partition — RESOLVED BY REMOVAL) | Desktop App (Interactive Explorers, Review Projections & Observable Ledger) | No partition — all review surfaces + tooling are core |
 | Q8 (public-API dead-surface exemption) | Rule & Obligation Engine (Configuration Subsystem home) | Must ship WITH the rule |
 | Blocker: interface contract (harness API + persistence schemas + runtime contract) | Harness System (Interpreter & Wrapped Runners, State Data System, Configuration Subsystem) | Gates the format work |
 | Blocker: coverage-ID scheme | AST Analyzer Core (ID grammar), Cache Subsystem (two-stage invalidation), Ref-to-Ref Semantic Diff Engine (correspondence + churn matrix) | Cache-internal only |
