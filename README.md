@@ -1,61 +1,39 @@
 # Assayer
 
-A comprehensive TypeScript test stub generator that uses the TypeScript Compiler API to parse source files and generate executable test stubs with comprehensive branch coverage.
+A test enforcement and generation tool for TypeScript repos maintained by LLMs.
 
-## Table of Contents
+Assayer statically identifies what *should* be tested, compares it against what
+*is* tested, and fails like a build error when the two disagree — so an LLM
+working in the repo gets told exactly what it broke and what satisfies the
+check, instead of a human re-verifying every change by hand.
 
-- [Overview](#overview)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Core Architecture](#core-architecture)
-- [API Reference](#api-reference)
-- [Configuration](#configuration)
-- [Examples](#examples)
-- [Development](#development)
-- [Testing](#testing)
+## Status
 
-## Overview
+**Planning phase. There is no implementation yet.** The previous stub-generator
+prototype was scrapped and this repo was reset; the current design supersedes
+it entirely.
 
-Assayer is a deterministic testing tool that addresses the unreliability of AI-based code analysis. It uses the TypeScript Compiler API to parse source files, identify all testable code paths and branches, then generates executable test stubs. The key insight is moving intelligence from AI (unreliable) to AST parsing (deterministic), using AI only for filling pre-structured test stubs.
+All current thinking lives in `plan/`:
 
-### Key Features
+| Doc | Contents |
+|---|---|
+| `plan/requirements.md` | Principles, requirements, decisions, open questions, glossary, artifact inventory — start here (blockers for epic carving are at the top) |
+| `plan/expectation-catalog.md` | Concrete syntax → expectation classifications: what gets auto-tested, what needs declared intent, what's repo-specific |
+| `plan/case-studies.md` | The real incidents motivating the design — read these first for the "why" |
 
-- **Deterministic Parsing**: Uses TypeScript Compiler API for reliable AST analysis
-- **Comprehensive Coverage**: Identifies all function types including arrow functions, class methods, and object methods
-- **Flexible Generation**: Supports Jest, Vitest, and custom test frameworks
-- **Configurable Extraction**: Control which functions to extract (exported-only vs all functions)
-- **Template System**: Customizable test templates for different testing patterns
-- **Validation Framework**: Built-in validation to ensure generated tests are syntactically correct
+## Design summary (decided, not built)
 
-## Installation
+- npm package installed per-repo; TypeScript projects only.
+- Owns and fully wraps its test runners (Jest for unit/integration, Playwright
+  for e2e) — consumers never touch raw runner APIs.
+- Tests are declarative config structures, not `it()` blocks; one test file
+  drives multiple execution modes.
+- Coverage enforcement is rule-driven (ESLint-style architecture): a base rule
+  set plus pluggable per-tech packages, with build-error output written for LLM
+  consumption.
+- Generated tests are machine-owned and locked; humans and LLMs author only
+  harnesses, declared observables/requirements, and expectation values.
+- Review surfaces (model projections, semantic diffs, state/endpoint explorers)
+  let a human verify requirement-level changes without reading test files.
 
-```bash
-npm install assayer
-```
-
-## Quick Start
-
-## Core Architecture
-
-Assayer's architecture is built around three main components:
-
-### 1. Parsers
-
-Extract function metadata from TypeScript/JavaScript source code.
-
-- **FunctionParser**: The main parser supporting configurable function extraction
-- **SimpleFunctionParser**: Legacy parser for exported functions only
-
-### 2. Generators
-
-Convert function metadata into executable test stubs.
-
-- **JestTestStubGenerator**: Generates Jest-compatible test files
-- **GeneratorFactory**: Factory for creating generators with custom configurations
-
-### 3. Templates
-
-Customizable templates for different test patterns and frameworks.
-
-- **JestTemplates**: Template system for Jest test generation
-- **Custom Templates**: Support for Vitest, Mocha, and custom frameworks
+None of the above exists as code yet.

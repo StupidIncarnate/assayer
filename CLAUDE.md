@@ -1,197 +1,104 @@
-# Assayer 
-
-## Environment
-
-- **Project Type**: AST-based test stub generator for TypeScript/React
-- **Node Version**: ES2016+ (based on TypeScript target)
-- **TypeScript Version**: ^5.5.3
-- **Test Framework**: Jest ^30.0.4
-- **Linting**: ESLint ^9.30.1
-- **Build Target**: CommonJS modules in dist/
-- **Primary Purpose**: Parse TypeScript/JSX files and generate comprehensive test stubs with 100% branch coverage
+# Assayer
 
 ## Project Context
 
-Assayer is a deterministic testing tool that addresses the unreliability of AI-based code analysis. It uses the TypeScript Compiler API to parse source files, identify all testable code paths and branches, then generates executable test stubs. The key insight is moving intelligence from AI (unreliable) to AST parsing (deterministic), using AI only for filling pre-structured test stubs.
+Assayer is a test enforcement + generation npm package for TypeScript repos
+maintained by LLMs. It statically identifies what SHOULD be tested (rule-driven,
+ESLint-style architecture), diffs that against what IS tested, and fails like a
+build error. It owns and fully wraps its runners (Jest = unit/integration,
+Playwright = e2e); tests are declarative config structures, not `it()` blocks.
+The key move: intelligence lives in deterministic AST/type-graph analysis, not
+in the LLM — the LLM only fills pre-structured expectation values and authors
+declared intent (observables), and build errors tell it exactly what to fix.
 
-## Testing Standards
+**Status: planning. No implementation exists.** Source of truth is `plan/`:
+`requirements.md` (principles/requirements/decisions/glossary/artifact
+inventory — epic-carving BLOCKERS are at the top; do not implement past them),
+`expectation-catalog.md` (syntax → expectation classifications),
+`case-studies.md` (the real incidents motivating the design — the "why").
+This file summarizes decision-shaping constraints; the plan docs win on detail.
 
-### Test Framework Configuration
+## Constraints that shape every implementation decision
 
-**Jest Configuration**:
-- Test environment: Node.js
-- Coverage collection from: `src/**/*.{ts,tsx}`
-- Test file patterns: `*.{test}.{ts,tsx}`
-- Module path mapping: `@/` → `src/`
-- Setup file: `jest.setup.js`
-- Transform: Uses babel-jest (requires babel configuration to be added)
+**Error text is product surface (P1).** Every failure must name what's wrong,
+where, and what satisfies the check — written for an LLM to act on without a
+human. A vague error is a bug. Exact error strings are asserted in tests.
 
-**Coverage Requirements**:
-- Minimum coverage: 100% (to be enforced)
+**Detect by type graph, never by convention (P3).** No folder-name, file-name,
+or architecture assumptions in detection logic — TypeScript type-graph facts
+only. Assayer must work standalone in any TS repo; dungeonmaster-shaped repos
+are best-case input, never required input. Graceful degradation: declared-as-
+data semantics ⇒ tier-2 exhaustive generation; imperative literals ⇒ tier-1
+branch skeletons. Nudge toward declaration in errors; never require it.
 
-### Test File Organization
+**Expectations never derive from the code under test (P4).** Generated expected
+values come from inputs, declared models, observables, or consumer demands —
+NEVER from executing the implementation and recording output. That's a snapshot
+test; it cannot disagree with the code. This rule is why regeneration is safe.
 
-```
-src/
-├── component.ts
-├── component.test.ts       # Unit tests
-└── __tests__/
-    └── component.test.ts   # Alternative location
-```
+**Wrapping discipline (R1) — exclusive allowlist.** Raw Jest/Playwright
+controls are never exposed: not in configs, not in harnesses, not in custom
+tests. Escalation ladder for capability requests: (1) express in the closed
+vocabulary; (2) global repo-level config control (e.g. timeouts — per-test
+timeout knobs must never exist); (3) last resort, a new WRAPPED capability.
+Every leaked raw control is an LLM escape hatch and blocks runner swapping.
 
-### Test Naming Conventions
+**Determinism is load-bearing everywhere.** Same code ⇒ same derived artifacts,
+same hashes, byte-identical serialization. Baselines (approval records), the
+content-hash cache, semantic diffs, and CI cold-start all depend on it. No
+timestamps, randomness, or map-ordering nondeterminism in any derived output.
 
-**Test Files**:
-- Unit tests: `[name].test.ts`
-- Integration tests: `[name].integration.test.ts`
-- Place tests next to source files or in `__tests__` directories
+**Ownership split (D12) — never blur it.** Machine-owned: assembled test files
+in `.assayer/cache/` (never committed, never colocated, no manual edits, NO
+representable skip). Authored + committed: harnesses, observables/scenarios,
+expectation fills (keyed by coverage ID), waivers, config/policies, baseline
+records, repo-local plugins. Everything in `.assayer/` commits EXCEPT `cache/`.
 
-**Test Suites**:
-```typescript
-describe('ComponentName', () => {
-  describe('methodName', () => {
-    it('should handle specific scenario', () => {
-      // Test implementation
-    });
-  });
-});
-```
+**Obligations key off consumption, never declaration.** Chain-follow to
+consumption sites; declared-but-unconsumed surface is a lint error, not a test.
+Pure passthrough plumbing is proven statically, never tested. Tests attach only
+at transformation and consumption sites.
 
-### Testing Patterns
+**Refusal beats testing (R10).** When ambiguity or redundancy can be made
+unrepresentable (duplicate union enumerations, string-built SQL, two contracts
+for one wire event), emit a build error demanding the canonical model — do not
+generate tests around the ambiguity. Prose invariants in comments/docs are
+bugs: convert them to enforced rules (checklist ratchet).
 
-**DAMP Principle**: Tests should be Descriptive And Meaningful Phrases
-- Each test should be self-contained and readable
-- Avoid excessive DRY in tests - clarity over brevity
-- Include setup, action, and assertion phases
+**One rule engine, one plugin pattern.** Rules emit obligations, lints, or
+refusals — one engine, three output kinds. All extension goes through the
+seam-plus-adapters pattern (detect/tap/observe/display; R15): plugins are
+SUBSCRIBERS — they declare syntax patterns and answer phase-keyed callbacks;
+the core owns all traversal, chain-following, and ID assignment. Plugins never
+parse.
 
-**Branch Coverage Focus**:
-- Test all if/else branches
-- Cover all switch cases
-- Test ternary operators both ways
-- Cover optional chaining scenarios
-- Test try/catch blocks
-- Verify dynamic JSX values
-- Test conditional rendering
-- Cover all event handlers
+**The plugin contract must be LLM-authorable.** A user will point an LLM at
+`assayer docs` and say "write me a three.js plugin." If authoring a plugin
+requires core-internals knowledge, the API design has failed. Assayer validates
+plugins with P1-grade errors so a wrong plugin is just another fixable build
+error.
 
-### Mock and Stub Patterns
+**Lean core, per-tech packages (R17).** Core never depends on consumer tech
+(no pg/mongo/react-hook-form imports in core). Tech integrations ship as
+separate `@assayer/*` packages; `assayer init` auto-detects and wires them.
+Core owns plugin version compatibility (peer-range enforcement, P1-grade
+mismatch errors).
 
-Since Assayer will work with the TypeScript Compiler API:
-```typescript
-// Mock TypeScript compiler types
-jest.mock('typescript', () => ({
-  createSourceFile: jest.fn(),
-  SyntaxKind: { /* mock syntax kinds */ }
-}));
-```
+**Assayer's own tests are conventional (R16).** Plain Jest/Playwright under the
+injected dungeonmaster standards — Assayer never verifies itself with its own
+config format. Integration shape: run the CLI/analyzer against fixture repos,
+assert outputs (generated skeletons, EXACT error text, coverage reports).
 
-## Core Development Principles
+## Anti-patterns (each one broke a real repo — see case-studies.md)
 
-### No Redundancy
-- **Never** have multiple components doing the same thing
-- If two pieces of code serve the same purpose, consolidate them
-- One clear way to do each thing
-
-### Code Cleanliness
-- No orphaned files or unused code
-- No commented-out code blocks
-- No TODO comments in completed work
-- No console.log statements in tests (unless specifically testing console output)
-
-### Consistency First
-- If there's an existing pattern, follow it
-- Don't introduce new patterns without removing old ones
-- Same problem = same solution throughout codebase
-
-### Complete Work
-- A task isn't done until:
-  - All tests pass
-  - No TypeScript errors
-  - No linting warnings
-  - No test output spam
-  - All related code is updated
-  - No loose ends
-
-### Obvious Architecture
-- Code organization should be self-evident
-- No confusing dual-purpose components
-- Clear single responsibility
-- If you have to explain why something exists, it probably shouldn't
-
-## Code Standards
-
-### TypeScript Configuration
-
-**Compiler Options**:
-- Target: ES2016
-- Module: CommonJS
-- Strict mode: Enabled (all strict checks)
-- ESM Interop: Enabled
-- Output directory: `dist/`
-
-**Type Safety Requirements**:
-- No implicit any
-- Strict null checks
-- Strict function types
-- No implicit this
-- Consistent casing in file names
-
-### ESLint Rules
-
-**Current Configuration**:
-- Base: @eslint/js/recommended
-- Environment: Node.js, ES2022
-- no-unused-vars: Warning level
-- no-console: Allowed (for development)
-
-**Additional Recommended Rules**:
-```json
-{
-  "rules": {
-    "@typescript-eslint/explicit-function-return-type": "warn",
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/consistent-type-imports": "warn",
-    "prefer-const": "error"
-  }
-}
-```
-
-## Architecture Guidelines
-
-### Core Module Responsibilities
-
-**AST Parser Module**:
-- Parse TypeScript/JSX using Compiler API
-- Build traversable AST representation
-- Handle syntax errors gracefully
-
-**Branch Detector Module**:
-- Identify all conditional branches
-- Map JSX dynamic content
-- Track branch coverage requirements
-
-**Stub Generator Module**:
-- Generate DAMP test structures
-- Create type-safe test stubs
-- Output executable Jest/Vitest files
-
-### Performance Considerations
-
-- Cache parsed ASTs for large files
-- Stream file generation for memory efficiency
-- Parallelize analysis where possible
-- Target <30 second generation per component
-
-### Error Handling
-
-- Graceful degradation for unparseable files
-- Clear error messages with file context
-- Recoverable parsing with partial results
-- Detailed logs for debugging
-
-## Quality Metrics
-
-**Code Quality**:
-- TypeScript strict mode compliance
-- ESLint rule compliance
-- 100% test coverage
+- Exposing a raw runner control "just this once."
+- Committing or colocating generated tests; adding a skip mechanism.
+- Deriving an expected value by running the implementation.
+- Detecting anything by folder/file naming convention.
+- Two encodings of one concept (mode-as-string-prefix, twin contracts,
+  re-enumerated unions) — refuse, don't accommodate.
+- Enforcing an invariant via comment or doc instead of a rule.
+- Per-test/per-harness tuning knobs (timeouts, retries) instead of global
+  config.
+- Testing tier-2 derivable logic through full-browser e2e (floor-ordering
+  lesson: model-derived matrices run at unit speed; ONE e2e proves rendering).
