@@ -1,0 +1,28 @@
+{
+  "name": "@assayer/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./brokers": {
+      "source": "./brokers.ts",
+      "import": "./dist/brokers.js",
+      "require": "./dist/brokers.js",
+      "types": "./dist/brokers.d.ts"
+    },
+    "./testing": {
+      "source": "./testing.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.js",
+      "types": "./dist/testing.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "start": "electron dist/bin/desktop-main.js",
+    "dev": "ASSAYER_DEV=1 electron dist/bin/desktop-main.js --repo ."
+  },
+  "dependencies": {
+    "@assayer/core": "*",
+    "zod": "^3.23.8"
+  }
+}

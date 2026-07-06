@@ -5,6 +5,23 @@ const dungeonmasterTestConfigs = dungeonmaster.configs.dungeonmasterTest;
 
 module.exports = [
     {
+        // Framework/build artifacts that live outside the dungeonmaster folder-type
+        // system (bundler configs, compiled output). Linting these would fail the
+        // enforce-project-structure rule and typed-lint project resolution.
+        ignores: [
+            '**/dist/**',
+            '**/bin/**',
+            '**/*.config.ts',
+            '**/*.config.js',
+            '**/*.d.ts',
+            '**/@types/**',
+            '**/__mocks__/**',
+            '**/src/main.tsx',
+            '**/startup/desktop-main.ts',
+            '**/startup/desktop-preload.ts',
+        ],
+    },
+    {
         files: ['**/*.ts', '**/*.tsx'],
         ignores: ['**/*.test.ts', '**/*.test.tsx'],
         languageOptions: {

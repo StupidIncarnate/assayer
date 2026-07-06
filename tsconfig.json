@@ -1,13 +1,33 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "composite": false,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "allowJs": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ]
   },
-  "include": ["src"]
+  "references": [
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/desktop"
+    },
+    {
+      "path": "./packages/cli"
+    }
+  ],
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/src/**/*.tsx",
+    "packages/*/*.ts"
+  ],
+  "extends": "./tsconfig.base.json"
 }

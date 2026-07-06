@@ -1,0 +1,31 @@
+{
+  "name": "@assayer/core",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./brokers": {
+      "source": "./brokers.ts",
+      "import": "./dist/brokers.js",
+      "require": "./dist/brokers.js",
+      "types": "./dist/brokers.d.ts"
+    },
+    "./contracts": {
+      "source": "./contracts.ts",
+      "import": "./dist/contracts.js",
+      "require": "./dist/contracts.js",
+      "types": "./dist/contracts.d.ts"
+    },
+    "./testing": {
+      "source": "./testing.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.js",
+      "types": "./dist/testing.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}

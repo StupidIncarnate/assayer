@@ -1,0 +1,16 @@
+{
+  "name": "assayer",
+  "version": "1.0.0",
+  "private": true,
+  "bin": {
+    "assayer": "dist/bin/assayer.js"
+  },
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@assayer/core": "*",
+    "@assayer/desktop": "*",
+    "zod": "^3.23.8"
+  }
+}
