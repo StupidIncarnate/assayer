@@ -1,7 +1,7 @@
-import { assayerCoreDocsAdapterProxy } from '../../../adapters/assayer-core/docs/assayer-core-docs-adapter.proxy';
+import { docsGetBrokerProxy } from '@assayer/core/testing';
 
 export const DocsShowResponderProxy = (): Record<PropertyKey, never> => {
-  assayerCoreDocsAdapterProxy();
+  docsGetBrokerProxy();
 
   return {};
 };

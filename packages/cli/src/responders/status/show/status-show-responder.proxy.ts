@@ -1,7 +1,7 @@
-import { assayerCoreStatusAdapterProxy } from '../../../adapters/assayer-core/status/assayer-core-status-adapter.proxy';
+import { statusGetBrokerProxy } from '@assayer/core/testing';
 
 export const StatusShowResponderProxy = (): Record<PropertyKey, never> => {
-  assayerCoreStatusAdapterProxy();
+  statusGetBrokerProxy();
 
   return {};
 };

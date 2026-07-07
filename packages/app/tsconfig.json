@@ -10,5 +10,5 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "typeRoots": ["../../node_modules/@types"]
   },
-  "include": ["src/**/*", "*.ts", "@types/**/*.d.ts"]
+  "include": ["src/**/*", "test/**/*", "*.ts", "@types/**/*.d.ts"]
 }

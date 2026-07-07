@@ -1,7 +1,7 @@
-import { assayerDesktopLaunchAdapterProxy } from '../../../adapters/assayer-desktop/launch/assayer-desktop-launch-adapter.proxy';
+import { desktopLaunchBrokerProxy } from '@assayer/desktop/testing';
 
 export const LaunchRunResponderProxy = (): Record<PropertyKey, never> => {
-  assayerDesktopLaunchAdapterProxy();
+  desktopLaunchBrokerProxy();
 
   return {};
 };

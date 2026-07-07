@@ -1,4 +1,5 @@
-import { DocsTopicStub } from '../../../contracts/docs-topic/docs-topic.stub';
+import { DocsTopicStub } from '@assayer/shared/contracts';
+
 import { docsGetBroker } from './docs-get-broker';
 import { docsGetBrokerProxy } from './docs-get-broker.proxy';
 

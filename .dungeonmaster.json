@@ -1,0 +1,19 @@
+{
+  "framework": "monorepo",
+  "orchestrationMode": "node",
+  "schema": "zod",
+  "orchestration": {
+    "slotCount": 3,
+    "timeoutMs": 900000
+  },
+  "dungeonmaster": {
+    "port": 3737
+  },
+  "devServer": {
+    "devCommand": "npm run dev",
+    "port": 3738,
+    "buildCommand": "npm run build",
+    "readinessPath": "/",
+    "readinessTimeoutMs": 30000
+  }
+}

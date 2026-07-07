@@ -1,12 +1,10 @@
 /**
- * PURPOSE: Electron preload — exposes a typed `assayerBridge` on window via contextBridge so the
- *   renderer fetches status over IPC without Node access. Framework bootstrap (bin/, eslint-ignored).
+ * PURPOSE: Electron preload entry — exposes the assayer bridge. Thin bootstrap; the contextBridge
+ *   logic lives in the electron/preload-bridge adapter + the desktop-preload flow/responder.
  *
  * USAGE:
  * // Referenced by the BrowserWindow webPreferences.preload
  */
-import { contextBridge, ipcRenderer } from 'electron';
+import { StartDesktopPreload } from '../src/startup/start-desktop-preload';
 
-contextBridge.exposeInMainWorld('assayerBridge', {
-  getStatus: (): Promise<unknown> => ipcRenderer.invoke('assayer:status'),
-});
+StartDesktopPreload();

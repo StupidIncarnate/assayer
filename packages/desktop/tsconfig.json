@@ -9,5 +9,5 @@
     "typeRoots": ["../../node_modules/@types"]
   },
   "include": ["src/**/*", "*.ts", "bin/**/*"],
-  "references": [{ "path": "../core" }]
+  "references": [{ "path": "../shared" }, { "path": "../core" }]
 }

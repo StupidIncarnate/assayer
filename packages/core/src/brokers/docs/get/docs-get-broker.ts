@@ -6,9 +6,9 @@
  * docsGetBroker({ topic: docsTopicContract.parse('overview') });
  * // Returns a validated DocsResult { topic, body }; throws on an unknown topic
  */
-import { docsResultContract } from '../../../contracts/docs-result/docs-result-contract';
-import type { DocsResult } from '../../../contracts/docs-result/docs-result-contract';
-import type { DocsTopic } from '../../../contracts/docs-topic/docs-topic-contract';
+import { docsResultContract } from '@assayer/shared/contracts';
+import type { DocsResult, DocsTopic } from '@assayer/shared/contracts';
+
 import { docsCatalogStatics } from '../../../statics/docs-catalog/docs-catalog-statics';
 
 export const docsGetBroker = ({ topic }: { topic: DocsTopic }): DocsResult => {

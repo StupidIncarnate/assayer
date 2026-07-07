@@ -7,8 +7,9 @@
  * statusGetBroker();
  * // Returns a validated StatusResult, e.g. { version: '1.0.0', message: 'Assayer core online' }
  */
-import { statusResultContract } from '../../../contracts/status-result/status-result-contract';
-import type { StatusResult } from '../../../contracts/status-result/status-result-contract';
+import { statusResultContract } from '@assayer/shared/contracts';
+import type { StatusResult } from '@assayer/shared/contracts';
+
 import { assayerVersionStatics } from '../../../statics/assayer-version/assayer-version-statics';
 
 export const statusGetBroker = (): StatusResult =>

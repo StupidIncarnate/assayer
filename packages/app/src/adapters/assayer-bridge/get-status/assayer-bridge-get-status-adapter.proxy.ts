@@ -1,26 +1,23 @@
 /**
- * WHY MOCK ADAPTER: the preload contextBridge (window.assayerBridge) is a runtime global
- * injected by Electron, not an npm package. Like the runtime dynamic-import adapter, this
- * adapter mocks itself — registerMock triggers the AST transformer's jest.mock, then values
- * are set directly on the jest.fn().
+ * WHY MOCK THE WINDOW GLOBAL: the adapter's I/O boundary is window.assayerBridge — the
+ * contextBridge object the Electron preload injects at runtime. jsdom has no such global, so the
+ * proxy stands it up (default: resolves a stub) and can also remove it via absent() to exercise the
+ * missing-preload guard. Mocking the boundary, not the adapter, keeps the adapter body running real.
  */
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-
-import { assayerBridgeGetStatusAdapter } from './assayer-bridge-get-status-adapter';
 import { StatusViewStub } from '../../../contracts/status-view/status-view.stub';
-
-registerMock({ fn: assayerBridgeGetStatusAdapter });
 
 export const assayerBridgeGetStatusAdapterProxy = (): {
   returns: (params: { status: ReturnType<typeof StatusViewStub> }) => void;
+  absent: () => void;
 } => {
-  const mock = assayerBridgeGetStatusAdapter as unknown as jest.Mock;
-
-  mock.mockResolvedValue(StatusViewStub());
+  window.assayerBridge = { getStatus: async (): Promise<unknown> => Promise.resolve(StatusViewStub()) };
 
   return {
     returns: ({ status }: { status: ReturnType<typeof StatusViewStub> }): void => {
-      mock.mockResolvedValue(status);
+      window.assayerBridge = { getStatus: async (): Promise<unknown> => Promise.resolve(status) };
+    },
+    absent: (): void => {
+      Reflect.deleteProperty(window, 'assayerBridge');
     },
   };
 };

@@ -11,6 +11,8 @@
  * assayer                 # (no command) opens the desktop app scoped to the current repo
  */
 
+import { processCwdAdapter } from '@dungeonmaster/shared/adapters';
+
 import { StartAssayer } from '../src/startup/start-assayer';
 
 const COMMAND_ARG_START_INDEX = 2;
@@ -19,7 +21,7 @@ if (require.main === module) {
   try {
     const output = StartAssayer({
       argv: process.argv.slice(COMMAND_ARG_START_INDEX),
-      repoPath: process.env.PWD ?? '.',
+      repoPath: processCwdAdapter(),
     });
     process.stdout.write(`${output}\n`);
   } catch (error) {

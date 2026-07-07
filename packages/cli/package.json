@@ -11,6 +11,7 @@
   "dependencies": {
     "@assayer/core": "*",
     "@assayer/desktop": "*",
+    "@assayer/shared": "*",
     "zod": "^3.23.8"
   }
 }

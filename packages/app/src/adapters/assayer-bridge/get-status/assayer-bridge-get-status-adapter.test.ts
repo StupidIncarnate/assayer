@@ -17,4 +17,15 @@ describe('assayerBridgeGetStatusAdapter', () => {
       });
     });
   });
+
+  describe('when the preload bridge is absent', () => {
+    it('ERROR: {window.assayerBridge undefined} => throws an actionable preload-unavailable error', async () => {
+      const proxy = assayerBridgeGetStatusAdapterProxy();
+      proxy.absent();
+
+      await expect(assayerBridgeGetStatusAdapter()).rejects.toThrow(
+        /^Assayer preload bridge unavailable: window\.assayerBridge was not exposed by the Electron preload\./u,
+      );
+    });
+  });
 });

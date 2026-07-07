@@ -8,5 +8,5 @@
     "typeRoots": ["../../node_modules/@types"]
   },
   "include": ["src/**/*", "*.ts", "bin/**/*"],
-  "references": [{ "path": "../core" }, { "path": "../desktop" }]
+  "references": [{ "path": "../shared" }, { "path": "../core" }, { "path": "../desktop" }]
 }

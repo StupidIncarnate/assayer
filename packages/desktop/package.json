@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@assayer/core": "*",
+    "@assayer/shared": "*",
     "zod": "^3.23.8"
   }
 }
