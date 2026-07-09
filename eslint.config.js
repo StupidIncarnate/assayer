@@ -15,6 +15,9 @@ module.exports = [
             '**/*.d.ts',
             '**/@types/**',
             '**/__mocks__/**',
+            // smoke-repo is fixture INPUT for Assayer's own compiler (a plain TS repo
+            // it analyzes), NOT dungeonmaster-standards code — exclude it from lint.
+            'smoke-repo/**',
         ],
     },
     {
