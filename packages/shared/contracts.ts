@@ -70,6 +70,9 @@ export * from './src/contracts/assayer-cache-manifest/assayer-cache-manifest.stu
 export * from './src/contracts/compiled-file-blob/compiled-file-blob-contract';
 export * from './src/contracts/compiled-file-blob/compiled-file-blob.stub';
 
+export * from './src/contracts/compiled-file-view/compiled-file-view-contract';
+export * from './src/contracts/compiled-file-view/compiled-file-view.stub';
+
 export * from './src/contracts/compile-result/compile-result-contract';
 export * from './src/contracts/compile-result/compile-result.stub';
 
