@@ -16,6 +16,7 @@ module.exports = {
   moduleNameMapper: {
     '^@assayer/shared/contracts$': '<rootDir>/../shared/contracts.ts',
     '^@assayer/core/brokers$': '<rootDir>/../core/brokers.ts',
+    '^@assayer/core/contracts$': '<rootDir>/../core/contracts.ts',
     '^@assayer/core/testing$': '<rootDir>/../core/testing.ts',
     '^@assayer/desktop/brokers$': '<rootDir>/../desktop/brokers.ts',
     '^@assayer/desktop/testing$': '<rootDir>/../desktop/testing.ts',

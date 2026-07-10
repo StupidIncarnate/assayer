@@ -9,6 +9,12 @@
       "require": "./dist/brokers.js",
       "types": "./dist/brokers.d.ts"
     },
+    "./contracts": {
+      "source": "./contracts.ts",
+      "import": "./dist/contracts.js",
+      "require": "./dist/contracts.js",
+      "types": "./dist/contracts.d.ts"
+    },
     "./testing": {
       "source": "./testing.ts",
       "import": "./dist/testing.js",
@@ -20,6 +26,8 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "@assayer/shared": "*"
+    "@assayer/shared": "*",
+    "ts-morph": "^26.0.0",
+    "zod": "^3.23.8"
   }
 }
