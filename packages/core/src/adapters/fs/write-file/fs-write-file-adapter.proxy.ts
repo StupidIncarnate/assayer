@@ -5,6 +5,7 @@ export const fsWriteFileAdapterProxy = (): {
   succeeds: () => void;
   getWrittenPath: () => unknown;
   getWrittenContent: () => unknown;
+  wasCalled: () => boolean;
 } => {
   const handle = registerMock({ fn: writeFile });
 
@@ -16,5 +17,6 @@ export const fsWriteFileAdapterProxy = (): {
     },
     getWrittenPath: (): unknown => handle.mock.calls.at(-1)?.[0],
     getWrittenContent: (): unknown => handle.mock.calls.at(-1)?.[1],
+    wasCalled: (): boolean => handle.mock.calls.length > 0,
   };
 };

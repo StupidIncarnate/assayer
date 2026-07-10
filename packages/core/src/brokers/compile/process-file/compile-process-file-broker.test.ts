@@ -1,0 +1,70 @@
+import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+
+import { compileProcessFileBroker } from './compile-process-file-broker';
+import { compileProcessFileBrokerProxy } from './compile-process-file-broker.proxy';
+
+describe('compileProcessFileBroker', () => {
+  describe('blob already present for the content hash', () => {
+    it('VALID: {content: sha256 already has a blob file} => returns reused:true with the matching contentHash and never writes a blob', async () => {
+      const proxy = compileProcessFileBrokerProxy();
+      proxy.blobExists();
+      const content = 'export function foo() { return 1; }';
+      const contentHash = cryptoSha256Adapter({ content });
+
+      const result = await compileProcessFileBroker({
+        relPath: 'src/foo.ts',
+        content,
+        blobsDir: '/repo/.assayer/cache/blobs',
+      });
+
+      expect(result).toStrictEqual({ reused: true, contentHash });
+      expect(proxy.wasWriteCalled()).toBe(false);
+    });
+  });
+
+  describe('no existing blob for new content', () => {
+    it('VALID: {content: one function, no existing blob} => writes a new blob file and returns reused:false', async () => {
+      const proxy = compileProcessFileBrokerProxy();
+      proxy.blobMissing();
+      const content = 'export function foo() { return 1; }';
+      const contentHash = cryptoSha256Adapter({ content });
+
+      const result = await compileProcessFileBroker({
+        relPath: 'src/foo.ts',
+        content,
+        blobsDir: '/repo/.assayer/cache/blobs',
+      });
+
+      expect(result).toStrictEqual({ reused: false, contentHash });
+
+      const writtenBlob = JSON.parse(String(proxy.getWrittenBlob())) as unknown;
+
+      expect(writtenBlob).toStrictEqual({
+        relPath: 'src/foo.ts',
+        contentHash,
+        nodes: [{ kind: 'function', name: 'foo', startLine: 1, endLine: 1 }],
+        lines: [{ n: 1, text: content, hash: contentHash }],
+      });
+    });
+  });
+
+  describe('unparseable content with no existing blob', () => {
+    it('ERROR: {content: syntax error, no existing blob} => returns reused:false with a positioned parse error and writes no blob', async () => {
+      const proxy = compileProcessFileBrokerProxy();
+      proxy.blobMissing();
+      const content = 'const x = ;;;{{{';
+
+      const result = await compileProcessFileBroker({
+        relPath: 'src/broken.ts',
+        content,
+        blobsDir: '/repo/.assayer/cache/blobs',
+      });
+
+      expect(result).toStrictEqual({
+        reused: false,
+        error: { line: 1, column: 11, message: 'Expression expected.' },
+      });
+      expect(proxy.wasWriteCalled()).toBe(false);
+    });
+  });
+});
