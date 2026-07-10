@@ -8,17 +8,13 @@
  */
 import { statusViewContract } from '../../../contracts/status-view/status-view-contract';
 import type { StatusView } from '../../../contracts/status-view/status-view-contract';
+import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
 
 export const assayerBridgeGetStatusAdapter = async (): Promise<StatusView> => {
   const bridge = window.assayerBridge;
 
-  if (bridge === undefined) {
-    throw new Error(
-      'Assayer preload bridge unavailable: window.assayerBridge was not exposed by the Electron ' +
-        'preload. The preload never ran contextBridge.exposeInMainWorld — verify the BrowserWindow ' +
-        'sets webPreferences.sandbox=false (or the preload is bundled to a single file) and that the ' +
-        'preload path resolves to a built .js.',
-    );
+  if (bridge?.getStatus === undefined) {
+    throw new Error(preloadBridgeStatics.unavailableMessage);
   }
 
   const raw: unknown = await bridge.getStatus();
