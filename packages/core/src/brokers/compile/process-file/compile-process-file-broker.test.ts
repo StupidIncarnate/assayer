@@ -67,4 +67,35 @@ describe('compileProcessFileBroker', () => {
       expect(proxy.wasWriteCalled()).toBe(false);
     });
   });
+
+  describe('tsx JSX content compiles via threaded relPath', () => {
+    it('VALID: {relPath: src/app.tsx, content: JSX component, no existing blob} => writes a blob with one function node named App', async () => {
+      const proxy = compileProcessFileBrokerProxy();
+      proxy.blobMissing();
+      const content = 'function App() {\n  return <div>hi</div>;\n}\n';
+      const contentHash = cryptoSha256Adapter({ content });
+
+      const result = await compileProcessFileBroker({
+        relPath: 'src/app.tsx',
+        content,
+        blobsDir: '/repo/.assayer/cache/blobs',
+      });
+
+      expect(result).toStrictEqual({ reused: false, contentHash });
+
+      const writtenBlob = JSON.parse(String(proxy.getWrittenBlob())) as unknown;
+
+      expect(writtenBlob).toStrictEqual({
+        relPath: 'src/app.tsx',
+        contentHash,
+        nodes: [{ kind: 'function', name: 'App', startLine: 1, endLine: 3 }],
+        lines: [
+          { n: 1, text: 'function App() {', hash: cryptoSha256Adapter({ content: 'function App() {' }) },
+          { n: 2, text: '  return <div>hi</div>;', hash: cryptoSha256Adapter({ content: '  return <div>hi</div>;' }) },
+          { n: 3, text: '}', hash: cryptoSha256Adapter({ content: '}' }) },
+          { n: 4, text: '', hash: cryptoSha256Adapter({ content: '' }) },
+        ],
+      });
+    });
+  });
 });

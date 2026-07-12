@@ -4,7 +4,7 @@
  *   syntax error explaining why extraction failed.
  *
  * USAGE:
- * tsMorphExtractMapAdapter({ source: 'function foo() { return 1; }' });
+ * tsMorphExtractMapAdapter({ source: 'function foo() { return 1; }', relPath: 'src/foo.ts' });
  * // Returns a validated MapExtractResult: { success: true, nodes: [...] }
  */
 import { Project, Node } from 'ts-morph';
@@ -15,9 +15,15 @@ import type { MapNode } from '@assayer/shared/contracts';
 import { mapExtractResultContract } from '../../../contracts/map-extract-result/map-extract-result-contract';
 import type { MapExtractResult } from '../../../contracts/map-extract-result/map-extract-result-contract';
 
-export const tsMorphExtractMapAdapter = ({ source }: { source: string }): MapExtractResult => {
+export const tsMorphExtractMapAdapter = ({
+  source,
+  relPath,
+}: {
+  source: string;
+  relPath: string;
+}): MapExtractResult => {
   const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile('temp.ts', source);
+  const sourceFile = project.createSourceFile(relPath, source);
 
   const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
   const [firstDiagnostic] = diagnostics;

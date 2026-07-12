@@ -9,7 +9,7 @@ describe('tsMorphExtractMapAdapter', () => {
       tsMorphExtractMapAdapterProxy();
       const source = 'function foo() {\n  return 1;\n}\n';
 
-      const result = tsMorphExtractMapAdapter({ source });
+      const result = tsMorphExtractMapAdapter({ source, relPath: 'src/sample.ts' });
 
       expect(result).toStrictEqual({
         success: true,
@@ -22,7 +22,7 @@ describe('tsMorphExtractMapAdapter', () => {
       const source =
         'function g(x: number) {\n  if (x > 0) {\n    return 1;\n  } else {\n    return 2;\n  }\n}\n';
 
-      const result = tsMorphExtractMapAdapter({ source });
+      const result = tsMorphExtractMapAdapter({ source, relPath: 'src/sample.ts' });
 
       expect(result).toStrictEqual({
         success: true,
@@ -37,7 +37,7 @@ describe('tsMorphExtractMapAdapter', () => {
       tsMorphExtractMapAdapterProxy();
       const source = 'const y = true ? 1 : 2;\n';
 
-      const result = tsMorphExtractMapAdapter({ source });
+      const result = tsMorphExtractMapAdapter({ source, relPath: 'src/sample.ts' });
 
       expect(result).toStrictEqual({
         success: true,
@@ -50,7 +50,7 @@ describe('tsMorphExtractMapAdapter', () => {
       const source =
         'function h(x: number) {\n  switch (x) {\n    case 1:\n      return 1;\n    default:\n      return 0;\n  }\n}\n';
 
-      const result = tsMorphExtractMapAdapter({ source });
+      const result = tsMorphExtractMapAdapter({ source, relPath: 'src/sample.ts' });
 
       expect(result).toStrictEqual({
         success: true,
@@ -65,11 +65,23 @@ describe('tsMorphExtractMapAdapter', () => {
       tsMorphExtractMapAdapterProxy();
       const source = 'export default function () {\n  return 1;\n}\n';
 
-      const result = tsMorphExtractMapAdapter({ source });
+      const result = tsMorphExtractMapAdapter({ source, relPath: 'src/sample.ts' });
 
       expect(result).toStrictEqual({
         success: true,
         nodes: [MapNodeStub({ kind: 'function', startLine: 1, endLine: 3 })],
+      });
+    });
+
+    it('VALID: {source: JSX component, relPath: .tsx} => one function node named App', () => {
+      tsMorphExtractMapAdapterProxy();
+      const source = 'function App() {\n  return <div>hi</div>;\n}\n';
+
+      const result = tsMorphExtractMapAdapter({ source, relPath: 'src/app.tsx' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        nodes: [MapNodeStub({ kind: 'function', name: 'App', startLine: 1, endLine: 3 })],
       });
     });
   });
@@ -79,7 +91,7 @@ describe('tsMorphExtractMapAdapter', () => {
       tsMorphExtractMapAdapterProxy();
       const source = 'const x = ;\n';
 
-      const result = tsMorphExtractMapAdapter({ source });
+      const result = tsMorphExtractMapAdapter({ source, relPath: 'src/sample.ts' });
 
       expect(result).toStrictEqual({
         success: false,

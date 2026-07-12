@@ -46,7 +46,7 @@ export const compileProcessFileBroker = async ({
     return { reused: true, contentHash };
   }
 
-  const extracted = tsMorphExtractMapAdapter({ source: content });
+  const extracted = tsMorphExtractMapAdapter({ source: content, relPath });
 
   if (!extracted.success) {
     return {
