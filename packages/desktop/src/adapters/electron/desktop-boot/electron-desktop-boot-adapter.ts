@@ -1,25 +1,42 @@
 /**
- * PURPOSE: Wraps the Electron main-process boot sequence — registers the status IPC handler,
- *   waits for app-ready, opens the BrowserWindow (with the preload + renderer URL it resolves),
- *   and wires quit-on-all-closed. The single Electron main-process I/O boundary.
+ * PURPOSE: Wraps the Electron main-process boot sequence — registers the status, compiled-tree,
+ *   and compiled-file IPC handlers, waits for app-ready, opens the BrowserWindow (with the preload
+ *   + renderer URL it resolves), and wires quit-on-all-closed. The single Electron main-process
+ *   I/O boundary.
  *
  * USAGE:
- * await electronDesktopBootAdapter({ statusChannel: 'assayer:status', resolveStatus });
+ * await electronDesktopBootAdapter({
+ *   statusChannel: 'assayer:status',
+ *   compiledTreeChannel: 'assayer:compiled-tree',
+ *   compiledFileChannel: 'assayer:compiled-file',
+ *   resolveStatus,
+ *   resolveCompiledTree,
+ *   resolveCompiledFile,
+ * });
  * // Returns { success: true } once the window has loaded
  */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { CompiledTree, CompiledFileView } from '@assayer/shared/contracts';
 
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
 
 export const electronDesktopBootAdapter = async ({
   statusChannel,
+  compiledTreeChannel,
+  compiledFileChannel,
   resolveStatus,
+  resolveCompiledTree,
+  resolveCompiledFile,
 }: {
   statusChannel: string;
+  compiledTreeChannel: string;
+  compiledFileChannel: string;
   resolveStatus: () => DesktopStatus;
+  resolveCompiledTree: () => Promise<CompiledTree>;
+  resolveCompiledFile: (params: { relPath: unknown }) => Promise<CompiledFileView>;
 }): Promise<AdapterResult> => {
   const preloadPath = join(__dirname, '../../../../bin/desktop-preload.js');
   const rendererUrl =
@@ -28,6 +45,8 @@ export const electronDesktopBootAdapter = async ({
       : pathToFileURL(join(__dirname, '../../../../../../app/dist/index.html')).href;
 
   ipcMain.handle(statusChannel, () => resolveStatus());
+  ipcMain.handle(compiledTreeChannel, async () => resolveCompiledTree());
+  ipcMain.handle(compiledFileChannel, async (_event: unknown, relPath: unknown) => resolveCompiledFile({ relPath }));
   await app.whenReady();
 
   const window = new BrowserWindow({

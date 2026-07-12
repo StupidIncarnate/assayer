@@ -1,4 +1,5 @@
-import { registerModuleMock } from '@dungeonmaster/testing/register-mock';
+import { ipcMain } from 'electron';
+import { registerModuleMock, registerSpyOn } from '@dungeonmaster/testing/register-mock';
 
 // Electron is unavailable in jest; replace the module with a minimal main-process double.
 // BrowserWindow is a constructor (used with `new`), so it's a function returning a window double.
@@ -17,4 +18,21 @@ registerModuleMock({
   }),
 });
 
-export const electronDesktopBootAdapterProxy = (): Record<PropertyKey, never> => ({});
+export const electronDesktopBootAdapterProxy = (): {
+  handledChannels: () => unknown[];
+  invokeHandler: (params: { channel: string; arg?: unknown }) => Promise<unknown>;
+} => {
+  const handleSpy = registerSpyOn({ object: ipcMain, method: 'handle' });
+
+  return {
+    handledChannels: (): unknown[] => handleSpy.mock.calls.map((call) => call[0]),
+    invokeHandler: async ({ channel, arg }: { channel: string; arg?: unknown }): Promise<unknown> => {
+      const call = handleSpy.mock.calls.find((entry) => entry[0] === channel);
+      const handler = call?.[1] as ((event: unknown, arg?: unknown) => unknown) | undefined;
+      if (handler === undefined) {
+        throw new Error(`No handler registered for channel: ${channel}`);
+      }
+      return await handler(undefined, arg);
+    },
+  };
+};
