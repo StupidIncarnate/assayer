@@ -36,7 +36,7 @@ describe('deriveCasesTransformer', () => {
   });
 
   describe('literal-union operand', () => {
-    it('VALID: {eq on a 3-member union} => then binds the member, else binds the next member', () => {
+    it('VALID: {eq on a 3-member union} => then binds the member, else fans out one case per other member', () => {
       const unionType = TypeDescriptorStub({
         kind: 'union',
         members: [
@@ -71,6 +71,7 @@ describe('deriveCasesTransformer', () => {
       expect(cases).toStrictEqual([
         { reachesExit: 'classify/return@if-then', arrange: [{ param: 'status', value: 'a' }] },
         { reachesExit: 'classify/return@if-else', arrange: [{ param: 'status', value: 'b' }] },
+        { reachesExit: 'classify/return@if-else', arrange: [{ param: 'status', value: 'c' }] },
       ]);
     });
   });

@@ -100,7 +100,9 @@ export const DetailPanelWidget = ({ analysis, hoveredLine }: DetailPanelWidgetPr
                       const isMatch = active && touched.some((line) => line === hoveredLine);
                       return (
                         <Text
-                          key={testCase.reachesExit}
+                          key={`${testCase.reachesExit}#${testCase.arrange
+                            .map((binding) => JSON.stringify(binding.value))
+                            .join(',')}`}
                           data-testid="TEST_CASE_ROW"
                           data-match={isMatch ? 'true' : 'false'}
                           ff="monospace"

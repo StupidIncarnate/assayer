@@ -1,8 +1,10 @@
 /**
- * PURPOSE: Derives the salient test cases for an entry — one per reachable exit. For each exit it
- *   walks the guard path, choosing each guarding branch's arm representative for the operand param,
- *   then fills any unconstrained param with its representative value. The case asserts reaching the
- *   exit (structural, P4) — it never records the returned value.
+ * PURPOSE: Derives the salient test cases for an entry — per reachable exit, the cartesian product of
+ *   each guarding branch's arm value set bound to its operand param, with any unconstrained param
+ *   filled by its representative value. A single-valued arm (e.g. a string length check) yields one
+ *   case per exit; a multi-member arm (an enum's `else`, whose violating set is every OTHER member)
+ *   fans out exhaustively — one case per member (tier-2). Each case asserts reaching the exit
+ *   (structural, P4) — it never records the returned value.
  *
  * USAGE:
  * deriveCasesTransformer({ params, branches, exits });
@@ -44,29 +46,35 @@ export const deriveCasesTransformer = ({
     ]),
   );
 
-  return exits.map((exit) => {
-    const bound = new Map<SymbolName, RepresentativeValue>();
-    exit.guardPath.forEach((step) => {
+  return exits.flatMap((exit) => {
+    const stepChoices = exit.guardPath.flatMap((step) => {
       const range = rangeByBranch.get(step.branchCoverageId);
       const operand = range?.operand;
       if (range === undefined || operand === undefined) {
-        return;
+        return [];
       }
-      const chosen =
-        step.arm === 'else' ? range.armValues.violating[0] : range.armValues.satisfying[0];
-      if (chosen !== undefined) {
-        bound.set(operand, chosen);
-      }
+      const values = step.arm === 'else' ? range.armValues.violating : range.armValues.satisfying;
+      return values.length === 0 ? [] : [{ operand, values }];
     });
 
-    const arrange = params.map((param) => {
-      const existing = bound.get(param.name);
-      return {
-        param: param.name,
-        value: existing === undefined ? representativeValueTransformer({ type: param.type }) : existing,
-      };
-    });
+    const bindings = stepChoices.reduce<Map<SymbolName, RepresentativeValue>[]>(
+      (combos, choice) =>
+        combos.flatMap((combo) =>
+          choice.values.map((value) => new Map(combo).set(choice.operand, value)),
+        ),
+      [new Map<SymbolName, RepresentativeValue>()],
+    );
 
-    return derivedTestCaseContract.parse({ reachesExit: exit.coverageId, arrange });
+    return bindings.map((bound) => {
+      const arrange = params.map((param) => {
+        const existing = bound.get(param.name);
+        return {
+          param: param.name,
+          value: existing === undefined ? representativeValueTransformer({ type: param.type }) : existing,
+        };
+      });
+
+      return derivedTestCaseContract.parse({ reachesExit: exit.coverageId, arrange });
+    });
   });
 };
