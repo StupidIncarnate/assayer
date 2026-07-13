@@ -77,7 +77,7 @@ export const cacheOnlySourceAppHarness = (): {
         relPath: 'src/format-greeting.ts',
         contentHash: greetingHash,
         nodes: [{ kind: 'function', startLine: 1, endLine: 3 }],
-        lines: [
+        displayLines: [
           { n: 1, text: 'export function formatGreeting(name: string): string {', hash: lineHash },
           { n: 2, text: "  return 'FROM-CACHE-BLOB';", hash: lineHash },
           { n: 3, text: '}', hash: lineHash },
@@ -92,7 +92,7 @@ export const cacheOnlySourceAppHarness = (): {
         relPath: 'src/ghost.ts',
         contentHash: ghostHash,
         nodes: [{ kind: 'function', startLine: 1, endLine: 1 }],
-        lines: [{ n: 1, text: "export const ghost = 'no on-disk source exists';", hash: lineHash }],
+        displayLines: [{ n: 1, text: "export const ghost = 'no on-disk source exists';", hash: lineHash }],
       });
       writeFileSync(
         join(configDir, '.assayer', 'cache', 'blobs', `${ghostHash}.json`),

@@ -37,7 +37,7 @@ export const compiledFileResolveBroker = async ({
   return compiledFileViewContract.parse({
     relPath,
     contentHash: blob.contentHash,
-    lines: blob.lines,
+    displayLines: blob.displayLines,
     nodes: blob.nodes,
     ...(blob.analysis === undefined ? {} : { analysis: blob.analysis }),
   });

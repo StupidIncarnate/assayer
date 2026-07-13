@@ -8,7 +8,7 @@
  * compiledFileViewContract.parse({
  *   relPath: 'src/foo.ts',
  *   contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
- *   lines: [{ n: 1, text: 'export const x = 1;', hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
+ *   displayLines: [{ n: 1, text: 'export const x = 1;', hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
  *   nodes: [{ kind: 'function', startLine: 1, endLine: 5 }],
  * });
  * // Returns a validated CompiledFileView (branded fields)
@@ -24,7 +24,8 @@ import { fileAnalysisContract } from '../file-analysis/file-analysis-contract';
 export const compiledFileViewContract = z.object({
   relPath: relPathContract,
   contentHash: contentHashContract.optional(),
-  lines: z.array(sourceLineContract),
+  // Raw per-line source for DISPLAY only (the code viewer / raw-blob view). Never read by analysis.
+  displayLines: z.array(sourceLineContract),
   nodes: z.array(mapNodeContract),
   analysis: fileAnalysisContract.optional(),
 });

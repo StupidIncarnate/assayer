@@ -10,7 +10,7 @@ describe('CodeViewerWidget', () => {
     it('VALID: {fileView with 2 lines} => renders line-number gutter markers 1 and 2', () => {
       CodeViewerWidgetProxy();
       const fileView = CompiledFileViewStub({
-        lines: [
+        displayLines: [
           { n: 1, text: 'const a = 1;', hash: STUB_HASH },
           { n: 2, text: 'const b = 2;', hash: STUB_HASH },
         ],
@@ -28,7 +28,7 @@ describe('CodeViewerWidget', () => {
     it('VALID: {fileView with a TS code line} => renders syntax-highlighted token spans', () => {
       CodeViewerWidgetProxy();
       const fileView = CompiledFileViewStub({
-        lines: [{ n: 1, text: 'export const foo = 1;', hash: STUB_HASH }],
+        displayLines: [{ n: 1, text: 'export const foo = 1;', hash: STUB_HASH }],
       });
 
       const { getByRole } = testingLibraryRenderAdapter({
@@ -44,7 +44,7 @@ describe('CodeViewerWidget', () => {
     it('VALID: {fileView with a single line} => renders its text exactly', () => {
       CodeViewerWidgetProxy();
       const fileView = CompiledFileViewStub({
-        lines: [{ n: 1, text: 'const cached = true;', hash: STUB_HASH }],
+        displayLines: [{ n: 1, text: 'const cached = true;', hash: STUB_HASH }],
       });
 
       const { getByRole } = testingLibraryRenderAdapter({

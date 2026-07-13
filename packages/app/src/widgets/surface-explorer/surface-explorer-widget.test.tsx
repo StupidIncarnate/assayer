@@ -82,14 +82,14 @@ describe('SurfaceExplorerWidget', () => {
         relPath: 'packages/web/app.tsx',
         fileView: CompiledFileViewStub({
           relPath: 'packages/web/app.tsx',
-          lines: [{ n: 1, text: 'const appModule = 1;', hash: STUB_HASH }],
+          displayLines: [{ n: 1, text: 'const appModule = 1;', hash: STUB_HASH }],
         }),
       });
       proxy.setupFile({
         relPath: 'packages/web/other.tsx',
         fileView: CompiledFileViewStub({
           relPath: 'packages/web/other.tsx',
-          lines: [{ n: 1, text: 'const otherModule = 2;', hash: STUB_HASH }],
+          displayLines: [{ n: 1, text: 'const otherModule = 2;', hash: STUB_HASH }],
         }),
       });
 

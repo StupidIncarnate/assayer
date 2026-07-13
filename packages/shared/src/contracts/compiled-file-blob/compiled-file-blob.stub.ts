@@ -8,6 +8,6 @@ export const CompiledFileBlobStub = ({ ...props }: StubArgument<CompiledFileBlob
     relPath: 'packages/shared/src/index.ts',
     contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
     nodes: [{ kind: 'function', startLine: 1, endLine: 5 }],
-    lines: [{ n: 1, text: 'export const x = 1;', hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
+    displayLines: [{ n: 1, text: 'export const x = 1;', hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
     ...props,
   });

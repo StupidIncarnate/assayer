@@ -266,7 +266,7 @@ export const assayerCompileHarness = (): {
       const blob = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${String(entry.contentHash)}.json`), 'utf8'),
       ) as Blob;
-      return CliFileTextStub({ value: blob.lines.map((line) => String(line.text)).join('\n') });
+      return CliFileTextStub({ value: blob.displayLines.map((line) => String(line.text)).join('\n') });
     },
     concatAllBlobs: (): CliFileText => {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');

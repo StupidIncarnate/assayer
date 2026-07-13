@@ -12,7 +12,7 @@ describe('compiledFileViewContract', () => {
     it('EMPTY: {view with empty lines and empty nodes arrays} => parses successfully', () => {
       const result = compiledFileViewContract.parse({
         relPath: 'src/foo.ts',
-        lines: [],
+        displayLines: [],
         nodes: [],
       });
 
@@ -23,7 +23,7 @@ describe('compiledFileViewContract', () => {
   describe('invalid compiled file views', () => {
     it('INVALID: {relPath: ""} => throws validation error', () => {
       expect(() => {
-        return compiledFileViewContract.parse({ relPath: '', lines: [], nodes: [] });
+        return compiledFileViewContract.parse({ relPath: '', displayLines: [], nodes: [] });
       }).toThrow(/at least 1 character/u);
     });
   });

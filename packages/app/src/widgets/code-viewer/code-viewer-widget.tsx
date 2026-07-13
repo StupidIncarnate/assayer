@@ -25,7 +25,7 @@ export interface CodeViewerWidgetProps {
 
 export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProps): ReactElement => {
   const value = useMemo(
-    () => (fileView === null ? '' : fileView.lines.map((line) => line.text).join('\n')),
+    () => (fileView === null ? '' : fileView.displayLines.map((line) => line.text).join('\n')),
     [fileView],
   );
 

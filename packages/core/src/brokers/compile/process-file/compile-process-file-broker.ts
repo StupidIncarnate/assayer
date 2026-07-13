@@ -61,7 +61,7 @@ export const compileProcessFileBroker = async ({
     };
   }
 
-  const lines = content.split('\n').map((text, index) => ({
+  const displayLines = content.split('\n').map((text, index) => ({
     n: index + 1,
     text,
     hash: cryptoSha256Adapter({ content: text }),
@@ -73,7 +73,7 @@ export const compileProcessFileBroker = async ({
     relPath: relPathContract.parse(relPath),
     contentHash,
     nodes: extracted.nodes,
-    lines,
+    displayLines,
     analysis,
   });
 

@@ -43,7 +43,7 @@ describe('compileProcessFileBroker', () => {
         relPath: 'src/foo.ts',
         contentHash,
         nodes: [{ kind: 'function', name: 'foo', startLine: 1, endLine: 1 }],
-        lines: [{ n: 1, text: content, hash: contentHash }],
+        displayLines: [{ n: 1, text: content, hash: contentHash }],
         analysis: { functions: [], enrichment: [] },
       });
     });
@@ -90,7 +90,7 @@ describe('compileProcessFileBroker', () => {
         relPath: 'src/app.tsx',
         contentHash,
         nodes: [{ kind: 'function', name: 'App', startLine: 1, endLine: 3 }],
-        lines: [
+        displayLines: [
           { n: 1, text: 'function App() {', hash: cryptoSha256Adapter({ content: 'function App() {' }) },
           { n: 2, text: '  return <div>hi</div>;', hash: cryptoSha256Adapter({ content: '  return <div>hi</div>;' }) },
           { n: 3, text: '}', hash: cryptoSha256Adapter({ content: '}' }) },

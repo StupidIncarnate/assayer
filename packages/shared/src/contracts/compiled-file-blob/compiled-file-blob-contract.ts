@@ -7,7 +7,7 @@
  *   relPath: 'packages/shared/src/index.ts',
  *   contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
  *   nodes: [{ kind: 'function', startLine: 1, endLine: 5 }],
- *   lines: [{ n: 1, text: 'export const x = 1;', hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
+ *   displayLines: [{ n: 1, text: 'export const x = 1;', hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
  * });
  * // Returns a validated CompiledFileBlob (branded fields)
  */
@@ -23,7 +23,8 @@ export const compiledFileBlobContract = z.object({
   relPath: relPathContract,
   contentHash: contentHashContract,
   nodes: z.array(mapNodeContract),
-  lines: z.array(sourceLineContract),
+  // Raw per-line source for DISPLAY only (the code viewer / raw-blob view). Never read by analysis.
+  displayLines: z.array(sourceLineContract),
   analysis: fileAnalysisContract.optional(),
 });
 

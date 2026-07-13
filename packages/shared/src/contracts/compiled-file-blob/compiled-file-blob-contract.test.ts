@@ -11,12 +11,12 @@ describe('compiledFileBlobContract', () => {
       expect(result.nodes).toStrictEqual([{ kind: 'function', startLine: 1, endLine: 5 }]);
     });
 
-    it('EMPTY: {nodes: [], lines: []} => parses with empty arrays', () => {
+    it('EMPTY: {nodes: [], displayLines: []} => parses with empty arrays', () => {
       const result = compiledFileBlobContract.parse({
         relPath: 'packages/shared/src/index.ts',
         contentHash: HASH,
         nodes: [],
-        lines: [],
+        displayLines: [],
       });
 
       expect(result.nodes).toStrictEqual([]);
@@ -30,7 +30,7 @@ describe('compiledFileBlobContract', () => {
           relPath: '',
           contentHash: HASH,
           nodes: [],
-          lines: [],
+          displayLines: [],
         });
       }).toThrow(/at least 1 character/u);
     });
