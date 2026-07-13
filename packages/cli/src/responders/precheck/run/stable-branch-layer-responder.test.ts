@@ -55,9 +55,10 @@ describe('StableBranchLayerResponder', () => {
     });
   });
 
-  describe('both main and master present', () => {
-    it('VALID: {main and master candidates, picker chooses "develop"} => saves the picker choice, not the preselected candidate', async () => {
+  describe('both main and master present on an interactive TTY', () => {
+    it('VALID: {TTY + main and master candidates, picker chooses "develop"} => saves the picker choice, not the preselected candidate', async () => {
       const proxy = StableBranchLayerResponderProxy();
+      proxy.enableTty();
       proxy.insideWith({ branchListStdout: '* main\n  master\n' });
       proxy.picksBranch({ branch: BranchNameStub({ value: 'develop' }) });
       proxy.saveSucceeds();
@@ -98,6 +99,34 @@ describe('StableBranchLayerResponder', () => {
         '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main"}',
       );
       expect(proxy.pickerCallCount()).toBe(0);
+      expect(result).toStrictEqual({
+        version: '1',
+        repoRoot: '.',
+        exclude: [],
+        stableBranch: 'main',
+      });
+    });
+  });
+
+  describe('both main and master present but stdout is not a TTY (CI / piped)', () => {
+    it('VALID: {non-TTY + main and master candidates, preselected "main"} => resolves to "main" WITHOUT invoking the picker or writing a prompt to stdout', async () => {
+      const proxy = StableBranchLayerResponderProxy();
+      proxy.disableTty();
+      proxy.insideWith({ branchListStdout: '* main\n  master\n' });
+      proxy.saveSucceeds();
+      const config = AssayerConfigStub();
+
+      const result = await StableBranchLayerResponder({
+        config,
+        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        repoRoot: '/repo',
+      });
+
+      expect(proxy.pickerCallCount()).toBe(0);
+      expect(proxy.promptWritten()).toBe(false);
+      expect(proxy.getSavedConfigJson()).toBe(
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main"}',
+      );
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',

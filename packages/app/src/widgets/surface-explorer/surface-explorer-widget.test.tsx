@@ -139,7 +139,7 @@ describe('SurfaceExplorerWidget', () => {
         },
       });
 
-      expect(getByTestId('EXPLORER_CODE').textContent).toBe('');
+      expect(getByTestId('EXPLORER_CODE').textContent).toBe('Select a file to view its compiled source');
     });
   });
 });

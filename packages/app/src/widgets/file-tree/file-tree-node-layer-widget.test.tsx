@@ -103,6 +103,40 @@ describe('FileTreeNodeLayerWidget', () => {
 
       expect(onFileClick.mock.calls).toStrictEqual([]);
     });
+
+    it('VALID: {click dir node twice} => collapses then re-expands its children', async () => {
+      const { nodes } = CompiledTreeStub({
+        nodes: [
+          {
+            name: 'src',
+            path: 'src',
+            kind: 'dir',
+            children: [{ name: 'index.ts', path: 'src/index.ts', kind: 'file' }],
+          },
+        ],
+      });
+      const onFileClick = jest.fn();
+      const proxy = FileTreeNodeLayerWidgetProxy();
+      const { getByText, queryAllByTestId } = testingLibraryRenderAdapter({
+        ui: (
+          <>
+            {nodes.map((node) => (
+              <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
+            ))}
+          </>
+        ),
+      });
+
+      expect(getByText('index.ts')).toBeInTheDocument();
+
+      await proxy.clickEntry({ label: 'src' });
+
+      expect(queryAllByTestId('FILE_TREE_FILE')).toStrictEqual([]);
+
+      await proxy.clickEntry({ label: 'src' });
+
+      expect(getByText('index.ts')).toBeInTheDocument();
+    });
   });
 
   describe('directory node with no children', () => {

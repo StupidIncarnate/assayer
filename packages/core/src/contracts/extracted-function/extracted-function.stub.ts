@@ -1,0 +1,35 @@
+import type { StubArgument } from '@dungeonmaster/shared/@types';
+
+import { extractedFunctionContract } from './extracted-function-contract';
+import type { ExtractedFunction } from './extracted-function-contract';
+
+export const ExtractedFunctionStub = ({ ...props }: StubArgument<ExtractedFunction> = {}): ExtractedFunction =>
+  extractedFunctionContract.parse({
+    entry: {
+      name: 'formatGreeting',
+      params: [{ name: 'name', type: { kind: 'string' } }],
+      returnType: { kind: 'string' },
+      line: 1,
+    },
+    branches: [
+      {
+        coverageId: 'formatGreeting/if:name.length===0',
+        kind: 'if',
+        conditionText: 'name.length === 0',
+        operandParamName: 'name',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'length-eq-zero' },
+        startLine: 2,
+        endLine: 4,
+      },
+    ],
+    exits: [
+      {
+        coverageId: 'formatGreeting/return@if-then',
+        kind: 'return',
+        guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'then' }],
+        line: 3,
+      },
+    ],
+    ...props,
+  });

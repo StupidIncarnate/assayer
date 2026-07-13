@@ -12,5 +12,7 @@ import { MantineProvider } from '@mantine/core';
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 
+import { appThemeStatics } from '../../../statics/app-theme/app-theme-statics';
+
 export const testingLibraryRenderAdapter = ({ ui }: { ui: ReactElement }): RenderResult =>
-  render(createElement(MantineProvider, null, ui));
+  render(createElement(MantineProvider, { theme: appThemeStatics, forceColorScheme: 'dark' }, ui));

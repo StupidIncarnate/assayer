@@ -23,3 +23,7 @@ test-results/
 playwright-report/
 .ward-playwright-report.json
 .last-run.json
+
+# Assayer compiled cache — machine-owned, disposable, byte-identical cold rebuild.
+# Everything else under .assayer/ (states, config, policies) IS committed; only cache/ is not.
+.assayer/cache/

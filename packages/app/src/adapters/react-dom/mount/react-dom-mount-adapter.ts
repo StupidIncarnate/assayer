@@ -13,6 +13,8 @@ import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 
+import { appThemeStatics } from '../../../statics/app-theme/app-theme-statics';
+
 export const reactDomMountAdapter = ({
   container,
   content,
@@ -21,7 +23,11 @@ export const reactDomMountAdapter = ({
   content: ReactNode;
 }): AdapterResult => {
   createRoot(container).render(
-    createElement(StrictMode, null, createElement(MantineProvider, null, content)),
+    createElement(
+      StrictMode,
+      null,
+      createElement(MantineProvider, { theme: appThemeStatics, forceColorScheme: 'dark' }, content),
+    ),
   );
 
   return { success: true as const };

@@ -16,11 +16,13 @@ import { z } from 'zod';
 import { relPathContract } from '../rel-path/rel-path-contract';
 import { sourceLineContract } from '../source-line/source-line-contract';
 import { mapNodeContract } from '../map-node/map-node-contract';
+import { fileAnalysisContract } from '../file-analysis/file-analysis-contract';
 
 export const compiledFileViewContract = z.object({
   relPath: relPathContract,
   lines: z.array(sourceLineContract),
   nodes: z.array(mapNodeContract),
+  analysis: fileAnalysisContract.optional(),
 });
 
 export type CompiledFileView = z.infer<typeof compiledFileViewContract>;

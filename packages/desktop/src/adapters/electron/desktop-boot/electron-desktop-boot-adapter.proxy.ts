@@ -14,6 +14,7 @@ registerModuleMock({
     BrowserWindow: function BrowserWindow() {
       return { loadURL: async () => Promise.resolve() };
     },
+    Menu: { setApplicationMenu: () => undefined },
     ipcMain: { handle: () => undefined },
   }),
 });

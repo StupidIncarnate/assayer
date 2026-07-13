@@ -1,4 +1,4 @@
-import { AssayerCacheManifestStub, CompiledFileBlobStub, RelPathStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub, CompiledFileBlobStub, FileAnalysisStub, RelPathStub } from '@assayer/shared/contracts';
 
 import { compiledFileResolveBroker } from './compiled-file-resolve-broker';
 import { compiledFileResolveBrokerProxy } from './compiled-file-resolve-broker.proxy';
@@ -28,6 +28,25 @@ describe('compiledFileResolveBroker', () => {
       const { lines, nodes } = blob;
 
       expect(result).toStrictEqual({ relPath: 'src/index.ts', lines, nodes });
+    });
+
+    it('VALID: {blob carries analysis} => resolves the view including the analysis', async () => {
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+      const analysis = FileAnalysisStub();
+      const blob = CompiledFileBlobStub({ analysis });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/repo' }),
+        relPath: RelPathStub({ value: 'src/index.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(analysis);
     });
   });
 

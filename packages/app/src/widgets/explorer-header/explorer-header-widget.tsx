@@ -15,7 +15,7 @@ export interface ExplorerHeaderWidgetProps {
 }
 
 export const ExplorerHeaderWidget = ({ summary }: ExplorerHeaderWidgetProps): ReactElement => (
-  <Text data-testid="EXPLORER_HEADER">
+  <Text data-testid="EXPLORER_HEADER" ff="monospace" fz="sm" fw={600} c="gray.3">
     {`Assayer | ${summary.rootFolderName} ${summary.repoName}/${summary.branchName} | ts ${summary.tsCount} tsx ${summary.tsxCount}`}
   </Text>
 );

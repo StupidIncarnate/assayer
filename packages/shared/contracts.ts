@@ -78,3 +78,48 @@ export * from './src/contracts/compile-result/compile-result.stub';
 
 export * from './src/contracts/compiled-tree/compiled-tree-contract';
 export * from './src/contracts/compiled-tree/compiled-tree.stub';
+
+export * from './src/contracts/coverage-id/coverage-id-contract';
+export * from './src/contracts/coverage-id/coverage-id.stub';
+
+export * from './src/contracts/representative-value/representative-value-contract';
+export * from './src/contracts/representative-value/representative-value.stub';
+
+export * from './src/contracts/predicate/predicate-contract';
+export * from './src/contracts/predicate/predicate.stub';
+
+export * from './src/contracts/type-text/type-text-contract';
+export * from './src/contracts/type-text/type-text.stub';
+
+export * from './src/contracts/type-descriptor/type-descriptor-contract';
+export * from './src/contracts/type-descriptor/type-descriptor.stub';
+
+export * from './src/contracts/symbol-name/symbol-name-contract';
+export * from './src/contracts/symbol-name/symbol-name.stub';
+
+export * from './src/contracts/guard-step/guard-step-contract';
+export * from './src/contracts/guard-step/guard-step.stub';
+
+export * from './src/contracts/param-descriptor/param-descriptor-contract';
+export * from './src/contracts/param-descriptor/param-descriptor.stub';
+
+export * from './src/contracts/branch-node/branch-node-contract';
+export * from './src/contracts/branch-node/branch-node.stub';
+
+export * from './src/contracts/exit-node/exit-node-contract';
+export * from './src/contracts/exit-node/exit-node.stub';
+
+export * from './src/contracts/derived-test-case/derived-test-case-contract';
+export * from './src/contracts/derived-test-case/derived-test-case.stub';
+
+export * from './src/contracts/line-enrichment/line-enrichment-contract';
+export * from './src/contracts/line-enrichment/line-enrichment.stub';
+
+export * from './src/contracts/entry-signature/entry-signature-contract';
+export * from './src/contracts/entry-signature/entry-signature.stub';
+
+export * from './src/contracts/function-analysis/function-analysis-contract';
+export * from './src/contracts/function-analysis/function-analysis.stub';
+
+export * from './src/contracts/file-analysis/file-analysis-contract';
+export * from './src/contracts/file-analysis/file-analysis.stub';

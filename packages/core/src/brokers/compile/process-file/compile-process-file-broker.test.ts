@@ -26,7 +26,7 @@ describe('compileProcessFileBroker', () => {
     it('VALID: {content: one function, no existing blob} => writes a new blob file and returns reused:false', async () => {
       const proxy = compileProcessFileBrokerProxy();
       proxy.blobMissing();
-      const content = 'export function foo() { return 1; }';
+      const content = 'function foo() { return 1; }';
       const contentHash = cryptoSha256Adapter({ content });
 
       const result = await compileProcessFileBroker({
@@ -44,6 +44,7 @@ describe('compileProcessFileBroker', () => {
         contentHash,
         nodes: [{ kind: 'function', name: 'foo', startLine: 1, endLine: 1 }],
         lines: [{ n: 1, text: content, hash: contentHash }],
+        analysis: { functions: [], enrichment: [] },
       });
     });
   });
@@ -95,6 +96,7 @@ describe('compileProcessFileBroker', () => {
           { n: 3, text: '}', hash: cryptoSha256Adapter({ content: '}' }) },
           { n: 4, text: '', hash: cryptoSha256Adapter({ content: '' }) },
         ],
+        analysis: { functions: [], enrichment: [] },
       });
     });
   });

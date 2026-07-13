@@ -58,4 +58,21 @@ describe('readlineStableBranchPickAdapter', () => {
       expect(result).toBe('main');
     });
   });
+
+  describe('non-interactive stdin (EOF / close without a line)', () => {
+    it('EDGE: {stdin closes at EOF with no line} => resolves preselected BranchName main (does not hang)', async () => {
+      const proxy = readlineStableBranchPickAdapterProxy();
+      const main = BranchNameStub({ value: 'main' });
+      const develop = BranchNameStub({ value: 'develop' });
+      const featureX = BranchNameStub({ value: 'feature-x' });
+      proxy.closesAtEof();
+
+      const result = await readlineStableBranchPickAdapter({
+        candidates: [main, develop, featureX],
+        preselected: main,
+      });
+
+      expect(result).toBe('main');
+    });
+  });
 });

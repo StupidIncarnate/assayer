@@ -4,6 +4,7 @@ import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-writ
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
 import { tsMorphExtractMapAdapterProxy } from '../../../adapters/ts-morph/extract-map/ts-morph-extract-map-adapter.proxy';
 import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import type { FileCount } from '@assayer/shared/contracts';
 
 export const compileProcessFileBrokerProxy = (): {
@@ -19,6 +20,7 @@ export const compileProcessFileBrokerProxy = (): {
   const renameProxy = fsRenameAdapterProxy();
   tsMorphExtractMapAdapterProxy();
   cryptoSha256AdapterProxy();
+  analyzeFileBrokerProxy();
 
   return {
     blobExists: (): void => {

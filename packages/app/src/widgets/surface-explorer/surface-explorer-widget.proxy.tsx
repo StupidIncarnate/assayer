@@ -7,6 +7,7 @@ import { compiledFileFetchBrokerProxy } from '../../brokers/compiled-file/fetch/
 import { ExplorerHeaderWidgetProxy } from '../explorer-header/explorer-header-widget.proxy';
 import { FileTreeWidgetProxy } from '../file-tree/file-tree-widget.proxy';
 import { CodeViewerWidgetProxy } from '../code-viewer/code-viewer-widget.proxy';
+import { DetailPanelWidgetProxy } from '../detail-panel/detail-panel-widget.proxy';
 import type { CompiledTreeStub, CompiledFileViewStub } from '@assayer/shared/contracts';
 
 export const SurfaceExplorerWidgetProxy = (): {
@@ -21,6 +22,7 @@ export const SurfaceExplorerWidgetProxy = (): {
   ExplorerHeaderWidgetProxy();
   FileTreeWidgetProxy();
   CodeViewerWidgetProxy();
+  DetailPanelWidgetProxy();
   // Suppress + observe the surface-explorer's own console.error fallback so a failed file load
   // stays silent in the test output while still being assertable.
   const consoleErrorSpy = registerSpyOn({ object: globalThis.console, method: 'error' });

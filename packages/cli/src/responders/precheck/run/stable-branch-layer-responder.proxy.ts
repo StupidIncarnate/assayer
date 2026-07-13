@@ -4,6 +4,7 @@ import { gitDetectStableBranchBrokerProxy, configStableBranchSaveBrokerProxy } f
 import { assayerConfigContract, branchNameContract, fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount, BranchNameStub } from '@assayer/shared/contracts';
 
+import { processStdoutIsTtyAdapterProxy } from '../../../adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.proxy';
 import { readlineStableBranchPickAdapter } from '../../../adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter';
 import { readlineStableBranchPickAdapterProxy } from '../../../adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy';
 
@@ -18,6 +19,9 @@ export const StableBranchLayerResponderProxy = (): {
   saveSucceeds: () => void;
   wasSaveCalled: () => boolean;
   getSavedConfigJson: () => unknown;
+  enableTty: () => void;
+  disableTty: () => void;
+  promptWritten: () => boolean;
 } => {
   // The @assayer/core/testing composed proxies below are instantiated to satisfy
   // enforce-proxy-child-creation, but the cross-package registerMock chain they wire up
@@ -29,7 +33,13 @@ export const StableBranchLayerResponderProxy = (): {
   // this test's behavior.
   gitDetectStableBranchBrokerProxy();
   configStableBranchSaveBrokerProxy();
-  readlineStableBranchPickAdapterProxy();
+  // readline picker is mocked via pickerHandle below; its proxy also spies process.stdout.write,
+  // so promptWritten() surfaces any prompt bytes the responder path emits (none, when gated off).
+  const pickerProxy = readlineStableBranchPickAdapterProxy();
+  // Same-package proxy that toggles the real process.stdout.isTTY global, so composing it genuinely
+  // drives the responder's TTY gate. Default to non-TTY; interactive tests opt in via enableTty().
+  const ttyProxy = processStdoutIsTtyAdapterProxy();
+  ttyProxy.disableTty();
 
   const gitDetectHandle = registerMock({ fn: gitDetectStableBranchBroker });
   const configSaveHandle = registerMock({ fn: configStableBranchSaveBroker });
@@ -77,5 +87,12 @@ export const StableBranchLayerResponderProxy = (): {
     saveSucceeds: (): void => undefined,
     wasSaveCalled: (): boolean => configSaveHandle.mock.calls.length > 0,
     getSavedConfigJson: (): unknown => savedConfig.json,
+    enableTty: (): void => {
+      ttyProxy.enableTty();
+    },
+    disableTty: (): void => {
+      ttyProxy.disableTty();
+    },
+    promptWritten: (): boolean => pickerProxy.promptWasWritten(),
   };
 };

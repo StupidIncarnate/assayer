@@ -17,7 +17,7 @@
  */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 import type { CompiledTree, CompiledFileView } from '@assayer/shared/contracts';
 
@@ -49,10 +49,18 @@ export const electronDesktopBootAdapter = async ({
   ipcMain.handle(compiledFileChannel, async (_event: unknown, relPath: unknown) => resolveCompiledFile({ relPath }));
   await app.whenReady();
 
+  // Remove the application menu entirely so the Assayer window is a chromeless surface — no
+  // File/Edit/View/Window/Help bar. Set before the window is created so it opens menu-less.
+  Menu.setApplicationMenu(null);
+
   const window = new BrowserWindow({
     width: 1100,
     height: 760,
     title: 'Assayer',
+    // Headless for e2e: there is no Xvfb here, so tests set ASSAYER_HEADLESS=1 to create the
+    // window hidden (Playwright still drives a hidden BrowserWindow) — it never pops up on the
+    // developer's display. Production launches leave the flag unset, so the window shows normally.
+    show: process.env.ASSAYER_HEADLESS !== '1',
     // sandbox:false so the tsc-emitted multi-file preload can `require` its own modules;
     // contextIsolation + nodeIntegration:false keep the renderer boundary secure.
     webPreferences: {

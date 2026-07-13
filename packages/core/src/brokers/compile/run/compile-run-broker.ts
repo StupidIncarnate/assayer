@@ -2,7 +2,10 @@
  * PURPOSE: Runs one compile pass across the current working-tree namespace and the optional
  *   stable-branch namespace -- planning each, processing every target through the content-hash
  *   cache in order (stable first, then current), streaming progress, and writing the resulting
- *   cache manifest only when every target parses cleanly.
+ *   cache manifest only when every target parses cleanly. When currentBranch === stableBranch
+ *   (working ON the stable trunk) the two manifest namespaces collide on one key; CURRENT WINS --
+ *   the working-tree index (irrecoverable uncommitted edits) overwrites the committed stable index
+ *   (a pure function of ref + blob store, recomputable on demand).
  *
  * USAGE:
  * await compileRunBroker({
@@ -129,9 +132,13 @@ export const compileRunBroker = async ({
     return compileResultContract.parse({ status: 'errors', results, errors });
   }
 
+  // Spread STABLE first, then write CURRENT last: when currentBranch === stableBranch the keys
+  // collide and the last write wins, so the working-tree index (with its irrecoverable uncommitted
+  // edits) overwrites the committed stable index -- which is recomputable on demand from its ref.
+  // For distinct branches order is irrelevant (both coexist; manifestWriteBroker sorts keys).
   const namespaces = {
-    [String(currentBranch)]: { branch: currentBranch, files: currentProcessed.index },
     ...(stable === undefined ? {} : { [String(stable.manifestNamespace.branch)]: stable.manifestNamespace }),
+    [String(currentBranch)]: { branch: currentBranch, files: currentProcessed.index },
   };
 
   const manifest = {

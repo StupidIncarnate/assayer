@@ -34,5 +34,10 @@ export const compiledFileResolveBroker = async ({
 
   const blob = await cacheLoadBlobBroker({ repoPath, contentHash: entry.contentHash });
 
-  return compiledFileViewContract.parse({ relPath, lines: blob.lines, nodes: blob.nodes });
+  return compiledFileViewContract.parse({
+    relPath,
+    lines: blob.lines,
+    nodes: blob.nodes,
+    ...(blob.analysis === undefined ? {} : { analysis: blob.analysis }),
+  });
 };

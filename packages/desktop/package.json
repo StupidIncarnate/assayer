@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsc --build",
     "start": "electron dist/bin/desktop-main.js",
-    "dev": "ASSAYER_DEV=1 electron dist/bin/desktop-main.js --repo ."
+    "dev": "ASSAYER_DEV=1 electron dist/bin/desktop-main.js --repo ../.."
   },
   "dependencies": {
     "@assayer/core": "*",

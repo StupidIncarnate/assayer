@@ -42,6 +42,18 @@ describe('compiledTreeResolveBroker', () => {
     });
   });
 
+  it('EMPTY: {no cache manifest on disk} => returns an empty CompiledTree with placeholder summary, zero counts, and no nodes', async () => {
+    const proxy = compiledTreeResolveBrokerProxy();
+    proxy.setupMissingManifest();
+
+    const result = await compiledTreeResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+
+    expect(result).toStrictEqual({
+      summary: { repoName: 'default', branchName: 'default', rootFolderName: 'default', tsCount: 0, tsxCount: 0 },
+      nodes: [],
+    });
+  });
+
   it('ERROR: {manifest load rejects} => propagates the rejection', async () => {
     const proxy = compiledTreeResolveBrokerProxy();
     proxy.rejects({ error: new Error('cache manifest not found') });

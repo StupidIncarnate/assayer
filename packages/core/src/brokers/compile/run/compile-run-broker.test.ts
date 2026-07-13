@@ -247,4 +247,47 @@ describe('compileRunBroker', () => {
       });
     });
   });
+
+  describe('current branch is also the configured stable branch (namespace-key collision)', () => {
+    it('EDGE: {currentBranch === stableBranch, current file the stable index lacks} => manifest has exactly one namespace for that branch equal to the CURRENT working-tree index (uncommitted file wins), not the stable committed index', async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'master' });
+      const stableContent = 'export const stable = 1;\n';
+      proxy.stableChanged({
+        sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+        lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
+        fileContents: [stableContent],
+      });
+      const currentContent = 'export const current = 1;\n';
+      const currentHash = cryptoSha256Adapter({ content: currentContent });
+      proxy.queueCurrentFiles({ contents: [currentContent] });
+      proxy.manifestWriteSucceeds();
+      const config = AssayerConfigStub({ stableBranch: 'master' });
+
+      const result = await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(result).toStrictEqual({
+        status: 'ok',
+        results: [
+          { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
+          { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
+        ],
+        errors: [],
+      });
+      expect(proxy.getWrittenManifest()).toStrictEqual({
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+        namespaces: {
+          master: { branch: 'master', files: [{ relPath: 'current-0.ts', contentHash: currentHash }] },
+        },
+        repoName: 'repo',
+        rootFolderName: 'repo',
+      });
+    });
+  });
 });

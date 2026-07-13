@@ -56,14 +56,14 @@ describe('CodeViewerWidget', () => {
   });
 
   describe('with no file selected', () => {
-    it('EMPTY: {fileView: null} => renders an empty EXPLORER_CODE panel with no editor', () => {
+    it('EMPTY: {fileView: null} => renders the placeholder prompt in EXPLORER_CODE with no editor', () => {
       CodeViewerWidgetProxy();
 
       const { getByTestId } = testingLibraryRenderAdapter({
         ui: <CodeViewerWidget fileView={null} />,
       });
 
-      expect(getByTestId('EXPLORER_CODE').textContent).toBe('');
+      expect(getByTestId('EXPLORER_CODE').textContent).toBe('Select a file to view its compiled source');
       expect(Array.from(document.querySelectorAll('[role="textbox"]'))).toStrictEqual([]);
     });
   });

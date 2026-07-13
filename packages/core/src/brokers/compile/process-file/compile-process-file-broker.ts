@@ -20,6 +20,8 @@ import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import { tsMorphExtractMapAdapter } from '../../../adapters/ts-morph/extract-map/ts-morph-extract-map-adapter';
+
+import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
 import { errorMessageContract } from '@dungeonmaster/shared/contracts';
@@ -65,11 +67,14 @@ export const compileProcessFileBroker = async ({
     hash: cryptoSha256Adapter({ content: text }),
   }));
 
+  const analysis = analyzeFileBroker({ source: content, relPath });
+
   const blob = compiledFileBlobContract.parse({
     relPath: relPathContract.parse(relPath),
     contentHash,
     nodes: extracted.nodes,
     lines,
+    analysis,
   });
 
   await fsMkdirAdapter({ path: blobsDir });

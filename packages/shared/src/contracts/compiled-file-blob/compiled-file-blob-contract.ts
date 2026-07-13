@@ -17,12 +17,14 @@ import { relPathContract } from '../rel-path/rel-path-contract';
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { mapNodeContract } from '../map-node/map-node-contract';
 import { sourceLineContract } from '../source-line/source-line-contract';
+import { fileAnalysisContract } from '../file-analysis/file-analysis-contract';
 
 export const compiledFileBlobContract = z.object({
   relPath: relPathContract,
   contentHash: contentHashContract,
   nodes: z.array(mapNodeContract),
   lines: z.array(sourceLineContract),
+  analysis: fileAnalysisContract.optional(),
 });
 
 export type CompiledFileBlob = z.infer<typeof compiledFileBlobContract>;
