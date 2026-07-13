@@ -109,6 +109,60 @@ test.describe('Compiled Surface Explorer', () => {
     ]);
   });
 
+  test('VALID: {format-greeting.ts selected} => the detail panel lists the 2 derived cases, the gutter shows counts 2/1/1, hovering L3 highlights the then-case, and the Enrichment tab lists the per-line facts', async () => {
+    // Precondition: compile smoke-repo into .assayer/cache, then open the file's compiled view.
+    const exitCode = await assayerCompileHarness().compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.getByTestId('FILE_TREE_FILE').filter({ hasText: 'format-greeting.ts' }).click();
+
+    // code-shown: the read-only CodeMirror renders the cached blob, and the right detail panel is up.
+    const codePanel = window.getByTestId('EXPLORER_CODE');
+    await expect(codePanel.locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible({ timeout: 10_000 });
+
+    // Tests tab (the default active tab): the single entry, plus one derived case per reachable exit.
+    // TEST_ENTRY wraps the title AND the case rows, so assert the entry TITLE (its first child) exactly.
+    const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
+    await expect(entryTitle).toHaveText('formatGreeting(name) · 2 cases', { timeout: 10_000 });
+    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    expect([...caseRows].sort()).toStrictEqual([
+      'formatGreeting("") → reaches L3',
+      'formatGreeting("a") → reaches L6',
+    ]);
+
+    // Gutter: the .cm-test-counts gutter marks L2 (the shared `if` guard, on both cases' path) with 2,
+    // and each exit line (L3 then-return, L6 fall-through return) with 1. Unmarked lines render empty
+    // cells; the non-empty cells, in document order (2 < 3 < 6), read 2, 1, 1.
+    const gutterTexts = await codePanel.locator('.cm-test-counts .cm-gutterElement').allTextContents();
+    expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '1']);
+
+    // Hover transition — before hover: no case row is highlighted.
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveCount(0);
+
+    // Hover code line 3 (the then-return): its case row highlights (data-match=true); the L6 case dims.
+    await codePanel.locator('.cm-line').nth(2).hover();
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
+      'formatGreeting("") → reaches L3',
+      { timeout: 10_000 },
+    );
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveText(
+      'formatGreeting("a") → reaches L6',
+    );
+
+    // Enrichment tab: the per-line data facts — L1 the param symbol + type, L2 the branch operand's
+    // representative value range { "", "a" }.
+    await window.getByTestId('TAB_ENRICHMENT').click();
+    const enrichmentRows = await window.getByTestId('ENRICHMENT_ROW').allTextContents();
+    expect([...enrichmentRows].sort()).toStrictEqual([
+      'L1  name: string',
+      'L2  name: string  → { "", "a" }',
+    ]);
+  });
+
   test('EMPTY: {cache manifest lists zero files, window opens at /} => explorer shows the "No compiled surface — run assayer" empty state and no file tree', async () => {
     // Precondition (seeded by the harness): a temp config dir whose cache manifest lists a single
     // working-tree namespace with ZERO files. window-open -> request-tree resolves an empty tree.

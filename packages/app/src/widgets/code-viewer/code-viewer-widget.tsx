@@ -16,7 +16,7 @@ import { Box, Center, Text } from '@mantine/core';
 import type { CompiledFileView } from '@assayer/shared/contracts';
 
 import { codemirrorViewAdapter } from '../../adapters/codemirror/view/codemirror-view-adapter';
-import { caseTouchedLinesTransformer } from '../../transformers/case-touched-lines/case-touched-lines-transformer';
+import { caseGutterMarkersTransformer } from '../../transformers/case-gutter-markers/case-gutter-markers-transformer';
 
 export interface CodeViewerWidgetProps {
   fileView: CompiledFileView | null;
@@ -30,15 +30,11 @@ export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProp
   );
 
   const markers = useMemo(() => {
-    const touchedLines = (fileView?.analysis?.functions ?? []).flatMap((fn) =>
-      fn.cases.flatMap((testCase) =>
-        caseTouchedLinesTransformer({ functionAnalysis: fn, reachesExit: testCase.reachesExit }),
-      ),
-    );
-    return [...new Set(touchedLines)].map((line) => ({
-      line,
-      count: touchedLines.filter((candidate) => candidate === line).length,
-    }));
+    const gutterMarkers = caseGutterMarkersTransformer({
+      functions: fileView?.analysis?.functions ?? [],
+    });
+    // Adapter inputs allow raw primitives; map the branded markers to the adapter's raw shape.
+    return gutterMarkers.map((marker) => ({ line: marker.line, count: marker.count }));
   }, [fileView]);
 
   const editor = useMemo(
