@@ -25,9 +25,9 @@ describe('compiledFileResolveBroker', () => {
         relPath: RelPathStub({ value: 'src/index.ts' }),
       });
 
-      const { lines, nodes } = blob;
+      const { lines, nodes, contentHash } = blob;
 
-      expect(result).toStrictEqual({ relPath: 'src/index.ts', lines, nodes });
+      expect(result).toStrictEqual({ relPath: 'src/index.ts', contentHash, lines, nodes });
     });
 
     it('VALID: {blob carries analysis} => resolves the view including the analysis', async () => {

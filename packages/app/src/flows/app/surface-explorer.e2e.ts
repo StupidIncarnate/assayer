@@ -206,6 +206,35 @@ test.describe('Compiled Surface Explorer', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
   });
 
+  test('VALID: {format-greeting.ts selected, switch to Raw JSON tab} => shows the full cache blob (relPath + contentHash + derived analysis) at full width and hides the right detail panel', async () => {
+    const exitCode = await assayerCompileHarness().compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.getByTestId('FILE_TREE_FILE').filter({ hasText: 'format-greeting.ts' }).click();
+
+    // Code tab (default): the code pane and the right detail panel are both up.
+    await expect(window.getByTestId('EXPLORER_CODE').locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible({ timeout: 10_000 });
+
+    // Switch to the Raw JSON tab: the detail panel is unmounted (keepMounted=false), and the blob is
+    // shown as pretty-printed JSON — the exact CompiledFileView the app received from the cache.
+    await window.getByTestId('VIEW_TAB_RAW').click();
+
+    const rawBlob = window.getByTestId('RAW_BLOB');
+    await expect(rawBlob).toBeVisible({ timeout: 10_000 });
+    await expect(window.getByTestId('DETAIL_PANEL')).toHaveCount(0);
+    await expect(window.getByTestId('EXPLORER_CODE')).toHaveCount(0);
+
+    // The JSON carries the file's relPath, the content-hash blob key, and the DERIVED analysis
+    // (coverage IDs) — i.e. exactly what the compiler wrote to .assayer/cache.
+    await expect(rawBlob).toContainText('"relPath": "packages/shared/src/format-greeting.ts"');
+    await expect(rawBlob).toContainText('"contentHash":');
+    await expect(rawBlob).toContainText('formatGreeting/return@if-then');
+  });
+
   test('EMPTY: {cache manifest lists zero files, window opens at /} => explorer shows the "No compiled surface — run assayer" empty state and no file tree', async () => {
     // Precondition (seeded by the harness): a temp config dir whose cache manifest lists a single
     // working-tree namespace with ZERO files. window-open -> request-tree resolves an empty tree.

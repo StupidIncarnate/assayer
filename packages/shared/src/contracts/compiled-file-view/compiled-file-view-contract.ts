@@ -1,11 +1,13 @@
 /**
  * PURPOSE: Contract for a compiled file view — the rendered per-file projection combining its
- *   map nodes (branch-construct entries) and source lines, keyed by path, without the cache
- *   content hash used for invalidation.
+ *   map nodes (branch-construct entries), source lines, and derived analysis, keyed by path. The
+ *   cache content hash (the blob's on-disk key) is carried optionally so an inspection surface can
+ *   show the exact blob; it is never used to drive the render.
  *
  * USAGE:
  * compiledFileViewContract.parse({
  *   relPath: 'src/foo.ts',
+ *   contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
  *   lines: [{ n: 1, text: 'export const x = 1;', hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }],
  *   nodes: [{ kind: 'function', startLine: 1, endLine: 5 }],
  * });
@@ -14,12 +16,14 @@
 import { z } from 'zod';
 
 import { relPathContract } from '../rel-path/rel-path-contract';
+import { contentHashContract } from '../content-hash/content-hash-contract';
 import { sourceLineContract } from '../source-line/source-line-contract';
 import { mapNodeContract } from '../map-node/map-node-contract';
 import { fileAnalysisContract } from '../file-analysis/file-analysis-contract';
 
 export const compiledFileViewContract = z.object({
   relPath: relPathContract,
+  contentHash: contentHashContract.optional(),
   lines: z.array(sourceLineContract),
   nodes: z.array(mapNodeContract),
   analysis: fileAnalysisContract.optional(),

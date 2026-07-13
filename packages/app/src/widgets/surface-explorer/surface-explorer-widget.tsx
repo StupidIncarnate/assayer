@@ -11,7 +11,7 @@
  */
 import { useCallback, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Box, Center, Flex, Text } from '@mantine/core';
+import { Box, Center, Flex, Tabs, Text } from '@mantine/core';
 import { lineNumberContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, LineNumber, RelPath } from '@assayer/shared/contracts';
 
@@ -21,6 +21,7 @@ import { ExplorerHeaderWidget } from '../explorer-header/explorer-header-widget'
 import { FileTreeWidget } from '../file-tree/file-tree-widget';
 import { CodeViewerWidget } from '../code-viewer/code-viewer-widget';
 import { DetailPanelWidget } from '../detail-panel/detail-panel-widget';
+import { RawBlobViewerWidget } from '../raw-blob-viewer/raw-blob-viewer-widget';
 
 const SIDEBAR_WIDTH = 300;
 
@@ -82,15 +83,35 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 }}
               />
             </Box>
-            <Flex style={{ flex: 1, minHeight: 0 }}>
-              <Flex bg="dark.8" style={{ flex: 1, minHeight: 0, flexDirection: 'column' }}>
-                <CodeViewerWidget fileView={fileView} onLineHover={handleLineHover} />
-              </Flex>
-              <DetailPanelWidget
-                analysis={fileView === null ? undefined : fileView.analysis}
-                hoveredLine={hoveredLine}
-              />
-            </Flex>
+            <Tabs
+              defaultValue="code"
+              keepMounted={false}
+              data-testid="FILE_VIEW_TABS"
+              style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+            >
+              <Tabs.List bg="dark.7">
+                <Tabs.Tab value="code" data-testid="VIEW_TAB_CODE">
+                  Code
+                </Tabs.Tab>
+                <Tabs.Tab value="raw" data-testid="VIEW_TAB_RAW">
+                  Raw JSON
+                </Tabs.Tab>
+              </Tabs.List>
+              <Tabs.Panel value="code" style={{ flex: 1, minHeight: 0 }}>
+                <Flex style={{ height: '100%', minHeight: 0 }}>
+                  <Flex bg="dark.8" style={{ flex: 1, minHeight: 0, flexDirection: 'column' }}>
+                    <CodeViewerWidget fileView={fileView} onLineHover={handleLineHover} />
+                  </Flex>
+                  <DetailPanelWidget
+                    analysis={fileView === null ? undefined : fileView.analysis}
+                    hoveredLine={hoveredLine}
+                  />
+                </Flex>
+              </Tabs.Panel>
+              <Tabs.Panel value="raw" style={{ flex: 1, minHeight: 0 }}>
+                <RawBlobViewerWidget fileView={fileView} />
+              </Tabs.Panel>
+            </Tabs>
           </Flex>
         </>
       )}
