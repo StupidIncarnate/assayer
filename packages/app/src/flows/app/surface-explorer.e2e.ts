@@ -45,15 +45,15 @@ test.describe('Compiled Surface Explorer', () => {
     const window = await app.launch();
 
     // obs-status-header (also proves obs-tree-bridge-call: header renders live cache data, so the
-    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 5 ts +
+    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 6 ts +
     // 1 tsx. Branch segment is the current working-tree namespace (environment-dependent), so pin
     // the stable brand/root/repo prefix + exact counts and allow any non-space branch token.
     const header = window.getByTestId('EXPLORER_HEADER');
     await expect(header).toBeVisible({ timeout: 30_000 });
-    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 5 tsx 1$/u);
+    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 6 tsx 1$/u);
 
     // obs-tree-render: the left tree is rebuilt purely from the cache manifest relPaths. Assert the
-    // exact file leaves (6 = the compiled surface) and the exact directory nodes derived from those
+    // exact file leaves (7 = the compiled surface) and the exact directory nodes derived from those
     // relPaths (packages/{cli,server,shared,web}, four src/ dirs).
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 10_000 });
     const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
@@ -63,6 +63,7 @@ test.describe('Compiled Surface Explorer', () => {
       'index.ts',
       'index.ts',
       'index.ts',
+      'route-label.ts',
       'run.ts',
     ]);
     const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
@@ -161,6 +162,48 @@ test.describe('Compiled Surface Explorer', () => {
       'L1  name: string',
       'L2  name: string  → { "", "a" }',
     ]);
+  });
+
+  test('VALID: {route-label.ts selected} => the switch over a 3-member union derives 3 exhaustive cases (one per label + the default\'s single uncovered member) and hovering the default return highlights only that case', async () => {
+    // Precondition: compile smoke-repo into .assayer/cache, then open the switch file's compiled view.
+    const exitCode = await assayerCompileHarness().compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.getByTestId('FILE_TREE_FILE').filter({ hasText: 'route-label.ts' }).click();
+
+    const codePanel = window.getByTestId('EXPLORER_CODE');
+    await expect(codePanel.locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible({ timeout: 10_000 });
+
+    // Tests tab: the switch over `'get' | 'post' | 'delete'` yields exactly 3 cases — one per case
+    // label, plus the default binding the SINGLE union member no case covers ('delete'). Every arrange
+    // value is derived from the type, never from running the code (P4).
+    const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
+    await expect(entryTitle).toHaveText('routeLabel(method) · 3 cases', { timeout: 10_000 });
+    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    expect([...caseRows].sort()).toStrictEqual([
+      'routeLabel("delete") → reaches L8',
+      'routeLabel("get") → reaches L4',
+      'routeLabel("post") → reaches L6',
+    ]);
+
+    // Gutter: each discriminant test line (L3 `case 'get'`, L5 `case 'post'`) is on 2 cases' paths (its
+    // own case + the default, which must fail every case); each exit line (L4/L6/L8) is on 1. In
+    // document order 3 < 4 < 5 < 6 < 8 the non-empty count cells read 2, 1, 2, 1, 1.
+    const gutterTexts = await codePanel.locator('.cm-test-counts .cm-gutterElement').allTextContents();
+    expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '2', '1', '1']);
+
+    // Hover the default return (L8): only the default's case (reaches L8) runs through it, so exactly
+    // that one row highlights and the two labelled cases dim.
+    await codePanel.locator('.cm-line').nth(7).hover();
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
+      'routeLabel("delete") → reaches L8',
+      { timeout: 10_000 },
+    );
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
   });
 
   test('EMPTY: {cache manifest lists zero files, window opens at /} => explorer shows the "No compiled surface — run assayer" empty state and no file tree', async () => {
