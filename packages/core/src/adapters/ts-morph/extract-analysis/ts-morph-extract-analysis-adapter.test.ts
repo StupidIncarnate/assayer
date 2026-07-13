@@ -234,6 +234,101 @@ describe('tsMorphExtractAnalysisAdapter', () => {
     });
   });
 
+  describe('exported function with a switch over a literal-union param', () => {
+    it('VALID: {routeLabel} => two switch-kind eq-branches and case/case/default exits', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      const source =
+        "export function routeLabel(method: 'get' | 'post' | 'delete'): string {\n  switch (method) {\n    case 'get':\n      return 'read';\n    case 'post':\n      return 'create';\n    default:\n      return 'other';\n  }\n}\n";
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/route-label.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'routeLabel',
+              params: [
+                {
+                  name: 'method',
+                  type: {
+                    kind: 'union',
+                    members: [
+                      { kind: 'literal', value: 'get' },
+                      { kind: 'literal', value: 'post' },
+                      { kind: 'literal', value: 'delete' },
+                    ],
+                  },
+                },
+              ],
+              returnType: { kind: 'string' },
+              line: 1,
+            },
+            branches: [
+              {
+                coverageId: "routeLabel/switch:method === 'get'",
+                kind: 'switch',
+                conditionText: "method === 'get'",
+                operandParamName: 'method',
+                operandType: {
+                  kind: 'union',
+                  members: [
+                    { kind: 'literal', value: 'get' },
+                    { kind: 'literal', value: 'post' },
+                    { kind: 'literal', value: 'delete' },
+                  ],
+                },
+                predicate: { kind: 'eq', literal: 'get' },
+                startLine: 3,
+                endLine: 4,
+              },
+              {
+                coverageId: "routeLabel/switch:method === 'post'",
+                kind: 'switch',
+                conditionText: "method === 'post'",
+                operandParamName: 'method',
+                operandType: {
+                  kind: 'union',
+                  members: [
+                    { kind: 'literal', value: 'get' },
+                    { kind: 'literal', value: 'post' },
+                    { kind: 'literal', value: 'delete' },
+                  ],
+                },
+                predicate: { kind: 'eq', literal: 'post' },
+                startLine: 5,
+                endLine: 6,
+              },
+            ],
+            exits: [
+              {
+                coverageId: "routeLabel/return@switch:'get'",
+                kind: 'return',
+                guardPath: [{ branchCoverageId: "routeLabel/switch:method === 'get'", arm: 'then' }],
+                line: 4,
+              },
+              {
+                coverageId: "routeLabel/return@switch:'post'",
+                kind: 'return',
+                guardPath: [{ branchCoverageId: "routeLabel/switch:method === 'post'", arm: 'then' }],
+                line: 6,
+              },
+              {
+                coverageId: 'routeLabel/return@switch:default',
+                kind: 'return',
+                guardPath: [
+                  { branchCoverageId: "routeLabel/switch:method === 'get'", arm: 'else' },
+                  { branchCoverageId: "routeLabel/switch:method === 'post'", arm: 'else' },
+                ],
+                line: 8,
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
   describe('syntax error', () => {
     it('ERROR: {source: missing expression} => returns positioned parse error', () => {
       tsMorphExtractAnalysisAdapterProxy();

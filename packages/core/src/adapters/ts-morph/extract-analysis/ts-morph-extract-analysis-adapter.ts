@@ -4,11 +4,13 @@
  *   function-expression `const`s (`export const f = (x) => …` / `export const f = function (x) {…}`),
  *   and default-exported functions/arrows (`export default function f() {…}` / `export default (x) => …`).
  *   For each entry it captures its signature (params + return as serializable type descriptors), its
- *   `if` branch nodes (condition, operand, operand type, parsed predicate), and its exit nodes
- *   (return/throw/implicit-void, plus a concise-body arrow's single implicit `return@top`) with the
- *   ordered guard path reaching each. Literal-union and enum operand types become `union` descriptors
- *   (their members feed exhaustive violating sets); switch/ternary branches are still punted to a later
- *   pass (v1 branch parsing handles `if`).
+ *   `if` branch nodes plus each `switch` case desugared into an eq-branch (condition, operand, operand
+ *   type, parsed predicate), and its exit nodes (return/throw/implicit-void, plus a concise-body
+ *   arrow's single implicit `return@top`) with the ordered guard path reaching each — a switch case's
+ *   exit guards on its branch's `then` arm, the `default` exit on every case branch's `else` arm.
+ *   Literal-union and enum operand types become `union` descriptors (their members feed exhaustive
+ *   violating sets, so a switch over such a param yields exhaustive tier-2 cases); ternary branches are
+ *   still punted to a later pass.
  *
  * USAGE:
  * tsMorphExtractAnalysisAdapter({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
@@ -155,7 +157,7 @@ export const tsMorphExtractAnalysisAdapter = ({
         );
       const entryIfSet = new Set<Node>(entryIfStatements);
 
-      const branches = entryIfStatements.map((ifStmt) => {
+      const ifBranches = entryIfStatements.map((ifStmt) => {
         const expr = ifStmt.getExpression();
         const conditionText = expr.getText();
         let operandText = conditionText;
@@ -218,6 +220,103 @@ export const tsMorphExtractAnalysisAdapter = ({
         };
       });
 
+      const entrySwitchStatements = entryNode
+        .getDescendantsOfKind(SyntaxKind.SwitchStatement)
+        .filter(
+          (switchStmt) =>
+            switchStmt.getFirstAncestor(
+              (ancestor) =>
+                Node.isFunctionDeclaration(ancestor) ||
+                Node.isArrowFunction(ancestor) ||
+                Node.isFunctionExpression(ancestor),
+            ) === entryNode,
+        );
+      const entrySwitchClauses = new Set<Node>(
+        entrySwitchStatements.flatMap((switchStmt) => switchStmt.getClauses()),
+      );
+
+      const switchInfos = entrySwitchStatements.map((switchStmt) => {
+        const disc = switchStmt.getExpression().getText();
+        const matchedParam = params.find((param) => param.name === disc);
+        const clauses = switchStmt.getClauses();
+        const caseInfos = clauses.flatMap((clause) => {
+          if (!Node.isCaseClause(clause)) {
+            return [];
+          }
+          const caseExpr = clause.getExpression();
+          if (!Node.isStringLiteral(caseExpr) && !Node.isNumericLiteral(caseExpr)) {
+            return [];
+          }
+          const caseExprText = caseExpr.getText();
+          return [
+            {
+              clause,
+              caseExprText,
+              literalValue: Node.isStringLiteral(caseExpr)
+                ? caseExpr.getLiteralValue()
+                : Number(caseExpr.getText()),
+              branchCoverageId: `${scope}/switch:${disc} === ${caseExprText}`,
+            },
+          ];
+        });
+        const defaultClause = clauses.find((clause) => Node.isDefaultClause(clause));
+        return { disc, matchedParam, caseInfos, defaultClause };
+      });
+
+      const switchBranches = switchInfos.flatMap((info) =>
+        info.caseInfos.map((caseInfo) => ({
+          coverageId: caseInfo.branchCoverageId,
+          kind: 'switch',
+          conditionText: `${info.disc} === ${caseInfo.caseExprText}`,
+          ...(info.matchedParam === undefined ? {} : { operandParamName: info.disc }),
+          operandType:
+            info.matchedParam === undefined ? { kind: 'unknown', text: 'unknown' } : info.matchedParam.type,
+          predicate: { kind: 'eq', literal: caseInfo.literalValue },
+          startLine: caseInfo.clause.getStartLineNumber(),
+          endLine: caseInfo.clause.getEndLineNumber(),
+        })),
+      );
+
+      const switchExits = switchInfos.flatMap((info) => {
+        const defaultGuardPath = info.caseInfos.map((caseInfo) => ({
+          branchCoverageId: caseInfo.branchCoverageId,
+          arm: 'else',
+        }));
+        const caseExits = info.caseInfos.flatMap((caseInfo) =>
+          [
+            ...caseInfo.clause.getDescendantsOfKind(SyntaxKind.ReturnStatement),
+            ...caseInfo.clause.getDescendantsOfKind(SyntaxKind.ThrowStatement),
+          ].map((node) => {
+            const isThrow = Node.isThrowStatement(node);
+            return {
+              coverageId: `${scope}/${isThrow ? 'throw' : 'return'}@switch:${caseInfo.caseExprText}`,
+              kind: isThrow ? 'throw' : 'return',
+              guardPath: [{ branchCoverageId: caseInfo.branchCoverageId, arm: 'then' }],
+              line: node.getStartLineNumber(),
+            };
+          }),
+        );
+        const defaultNodes =
+          info.defaultClause === undefined
+            ? []
+            : [
+                ...info.defaultClause.getDescendantsOfKind(SyntaxKind.ReturnStatement),
+                ...info.defaultClause.getDescendantsOfKind(SyntaxKind.ThrowStatement),
+              ];
+        const defaultExits = defaultNodes.map((node) => {
+          const isThrow = Node.isThrowStatement(node);
+          return {
+            coverageId: `${scope}/${isThrow ? 'throw' : 'return'}@switch:default`,
+            kind: isThrow ? 'throw' : 'return',
+            guardPath: defaultGuardPath,
+            line: node.getStartLineNumber(),
+          };
+        });
+        return [...caseExits, ...defaultExits];
+      });
+
+      const branches = [...ifBranches, ...switchBranches];
+
       const explicitExits = [
         ...entryNode.getDescendantsOfKind(SyntaxKind.ReturnStatement),
         ...entryNode.getDescendantsOfKind(SyntaxKind.ThrowStatement),
@@ -231,6 +330,7 @@ export const tsMorphExtractAnalysisAdapter = ({
                 Node.isFunctionExpression(ancestor),
             ) === entryNode,
         )
+        .filter((node) => !node.getAncestors().some((ancestor) => entrySwitchClauses.has(ancestor)))
         .map((node) => {
           const isThrow = Node.isThrowStatement(node);
           const ancestorGuard = node
@@ -276,8 +376,23 @@ export const tsMorphExtractAnalysisAdapter = ({
         });
 
       const lastStatement = topStatements.at(-1);
+      const lastSwitchTerminates =
+        lastStatement !== undefined &&
+        Node.isSwitchStatement(lastStatement) &&
+        lastStatement.getClauses().some((clause) => Node.isDefaultClause(clause)) &&
+        lastStatement
+          .getClauses()
+          .every(
+            (clause) =>
+              clause.getDescendantsOfKind(SyntaxKind.ReturnStatement).length +
+                clause.getDescendantsOfKind(SyntaxKind.ThrowStatement).length >
+              0,
+          );
       const bodyTerminates =
-        lastStatement !== undefined && (Node.isReturnStatement(lastStatement) || Node.isThrowStatement(lastStatement));
+        lastStatement !== undefined &&
+        (Node.isReturnStatement(lastStatement) ||
+          Node.isThrowStatement(lastStatement) ||
+          lastSwitchTerminates);
       const implicitExits = bodyTerminates
         ? []
         : [
@@ -292,7 +407,7 @@ export const tsMorphExtractAnalysisAdapter = ({
 
       const exits =
         conciseBody === undefined
-          ? [...explicitExits, ...implicitExits]
+          ? [...explicitExits, ...switchExits, ...implicitExits]
           : [
               {
                 coverageId: `${scope}/return@top`,

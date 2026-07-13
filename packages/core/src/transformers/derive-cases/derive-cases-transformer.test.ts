@@ -76,6 +76,66 @@ describe('deriveCasesTransformer', () => {
     });
   });
 
+  describe('switch-desugared operand (exhaustive default)', () => {
+    it('VALID: {switch over 3-member union} => each case binds its member and default binds the single uncovered member', () => {
+      const unionType = TypeDescriptorStub({
+        kind: 'union',
+        members: [
+          TypeDescriptorStub({ kind: 'literal', value: 'get' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'post' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'delete' }),
+        ],
+      });
+      const getBranch = BranchNodeStub({
+        coverageId: "routeLabel/switch:method === 'get'",
+        kind: 'switch',
+        conditionText: "method === 'get'",
+        operandParamName: 'method',
+        operandType: unionType,
+        predicate: { kind: 'eq', literal: 'get' },
+      });
+      const postBranch = BranchNodeStub({
+        coverageId: "routeLabel/switch:method === 'post'",
+        kind: 'switch',
+        conditionText: "method === 'post'",
+        operandParamName: 'method',
+        operandType: unionType,
+        predicate: { kind: 'eq', literal: 'post' },
+      });
+
+      const cases = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'method', type: unionType })],
+        branches: [getBranch, postBranch],
+        exits: [
+          ExitNodeStub({
+            coverageId: "routeLabel/return@switch:'get'",
+            guardPath: [{ branchCoverageId: "routeLabel/switch:method === 'get'", arm: 'then' }],
+            line: 4,
+          }),
+          ExitNodeStub({
+            coverageId: "routeLabel/return@switch:'post'",
+            guardPath: [{ branchCoverageId: "routeLabel/switch:method === 'post'", arm: 'then' }],
+            line: 6,
+          }),
+          ExitNodeStub({
+            coverageId: 'routeLabel/return@switch:default',
+            guardPath: [
+              { branchCoverageId: "routeLabel/switch:method === 'get'", arm: 'else' },
+              { branchCoverageId: "routeLabel/switch:method === 'post'", arm: 'else' },
+            ],
+            line: 8,
+          }),
+        ],
+      });
+
+      expect(cases).toStrictEqual([
+        { reachesExit: "routeLabel/return@switch:'get'", arrange: [{ param: 'method', value: 'get' }] },
+        { reachesExit: "routeLabel/return@switch:'post'", arrange: [{ param: 'method', value: 'post' }] },
+        { reachesExit: 'routeLabel/return@switch:default', arrange: [{ param: 'method', value: 'delete' }] },
+      ]);
+    });
+  });
+
   describe('unguarded exits', () => {
     it('EMPTY: {no params, implicit exit} => arranges nothing reaching the implicit exit', () => {
       const cases = deriveCasesTransformer({
