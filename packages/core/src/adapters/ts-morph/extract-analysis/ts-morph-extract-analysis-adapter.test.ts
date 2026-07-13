@@ -139,6 +139,101 @@ describe('tsMorphExtractAnalysisAdapter', () => {
     });
   });
 
+  describe('exported arrow-const function with a guard clause', () => {
+    it('VALID: {classify} => entry named from the const, one if branch, then/else exits', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      const source =
+        "export const classify = (name: string): string => {\n  if (name.length === 0) {\n    return 'empty';\n  }\n  return 'named';\n};\n";
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/classify.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'classify',
+              params: [{ name: 'name', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 1,
+            },
+            branches: [
+              {
+                coverageId: 'classify/if:name.length === 0',
+                kind: 'if',
+                conditionText: 'name.length === 0',
+                operandParamName: 'name',
+                operandType: { kind: 'string' },
+                predicate: { kind: 'length-eq-zero' },
+                startLine: 2,
+                endLine: 4,
+              },
+            ],
+            exits: [
+              {
+                coverageId: 'classify/return@if-then',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'classify/if:name.length === 0', arm: 'then' }],
+                line: 3,
+              },
+              {
+                coverageId: 'classify/return@if-else',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'classify/if:name.length === 0', arm: 'else' }],
+                line: 5,
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
+  describe('default-exported function declaration', () => {
+    it('VALID: {export default function greet} => entry named greet with one return@top exit', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      const source = "export default function greet(): string {\n  return 'hi';\n}\n";
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/greet.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: { name: 'greet', params: [], returnType: { kind: 'string' }, line: 1 },
+            branches: [],
+            exits: [{ coverageId: 'greet/return@top', kind: 'return', guardPath: [], line: 2 }],
+          },
+        ],
+      });
+    });
+  });
+
+  describe('exported concise-body arrow-const function', () => {
+    it('VALID: {double} => no branches and a single implicit return@top exit', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      const source = 'export const double = (n: number): number => n * 2;\n';
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/double.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'double',
+              params: [{ name: 'n', type: { kind: 'number' } }],
+              returnType: { kind: 'number' },
+              line: 1,
+            },
+            branches: [],
+            exits: [{ coverageId: 'double/return@top', kind: 'return', guardPath: [], line: 1 }],
+          },
+        ],
+      });
+    });
+  });
+
   describe('syntax error', () => {
     it('ERROR: {source: missing expression} => returns positioned parse error', () => {
       tsMorphExtractAnalysisAdapterProxy();

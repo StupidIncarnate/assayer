@@ -1,10 +1,14 @@
 /**
  * PURPOSE: Parses a TypeScript source string with ts-morph and extracts the analysis model for each
- *   EXPORTED function entry: its signature (params + return as serializable type descriptors), its
+ *   EXPORTED function-like entry — `export function` declarations, exported arrow-function and
+ *   function-expression `const`s (`export const f = (x) => …` / `export const f = function (x) {…}`),
+ *   and default-exported functions/arrows (`export default function f() {…}` / `export default (x) => …`).
+ *   For each entry it captures its signature (params + return as serializable type descriptors), its
  *   `if` branch nodes (condition, operand, operand type, parsed predicate), and its exit nodes
- *   (return/throw/implicit-void) with the ordered guard path reaching each. Literal-union and enum
- *   operand types become `union` descriptors (their members feed exhaustive violating sets);
- *   switch/ternary branches are still punted to a later pass (v1 branch parsing handles `if`).
+ *   (return/throw/implicit-void, plus a concise-body arrow's single implicit `return@top`) with the
+ *   ordered guard path reaching each. Literal-union and enum operand types become `union` descriptors
+ *   (their members feed exhaustive violating sets); switch/ternary branches are still punted to a later
+ *   pass (v1 branch parsing handles `if`).
  *
  * USAGE:
  * tsMorphExtractAnalysisAdapter({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
@@ -40,13 +44,39 @@ export const tsMorphExtractAnalysisAdapter = ({
     });
   }
 
-  const functions = sourceFile
+  const declarationEntries = sourceFile
     .getFunctions()
     .filter((fn) => fn.isExported())
-    .map((fn) => {
-      const scope = fn.getName() ?? 'anonymous';
+    .map((fn) => ({ name: fn.getName() ?? 'default', node: fn }));
 
-      const params = fn.getParameters().map((param) => {
+  const constEntries = sourceFile
+    .getVariableStatements()
+    .filter((statement) => statement.isExported())
+    .flatMap((statement) => statement.getDeclarations())
+    .flatMap((declaration) => {
+      const initializer = declaration.getInitializer();
+      return initializer !== undefined &&
+        (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer))
+        ? [{ name: declaration.getName(), node: initializer }]
+        : [];
+    });
+
+  const defaultEntries = sourceFile
+    .getExportAssignments()
+    .filter((assignment) => !assignment.isExportEquals())
+    .flatMap((assignment) => {
+      const expression = assignment.getExpression();
+      return Node.isArrowFunction(expression) || Node.isFunctionExpression(expression)
+        ? [{ name: 'default', node: expression }]
+        : [];
+    });
+
+  const functions = [...declarationEntries, ...constEntries, ...defaultEntries]
+    .filter((entry, index, entries) => entries.findIndex((other) => other.node === entry.node) === index)
+    .map(({ name, node: entryNode }) => {
+      const scope = name;
+
+      const params = entryNode.getParameters().map((param) => {
         const type = param.getType();
         const literalMembers = type.isUnion()
           ? type
@@ -79,7 +109,7 @@ export const tsMorphExtractAnalysisAdapter = ({
         };
       });
 
-      const [returnType] = [fn.getReturnType()].map((type) => {
+      const [returnType] = [entryNode.getReturnType()].map((type) => {
         const literalMembers = type.isUnion()
           ? type
               .getUnionTypes()
@@ -108,88 +138,104 @@ export const tsMorphExtractAnalysisAdapter = ({
                   : { kind: 'unknown', text: type.getText() };
       });
 
-      const body = fn.getBody();
+      const body = entryNode.getBody();
+      const conciseBody = body !== undefined && !Node.isBlock(body) ? body : undefined;
       const topStatements = body !== undefined && Node.isBlock(body) ? body.getStatements() : [];
 
-      const branches = fn
+      const entryIfStatements = entryNode
         .getDescendantsOfKind(SyntaxKind.IfStatement)
-        .filter((ifStmt) => ifStmt.getFirstAncestorByKind(SyntaxKind.FunctionDeclaration) === fn)
-        .map((ifStmt) => {
-          const expr = ifStmt.getExpression();
-          const conditionText = expr.getText();
-          let operandText = conditionText;
-          let predicate: unknown = { kind: 'unrecognized' };
+        .filter(
+          (ifStmt) =>
+            ifStmt.getFirstAncestor(
+              (ancestor) =>
+                Node.isFunctionDeclaration(ancestor) ||
+                Node.isArrowFunction(ancestor) ||
+                Node.isFunctionExpression(ancestor),
+            ) === entryNode,
+        );
+      const entryIfSet = new Set<Node>(entryIfStatements);
 
-          if (Node.isBinaryExpression(expr)) {
-            const op = expr.getOperatorToken().getText();
-            const left = expr.getLeft();
-            const right = expr.getRight();
-            const rightText = right.getText();
+      const branches = entryIfStatements.map((ifStmt) => {
+        const expr = ifStmt.getExpression();
+        const conditionText = expr.getText();
+        let operandText = conditionText;
+        let predicate: unknown = { kind: 'unrecognized' };
 
-            if (Node.isPropertyAccessExpression(left) && left.getName() === 'length') {
-              operandText = left.getExpression().getText();
-              predicate =
-                op === '===' && rightText === '0'
-                  ? { kind: 'length-eq-zero' }
-                  : (op === '>' || op === '!==') && rightText === '0'
-                    ? { kind: 'length-gt-zero' }
-                    : { kind: 'unrecognized' };
-            } else {
-              operandText = left.getText();
-              const literal = Node.isStringLiteral(right)
-                ? right.getLiteralValue()
-                : Node.isNumericLiteral(right)
-                  ? Number(rightText)
-                  : rightText === 'true'
-                    ? true
-                    : rightText === 'false'
-                      ? false
-                      : undefined;
-              const kind =
-                op === '==='
-                  ? 'eq'
-                  : op === '!=='
-                    ? 'neq'
-                    : op === '>'
-                      ? 'gt'
-                      : op === '>='
-                        ? 'gte'
-                        : op === '<'
-                          ? 'lt'
-                          : op === '<='
-                            ? 'lte'
-                            : 'unrecognized';
-              predicate = literal === undefined || kind === 'unrecognized' ? { kind: 'unrecognized' } : { kind, literal };
-            }
+        if (Node.isBinaryExpression(expr)) {
+          const op = expr.getOperatorToken().getText();
+          const left = expr.getLeft();
+          const right = expr.getRight();
+          const rightText = right.getText();
+
+          if (Node.isPropertyAccessExpression(left) && left.getName() === 'length') {
+            operandText = left.getExpression().getText();
+            predicate =
+              op === '===' && rightText === '0'
+                ? { kind: 'length-eq-zero' }
+                : (op === '>' || op === '!==') && rightText === '0'
+                  ? { kind: 'length-gt-zero' }
+                  : { kind: 'unrecognized' };
+          } else {
+            operandText = left.getText();
+            const literal = Node.isStringLiteral(right)
+              ? right.getLiteralValue()
+              : Node.isNumericLiteral(right)
+                ? Number(rightText)
+                : rightText === 'true'
+                  ? true
+                  : rightText === 'false'
+                    ? false
+                    : undefined;
+            const kind =
+              op === '==='
+                ? 'eq'
+                : op === '!=='
+                  ? 'neq'
+                  : op === '>'
+                    ? 'gt'
+                    : op === '>='
+                      ? 'gte'
+                      : op === '<'
+                        ? 'lt'
+                        : op === '<='
+                          ? 'lte'
+                          : 'unrecognized';
+            predicate = literal === undefined || kind === 'unrecognized' ? { kind: 'unrecognized' } : { kind, literal };
           }
+        }
 
-          const matched = params.find((param) => param.name === operandText);
+        const matched = params.find((param) => param.name === operandText);
 
-          return {
-            coverageId: `${scope}/if:${conditionText}`,
-            kind: 'if',
-            conditionText,
-            operandParamName: operandText,
-            operandType: matched === undefined ? { kind: 'unknown', text: 'unknown' } : matched.type,
-            predicate,
-            startLine: ifStmt.getStartLineNumber(),
-            endLine: ifStmt.getEndLineNumber(),
-          };
-        });
+        return {
+          coverageId: `${scope}/if:${conditionText}`,
+          kind: 'if',
+          conditionText,
+          operandParamName: operandText,
+          operandType: matched === undefined ? { kind: 'unknown', text: 'unknown' } : matched.type,
+          predicate,
+          startLine: ifStmt.getStartLineNumber(),
+          endLine: ifStmt.getEndLineNumber(),
+        };
+      });
 
       const explicitExits = [
-        ...fn.getDescendantsOfKind(SyntaxKind.ReturnStatement),
-        ...fn.getDescendantsOfKind(SyntaxKind.ThrowStatement),
+        ...entryNode.getDescendantsOfKind(SyntaxKind.ReturnStatement),
+        ...entryNode.getDescendantsOfKind(SyntaxKind.ThrowStatement),
       ]
-        .filter((node) => node.getFirstAncestorByKind(SyntaxKind.FunctionDeclaration) === fn)
+        .filter(
+          (node) =>
+            node.getFirstAncestor(
+              (ancestor) =>
+                Node.isFunctionDeclaration(ancestor) ||
+                Node.isArrowFunction(ancestor) ||
+                Node.isFunctionExpression(ancestor),
+            ) === entryNode,
+        )
         .map((node) => {
           const isThrow = Node.isThrowStatement(node);
           const ancestorGuard = node
             .getAncestors()
-            .filter(
-              (ancestor) =>
-                Node.isIfStatement(ancestor) && ancestor.getFirstAncestorByKind(SyntaxKind.FunctionDeclaration) === fn,
-            )
+            .filter((ancestor) => Node.isIfStatement(ancestor) && entryIfSet.has(ancestor))
             .map((ancestor) => {
               const thenStmt = Node.isIfStatement(ancestor) ? ancestor.getThenStatement() : undefined;
               const inThen =
@@ -239,14 +285,27 @@ export const tsMorphExtractAnalysisAdapter = ({
               coverageId: `${scope}/exit@implicit`,
               kind: 'implicit',
               guardPath: [],
-              line: body !== undefined && Node.isBlock(body) ? body.getEndLineNumber() : fn.getEndLineNumber(),
+              line:
+                body !== undefined && Node.isBlock(body) ? body.getEndLineNumber() : entryNode.getEndLineNumber(),
             },
           ];
 
+      const exits =
+        conciseBody === undefined
+          ? [...explicitExits, ...implicitExits]
+          : [
+              {
+                coverageId: `${scope}/return@top`,
+                kind: 'return',
+                guardPath: [],
+                line: conciseBody.getStartLineNumber(),
+              },
+            ];
+
       return {
-        entry: { name: scope, params, returnType, line: fn.getStartLineNumber() },
+        entry: { name: scope, params, returnType, line: entryNode.getStartLineNumber() },
         branches,
-        exits: [...explicitExits, ...implicitExits],
+        exits,
       };
     });
 
