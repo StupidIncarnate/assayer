@@ -55,7 +55,7 @@ test.describe('Compiled Surface Explorer', () => {
     // obs-tree-render: the left tree is rebuilt purely from the cache manifest relPaths. Assert the
     // exact file leaves (7 = the compiled surface) and the exact directory nodes derived from those
     // relPaths (packages/{cli,server,shared,web}, four src/ dirs).
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 10_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
     expect([...fileNames].sort()).toStrictEqual([
       'app.tsx',
@@ -85,13 +85,13 @@ test.describe('Compiled Surface Explorer', () => {
 
     // code-shown: read-only CodeMirror 6 renders the cached blob.
     const codePanel = window.getByTestId('EXPLORER_CODE');
-    await expect(codePanel.locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
+    await expect(codePanel.locator('.cm-editor')).toBeVisible();
 
     // obs-codemirror-linenumbers: a visible line-number gutter.
-    await expect(codePanel.locator('.cm-lineNumbers')).toBeVisible({ timeout: 10_000 });
+    await expect(codePanel.locator('.cm-lineNumbers')).toBeVisible();
 
     // obs-codemirror-highlight: TS syntax highlighting wraps tokens in styled spans inside lines.
-    await expect(codePanel.locator('.cm-line span').first()).toBeVisible({ timeout: 10_000 });
+    await expect(codePanel.locator('.cm-line span').first()).toBeVisible();
 
     // obs-code-from-cache: the rendered text equals the cached blob's lines[] for this relPath —
     // the exact bytes the compiler stored for smoke-repo/packages/shared/src/format-greeting.ts.
@@ -122,13 +122,13 @@ test.describe('Compiled Surface Explorer', () => {
 
     // code-shown: the read-only CodeMirror renders the cached blob, and the right detail panel is up.
     const codePanel = window.getByTestId('EXPLORER_CODE');
-    await expect(codePanel.locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible({ timeout: 10_000 });
+    await expect(codePanel.locator('.cm-editor')).toBeVisible();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // Tests tab (the default active tab): the single entry, plus one derived case per reachable exit.
     // TEST_ENTRY wraps the title AND the case rows, so assert the entry TITLE (its first child) exactly.
     const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
-    await expect(entryTitle).toHaveText('formatGreeting(name) · 2 cases', { timeout: 10_000 });
+    await expect(entryTitle).toHaveText('formatGreeting(name) · 2 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
       'formatGreeting("") → reaches L3',
@@ -148,7 +148,6 @@ test.describe('Compiled Surface Explorer', () => {
     await codePanel.locator('.cm-line').nth(2).hover();
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
       'formatGreeting("") → reaches L3',
-      { timeout: 10_000 },
     );
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveText(
       'formatGreeting("a") → reaches L6',
@@ -175,14 +174,14 @@ test.describe('Compiled Surface Explorer', () => {
     await window.getByTestId('FILE_TREE_FILE').filter({ hasText: 'route-label.ts' }).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
-    await expect(codePanel.locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible({ timeout: 10_000 });
+    await expect(codePanel.locator('.cm-editor')).toBeVisible();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // Tests tab: the switch over `'get' | 'post' | 'delete'` yields exactly 3 cases — one per case
     // label, plus the default binding the SINGLE union member no case covers ('delete'). Every arrange
     // value is derived from the type, never from running the code (P4).
     const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
-    await expect(entryTitle).toHaveText('routeLabel(method) · 3 cases', { timeout: 10_000 });
+    await expect(entryTitle).toHaveText('routeLabel(method) · 3 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
       'routeLabel("delete") → reaches L8',
@@ -201,7 +200,6 @@ test.describe('Compiled Surface Explorer', () => {
     await codePanel.locator('.cm-line').nth(7).hover();
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
       'routeLabel("delete") → reaches L8',
-      { timeout: 10_000 },
     );
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
   });
@@ -216,15 +214,15 @@ test.describe('Compiled Surface Explorer', () => {
     await window.getByTestId('FILE_TREE_FILE').filter({ hasText: 'format-greeting.ts' }).click();
 
     // Code tab (default): the code pane and the right detail panel are both up.
-    await expect(window.getByTestId('EXPLORER_CODE').locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible({ timeout: 10_000 });
+    await expect(window.getByTestId('EXPLORER_CODE').locator('.cm-editor')).toBeVisible();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // Switch to the Raw JSON tab: the detail panel is unmounted (keepMounted=false), and the blob is
     // shown as pretty-printed JSON — the exact CompiledFileView the app received from the cache.
     await window.getByTestId('VIEW_TAB_RAW').click();
 
     const rawBlob = window.getByTestId('RAW_BLOB');
-    await expect(rawBlob).toBeVisible({ timeout: 10_000 });
+    await expect(rawBlob).toBeVisible();
     await expect(window.getByTestId('DETAIL_PANEL')).toHaveCount(0);
     await expect(window.getByTestId('EXPLORER_CODE')).toHaveCount(0);
 
@@ -283,7 +281,7 @@ test.describe('Compiled Surface Explorer', () => {
 
     // The tree lists BOTH relPaths — including src/ghost.ts, which has no on-disk file at all — so the
     // tree can only have been rebuilt from cache manifest relPaths, never a repoRoot directory scan.
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 10_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
     expect([...fileNames].sort()).toStrictEqual(['format-greeting.ts', 'ghost.ts']);
     const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
@@ -293,7 +291,7 @@ test.describe('Compiled Surface Explorer', () => {
     await window.getByTestId('FILE_TREE_FILE').filter({ hasText: 'format-greeting.ts' }).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
-    await expect(codePanel.locator('.cm-editor')).toBeVisible({ timeout: 15_000 });
+    await expect(codePanel.locator('.cm-editor')).toBeVisible();
 
     // obs-file-from-cache-blob + obs-code-from-cache + obs-no-source-read (file): the rendered text is
     // the CACHED blob's lines[] ('FROM-CACHE-BLOB'), NOT the altered on-disk source ('FROM-ON-DISK-

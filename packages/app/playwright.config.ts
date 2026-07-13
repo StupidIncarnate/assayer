@@ -15,6 +15,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,
+  // One global assertion ceiling for element-polling (Playwright's default is 5s — too short for a
+  // warm Electron app). Per-assertion `{ timeout }` overrides are reserved for the genuinely-longer
+  // first paint right after _electron.launch (cold boot + preload IPC + cache read).
+  expect: { timeout: 15_000 },
   // A named project makes Playwright's line reporter emit `[electron] › <file>` — the prefix
   // ward's runner keys on to confirm each discovered e2e actually executed.
   projects: [{ name: 'electron' }],

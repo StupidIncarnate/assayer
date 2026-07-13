@@ -117,6 +117,9 @@ assert outputs (generated skeletons, EXACT error text, coverage reports).
 - Enforcing an invariant via comment or doc instead of a rule.
 - Per-test/per-harness tuning knobs (timeouts, retries) instead of global
   config.
+- Per-assertion `{ timeout }` on individual e2e statements — the global
+  `expect.timeout` in `playwright.config.ts` owns it (only the post-launch
+  first-paint keeps an explicit 30s override).
 - Per-site suppressions/waivers of any kind — don't-cares are global rule
   config only.
 - Testing tier-2 derivable logic through full-browser e2e (floor-ordering
