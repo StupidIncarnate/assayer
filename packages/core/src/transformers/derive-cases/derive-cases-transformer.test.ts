@@ -1,4 +1,4 @@
-import { ParamDescriptorStub, BranchNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub, BranchNodeStub, ExitNodeStub, TypeDescriptorStub } from '@assayer/shared/contracts';
 
 import { deriveCasesTransformer } from './derive-cases-transformer';
 
@@ -31,6 +31,46 @@ describe('deriveCasesTransformer', () => {
 
       expect(cases).toStrictEqual([
         { reachesExit: 'formatGreeting/return@if-else', arrange: [{ param: 'name', value: 'a' }] },
+      ]);
+    });
+  });
+
+  describe('literal-union operand', () => {
+    it('VALID: {eq on a 3-member union} => then binds the member, else binds the next member', () => {
+      const unionType = TypeDescriptorStub({
+        kind: 'union',
+        members: [
+          TypeDescriptorStub({ kind: 'literal', value: 'a' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'b' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'c' }),
+        ],
+      });
+      const branch = BranchNodeStub({
+        coverageId: "classify/if:status === 'a'",
+        conditionText: "status === 'a'",
+        operandParamName: 'status',
+        operandType: unionType,
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+
+      const cases = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'status', type: unionType })],
+        branches: [branch],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'classify/return@if-then',
+            guardPath: [{ branchCoverageId: "classify/if:status === 'a'", arm: 'then' }],
+          }),
+          ExitNodeStub({
+            coverageId: 'classify/return@if-else',
+            guardPath: [{ branchCoverageId: "classify/if:status === 'a'", arm: 'else' }],
+          }),
+        ],
+      });
+
+      expect(cases).toStrictEqual([
+        { reachesExit: 'classify/return@if-then', arrange: [{ param: 'status', value: 'a' }] },
+        { reachesExit: 'classify/return@if-else', arrange: [{ param: 'status', value: 'b' }] },
       ]);
     });
   });

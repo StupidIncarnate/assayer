@@ -2,8 +2,9 @@
  * PURPOSE: Parses a TypeScript source string with ts-morph and extracts the analysis model for each
  *   EXPORTED function entry: its signature (params + return as serializable type descriptors), its
  *   `if` branch nodes (condition, operand, operand type, parsed predicate), and its exit nodes
- *   (return/throw/implicit-void) with the ordered guard path reaching each. Union operand types and
- *   switch/ternary branches are punted to a later pass (v1 handles `if` + primitive/literal types).
+ *   (return/throw/implicit-void) with the ordered guard path reaching each. Literal-union and enum
+ *   operand types become `union` descriptors (their members feed exhaustive violating sets);
+ *   switch/ternary branches are still punted to a later pass (v1 branch parsing handles `if`).
  *
  * USAGE:
  * tsMorphExtractAnalysisAdapter({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
@@ -45,24 +46,50 @@ export const tsMorphExtractAnalysisAdapter = ({
     .map((fn) => {
       const scope = fn.getName() ?? 'anonymous';
 
-      const params = fn
-        .getParameters()
-        .map((param) => ({ name: param.getName(), type: param.getType() }))
-        .map((entry) => ({
-          name: entry.name,
-          type: entry.type.isString()
+      const params = fn.getParameters().map((param) => {
+        const type = param.getType();
+        const literalMembers = type.isUnion()
+          ? type
+              .getUnionTypes()
+              .filter((member) => !member.isUndefined() && !member.isNull())
+              .filter(
+                (member) => member.isStringLiteral() || member.isNumberLiteral() || member.isEnumLiteral(),
+              )
+          : [];
+        const isLiteralUnion = type.isUnion() && literalMembers.length === type.getUnionTypes().length;
+        return {
+          name: param.getName(),
+          type: type.isString()
             ? { kind: 'string' }
-            : entry.type.isNumber()
+            : type.isNumber()
               ? { kind: 'number' }
-              : entry.type.isBoolean()
+              : type.isBoolean()
                 ? { kind: 'boolean' }
-                : entry.type.isStringLiteral() || entry.type.isNumberLiteral()
-                  ? { kind: 'literal', value: entry.type.getLiteralValueOrThrow() }
-                  : { kind: 'unknown', text: entry.type.getText() },
-        }));
+                : type.isStringLiteral() || type.isNumberLiteral()
+                  ? { kind: 'literal', value: type.getLiteralValueOrThrow() }
+                  : isLiteralUnion
+                    ? {
+                        kind: 'union',
+                        members: literalMembers.map((member) => ({
+                          kind: 'literal',
+                          value: member.getLiteralValueOrThrow(),
+                        })),
+                      }
+                    : { kind: 'unknown', text: type.getText() },
+        };
+      });
 
-      const [returnType] = [fn.getReturnType()].map((type) =>
-        type.isString()
+      const [returnType] = [fn.getReturnType()].map((type) => {
+        const literalMembers = type.isUnion()
+          ? type
+              .getUnionTypes()
+              .filter((member) => !member.isUndefined() && !member.isNull())
+              .filter(
+                (member) => member.isStringLiteral() || member.isNumberLiteral() || member.isEnumLiteral(),
+              )
+          : [];
+        const isLiteralUnion = type.isUnion() && literalMembers.length === type.getUnionTypes().length;
+        return type.isString()
           ? { kind: 'string' }
           : type.isNumber()
             ? { kind: 'number' }
@@ -70,8 +97,16 @@ export const tsMorphExtractAnalysisAdapter = ({
               ? { kind: 'boolean' }
               : type.isStringLiteral() || type.isNumberLiteral()
                 ? { kind: 'literal', value: type.getLiteralValueOrThrow() }
-                : { kind: 'unknown', text: type.getText() },
-      );
+                : isLiteralUnion
+                  ? {
+                      kind: 'union',
+                      members: literalMembers.map((member) => ({
+                        kind: 'literal',
+                        value: member.getLiteralValueOrThrow(),
+                      })),
+                    }
+                  : { kind: 'unknown', text: type.getText() };
+      });
 
       const body = fn.getBody();
       const topStatements = body !== undefined && Node.isBlock(body) ? body.getStatements() : [];

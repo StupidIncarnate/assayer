@@ -72,6 +72,73 @@ describe('tsMorphExtractAnalysisAdapter', () => {
     });
   });
 
+  describe('exported function with a literal-union param', () => {
+    it('VALID: {classifyStatus} => union operand type with both members', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      const source =
+        "export function classifyStatus(status: 'open' | 'closed'): string {\n  if (status === 'open') {\n    return 'active';\n  }\n  return 'archived';\n}\n";
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/classify-status.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'classifyStatus',
+              params: [
+                {
+                  name: 'status',
+                  type: {
+                    kind: 'union',
+                    members: [
+                      { kind: 'literal', value: 'open' },
+                      { kind: 'literal', value: 'closed' },
+                    ],
+                  },
+                },
+              ],
+              returnType: { kind: 'string' },
+              line: 1,
+            },
+            branches: [
+              {
+                coverageId: "classifyStatus/if:status === 'open'",
+                kind: 'if',
+                conditionText: "status === 'open'",
+                operandParamName: 'status',
+                operandType: {
+                  kind: 'union',
+                  members: [
+                    { kind: 'literal', value: 'open' },
+                    { kind: 'literal', value: 'closed' },
+                  ],
+                },
+                predicate: { kind: 'eq', literal: 'open' },
+                startLine: 2,
+                endLine: 4,
+              },
+            ],
+            exits: [
+              {
+                coverageId: 'classifyStatus/return@if-then',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: "classifyStatus/if:status === 'open'", arm: 'then' }],
+                line: 3,
+              },
+              {
+                coverageId: 'classifyStatus/return@if-else',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: "classifyStatus/if:status === 'open'", arm: 'else' }],
+                line: 5,
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
   describe('syntax error', () => {
     it('ERROR: {source: missing expression} => returns positioned parse error', () => {
       tsMorphExtractAnalysisAdapterProxy();
