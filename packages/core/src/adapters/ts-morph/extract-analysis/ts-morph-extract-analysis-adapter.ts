@@ -20,6 +20,7 @@ import { Project, Node, SyntaxKind } from 'ts-morph';
 
 import { analysisExtractResultContract } from '../../../contracts/analysis-extract-result/analysis-extract-result-contract';
 import type { AnalysisExtractResult } from '../../../contracts/analysis-extract-result/analysis-extract-result-contract';
+import { normalizeSourceTextTransformer } from '../../../transformers/normalize-source-text/normalize-source-text-transformer';
 
 export const tsMorphExtractAnalysisAdapter = ({
   source,
@@ -159,8 +160,9 @@ export const tsMorphExtractAnalysisAdapter = ({
 
       const ifBranches = entryIfStatements.map((ifStmt) => {
         const expr = ifStmt.getExpression();
-        const conditionText = expr.getText();
-        let operandText = conditionText;
+        // Normalize so the coverage-ID is identity across reformats (reindent must not read as a change).
+        const conditionText = normalizeSourceTextTransformer({ text: expr.getText() });
+        let operandText = expr.getText();
         let predicate: unknown = { kind: 'unrecognized' };
 
         if (Node.isBinaryExpression(expr)) {
@@ -236,7 +238,7 @@ export const tsMorphExtractAnalysisAdapter = ({
       );
 
       const switchInfos = entrySwitchStatements.map((switchStmt) => {
-        const disc = switchStmt.getExpression().getText();
+        const disc = normalizeSourceTextTransformer({ text: switchStmt.getExpression().getText() });
         const matchedParam = params.find((param) => param.name === disc);
         const clauses = switchStmt.getClauses();
         const caseInfos = clauses.flatMap((clause) => {
@@ -247,7 +249,7 @@ export const tsMorphExtractAnalysisAdapter = ({
           if (!Node.isStringLiteral(caseExpr) && !Node.isNumericLiteral(caseExpr)) {
             return [];
           }
-          const caseExprText = caseExpr.getText();
+          const caseExprText = normalizeSourceTextTransformer({ text: caseExpr.getText() });
           return [
             {
               clause,
@@ -340,7 +342,9 @@ export const tsMorphExtractAnalysisAdapter = ({
               const thenStmt = Node.isIfStatement(ancestor) ? ancestor.getThenStatement() : undefined;
               const inThen =
                 thenStmt !== undefined && node.getStart() >= thenStmt.getStart() && node.getEnd() <= thenStmt.getEnd();
-              const conditionText = Node.isIfStatement(ancestor) ? ancestor.getExpression().getText() : '';
+              const conditionText = Node.isIfStatement(ancestor)
+                ? normalizeSourceTextTransformer({ text: ancestor.getExpression().getText() })
+                : '';
               return { branchCoverageId: `${scope}/if:${conditionText}`, arm: inThen ? 'then' : 'else' };
             })
             .reverse();
@@ -359,7 +363,11 @@ export const tsMorphExtractAnalysisAdapter = ({
                         0,
                   )
                   .map((statement) => ({
-                    branchCoverageId: `${scope}/if:${Node.isIfStatement(statement) ? statement.getExpression().getText() : ''}`,
+                    branchCoverageId: `${scope}/if:${
+                      Node.isIfStatement(statement)
+                        ? normalizeSourceTextTransformer({ text: statement.getExpression().getText() })
+                        : ''
+                    }`,
                     arm: 'else',
                   }))
               : [];

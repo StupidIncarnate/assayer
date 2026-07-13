@@ -329,6 +329,67 @@ describe('tsMorphExtractAnalysisAdapter', () => {
     });
   });
 
+  // WHY THIS MATTERS: coverage IDs are the cache-internal IDENTITY the ref-to-ref diff keys on. They
+  // are minted from the condition/discriminant/case source text, so that text is whitespace-normalized
+  // FIRST (spaces, tabs, newlines, indentation collapsed to single spaces). Without this, a purely
+  // cosmetic edit — someone without prettier adds an indent, or wraps a long condition across lines —
+  // would change the ID and read as a CHANGED node in the diff even though nothing behavioral changed.
+  // What we normalize FOR: reindent, line-wrap/rewrap, tab-vs-space, and repeated spaces. Line numbers
+  // (startLine/endLine/exit line) still shift — those are render metadata, never identity.
+  describe('formatting-invariant coverage IDs', () => {
+    it('VALID: {condition wrapped across two lines} => same normalized coverage ID as the single-line form; only line numbers shift', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      // Identical semantics to the canonical single-line `if (name.length === 0)` guard clause above,
+      // but the condition is wrapped across lines 2-3. The coverage IDs MUST be byte-identical to that
+      // test's (`formatGreeting/if:name.length === 0`, `.../return@if-then`, `.../return@if-else`); the
+      // guard-path branchCoverageId must still match the branch's ID; only the line spans differ.
+      const source =
+        "export function formatGreeting(name: string): string {\n  if (name.length ===\n      0) {\n    return 'Hello, stranger!';\n  }\n  return 'Hello, ' + name + '!';\n}\n";
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/format-greeting.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'formatGreeting',
+              params: [{ name: 'name', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 1,
+            },
+            branches: [
+              {
+                coverageId: 'formatGreeting/if:name.length === 0',
+                kind: 'if',
+                conditionText: 'name.length === 0',
+                operandParamName: 'name',
+                operandType: { kind: 'string' },
+                predicate: { kind: 'length-eq-zero' },
+                startLine: 2,
+                endLine: 5,
+              },
+            ],
+            exits: [
+              {
+                coverageId: 'formatGreeting/return@if-then',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length === 0', arm: 'then' }],
+                line: 4,
+              },
+              {
+                coverageId: 'formatGreeting/return@if-else',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length === 0', arm: 'else' }],
+                line: 6,
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
   describe('syntax error', () => {
     it('ERROR: {source: missing expression} => returns positioned parse error', () => {
       tsMorphExtractAnalysisAdapterProxy();
