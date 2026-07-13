@@ -5,7 +5,7 @@
  *
  * USAGE:
  * import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
- * const app = electronAppHarness();
+ * const app = smokeRepoAppHarness();
  * wireHarnessLifecycle({ harness: app });
  */
 import { test, expect } from '@playwright/test';

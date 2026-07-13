@@ -1,17 +1,18 @@
 /**
- * PURPOSE: Playwright e2e for the Compiled Surface Explorer flow. Compiles the smoke-repo into
- *   .assayer/cache via the built CLI precheck, launches the REAL built Electron desktop app at the
- *   '/' hash route, and walks the flow graph window-open -> request-tree -> tree-shown -> click-file
+ * PURPOSE: Playwright e2e for the Compiled Surface Explorer flow. Compiles the smoke-repo into a
+ *   PER-TEST temp cache via the built CLI precheck, launches the REAL built Electron desktop app at
+ *   the '/' hash route, and walks the flow graph window-open -> request-tree -> tree-shown -> click-file
  *   -> request-file -> code-shown, asserting each observable on the path (header handshake, file
  *   tree from cache relPaths, CodeMirror line-number gutter + syntax highlighting + cached source).
  *
  * USAGE:
  * npm run ward -- --only e2e -- packages/app/src/flows/app/surface-explorer.e2e.ts
- * // Boots the built dist + desktop-main against this repo (repoRoot=./smoke-repo); needs a display.
+ * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  *
  * Both cache-present branches are covered, and the empty-state terminal is reached two distinct
- * ways: the [has files] path (compiled smoke-repo -> header + tree + code) via
- * electronAppHarness/assayerCompileHarness; the SEEDED [no files] path (a cache manifest listing a
+ * ways: the [has files] path (compiled smoke-repo -> header + tree + code) via smokeRepoAppHarness
+ * (each test compiles into + reads its OWN temp cache dir — never the repo's shared .assayer/cache);
+ * the SEEDED [no files] path (a cache manifest listing a
  * working-tree namespace with ZERO files) via emptySurfaceAppHarness; and the true no-cache first-run
  * path (NO .assayer directory at all — the default `npm run dev` condition where the CLI compile
  * never ran) via noCacheAppHarness. A fourth scenario proves obs-no-source-read / obs-file-from-cache-blob:
@@ -20,14 +21,13 @@
  * never the repoRoot source, via cacheOnlySourceAppHarness. Each harness owns its own teardown.
  */
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { electronAppHarness } from '../../../test/harnesses/electron-app.harness';
+import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 import { emptySurfaceAppHarness } from '../../../test/harnesses/empty-surface-app.harness';
 import { noCacheAppHarness } from '../../../test/harnesses/no-cache-app.harness';
 import { cacheOnlySourceAppHarness } from '../../../test/harnesses/cache-only-source-app.harness';
-import { assayerCompileHarness } from '../../../test/harnesses/assayer-compile.harness';
 
 test.describe('Compiled Surface Explorer', () => {
-  const app = electronAppHarness();
+  const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
   const emptyApp = emptySurfaceAppHarness();
   wireHarnessLifecycle({ harness: emptyApp });
@@ -38,7 +38,7 @@ test.describe('Compiled Surface Explorer', () => {
 
   test('VALID: {compiled smoke-repo cache, window opens at /} => header handshake + file tree, and clicking format-greeting.ts renders its cached source in CodeMirror', async () => {
     // Precondition: run the built CLI precheck, which compiles smoke-repo into .assayer/cache.
-    const exitCode = await assayerCompileHarness().compile();
+    const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
     // window-open: the Electron window opens the renderer at the '/' hash route.
@@ -112,7 +112,7 @@ test.describe('Compiled Surface Explorer', () => {
 
   test('VALID: {format-greeting.ts selected} => the detail panel lists the 2 derived cases, the gutter shows counts 2/1/1, hovering L3 highlights the then-case, and the Enrichment tab lists the per-line facts', async () => {
     // Precondition: compile smoke-repo into .assayer/cache, then open the file's compiled view.
-    const exitCode = await assayerCompileHarness().compile();
+    const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
     const window = await app.launch();
@@ -165,7 +165,7 @@ test.describe('Compiled Surface Explorer', () => {
 
   test('VALID: {route-label.ts selected} => the switch over a 3-member union derives 3 exhaustive cases (one per label + the default\'s single uncovered member) and hovering the default return highlights only that case', async () => {
     // Precondition: compile smoke-repo into .assayer/cache, then open the switch file's compiled view.
-    const exitCode = await assayerCompileHarness().compile();
+    const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
     const window = await app.launch();
@@ -205,7 +205,7 @@ test.describe('Compiled Surface Explorer', () => {
   });
 
   test('VALID: {format-greeting.ts selected, switch to Raw JSON tab} => shows the full cache blob (relPath + contentHash + derived analysis) at full width and hides the right detail panel', async () => {
-    const exitCode = await assayerCompileHarness().compile();
+    const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
     const window = await app.launch();
