@@ -2,16 +2,18 @@
 
 > Living status/handoff doc. Source-of-truth design still lives in `requirements.md` /
 > `features.md` / `expectation-catalog.md` / `case-studies.md`; this tracks what is BUILT
-> against that design and what is next. Last updated: session ending 2026-07-12.
+> against that design and what is next. Last updated: session 2 (2026-07-12) — syntax coverage
+> widened past `if` (union/enum, switch, more entry kinds); see "Session 2" below.
 
 ## Headline
 
-**The full "conditional + return" vertical is built and ward-green** (all 5 packages:
-lint 567 / typecheck 571 / unit 186). It runs end to end: `assayer` compile → cache blob
-carrying analysis → desktop bridge → app detail view. Scope was deliberately narrowed to
-**one syntax family (`if` conditionals + returns)** to shake out the whole machine before
-adding more syntax (owner's "full system on just conditionals first" directive). Phase 2
-(actually executing the derived cases through Jest) is **deferred** — Phase 1 is derive +
+**The conditional/derivation vertical is built and ward-green** (all 5 packages:
+lint 572 / typecheck 576 / unit 188 / integration 12 / e2e 6 tests). It runs end to end:
+`assayer` compile → cache blob carrying analysis → desktop bridge → app detail view. Session 1
+narrowed scope to **one syntax family (`if` + returns)** to shake out the whole machine; session 2
+widened the analyzer to **literal-union/enum operand types, exhaustive per-member case fan-out,
+`switch` statements, and arrow-const/default-export entries** — all still derive + display. Phase 2
+(actually executing the derived cases through Jest) is **deferred** — this vertical is derive +
 display only.
 
 Worked example (real `smoke-repo/packages/shared/src/format-greeting.ts`):
@@ -103,27 +105,58 @@ The pre-edit-lint hook blocks writes on violations; these cost the most iteratio
 - Array destructuring IS `T | undefined` under `noUncheckedIndexedAccess`.
 - `String(x)`/`Number(x)` on an already-typed value trips `no-unnecessary-type-conversion`.
 
+## Session 2 (2026-07-12) — increments landed
+
+All committed, ward-green, and verified end-to-end (CLI compile → cache blob → app e2e). New
+smoke-repo fixture `packages/shared/src/route-label.ts` (a `switch` over `'get'|'post'|'delete'`)
+is the live worked example; the app e2e drives it and asserts the 3 exhaustive cases in the UI.
+
+- **[done] Union/enum type descriptors (was item 1).** The adapter now maps literal-union and
+  enum operand types (params + return) to `{kind:'union', members:[…]}` instead of `unknown`.
+  Downstream already consumed unions (type-to-range's eq/neq `unionOthers`, type-text, rep-value).
+- **[done] Exhaustive per-member case fan-out (item 1).** `derive-cases` now emits, per exit, the
+  cartesian product of each guarding arm's value SET bound to its operand (grouped by operand,
+  **intersected** for same-operand constraints, cartesian across distinct operands). A string
+  length check → 1 case/exit; an enum's `else` (violating = every other member) → one case per
+  member. This is the tier-2 exhaustive behavior.
+- **[done] `switch` statements (item 1).** An isolated switch pass desugars each `case` into a
+  `'switch'`-kind eq-branch and emits per-case exits (matched arm) + a default exit (else of every
+  case). With the intersection above, the default binds to the single UNCOVERED member. Verified:
+  `routeLabel` → get→"get", post→"post", default→"delete". Proven `if` logic untouched.
+- **[done] Arrow-const + default-export entries (item 3).** Entry enumeration widened past
+  `export function` to exported arrow/function-expression consts and `export default` functions/
+  arrows; "belongs to this entry" checks generalized to nearest-enclosing-function-like; concise
+  arrows get one `return@top` exit.
+- **[done] Gutter-count unit test + detail-panel e2e (item 5).** Extracted the gutter aggregation
+  into a pure `case-gutter-markers` transformer (+ branded contract) with a golden unit test
+  (CodeMirror's custom gutter is jsdom-flaky, so the COUNT logic is now covered off-DOM). New app
+  e2e drives the detail view (test-case rows, gutter counts, hover `data-match`, enrichment tab).
+- **[deferred, documented] Perf single-parse (item 6).** `process-file` still parses twice
+  (extract-map + extract-analysis). A clean merge would collapse two single-responsibility ts-morph
+  adapters (map = explorer type-graph; analysis = test derivation) into one pass — a cohesion cost
+  the plan itself flags ("fine for now, mergeable later"). Correct next step: a shared parse-cache
+  seam (one `Project`/`SourceFile` produced once, both extractors read it) rather than merging the
+  adapters. Not worth the regression risk on a green tree for small-file parsing.
+
 ## What's next (prioritized)
 
-1. **More predicate/type coverage in the adapter.** The transformers already handle unions
-   (enum members), numeric thresholds, truthy/falsy — the **adapter currently punts unions to
-   `unknown` and only parses `if`**. Emit union type descriptors (enum params) and handle
-   `switch` + ternary branches. This is the natural next increment and mostly extends the
-   adapter's inline predicate/type logic.
-2. **Cross-function / inter-procedural flow.** `run()` is one implicit exit; the analysis does
-   not descend into `formatGreeting` it calls. Each `FunctionAnalysis` is independent and
-   coverage-id-keyed, so a call-graph pass can stitch them without touching this layer.
-3. **Exported arrow-consts / default exports** as entries (v1 only handles `export function`
-   declarations; the seam is the `getFunctions().filter(isExported)` step).
-4. **Phase 2 — execute + report.** Wrap Jest to actually run the derived cases, map pass/fail
-   back onto exits via a reporter, show green/red per case in the Tests tab. Larger; pulls in
-   the runner. (Explicitly deferred by owner in Phase 1.)
-5. **UX polish (open question):** hover currently **highlights + dims**; owner floated
-   "show ONLY those cases" (filter) as an alternative — one render change if wanted. Also the
-   gutter count rendering has no dedicated unit test (CodeMirror/jsdom flakiness) — visually
-   verified only.
-6. **Perf later:** `process-file` now parses each file twice (extract-map + extract-analysis);
-   fine for now, mergeable later.
+1. **Ternary branches.** `switch` and `if` are handled; a ternary in a return position
+   (`return cond ? a : b`) is still punted. The map adapter already marks ternary NODES; the
+   analysis adapter needs a ternary pass analogous to the switch pass (condition → predicate, the
+   two arms → two exits). Lower value than switch (ternaries usually compute values, and P4 asserts
+   reaching the exit, not the value) — but it completes expression-level branching.
+2. **Non-literal switch cases.** `case Color.Red:` (enum-member refs / identifiers) and fallthrough
+   cases are skipped today — only string/number literal cases desugar. Resolve enum-member refs to
+   their literal value via the type checker to cover the idiomatic enum switch.
+3. **Cross-function / inter-procedural flow (was item 2).** Each `FunctionAnalysis` is independent
+   and coverage-id-keyed; a call-graph pass can stitch a caller to the callees it invokes without
+   touching this layer. This is a genuinely NEW capability (cross-file resolution + a call-graph
+   artifact), not an extension — size it as its own vertical.
+4. **Phase 2 — execute + report.** Wrap Jest to actually run the derived cases, map pass/fail back
+   onto exits via a reporter, show green/red per case in the Tests tab. Larger; pulls in the runner.
+   (Explicitly deferred by owner.)
+5. **UX polish (open question):** hover **highlights + dims**; owner floated "show ONLY those
+   cases" (filter) as an alternative — one render change if wanted.
 
 ## Guardrails carried from the design
 
