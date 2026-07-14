@@ -16,9 +16,8 @@ describe('branchNodeContract', () => {
     it('INVALID: {kind: "loop"} => throws validation error', () => {
       expect(() => {
         return branchNodeContract.parse({
-          coverageId: 'formatGreeting/if:name.length===0',
+          coverageId: 'formatGreeting/if:BinaryExpression,id:name',
           kind: 'loop',
-          conditionText: 'name.length === 0',
           operandType: { kind: 'string' },
           predicate: { kind: 'length-eq-zero' },
           startLine: 2,

@@ -18,9 +18,12 @@
  */
 import { Project, Node, SyntaxKind } from 'ts-morph';
 
+import { predicateContract } from '@assayer/shared/contracts';
+import type { CoverageId } from '@assayer/shared/contracts';
+
 import { analysisExtractResultContract } from '../../../contracts/analysis-extract-result/analysis-extract-result-contract';
 import type { AnalysisExtractResult } from '../../../contracts/analysis-extract-result/analysis-extract-result-contract';
-import { normalizeSourceTextTransformer } from '../../../transformers/normalize-source-text/normalize-source-text-transformer';
+import { coverageIdTransformer } from '../../../transformers/coverage-id/coverage-id-transformer';
 
 export const tsMorphExtractAnalysisAdapter = ({
   source,
@@ -158,69 +161,94 @@ export const tsMorphExtractAnalysisAdapter = ({
         );
       const entryIfSet = new Set<Node>(entryIfStatements);
 
-      const ifBranches = entryIfStatements.map((ifStmt) => {
+      const ifBranchData = entryIfStatements.map((ifStmt) => {
         const expr = ifStmt.getExpression();
-        // Normalize so the coverage-ID is identity across reformats (reindent must not read as a change).
-        const conditionText = normalizeSourceTextTransformer({ text: expr.getText() });
-        let operandText = expr.getText();
+        // Identity derives ONLY from the STRUCTURAL projection: every node's KIND, plus identifier
+        // SYMBOL names, plus literal VALUES (parens dropped). Quote style, operator spacing, reindent,
+        // and redundant parens cannot change it (see CLAUDE.md). No source-text field exists.
+        const conditionStructure = [expr, ...expr.getDescendants()]
+          .filter((child) => !Node.isParenthesizedExpression(child))
+          .map((child) =>
+            Node.isIdentifier(child)
+              ? `id:${child.getText()}`
+              : Node.isStringLiteral(child)
+                ? `str:${child.getLiteralValue()}`
+                : Node.isNumericLiteral(child)
+                  ? `num:${String(child.getLiteralValue())}`
+                  : child.getKindName(),
+          )
+          .join(',');
+
+        let operandNode: Node = expr;
         let predicate: unknown = { kind: 'unrecognized' };
 
         if (Node.isBinaryExpression(expr)) {
-          const op = expr.getOperatorToken().getText();
+          const opKind = expr.getOperatorToken().getKindName();
           const left = expr.getLeft();
           const right = expr.getRight();
-          const rightText = right.getText();
+          const rightIsZero = Node.isNumericLiteral(right) && right.getLiteralValue() === 0;
 
           if (Node.isPropertyAccessExpression(left) && left.getName() === 'length') {
-            operandText = left.getExpression().getText();
+            operandNode = left.getExpression();
             predicate =
-              op === '===' && rightText === '0'
+              opKind === 'EqualsEqualsEqualsToken' && rightIsZero
                 ? { kind: 'length-eq-zero' }
-                : (op === '>' || op === '!==') && rightText === '0'
+                : (opKind === 'GreaterThanToken' || opKind === 'ExclamationEqualsEqualsToken') && rightIsZero
                   ? { kind: 'length-gt-zero' }
                   : { kind: 'unrecognized' };
           } else {
-            operandText = left.getText();
+            operandNode = left;
             const literal = Node.isStringLiteral(right)
               ? right.getLiteralValue()
               : Node.isNumericLiteral(right)
-                ? Number(rightText)
-                : rightText === 'true'
+                ? right.getLiteralValue()
+                : right.getKindName() === 'TrueKeyword'
                   ? true
-                  : rightText === 'false'
+                  : right.getKindName() === 'FalseKeyword'
                     ? false
                     : undefined;
             const kind =
-              op === '==='
+              opKind === 'EqualsEqualsEqualsToken'
                 ? 'eq'
-                : op === '!=='
+                : opKind === 'ExclamationEqualsEqualsToken'
                   ? 'neq'
-                  : op === '>'
+                  : opKind === 'GreaterThanToken'
                     ? 'gt'
-                    : op === '>='
+                    : opKind === 'GreaterThanEqualsToken'
                       ? 'gte'
-                      : op === '<'
+                      : opKind === 'LessThanToken'
                         ? 'lt'
-                        : op === '<='
+                        : opKind === 'LessThanEqualsToken'
                           ? 'lte'
                           : 'unrecognized';
             predicate = literal === undefined || kind === 'unrecognized' ? { kind: 'unrecognized' } : { kind, literal };
           }
         }
 
-        const matched = params.find((param) => param.name === operandText);
+        // operandName (identifier symbol, for param matching) + predicate feed CASE DERIVATION only.
+        // IDENTITY is the whole condition's structural projection — one canonical scheme for every
+        // branch (simple or compound), so there is no second "semantic" ID format to drift from.
+        const operandName = Node.isIdentifier(operandNode) ? operandNode.getText() : undefined;
+        const matched = operandName === undefined ? undefined : params.find((param) => param.name === operandName);
+        const parsedPredicate = predicateContract.parse(predicate);
 
         return {
-          coverageId: `${scope}/if:${conditionText}`,
-          kind: 'if',
-          conditionText,
-          operandParamName: operandText,
-          operandType: matched === undefined ? { kind: 'unknown', text: 'unknown' } : matched.type,
-          predicate,
-          startLine: ifStmt.getStartLineNumber(),
-          endLine: ifStmt.getEndLineNumber(),
+          node: ifStmt,
+          branch: {
+            coverageId: coverageIdTransformer({ scope, segment: `if:${conditionStructure}` }),
+            kind: 'if',
+            ...(operandName === undefined ? {} : { operandParamName: operandName }),
+            operandType: matched === undefined ? { kind: 'unknown', text: 'unknown' } : matched.type,
+            predicate: parsedPredicate,
+            startLine: ifStmt.getStartLineNumber(),
+            endLine: ifStmt.getEndLineNumber(),
+          },
         };
       });
+      const ifCoverageByNode = new Map<Node, CoverageId>(
+        ifBranchData.map((data) => [data.node, data.branch.coverageId] as const),
+      );
+      const ifBranches = ifBranchData.map((data) => data.branch);
 
       const entrySwitchStatements = entryNode
         .getDescendantsOfKind(SyntaxKind.SwitchStatement)
@@ -238,8 +266,24 @@ export const tsMorphExtractAnalysisAdapter = ({
       );
 
       const switchInfos = entrySwitchStatements.map((switchStmt) => {
-        const disc = normalizeSourceTextTransformer({ text: switchStmt.getExpression().getText() });
-        const matchedParam = params.find((param) => param.name === disc);
+        const discNode = switchStmt.getExpression();
+        // discStructure = the discriminant's structural projection; discName (identifier symbol) is
+        // for param matching only. Every switch case branch keys on the SAME canonical structural
+        // scheme as `if` — disc structure + operator kind + typed literal token.
+        const discName = Node.isIdentifier(discNode) ? discNode.getText() : undefined;
+        const discStructure = [discNode, ...discNode.getDescendants()]
+          .filter((child) => !Node.isParenthesizedExpression(child))
+          .map((child) =>
+            Node.isIdentifier(child)
+              ? `id:${child.getText()}`
+              : Node.isStringLiteral(child)
+                ? `str:${child.getLiteralValue()}`
+                : Node.isNumericLiteral(child)
+                  ? `num:${String(child.getLiteralValue())}`
+                  : child.getKindName(),
+          )
+          .join(',');
+        const matchedParam = discName === undefined ? undefined : params.find((param) => param.name === discName);
         const clauses = switchStmt.getClauses();
         const caseInfos = clauses.flatMap((clause) => {
           if (!Node.isCaseClause(clause)) {
@@ -249,28 +293,26 @@ export const tsMorphExtractAnalysisAdapter = ({
           if (!Node.isStringLiteral(caseExpr) && !Node.isNumericLiteral(caseExpr)) {
             return [];
           }
-          const caseExprText = normalizeSourceTextTransformer({ text: caseExpr.getText() });
+          const literalValue = caseExpr.getLiteralValue();
+          const literalToken = typeof literalValue === 'string' ? `str:${literalValue}` : `num:${String(literalValue)}`;
           return [
             {
               clause,
-              caseExprText,
-              literalValue: Node.isStringLiteral(caseExpr)
-                ? caseExpr.getLiteralValue()
-                : Number(caseExpr.getText()),
-              branchCoverageId: `${scope}/switch:${disc} === ${caseExprText}`,
+              literalValue,
+              literalToken,
+              branchCoverageId: `${scope}/switch:${discStructure},EqualsEqualsEqualsToken,${literalToken}`,
             },
           ];
         });
         const defaultClause = clauses.find((clause) => Node.isDefaultClause(clause));
-        return { disc, matchedParam, caseInfos, defaultClause };
+        return { discName, matchedParam, caseInfos, defaultClause };
       });
 
       const switchBranches = switchInfos.flatMap((info) =>
         info.caseInfos.map((caseInfo) => ({
           coverageId: caseInfo.branchCoverageId,
           kind: 'switch',
-          conditionText: `${info.disc} === ${caseInfo.caseExprText}`,
-          ...(info.matchedParam === undefined ? {} : { operandParamName: info.disc }),
+          ...(info.discName === undefined ? {} : { operandParamName: info.discName }),
           operandType:
             info.matchedParam === undefined ? { kind: 'unknown', text: 'unknown' } : info.matchedParam.type,
           predicate: { kind: 'eq', literal: caseInfo.literalValue },
@@ -291,7 +333,7 @@ export const tsMorphExtractAnalysisAdapter = ({
           ].map((node) => {
             const isThrow = Node.isThrowStatement(node);
             return {
-              coverageId: `${scope}/${isThrow ? 'throw' : 'return'}@switch:${caseInfo.caseExprText}`,
+              coverageId: `${scope}/${isThrow ? 'throw' : 'return'}@switch:${caseInfo.literalToken}`,
               kind: isThrow ? 'throw' : 'return',
               guardPath: [{ branchCoverageId: caseInfo.branchCoverageId, arm: 'then' }],
               line: node.getStartLineNumber(),
@@ -338,14 +380,15 @@ export const tsMorphExtractAnalysisAdapter = ({
           const ancestorGuard = node
             .getAncestors()
             .filter((ancestor) => Node.isIfStatement(ancestor) && entryIfSet.has(ancestor))
-            .map((ancestor) => {
+            .flatMap((ancestor) => {
+              const branchCoverageId = ifCoverageByNode.get(ancestor);
+              if (branchCoverageId === undefined) {
+                return [];
+              }
               const thenStmt = Node.isIfStatement(ancestor) ? ancestor.getThenStatement() : undefined;
               const inThen =
                 thenStmt !== undefined && node.getStart() >= thenStmt.getStart() && node.getEnd() <= thenStmt.getEnd();
-              const conditionText = Node.isIfStatement(ancestor)
-                ? normalizeSourceTextTransformer({ text: ancestor.getExpression().getText() })
-                : '';
-              return { branchCoverageId: `${scope}/if:${conditionText}`, arm: inThen ? 'then' : 'else' };
+              return [{ branchCoverageId, arm: inThen ? 'then' : 'else' }];
             })
             .reverse();
 
@@ -362,14 +405,10 @@ export const tsMorphExtractAnalysisAdapter = ({
                         statement.getThenStatement().getDescendantsOfKind(SyntaxKind.ThrowStatement).length >
                         0,
                   )
-                  .map((statement) => ({
-                    branchCoverageId: `${scope}/if:${
-                      Node.isIfStatement(statement)
-                        ? normalizeSourceTextTransformer({ text: statement.getExpression().getText() })
-                        : ''
-                    }`,
-                    arm: 'else',
-                  }))
+                  .flatMap((statement) => {
+                    const branchCoverageId = ifCoverageByNode.get(statement);
+                    return branchCoverageId === undefined ? [] : [{ branchCoverageId, arm: 'else' }];
+                  })
               : [];
 
           const guardPath = ancestorGuard.length > 0 ? ancestorGuard : negationGuard;

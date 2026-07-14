@@ -37,18 +37,25 @@ export const analyzeFileBroker = ({ source, relPath }: { source: string; relPath
       symbol: param.name,
       typeText: typeTextTransformer({ type: param.type }),
     })),
-    ...fn.branches.map((branch) => {
+    // Enrichment shows a PARAM's type + representative range on the branch line. Branches whose
+    // operand is not a simple param have no meaningful symbol/type/range, so they are skipped.
+    ...fn.branches.flatMap((branch) => {
+      if (branch.operandParamName === undefined) {
+        return [];
+      }
       const armValues = typeToRangeTransformer({
         type: branch.operandType,
         predicateKind: branch.predicate.kind,
         ...(branch.predicate.literal === undefined ? {} : { literal: branch.predicate.literal }),
       });
-      return {
-        line: branch.startLine,
-        symbol: branch.operandParamName ?? branch.conditionText,
-        typeText: typeTextTransformer({ type: branch.operandType }),
-        range: [...armValues.satisfying, ...armValues.violating],
-      };
+      return [
+        {
+          line: branch.startLine,
+          symbol: branch.operandParamName,
+          typeText: typeTextTransformer({ type: branch.operandType }),
+          range: [...armValues.satisfying, ...armValues.violating],
+        },
+      ];
     }),
   ]);
 

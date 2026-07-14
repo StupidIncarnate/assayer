@@ -15,7 +15,6 @@ export const ExtractedFunctionStub = ({ ...props }: StubArgument<ExtractedFuncti
       {
         coverageId: 'formatGreeting/if:name.length===0',
         kind: 'if',
-        conditionText: 'name.length === 0',
         operandParamName: 'name',
         operandType: { kind: 'string' },
         predicate: { kind: 'length-eq-zero' },

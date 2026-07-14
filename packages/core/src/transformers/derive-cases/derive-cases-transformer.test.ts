@@ -47,7 +47,6 @@ describe('deriveCasesTransformer', () => {
       });
       const branch = BranchNodeStub({
         coverageId: "classify/if:status === 'a'",
-        conditionText: "status === 'a'",
         operandParamName: 'status',
         operandType: unionType,
         predicate: { kind: 'eq', literal: 'a' },
@@ -89,7 +88,6 @@ describe('deriveCasesTransformer', () => {
       const getBranch = BranchNodeStub({
         coverageId: "routeLabel/switch:method === 'get'",
         kind: 'switch',
-        conditionText: "method === 'get'",
         operandParamName: 'method',
         operandType: unionType,
         predicate: { kind: 'eq', literal: 'get' },
@@ -97,7 +95,6 @@ describe('deriveCasesTransformer', () => {
       const postBranch = BranchNodeStub({
         coverageId: "routeLabel/switch:method === 'post'",
         kind: 'switch',
-        conditionText: "method === 'post'",
         operandParamName: 'method',
         operandType: unionType,
         predicate: { kind: 'eq', literal: 'post' },

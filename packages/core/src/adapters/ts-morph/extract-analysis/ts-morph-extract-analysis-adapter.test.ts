@@ -22,10 +22,8 @@ describe('tsMorphExtractAnalysisAdapter', () => {
             },
             branches: [
               {
-                coverageId: 'formatGreeting/if:name.length === 0',
-                kind: 'if',
-                conditionText: 'name.length === 0',
-                operandParamName: 'name',
+                coverageId: 'formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0',
+                kind: 'if',                operandParamName: 'name',
                 operandType: { kind: 'string' },
                 predicate: { kind: 'length-eq-zero' },
                 startLine: 2,
@@ -36,13 +34,13 @@ describe('tsMorphExtractAnalysisAdapter', () => {
               {
                 coverageId: 'formatGreeting/return@if-then',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length === 0', arm: 'then' }],
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0', arm: 'then' }],
                 line: 3,
               },
               {
                 coverageId: 'formatGreeting/return@if-else',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length === 0', arm: 'else' }],
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0', arm: 'else' }],
                 line: 5,
               },
             ],
@@ -103,10 +101,8 @@ describe('tsMorphExtractAnalysisAdapter', () => {
             },
             branches: [
               {
-                coverageId: "classifyStatus/if:status === 'open'",
-                kind: 'if',
-                conditionText: "status === 'open'",
-                operandParamName: 'status',
+                coverageId: 'classifyStatus/if:BinaryExpression,id:status,EqualsEqualsEqualsToken,str:open',
+                kind: 'if',                operandParamName: 'status',
                 operandType: {
                   kind: 'union',
                   members: [
@@ -123,13 +119,13 @@ describe('tsMorphExtractAnalysisAdapter', () => {
               {
                 coverageId: 'classifyStatus/return@if-then',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: "classifyStatus/if:status === 'open'", arm: 'then' }],
+                guardPath: [{ branchCoverageId: 'classifyStatus/if:BinaryExpression,id:status,EqualsEqualsEqualsToken,str:open', arm: 'then' }],
                 line: 3,
               },
               {
                 coverageId: 'classifyStatus/return@if-else',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: "classifyStatus/if:status === 'open'", arm: 'else' }],
+                guardPath: [{ branchCoverageId: 'classifyStatus/if:BinaryExpression,id:status,EqualsEqualsEqualsToken,str:open', arm: 'else' }],
                 line: 5,
               },
             ],
@@ -159,10 +155,8 @@ describe('tsMorphExtractAnalysisAdapter', () => {
             },
             branches: [
               {
-                coverageId: 'classify/if:name.length === 0',
-                kind: 'if',
-                conditionText: 'name.length === 0',
-                operandParamName: 'name',
+                coverageId: 'classify/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0',
+                kind: 'if',                operandParamName: 'name',
                 operandType: { kind: 'string' },
                 predicate: { kind: 'length-eq-zero' },
                 startLine: 2,
@@ -173,13 +167,13 @@ describe('tsMorphExtractAnalysisAdapter', () => {
               {
                 coverageId: 'classify/return@if-then',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: 'classify/if:name.length === 0', arm: 'then' }],
+                guardPath: [{ branchCoverageId: 'classify/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0', arm: 'then' }],
                 line: 3,
               },
               {
                 coverageId: 'classify/return@if-else',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: 'classify/if:name.length === 0', arm: 'else' }],
+                guardPath: [{ branchCoverageId: 'classify/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0', arm: 'else' }],
                 line: 5,
               },
             ],
@@ -266,10 +260,8 @@ describe('tsMorphExtractAnalysisAdapter', () => {
             },
             branches: [
               {
-                coverageId: "routeLabel/switch:method === 'get'",
-                kind: 'switch',
-                conditionText: "method === 'get'",
-                operandParamName: 'method',
+                coverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get',
+                kind: 'switch',                operandParamName: 'method',
                 operandType: {
                   kind: 'union',
                   members: [
@@ -283,10 +275,8 @@ describe('tsMorphExtractAnalysisAdapter', () => {
                 endLine: 4,
               },
               {
-                coverageId: "routeLabel/switch:method === 'post'",
-                kind: 'switch',
-                conditionText: "method === 'post'",
-                operandParamName: 'method',
+                coverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post',
+                kind: 'switch',                operandParamName: 'method',
                 operandType: {
                   kind: 'union',
                   members: [
@@ -302,23 +292,23 @@ describe('tsMorphExtractAnalysisAdapter', () => {
             ],
             exits: [
               {
-                coverageId: "routeLabel/return@switch:'get'",
+                coverageId: 'routeLabel/return@switch:str:get',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: "routeLabel/switch:method === 'get'", arm: 'then' }],
+                guardPath: [{ branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'then' }],
                 line: 4,
               },
               {
-                coverageId: "routeLabel/return@switch:'post'",
+                coverageId: 'routeLabel/return@switch:str:post',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: "routeLabel/switch:method === 'post'", arm: 'then' }],
+                guardPath: [{ branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post', arm: 'then' }],
                 line: 6,
               },
               {
                 coverageId: 'routeLabel/return@switch:default',
                 kind: 'return',
                 guardPath: [
-                  { branchCoverageId: "routeLabel/switch:method === 'get'", arm: 'else' },
-                  { branchCoverageId: "routeLabel/switch:method === 'post'", arm: 'else' },
+                  { branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'else' },
+                  { branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post', arm: 'else' },
                 ],
                 line: 8,
               },
@@ -330,18 +320,18 @@ describe('tsMorphExtractAnalysisAdapter', () => {
   });
 
   // WHY THIS MATTERS: coverage IDs are the cache-internal IDENTITY the ref-to-ref diff keys on. They
-  // are minted from the condition/discriminant/case source text, so that text is whitespace-normalized
-  // FIRST (spaces, tabs, newlines, indentation collapsed to single spaces). Without this, a purely
-  // cosmetic edit — someone without prettier adds an indent, or wraps a long condition across lines —
-  // would change the ID and read as a CHANGED node in the diff even though nothing behavioral changed.
-  // What we normalize FOR: reindent, line-wrap/rewrap, tab-vs-space, and repeated spaces. Line numbers
-  // (startLine/endLine/exit line) still shift — those are render metadata, never identity.
+  // are the whole condition's STRUCTURAL projection — one canonical scheme (node KINDS + `id:` symbol
+  // names + `str:`/`num:` literal VALUES, comma-joined, parens dropped), never source text. So every
+  // purely lexical spelling collapses to one ID: quote style (`"x"` vs `'x'`), operator spacing
+  // (`a===b` vs `a === b`), and reindent/line-wrap all erase in the AST. Only a real logic change
+  // moves the ID. conditionText is display-only and DOES still reflect source spelling; line numbers
+  // are render metadata. The two tests below pin (a) line-wrap invariance and (b) quote/spacing.
   describe('formatting-invariant coverage IDs', () => {
-    it('VALID: {condition wrapped across two lines} => same normalized coverage ID as the single-line form; only line numbers shift', () => {
+    it('VALID: {condition wrapped across two lines} => same coverage ID as the single-line form; only line numbers shift', () => {
       tsMorphExtractAnalysisAdapterProxy();
       // Identical semantics to the canonical single-line `if (name.length === 0)` guard clause above,
       // but the condition is wrapped across lines 2-3. The coverage IDs MUST be byte-identical to that
-      // test's (`formatGreeting/if:name.length === 0`, `.../return@if-then`, `.../return@if-else`); the
+      // test's (`formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0`, `.../return@if-then`, `.../return@if-else`); the
       // guard-path branchCoverageId must still match the branch's ID; only the line spans differ.
       const source =
         "export function formatGreeting(name: string): string {\n  if (name.length ===\n      0) {\n    return 'Hello, stranger!';\n  }\n  return 'Hello, ' + name + '!';\n}\n";
@@ -360,10 +350,8 @@ describe('tsMorphExtractAnalysisAdapter', () => {
             },
             branches: [
               {
-                coverageId: 'formatGreeting/if:name.length === 0',
-                kind: 'if',
-                conditionText: 'name.length === 0',
-                operandParamName: 'name',
+                coverageId: 'formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0',
+                kind: 'if',                operandParamName: 'name',
                 operandType: { kind: 'string' },
                 predicate: { kind: 'length-eq-zero' },
                 startLine: 2,
@@ -374,14 +362,102 @@ describe('tsMorphExtractAnalysisAdapter', () => {
               {
                 coverageId: 'formatGreeting/return@if-then',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length === 0', arm: 'then' }],
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0', arm: 'then' }],
                 line: 4,
               },
               {
                 coverageId: 'formatGreeting/return@if-else',
                 kind: 'return',
-                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length === 0', arm: 'else' }],
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,DotToken,id:length,EqualsEqualsEqualsToken,num:0', arm: 'else' }],
                 line: 6,
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('VALID: {double-quote + spaced vs single-quote + tight} => byte-identical analysis (no source-text field)', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      // The SAME logic spelled two ways the AST erases: `=== "blah"` spaced with double quotes vs
+      // `==='blah'` tight with single quotes. The structural projection is identical
+      // (`id:something,EqualsEqualsEqualsToken,str:blah`), so both produce byte-identical output —
+      // the diff sees no change. Nothing in the blob reflects the source spelling.
+      const spacedDouble =
+        'export function pick(something: string): string {\n  if (something === "blah") {\n    return \'x\';\n  }\n  return \'y\';\n}\n';
+      const tightSingle =
+        "export function pick(something: string): string {\n  if (something==='blah') {\n    return 'x';\n  }\n  return 'y';\n}\n";
+
+      expect(tsMorphExtractAnalysisAdapter({ source: spacedDouble, relPath: 'src/pick.ts' })).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'pick',
+              params: [{ name: 'something', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 1,
+            },
+            branches: [
+              {
+                coverageId: 'pick/if:BinaryExpression,id:something,EqualsEqualsEqualsToken,str:blah',
+                kind: 'if',                operandParamName: 'something',
+                operandType: { kind: 'string' },
+                predicate: { kind: 'eq', literal: 'blah' },
+                startLine: 2,
+                endLine: 4,
+              },
+            ],
+            exits: [
+              {
+                coverageId: 'pick/return@if-then',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'pick/if:BinaryExpression,id:something,EqualsEqualsEqualsToken,str:blah', arm: 'then' }],
+                line: 3,
+              },
+              {
+                coverageId: 'pick/return@if-else',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'pick/if:BinaryExpression,id:something,EqualsEqualsEqualsToken,str:blah', arm: 'else' }],
+                line: 5,
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(tsMorphExtractAnalysisAdapter({ source: tightSingle, relPath: 'src/pick.ts' })).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'pick',
+              params: [{ name: 'something', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 1,
+            },
+            branches: [
+              {
+                coverageId: 'pick/if:BinaryExpression,id:something,EqualsEqualsEqualsToken,str:blah',
+                kind: 'if',                operandParamName: 'something',
+                operandType: { kind: 'string' },
+                predicate: { kind: 'eq', literal: 'blah' },
+                startLine: 2,
+                endLine: 4,
+              },
+            ],
+            exits: [
+              {
+                coverageId: 'pick/return@if-then',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'pick/if:BinaryExpression,id:something,EqualsEqualsEqualsToken,str:blah', arm: 'then' }],
+                line: 3,
+              },
+              {
+                coverageId: 'pick/return@if-else',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'pick/if:BinaryExpression,id:something,EqualsEqualsEqualsToken,str:blah', arm: 'else' }],
+                line: 5,
               },
             ],
           },

@@ -32,6 +32,27 @@ are best-case input, never required input. Graceful degradation: declared-as-
 data semantics ⇒ tier-2 exhaustive generation; imperative literals ⇒ tier-1
 branch skeletons. Nudge toward declaration in errors; never require it.
 
+**Static analysis derives from the PARSED AST, NEVER from source text — no
+exceptions.** Every fact the analyzer produces — coverage IDs, map-node
+identity, predicates, operands, diff correspondence keys — is computed from
+AST structure: node KINDS, resolved SYMBOLS (identifier/type names via the
+checker), and literal VALUES (`getLiteralValue()`, not the quoted spelling).
+Source formatting MUST NEVER enter identity or analysis: quote style (`"x"`
+vs `'x'`), operator spacing (`a===b` vs `a === b`), reindentation, line-wrap,
+and redundant parens must all be invisible to it. A coverage ID moves ONLY
+when the logic moves (operand, operator, or literal value changes) — never
+when the spelling changes. The ONLY place raw source text is allowed is
+DISPLAY-only fields explicitly never read by analysis (`displayLines`,
+`conditionText`) and cache keys over whole-file *content* (which are about
+"did the bytes change", not "what does the code mean"). If the AST can't yet
+be decomposed for some syntax, the fix is to build a normalized STRUCTURAL
+projection of that node (node kind + children + leaf values) — the cache IS a
+translated AST — NOT to fall back to `getText()`. Pulling text for static
+analysis is a bug, full stop. (Reference: `ts-morph-extract-analysis-adapter.ts`
+keys coverage IDs on the identifier SYMBOL name for simple operands and the
+whole condition's structural projection otherwise; predicate operator/literal
+come from node kind + `getLiteralValue()`. No `getText()` reaches any ID.)
+
 **Expectations never derive from the code under test (P4).** Generated expected
 values come from inputs, declared models, observables, or consumer demands —
 NEVER from executing the implementation and recording output. That's a snapshot
@@ -112,6 +133,9 @@ assert outputs (generated skeletons, EXACT error text, coverage reports).
 - Committing or colocating generated tests; adding a skip mechanism.
 - Deriving an expected value by running the implementation.
 - Detecting anything by folder/file naming convention.
+- Pulling source TEXT (`node.getText()`, condition strings) into any identity,
+  coverage ID, predicate, or diff key. Derive from AST kinds/symbols/literal
+  values; text is DISPLAY-only. A formatting-only edit that moves an ID is a bug.
 - Two encodings of one concept (mode-as-string-prefix, twin contracts,
   re-enumerated unions) — refuse, don't accommodate.
 - Enforcing an invariant via comment or doc instead of a rule.
