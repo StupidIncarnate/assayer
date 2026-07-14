@@ -31,6 +31,7 @@ export const FileTreeNodeLayerWidget = ({
     return (
       <NavLink
         data-testid="FILE_TREE_FILE"
+        data-relpath={node.path}
         label={node.name}
         active={node.path === selectedRelPath}
         onClick={() => {

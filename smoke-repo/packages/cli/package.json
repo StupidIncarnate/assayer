@@ -1,9 +1,0 @@
-{
-  "name": "@smoke-repo/cli",
-  "version": "1.0.0",
-  "private": true,
-  "main": "index.ts",
-  "dependencies": {
-    "@smoke-repo/shared": "1.0.0"
-  }
-}

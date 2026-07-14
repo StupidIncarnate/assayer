@@ -9,10 +9,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@smoke-repo/shared": ["packages/shared/index.ts"]
-    },
     "noEmit": true
   },
   "include": ["packages/*/src/**/*", "packages/*/index.ts"]

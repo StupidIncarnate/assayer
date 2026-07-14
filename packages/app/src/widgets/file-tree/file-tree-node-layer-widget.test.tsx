@@ -23,6 +23,7 @@ describe('FileTreeNodeLayerWidget', () => {
       });
 
       expect(getByTestId('FILE_TREE_FILE')).toHaveTextContent('app.tsx');
+      expect(getByTestId('FILE_TREE_FILE')).toHaveAttribute('data-relpath', 'app.tsx');
     });
 
     it('VALID: {click file node} => calls onFileClick with the node relPath', async () => {

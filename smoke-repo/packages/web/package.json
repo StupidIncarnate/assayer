@@ -1,9 +1,0 @@
-{
-  "name": "@smoke-repo/web",
-  "version": "1.0.0",
-  "private": true,
-  "main": "src/app.tsx",
-  "dependencies": {
-    "@smoke-repo/shared": "1.0.0"
-  }
-}
