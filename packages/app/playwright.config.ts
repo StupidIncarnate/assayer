@@ -12,6 +12,9 @@ process.env.ASSAYER_HEADLESS = '1';
 export default defineConfig({
   testDir: './src',
   testMatch: '**/*.e2e.ts',
+  // Enforce the "run `npm run build` first" prerequisite: rebuild tsc dist + the app's VITE bundle
+  // before any spec, so the built Electron app never runs against a stale inlined shared contract.
+  globalSetup: './test/e2e-global-build.ts',
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,

@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.build.json && npm run build -w @assayer/app",
+    "build": "tsc --build tsconfig.build.json && node scripts/copy-dist-package-json.mjs && npm run build -w @assayer/app",
     "dev": "tsc --build tsconfig.build.json && node packages/cli/dist/bin/assayer.js status && concurrently -k -n app,desktop -c blue,green \"npm run dev -w @assayer/app\" \"wait-on tcp:127.0.0.1:6273 && npm run dev -w @assayer/desktop\"",
     "ward": "dungeonmaster-ward",
     "lint": "dungeonmaster-ward --only lint",
