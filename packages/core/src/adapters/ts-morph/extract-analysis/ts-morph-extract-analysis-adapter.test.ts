@@ -466,6 +466,108 @@ describe('tsMorphExtractAnalysisAdapter', () => {
     });
   });
 
+  describe('bare top-level if/else (module scope)', () => {
+    it('VALID: {top-level if/else over a const} => a *module* void entry, one if branch, per-arm implicit exits', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      const source =
+        "const value = 7;\n\nif (value > 5) {\n  console.log('big');\n} else {\n  console.log('small');\n}\n";
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/if-else/pure-statement.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: { name: '*module*', params: [], returnType: { kind: 'unknown', text: 'void' }, line: 1 },
+            branches: [
+              {
+                coverageId: '*module*/if:BinaryExpression,id:value,GreaterThanToken,num:5',
+                kind: 'if',
+                operandParamName: 'value',
+                operandType: { kind: 'number' },
+                predicate: { kind: 'gt', literal: 5 },
+                startLine: 3,
+                endLine: 7,
+              },
+            ],
+            exits: [
+              {
+                coverageId: '*module*/exit@if-then',
+                kind: 'implicit',
+                guardPath: [
+                  { branchCoverageId: '*module*/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' },
+                ],
+                line: 4,
+              },
+              {
+                coverageId: '*module*/exit@if-else',
+                kind: 'implicit',
+                guardPath: [
+                  { branchCoverageId: '*module*/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' },
+                ],
+                line: 6,
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
+  describe('bare top-level switch (module scope)', () => {
+    it('VALID: {top-level switch over a const} => a *module* void entry, one switch branch, per-arm implicit exits', () => {
+      tsMorphExtractAnalysisAdapterProxy();
+      const source =
+        "const method = 'get';\n\nswitch (method) {\n  case 'get':\n    console.log('read');\n    break;\n  default:\n    console.log('other');\n}\n";
+
+      const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/switch/pure-statement.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: { name: '*module*', params: [], returnType: { kind: 'unknown', text: 'void' }, line: 1 },
+            branches: [
+              {
+                coverageId: '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get',
+                kind: 'switch',
+                operandParamName: 'method',
+                operandType: { kind: 'string' },
+                predicate: { kind: 'eq', literal: 'get' },
+                startLine: 4,
+                endLine: 6,
+              },
+            ],
+            exits: [
+              {
+                coverageId: '*module*/exit@switch:str:get',
+                kind: 'implicit',
+                guardPath: [
+                  {
+                    branchCoverageId: '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get',
+                    arm: 'then',
+                  },
+                ],
+                line: 5,
+              },
+              {
+                coverageId: '*module*/exit@switch:default',
+                kind: 'implicit',
+                guardPath: [
+                  {
+                    branchCoverageId: '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get',
+                    arm: 'else',
+                  },
+                ],
+                line: 8,
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
   describe('syntax error', () => {
     it('ERROR: {source: missing expression} => returns positioned parse error', () => {
       tsMorphExtractAnalysisAdapterProxy();

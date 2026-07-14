@@ -471,5 +471,244 @@ export const tsMorphExtractAnalysisAdapter = ({
       };
     });
 
-  return analysisExtractResultContract.parse({ success: true, functions });
+  // ── Module scope: bare top-level if/switch statements ────────────────────────
+  // Top-level statements belong to no function entry, but their branch logic is still
+  // testable. Model the file's module scope as a synthetic parameterless void entry
+  // named `*module*`, mirroring the function pass's branch shape with one `implicit`
+  // exit per arm — a module-scope `return` is a syntax error, so every arm just
+  // COMPLETES rather than returning. Operand types come from the TYPE GRAPH (the
+  // referenced top-level binding's widened type via the checker), never from source
+  // text; coverage IDs use the same structural projection the function pass keys on.
+  // Only DIRECT top-level if/switch are modelled — nested branches fall under an arm.
+  const moduleScope = '*module*';
+  const topLevelStatements = sourceFile.getStatements();
+  const topLevelIfStatements = topLevelStatements.flatMap((statement) =>
+    Node.isIfStatement(statement) ? [statement] : [],
+  );
+  const topLevelSwitchStatements = topLevelStatements.flatMap((statement) =>
+    Node.isSwitchStatement(statement) ? [statement] : [],
+  );
+
+  const moduleIfData = topLevelIfStatements.map((ifStmt) => {
+    const expr = ifStmt.getExpression();
+    const conditionStructure = [expr, ...expr.getDescendants()]
+      .filter((child) => !Node.isParenthesizedExpression(child))
+      .map((child) =>
+        Node.isIdentifier(child)
+          ? `id:${child.getText()}`
+          : Node.isStringLiteral(child)
+            ? `str:${child.getLiteralValue()}`
+            : Node.isNumericLiteral(child)
+              ? `num:${String(child.getLiteralValue())}`
+              : child.getKindName(),
+      )
+      .join(',');
+
+    let operandNode: Node = expr;
+    let predicate: unknown = { kind: 'unrecognized' };
+
+    if (Node.isBinaryExpression(expr)) {
+      const opKind = expr.getOperatorToken().getKindName();
+      const left = expr.getLeft();
+      const right = expr.getRight();
+      const rightIsZero = Node.isNumericLiteral(right) && right.getLiteralValue() === 0;
+
+      if (Node.isPropertyAccessExpression(left) && left.getName() === 'length') {
+        operandNode = left.getExpression();
+        predicate =
+          opKind === 'EqualsEqualsEqualsToken' && rightIsZero
+            ? { kind: 'length-eq-zero' }
+            : (opKind === 'GreaterThanToken' || opKind === 'ExclamationEqualsEqualsToken') && rightIsZero
+              ? { kind: 'length-gt-zero' }
+              : { kind: 'unrecognized' };
+      } else {
+        operandNode = left;
+        const literal = Node.isStringLiteral(right)
+          ? right.getLiteralValue()
+          : Node.isNumericLiteral(right)
+            ? right.getLiteralValue()
+            : right.getKindName() === 'TrueKeyword'
+              ? true
+              : right.getKindName() === 'FalseKeyword'
+                ? false
+                : undefined;
+        const kind =
+          opKind === 'EqualsEqualsEqualsToken'
+            ? 'eq'
+            : opKind === 'ExclamationEqualsEqualsToken'
+              ? 'neq'
+              : opKind === 'GreaterThanToken'
+                ? 'gt'
+                : opKind === 'GreaterThanEqualsToken'
+                  ? 'gte'
+                  : opKind === 'LessThanToken'
+                    ? 'lt'
+                    : opKind === 'LessThanEqualsToken'
+                      ? 'lte'
+                      : 'unrecognized';
+        predicate = literal === undefined || kind === 'unrecognized' ? { kind: 'unrecognized' } : { kind, literal };
+      }
+    }
+
+    const operandName = Node.isIdentifier(operandNode) ? operandNode.getText() : undefined;
+    const [operandType] = [operandNode.getType().getBaseTypeOfLiteralType()].map((type) =>
+      type.isString()
+        ? { kind: 'string' }
+        : type.isNumber()
+          ? { kind: 'number' }
+          : type.isBoolean()
+            ? { kind: 'boolean' }
+            : { kind: 'unknown', text: type.getText() },
+    );
+    const coverageId = coverageIdTransformer({ scope: moduleScope, segment: `if:${conditionStructure}` });
+
+    const thenStatement = ifStmt.getThenStatement();
+    const [thenLine] = [Node.isBlock(thenStatement) ? thenStatement.getStatements()[0] : thenStatement].map((node) =>
+      node === undefined ? thenStatement.getStartLineNumber() : node.getStartLineNumber(),
+    );
+    const elseStatement = ifStmt.getElseStatement();
+    const elseLine =
+      elseStatement === undefined
+        ? undefined
+        : (Node.isBlock(elseStatement) ? elseStatement.getStatements()[0] : elseStatement)?.getStartLineNumber() ??
+          elseStatement.getStartLineNumber();
+
+    return {
+      branch: {
+        coverageId,
+        kind: 'if',
+        ...(operandName === undefined ? {} : { operandParamName: operandName }),
+        operandType,
+        predicate: predicateContract.parse(predicate),
+        startLine: ifStmt.getStartLineNumber(),
+        endLine: ifStmt.getEndLineNumber(),
+      },
+      exits: [
+        {
+          coverageId: `${moduleScope}/exit@if-then`,
+          kind: 'implicit',
+          guardPath: [{ branchCoverageId: coverageId, arm: 'then' }],
+          line: thenLine,
+        },
+        ...(elseStatement === undefined || elseLine === undefined
+          ? []
+          : [
+              {
+                coverageId: `${moduleScope}/exit@if-else`,
+                kind: 'implicit',
+                guardPath: [{ branchCoverageId: coverageId, arm: 'else' }],
+                line: elseLine,
+              },
+            ]),
+      ],
+    };
+  });
+
+  const moduleSwitchData = topLevelSwitchStatements.map((switchStmt) => {
+    const discNode = switchStmt.getExpression();
+    const discName = Node.isIdentifier(discNode) ? discNode.getText() : undefined;
+    const discStructure = [discNode, ...discNode.getDescendants()]
+      .filter((child) => !Node.isParenthesizedExpression(child))
+      .map((child) =>
+        Node.isIdentifier(child)
+          ? `id:${child.getText()}`
+          : Node.isStringLiteral(child)
+            ? `str:${child.getLiteralValue()}`
+            : Node.isNumericLiteral(child)
+              ? `num:${String(child.getLiteralValue())}`
+              : child.getKindName(),
+      )
+      .join(',');
+    const [operandType] = [discNode.getType().getBaseTypeOfLiteralType()].map((type) =>
+      type.isString()
+        ? { kind: 'string' }
+        : type.isNumber()
+          ? { kind: 'number' }
+          : type.isBoolean()
+            ? { kind: 'boolean' }
+            : { kind: 'unknown', text: type.getText() },
+    );
+    const clauses = switchStmt.getClauses();
+    const caseInfos = clauses.flatMap((clause) => {
+      if (!Node.isCaseClause(clause)) {
+        return [];
+      }
+      const caseExpr = clause.getExpression();
+      if (!Node.isStringLiteral(caseExpr) && !Node.isNumericLiteral(caseExpr)) {
+        return [];
+      }
+      const literalValue = caseExpr.getLiteralValue();
+      const literalToken = typeof literalValue === 'string' ? `str:${literalValue}` : `num:${String(literalValue)}`;
+      const [firstStatement] = clause.getStatements();
+      return [
+        {
+          branchCoverageId: `${moduleScope}/switch:${discStructure},EqualsEqualsEqualsToken,${literalToken}`,
+          literalValue,
+          literalToken,
+          startLine: clause.getStartLineNumber(),
+          endLine: clause.getEndLineNumber(),
+          exitLine: firstStatement === undefined ? clause.getStartLineNumber() : firstStatement.getStartLineNumber(),
+        },
+      ];
+    });
+    const defaultClause = clauses.find((clause) => Node.isDefaultClause(clause));
+    const defaultFirst = defaultClause === undefined ? undefined : defaultClause.getStatements()[0];
+    const defaultExitLine =
+      defaultClause === undefined
+        ? undefined
+        : defaultFirst === undefined
+          ? defaultClause.getStartLineNumber()
+          : defaultFirst.getStartLineNumber();
+    return { discName, operandType, caseInfos, hasDefault: defaultClause !== undefined, defaultExitLine };
+  });
+
+  const moduleBranches = [
+    ...moduleIfData.map((data) => data.branch),
+    ...moduleSwitchData.flatMap((info) =>
+      info.caseInfos.map((caseInfo) => ({
+        coverageId: caseInfo.branchCoverageId,
+        kind: 'switch',
+        ...(info.discName === undefined ? {} : { operandParamName: info.discName }),
+        operandType: info.operandType,
+        predicate: { kind: 'eq', literal: caseInfo.literalValue },
+        startLine: caseInfo.startLine,
+        endLine: caseInfo.endLine,
+      })),
+    ),
+  ];
+
+  const moduleExits = [
+    ...moduleIfData.flatMap((data) => data.exits),
+    ...moduleSwitchData.flatMap((info) => [
+      ...info.caseInfos.map((caseInfo) => ({
+        coverageId: `${moduleScope}/exit@switch:${caseInfo.literalToken}`,
+        kind: 'implicit',
+        guardPath: [{ branchCoverageId: caseInfo.branchCoverageId, arm: 'then' }],
+        line: caseInfo.exitLine,
+      })),
+      ...(info.hasDefault
+        ? [
+            {
+              coverageId: `${moduleScope}/exit@switch:default`,
+              kind: 'implicit',
+              guardPath: info.caseInfos.map((caseInfo) => ({ branchCoverageId: caseInfo.branchCoverageId, arm: 'else' })),
+              line: info.defaultExitLine,
+            },
+          ]
+        : []),
+    ]),
+  ];
+
+  const moduleFunctions =
+    moduleBranches.length === 0
+      ? []
+      : [
+          {
+            entry: { name: moduleScope, params: [], returnType: { kind: 'unknown', text: 'void' }, line: 1 },
+            branches: moduleBranches,
+            exits: moduleExits,
+          },
+        ];
+
+  return analysisExtractResultContract.parse({ success: true, functions: [...functions, ...moduleFunctions] });
 };

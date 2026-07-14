@@ -12,9 +12,10 @@
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  *
  * The compiled surface is the granular syntax-repository: two constructs (if-else, switch), each with
- * three containment rungs (pure-statement, in-function, in-class) = ts 6 tsx 0. Only the in-function
- * rung is analyzed today, so it drives the detail panel (derived cases, gutter, enrichment); the bare
- * pure-statement / in-class rungs are analyzer GAPS that render source with an empty Tests tab. The
+ * three containment rungs (pure-statement, in-function, in-class) = ts 6 tsx 0. The in-function rung
+ * (a function entry) and the pure-statement rung (bare top-level `*module*` scope) are both analyzed, so
+ * they drive the detail panel (derived cases, gutter, enrichment); the in-class rung (a class method) is
+ * the remaining analyzer GAP that renders source with an empty Tests tab. The
  * empty-state terminal is reached three ways via seeded/hermetic harnesses (emptySurfaceAppHarness,
  * noCacheAppHarness) and a cache-only-source proof (cacheOnlySourceAppHarness) — none depend on the
  * syntax-repository source. Each harness owns its own teardown.
