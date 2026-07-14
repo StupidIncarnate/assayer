@@ -10,9 +10,8 @@
  */
 import { configHashBroker, manifestLoadBroker, manifestTrashBroker, compileRunBroker } from '@assayer/core/brokers';
 import type { FilePath } from '@assayer/core/contracts';
-import type { AssayerConfig } from '@assayer/shared/contracts';
+import type { AssayerConfig, ContentHash } from '@assayer/shared/contracts';
 
-import type { AssayerVersion } from '../../../contracts/assayer-version/assayer-version-contract';
 import { processStdoutCompileProgressAdapter } from '../../../adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter';
 import { compileErrorMessageFormatTransformer } from '../../../transformers/compile-error-message-format/compile-error-message-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
@@ -24,7 +23,7 @@ export const CompileRunLayerResponder = async ({
 }: {
   config: AssayerConfig;
   configDir: FilePath;
-  assayerVersion: AssayerVersion;
+  assayerVersion: ContentHash;
 }): Promise<undefined> => {
   const configHash = configHashBroker({ config });
   const loaded = await manifestLoadBroker({

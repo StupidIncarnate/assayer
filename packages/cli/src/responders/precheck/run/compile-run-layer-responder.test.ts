@@ -1,9 +1,8 @@
-import { AssayerConfigStub, AssayerCacheManifestStub, CompileResultStub } from '@assayer/shared/contracts';
+import { AssayerConfigStub, AssayerCacheManifestStub, CompileResultStub, ContentHashStub } from '@assayer/shared/contracts';
 import { FilePathStub } from '@assayer/core/contracts';
 
 import { CompileRunLayerResponder } from './compile-run-layer-responder';
 import { CompileRunLayerResponderProxy } from './compile-run-layer-responder.proxy';
-import { AssayerVersionStub } from '../../../contracts/assayer-version/assayer-version.stub';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 
 describe('CompileRunLayerResponder', () => {
@@ -16,7 +15,7 @@ describe('CompileRunLayerResponder', () => {
       await CompileRunLayerResponder({
         config: AssayerConfigStub(),
         configDir: FilePathStub({ value: '/repo' }),
-        assayerVersion: AssayerVersionStub({ value: '1.0.0' }),
+        assayerVersion: ContentHashStub(),
       });
 
       expect(proxy.getCallOrder()).toStrictEqual(['trash', 'compile']);
@@ -38,7 +37,7 @@ describe('CompileRunLayerResponder', () => {
         CompileRunLayerResponder({
           config: AssayerConfigStub(),
           configDir: FilePathStub({ value: '/repo' }),
-          assayerVersion: AssayerVersionStub({ value: '1.0.0' }),
+          assayerVersion: ContentHashStub(),
         }),
       ).rejects.toThrow(new CliExactOutputError({ message: 'src/foo.ts:10:4 Unexpected token' }));
     });
@@ -53,7 +52,7 @@ describe('CompileRunLayerResponder', () => {
       await CompileRunLayerResponder({
         config: AssayerConfigStub(),
         configDir: FilePathStub({ value: '/repo' }),
-        assayerVersion: AssayerVersionStub({ value: '1.0.0' }),
+        assayerVersion: ContentHashStub(),
       });
 
       expect(proxy.getCallOrder()).toStrictEqual(['compile']);
@@ -69,7 +68,7 @@ describe('CompileRunLayerResponder', () => {
       await CompileRunLayerResponder({
         config: AssayerConfigStub(),
         configDir: FilePathStub({ value: '/repo' }),
-        assayerVersion: AssayerVersionStub({ value: '1.0.0' }),
+        assayerVersion: ContentHashStub(),
       });
 
       expect(proxy.getCallOrder()).toStrictEqual(['compile']);

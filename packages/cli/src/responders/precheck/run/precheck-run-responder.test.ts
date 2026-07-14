@@ -19,7 +19,11 @@ describe('PrecheckRunResponder', () => {
       const result = await PrecheckRunResponder({ repoPath: '/repo' });
 
       expect(result).toBe('/repo');
-      expect(proxy.getCompileRunArgs()).toStrictEqual({ config, configDir, assayerVersion: '1.0.0' });
+      expect(proxy.getCompileRunArgs()).toStrictEqual({
+        config,
+        configDir,
+        assayerVersion: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      });
     });
   });
 

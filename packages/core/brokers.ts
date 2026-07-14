@@ -20,6 +20,8 @@ export * from './src/brokers/config/validate/config-validate-broker';
 export * from './src/brokers/config/hash/config-hash-broker';
 export * from './src/brokers/config/stable-branch-save/config-stable-branch-save-broker';
 
+export * from './src/brokers/analyzer/hash/analyzer-hash-broker';
+
 export * from './src/brokers/git/detect-stable-branch/git-detect-stable-branch-broker';
 
 export * from './src/brokers/manifest/load/manifest-load-broker';

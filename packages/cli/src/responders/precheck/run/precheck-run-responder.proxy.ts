@@ -1,7 +1,9 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { fileCountContract } from '@assayer/shared/contracts';
+import { fileCountContract, ContentHashStub } from '@assayer/shared/contracts';
 import type { FileCount , AssayerConfigStub} from '@assayer/shared/contracts';
 import type { FilePath } from '@assayer/core/contracts';
+import { analyzerHashBroker } from '@assayer/core/brokers';
+import { analyzerHashBrokerProxy } from '@assayer/core/testing';
 
 import { ConfigResolveLayerResponder } from './config-resolve-layer-responder';
 import { ConfigResolveLayerResponderProxy } from './config-resolve-layer-responder.proxy';
@@ -9,7 +11,7 @@ import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
 import { CompileRunLayerResponder } from './compile-run-layer-responder';
 import { CompileRunLayerResponderProxy } from './compile-run-layer-responder.proxy';
-import { packageJsonReadAdapterProxy } from '../../../adapters/package-json/read/package-json-read-adapter.proxy';
+import { analyzerRootsResolveAdapterProxy } from '../../../adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter.proxy';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 
 type AssayerConfig = ReturnType<typeof AssayerConfigStub>;
@@ -23,13 +25,12 @@ export const PrecheckRunResponderProxy = (): {
   compileCallCount: () => FileCount;
   getCompileRunArgs: () => unknown;
 } => {
-  // packageJsonReadAdapterProxy is a same-package relative import, so the ts-jest proxy-mock
-  // AST collector CAN walk into it and hoist the nested registerMock(readFile) call it sets up
-  // — unlike the cross-package "@assayer/core/testing" composed proxies in the sibling layer
-  // proxies, which are bare-called only to satisfy enforce-proxy-child-creation and never
-  // actually intercept I/O. Here the bare call is what makes the REAL packageJsonReadAdapter
-  // (never mocked itself — the responder imports and calls it directly) resolve to '1.0.0'.
-  packageJsonReadAdapterProxy();
+  // Bare-called to satisfy enforce-proxy-child-creation. analyzerHashBroker is a cross-package
+  // core broker the responder calls directly, so (like the layer responders below) we registerMock
+  // it directly to give it a deterministic hash — the analyzerRootsResolveAdapter it consumes is a
+  // pure __dirname path computation with no I/O, so it is left to run for real.
+  analyzerHashBrokerProxy();
+  analyzerRootsResolveAdapterProxy();
 
   // The three layer-responder proxies below are also bare-called only to satisfy
   // enforce-proxy-child-creation: they wire registerMock onto the CORE BROKERS each layer
@@ -40,10 +41,12 @@ export const PrecheckRunResponderProxy = (): {
   StableBranchLayerResponderProxy();
   CompileRunLayerResponderProxy();
 
+  const analyzerHashHandle = registerMock({ fn: analyzerHashBroker });
   const configResolveHandle = registerMock({ fn: ConfigResolveLayerResponder });
   const stableBranchHandle = registerMock({ fn: StableBranchLayerResponder });
   const compileRunHandle = registerMock({ fn: CompileRunLayerResponder });
 
+  analyzerHashHandle.mockResolvedValue(ContentHashStub());
   stableBranchHandle.mockImplementation(async ({ config }: { config: AssayerConfig }) => Promise.resolve(config));
   compileRunHandle.mockResolvedValue(undefined);
 

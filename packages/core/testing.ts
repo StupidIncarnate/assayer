@@ -20,6 +20,8 @@ export * from './src/brokers/config/validate/config-validate-broker.proxy';
 export * from './src/brokers/config/hash/config-hash-broker.proxy';
 export * from './src/brokers/config/stable-branch-save/config-stable-branch-save-broker.proxy';
 
+export * from './src/brokers/analyzer/hash/analyzer-hash-broker.proxy';
+
 export * from './src/brokers/git/detect-stable-branch/git-detect-stable-branch-broker.proxy';
 
 export * from './src/brokers/manifest/load/manifest-load-broker.proxy';

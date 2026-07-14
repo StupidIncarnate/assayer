@@ -1,7 +1,9 @@
 /**
  * PURPOSE: Contract for the Assayer cache manifest — the top-level record of what the
  *   content-hash cache holds per namespace (branch/commit + the file hashes derived from it),
- *   scoped to the assayer version and config hash that produced it.
+ *   scoped to the tool identity and config hash that produced it. `assayerVersion` is NOT a
+ *   semver — it is a CONTENT HASH of the analyzer's own source (see analyzerHashBroker), so any
+ *   change to the analysis code invalidates the whole cache with no manual version bump.
  *
  * USAGE:
  * const manifest = assayerCacheManifestContract.parse({

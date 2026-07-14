@@ -10,11 +10,12 @@
  * // (from whichever layer failed) without running the later stages
  */
 import type { FilePath } from '@assayer/core/contracts';
+import { analyzerHashBroker } from '@assayer/core/brokers';
 
 import { ConfigResolveLayerResponder } from './config-resolve-layer-responder';
 import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { CompileRunLayerResponder } from './compile-run-layer-responder';
-import { packageJsonReadAdapter } from '../../../adapters/package-json/read/package-json-read-adapter';
+import { analyzerRootsResolveAdapter } from '../../../adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter';
 
 export const PrecheckRunResponder = async ({ repoPath }: { repoPath: string }): Promise<FilePath> => {
   const resolved = await ConfigResolveLayerResponder({ repoPath });
@@ -23,7 +24,10 @@ export const PrecheckRunResponder = async ({ repoPath }: { repoPath: string }): 
     configPath: resolved.configPath,
     repoRoot: repoPath,
   });
-  const assayerVersion = await packageJsonReadAdapter();
+  // Cache-invalidation identity = a content hash of Assayer's OWN analyzer source, not a version
+  // string. When any analysis code changes this hash changes and the stale cache is rebuilt — no
+  // manual bump. (Config changes fold in separately via configHash downstream.)
+  const assayerVersion = await analyzerHashBroker({ roots: analyzerRootsResolveAdapter() });
 
   await CompileRunLayerResponder({ config, configDir: resolved.configDir, assayerVersion });
 
