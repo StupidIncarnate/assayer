@@ -17,6 +17,11 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testMatch: ['**/src/**/*.test.[jt]s?(x)'],
   moduleNameMapper: {
+    // Spread, never replace: the base maps @assayer/* to SOURCE. Dropping those makes this package
+    // resolve its siblings through package.json exports to their built dist instead, so app tests
+    // run against the last `npm run build` while every other package tests the working tree — the
+    // two silently disagree until someone rebuilds.
+    ...baseConfig.moduleNameMapper,
     '\\.(css|less|scss)$': '<rootDir>/src/__mocks__/style-mock.cjs',
     '^react$': reactDir,
     '^react-dom$': reactDomDir,
