@@ -32,6 +32,8 @@ describe('if-else / pure-statement — bare top-level if/else', () => {
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
             line: 1,
+            // A module scope runs at require time; nothing can call it.
+            access: { kind: 'unreachable' },
           },
           branches: [
             {

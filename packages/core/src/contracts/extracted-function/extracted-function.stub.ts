@@ -11,6 +11,7 @@ export const ExtractedFunctionStub = ({ ...props }: StubArgument<ExtractedFuncti
       params: [{ name: 'name', type: { kind: 'string' } }],
       returnType: { kind: 'string' },
       line: 1,
+      access: { kind: 'named' },
     },
     branches: [
       {

@@ -69,6 +69,7 @@ describe('analyzeFileBroker', () => {
               params: [],
               returnType: { kind: 'unknown', text: 'void' },
               line: 1,
+              access: { kind: 'unreachable' },
             },
             branches: [
               {

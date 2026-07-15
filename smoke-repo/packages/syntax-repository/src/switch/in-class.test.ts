@@ -41,6 +41,7 @@ describe('switch / in-class — switch inside an exported class method', () => {
             params: [{ name: 'method', type: methodUnion }],
             returnType: { kind: 'string' },
             line: 2,
+            access: { kind: 'method', className: 'Router', constructable: true },
           },
           branches: [
             {

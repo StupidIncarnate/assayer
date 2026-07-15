@@ -8,17 +8,28 @@
  *   the entry would be judged by code it merely scheduled. Listing the entry's OWN exits makes the
  *   question exact rather than positional.
  *
- *   Only NAMED EXPORTS become entries today. A `*module*` scope is not callable at all (its branches
- *   run at require time), and default exports / class methods need construction — each is a named gap
- *   rather than a silent omission.
+ *   Each entry carries its `access`, because a case is not addressable without it: the runner has to
+ *   know whether to read a module property, reach for `default`, or build an instance first.
+ *
+ *   `gaps` is the other half of that, and it is REQUIRED rather than optional for the same reason
+ *   `darkSpots` is: a case set that can omit what it could not drive reads as complete coverage of
+ *   the file, which is worse than admitting the hole. An entry nothing can construct belongs here —
+ *   named, with a reason — never dropped silently and never driven anyway and reported as a failure
+ *   of the analyzer.
  *
  * USAGE:
- * caseSetContract.parse({ relPath: 'src/boolean/and.ts', modulePath: '/abs/and.ts', entries: [...] });
+ * caseSetContract.parse({ relPath: 'src/boolean/and.ts', modulePath: '/abs/and.ts', entries: [...], gaps: [] });
  * // Returns a validated CaseSet (branded fields)
  */
 import { z } from 'zod';
 
-import { coverageIdContract, derivedTestCaseContract, relPathContract, symbolNameContract } from '@assayer/shared/contracts';
+import {
+  coverageIdContract,
+  derivedTestCaseContract,
+  entryAccessContract,
+  relPathContract,
+  symbolNameContract,
+} from '@assayer/shared/contracts';
 
 export const caseSetContract = z.object({
   relPath: relPathContract,
@@ -26,8 +37,15 @@ export const caseSetContract = z.object({
   entries: z.array(
     z.object({
       name: symbolNameContract,
+      access: entryAccessContract,
       exitIds: z.array(coverageIdContract),
       cases: z.array(derivedTestCaseContract),
+    }),
+  ),
+  gaps: z.array(
+    z.object({
+      name: symbolNameContract,
+      reason: z.string().min(1).brand<'CaseSetGapReason'>(),
     }),
   ),
 });

@@ -10,5 +10,6 @@ export const EntrySignatureStub = ({ ...props }: StubArgument<EntrySignature> = 
     params: [{ name: 'name', type: { kind: 'string' } }],
     returnType: { kind: 'string' },
     line: 1,
+    access: { kind: 'named' },
     ...props,
   });

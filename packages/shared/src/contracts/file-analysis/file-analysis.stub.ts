@@ -13,6 +13,7 @@ export const FileAnalysisStub = ({ ...props }: StubArgument<FileAnalysis> = {}):
           params: [{ name: 'name', type: { kind: 'string' } }],
           returnType: { kind: 'string' },
           line: 1,
+          access: { kind: 'named' },
         },
         branches: [
           {

@@ -10,6 +10,7 @@ export const CaseSetStub = ({ ...props }: StubArgument<CaseSet> = {}): CaseSet =
     entries: [
       {
         name: 'grade',
+        access: { kind: 'named' },
         exitIds: ['grade/return@then', 'grade/return@else'],
         cases: [
           {
@@ -22,5 +23,6 @@ export const CaseSetStub = ({ ...props }: StubArgument<CaseSet> = {}): CaseSet =
         ],
       },
     ],
+    gaps: [],
     ...props,
   });

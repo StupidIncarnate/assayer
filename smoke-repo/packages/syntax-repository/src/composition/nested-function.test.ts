@@ -30,6 +30,7 @@ describe('composition / nested-function — a function declared inside a functio
             params: [{ name: 'value', type: { kind: 'number' } }],
             returnType: { kind: 'string' },
             line: 1,
+            access: { kind: 'named' },
           },
           branches: [],
           exits: [{ coverageId: '*module*/outer/return@top', kind: 'return', guardPath: [], line: 10 }],

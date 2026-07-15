@@ -9,6 +9,7 @@ export const ScopeRecordStub = ({ ...props }: StubArgument<ScopeRecord> = {}): S
     name: 'classify',
     kind: 'function',
     exported: true,
+    access: { kind: 'named' },
     params: [{ name: 'value', type: { kind: 'number' } }],
     returnType: { kind: 'string' },
     line: 1,

@@ -10,6 +10,7 @@ describe('caseSetContract', () => {
         entries: [
           {
             name: 'grade',
+            access: { kind: 'named' },
             exitIds: ['grade/return@then', 'grade/return@else'],
             cases: [
               {
@@ -22,20 +23,40 @@ describe('caseSetContract', () => {
             ],
           },
         ],
+        gaps: [],
       });
     });
 
-    // A file whose entries are all uncallable (a bare module scope, a default export) assembles to an
+    // A file whose entries are all uncallable (a bare module scope, a nested helper) assembles to an
     // empty set rather than to nothing: "analyzed, nothing runnable" must stay sayable.
     it('EMPTY: {no entries} => parses', () => {
       expect(CaseSetStub({ entries: [] }).entries).toStrictEqual([]);
+    });
+
+    // Required, not optional, for the reason darkSpots is: a set that can omit what it could not
+    // drive reads as complete coverage of the file.
+    it('INVALID: {no gaps} => throws, since an omitted gap reads as full coverage', () => {
+      expect(() => {
+        return caseSetContract.parse({ relPath: 'src/f.ts', modulePath: '/abs/f.ts', entries: [] });
+      }).toThrow(/Required/u);
     });
   });
 
   describe('invalid case sets', () => {
     it('INVALID: {no modulePath} => throws, since an entry that cannot be required cannot be driven', () => {
       expect(() => {
-        return caseSetContract.parse({ relPath: 'src/f.ts', entries: [] });
+        return caseSetContract.parse({ relPath: 'src/f.ts', entries: [], gaps: [] });
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {an entry with no access} => throws, since it could only be driven by guessing', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          relPath: 'src/f.ts',
+          modulePath: '/abs/f.ts',
+          entries: [{ name: 'grade', exitIds: [], cases: [] }],
+          gaps: [],
+        });
       }).toThrow(/Required/u);
     });
   });

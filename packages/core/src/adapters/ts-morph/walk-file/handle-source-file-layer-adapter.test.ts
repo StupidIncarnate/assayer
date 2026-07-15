@@ -12,6 +12,8 @@ const MODULE_SCOPE = ScopeRecordStub({
   name: '*module*',
   kind: 'module',
   exported: false,
+  // Nothing can call a module scope — its branches run at require time.
+  access: { kind: 'unreachable' },
   params: [],
   returnType: { kind: 'unknown', text: 'void' },
   line: 1,

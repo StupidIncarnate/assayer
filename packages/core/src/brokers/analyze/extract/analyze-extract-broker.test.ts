@@ -21,6 +21,7 @@ describe('analyzeExtractBroker', () => {
               params: [{ name: 'value', type: { kind: 'number' } }],
               returnType: { kind: 'string' },
               line: 1,
+              access: { kind: 'named' },
             },
             branches: [
               {
@@ -84,6 +85,7 @@ describe('analyzeExtractBroker', () => {
               params: [{ name: 'n', type: { kind: 'string' } }],
               returnType: { kind: 'string' },
               line: 1,
+              access: { kind: 'named' },
             },
             branches: [],
             exits: [{ coverageId: '*module*/echo/return@top', kind: 'return', guardPath: [], line: 2 }],

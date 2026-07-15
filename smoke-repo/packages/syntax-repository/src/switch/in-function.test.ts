@@ -39,6 +39,7 @@ describe('switch / in-function — switch inside an exported function', () => {
             params: [{ name: 'method', type: methodUnion }],
             returnType: { kind: 'string' },
             line: 1,
+            access: { kind: 'named' },
           },
           branches: [
             {

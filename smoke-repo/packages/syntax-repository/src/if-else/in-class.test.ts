@@ -32,6 +32,9 @@ describe('if-else / in-class — if/else inside an exported class method', () =>
             params: [{ name: 'value', type: { kind: 'number' } }],
             returnType: { kind: 'string' },
             line: 2,
+            // Reached through an instance, not as a module property — and the zero-arg class means
+            // the runner can build one, so this method is drivable rather than a gap.
+            access: { kind: 'method', className: 'Classifier', constructable: true },
           },
           branches: [
             {

@@ -5,6 +5,11 @@
  *   class an analysable entry while a bare nested function is not. Members are then just
  *   function-likes: the class rung costs this file and nothing else.
  *
+ *   It also hands DOWN its identity and constructability, because a method is only addressable
+ *   through an instance and the class is the only node that knows how to make one. A constructor
+ *   with required arguments makes its methods a named gap rather than something the runner may
+ *   guess at.
+ *
  * USAGE:
  * handleClassLayerAdapter({ node: classDeclaration, context });
  * // Returns a HandlerResult descending the class's members under its name
@@ -28,7 +33,22 @@ export const handleClassLayerAdapter = ({
 }): ReturnType<typeof handlerResultLayerAdapter> => {
   const name = symbolNameContract.parse(node.getName() ?? 'default');
   const exported = Node.isClassDeclaration(node) ? node.isExported() : context.exported;
-  const scoped = walkContextTransformer({ context, scopeSegment: name, params: [], exported });
+
+  // No constructor at all, or one every parameter of which can be omitted, means an instance costs
+  // nothing to make. `every` over no constructors is vacuously true, which is the right answer.
+  const constructable = node
+    .getConstructors()
+    .every((ctor) =>
+      ctor.getParameters().every((param) => param.isOptional() || param.hasInitializer() || param.isRestParameter()),
+    );
+
+  const scoped = walkContextTransformer({
+    context,
+    scopeSegment: name,
+    params: [],
+    exported,
+    enclosingClass: { name, constructable },
+  });
 
   return handlerResultLayerAdapter({
     nodes: [

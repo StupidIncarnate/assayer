@@ -37,6 +37,7 @@ import { walkContextTransformer } from '../../../transformers/walk-context/walk-
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
+import { readEntryAccessLayerAdapter } from './read-entry-access-layer-adapter';
 import { readExportFlagLayerAdapter } from './read-export-flag-layer-adapter';
 import { readFunctionNameLayerAdapter } from './read-function-name-layer-adapter';
 import { readTypeFactLayerAdapter } from './read-type-fact-layer-adapter';
@@ -59,6 +60,8 @@ export const handleFunctionLayerAdapter = ({
 }): ReturnType<typeof handlerResultLayerAdapter> => {
   const name = readFunctionNameLayerAdapter({ node });
   const exported = readExportFlagLayerAdapter({ node, context });
+  // Read from the context the CLASS handed down, before the scope below clears it.
+  const access = readEntryAccessLayerAdapter({ node, context });
 
   const params = node.getParameters().map((param) =>
     paramDescriptorContract.parse({
@@ -117,6 +120,7 @@ export const handleFunctionLayerAdapter = ({
       name,
       kind: 'function',
       exported,
+      access,
       params,
       returnType,
       line: node.getStartLineNumber(),

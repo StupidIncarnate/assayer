@@ -29,6 +29,7 @@ describe('if-else / in-function — if/else inside an exported function', () => 
             params: [{ name: 'value', type: { kind: 'number' } }],
             returnType: { kind: 'string' },
             line: 1,
+            access: { kind: 'named' },
           },
           branches: [
             {

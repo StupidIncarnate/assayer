@@ -50,7 +50,13 @@ describe('handleClassLayerAdapter', () => {
       const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
 
       expect(result.descents.map((descent) => descent.context)).toStrictEqual([
-        WalkContextStub({ scopePath: ['*module*', 'C'], guardPath: [], params: [], exported: true }),
+        WalkContextStub({
+          scopePath: ['*module*', 'C'],
+          guardPath: [],
+          params: [],
+          exported: true,
+          enclosingClass: { name: 'C', constructable: true },
+        }),
       ]);
     });
 
@@ -63,7 +69,64 @@ describe('handleClassLayerAdapter', () => {
       const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
 
       expect(result.descents.map((descent) => descent.context)).toStrictEqual([
-        WalkContextStub({ scopePath: ['*module*', 'C'], guardPath: [], params: [], exported: false }),
+        WalkContextStub({
+          scopePath: ['*module*', 'C'],
+          guardPath: [],
+          params: [],
+          exported: false,
+          enclosingClass: { name: 'C', constructable: true },
+        }),
+      ]);
+    });
+  });
+
+  // A method is only addressable through an instance, and the class is the only node that knows what
+  // making one costs. Handed DOWN rather than climbed for.
+  describe('constructability handed to members', () => {
+    it('VALID: {no constructor} => constructable, since an instance costs nothing', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  m(): void {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.context.enclosingClass)).toStrictEqual([
+        { name: 'C', constructable: true },
+      ]);
+    });
+
+    it('VALID: {constructor needing an argument} => NOT constructable', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export class C {\n  constructor(readonly db: string) {}\n  m(): void {}\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.context.enclosingClass)).toStrictEqual([
+        { name: 'C', constructable: false },
+        { name: 'C', constructable: false },
+      ]);
+    });
+
+    it('VALID: {constructor whose every argument is omittable} => constructable', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export class C {\n  constructor(a?: string, b: number = 1) {}\n  m(): void {}\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.context.enclosingClass)).toStrictEqual([
+        { name: 'C', constructable: true },
+        { name: 'C', constructable: true },
       ]);
     });
   });

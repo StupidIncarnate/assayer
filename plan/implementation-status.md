@@ -310,23 +310,59 @@ grade(6, 1)  TWO cond events  leaf.0 true
   probe" is wrong — a callback the entry invoked fires its own exit probe afterwards.
 - **One execution path.** `runUnitBroker` produces one artifact; CLI and desktop both read it. They
   cannot drift because they are not two runners.
-- Verified: ward green (lint 777 / typecheck 779 / unit 262 / integration 12), `test:syntax` 15/38.
 
-**Known gaps, named not hidden:** only NAMED EXPORTS are runnable (default exports and class methods
-need construction; `*module*` scope is not callable at all — each is dropped in
-`case-set-projection` as policy). Switch case-leaves get NO cond probe: `method === 'get'` is
+**An entry carries its ACCESS, and that is what makes a case addressable.** A case has arrange values
+and a predicted exit, but neither says how to lay hands on the function. `entry-access` answers it:
+`named` (a module property), `default` (under `default`), `method` (an INSTANCE, built per case so no
+case sees another's state), `constructor` (reached through `new`), `unreachable` (a module scope, a
+nested helper — nothing can call it).
+
+The class is the only node that knows its own name and what an instance costs, so it hands both DOWN
+(`walk-context.enclosingClass`) — climbing back up for it would rebuild the ownership bug the walk
+exists to remove. It resets on entering any other scope, exactly as `guardPath` does: a function
+nested inside a method is not a method.
+
+`access` and `exported` are different questions and both are kept: access says HOW an entry is
+reached, `exported` says WHETHER it can be. A method of an unexported class is `method` + `exported:
+false`.
+
+**What cannot be driven is a NAMED gap, never a failure.** `case-set-projection` splits on capability
+rather than on a name: a method whose class needs constructor arguments, and a constructor (reached
+through `new`, which the runner does not model), become `gaps` carrying a reason. `gaps` is REQUIRED
+on `case-set` for the reason `darkSpots` is — a set that can omit what it could not drive reads as
+complete coverage. Driving them anyway is what reported CORRECT code as failing: a method resolved as
+`subject[name]` is `undefined`, and a constructor resolved that way is the class, which throws when
+applied without `new`.
+
+- Verified: ward green (lint 786 / typecheck 788 / unit 265 / integration 12 / e2e 1), `test:syntax`
+  15/38, and live — `if-else/in-class.ts` runs 2/2 with per-arm exit attribution.
+
+**Known gaps, named not hidden:** switch case-leaves get NO cond probe: `method === 'get'` is
 desugared and has no expression to wrap, so switches run and report but lack per-case attribution
-(probing the discriminant would recover it). And the unclassified-leaf dark spot from Session 4 is
-still open.
+(probing the discriminant would recover it). The unclassified-leaf dark spot is still open, and it
+bites any condition over non-literals: `value > this.floor` derives the SAME arrange for both arms, so
+one case provably cannot reach the exit it claims and fails against correct code. Instance state and
+constructor arguments are both untyped as inputs — the "global inputs" problem, adjacent to the call
+graph.
 
 ## What's next (prioritized)
 
 0. **Phase 4/5 of the execution vertical — CLI + UI.** The engine is done and proven; what remains is
-   surfacing. `assayer unit [paths]` needs a real arg parser (`cli-command-normalize` is a
-   single-token switch over a closed enum, no flags), plus `assayer detail <runId>` and the link into
-   the app. Then the bridge (a spawn adapter that CAPTURES exit code — the existing one is
-   `detached`+`stdio:'ignore'` and cannot await) and the Tests tab: stub list, Run action, saved
-   status, trace view. Plan: `~/.claude/plans/rippling-knitting-lollipop.md`.
+   surfacing. `assayer unit [paths]` needs a real arg parser — `cli-command-normalize` is a
+   single-token switch over a closed enum with no flags, and it must use Node's built-in
+   `util.parseArgs` (a third-party parser is a new dep). Then `assayer detail <runId>` and the link
+   into the app; the bridge (a spawn adapter that CAPTURES exit code — the existing one is
+   `detached`+`stdio:'ignore'` and cannot await); and the Tests tab: stub list, Run action, saved
+   status, trace view. **Surface `caseSet.gaps` wherever results are shown** — a gap is the product
+   telling a human what it could not drive, and it is worthless if only the JSON knows.
+   Plan: `~/.claude/plans/rippling-knitting-lollipop.md`.
+
+0b. **The engine has NO automated end-to-end coverage.** `run-unit-broker.test.ts` is fully mocked
+   (the proxy hands back a stub run; Jest never executes), and core has ZERO integration tests — ward's
+   "integration 12" is desktop/cli/app only. So the headline capability can regress silently, and
+   every claim that it runs rests on a hand-run probe. The plan already specifies the fix:
+   `analyzeFileBroker` → assemble → `runCLI` against smoke-repo, asserting `run.json` + traces on
+   disk. Do this BEFORE the CLI/UI work rides on top of it.
 
 1. **Ternary branches.** Now a single new handler file plus its case-derivation semantics, touching
    no existing handler — the ternary is already a recorded DARK SPOT, so the gap is visible rather

@@ -19,6 +19,7 @@ import { z } from 'zod';
 
 import {
   branchNodeContract,
+  entryAccessContract,
   exitNodeContract,
   lineNumberContract,
   paramDescriptorContract,
@@ -31,6 +32,7 @@ export const scopeRecordContract = z.object({
   name: symbolNameContract,
   kind: z.enum(['module', 'function']).brand<'ScopeKind'>(),
   exported: z.boolean(),
+  access: entryAccessContract,
   params: z.array(paramDescriptorContract),
   returnType: typeDescriptorContract,
   line: lineNumberContract,

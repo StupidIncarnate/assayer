@@ -127,6 +127,9 @@ export * from './src/contracts/derived-test-case/derived-test-case.stub';
 export * from './src/contracts/line-enrichment/line-enrichment-contract';
 export * from './src/contracts/line-enrichment/line-enrichment.stub';
 
+export * from './src/contracts/entry-access/entry-access-contract';
+export * from './src/contracts/entry-access/entry-access.stub';
+
 export * from './src/contracts/entry-signature/entry-signature-contract';
 export * from './src/contracts/entry-signature/entry-signature.stub';
 

@@ -53,6 +53,8 @@ export const handleSourceFileLayerAdapter = ({
       name,
       kind: 'module',
       exported: false,
+      // Nothing can call a module scope — its branches run at require time.
+      access: { kind: 'unreachable' },
       params: [],
       returnType: { kind: 'unknown', text: moduleScopeStatics.returnTypeText },
       line: 1,

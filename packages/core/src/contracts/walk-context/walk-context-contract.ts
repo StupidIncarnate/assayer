@@ -12,6 +12,10 @@
  *   arms merely converge and only the scope's own end is an exit. Without it, "per-arm exits" would
  *   have to be a rung-specific rule — which is exactly the duplication this design removes.
  *
+ *   `enclosingClass` travels here for the same reason everything else does: a method needs its
+ *   class's name and constructability to be addressable, and the class is the only node that knows
+ *   them. Climbing back up to find it would re-create the ownership bug this walk exists to remove.
+ *
  * USAGE:
  * walkContextContract.parse({ scopePath: ['classify'], guardPath: [], params: [], exported: true, tail: true });
  * // Returns a validated WalkContext (branded fields)
@@ -26,6 +30,7 @@ export const walkContextContract = z.object({
   params: z.array(paramDescriptorContract),
   exported: z.boolean(),
   tail: z.boolean(),
+  enclosingClass: z.object({ name: symbolNameContract, constructable: z.boolean() }).optional(),
 });
 
 export type WalkContext = z.infer<typeof walkContextContract>;

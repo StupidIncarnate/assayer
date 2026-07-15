@@ -23,6 +23,7 @@ export const walkContextTransformer = ({
   params,
   exported,
   tail,
+  enclosingClass,
 }: {
   context: WalkContext;
   scopeSegment?: SymbolName;
@@ -30,8 +31,13 @@ export const walkContextTransformer = ({
   params?: ParamDescriptor[];
   exported?: boolean;
   tail?: boolean;
-}): WalkContext =>
-  walkContextContract.parse({
+  enclosingClass?: { name: SymbolName; constructable: boolean };
+}): WalkContext => {
+  // Same reset rule as guardPath, for the same reason: a class hands its identity to its MEMBERS,
+  // but entering any other scope clears it — a function nested inside a method is not a method.
+  const nextClass = scopeSegment === undefined ? context.enclosingClass : enclosingClass;
+
+  return walkContextContract.parse({
     scopePath: scopeSegment === undefined ? context.scopePath : [...context.scopePath, scopeSegment],
     // Entering a scope resets the guard path; entering an arm appends to it. Never both at once.
     guardPath:
@@ -44,4 +50,8 @@ export const walkContextTransformer = ({
     exported: exported === undefined ? context.exported : exported,
     // A scope body is in tail position by definition: reaching its end ends the scope.
     tail: scopeSegment === undefined ? (tail === undefined ? context.tail : tail) : true,
+    // Omitted rather than set undefined: a context with no class must be strictly equal to one that
+    // never had the key, or every golden assertion downstream churns.
+    ...(nextClass === undefined ? {} : { enclosingClass: nextClass }),
   });
+};

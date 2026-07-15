@@ -37,6 +37,7 @@ export const analysisProjectionTransformer = ({ walked }: { walked: WalkFileResu
         params: scope.params,
         returnType: scope.returnType,
         line: scope.line,
+        access: scope.access,
       },
       branches: scope.branches,
       exits: scope.exits,

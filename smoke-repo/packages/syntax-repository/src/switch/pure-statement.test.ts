@@ -31,6 +31,7 @@ describe('switch / pure-statement — bare top-level switch', () => {
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
             line: 1,
+            access: { kind: 'unreachable' },
           },
           branches: [
             {
