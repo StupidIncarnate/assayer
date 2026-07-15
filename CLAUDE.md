@@ -103,6 +103,17 @@ for one wire event), emit a build error demanding the canonical model — do not
 generate tests around the ambiguity. Prose invariants in comments/docs are
 bugs: convert them to enforced rules (checklist ratchet).
 
+**Docs state the CURRENT truth, never history.** Every doc, plan, memory and
+comment describes what IS — not what was, not what changed, not who fixed it.
+Git carries history; a reference doc that narrates it is noise that ages badly.
+**When something is fixed, DELETE the defect language — never annotate it as
+resolved.** "X was impossible (now works)" still teaches the reader X is
+fragile, and the next reader re-derives the dead conclusion from the half they
+remember. If the fixed thing now works as anyone would assume, the correct
+amount of documentation is NONE: say nothing and let the code be the record.
+Only a CURRENTLY-TRUE constraint or a CURRENTLY-REAL defect earns words. Never
+state a fact the repo already states — a `file:` dep documents itself.
+
 **One rule engine, one plugin pattern.** Rules emit obligations, lints, or
 refusals — one engine, three output kinds. All extension goes through the
 seam-plus-adapters pattern (detect/tap/observe/display; R15): plugins are
@@ -139,6 +150,8 @@ assert outputs (generated skeletons, EXACT error text, coverage reports).
 - Two encodings of one concept (mode-as-string-prefix, twin contracts,
   re-enumerated unions) — refuse, don't accommodate.
 - Enforcing an invariant via comment or doc instead of a rule.
+- Narrating history in a doc ("this used to…", "previously broken", "now fixed")
+  instead of stating only what is true now.
 - Per-test/per-harness tuning knobs (timeouts, retries) instead of global
   config.
 - Per-assertion `{ timeout }` on individual e2e statements — the global

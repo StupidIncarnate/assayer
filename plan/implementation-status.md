@@ -2,10 +2,10 @@
 
 > Living status/handoff doc. Source-of-truth design still lives in `requirements.md` /
 > `features.md` / `expectation-catalog.md` / `case-studies.md`; this tracks what is BUILT
-> against that design and what is next. Last updated: session 3 (2026-07-14) — the analyzer was
-> **re-architected onto a recursive scope walk**; see "Session 3" below, which supersedes the
-> analyzer internals described under Session 1/2 (the derived facts and downstream layers survive
-> unchanged; the traversal does not).
+> against that design and what is next. Last updated: session 4 (2026-07-14) — a branch's condition is
+> now a boolean TREE and cases fan out per CAUSE; see "Session 4" below, which supersedes the flat
+> operand+predicate branch shape described under Session 1/2. Session 3's recursive scope walk stands
+> unchanged — the tree slots into it via one handler call.
 
 ## Headline
 
@@ -106,6 +106,24 @@ The pre-edit-lint hook blocks writes on violations; these cost the most iteratio
 - `toMatch` needs `^…$` anchors; `toThrow` uses a regex; `.length`-less strict assertions.
 - Array destructuring IS `T | undefined` under `noUncheckedIndexedAccess`.
 - `String(x)`/`Number(x)` on an already-typed value trips `no-unnecessary-type-conversion`.
+
+## Local setup
+
+`@dungeonmaster/*` are `file:` deps, so **`codex-of-consentient-craft` must be checked out as a
+sibling directory** of this repo. npm installs them as symlinks; edits there are live here.
+
+## Packaging — NOT publish-ready (deferred: not publishing yet)
+
+`npm pack --dry-run` on `packages/core` reports **359 files, `dist/` → 0 of them**, while that
+package.json's `exports` point at `./dist/adapters.js` / `./dist/brokers.js`. `dist/` is gitignored
+and there is no `files` field or prepublish build, so a published core would resolve every export
+to a file that is not in the tarball — broken on arrival. It also ships 127 `.test.ts` files and
+`CLAUDE.md`. Fix before any publish: add a `files` allowlist + a prepublish build.
+
+**Open packaging question (undecided):** core declares `typescript` and `ts-jest` as hard
+`dependencies`. For a package installed into arbitrary consumer TS repos, `typescript` is
+conventionally a `peerDependency` — otherwise the consumer gets a second TypeScript copy their own
+`tsc` and our ts-morph can disagree about. Decide before publishing.
 
 ## Session 2 (2026-07-12) — increments landed
 
@@ -211,7 +229,104 @@ still resolve by NAME, not symbol → a local shadowing a param reads as the par
 branches are walked but not projected as an entry (its logic is owed through its caller — needs the
 call-graph vertical).
 
+## Session 4 (2026-07-14) — conditions are a boolean TREE
+
+Prerequisite for the execution vertical (owner: "when an `if` has more than one argument, we can track
+it falling into that `if` — traditional coverages don't do that"). It was not a runner gap: the
+analyzer could not REPRESENT a compound condition. `read-condition` classifies exactly one comparison,
+so `score > 5 && bonus > 1` read as ONE opaque operand with an `unrecognized` predicate.
+
+**That was silently unsound, not merely incomplete.** Both arms derived IDENTICAL arrange values —
+`grade(0, 0)` was emitted as *both* the then-case and the else-case, so one of the two provably could
+not reach the exit it claimed. `darkSpots` was empty. Every `&&`, `||`, `!` and bare-boolean condition
+in any analyzed repo had this.
+
+- **`condition-leaf` + `condition-node` contracts** (shared): a recursive tree of `and`/`or`/`not` over
+  leaves. `branch-node` REPLACES `operandParamName`/`operandType`/`predicate` with `condition` — one
+  encoding, since a simple comparison is a one-leaf tree. Leaf ids are the branch id plus a positional
+  path (`#leaf`, `#leaf.0`, `#leaf.1.0`); parens do NOT consume a path segment.
+- **`read-condition-tree-layer-adapter`**: recursive decomposition, typing each leaf.
+  `handle-if` collapsed to one call; `handle-switch`'s eq-branches are one-leaf trees.
+  `read-condition`/`transformers/predicate` keep their jobs — this adds only SHAPE.
+- **Truthiness is now classified** (`predicate-transformer`): a condition with no operator is a
+  `truthy` test, not `unrecognized`. `truthy`/`falsy` already existed in the contract and in
+  `type-to-range`; **nothing had ever produced them** — dead code. Without this, `!ready` and
+  `a || flag` derive no values.
+- **Cause enumeration** (`condition-causes` → `exit-causes` → `cause-arrange`, orchestrated by
+  `derive-cases`): one case per distinct REASON an arm was taken. Short-circuiting is MODELLED — a leaf
+  the language would not evaluate is ABSENT from the cause (absent ≠ false), which is the distinction
+  branch coverage throws away. **`type-to-range` needed no change**: `!` just flips which side of
+  `{satisfying, violating}` is read.
+- **Enumeration is LINEAR, not exponential** — `a && b && c` is false for 3 causes, true for 1 (MC/DC's
+  n+1). Pinned by a test; `mixed.ts` gets 4 cases from 3 leaves. If this ever goes exponential,
+  exhaustive derivation stops being affordable.
+- **Enrichment is now per-LEAF**, so a compound condition enriches BOTH operands. It previously
+  enriched neither, having no single operand to name.
+- **Specimens**: `boolean/{and,or,not,mixed}.ts`. No separate `short-circuit` specimen — short-circuiting
+  is a consequence of `&&`/`||`, not a construct, and `and.ts`'s else-cause already exercises it.
+- Verified: ward green (lint 718 / typecheck 722 / unit 242 / integration 12 / e2e 1),
+  `test:syntax` 15 suites / 38 tests, determinism byte-identical, and formatting immunity holds
+  (minified + double quotes + redundant parens ⇒ identical IDs).
+
+**Deferred, deliberately — the dark spot for an UNCLASSIFIED leaf.** The plan put this in this phase;
+it is not done. An `unrecognized` leaf (`if (a.b > c)`, `if (a + b)`) still falls back to representative
+fill for BOTH arms — i.e. the exact silent unsoundness fixed above still exists for conditions the
+classifier cannot read. It is PRE-EXISTING and not worsened here, but it is real. Doing it properly
+needs a design call, which is why it was not rushed: `dark-spot` is shaped around a walk NODE (`kind:
+SyntaxKindName`, `reason: 'unhandled-syntax'`), and a condition leaf carries no syntax kind — so it
+needs either a new reason plus a node-kind on the leaf, or the walk emitting the condition as an
+unhandled node. Also still open from before: `read-condition` reads the LEFT side of any binary as the
+operand, so `a + b` names `a` (harmless today only because the predicate is `unrecognized`).
+
+## Session 4b (2026-07-14) — the execution vertical RUNS
+
+The runner works end to end against a real specimen. `runUnitBroker` → probe plan → wrapped Jest →
+instrumented emit → trace → saved artifact. Live on `boolean/and.ts`: 3/3 cases passed, and the trace
+carries exactly what the owner asked for.
+
+```
+grade(5, 0)  ONE cond event   leaf.0 false          bonus > 1 NEVER RAN (short-circuit)
+grade(6, 1)  TWO cond events  leaf.0 true
+                              leaf.1 false          this operand DECIDED
+             exit  'fail'                           the end result of the data
+```
+
+- **Emit-time injection, proven.** Spike: 7/7, **0 diagnostics**. Narrowing survives (`if (!user)
+  return;` then `user.name` compiles — a text splice makes that TS18047). Short-circuit survives.
+  `return (a,b)` still returns 2; `obj?.b.c` still returns undefined instead of throwing. `__P` as a
+  global via `setupFiles` works across shim + subject. `runCLI` + inline JSON config works.
+- **The walk emits PROBE SITES** (`probe-site`, threaded through `walk-facts`/`walk-file-result` flat
+  like `nodes`). Load-bearing: the id a probe reports at runtime is the id the analyzer derived, from
+  the SAME descent. A second derivation would drift.
+- **Offsets live in a cache-internal SIDECAR** (`probe-plan`), keyed by content hash, never in the
+  analysis blob and never diffed. Offsets are formatting-coupled by nature; coverage IDs must not be.
+  Keying by hash makes a stale read unrepresentable — wrong bytes, no plan to find.
+- **`version` is PINNED**; the analyzer content hash rides in ts-jest's transformer `options`, which
+  it folds into its cache key. Invalidation by content, never the manual version bump ts-jest's own
+  transformers use (the mechanism this repo ruled against; cf. the `/tmp/jest_rt` burn).
+- **The probe records value AND `Boolean(value)`.** Uniform, not a special case: a comparison leaf is
+  already boolean; a truthiness leaf (`!user`) wraps the raw operand, and Boolean() IS its predicate.
+- **Reached exit = last trace event among the ENTRY'S OWN exit ids** (`caseSet.exitIds`). "Last exit
+  probe" is wrong — a callback the entry invoked fires its own exit probe afterwards.
+- **One execution path.** `runUnitBroker` produces one artifact; CLI and desktop both read it. They
+  cannot drift because they are not two runners.
+- Verified: ward green (lint 777 / typecheck 779 / unit 262 / integration 12), `test:syntax` 15/38.
+
+**Known gaps, named not hidden:** only NAMED EXPORTS are runnable (default exports and class methods
+need construction; `*module*` scope is not callable at all — each is dropped in
+`case-set-projection` as policy). Switch case-leaves get NO cond probe: `method === 'get'` is
+desugared and has no expression to wrap, so switches run and report but lack per-case attribution
+(probing the discriminant would recover it). And the unclassified-leaf dark spot from Session 4 is
+still open.
+
 ## What's next (prioritized)
+
+0. **Phase 4/5 of the execution vertical — CLI + UI.** The engine is done and proven; what remains is
+   surfacing. `assayer unit [paths]` needs a real arg parser (`cli-command-normalize` is a
+   single-token switch over a closed enum, no flags), plus `assayer detail <runId>` and the link into
+   the app. Then the bridge (a spawn adapter that CAPTURES exit code — the existing one is
+   `detached`+`stdio:'ignore'` and cannot await) and the Tests tab: stub list, Run action, saved
+   status, trace view. Plan: `~/.claude/plans/rippling-knitting-lollipop.md`.
 
 1. **Ternary branches.** Now a single new handler file plus its case-derivation semantics, touching
    no existing handler — the ternary is already a recorded DARK SPOT, so the gap is visible rather

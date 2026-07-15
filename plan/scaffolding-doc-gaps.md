@@ -33,15 +33,17 @@ The CLAUDE snippet says to always use `npm run ward`, but a fresh repo has no
 **Suggest:** `assayer init` / the standards should scaffold the ward scripts and
 state that `@dungeonmaster/ward` must be present.
 
-## 4. `@dungeonmaster/*` are undeclared global links that a workspace install prunes
-The tooling packages were present via GLOBAL `npm link`s to the sibling
-`codex-of-consentient-craft` repo but NOT declared in `package.json`. Converting
-to npm workspaces + `npm install` PRUNED them all, breaking eslint + the
-pre-edit/pre-bash hooks + the MCP server. Recovery: recreate the symlinks
-directly (`ln -sfn <codex>/packages/<p> node_modules/@dungeonmaster/<p>`), and any
-later `npm install`/`npm link` re-prunes them.
-**Suggest:** declare the tooling as real `file:`/`link:` deps, or have `assayer
-init` wire them so installs don't prune.
+## 4. The standards don't say how to wire `@dungeonmaster/*` into a consuming repo
+Nothing states how the tooling packages should be depended on. `npm link` is the
+obvious reach and is a trap: links are invisible to npm's dependency graph, so a
+declared `"*"` resolves nowhere, installs 404 on the unpublished scope, and any
+install prunes the links.
+
+Declaring each as `file:../codex-of-consentient-craft/packages/<pkg>` is what
+works — npm installs `file:` deps as symlinks (`install-links` defaults false),
+so linking is preserved and recorded. This repo does that; it requires the codex
+repo as a sibling checkout.
+**Suggest:** state this in the standards, and have `assayer init` wire it.
 
 ## 5. ESLint version floor is not declared
 The eslint-plugin references the `preserve-caught-error` rule (ESLint ≥ 9.36),
