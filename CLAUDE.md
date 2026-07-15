@@ -12,12 +12,28 @@ in the LLM — expectations are DERIVED (from inputs, source literals, declared
 models, consumer demands); the LLM authors only harnesses, named states, and
 config, and build errors tell it exactly what to fix.
 
-**Status: planning. No implementation exists.** Source of truth is `plan/`:
-`requirements.md` (principles/requirements/decisions/glossary/artifact
-inventory — epic-carving BLOCKERS are at the top; do not implement past them),
-`expectation-catalog.md` (syntax → expectation classifications),
-`case-studies.md` (the real incidents motivating the design — the "why").
-This file summarizes decision-shaping constraints; the plan docs win on detail.
+**Design source of truth is `plan/`:** `requirements.md`
+(principles/requirements/decisions/glossary/artifact inventory — epic-carving
+BLOCKERS are at the top; do not implement past them), `expectation-catalog.md`
+(syntax → expectation classifications), `case-studies.md` (the real incidents
+motivating the design — the "why"). This file summarizes decision-shaping
+constraints; the plan docs win on detail. For how the ANALYZER works, read
+`packages/core/CLAUDE.md` before touching it.
+
+**Local setup:** `@dungeonmaster/*` are `file:` deps, so
+`codex-of-consentient-craft` must be checked out as a SIBLING directory of this
+repo. Verify with BOTH `npm run ward` and `npm run test:syntax` — the specimen
+catalogue is not in ward's graph.
+
+**Known defect — core is NOT publish-ready.** `npm pack` ships 359 files with
+`dist/` → **0** of them, while `package.json`'s `exports` point at
+`./dist/*.js`: gitignored, no `files` allowlist, no prepublish build, so a
+published core resolves every export to a file that is not in the tarball. It
+also ships 127 `.test.ts`. Undecided alongside it: core declares `typescript`
+and `ts-jest` as hard `dependencies`, where a package installed into arbitrary
+consumer TS repos conventionally makes `typescript` a `peerDependency` — else
+the consumer gets a second TypeScript their own `tsc` and our ts-morph can
+disagree about. Fix both before any publish.
 
 ## Constraints that shape every implementation decision
 
