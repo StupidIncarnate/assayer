@@ -2,7 +2,7 @@ import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adap
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
-import { tsMorphExtractMapAdapterProxy } from '../../../adapters/ts-morph/extract-map/ts-morph-extract-map-adapter.proxy';
+import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
 import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import type { FileCount } from '@assayer/shared/contracts';
@@ -18,7 +18,7 @@ export const compileProcessFileBrokerProxy = (): {
   const mkdirProxy = fsMkdirAdapterProxy();
   const writeFileProxy = fsWriteFileAdapterProxy();
   const renameProxy = fsRenameAdapterProxy();
-  tsMorphExtractMapAdapterProxy();
+  tsMorphWalkFileAdapterProxy();
   cryptoSha256AdapterProxy();
   analyzeFileBrokerProxy();
 

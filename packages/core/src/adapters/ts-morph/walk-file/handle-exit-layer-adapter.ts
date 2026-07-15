@@ -1,0 +1,50 @@
+/**
+ * PURPOSE: Handles a `return` or `throw` — the scope's explicit exits. Its whole body is reading the
+ *   guard path straight off the context, and that is the point: the old analyzer reconstructed this
+ *   by climbing ancestors from each return, which only ever understood `if` and silently attributed
+ *   a return inside a nested callback to the enclosing entry. Here the guard is simply what the walk
+ *   carried down, so a return nested in an `if` inside a `switch` case inside another `if` is
+ *   guarded correctly by construction, and one inside a callback belongs to the callback's scope
+ *   because the walk opened one.
+ *
+ *   It DOES descend the returned expression, even though the exit is what a derived case drives
+ *   toward and the value it carries is never the assertion (P4). The expression is not analysed for
+ *   its value — it is descended because things worth finding hide in it: `return xs.map((n) => …)`
+ *   contains a whole scope, and `return a ? b : c` contains a branch this analyzer must at least
+ *   admit it cannot follow. Skipping it would silently drop both.
+ *
+ * USAGE:
+ * handleExitLayerAdapter({ node: returnStatement, context });
+ * // Returns a HandlerResult with one exit carrying the guard path that reached it
+ */
+import { Node } from 'ts-morph';
+import type { ReturnStatement, ThrowStatement } from 'ts-morph';
+
+import { exitNodeContract } from '@assayer/shared/contracts';
+
+import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
+import { exitCoverageIdTransformer } from '../../../transformers/exit-coverage-id/exit-coverage-id-transformer';
+import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
+
+export const handleExitLayerAdapter = ({
+  node,
+  context,
+}: {
+  node: ReturnStatement | ThrowStatement;
+  context: WalkContext;
+}): ReturnType<typeof handlerResultLayerAdapter> => {
+  const kind = Node.isThrowStatement(node) ? 'throw' : 'return';
+  const expression = node.getExpression();
+
+  return handlerResultLayerAdapter({
+    exits: [
+      exitNodeContract.parse({
+        coverageId: exitCoverageIdTransformer({ kind, guardPath: context.guardPath, scopePath: context.scopePath }),
+        kind,
+        guardPath: context.guardPath,
+        line: node.getStartLineNumber(),
+      }),
+    ],
+    descents: expression === undefined ? [] : [{ node: expression, context }],
+  });
+};

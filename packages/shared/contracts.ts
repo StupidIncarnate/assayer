@@ -97,6 +97,12 @@ export * from './src/contracts/type-descriptor/type-descriptor.stub';
 export * from './src/contracts/symbol-name/symbol-name-contract';
 export * from './src/contracts/symbol-name/symbol-name.stub';
 
+export * from './src/contracts/syntax-kind-name/syntax-kind-name-contract';
+export * from './src/contracts/syntax-kind-name/syntax-kind-name.stub';
+
+export * from './src/contracts/dark-spot/dark-spot-contract';
+export * from './src/contracts/dark-spot/dark-spot.stub';
+
 export * from './src/contracts/guard-step/guard-step-contract';
 export * from './src/contracts/guard-step/guard-step.stub';
 

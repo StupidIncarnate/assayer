@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { Project } from 'ts-morph';
 
-import { tsMorphExtractAnalysisAdapter } from '@assayer/core/extract-analysis';
+import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
 
@@ -16,6 +16,9 @@ const methodUnion = {
   ],
 };
 
+const GET = '*module*/routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get';
+const POST = '*module*/routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post';
+
 describe('switch / in-function — switch inside an exported function', () => {
   it('VALID: {exported function with switch} => 0 syntactic diagnostics (valid TypeScript)', () => {
     const project = new Project({ useInMemoryFileSystem: true });
@@ -25,20 +28,21 @@ describe('switch / in-function — switch inside an exported function', () => {
   });
 
   it('VALID: {switch over a 3-member union} => two eq-branches and case/case/default exits', () => {
-    const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/switch/in-function.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/switch/in-function.ts' });
     expect(result).toStrictEqual({
       success: true,
       functions: [
         {
           entry: {
             name: 'routeLabel',
+            scopePath: ['*module*', 'routeLabel'],
             params: [{ name: 'method', type: methodUnion }],
             returnType: { kind: 'string' },
             line: 1,
           },
           branches: [
             {
-              coverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get',
+              coverageId: GET,
               kind: 'switch',
               operandParamName: 'method',
               operandType: methodUnion,
@@ -47,7 +51,7 @@ describe('switch / in-function — switch inside an exported function', () => {
               endLine: 4,
             },
             {
-              coverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post',
+              coverageId: POST,
               kind: 'switch',
               operandParamName: 'method',
               operandType: methodUnion,
@@ -58,27 +62,26 @@ describe('switch / in-function — switch inside an exported function', () => {
           ],
           exits: [
             {
-              coverageId: 'routeLabel/return@switch:str:get',
+              coverageId: `${GET.replace('/switch:', '/return@switch:')}#then`,
               kind: 'return',
-              guardPath: [
-                { branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'then' },
-              ],
+              guardPath: [{ branchCoverageId: GET, arm: 'then' }],
               line: 4,
             },
             {
-              coverageId: 'routeLabel/return@switch:str:post',
+              coverageId: `${POST.replace('/switch:', '/return@switch:')}#then`,
               kind: 'return',
-              guardPath: [
-                { branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post', arm: 'then' },
-              ],
+              guardPath: [{ branchCoverageId: POST, arm: 'then' }],
               line: 6,
             },
+            // `default` runs only when EVERY case missed, so it carries the else of all of them —
+            // which is what lets case derivation intersect down to the one uncovered member.
             {
-              coverageId: 'routeLabel/return@switch:default',
+              coverageId:
+                '*module*/routeLabel/return@switch:id:method,EqualsEqualsEqualsToken,str:get#else/switch:id:method,EqualsEqualsEqualsToken,str:post#else',
               kind: 'return',
               guardPath: [
-                { branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'else' },
-                { branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post', arm: 'else' },
+                { branchCoverageId: GET, arm: 'else' },
+                { branchCoverageId: POST, arm: 'else' },
               ],
               line: 8,
             },

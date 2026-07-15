@@ -48,30 +48,37 @@ test.describe('Compiled Surface Explorer', () => {
     const window = await app.launch();
 
     // obs-status-header (also proves obs-tree-bridge-call: header renders live cache data, so the
-    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 6 ts +
-    // 0 tsx (the six specimen .ts files; the co-located *.test.ts are excluded from the surface).
+    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 11 ts +
+    // 0 tsx (the specimen .ts files; the co-located *.test.ts are excluded from the surface).
     // Branch segment is the current working-tree namespace (environment-dependent), so pin the stable
     // brand/root/repo prefix + exact counts and allow any non-space branch token.
     const header = window.getByTestId('EXPLORER_HEADER');
     await expect(header).toBeVisible({ timeout: 30_000 });
-    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 6 tsx 0$/u);
+    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 11 tsx 0$/u);
 
     // obs-tree-render: the left tree is rebuilt purely from the cache manifest relPaths. Assert the
-    // exact file leaves (6 = the two constructs' three rungs each) and the exact directory nodes
-    // derived from those relPaths (packages/syntax-repository/src/{if-else,switch}).
+    // exact file leaves (if-else and switch × three rungs each, plus the composition and loop
+    // specimens) and the exact directory nodes derived from those relPaths.
     await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
     expect([...fileNames].sort()).toStrictEqual([
+      'fallthrough-in-if.ts',
+      'if-in-switch.ts',
       'in-class.ts',
       'in-class.ts',
       'in-function.ts',
       'in-function.ts',
+      'in-function.ts',
+      'nested-function.ts',
       'pure-statement.ts',
       'pure-statement.ts',
+      'switch-in-if.ts',
     ]);
     const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
     expect([...dirNames].sort()).toStrictEqual([
+      'composition',
       'if-else',
+      'loop',
       'packages',
       'src',
       'switch',
@@ -229,7 +236,11 @@ test.describe('Compiled Surface Explorer', () => {
     // (coverage IDs) — i.e. exactly what the compiler wrote to .assayer/cache.
     await expect(rawBlob).toContainText('"relPath": "packages/syntax-repository/src/if-else/in-function.ts"');
     await expect(rawBlob).toContainText('"contentHash":');
-    await expect(rawBlob).toContainText('classify/return@if-then');
+    // The exit ID names the BRANCH it crossed, not just the arm — two sibling `then`-returns in one
+    // scope would otherwise key identically, and the ref-to-ref diff keys on exactly this.
+    await expect(rawBlob).toContainText(
+      'classify/return@if:BinaryExpression,id:value,GreaterThanToken,num:5#then',
+    );
   });
 
   test('EMPTY: {cache manifest lists zero files, window opens at /} => explorer shows the "No compiled surface — run assayer" empty state and no file tree', async () => {

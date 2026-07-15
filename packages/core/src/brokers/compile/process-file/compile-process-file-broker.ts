@@ -1,8 +1,10 @@
 /**
  * PURPOSE: Compiles a single source file into its cached blob — hashing the content, reusing an
- *   already-cached blob for that hash without touching ts-morph, and otherwise extracting the
- *   type-graph map and writing the blob atomically (tmp file + rename) so a crash mid-write never
- *   leaves a corrupt blob at its final path.
+ *   already-cached blob for that hash without touching ts-morph, and otherwise walking the file ONCE
+ *   and projecting that single walk into both the type-graph map and the analysis before writing the
+ *   blob atomically (tmp file + rename) so a crash mid-write never leaves a corrupt blob at its
+ *   final path. The map and the analysis are two views of one parse, so they cannot disagree about
+ *   the file and it is never parsed twice.
  *
  * USAGE:
  * await compileProcessFileBroker({
@@ -19,7 +21,8 @@ import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
-import { tsMorphExtractMapAdapter } from '../../../adapters/ts-morph/extract-map/ts-morph-extract-map-adapter';
+import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { mapProjectionTransformer } from '../../../transformers/map-projection/map-projection-transformer';
 
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
@@ -48,7 +51,8 @@ export const compileProcessFileBroker = async ({
     return { reused: true, contentHash };
   }
 
-  const extracted = tsMorphExtractMapAdapter({ source: content, relPath });
+  const walked = tsMorphWalkFileAdapter({ source: content, relPath });
+  const extracted = mapProjectionTransformer({ walked });
 
   if (!extracted.success) {
     return {
@@ -67,7 +71,7 @@ export const compileProcessFileBroker = async ({
     hash: cryptoSha256Adapter({ content: text }),
   }));
 
-  const analysis = analyzeFileBroker({ source: content, relPath });
+  const analysis = analyzeFileBroker({ walked });
 
   const blob = compiledFileBlobContract.parse({
     relPath: relPathContract.parse(relPath),

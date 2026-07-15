@@ -2,8 +2,10 @@
 
 > Living status/handoff doc. Source-of-truth design still lives in `requirements.md` /
 > `features.md` / `expectation-catalog.md` / `case-studies.md`; this tracks what is BUILT
-> against that design and what is next. Last updated: session 2 (2026-07-12) — syntax coverage
-> widened past `if` (union/enum, switch, more entry kinds); see "Session 2" below.
+> against that design and what is next. Last updated: session 3 (2026-07-14) — the analyzer was
+> **re-architected onto a recursive scope walk**; see "Session 3" below, which supersedes the
+> analyzer internals described under Session 1/2 (the derived facts and downstream layers survive
+> unchanged; the traversal does not).
 
 ## Headline
 
@@ -138,13 +140,83 @@ is the live worked example; the app e2e drives it and asserts the 3 exhaustive c
   seam (one `Project`/`SourceFile` produced once, both extractors read it) rather than merging the
   adapters. Not worth the regression risk on a green tree for small-file parsing.
 
+## Session 3 (2026-07-14) — the analyzer is a recursive scope WALK
+
+The old analyzer had no walk. It ran a flat `getDescendantsOfKind` scan per SyntaxKind and then
+re-derived ownership by climbing ancestors (`getFirstAncestor(isFunctionLike) === entryNode`, three
+times). Context flowed UP from leaves instead of DOWN through descent, and four things followed:
+constructs could not compose, each host scope needed its own near-copy of the derivation, nesting
+did not exist, and unhandled syntax vanished silently. `adapters/ts-morph/extract-analysis` and
+`extract-map` are **deleted**; `adapters/ts-morph/walk-file` replaces both.
+
+**The model — two axes carried down one walk** (`contracts/walk-context`):
+
+| Axis | Pushed by | Crossing a function boundary |
+| --- | --- | --- |
+| `scopePath` | module root, function-like, class | **extends** (`['*module*','Classifier','classify']`) |
+| `guardPath` | `if`, `switch` | **resets** — a fn defined in an arm is not guarded by it |
+| `tail` | statement position | only the LAST statement can end the scope |
+
+`tail` is what makes a bare top-level `if` and an `if` inside a function the same handler: when the
+`if` is the last thing that runs, each arm's COMPLETION is an exit worth a case; when code follows
+it, the arms merely converge. Without it, "per-arm exits" would be a rung-specific rule — exactly
+the duplication this removes.
+
+**Two reachability predicates, deliberately separate** (`read-terminal` vs `read-accounted`).
+"Does this ALWAYS exit?" (does it guard what follows) and "are its ways out already emitted?" (does
+the scope owe a completion exit) are different questions, and one predicate answering both is a real
+soundness bug: an `if`-with-else whose arms fall through is *accounted for* (each arm gets a
+completion) but does NOT *always exit* — code after it runs on both arms. Conflating them guarded a
+trailing `return` by an arm it did not depend on, keying a genuinely unconditional exit under a
+wrong ID. Specimen: `composition/fallthrough-in-if`.
+
+`walk-node` owns the recursion and calls ITSELF per descent; `dispatch-node` is the only file that
+names SyntaxKinds; handlers return `{facts, descents}` and never recurse (R15: core owns traversal).
+Scopes are completed on the way back UP — branches/exits travel as LOOSE facts and are claimed by
+whichever node opened the scope, so no node ever asks "which function am I in?".
+
+**Bugs the architecture fixed (each now a specimen in `smoke-repo/.../composition/`):**
+- `switch` inside `if` silently **lost the outer if guard** (switch exits hardcoded a 1-step guard).
+- A `return` inside a callback was attributed to the **enclosing entry** (switch scans skipped the
+  ownership filter every other scan applied).
+- Two sibling `if`s each returning from `then` produced **byte-identical exit IDs** — and the
+  ref-to-ref diff keys on exactly those (churn-matrix #10). Exit IDs now name the BRANCH crossed.
+- The early-return rule (`return` after a guard clause is guarded by its `else`) only worked at a
+  function's TOP level; nested blocks lost it. `handle-block` applies it at every depth.
+
+**Rungs are now free.** `derive-module-scope` (a 155-line near-copy) is gone; the two `in-class`
+ratchets FLIPPED from `functions: []` to real analysis; nested functions and callbacks are walked
+(they were double-dropped). `guards/is-function-like-kind` is deleted — it existed only for the
+ownership re-derivation the walk makes unnecessary.
+
+**Dark spots (D22) are real.** `dispatch-node`'s default branch descends anyway (contents are never
+lost — a `return` inside an unhandled `for` is still found) and records load-bearing-but-unclaimed
+kinds (`statics/significant-syntax-kinds`), which project to `FileAnalysis.darkSpots` and ride into
+the cache blob. `darkSpots` is REQUIRED on `file-analysis`: an analysis that can omit its own blind
+spots reads as complete.
+
+**Single parse.** `walk-file` emits one normalized model; `analysis-projection` and `map-projection`
+are pure functions of it. The deferred double-parse debt (old item 6) is resolved as a byproduct.
+
+**IDs changed (cache-internal by ruling, so free):** every ID is rooted at `*module*`; exits key on
+guard-path branch identity (`return@if:<projection>#then`); `project-node` walks with `forEachChild`
+rather than `getDescendants`, which dropped punctuation and **fixed a real formatting sensitivity**
+(`(n) => n` vs `n => n` used to key differently). Verified: byte-identical across runs, and a
+formatting-only edit (minify, quote style, spacing) moves NO ID.
+
+**Known caveats, deliberately not silently resolved:** `read-operand-type` keeps BOTH existing rules
+behind one owner (param → declared descriptor; other binding → widened type-graph read) — merging
+them would collapse `'get'|'post'|'delete'` to `string` and destroy the exhaustive fan-out. Operands
+still resolve by NAME, not symbol → a local shadowing a param reads as the param. A nested helper's
+branches are walked but not projected as an entry (its logic is owed through its caller — needs the
+call-graph vertical).
+
 ## What's next (prioritized)
 
-1. **Ternary branches.** `switch` and `if` are handled; a ternary in a return position
-   (`return cond ? a : b`) is still punted. The map adapter already marks ternary NODES; the
-   analysis adapter needs a ternary pass analogous to the switch pass (condition → predicate, the
-   two arms → two exits). Lower value than switch (ternaries usually compute values, and P4 asserts
-   reaching the exit, not the value) — but it completes expression-level branching.
+1. **Ternary branches.** Now a single new handler file plus its case-derivation semantics, touching
+   no existing handler — the ternary is already a recorded DARK SPOT, so the gap is visible rather
+   than silent, and `read-condition` already takes a condition expression so it reuses unchanged.
+   Same shape for `try/catch`, loops, `??`, `?.`, async.
 2. **Non-literal switch cases.** `case Color.Red:` (enum-member refs / identifiers) and fallthrough
    cases are skipped today — only string/number literal cases desugar. Resolve enum-member refs to
    their literal value via the type checker to cover the idiomatic enum switch.

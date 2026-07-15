@@ -13,7 +13,8 @@
     "lint": "dungeonmaster-ward --only lint",
     "typecheck": "dungeonmaster-ward --only typecheck",
     "test": "dungeonmaster-ward --only test",
-    "test:syntax": "jest --config smoke-repo/packages/syntax-repository/jest.config.js"
+    "test:syntax": "jest --config smoke-repo/packages/syntax-repository/jest.config.js",
+    "typecheck:syntax": "npm run typecheck --prefix smoke-repo"
   },
   "devDependencies": {
     "@dungeonmaster/eslint-plugin": "*",

@@ -7,7 +7,27 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "strict": true
+    "strict": true,
+    "noEmit": true,
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    // The specimens import the analyzer the way a consumer would, by package subpath. These paths
+    // are the ONLY definition of where those subpaths resolve: jest.config.js derives its
+    // moduleNameMapper from them, so the runtime and the typechecker cannot disagree.
+    //
+    // Mapped straight at core: a shim file here would become part of the analyzed surface itself.
+    "paths": {
+      "@assayer/core/extract-analysis": [
+        "../../../packages/core/src/brokers/analyze/extract/analyze-extract-broker"
+      ],
+      // Specimens that assert DARK SPOTS need the full file analysis, which is a projection of a
+      // WALK rather than of source — so they need the walk adapter alongside the broker.
+      "@assayer/core/walk-file": [
+        "../../../packages/core/src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter"
+      ],
+      "@assayer/core/analyze-file": ["../../../packages/core/src/brokers/analyze/file/analyze-file-broker"],
+      "@assayer/shared/contracts": ["../../../packages/shared/contracts"]
+    }
   },
   "include": ["src/**/*"]
 }

@@ -3,9 +3,11 @@ import { join } from 'path';
 
 import { Project } from 'ts-morph';
 
-import { tsMorphExtractAnalysisAdapter } from '@assayer/core/extract-analysis';
+import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'pure-statement.ts'), 'utf8');
+
+const GET = '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get';
 
 describe('switch / pure-statement — bare top-level switch', () => {
   it('VALID: {bare top-level switch} => 0 syntactic diagnostics (valid TypeScript)', () => {
@@ -15,16 +17,24 @@ describe('switch / pure-statement — bare top-level switch', () => {
     expect(diagnostics.length).toBe(0);
   });
 
+  // Same tail-position rule as the bare `if`: the switch is the last thing that runs, so a clause
+  // merely falling out of it ends the module and is an exit worth a case.
   it('VALID: {bare top-level switch} => a *module* void entry, one switch branch, per-arm implicit exits', () => {
-    const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/switch/pure-statement.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/switch/pure-statement.ts' });
     expect(result).toStrictEqual({
       success: true,
       functions: [
         {
-          entry: { name: '*module*', params: [], returnType: { kind: 'unknown', text: 'void' }, line: 1 },
+          entry: {
+            name: '*module*',
+            scopePath: ['*module*'],
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            line: 1,
+          },
           branches: [
             {
-              coverageId: '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get',
+              coverageId: GET,
               kind: 'switch',
               operandParamName: 'method',
               operandType: { kind: 'string' },
@@ -35,19 +45,15 @@ describe('switch / pure-statement — bare top-level switch', () => {
           ],
           exits: [
             {
-              coverageId: '*module*/exit@switch:str:get',
+              coverageId: `${GET.replace('/switch:', '/exit@switch:')}#then`,
               kind: 'implicit',
-              guardPath: [
-                { branchCoverageId: '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'then' },
-              ],
+              guardPath: [{ branchCoverageId: GET, arm: 'then' }],
               line: 5,
             },
             {
-              coverageId: '*module*/exit@switch:default',
+              coverageId: `${GET.replace('/switch:', '/exit@switch:')}#else`,
               kind: 'implicit',
-              guardPath: [
-                { branchCoverageId: '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'else' },
-              ],
+              guardPath: [{ branchCoverageId: GET, arm: 'else' }],
               line: 8,
             },
           ],

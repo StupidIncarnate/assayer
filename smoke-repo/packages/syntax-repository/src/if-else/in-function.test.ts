@@ -3,9 +3,11 @@ import { join } from 'path';
 
 import { Project } from 'ts-morph';
 
-import { tsMorphExtractAnalysisAdapter } from '@assayer/core/extract-analysis';
+import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
+
+const BRANCH = '*module*/classify/if:BinaryExpression,id:value,GreaterThanToken,num:5';
 
 describe('if-else / in-function — if/else inside an exported function', () => {
   it('VALID: {exported function with if/else} => 0 syntactic diagnostics (valid TypeScript)', () => {
@@ -16,20 +18,21 @@ describe('if-else / in-function — if/else inside an exported function', () => 
   });
 
   it('VALID: {exported function with if/else} => one entry, one gt branch, then/else exits', () => {
-    const result = tsMorphExtractAnalysisAdapter({ source, relPath: 'src/if-else/in-function.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/if-else/in-function.ts' });
     expect(result).toStrictEqual({
       success: true,
       functions: [
         {
           entry: {
             name: 'classify',
+            scopePath: ['*module*', 'classify'],
             params: [{ name: 'value', type: { kind: 'number' } }],
             returnType: { kind: 'string' },
             line: 1,
           },
           branches: [
             {
-              coverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5',
+              coverageId: BRANCH,
               kind: 'if',
               operandParamName: 'value',
               operandType: { kind: 'number' },
@@ -40,19 +43,17 @@ describe('if-else / in-function — if/else inside an exported function', () => 
           ],
           exits: [
             {
-              coverageId: 'classify/return@if-then',
+              coverageId: '*module*/classify/return@if:BinaryExpression,id:value,GreaterThanToken,num:5#then',
               kind: 'return',
-              guardPath: [
-                { branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' },
-              ],
+              guardPath: [{ branchCoverageId: BRANCH, arm: 'then' }],
               line: 3,
             },
+            // The trailing return is reachable only when the guard clause did NOT fire, so the
+            // walk guards it by that if's `else` rather than leaving it unconditional.
             {
-              coverageId: 'classify/return@if-else',
+              coverageId: '*module*/classify/return@if:BinaryExpression,id:value,GreaterThanToken,num:5#else',
               kind: 'return',
-              guardPath: [
-                { branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' },
-              ],
+              guardPath: [{ branchCoverageId: BRANCH, arm: 'else' }],
               line: 6,
             },
           ],

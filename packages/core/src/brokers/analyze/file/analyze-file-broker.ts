@@ -1,27 +1,33 @@
 /**
- * PURPOSE: Analyzes one source file into its FileAnalysis — running the ts-morph analysis adapter,
- *   deriving the salient test cases per entry (one per reachable exit), and building the per-line
- *   enrichment (each param's type on the entry line; each branch operand's type + representative
- *   value range on the branch line). Returns an empty analysis when the source fails to parse (the
- *   compile pipeline already reports the syntax error through the map extractor).
+ * PURPOSE: Turns a walked file into its FileAnalysis — projecting the entries, deriving the salient
+ *   test cases per entry (one per reachable exit), building the per-line enrichment (each param's
+ *   type on the entry line; each branch operand's type + representative value range on the branch
+ *   line), and carrying through the dark spots the walk could not follow.
+ *
+ *   It takes the WALK rather than source on purpose: the compile pipeline already walked the file to
+ *   build its map, and parsing a second time here is what the single-parse seam exists to avoid.
+ *   Returns an empty analysis when the source failed to parse — the pipeline already reports the
+ *   syntax error from the same walk.
  *
  * USAGE:
- * analyzeFileBroker({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
- * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...] }
+ * analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+ * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...] }
  */
 import { fileAnalysisContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
-import { tsMorphExtractAnalysisAdapter } from '../../../adapters/ts-morph/extract-analysis/ts-morph-extract-analysis-adapter';
+import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
+import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
+import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-projection/dark-spot-projection-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { typeTextTransformer } from '../../../transformers/type-text/type-text-transformer';
 import { typeToRangeTransformer } from '../../../transformers/type-to-range/type-to-range-transformer';
 
-export const analyzeFileBroker = ({ source, relPath }: { source: string; relPath: string }): FileAnalysis => {
-  const extracted = tsMorphExtractAnalysisAdapter({ source, relPath });
+export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileAnalysis => {
+  const extracted = analysisProjectionTransformer({ walked });
 
   if (!extracted.success) {
-    return fileAnalysisContract.parse({ functions: [], enrichment: [] });
+    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [] });
   }
 
   const functions = extracted.functions.map((fn) => ({
@@ -59,5 +65,9 @@ export const analyzeFileBroker = ({ source, relPath }: { source: string; relPath
     }),
   ]);
 
-  return fileAnalysisContract.parse({ functions, enrichment });
+  return fileAnalysisContract.parse({
+    functions,
+    enrichment,
+    darkSpots: darkSpotProjectionTransformer({ walked }),
+  });
 };

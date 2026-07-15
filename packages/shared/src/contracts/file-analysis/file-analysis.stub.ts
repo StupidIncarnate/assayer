@@ -9,6 +9,7 @@ export const FileAnalysisStub = ({ ...props }: StubArgument<FileAnalysis> = {}):
       {
         entry: {
           name: 'formatGreeting',
+          scopePath: ['formatGreeting'],
           params: [{ name: 'name', type: { kind: 'string' } }],
           returnType: { kind: 'string' },
           line: 1,
@@ -36,5 +37,6 @@ export const FileAnalysisStub = ({ ...props }: StubArgument<FileAnalysis> = {}):
       },
     ],
     enrichment: [{ line: 1, symbol: 'name', typeText: 'string' }],
+    darkSpots: [],
     ...props,
   });

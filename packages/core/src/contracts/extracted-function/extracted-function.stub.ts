@@ -7,6 +7,7 @@ export const ExtractedFunctionStub = ({ ...props }: StubArgument<ExtractedFuncti
   extractedFunctionContract.parse({
     entry: {
       name: 'formatGreeting',
+      scopePath: ['formatGreeting'],
       params: [{ name: 'name', type: { kind: 'string' } }],
       returnType: { kind: 'string' },
       line: 1,
