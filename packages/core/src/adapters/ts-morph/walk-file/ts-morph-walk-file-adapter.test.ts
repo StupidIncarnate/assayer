@@ -12,6 +12,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [],
         nodes: [],
         scopes: [
           ScopeRecordStub({
@@ -38,6 +39,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [{ id: '*module*/classify/return@top', kind: 'exit', start: 59, end: 64 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -82,6 +84,10 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [
+          { id: '*module*/outer/inner/return@top', kind: 'exit', start: 96, end: 97 },
+          { id: '*module*/outer/return@top', kind: 'exit', start: 112, end: 124 },
+        ],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -141,6 +147,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [{ id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 73, end: 78 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -185,6 +192,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [{ id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 66, end: 71 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -230,6 +238,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [{ id: '*module*/run/return@top', kind: 'exit', start: 58, end: 77 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -301,6 +310,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [{ id: '*module*/sumAll/return@top', kind: 'exit', start: 136, end: 141 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -347,6 +357,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [{ id: '*module*/pick/return@top', kind: 'exit', start: 55, end: 71 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -392,6 +403,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        probeSites: [{ id: '*module*/greet/return@top', kind: 'exit', start: 77, end: 82 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],

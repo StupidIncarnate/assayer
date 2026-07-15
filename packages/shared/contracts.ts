@@ -109,6 +109,12 @@ export * from './src/contracts/guard-step/guard-step.stub';
 export * from './src/contracts/param-descriptor/param-descriptor-contract';
 export * from './src/contracts/param-descriptor/param-descriptor.stub';
 
+export * from './src/contracts/condition-leaf/condition-leaf-contract';
+export * from './src/contracts/condition-leaf/condition-leaf.stub';
+
+export * from './src/contracts/condition-node/condition-node-contract';
+export * from './src/contracts/condition-node/condition-node.stub';
+
 export * from './src/contracts/branch-node/branch-node-contract';
 export * from './src/contracts/branch-node/branch-node.stub';
 
@@ -129,3 +135,15 @@ export * from './src/contracts/function-analysis/function-analysis.stub';
 
 export * from './src/contracts/file-analysis/file-analysis-contract';
 export * from './src/contracts/file-analysis/file-analysis.stub';
+
+export * from './src/contracts/trace-value-text/trace-value-text-contract';
+export * from './src/contracts/trace-value-text/trace-value-text.stub';
+
+export * from './src/contracts/trace-event/trace-event-contract';
+export * from './src/contracts/trace-event/trace-event.stub';
+
+export * from './src/contracts/case-result/case-result-contract';
+export * from './src/contracts/case-result/case-result.stub';
+
+export * from './src/contracts/run-result/run-result-contract';
+export * from './src/contracts/run-result/run-result.stub';

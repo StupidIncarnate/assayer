@@ -8,5 +8,6 @@ export const WalkFileResultStub = ({ ...props }: StubArgument<WalkFileResult> = 
     success: true,
     scopes: [],
     nodes: [],
+    probeSites: [],
     ...props,
   });

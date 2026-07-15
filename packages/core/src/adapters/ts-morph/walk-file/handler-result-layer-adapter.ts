@@ -16,6 +16,7 @@ import type { Node } from 'ts-morph';
 
 import type { BranchNode, ExitNode } from '@assayer/shared/contracts';
 
+import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import type { WalkNode } from '../../../contracts/walk-node/walk-node-contract';
@@ -29,6 +30,8 @@ export interface HandlerResult {
   branches: BranchNode[];
   exits: ExitNode[];
   nodes: WalkNode[];
+  /** Where the instrumenter must wrap, keyed by the id the analyzer already derived. */
+  probeSites: ProbeSite[];
   descents: Descent[];
   /**
    * Passed in with empty branches/exits — the walk fills them from the scope body's loose facts.
@@ -41,18 +44,21 @@ export const handlerResultLayerAdapter = ({
   branches,
   exits,
   nodes,
+  probeSites,
   descents,
   opensScope,
 }: {
   branches?: BranchNode[];
   exits?: ExitNode[];
   nodes?: WalkNode[];
+  probeSites?: ProbeSite[];
   descents?: Descent[];
   opensScope?: ScopeRecord;
 }): HandlerResult => ({
   branches: branches ?? [],
   exits: exits ?? [],
   nodes: nodes ?? [],
+  probeSites: probeSites ?? [],
   descents: descents ?? [],
   ...(opensScope === undefined ? {} : { opensScope }),
 });

@@ -118,16 +118,21 @@ describe('readConditionLayerAdapter', () => {
     });
   });
 
-  describe('conditions it cannot classify', () => {
-    it('EDGE: {bare identifier condition} => an unrecognized predicate rather than a guess', () => {
+  describe('conditions with no comparison at all', () => {
+    // Not a guess: a condition with no operator IS a truthiness test, which is what the language
+    // does. Reading it as `unrecognized` meant a bare boolean operand had no derivable domain, so
+    // `if (a || flag)` and `if (!ready)` produced no usable values.
+    it('VALID: {bare identifier condition} => a truthy predicate on the operand itself', () => {
       readConditionLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (flag) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
-      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'unrecognized' });
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'truthy' });
     });
+  });
 
+  describe('conditions it cannot classify', () => {
     it('EDGE: {a.b > c compared against a non-literal} => an unrecognized predicate', () => {
       readConditionLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });

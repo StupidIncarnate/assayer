@@ -30,15 +30,17 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
   });
 
   const nodes = [...handled.nodes, ...child.nodes];
+  // Probe sites are positions in the FILE, so they never belong to a scope and are never claimed.
+  const probeSites = [...handled.probeSites, ...child.probeSites];
   const branches = [...handled.branches, ...child.looseBranches];
   const exits = [...handled.exits, ...child.looseExits];
   const { opensScope } = handled;
 
   if (opensScope === undefined) {
-    return { scopes: child.scopes, looseBranches: branches, looseExits: exits, nodes };
+    return { scopes: child.scopes, looseBranches: branches, looseExits: exits, nodes, probeSites };
   }
 
   const completed = scopeRecordContract.parse({ ...opensScope, branches, exits });
 
-  return { scopes: [completed, ...child.scopes], looseBranches: [], looseExits: [], nodes };
+  return { scopes: [completed, ...child.scopes], looseBranches: [], looseExits: [], nodes, probeSites };
 };

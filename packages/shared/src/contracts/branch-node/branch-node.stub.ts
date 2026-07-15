@@ -7,9 +7,13 @@ export const BranchNodeStub = ({ ...props }: StubArgument<BranchNode> = {}): Bra
   branchNodeContract.parse({
     coverageId: 'formatGreeting/if:name.length===0',
     kind: 'if',
-    operandParamName: 'name',
-    operandType: { kind: 'string' },
-    predicate: { kind: 'length-eq-zero' },
+    condition: {
+      kind: 'leaf',
+      id: 'formatGreeting/if:name.length===0#leaf',
+      operandParamName: 'name',
+      operandType: { kind: 'string' },
+      predicate: { kind: 'length-eq-zero' },
+    },
     startLine: 2,
     endLine: 4,
     ...props,

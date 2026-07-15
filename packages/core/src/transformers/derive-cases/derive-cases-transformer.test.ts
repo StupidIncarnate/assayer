@@ -2,6 +2,67 @@ import { ParamDescriptorStub, BranchNodeStub, ExitNodeStub, TypeDescriptorStub }
 
 import { deriveCasesTransformer } from './derive-cases-transformer';
 
+const NUMBER_PARAMS = [
+  ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
+  ParamDescriptorStub({ name: 'bonus', type: { kind: 'number' } }),
+];
+
+const AND_BRANCH = BranchNodeStub({
+  coverageId: 'grade/if:and',
+  condition: {
+    kind: 'and',
+    left: {
+      kind: 'leaf',
+      id: 'grade/if:and#leaf.0',
+      operandParamName: 'score',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'gt', literal: 5 },
+    },
+    right: {
+      kind: 'leaf',
+      id: 'grade/if:and#leaf.1',
+      operandParamName: 'bonus',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'gt', literal: 1 },
+    },
+  },
+});
+
+const OR_BRANCH = BranchNodeStub({
+  coverageId: 'alarm/if:or',
+  condition: {
+    kind: 'or',
+    left: {
+      kind: 'leaf',
+      id: 'alarm/if:or#leaf.0',
+      operandParamName: 'temp',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'gt', literal: 50 },
+    },
+    right: {
+      kind: 'leaf',
+      id: 'alarm/if:or#leaf.1',
+      operandParamName: 'smoke',
+      operandType: { kind: 'boolean' },
+      predicate: { kind: 'truthy' },
+    },
+  },
+});
+
+const NOT_BRANCH = BranchNodeStub({
+  coverageId: 'gate/if:not',
+  condition: {
+    kind: 'not',
+    operand: {
+      kind: 'leaf',
+      id: 'gate/if:not#leaf.0',
+      operandParamName: 'ready',
+      operandType: { kind: 'boolean' },
+      predicate: { kind: 'truthy' },
+    },
+  },
+});
+
 describe('deriveCasesTransformer', () => {
   describe('guarded exits', () => {
     it('VALID: {if-then exit} => arranges the empty string reaching the then exit', () => {
@@ -35,6 +96,149 @@ describe('deriveCasesTransformer', () => {
     });
   });
 
+  describe('compound conditions fan out per CAUSE', () => {
+    it('VALID: {a && b, then} => ONE case, since a conjunction holds exactly one way', () => {
+      const cases = deriveCasesTransformer({
+        params: NUMBER_PARAMS,
+        branches: [AND_BRANCH],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'grade/return@then',
+            guardPath: [{ branchCoverageId: 'grade/if:and', arm: 'then' }],
+          }),
+        ],
+      });
+
+      expect(cases).toStrictEqual([
+        {
+          reachesExit: 'grade/return@then',
+          arrange: [
+            { param: 'score', value: 6 },
+            { param: 'bonus', value: 2 },
+          ],
+        },
+      ]);
+    });
+
+    // The bug this whole decomposition exists for: read as ONE opaque operand, both arms derived the
+    // SAME arrange values, so the then-case and the else-case were identical and one of them claimed
+    // an exit its own values cannot reach. Two DISTINCT causes, two distinct arrangements.
+    it('VALID: {a && b, else} => TWO cases: a failed (b never ran), or a held and b failed', () => {
+      const cases = deriveCasesTransformer({
+        params: NUMBER_PARAMS,
+        branches: [AND_BRANCH],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'grade/return@else',
+            guardPath: [{ branchCoverageId: 'grade/if:and', arm: 'else' }],
+          }),
+        ],
+      });
+
+      expect(cases).toStrictEqual([
+        {
+          reachesExit: 'grade/return@else',
+          // score fails, so bonus NEVER EVALUATES — it is unconstrained and falls to representative
+          // fill rather than being pinned to a value the flow never reads.
+          arrange: [
+            { param: 'score', value: 5 },
+            { param: 'bonus', value: 0 },
+          ],
+        },
+        {
+          reachesExit: 'grade/return@else',
+          arrange: [
+            { param: 'score', value: 6 },
+            { param: 'bonus', value: 1 },
+          ],
+        },
+      ]);
+    });
+
+    it('VALID: {a || b, then} => TWO cases, since a disjunction holds two ways', () => {
+      const cases = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'temp', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'smoke', type: { kind: 'boolean' } }),
+        ],
+        branches: [OR_BRANCH],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'alarm/return@then',
+            guardPath: [{ branchCoverageId: 'alarm/if:or', arm: 'then' }],
+          }),
+        ],
+      });
+
+      expect(cases).toStrictEqual([
+        {
+          reachesExit: 'alarm/return@then',
+          arrange: [
+            { param: 'temp', value: 51 },
+            { param: 'smoke', value: false },
+          ],
+        },
+        {
+          reachesExit: 'alarm/return@then',
+          arrange: [
+            { param: 'temp', value: 50 },
+            { param: 'smoke', value: true },
+          ],
+        },
+      ]);
+    });
+
+    it('VALID: {a || b, else} => ONE case, since a disjunction fails only when both fail', () => {
+      const cases = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'temp', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'smoke', type: { kind: 'boolean' } }),
+        ],
+        branches: [OR_BRANCH],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'alarm/return@else',
+            guardPath: [{ branchCoverageId: 'alarm/if:or', arm: 'else' }],
+          }),
+        ],
+      });
+
+      expect(cases).toStrictEqual([
+        {
+          reachesExit: 'alarm/return@else',
+          arrange: [
+            { param: 'temp', value: 50 },
+            { param: 'smoke', value: false },
+          ],
+        },
+      ]);
+    });
+
+    it('VALID: {!ready} => the arms INVERT, so then arranges false and else arranges true', () => {
+      const params = [ParamDescriptorStub({ name: 'ready', type: { kind: 'boolean' } })];
+
+      const cases = deriveCasesTransformer({
+        params,
+        branches: [NOT_BRANCH],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'gate/return@then',
+            guardPath: [{ branchCoverageId: 'gate/if:not', arm: 'then' }],
+          }),
+          ExitNodeStub({
+            coverageId: 'gate/return@else',
+            guardPath: [{ branchCoverageId: 'gate/if:not', arm: 'else' }],
+          }),
+        ],
+      });
+
+      expect(cases).toStrictEqual([
+        { reachesExit: 'gate/return@then', arrange: [{ param: 'ready', value: false }] },
+        { reachesExit: 'gate/return@else', arrange: [{ param: 'ready', value: true }] },
+      ]);
+    });
+  });
+
   describe('literal-union operand', () => {
     it('VALID: {eq on a 3-member union} => then binds the member, else fans out one case per other member', () => {
       const unionType = TypeDescriptorStub({
@@ -47,9 +251,13 @@ describe('deriveCasesTransformer', () => {
       });
       const branch = BranchNodeStub({
         coverageId: "classify/if:status === 'a'",
-        operandParamName: 'status',
-        operandType: unionType,
-        predicate: { kind: 'eq', literal: 'a' },
+        condition: {
+          kind: 'leaf',
+          id: "classify/if:status === 'a'#leaf",
+          operandParamName: 'status',
+          operandType: unionType,
+          predicate: { kind: 'eq', literal: 'a' },
+        },
       });
 
       const cases = deriveCasesTransformer({
@@ -88,16 +296,24 @@ describe('deriveCasesTransformer', () => {
       const getBranch = BranchNodeStub({
         coverageId: "routeLabel/switch:method === 'get'",
         kind: 'switch',
-        operandParamName: 'method',
-        operandType: unionType,
-        predicate: { kind: 'eq', literal: 'get' },
+        condition: {
+          kind: 'leaf',
+          id: "routeLabel/switch:method === 'get'#leaf",
+          operandParamName: 'method',
+          operandType: unionType,
+          predicate: { kind: 'eq', literal: 'get' },
+        },
       });
       const postBranch = BranchNodeStub({
         coverageId: "routeLabel/switch:method === 'post'",
         kind: 'switch',
-        operandParamName: 'method',
-        operandType: unionType,
-        predicate: { kind: 'eq', literal: 'post' },
+        condition: {
+          kind: 'leaf',
+          id: "routeLabel/switch:method === 'post'#leaf",
+          operandParamName: 'method',
+          operandType: unionType,
+          predicate: { kind: 'eq', literal: 'post' },
+        },
       });
 
       const cases = deriveCasesTransformer({

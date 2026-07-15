@@ -74,9 +74,13 @@ describe('analyzeFileBroker', () => {
               {
                 coverageId: MODULE_BRANCH,
                 kind: 'if',
-                operandParamName: 'value',
-                operandType: { kind: 'number' },
-                predicate: { kind: 'gt', literal: 5 },
+                condition: {
+                  kind: 'leaf',
+                  id: `${MODULE_BRANCH}#leaf`,
+                  operandParamName: 'value',
+                  operandType: { kind: 'number' },
+                  predicate: { kind: 'gt', literal: 5 },
+                },
                 startLine: 3,
                 endLine: 7,
               },

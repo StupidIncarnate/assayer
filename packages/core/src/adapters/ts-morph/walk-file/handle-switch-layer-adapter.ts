@@ -43,13 +43,24 @@ export const handleSwitchLayerAdapter = ({
     ...(desugared.discName === undefined ? {} : { name: desugared.discName }),
   });
 
+  // A `case` is already an equality test on one discriminant, so it IS a one-leaf condition tree —
+  // the same shape an `if` builds, reached without a decomposition pass.
+  //
+  // These leaves get NO probe site, deliberately. `method === 'get'` is DESUGARED — it exists in the
+  // analysis model but not in the source, so there is no expression to wrap. Exits inside the clauses
+  // are still probed, so a switch runs and reports normally; only per-case condition ATTRIBUTION is
+  // absent. Probing the discriminant once would recover it, and is a follow-on rather than a fudge.
   const branches = desugared.caseInfos.map((caseInfo) =>
     branchNodeContract.parse({
       coverageId: caseInfo.branchCoverageId,
       kind: 'switch',
-      ...(desugared.discName === undefined ? {} : { operandParamName: desugared.discName }),
-      operandType,
-      predicate: { kind: 'eq', literal: caseInfo.literalValue },
+      condition: {
+        kind: 'leaf',
+        id: `${caseInfo.branchCoverageId}#leaf`,
+        ...(desugared.discName === undefined ? {} : { operandParamName: desugared.discName }),
+        operandType,
+        predicate: { kind: 'eq', literal: caseInfo.literalValue },
+      },
       startLine: caseInfo.clause.getStartLineNumber(),
       endLine: caseInfo.clause.getEndLineNumber(),
     }),

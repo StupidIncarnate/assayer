@@ -45,6 +45,7 @@ export const walkFactsLayerAdapter = ({ facts }: { facts: WalkFacts[] }): WalkFa
       looseBranches: [...merged.looseBranches, ...next.looseBranches],
       looseExits: [...merged.looseExits, ...next.looseExits],
       nodes: [...merged.nodes, ...next.nodes],
+      probeSites: [...merged.probeSites, ...next.probeSites],
     }),
-    { scopes: [], looseBranches: [], looseExits: [], nodes: [] },
+    { scopes: [], looseBranches: [], looseExits: [], nodes: [], probeSites: [] },
   );

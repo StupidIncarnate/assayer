@@ -18,6 +18,7 @@ import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
+import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
 import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-projection/dark-spot-projection-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { typeTextTransformer } from '../../../transformers/type-text/type-text-transformer';
@@ -43,26 +44,31 @@ export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileA
       symbol: param.name,
       typeText: typeTextTransformer({ type: param.type }),
     })),
-    // Enrichment shows a PARAM's type + representative range on the branch line. Branches whose
-    // operand is not a simple param have no meaningful symbol/type/range, so they are skipped.
-    ...fn.branches.flatMap((branch) => {
-      if (branch.operandParamName === undefined) {
-        return [];
-      }
-      const armValues = typeToRangeTransformer({
-        type: branch.operandType,
-        predicateKind: branch.predicate.kind,
-        ...(branch.predicate.literal === undefined ? {} : { literal: branch.predicate.literal }),
-      });
-      return [
-        {
-          line: branch.startLine,
-          symbol: branch.operandParamName,
-          typeText: typeTextTransformer({ type: branch.operandType }),
-          range: [...armValues.satisfying, ...armValues.violating],
-        },
-      ];
-    }),
+    // Enrichment shows a PARAM's type + representative range on the branch line — once per LEAF, so
+    // `if (score > 5 && bonus > 1)` enriches both operands. Reading the branch as a single operand
+    // showed neither: a compound condition had no param name to report at all.
+    // A leaf whose operand is not a simple param has no meaningful symbol/type/range, so it is
+    // skipped.
+    ...fn.branches.flatMap((branch) =>
+      conditionLeavesTransformer({ condition: branch.condition }).flatMap((leaf) => {
+        if (leaf.operandParamName === undefined) {
+          return [];
+        }
+        const armValues = typeToRangeTransformer({
+          type: leaf.operandType,
+          predicateKind: leaf.predicate.kind,
+          ...(leaf.predicate.literal === undefined ? {} : { literal: leaf.predicate.literal }),
+        });
+        return [
+          {
+            line: branch.startLine,
+            symbol: leaf.operandParamName,
+            typeText: typeTextTransformer({ type: leaf.operandType }),
+            range: [...armValues.satisfying, ...armValues.violating],
+          },
+        ];
+      }),
+    ),
   ]);
 
   return fileAnalysisContract.parse({

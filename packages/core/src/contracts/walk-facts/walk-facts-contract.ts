@@ -13,6 +13,7 @@ import { z } from 'zod';
 
 import { branchNodeContract, exitNodeContract } from '@assayer/shared/contracts';
 
+import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
 import { walkNodeContract } from '../walk-node/walk-node-contract';
 
@@ -21,6 +22,9 @@ export const walkFactsContract = z.object({
   looseBranches: z.array(branchNodeContract),
   looseExits: z.array(exitNodeContract),
   nodes: z.array(walkNodeContract),
+  // Flat like `nodes`, not loose like branches/exits: a probe site is a position in the FILE, so no
+  // scope ever claims it.
+  probeSites: z.array(probeSiteContract),
 });
 
 export type WalkFacts = z.infer<typeof walkFactsContract>;

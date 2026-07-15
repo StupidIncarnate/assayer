@@ -25,8 +25,7 @@ import { walkContextTransformer } from '../../../transformers/walk-context/walk-
 import { deriveBranchIdLayerAdapter } from './derive-branch-id-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
-import { readConditionLayerAdapter } from './read-condition-layer-adapter';
-import { readOperandTypeLayerAdapter } from './read-operand-type-layer-adapter';
+import { readConditionTreeLayerAdapter } from './read-condition-tree-layer-adapter';
 
 export const handleIfLayerAdapter = ({
   node,
@@ -36,18 +35,17 @@ export const handleIfLayerAdapter = ({
   context: WalkContext;
 }): ReturnType<typeof handlerResultLayerAdapter> => {
   const coverageId = deriveBranchIdLayerAdapter({ node, scopePath: context.scopePath });
-  const readout = readConditionLayerAdapter({ condition: node.getExpression() });
+  const readout = readConditionTreeLayerAdapter({
+    condition: node.getExpression(),
+    context,
+    branchCoverageId: coverageId,
+    path: [],
+  });
 
   const branch = branchNodeContract.parse({
     coverageId,
     kind: 'if',
-    ...(readout.operandName === undefined ? {} : { operandParamName: readout.operandName }),
-    operandType: readOperandTypeLayerAdapter({
-      node: readout.operandNode,
-      context,
-      ...(readout.operandName === undefined ? {} : { name: readout.operandName }),
-    }),
-    predicate: readout.predicate,
+    condition: readout.condition,
     startLine: node.getStartLineNumber(),
     endLine: node.getEndLineNumber(),
   });
@@ -89,6 +87,7 @@ export const handleIfLayerAdapter = ({
   return handlerResultLayerAdapter({
     branches: [branch],
     exits: completions,
+    probeSites: readout.sites,
     nodes: [
       walkNodeContract.parse({
         kind: node.getKindName(),

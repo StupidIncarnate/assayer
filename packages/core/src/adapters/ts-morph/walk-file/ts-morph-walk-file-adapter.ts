@@ -47,5 +47,10 @@ export const tsMorphWalkFileAdapter = ({
   const seed = walkContextContract.parse({ scopePath: [], guardPath: [], params: [], exported: false, tail: true });
   const walked = walkNodeLayerAdapter({ node: sourceFile, context: seed });
 
-  return walkFileResultContract.parse({ success: true, scopes: walked.scopes, nodes: walked.nodes });
+  return walkFileResultContract.parse({
+    success: true,
+    scopes: walked.scopes,
+    nodes: walked.nodes,
+    probeSites: walked.probeSites,
+  });
 };

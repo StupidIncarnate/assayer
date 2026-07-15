@@ -13,6 +13,7 @@ import { z } from 'zod';
 
 import { lineNumberContract } from '@assayer/shared/contracts';
 
+import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
 import { walkNodeContract } from '../walk-node/walk-node-contract';
 
@@ -21,6 +22,7 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     success: z.literal(true),
     scopes: z.array(scopeRecordContract),
     nodes: z.array(walkNodeContract),
+    probeSites: z.array(probeSiteContract),
   }),
   z.object({
     success: z.literal(false),

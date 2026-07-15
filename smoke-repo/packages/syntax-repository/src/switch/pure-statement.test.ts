@@ -36,9 +36,13 @@ describe('switch / pure-statement — bare top-level switch', () => {
             {
               coverageId: GET,
               kind: 'switch',
-              operandParamName: 'method',
-              operandType: { kind: 'string' },
-              predicate: { kind: 'eq', literal: 'get' },
+              condition: {
+                kind: 'leaf',
+                id: `${GET}#leaf`,
+                operandParamName: 'method',
+                operandType: { kind: 'string' },
+                predicate: { kind: 'eq', literal: 'get' },
+              },
               startLine: 4,
               endLine: 6,
             },

@@ -22,6 +22,7 @@ import type { ReturnStatement, ThrowStatement } from 'ts-morph';
 
 import { exitNodeContract } from '@assayer/shared/contracts';
 
+import { probeSiteContract } from '../../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { exitCoverageIdTransformer } from '../../../transformers/exit-coverage-id/exit-coverage-id-transformer';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
@@ -35,16 +36,24 @@ export const handleExitLayerAdapter = ({
 }): ReturnType<typeof handlerResultLayerAdapter> => {
   const kind = Node.isThrowStatement(node) ? 'throw' : 'return';
   const expression = node.getExpression();
+  const coverageId = exitCoverageIdTransformer({ kind, guardPath: context.guardPath, scopePath: context.scopePath });
 
   return handlerResultLayerAdapter({
     exits: [
       exitNodeContract.parse({
-        coverageId: exitCoverageIdTransformer({ kind, guardPath: context.guardPath, scopePath: context.scopePath }),
+        coverageId,
         kind,
         guardPath: context.guardPath,
         line: node.getStartLineNumber(),
       }),
     ],
+    // The probe wraps the returned EXPRESSION, so the exit's runtime observation carries the value
+    // that flowed out — display-only (P4 forbids asserting it), and the reason a bare `return;` gets
+    // no site: there is no expression to wrap.
+    probeSites:
+      expression === undefined
+        ? []
+        : [probeSiteContract.parse({ id: coverageId, kind: 'exit', start: expression.getStart(), end: expression.getEnd() })],
     descents: expression === undefined ? [] : [{ node: expression, context }],
   });
 };

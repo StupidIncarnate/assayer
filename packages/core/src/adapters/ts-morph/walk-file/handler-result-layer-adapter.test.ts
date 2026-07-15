@@ -12,6 +12,7 @@ describe('handlerResultLayerAdapter', () => {
         branches: [],
         exits: [],
         nodes: [],
+        probeSites: [],
         descents: [],
       });
     });
@@ -23,6 +24,7 @@ describe('handlerResultLayerAdapter', () => {
         branches: [],
         exits: [],
         nodes: [WalkNodeStub()],
+        probeSites: [],
         descents: [],
       });
     });
@@ -36,6 +38,7 @@ describe('handlerResultLayerAdapter', () => {
         branches: [],
         exits: [],
         nodes: [],
+        probeSites: [],
         descents: [],
         opensScope: ScopeRecordStub(),
       });

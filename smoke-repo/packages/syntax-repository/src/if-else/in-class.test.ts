@@ -37,9 +37,13 @@ describe('if-else / in-class — if/else inside an exported class method', () =>
             {
               coverageId: BRANCH,
               kind: 'if',
-              operandParamName: 'value',
-              operandType: { kind: 'number' },
-              predicate: { kind: 'gt', literal: 5 },
+              condition: {
+                kind: 'leaf',
+                id: `${BRANCH}#leaf`,
+                operandParamName: 'value',
+                operandType: { kind: 'number' },
+                predicate: { kind: 'gt', literal: 5 },
+              },
               startLine: 3,
               endLine: 5,
             },

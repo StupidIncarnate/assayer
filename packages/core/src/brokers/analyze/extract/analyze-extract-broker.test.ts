@@ -26,9 +26,13 @@ describe('analyzeExtractBroker', () => {
               {
                 coverageId: '*module*/classify/if:BinaryExpression,id:value,GreaterThanToken,num:5',
                 kind: 'if',
-                operandParamName: 'value',
-                operandType: { kind: 'number' },
-                predicate: { kind: 'gt', literal: 5 },
+                condition: {
+                  kind: 'leaf',
+                  id: '*module*/classify/if:BinaryExpression,id:value,GreaterThanToken,num:5#leaf',
+                  operandParamName: 'value',
+                  operandType: { kind: 'number' },
+                  predicate: { kind: 'gt', literal: 5 },
+                },
                 startLine: 2,
                 endLine: 4,
               },

@@ -1,31 +1,33 @@
 /**
  * PURPOSE: Contract for a branch node — a conditional construct (if/switch/ternary) in an entry,
  *   carrying its cache-internal coverage ID (the whole condition's structural projection), the
- *   operand parameter under test and its type, the parsed predicate, and its rendered line span.
- *   Identity is fully AST-derived — no source-text field.
+ *   decomposed CONDITION TREE it tests, and its rendered line span. Identity is fully AST-derived —
+ *   no source-text field.
+ *
+ *   The condition is a tree rather than a flat operand+predicate so that ONE encoding covers every
+ *   condition: a simple comparison is a one-leaf tree, and `a > 5 && b < 3` decomposes into leaves
+ *   the range engine can derive values for. The flat shape could not express a compound condition at
+ *   all — it collapsed to one opaque operand with an `unrecognized` predicate, which made both arms
+ *   derive identical values and silently claim exits those values cannot reach.
  *
  * USAGE:
  * branchNodeContract.parse({
  *   coverageId: 'formatGreeting/if:BinaryExpression,id:name,…', kind: 'if',
- *   operandParamName: 'name', operandType: { kind: 'string' }, predicate: { kind: 'length-eq-zero' },
+ *   condition: { kind: 'leaf', id: '…#leaf', operandParamName: 'name', operandType: { kind: 'string' }, predicate: { kind: 'length-eq-zero' } },
  *   startLine: 2, endLine: 4,
  * });
  * // Returns a validated BranchNode (branded fields)
  */
 import { z } from 'zod';
 
+import { conditionNodeContract } from '../condition-node/condition-node-contract';
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
-import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
-import { predicateContract } from '../predicate/predicate-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const branchNodeContract = z.object({
   coverageId: coverageIdContract,
   kind: z.enum(['if', 'switch', 'ternary']).brand<'BranchKind'>(),
-  operandParamName: symbolNameContract.optional(),
-  operandType: typeDescriptorContract,
-  predicate: predicateContract,
+  condition: conditionNodeContract,
   startLine: lineNumberContract,
   endLine: lineNumberContract,
 });

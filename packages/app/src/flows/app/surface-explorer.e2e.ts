@@ -11,12 +11,11 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/surface-explorer.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  *
- * The compiled surface is the granular syntax-repository: two constructs (if-else, switch), each with
- * three containment rungs (pure-statement, in-function, in-class) = ts 6 tsx 0. The in-function rung
- * (a function entry) and the pure-statement rung (bare top-level `*module*` scope) are both analyzed, so
- * they drive the detail panel (derived cases, gutter, enrichment); the in-class rung (a class method) is
- * the remaining analyzer GAP that renders source with an empty Tests tab. The
- * empty-state terminal is reached three ways via seeded/hermetic harnesses (emptySurfaceAppHarness,
+ * The compiled surface is the granular syntax-repository: if-else and switch across three containment
+ * rungs (pure-statement, in-function, in-class), the composition specimens, the loop dark-spot
+ * ratchet, and the boolean connectives (and, or, not, mixed) = ts 15 tsx 0. Adding a specimen changes
+ * the three surface assertions below (header count, file leaves, dirs) — see packages/core/CLAUDE.md.
+ * The empty-state terminal is reached three ways via seeded/hermetic harnesses (emptySurfaceAppHarness,
  * noCacheAppHarness) and a cache-only-source proof (cacheOnlySourceAppHarness) — none depend on the
  * syntax-repository source. Each harness owns its own teardown.
  */
@@ -28,6 +27,7 @@ import { cacheOnlySourceAppHarness } from '../../../test/harnesses/cache-only-so
 
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/switch/in-function.ts';
+const BOOLEAN_AND = 'packages/syntax-repository/src/boolean/and.ts';
 
 test.describe('Compiled Surface Explorer', () => {
   const app = smokeRepoAppHarness();
@@ -54,7 +54,7 @@ test.describe('Compiled Surface Explorer', () => {
     // brand/root/repo prefix + exact counts and allow any non-space branch token.
     const header = window.getByTestId('EXPLORER_HEADER');
     await expect(header).toBeVisible({ timeout: 30_000 });
-    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 11 tsx 0$/u);
+    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 15 tsx 0$/u);
 
     // obs-tree-render: the left tree is rebuilt purely from the cache manifest relPaths. Assert the
     // exact file leaves (if-else and switch × three rungs each, plus the composition and loop
@@ -62,6 +62,7 @@ test.describe('Compiled Surface Explorer', () => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
     expect([...fileNames].sort()).toStrictEqual([
+      'and.ts',
       'fallthrough-in-if.ts',
       'if-in-switch.ts',
       'in-class.ts',
@@ -69,13 +70,17 @@ test.describe('Compiled Surface Explorer', () => {
       'in-function.ts',
       'in-function.ts',
       'in-function.ts',
+      'mixed.ts',
       'nested-function.ts',
+      'not.ts',
+      'or.ts',
       'pure-statement.ts',
       'pure-statement.ts',
       'switch-in-if.ts',
     ]);
     const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
     expect([...dirNames].sort()).toStrictEqual([
+      'boolean',
       'composition',
       'if-else',
       'loop',
@@ -208,6 +213,50 @@ test.describe('Compiled Surface Explorer', () => {
       'routeLabel("delete") → reaches L8',
     );
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
+  });
+
+  test('VALID: {boolean/and.ts selected} => the compound condition derives one case per CAUSE (1 then + 2 else), and the gutter counts every case through the guard line', async () => {
+    // Precondition: compile the syntax-repository into .assayer/cache, then open the && specimen.
+    const exitCode = await app.compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
+
+    const codePanel = window.getByTestId('EXPLORER_CODE');
+    await expect(codePanel.locator('.cm-editor')).toBeVisible();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+
+    // `score > 5 && bonus > 1` is false for TWO distinct reasons, so the else exit owes two cases —
+    // and each carries values that actually drive it there. Read as one opaque operand, this
+    // condition derived two IDENTICAL cases, one of which claimed an exit its values cannot reach.
+    const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
+    await expect(entryTitle).toHaveText('grade(score, bonus) · 3 cases');
+    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    expect([...caseRows].sort()).toStrictEqual([
+      // score fails its own test, so bonus never evaluates and is left at its fill value.
+      'grade(5, 0) → reaches L6',
+      // score passes, so bonus is the operand that decides.
+      'grade(6, 1) → reaches L6',
+      'grade(6, 2) → reaches L3',
+    ]);
+
+    // Gutter: L2 (the `if`) is on all 3 cases' paths; L3 (then-return) on 1; L6 (else-return) on 2.
+    const gutterTexts = await codePanel.locator('.cm-test-counts .cm-gutterElement').allTextContents();
+    expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['3', '1', '2']);
+
+    // Enrichment: BOTH operands of the compound condition get their range on the branch line. A
+    // compound condition previously enriched neither, having no single operand to name.
+    await window.getByTestId('TAB_ENRICHMENT').click();
+    const enrichmentRows = await window.getByTestId('ENRICHMENT_ROW').allTextContents();
+    expect([...enrichmentRows].sort()).toStrictEqual([
+      'L1  bonus: number',
+      'L1  score: number',
+      'L2  bonus: number  → { 2, 1 }',
+      'L2  score: number  → { 6, 5 }',
+    ]);
   });
 
   test('VALID: {if-else/in-function.ts selected, switch to Raw JSON tab} => shows the full cache blob (relPath + contentHash + derived analysis) at full width and hides the right detail panel', async () => {

@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
+    "./adapters": {
+      "source": "./adapters.ts",
+      "import": "./dist/adapters.js",
+      "require": "./dist/adapters.js",
+      "types": "./dist/adapters.d.ts"
+    },
     "./brokers": {
       "source": "./brokers.ts",
       "import": "./dist/brokers.js",
@@ -27,7 +33,11 @@
   },
   "dependencies": {
     "@assayer/shared": "*",
+    "@jest/core": "^30.0.4",
+    "jest": "^30.0.4",
+    "ts-jest": "^29.4.0",
     "ts-morph": "^26.0.0",
+    "typescript": "^5.8.3",
     "zod": "^3.23.8"
   }
 }

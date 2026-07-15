@@ -37,9 +37,13 @@ describe('if-else / pure-statement — bare top-level if/else', () => {
             {
               coverageId: BRANCH,
               kind: 'if',
-              operandParamName: 'value',
-              operandType: { kind: 'number' },
-              predicate: { kind: 'gt', literal: 5 },
+              condition: {
+                kind: 'leaf',
+                id: `${BRANCH}#leaf`,
+                operandParamName: 'value',
+                operandType: { kind: 'number' },
+                predicate: { kind: 'gt', literal: 5 },
+              },
               startLine: 3,
               endLine: 7,
             },
