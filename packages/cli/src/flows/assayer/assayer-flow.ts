@@ -16,6 +16,8 @@ import { HelpShowResponder } from '../../responders/help/show/help-show-responde
 import { VersionShowResponder } from '../../responders/version/show/version-show-responder';
 import { DocsShowResponder } from '../../responders/docs/show/docs-show-responder';
 import { StatusShowResponder } from '../../responders/status/show/status-show-responder';
+import { UnitRunResponder } from '../../responders/unit/run/unit-run-responder';
+import { DetailShowResponder } from '../../responders/detail/show/detail-show-responder';
 import { LaunchRunResponder } from '../../responders/launch/run/launch-run-responder';
 import { PrecheckRunResponder } from '../../responders/precheck/run/precheck-run-responder';
 import { docsOverviewStatics } from '../../statics/docs-overview/docs-overview-statics';
@@ -53,13 +55,33 @@ export const AssayerFlow = async ({
     return StatusShowResponder();
   }
 
+  // Both run AFTER the precheck: a stale compile would derive cases from source the analyzer has not
+  // read, and a run against those is worse than no run — it reports on code that is not there.
+  if (command === 'unit') {
+    const precheck = await PrecheckRunResponder({ repoPath });
+
+    // configDir owns the cache; root is where the SOURCE lives. They differ whenever the config sets
+    // a repoRoot, so a run needs both.
+    return UnitRunResponder({
+      configDir: String(precheck.configDir),
+      root: String(precheck.root),
+      argv: argv.slice(1),
+    });
+  }
+
+  if (command === 'detail') {
+    const precheck = await PrecheckRunResponder({ repoPath });
+
+    return DetailShowResponder({ configDir: String(precheck.configDir), argv: argv.slice(1) });
+  }
+
   if (command === 'unknown') {
     await PrecheckRunResponder({ repoPath });
 
     throw new CliExactOutputError({ message: `Unknown command: ${argv[0]}\n\n${cliUsageStatics.text}` });
   }
 
-  const configDir = await PrecheckRunResponder({ repoPath });
+  const precheck = await PrecheckRunResponder({ repoPath });
 
-  return LaunchRunResponder({ repoPath: String(configDir) });
+  return LaunchRunResponder({ repoPath: String(precheck.configDir) });
 };

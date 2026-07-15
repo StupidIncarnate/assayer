@@ -9,5 +9,6 @@ export const RunResultStub = ({ ...props }: StubArgument<RunResult> = {}): RunRe
     runId: 'r-1784093000000',
     relPath: 'packages/syntax-repository/src/boolean/and.ts',
     cases: [CaseResultStub()],
+    gaps: [],
     ...props,
   });

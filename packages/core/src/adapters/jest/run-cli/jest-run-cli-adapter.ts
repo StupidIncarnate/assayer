@@ -40,6 +40,10 @@ export const jestRunCliAdapter = async ({
     testEnvironment: 'node',
     setupFiles: [join(coreRoot, 'probe-runtime.js')],
     testMatch: [`${runDir}/**/*.test.js`],
+    // No reporters at all: the runner is an implementation detail, and its pass/fail summary reaching
+    // a human is a leak of exactly the surface this boundary exists to hide. The verdict is read back
+    // from the artifact, so nothing here needs to print.
+    reporters: [],
     transform: {
       '^.+\\.ts$': [
         'ts-jest',

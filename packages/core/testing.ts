@@ -28,3 +28,7 @@ export * from './src/brokers/manifest/load/manifest-load-broker.proxy';
 export * from './src/brokers/manifest/trash/manifest-trash-broker.proxy';
 
 export * from './src/brokers/compile/run/compile-run-broker.proxy';
+export * from './src/brokers/compile/resolve-root/compile-resolve-root-broker.proxy';
+
+export * from './src/brokers/run/paths/run-paths-broker.proxy';
+export * from './src/brokers/run/load/run-load-broker.proxy';

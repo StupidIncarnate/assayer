@@ -30,6 +30,14 @@ export const cliCommandNormalizeTransformer = ({ arg }: { arg?: string }): CliCo
     return cliCommandContract.parse('status');
   }
 
+  if (arg === 'unit') {
+    return cliCommandContract.parse('unit');
+  }
+
+  if (arg === 'detail') {
+    return cliCommandContract.parse('detail');
+  }
+
   if (arg === undefined) {
     return cliCommandContract.parse('bare');
   }

@@ -28,7 +28,16 @@ describe('runResultContract', () => {
             ],
           },
         ],
+        gaps: [],
       });
+    });
+
+    // Carried on the run, not left in the cache: a gap is Assayer telling a HUMAN what it could not
+    // drive, and a run reporting only its passes reads as complete coverage of the file.
+    it('VALID: {a run with a gap} => the gap parses with its reason', () => {
+      const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
+
+      expect(run.gaps).toStrictEqual([{ name: 'find', reason: 'needs a harness' }]);
     });
 
     // A run that reached NO exit is a real outcome, not a malformed record: the entry threw, or could
@@ -61,7 +70,15 @@ describe('runResultContract', () => {
   describe('invalid runs', () => {
     it('INVALID: {no runId} => throws validation error', () => {
       expect(() => {
-        return runResultContract.parse({ relPath: 'src/f.ts', cases: [] });
+        return runResultContract.parse({ relPath: 'src/f.ts', cases: [], gaps: [] });
+      }).toThrow(/Required/u);
+    });
+
+    // Required for the reason darkSpots is: a run that can omit what it could not drive reads as
+    // complete coverage.
+    it('INVALID: {no gaps} => throws, since an omitted gap reads as full coverage', () => {
+      expect(() => {
+        return runResultContract.parse({ runId: 'r1', relPath: 'src/f.ts', cases: [] });
       }).toThrow(/Required/u);
     });
   });

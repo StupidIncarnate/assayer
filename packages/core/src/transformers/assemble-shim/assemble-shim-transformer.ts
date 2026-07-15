@@ -68,6 +68,9 @@ export const assembleShimTransformer = ({
       `    runId: ${JSON.stringify(runId)},`,
       '    relPath: caseSet.relPath,',
       '    cases,',
+      // Carried through, not recomputed: a gap is what Assayer could NOT drive, and a run that
+      // reports only its passes reads as complete coverage of the file.
+      '    gaps: caseSet.gaps,',
       '  }, null, 2));',
       '});',
       '',

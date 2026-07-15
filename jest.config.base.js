@@ -41,4 +41,9 @@ module.exports = {
   verbose: false,
   detectOpenHandles: true,
   forceExit: true,
+  // The ONE timeout control, global by rule. Integration tests drive a real wrapped Jest run, which
+  // jest's 5s default cannot finish — and the fix for that must never be a per-test `it(..., 120000)`
+  // knob. A per-test timeout is a tuning escape hatch: it hides a slow test from everyone but the
+  // person who wrote it, and it is precisely the anti-pattern Assayer refuses to generate.
+  testTimeout: 120000,
 };

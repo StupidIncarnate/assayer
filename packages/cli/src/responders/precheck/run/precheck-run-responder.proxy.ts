@@ -3,7 +3,7 @@ import { fileCountContract, ContentHashStub } from '@assayer/shared/contracts';
 import type { FileCount , AssayerConfigStub} from '@assayer/shared/contracts';
 import type { FilePath } from '@assayer/core/contracts';
 import { analyzerHashBroker } from '@assayer/core/brokers';
-import { analyzerHashBrokerProxy } from '@assayer/core/testing';
+import { analyzerHashBrokerProxy, compileResolveRootBrokerProxy } from '@assayer/core/testing';
 
 import { ConfigResolveLayerResponder } from './config-resolve-layer-responder';
 import { ConfigResolveLayerResponderProxy } from './config-resolve-layer-responder.proxy';
@@ -31,6 +31,9 @@ export const PrecheckRunResponderProxy = (): {
   // pure __dirname path computation with no I/O, so it is left to run for real.
   analyzerHashBrokerProxy();
   analyzerRootsResolveAdapterProxy();
+  // Left to run for real: resolving a repoRoot against its config dir is pure path arithmetic with
+  // no I/O, and mocking it would hide the very configDir-vs-root distinction the tests assert.
+  compileResolveRootBrokerProxy();
 
   // The three layer-responder proxies below are also bare-called only to satisfy
   // enforce-proxy-child-creation: they wire registerMock onto the CORE BROKERS each layer

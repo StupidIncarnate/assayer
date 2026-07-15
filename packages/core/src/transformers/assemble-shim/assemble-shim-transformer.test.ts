@@ -39,6 +39,7 @@ const EXPECTED = [
   '    runId: "r1",',
   '    relPath: caseSet.relPath,',
   '    cases,',
+  '    gaps: caseSet.gaps,',
   '  }, null, 2));',
   '});',
   '',

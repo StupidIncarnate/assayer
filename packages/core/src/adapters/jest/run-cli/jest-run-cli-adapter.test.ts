@@ -55,6 +55,9 @@ describe('jestRunCliAdapter', () => {
           testEnvironment: 'node',
           setupFiles: ['/core/probe-runtime.js'],
           testMatch: ['/cache/runs/r1/**/*.test.js'],
+          // Empty by design: the runner's own pass/fail summary reaching a human leaks exactly the
+          // surface this boundary exists to hide. The verdict is read back from the artifact.
+          reporters: [],
           transform: {
             '^.+\\.ts$': [
               'ts-jest',
