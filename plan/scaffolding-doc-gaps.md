@@ -45,6 +45,20 @@ so linking is preserved and recorded. This repo does that; it requires the codex
 repo as a sibling checkout.
 **Suggest:** state this in the standards, and have `assayer init` wire it.
 
+## 4b. Two test rules contradict, making `undefined` unassertable
+`dungeonmasterTest.test.rules` sets BOTH `jest/prefer-to-be: error` and
+`@dungeonmaster/ban-weak-existence-matchers: error`. They want opposite things:
+`jest/prefer-to-be` **autofixes** `toBe(undefined)` into `toBeUndefined()`, and
+`ban-weak-existence-matchers` errors on `toBeUndefined()` demanding
+`toBe(undefined)`. Every spelling is an error and `--fix` loops between them, so
+a test cannot assert `undefined` at all.
+
+`toBe(undefined)` is the standard the code is written to (it appears throughout
+`@dungeonmaster`'s own tests), so assayer's `eslint.config.js` turns
+`jest/prefer-to-be` off for tests.
+**Suggest:** drop `jest/prefer-to-be` from the shared test config, or narrow it
+to `['error', { ignoreUndefined: true }]`, so the two rules stop disagreeing.
+
 ## 5. ESLint version floor is not declared
 The eslint-plugin references the `preserve-caught-error` rule (ESLint ≥ 9.36),
 but declares no peer floor, so `eslint@9.30.1` crashed lint with
