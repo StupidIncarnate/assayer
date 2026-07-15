@@ -2,9 +2,9 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { RunResultStub, fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
+import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 import { runUnitBroker } from '../unit/run-unit-broker';
 import { runUnitBrokerProxy } from '../unit/run-unit-broker.proxy';
 
@@ -16,7 +16,7 @@ export const runEachLayerBrokerProxy = (): {
   // rather than driven through its own proxy: both it and this broker read through
   // fsReadFileAdapter, so one shared read mock cannot serve a source file and a run.json at once —
   // the source would come back where JSON was expected.
-  cryptoSha256AdapterProxy();
+  runIdBrokerProxy();
   runUnitBrokerProxy();
   fsReadFileAdapterProxy();
 

@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Exposes the preload bridge in the renderer — hands the preload adapter the bridge key
- *   and the status, compiled-tree, and compiled-file channels from statics.
+ *   and every channel from statics.
  *
  * USAGE:
  * DesktopPreloadExposeResponder();
@@ -17,4 +17,6 @@ export const DesktopPreloadExposeResponder = (): AdapterResult =>
     statusChannel: desktopBridgeStatics.channels.status,
     compiledTreeChannel: desktopBridgeStatics.channels.compiledTree,
     compiledFileChannel: desktopBridgeStatics.channels.compiledFile,
+    runChannel: desktopBridgeStatics.channels.run,
+    savedRunChannel: desktopBridgeStatics.channels.savedRun,
   });

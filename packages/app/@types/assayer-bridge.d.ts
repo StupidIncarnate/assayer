@@ -11,6 +11,10 @@ declare global {
       getStatus?: () => Promise<unknown>;
       getCompiledTree?: () => Promise<unknown>;
       getCompiledFile?: (params: { relPath: string }) => Promise<unknown>;
+      // Separate all the way across the bridge: reading what a file's last run said must never be
+      // able to start one.
+      runFile?: (params: { relPath: string }) => Promise<unknown>;
+      getSavedRun?: (params: { relPath: string }) => Promise<unknown>;
     };
   }
 }

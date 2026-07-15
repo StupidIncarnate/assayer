@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
 
 import { useCompiledTreeBindingProxy } from '../../bindings/use-compiled-tree/use-compiled-tree-binding.proxy';
+import { useFileRunBindingProxy } from '../../bindings/use-file-run/use-file-run-binding.proxy';
 import { compiledFileFetchBrokerProxy } from '../../brokers/compiled-file/fetch/compiled-file-fetch-broker.proxy';
 import { ExplorerHeaderWidgetProxy } from '../explorer-header/explorer-header-widget.proxy';
 import { FileTreeWidgetProxy } from '../file-tree/file-tree-widget.proxy';
@@ -20,6 +21,10 @@ export const SurfaceExplorerWidgetProxy = (): {
 } => {
   const treeProxy = useCompiledTreeBindingProxy();
   const fileProxy = compiledFileFetchBrokerProxy();
+  // Defaults to "never run", so opening a file in these tests reads a saved run rather than
+  // executing one.
+  const runProxy = useFileRunBindingProxy();
+  runProxy.neverRun();
   ExplorerHeaderWidgetProxy();
   FileTreeWidgetProxy();
   CodeViewerWidgetProxy();

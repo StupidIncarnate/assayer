@@ -142,8 +142,8 @@ test.describe('Compiled Surface Explorer', () => {
     await expect(entryTitle).toHaveText('classify(value) · 2 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'classify(5) → reaches L6',
-      'classify(6) → reaches L3',
+      'not run classify(5) → reaches L6',
+      'not run classify(6) → reaches L3',
     ]);
 
     // Gutter: the .cm-test-counts gutter marks L2 (the `if` guard, on both cases' path) with 2, and
@@ -158,10 +158,10 @@ test.describe('Compiled Surface Explorer', () => {
     // Hover code line 3 (the then-return): its case row highlights (data-match=true); the L6 case dims.
     await codePanel.locator('.cm-line').nth(2).hover();
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
-      'classify(6) → reaches L3',
+      'not run classify(6) → reaches L3',
     );
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveText(
-      'classify(5) → reaches L6',
+      'not run classify(5) → reaches L6',
     );
 
     // Enrichment tab: the per-line data facts — L1 the param symbol + type, L2 the branch operand's
@@ -195,9 +195,9 @@ test.describe('Compiled Surface Explorer', () => {
     await expect(entryTitle).toHaveText('routeLabel(method) · 3 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'routeLabel("delete") → reaches L8',
-      'routeLabel("get") → reaches L4',
-      'routeLabel("post") → reaches L6',
+      'not run routeLabel("delete") → reaches L8',
+      'not run routeLabel("get") → reaches L4',
+      'not run routeLabel("post") → reaches L6',
     ]);
 
     // Gutter: each discriminant test line (L3 `case 'get'`, L5 `case 'post'`) is on 2 cases' paths (its
@@ -210,7 +210,7 @@ test.describe('Compiled Surface Explorer', () => {
     // that one row highlights and the two labelled cases dim.
     await codePanel.locator('.cm-line').nth(7).hover();
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
-      'routeLabel("delete") → reaches L8',
+      'not run routeLabel("delete") → reaches L8',
     );
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
   });
@@ -237,10 +237,10 @@ test.describe('Compiled Surface Explorer', () => {
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
       // score fails its own test, so bonus never evaluates and is left at its fill value.
-      'grade(5, 0) → reaches L6',
+      'not run grade(5, 0) → reaches L6',
       // score passes, so bonus is the operand that decides.
-      'grade(6, 1) → reaches L6',
-      'grade(6, 2) → reaches L3',
+      'not run grade(6, 1) → reaches L6',
+      'not run grade(6, 2) → reaches L3',
     ]);
 
     // Gutter: L2 (the `if`) is on all 3 cases' paths; L3 (then-return) on 1; L6 (else-return) on 2.

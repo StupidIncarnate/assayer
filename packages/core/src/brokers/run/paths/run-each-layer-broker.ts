@@ -12,8 +12,8 @@
  */
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
+import { runIdBroker } from '../id/run-id-broker';
 import { runUnitBroker } from '../unit/run-unit-broker';
 
 export const runEachLayerBroker = async ({
@@ -47,9 +47,9 @@ export const runEachLayerBroker = async ({
     relPath,
     absPath,
     source,
-    // Content-keyed, never a timestamp: the same bytes give the same runId, so an `assayer detail`
-    // link stays stable and re-running a file reuses its directory instead of accreting garbage.
-    runId: String(cryptoSha256Adapter({ content: `${relPath}\n${source}` })),
+    // Derived through the shared broker, never computed here: every reader has to find this same
+    // directory from nothing but the file, and a second derivation would drift.
+    runId: String(runIdBroker({ relPath, source })),
     analyzerContentHash,
   });
 

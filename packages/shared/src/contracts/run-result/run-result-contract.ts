@@ -20,10 +20,11 @@ import { z } from 'zod';
 
 import { caseResultContract } from '../case-result/case-result-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
+import { runIdContract } from '../run-id/run-id-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const runResultContract = z.object({
-  runId: z.string().min(1).brand<'RunId'>(),
+  runId: runIdContract,
   relPath: relPathContract,
   cases: z.array(caseResultContract),
   gaps: z.array(z.object({ name: symbolNameContract, reason: z.string().min(1).brand<'RunGapReason'>() })),

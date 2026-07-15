@@ -11,6 +11,8 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
       });
 
       expect(result).toStrictEqual({ success: true });
@@ -26,6 +28,8 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
       });
 
       await proxy.triggerGetCompiledTree();
@@ -43,11 +47,53 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
       });
 
       await proxy.triggerGetCompiledFile({ relPath: 'src/index.ts' });
 
       expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:compiled-file', 'src/index.ts']);
+    });
+  });
+
+  describe('runFile()', () => {
+    it('VALID: {relPath} => invokes the run channel with the bare relPath string', async () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+      });
+
+      await proxy.triggerRunFile({ relPath: 'src/index.ts' });
+
+      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:run', 'src/index.ts']);
+    });
+  });
+
+  describe('getSavedRun()', () => {
+    // Its own channel across the bridge too: reading what a file's last run said must never be able
+    // to start one.
+    it('VALID: {relPath} => invokes the saved-run channel, never the run channel', async () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+      });
+
+      await proxy.triggerGetSavedRun({ relPath: 'src/index.ts' });
+
+      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:saved-run', 'src/index.ts']);
     });
   });
 });

@@ -148,5 +148,8 @@ export * from './src/contracts/trace-event/trace-event.stub';
 export * from './src/contracts/case-result/case-result-contract';
 export * from './src/contracts/case-result/case-result.stub';
 
+export * from './src/contracts/run-id/run-id-contract';
+export * from './src/contracts/run-id/run-id.stub';
+
 export * from './src/contracts/run-result/run-result-contract';
 export * from './src/contracts/run-result/run-result.stub';

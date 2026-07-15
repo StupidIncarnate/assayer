@@ -15,6 +15,8 @@ describe('DesktopMainBootResponder', () => {
         desktopBridgeStatics.channels.status,
         desktopBridgeStatics.channels.compiledTree,
         desktopBridgeStatics.channels.compiledFile,
+        desktopBridgeStatics.channels.run,
+        desktopBridgeStatics.channels.savedRun,
       ]);
     });
   });

@@ -14,6 +14,8 @@ export const electronPreloadBridgeAdapterProxy = (): {
   exposedBridgeKey: () => unknown;
   triggerGetCompiledTree: () => Promise<void>;
   triggerGetCompiledFile: ({ relPath }: { relPath: string }) => Promise<void>;
+  triggerRunFile: ({ relPath }: { relPath: string }) => Promise<void>;
+  triggerGetSavedRun: ({ relPath }: { relPath: string }) => Promise<void>;
   invokedChannels: () => unknown[];
   lastInvokeArgs: () => unknown[];
 } => {
@@ -33,6 +35,12 @@ export const electronPreloadBridgeAdapterProxy = (): {
     },
     triggerGetCompiledFile: async ({ relPath }: { relPath: string }): Promise<void> => {
       await getApi()?.getCompiledFile?.({ relPath });
+    },
+    triggerRunFile: async ({ relPath }: { relPath: string }): Promise<void> => {
+      await getApi()?.runFile?.({ relPath });
+    },
+    triggerGetSavedRun: async ({ relPath }: { relPath: string }): Promise<void> => {
+      await getApi()?.getSavedRun?.({ relPath });
     },
     invokedChannels: (): unknown[] => invokeSpy.mock.calls.map((call) => call[0]),
     lastInvokeArgs: (): unknown[] => invokeSpy.mock.calls.at(-1) ?? [],

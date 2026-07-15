@@ -16,6 +16,7 @@ import { lineNumberContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, LineNumber, RelPath } from '@assayer/shared/contracts';
 
 import { useCompiledTreeBinding } from '../../bindings/use-compiled-tree/use-compiled-tree-binding';
+import { useFileRunBinding } from '../../bindings/use-file-run/use-file-run-binding';
 import { compiledFileFetchBroker } from '../../brokers/compiled-file/fetch/compiled-file-fetch-broker';
 import { ExplorerHeaderWidget } from '../explorer-header/explorer-header-widget';
 import { FileTreeWidget } from '../file-tree/file-tree-widget';
@@ -30,6 +31,8 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
   const [selectedRelPath, setSelectedRelPath] = useState<RelPath | null>(null);
   const [hoveredLine, setHoveredLine] = useState<LineNumber | null>(null);
+  // Keyed on the selected path, so opening a file LOADS its last run and never starts one.
+  const fileRun = useFileRunBinding({ relPath: selectedRelPath });
 
   const handleLineHover = useCallback((line: number | null): void => {
     setHoveredLine(line === null ? null : lineNumberContract.parse(line));
@@ -105,6 +108,10 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                   <DetailPanelWidget
                     analysis={fileView === null ? undefined : fileView.analysis}
                     hoveredLine={hoveredLine}
+                    run={fileRun.run}
+                    running={fileRun.running}
+                    runError={fileRun.error}
+                    onRun={fileRun.execute}
                   />
                 </Flex>
               </Tabs.Panel>

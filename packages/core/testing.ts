@@ -32,3 +32,4 @@ export * from './src/brokers/compile/resolve-root/compile-resolve-root-broker.pr
 
 export * from './src/brokers/run/paths/run-paths-broker.proxy';
 export * from './src/brokers/run/load/run-load-broker.proxy';
+export * from './src/brokers/run/find/run-find-broker.proxy';

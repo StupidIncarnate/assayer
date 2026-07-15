@@ -11,20 +11,34 @@
  * // Renders the Enrichment / Tests tabbed panel, highlighting rows tied to the hovered line
  */
 import type { ReactElement } from 'react';
-import { Box, Tabs, Text, Stack } from '@mantine/core';
-import type { FileAnalysis, LineNumber } from '@assayer/shared/contracts';
+import { Box, Tabs, Text, Stack, Button, Group } from '@mantine/core';
+import type { FileAnalysis, LineNumber, RunResult } from '@assayer/shared/contracts';
 
+import { caseRunStatusTransformer } from '../../transformers/case-run-status/case-run-status-transformer';
 import { caseTouchedLinesTransformer } from '../../transformers/case-touched-lines/case-touched-lines-transformer';
+import { runStatusStatics } from '../../statics/run-status/run-status-statics';
 
 export interface DetailPanelWidgetProps {
   analysis: FileAnalysis | undefined;
   hoveredLine?: LineNumber | null;
+  run?: RunResult | undefined;
+  running?: boolean;
+  runError?: Error | null;
+  onRun?: () => void;
 }
 
-export const DetailPanelWidget = ({ analysis, hoveredLine }: DetailPanelWidgetProps): ReactElement => {
+export const DetailPanelWidget = ({
+  analysis,
+  hoveredLine,
+  run,
+  running,
+  runError,
+  onRun,
+}: DetailPanelWidgetProps): ReactElement => {
   const functions = analysis === undefined ? [] : analysis.functions;
   const enrichment = analysis === undefined ? [] : analysis.enrichment;
   const active = hoveredLine !== undefined && hoveredLine !== null;
+  const gaps = run === undefined ? [] : run.gaps;
 
   return (
     <Box
@@ -82,9 +96,33 @@ export const DetailPanelWidget = ({ analysis, hoveredLine }: DetailPanelWidgetPr
             </Text>
           ) : (
             <Stack gap="sm">
-              <Text data-testid="TESTS_HINT" c="dimmed" fz="xs" fs="italic">
-                Hover a line in the code to highlight the cases that run through it.
-              </Text>
+              <Group justify="space-between" gap="xs">
+                <Text data-testid="TESTS_HINT" c="dimmed" fz="xs" fs="italic">
+                  Hover a line to highlight its cases.
+                </Text>
+                <Button
+                  data-testid="RUN_BUTTON"
+                  size="compact-xs"
+                  variant="light"
+                  loading={running === true}
+                  onClick={onRun}
+                >
+                  Run
+                </Button>
+              </Group>
+
+              {runError === null || runError === undefined ? null : (
+                <Text data-testid="RUN_ERROR" c="red.4" fz="xs" ff="monospace" style={{ whiteSpace: 'pre-wrap' }}>
+                  {runError.message}
+                </Text>
+              )}
+
+              {gaps.map((gap) => (
+                <Text key={String(gap.name)} data-testid="RUN_GAP" c="yellow.5" fz="xs" ff="monospace">
+                  {`GAP ${String(gap.name)} — ${String(gap.reason)}`}
+                </Text>
+              ))}
+
               {functions.map((fn) => (
                 <Box key={fn.entry.name} data-testid="TEST_ENTRY">
                   <Text ff="monospace" fz="xs" fw={600} c="gray.1">
@@ -98,6 +136,8 @@ export const DetailPanelWidget = ({ analysis, hoveredLine }: DetailPanelWidgetPr
                         reachesExit: testCase.reachesExit,
                       });
                       const isMatch = active && touched.some((line) => line === hoveredLine);
+                      const status = String(caseRunStatusTransformer({ run, testCase }));
+
                       return (
                         <Text
                           key={`${testCase.reachesExit}#${testCase.arrange
@@ -105,6 +145,7 @@ export const DetailPanelWidget = ({ analysis, hoveredLine }: DetailPanelWidgetPr
                             .join(',')}`}
                           data-testid="TEST_CASE_ROW"
                           data-match={isMatch ? 'true' : 'false'}
+                          data-status={status}
                           ff="monospace"
                           fz="xs"
                           c={active && !isMatch ? 'dark.3' : 'gray.4'}
@@ -114,6 +155,15 @@ export const DetailPanelWidget = ({ analysis, hoveredLine }: DetailPanelWidgetPr
                             paddingInline: 4,
                           }}
                         >
+                          <Text
+                            span
+                            data-testid="CASE_STATUS"
+                            fz="xs"
+                            fw={600}
+                            c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
+                          >
+                            {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
+                          </Text>
                           {`${fn.entry.name}(${testCase.arrange
                             .map((binding) => JSON.stringify(binding.value))
                             .join(', ')}) → reaches L${exit?.line ?? '?'}`}
