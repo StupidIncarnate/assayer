@@ -7,6 +7,11 @@
  *   while `run` executes on demand. Folding them into one "get or run" channel is how a UI ends up
  *   silently running the repo just because someone clicked a file.
  *
+ *   `runOutput` is a PUSH channel, not a handler: a run answers once, but its console output arrives
+ *   throughout, so the CLI's report can only reach the window as it is written by main sending to the
+ *   renderer. A request/response channel could only ever deliver the report after the wait it exists
+ *   to narrate.
+ *
  * USAGE:
  * desktopBridgeStatics.channels.status;
  * // Returns 'assayer:status'
@@ -23,5 +28,6 @@ export const desktopBridgeStatics = {
     compiledFile: 'assayer:compiled-file',
     run: 'assayer:run',
     savedRun: 'assayer:saved-run',
+    runOutput: 'assayer:run-output',
   },
 } as const;

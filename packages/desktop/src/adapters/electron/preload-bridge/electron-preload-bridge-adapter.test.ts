@@ -13,6 +13,7 @@ describe('electronPreloadBridgeAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
       });
 
       expect(result).toStrictEqual({ success: true });
@@ -30,6 +31,7 @@ describe('electronPreloadBridgeAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetCompiledTree();
@@ -49,6 +51,7 @@ describe('electronPreloadBridgeAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetCompiledFile({ relPath: 'src/index.ts' });
@@ -68,11 +71,55 @@ describe('electronPreloadBridgeAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerRunFile({ relPath: 'src/index.ts' });
 
       expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:run', 'src/index.ts']);
+    });
+  });
+
+  describe('onRunOutput()', () => {
+    // A run answers once but writes throughout, so this one SUBSCRIBES rather than invoking — the
+    // report can only narrate the wait if it arrives during it.
+    it('VALID: {a subscriber} => listens on the run-output channel and forwards what main sends', () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+      });
+      proxy.triggerOnRunOutput();
+      proxy.emitRunOutput({ chunk: 'a.ts  3/3 passed\n' });
+
+      expect(proxy.subscribedChannels()).toStrictEqual(['assayer:run-output']);
+      expect(proxy.receivedChunks()).toStrictEqual(['a.ts  3/3 passed\n']);
+    });
+
+    // The renderer cannot pass a function reference back across the contextBridge, so it could never
+    // name a listener to remove — the bridge hands back the teardown instead.
+    it('VALID: {the returned unsubscribe} => stops listening on the run-output channel', () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+      });
+      proxy.triggerOnRunOutput();
+      proxy.triggerUnsubscribeRunOutput();
+
+      expect(proxy.removedChannels()).toStrictEqual(['assayer:run-output']);
     });
   });
 
@@ -89,6 +136,7 @@ describe('electronPreloadBridgeAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetSavedRun({ relPath: 'src/index.ts' });

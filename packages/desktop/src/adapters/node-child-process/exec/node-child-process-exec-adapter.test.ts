@@ -28,7 +28,7 @@ describe('nodeChildProcessExecAdapter', () => {
   describe('the process it spawns', () => {
     // Piped, never inherited: the child's output belongs to the caller, not to whoever launched the
     // window.
-    it('VALID: {a command} => spawned in the given cwd with piped output', async () => {
+    it('VALID: {a command} => spawned in the given cwd with piped output and the parent environment', async () => {
       const proxy = nodeChildProcessExecAdapterProxy();
 
       await nodeChildProcessExecAdapter({ command: 'node', args: ['x.js', 'unit'], cwd: '/repo' });
@@ -36,7 +36,30 @@ describe('nodeChildProcessExecAdapter', () => {
       expect(proxy.getLastCall()).toStrictEqual([
         'node',
         ['x.js', 'unit'],
-        { cwd: '/repo', stdio: ['ignore', 'pipe', 'pipe'] },
+        { cwd: '/repo', env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] },
+      ]);
+    });
+
+    // The child would otherwise lose PATH and every other inherited variable, so overrides MERGE
+    // onto the parent environment rather than becoming the whole of it.
+    it('VALID: {an env override} => merged onto the parent environment rather than replacing it', async () => {
+      const proxy = nodeChildProcessExecAdapterProxy();
+
+      await nodeChildProcessExecAdapter({
+        command: 'node',
+        args: ['x.js'],
+        cwd: '/repo',
+        env: { ELECTRON_RUN_AS_NODE: '1' },
+      });
+
+      expect(proxy.getLastCall()).toStrictEqual([
+        'node',
+        ['x.js'],
+        {
+          cwd: '/repo',
+          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
       ]);
     });
   });

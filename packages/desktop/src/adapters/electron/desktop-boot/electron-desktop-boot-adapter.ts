@@ -22,6 +22,7 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
+import type { IpcMainInvokeEvent } from 'electron';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 import type { CompiledTree, CompiledFileView, RunResult } from '@assayer/shared/contracts';
 
@@ -33,6 +34,7 @@ export const electronDesktopBootAdapter = async ({
   compiledFileChannel,
   runChannel,
   savedRunChannel,
+  runOutputChannel,
   resolveStatus,
   resolveCompiledTree,
   resolveCompiledFile,
@@ -44,10 +46,14 @@ export const electronDesktopBootAdapter = async ({
   compiledFileChannel: string;
   runChannel: string;
   savedRunChannel: string;
+  runOutputChannel: string;
   resolveStatus: () => DesktopStatus;
   resolveCompiledTree: () => Promise<CompiledTree>;
   resolveCompiledFile: (params: { relPath: unknown }) => Promise<CompiledFileView>;
-  resolveRun: (params: { relPath: unknown }) => Promise<RunResult>;
+  resolveRun: (params: {
+    relPath: unknown;
+    onOutput: (params: { chunk: string }) => void;
+  }) => Promise<RunResult>;
   resolveSavedRun: (params: { relPath: unknown }) => Promise<RunResult | undefined>;
 }): Promise<AdapterResult> => {
   const preloadPath = join(__dirname, '../../../../bin/desktop-preload.js');
@@ -59,7 +65,17 @@ export const electronDesktopBootAdapter = async ({
   ipcMain.handle(statusChannel, () => resolveStatus());
   ipcMain.handle(compiledTreeChannel, async () => resolveCompiledTree());
   ipcMain.handle(compiledFileChannel, async (_event: unknown, relPath: unknown) => resolveCompiledFile({ relPath }));
-  ipcMain.handle(runChannel, async (_event: unknown, relPath: unknown) => resolveRun({ relPath }));
+  // The run's console output goes back to the SENDER, not to a captured window handle: the reply
+  // belongs to whoever asked for the run, and a captured handle would keep writing into a window
+  // that may already be gone.
+  ipcMain.handle(runChannel, async (event: IpcMainInvokeEvent, relPath: unknown) =>
+    resolveRun({
+      relPath,
+      onOutput: ({ chunk }: { chunk: string }): void => {
+        event.sender.send(runOutputChannel, chunk);
+      },
+    }),
+  );
   ipcMain.handle(savedRunChannel, async (_event: unknown, relPath: unknown) => resolveSavedRun({ relPath }));
   await app.whenReady();
 
@@ -68,8 +84,11 @@ export const electronDesktopBootAdapter = async ({
   Menu.setApplicationMenu(null);
 
   const window = new BrowserWindow({
-    width: 1100,
-    height: 760,
+    // Wide enough for every column the explorer can show at once: tree + code + detail + the run
+    // console. At 1100 the four do fit — but only by starving the code pane to ~60px, and the detail
+    // panel clipped its own tab strip even before the console existed.
+    width: 1500,
+    height: 800,
     title: 'Assayer',
     // Headless for e2e: there is no Xvfb here, so tests set ASSAYER_HEADLESS=1 to create the
     // window hidden (Playwright still drives a hidden BrowserWindow) — it never pops up on the

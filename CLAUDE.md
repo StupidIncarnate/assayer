@@ -25,6 +25,46 @@ constraints; the plan docs win on detail. For how the ANALYZER works, read
 repo. Verify with BOTH `npm run ward` and `npm run test:syntax` — the specimen
 catalogue is not in ward's graph.
 
+## Driving the desktop app by hand (an LLM can inspect the real UI)
+
+**A plain browser at the dev URL is a dead end.** The renderer's every fact
+arrives over Electron IPC via `window.assayerBridge`, injected by the preload's
+`contextBridge` — there is no HTTP API behind it. Outside Electron that global
+is `undefined`, so the app renders "No compiled surface" no matter what is
+compiled. Do not chase that empty state in Chrome, and never stub the bridge to
+make the page "work": a stubbed bridge verifies stub data, not Assayer.
+
+**Attach to the real app over CDP instead.** Electron accepts
+`--remote-debugging-port`, so one long-lived instance can be driven across many
+commands — unlike the e2e harnesses, which seed a throwaway temp repo and tear
+it down per test:
+
+```bash
+DISPLAY=:1 ASSAYER_DEV=1 npx electron packages/desktop/dist/bin/desktop-main.js \
+  --repo /path/to/repo --remote-debugging-port=9222 &
+```
+
+Then attach with `chromium.connectOverCDP('http://127.0.0.1:9222')` and take
+`contexts()[0].pages()[0]`. Playwright's own `close()` detaches CDP without
+killing the window. From there the page is fully scriptable: screenshot, click
+by testid, and call the bridge directly —
+`window.assayerBridge.getCompiledTree()` answers over real IPC.
+
+`--repo` picks the repo whose `.assayer/cache/` is read, and the window only
+lists files a compile already wrote there. `ASSAYER_DEV=1` swaps the renderer
+from the built `app/dist/index.html` to the Vite dev server, which must already
+be listening (`npm run dev -w @assayer/app`) or the window loads nothing.
+`ASSAYER_HEADLESS=1` creates the window hidden, which is what the e2e run needs
+where no display exists.
+
+**`npm run dev` clears the field first** (`predev` → `dev:stop`), so a second one
+never stacks a window or dies against the dev server's `strictPort`. Two details
+in `dev:stop` are load-bearing, not noise. The bracket in
+`pkill -f '[d]esktop-main.js'` keeps the pattern from matching the shell running
+it — spell it plainly and the script kills its own parent instead of the app.
+And the server dies by PORT (`fuser -k 6273/tcp`) because matching on `vite`
+would reach into whatever unrelated repo is also running one.
+
 **Known defect — core is NOT publish-ready.** `npm pack` ships 359 files with
 `dist/` → **0** of them, while `package.json`'s `exports` point at
 `./dist/*.js`: gitignored, no `files` allowlist, no prepublish build, so a

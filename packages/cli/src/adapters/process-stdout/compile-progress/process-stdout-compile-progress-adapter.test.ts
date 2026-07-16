@@ -5,7 +5,9 @@ import { processStdoutCompileProgressAdapterProxy } from './process-stdout-compi
 
 describe('processStdoutCompileProgressAdapter', () => {
   describe('first event of a compile', () => {
-    it('VALID: {namespace: "main", phase: "planned", current: 0, max: 2} => writes the header once then one empty bar line', () => {
+    // Planning is not compiling. Files are planned on every run — the working tree has no commit to
+    // diff against — so announcing here would announce every run, whether or not anything is written.
+    it('VALID: {namespace: "main", phase: "planned", current: 0, max: 2} => writes nothing yet, having compiled nothing yet', () => {
       const proxy = processStdoutCompileProgressAdapterProxy();
       const controller = processStdoutCompileProgressAdapter();
 
@@ -21,7 +23,41 @@ describe('processStdoutCompileProgressAdapter', () => {
         }),
       });
 
-      expect(proxy.getWrites()).toStrictEqual(['Assayer is updating caches\n', 'main: -------------------- 0/2\n']);
+      expect(proxy.getWrites()).toStrictEqual([]);
+    });
+
+    it('VALID: {planned main 0/2, then advanced main 1/2 compiled} => writes the header once then the bar', () => {
+      const proxy = processStdoutCompileProgressAdapterProxy();
+      const controller = processStdoutCompileProgressAdapter();
+
+      controller.render({
+        event: CompileProgressEventStub({
+          namespace: 'main',
+          branch: 'main',
+          phase: 'planned',
+          current: 0,
+          max: 2,
+          stableMax: 2,
+          currentMax: 2,
+        }),
+      });
+      controller.render({
+        event: CompileProgressEventStub({
+          namespace: 'main',
+          branch: 'main',
+          phase: 'advanced',
+          current: 1,
+          max: 2,
+          stableMax: 2,
+          currentMax: 2,
+          reused: false,
+        }),
+      });
+
+      expect(proxy.getWrites()).toStrictEqual([
+        'Assayer is updating caches\n',
+        'main: ##########---------- 1/2\n',
+      ]);
     });
   });
 
@@ -61,6 +97,7 @@ describe('processStdoutCompileProgressAdapter', () => {
           max: 2,
           stableMax: 2,
           currentMax: 2,
+          reused: false,
         }),
       });
       controller.render({
@@ -72,14 +109,14 @@ describe('processStdoutCompileProgressAdapter', () => {
           max: 2,
           stableMax: 2,
           currentMax: 2,
+          reused: false,
         }),
       });
 
+      // The two 'planned' events drew nothing — planning is not compiling — but they still REGISTERED
+      // both namespaces, so develop has its bar from the moment drawing starts.
       expect(proxy.getWrites()).toStrictEqual([
         'Assayer is updating caches\n',
-        'main: -------------------- 0/2\n',
-        'main: -------------------- 0/2\n',
-        'develop: -------------------- 0/2\n',
         'main: ##########---------- 1/2\n',
         'develop: -------------------- 0/2\n',
         'main: #################### 2/2\n',
@@ -124,6 +161,7 @@ describe('processStdoutCompileProgressAdapter', () => {
           max: 1,
           stableMax: 1,
           currentMax: 1,
+          reused: false,
         }),
       });
       controller.render({
@@ -135,14 +173,12 @@ describe('processStdoutCompileProgressAdapter', () => {
           max: 1,
           stableMax: 1,
           currentMax: 1,
+          reused: false,
         }),
       });
 
       expect(proxy.getWrites()).toStrictEqual([
         'Assayer is updating caches\n',
-        'main: -------------------- 0/1\n',
-        'main: -------------------- 0/1\n',
-        'develop: -------------------- 0/1\n',
         'main: #################### 1/1\n',
         'develop: -------------------- 0/1\n',
         'main: #################### 1/1\n',
@@ -151,23 +187,14 @@ describe('processStdoutCompileProgressAdapter', () => {
     });
   });
 
-  describe('TTY output redraws bars in place', () => {
-    it('VALID: {tty; planned main 0/2 then advanced main 1/2} => moves the cursor up before redrawing the bar', () => {
+  describe('a run in which every file was already cached', () => {
+    // The working-tree namespace has no commit to diff against, so it re-reads and re-hashes every
+    // file on every run and events arrive for files nobody touched. Announcing "updating caches" for
+    // them claimed work that never happened — not one blob or manifest byte is written on this path.
+    it('EMPTY: {every file reused} => writes nothing at all, rather than announcing an update', () => {
       const proxy = processStdoutCompileProgressAdapterProxy();
-      proxy.enableTty();
       const controller = processStdoutCompileProgressAdapter();
 
-      controller.render({
-        event: CompileProgressEventStub({
-          namespace: 'main',
-          branch: 'main',
-          phase: 'planned',
-          current: 0,
-          max: 2,
-          stableMax: 2,
-          currentMax: 2,
-        }),
-      });
       controller.render({
         event: CompileProgressEventStub({
           namespace: 'main',
@@ -177,14 +204,103 @@ describe('processStdoutCompileProgressAdapter', () => {
           max: 2,
           stableMax: 2,
           currentMax: 2,
+          reused: true,
+        }),
+      });
+      controller.render({
+        event: CompileProgressEventStub({
+          namespace: 'main',
+          branch: 'main',
+          phase: 'advanced',
+          current: 2,
+          max: 2,
+          stableMax: 2,
+          currentMax: 2,
+          reused: true,
+        }),
+      });
+
+      expect(proxy.getWrites()).toStrictEqual([]);
+    });
+  });
+
+  describe('a run in which only some files changed', () => {
+    // Events carry the ABSOLUTE count, so the bar is true the first time it is drawn even though the
+    // reused files ahead of it drew nothing — 2/2, not a bar restarted at 1.
+    it('VALID: {file 1 reused, file 2 compiled} => announces at the first real compile, counting every file', () => {
+      const proxy = processStdoutCompileProgressAdapterProxy();
+      const controller = processStdoutCompileProgressAdapter();
+
+      controller.render({
+        event: CompileProgressEventStub({
+          namespace: 'main',
+          branch: 'main',
+          phase: 'advanced',
+          current: 1,
+          max: 2,
+          stableMax: 2,
+          currentMax: 2,
+          reused: true,
+        }),
+      });
+      controller.render({
+        event: CompileProgressEventStub({
+          namespace: 'main',
+          branch: 'main',
+          phase: 'advanced',
+          current: 2,
+          max: 2,
+          stableMax: 2,
+          currentMax: 2,
+          reused: false,
         }),
       });
 
       expect(proxy.getWrites()).toStrictEqual([
         'Assayer is updating caches\n',
-        'main: -------------------- 0/2\n',
-        '[1A',
+        'main: #################### 2/2\n',
+      ]);
+    });
+  });
+
+  describe('TTY output redraws bars in place', () => {
+    // Two COMPILED events, because the cursor only moves for a REDRAW: the first bar drawn has
+    // nothing above it to overwrite, however many silent events came before it.
+    it('VALID: {tty; advanced main 1/2 then advanced main 2/2} => moves the cursor up before redrawing the bar', () => {
+      const proxy = processStdoutCompileProgressAdapterProxy();
+      proxy.enableTty();
+      const controller = processStdoutCompileProgressAdapter();
+
+      controller.render({
+        event: CompileProgressEventStub({
+          namespace: 'main',
+          branch: 'main',
+          phase: 'advanced',
+          current: 1,
+          max: 2,
+          stableMax: 2,
+          currentMax: 2,
+          reused: false,
+        }),
+      });
+      controller.render({
+        event: CompileProgressEventStub({
+          namespace: 'main',
+          branch: 'main',
+          phase: 'advanced',
+          current: 2,
+          max: 2,
+          stableMax: 2,
+          currentMax: 2,
+          reused: false,
+        }),
+      });
+
+      expect(proxy.getWrites()).toStrictEqual([
+        'Assayer is updating caches\n',
         'main: ##########---------- 1/2\n',
+        '\u001b[1A',
+        'main: #################### 2/2\n',
       ]);
     });
   });

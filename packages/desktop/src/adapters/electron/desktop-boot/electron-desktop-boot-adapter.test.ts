@@ -15,6 +15,7 @@ describe('electronDesktopBootAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
@@ -42,6 +43,7 @@ describe('electronDesktopBootAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
         resolveCompiledFile: async ({ relPath }) => {
@@ -68,6 +70,7 @@ describe('electronDesktopBootAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
@@ -84,6 +87,39 @@ describe('electronDesktopBootAdapter', () => {
       expect(result).toStrictEqual(run);
     });
 
+    // The run answers ONCE but writes throughout, so its output reaches the window by being pushed
+    // to the sender as it arrives. Handed back with the result instead, the report could only ever
+    // appear after the wait it exists to narrate.
+    it('VALID: {resolveRun writes output} => each chunk is sent to the sender on the run-output channel', async () => {
+      const proxy = electronDesktopBootAdapterProxy();
+
+      await electronDesktopBootAdapter({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async ({ onOutput }) => {
+          onOutput({ chunk: 'Assayer is updating caches\n' });
+          onOutput({ chunk: 'a.ts  3/3 passed\n' });
+
+          return Promise.resolve(RunResultStub());
+        },
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+      });
+
+      await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/boolean/and.ts' });
+
+      expect(proxy.sentToRenderer()).toStrictEqual([
+        ['assayer:run-output', 'Assayer is updating caches\n'],
+        ['assayer:run-output', 'a.ts  3/3 passed\n'],
+      ]);
+    });
+
     // Its own channel, never a lazy accessor on run: asking what a file's last run said must not
     // start a Jest run just because someone opened the file.
     it('VALID: {invokeHandler on savedRunChannel} => answers without running anything', async () => {
@@ -96,6 +132,7 @@ describe('electronDesktopBootAdapter', () => {
         compiledFileChannel: 'assayer:compiled-file',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),

@@ -15,6 +15,9 @@ declare global {
       // able to start one.
       runFile?: (params: { relPath: string }) => Promise<unknown>;
       getSavedRun?: (params: { relPath: string }) => Promise<unknown>;
+      // Subscribes to the running CLI's console output, returning its own unsubscribe — a renderer
+      // cannot hand the same function reference back across the bridge to remove a listener itself.
+      onRunOutput?: (params: { onChunk: (params: { chunk: string }) => void }) => () => void;
     };
   }
 }

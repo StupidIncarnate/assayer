@@ -23,6 +23,7 @@ import { FileTreeWidget } from '../file-tree/file-tree-widget';
 import { CodeViewerWidget } from '../code-viewer/code-viewer-widget';
 import { DetailPanelWidget } from '../detail-panel/detail-panel-widget';
 import { RawBlobViewerWidget } from '../raw-blob-viewer/raw-blob-viewer-widget';
+import { RunConsoleWidget } from '../run-console/run-console-widget';
 
 const SIDEBAR_WIDTH = 300;
 
@@ -31,11 +32,23 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
   const [selectedRelPath, setSelectedRelPath] = useState<RelPath | null>(null);
   const [hoveredLine, setHoveredLine] = useState<LineNumber | null>(null);
+  // The console is opened by the Run action alone — never by mounting, and never by opening a file,
+  // which does not run anything and so has no output to show.
+  const [consoleOpen, setConsoleOpen] = useState(false);
   // Keyed on the selected path, so opening a file LOADS its last run and never starts one.
   const fileRun = useFileRunBinding({ relPath: selectedRelPath });
 
   const handleLineHover = useCallback((line: number | null): void => {
     setHoveredLine(line === null ? null : lineNumberContract.parse(line));
+  }, []);
+
+  const handleRun = useCallback((): void => {
+    setConsoleOpen(true);
+    fileRun.execute();
+  }, [fileRun]);
+
+  const handleConsoleHide = useCallback((): void => {
+    setConsoleOpen(false);
   }, []);
 
   return (
@@ -90,7 +103,10 @@ export const SurfaceExplorerWidget = (): ReactElement => {
               defaultValue="code"
               keepMounted={false}
               data-testid="FILE_VIEW_TABS"
-              style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+              // minWidth:0 or this pane refuses to shrink below its content (flex items default to
+              // min-width:auto), pushing the fixed-width panels to its right off the window edge —
+              // where the root's overflow:hidden silently swallows them.
+              style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}
             >
               <Tabs.List bg="dark.7">
                 <Tabs.Tab value="code" data-testid="VIEW_TAB_CODE">
@@ -100,9 +116,9 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                   Raw JSON
                 </Tabs.Tab>
               </Tabs.List>
-              <Tabs.Panel value="code" style={{ flex: 1, minHeight: 0 }}>
-                <Flex style={{ height: '100%', minHeight: 0 }}>
-                  <Flex bg="dark.8" style={{ flex: 1, minHeight: 0, flexDirection: 'column' }}>
+              <Tabs.Panel value="code" style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
+                <Flex style={{ height: '100%', minWidth: 0, minHeight: 0 }}>
+                  <Flex bg="dark.8" style={{ flex: 1, minWidth: 0, minHeight: 0, flexDirection: 'column' }}>
                     <CodeViewerWidget fileView={fileView} onLineHover={handleLineHover} />
                   </Flex>
                   <DetailPanelWidget
@@ -111,7 +127,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                     run={fileRun.run}
                     running={fileRun.running}
                     runError={fileRun.error}
-                    onRun={fileRun.execute}
+                    onRun={handleRun}
                   />
                 </Flex>
               </Tabs.Panel>
@@ -119,6 +135,17 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 <RawBlobViewerWidget fileView={fileView} />
               </Tabs.Panel>
             </Tabs>
+            {/* Additive: its own full-height column at the far RIGHT of the body, so opening it
+                narrows the code pane rather than replacing any panel — the tree, code and detail
+                all stay mounted and readable. */}
+            {consoleOpen ? (
+              <RunConsoleWidget
+                output={fileRun.output}
+                running={fileRun.running}
+                error={fileRun.error}
+                onHide={handleConsoleHide}
+              />
+            ) : null}
           </Flex>
         </>
       )}

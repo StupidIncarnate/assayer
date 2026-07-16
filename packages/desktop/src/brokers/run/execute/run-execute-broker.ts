@@ -11,6 +11,9 @@
  *   with a perfectly good artifact behind it; only a run that produced NO artifact is an error, and
  *   the CLI's own report is what says why.
  *
+ *   `onOutput` streams the CLI's console output as it is written, so the UI can show the same report a
+ *   human reading a terminal sees, while it is still being written rather than only once it is done.
+ *
  * USAGE:
  * await runExecuteBroker({ repoPath: '/repo', root: '/repo/smoke-repo', relPath: 'src/a.ts' });
  * // Returns the saved RunResult
@@ -25,10 +28,12 @@ export const runExecuteBroker = async ({
   repoPath,
   root,
   relPath,
+  onOutput,
 }: {
   repoPath: string;
   root: string;
   relPath: string;
+  onOutput?: (params: { chunk: string }) => void;
 }): Promise<RunResult> => {
   const cliEntry = assayerCliEntryPathAdapter();
 
@@ -36,10 +41,15 @@ export const runExecuteBroker = async ({
     throw new Error('assayer: the CLI is not built, so nothing can be run. Build it and try again.');
   }
 
+  // In the Electron main process `process.execPath` is the ELECTRON binary, not node — so handing it
+  // a script path launches a second Electron APP that never exits, hanging this await forever.
+  // ELECTRON_RUN_AS_NODE makes that same binary behave as plain node, which is what the CLI needs.
   const exec = await nodeChildProcessExecAdapter({
     command: process.execPath,
     args: [String(cliEntry), 'unit', relPath],
     cwd: repoPath,
+    env: { ELECTRON_RUN_AS_NODE: '1' },
+    ...(onOutput === undefined ? {} : { onOutput }),
   });
 
   const run = await runFindBroker({ configDir: repoPath, root, relPath });

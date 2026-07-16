@@ -52,16 +52,7 @@ module.exports = [
             ...dungeonmasterTestConfigs.test.plugins,
             '@dungeonmaster': dungeonmaster,
         },
-        rules: {
-            ...dungeonmasterTestConfigs.test.rules,
-            // `jest/prefer-to-be` and `@dungeonmaster/ban-weak-existence-matchers` are both `error`
-            // in the shared test config and want opposite things: the former AUTOFIXES
-            // `toBe(undefined)` into `toBeUndefined()`, which the latter then rejects. Together they
-            // make asserting undefined unrepresentable — every spelling is an error, and --fix loops.
-            // ban-weak-existence-matchers wins because it is the standard the codebase is written to
-            // (`toBe(undefined)` throughout @dungeonmaster). Reported in plan/scaffolding-doc-gaps.md.
-            'jest/prefer-to-be': 'off',
-        },
+        rules: {...dungeonmasterTestConfigs.test.rules},
     },
     ...dungeonmasterTestConfigs.fileOverrides,
 ];

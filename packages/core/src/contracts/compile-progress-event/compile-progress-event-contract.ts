@@ -2,6 +2,12 @@
  * PURPOSE: Contract for a compile-progress event — reports how far a branch-keyed manifest
  *   index build has advanced, for streaming progress to a consumer (e.g. a CLI progress bar).
  *
+ *   `reused` reports whether the file it advanced past was ALREADY cached at its content hash. The
+ *   working-tree namespace has no commit to diff against, so it re-reads and re-hashes every file on
+ *   every run — meaning "a file advanced" says nothing about whether anything was written. Without
+ *   this flag a consumer cannot tell a compile from a verification, and announcing an update that
+ *   never happened is how a progress bar comes to lie.
+ *
  * USAGE:
  * compileProgressEventContract.parse({
  *   namespace: 'master',
@@ -11,6 +17,7 @@
  *   max: 5,
  *   stableMax: 3,
  *   currentMax: 5,
+ *   reused: false,
  * });
  * // Returns a validated CompileProgressEvent (branded fields)
  */
@@ -37,5 +44,8 @@ export const compileProgressEventContract = z.object({
   stableMax: fileCountContract,
   // currentMax: pre-counted total for the current namespace
   currentMax: fileCountContract,
+  // reused: for an 'advanced' event, whether THAT file was already cached at its content hash — so
+  // nothing was written for it. Absent on 'planned'/'done', which report a namespace, not a file.
+  reused: z.boolean().optional(),
 });
 export type CompileProgressEvent = z.infer<typeof compileProgressEventContract>;

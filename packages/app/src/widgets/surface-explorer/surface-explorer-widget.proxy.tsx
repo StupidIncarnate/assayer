@@ -10,6 +10,7 @@ import { FileTreeWidgetProxy } from '../file-tree/file-tree-widget.proxy';
 import { CodeViewerWidgetProxy } from '../code-viewer/code-viewer-widget.proxy';
 import { DetailPanelWidgetProxy } from '../detail-panel/detail-panel-widget.proxy';
 import { RawBlobViewerWidgetProxy } from '../raw-blob-viewer/raw-blob-viewer-widget.proxy';
+import { RunConsoleWidgetProxy } from '../run-console/run-console-widget.proxy';
 import type { CompiledTreeStub, CompiledFileViewStub } from '@assayer/shared/contracts';
 
 export const SurfaceExplorerWidgetProxy = (): {
@@ -17,6 +18,9 @@ export const SurfaceExplorerWidgetProxy = (): {
   setupFile: (params: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }) => void;
   failFile: () => void;
   clickFile: (params: { label: string }) => Promise<void>;
+  clickRun: () => Promise<void>;
+  hideRunConsole: () => Promise<void>;
+  emitRunOutput: (params: { chunk: string }) => void;
   errorLogged: () => boolean;
 } => {
   const treeProxy = useCompiledTreeBindingProxy();
@@ -30,6 +34,7 @@ export const SurfaceExplorerWidgetProxy = (): {
   CodeViewerWidgetProxy();
   DetailPanelWidgetProxy();
   RawBlobViewerWidgetProxy();
+  RunConsoleWidgetProxy();
   // Suppress + observe the surface-explorer's own console.error fallback so a failed file load
   // stays silent in the test output while still being assertable.
   const consoleErrorSpy = registerSpyOn({ object: globalThis.console, method: 'error' });
@@ -47,6 +52,15 @@ export const SurfaceExplorerWidgetProxy = (): {
     },
     clickFile: async ({ label }: { label: string }): Promise<void> => {
       await userEvent.click(screen.getByText(label));
+    },
+    clickRun: async (): Promise<void> => {
+      await userEvent.click(screen.getByTestId('RUN_BUTTON'));
+    },
+    hideRunConsole: async (): Promise<void> => {
+      await userEvent.click(screen.getByTestId('RUN_CONSOLE_HIDE'));
+    },
+    emitRunOutput: ({ chunk }: { chunk: string }): void => {
+      runProxy.emitRunOutput({ chunk });
     },
     errorLogged: (): boolean => consoleErrorSpy.mock.calls.length > 0,
   };

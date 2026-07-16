@@ -176,7 +176,7 @@ describe('stableNamespaceLayerBroker', () => {
 
       expect(events).toStrictEqual([
         { namespace: 'master', branch: 'master', phase: 'planned', current: 0, max: 1, stableMax: 1, currentMax: 2 },
-        { namespace: 'master', branch: 'master', phase: 'advanced', current: 1, max: 1, stableMax: 1, currentMax: 2 },
+        { namespace: 'master', branch: 'master', phase: 'advanced', current: 1, max: 1, stableMax: 1, currentMax: 2, reused: false },
         { namespace: 'master', branch: 'master', phase: 'done', current: 1, max: 1, stableMax: 1, currentMax: 2 },
       ]);
     });

@@ -146,7 +146,7 @@ describe('processTargetsLayerBroker', () => {
 
       expect(result).toStrictEqual({ index: [{ relPath: 'src/x.ts', contentHash: hash }], errors: [] });
       expect(events).toStrictEqual([
-        { namespace: 'master', branch: 'master', phase: 'advanced', current: 1, max: 1, stableMax: 0, currentMax: 1 },
+        { namespace: 'master', branch: 'master', phase: 'advanced', current: 1, max: 1, stableMax: 0, currentMax: 1, reused: false },
       ]);
     });
   });

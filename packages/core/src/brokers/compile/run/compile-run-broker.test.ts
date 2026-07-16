@@ -200,7 +200,7 @@ describe('compileRunBroker', () => {
 
       expect(events).toStrictEqual([
         { namespace: 'feature-x', branch: 'feature-x', phase: 'planned', current: 0, max: 1, stableMax: 0, currentMax: 1 },
-        { namespace: 'feature-x', branch: 'feature-x', phase: 'advanced', current: 1, max: 1, stableMax: 0, currentMax: 1 },
+        { namespace: 'feature-x', branch: 'feature-x', phase: 'advanced', current: 1, max: 1, stableMax: 0, currentMax: 1, reused: false },
         { namespace: 'feature-x', branch: 'feature-x', phase: 'done', current: 1, max: 1, stableMax: 0, currentMax: 1 },
       ]);
     });

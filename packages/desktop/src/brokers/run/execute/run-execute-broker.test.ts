@@ -16,7 +16,11 @@ describe('runExecuteBroker', () => {
 
     // The SAME binary a human would type. One execution path is what keeps "run in the UI" and "run
     // headless" from becoming two implementations that disagree.
-    it('VALID: {a file} => spawns the built CLI with `unit <relPath>` in the repo', async () => {
+    //
+    // ELECTRON_RUN_AS_NODE is load-bearing, not decoration: in the main process `process.execPath` is
+    // the Electron binary, which given a script path boots a second Electron app that never exits —
+    // so without the flag the run never returns and the UI spins forever.
+    it('VALID: {a file} => spawns the built CLI with `unit <relPath>` in the repo, as node rather than as an Electron app', async () => {
       const proxy = runExecuteBrokerProxy();
 
       await runExecuteBroker({ repoPath: '/repo', root: '/repo', relPath: 'src/a.ts' });
@@ -24,7 +28,11 @@ describe('runExecuteBroker', () => {
       expect(proxy.getSpawnArgs()).toStrictEqual([
         process.execPath,
         ['/repo/packages/cli/dist/bin/assayer.js', 'unit', 'src/a.ts'],
-        { cwd: '/repo', stdio: ['ignore', 'pipe', 'pipe'] },
+        {
+          cwd: '/repo',
+          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
       ]);
     });
 

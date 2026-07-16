@@ -63,6 +63,9 @@ export const processTargetsLayerBroker = async ({
   const nextCurrent = current + 1;
   const relPath = relPathContract.parse(target.relPath);
 
+  // `reused` rides along because "advanced past a file" and "compiled a file" are different facts,
+  // and only this broker still knows which one happened. A consumer told merely that the count moved
+  // cannot help but report a verification as an update.
   onProgress?.(
     compileProgressEventContract.parse({
       namespace,
@@ -72,6 +75,7 @@ export const processTargetsLayerBroker = async ({
       max,
       stableMax,
       currentMax,
+      reused: result.reused,
     }),
   );
 

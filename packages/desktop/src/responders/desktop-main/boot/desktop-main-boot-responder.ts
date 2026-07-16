@@ -34,15 +34,17 @@ export const DesktopMainBootResponder = async ({
     compiledFileChannel: desktopBridgeStatics.channels.compiledFile,
     runChannel: desktopBridgeStatics.channels.run,
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
+    runOutputChannel: desktopBridgeStatics.channels.runOutput,
     resolveStatus: () => statusResolveBroker({ repoPath }),
     resolveCompiledTree: async () => compiledTreeResolveBroker({ repoPath }),
     resolveCompiledFile: async ({ relPath }) =>
       compiledFileResolveBroker({ repoPath, relPath: relPathContract.parse(relPath) }),
-    resolveRun: async ({ relPath }) =>
+    resolveRun: async ({ relPath, onOutput }) =>
       runExecuteBroker({
         repoPath: String(repoPath),
         root: String(await repoSourceRootBroker({ repoPath })),
         relPath: String(relPathContract.parse(relPath)),
+        onOutput,
       }),
     resolveSavedRun: async ({ relPath }) =>
       runFindBroker({

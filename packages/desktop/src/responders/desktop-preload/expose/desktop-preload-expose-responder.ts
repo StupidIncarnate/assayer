@@ -19,4 +19,5 @@ export const DesktopPreloadExposeResponder = (): AdapterResult =>
     compiledFileChannel: desktopBridgeStatics.channels.compiledFile,
     runChannel: desktopBridgeStatics.channels.run,
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
+    runOutputChannel: desktopBridgeStatics.channels.runOutput,
   });
