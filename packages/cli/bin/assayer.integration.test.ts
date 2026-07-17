@@ -9,7 +9,12 @@ import { BranchNameStub, RelPathStub } from '@assayer/shared/contracts';
 const DOCS_OVERVIEW_TOPIC_BODY =
   'Assayer statically identifies what should be tested, generates and runs the tests itself, and fails like a build error when something testable is uncovered or broken.';
 
-const STATUS_STDOUT = /^Assayer is updating caches\n[\s\S]*\nassayer 1\.0\.0\nAssayer core online\n$/u;
+// A compile that WROTE something announces itself, then the status lines.
+const COMPILED_STATUS_STDOUT = /^Assayer is updating caches\n[\s\S]*\nassayer 1\.0\.0\nAssayer core online\n$/u;
+// A run that wrote nothing says nothing about caches. The working-tree namespace re-reads and
+// re-hashes every file on every run, so "a file was looked at" is not "a file was updated" — claiming
+// otherwise announced an update on every run of an untouched repo.
+const QUIET_STATUS_STDOUT = /^assayer 1\.0\.0\nAssayer core online\n$/u;
 
 describe('assayer CLI precheck flow (real built binary)', () => {
   const cli = assayerCliHarness();
@@ -68,20 +73,25 @@ describe('assayer CLI precheck flow (real built binary)', () => {
   });
 
   describe('config generation on a clean dir (obs-config-generated + obs-subcommand-after-precheck)', () => {
-    it('VALID: {argv: ["status"], no config present} => generates the default config, compiles, prints status, exit 0', async () => {
+    // An empty repo has nothing to compile, so it announces nothing — the manifest is still written.
+    it('VALID: {argv: ["status"], no config present} => generates the default config, writes the manifest, prints status, exit 0', async () => {
       const { exitCode, stdout } = await cli.run({ argv: ['status'] });
       const generatedConfig = cli.read({ relPath: 'assayer.config.json' });
       const manifestExists = cli.exists({ relPath: '.assayer/cache/manifest.json' });
 
       expect(exitCode).toBe(0);
-      expect(generatedConfig).toBe('{"version":"1","repoRoot":".","exclude":[]}');
+      expect(generatedConfig).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}');
       expect(manifestExists).toBe(true);
-      expect(stdout).toMatch(STATUS_STDOUT);
+      expect(stdout).toMatch(QUIET_STATUS_STDOUT);
     });
   });
 
   describe('status with an existing valid config (config found + compile + cache reuse)', () => {
-    it('VALID: {argv: ["status"], config + one source file} => compiles that file, prints status twice, exit 0', async () => {
+    // The two runs must DIFFER, and that difference is the whole claim of this test. The first
+    // compiles the file and says so; the second re-reads and re-hashes it, finds the blob already
+    // there, writes nothing — and so says nothing. Both announcing would mean "updating caches" fires
+    // on every run of an untouched repo, which is an update that never happened.
+    it('VALID: {argv: ["status"], config + one source file} => the first run announces the compile, the reusing second is silent, exit 0', async () => {
       cli.writeConfig({ json: '{"repoRoot":"./src","exclude":[]}' });
       cli.writeSource({ relPath: 'src/sample.ts', source: 'export const sample = (): number => 1;\n' });
 
@@ -91,10 +101,10 @@ describe('assayer CLI precheck flow (real built binary)', () => {
       const configAfter = cli.read({ relPath: 'assayer.config.json' });
 
       expect(firstExit).toBe(0);
-      expect(firstStdout).toMatch(STATUS_STDOUT);
+      expect(firstStdout).toMatch(COMPILED_STATUS_STDOUT);
       expect(manifestAfterFirst).toBe(true);
       expect(secondExit).toBe(0);
-      expect(secondStdout).toMatch(STATUS_STDOUT);
+      expect(secondStdout).toMatch(QUIET_STATUS_STDOUT);
       expect(configAfter).toBe('{"repoRoot":"./src","exclude":[]}');
     });
   });
@@ -113,7 +123,8 @@ describe('assayer CLI precheck flow (real built binary)', () => {
       expect(exitCode).toBe(0);
       expect(staleBlobExists).toBe(false);
       expect(manifestExists).toBe(true);
-      expect(stdout).toMatch(STATUS_STDOUT);
+      // The trashed cache means the file is genuinely compiled again, so this run DOES announce it.
+      expect(stdout).toMatch(COMPILED_STATUS_STDOUT);
     });
   });
 

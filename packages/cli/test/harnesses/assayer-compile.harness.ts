@@ -8,8 +8,7 @@
  *   are both exercised. It reads back the written .assayer/cache manifest + content-addressed blobs
  *   so a colocated .integration.test.ts asserts on the compiled surface (namespaces, per-file
  *   content hashes, reconstructed source, blob reuse) without touching node builtins itself. Owns
- *   all node:fs / node:child_process access. Requires `tsc --build tsconfig.build.json` first so
- *   dist/bin/assayer.js exists.
+ *   all node:fs / node:child_process access.
  *
  * USAGE:
  * const compile = assayerCompileHarness();

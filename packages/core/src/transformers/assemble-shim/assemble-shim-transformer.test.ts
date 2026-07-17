@@ -12,6 +12,7 @@ const EXPECTED = [
   "const { dirname } = require('node:path');",
   'const caseSet = require("/cache/runs/r1/0.cases.json");',
   'const subject = require(caseSet.modulePath);',
+  'const requireFresh = () => { jest.resetModules(); return require(caseSet.modulePath); };',
   'const cases = [];',
   '',
   'describe(caseSet.relPath, () => {',
@@ -19,7 +20,7 @@ const EXPECTED = [
   '    for (const [index, testCase] of entry.cases.entries()) {',
   "      it(entry.name + ' case ' + index, () => {",
   '        const result = jestInterpretCaseAdapter({',
-  '          entry: jestResolveEntryAdapter({ subject, name: entry.name, access: entry.access }),',
+  '          entry: jestResolveEntryAdapter({ subject, name: entry.name, access: entry.access, requireFresh }),',
   '          entryName: entry.name,',
   '          exitIds: entry.exitIds,',
   '          testCase,',
@@ -40,6 +41,8 @@ const EXPECTED = [
   '    relPath: caseSet.relPath,',
   '    cases,',
   '    gaps: caseSet.gaps,',
+  '    darkSpots: caseSet.darkSpots,',
+  '    undriven: caseSet.undriven,',
   '  }, null, 2));',
   '});',
   '',
@@ -69,6 +72,24 @@ describe('assembleShimTransformer', () => {
       });
 
       expect(shim.split('\n')[5]).toBe('const caseSet = require("C:\\\\cache\\\\0.cases.json");');
+    });
+
+    // The one thing the shim does that the interpreter cannot: a module scope's body runs once per
+    // load, so driving it again means loading it again — and the module registry belongs to the file
+    // Jest is running. It is Assayer's own machinery, not a control anyone is offered: every shim
+    // carries it whether or not the file has a module entry, and no config, harness or case can
+    // reach it.
+    it('VALID: {any file} => carries the fresh-require thunk, since only a Jest test file owns the registry', () => {
+      const shim = assembleShimTransformer({
+        caseSetPath: '/cache/0.cases.json',
+        adaptersPath: '/core/dist/adapters',
+        resultPath: '/cache/run.json',
+        runId: 'r1',
+      });
+
+      expect(shim.split('\n')[7]).toBe(
+        'const requireFresh = () => { jest.resetModules(); return require(caseSet.modulePath); };',
+      );
     });
   });
 });

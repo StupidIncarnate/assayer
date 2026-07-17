@@ -14,6 +14,8 @@
  * runDetailFormatTransformer({ run: RunResultStub() });
  * // Returns the full per-case trace text
  */
+import { arrangeTextTransformer } from '@assayer/shared/transformers';
+
 import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
 import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 import type { RunResult } from '@assayer/shared/contracts';
@@ -22,7 +24,7 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
   const header = `${String(run.relPath)}  run ${String(run.runId)}`;
 
   const cases = run.cases.flatMap((testCase) => {
-    const args = testCase.testCase.arrange.map((binding) => JSON.stringify(binding.value)).join(', ');
+    const args = arrangeTextTransformer({ arrange: testCase.testCase.arrange });
     const events = testCase.trace.map((event) => {
       const outcome = event.outcome === undefined ? '' : ` ${String(event.outcome)}`;
 

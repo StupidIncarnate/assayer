@@ -12,9 +12,14 @@
  *
  *   Each case asserts reaching the exit (structural, P4) — it never records the returned value.
  *
+ *   `envDrivable` says whether THIS entry is one the environment is an input to — a module scope,
+ *   which runs when it is imported and reads the environment as it goes. It is passed down rather
+ *   than inferred here because it is a fact about the entry, and the leaves only know a fact about
+ *   the code.
+ *
  * USAGE:
- * deriveCasesTransformer({ params, branches, exits });
- * // Returns [{ reachesExit, arrange: [{ param, value }] }, ...] (branded DerivedTestCase[])
+ * deriveCasesTransformer({ params, branches, exits, envDrivable: false });
+ * // Returns [{ reachesExit, arrange: [{ kind: 'param', param, value }] }, ...] (branded DerivedTestCase[])
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
 import type { BranchNode, DerivedTestCase, ExitNode, ParamDescriptor } from '@assayer/shared/contracts';
@@ -26,14 +31,16 @@ export const deriveCasesTransformer = ({
   params,
   branches,
   exits,
+  envDrivable,
 }: {
   params: ParamDescriptor[];
   branches: BranchNode[];
   exits: ExitNode[];
+  envDrivable: boolean;
 }): DerivedTestCase[] =>
   exits.flatMap((exit) =>
     exitCausesTransformer({ branches, guardPath: exit.guardPath }).flatMap((cause) =>
-      causeArrangeTransformer({ requirements: cause.requirements, params }).map((arrange) =>
+      causeArrangeTransformer({ requirements: cause.requirements, params, envDrivable }).map((arrange) =>
         derivedTestCaseContract.parse({ reachesExit: exit.coverageId, arrange }),
       ),
     ),

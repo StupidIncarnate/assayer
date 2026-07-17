@@ -26,6 +26,7 @@ import type { IpcMainInvokeEvent } from 'electron';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 import type { CompiledTree, CompiledFileView, RunResult } from '@assayer/shared/contracts';
 
+import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
 
 export const electronDesktopBootAdapter = async ({
@@ -62,21 +63,35 @@ export const electronDesktopBootAdapter = async ({
       ? 'http://localhost:6273'
       : pathToFileURL(join(__dirname, '../../../../../../app/dist/index.html')).href;
 
-  ipcMain.handle(statusChannel, () => resolveStatus());
-  ipcMain.handle(compiledTreeChannel, async () => resolveCompiledTree());
-  ipcMain.handle(compiledFileChannel, async (_event: unknown, relPath: unknown) => resolveCompiledFile({ relPath }));
+  // Every handler ANSWERS with an IpcReply and none of them throws. Electron builds
+  // `Error invoking remote method '<channel>': <error>` in the renderer out of a flag it sets only
+  // when a handler throws, and no option turns that text off — so a resolver's P1 error reaches the
+  // UI intact only by travelling as data. Routing all five through ipcReplyTransformer is what makes
+  // that structural: there is no registration here that can throw into Electron.
+  ipcMain.handle(statusChannel, async () =>
+    ipcReplyTransformer({ resolve: async () => Promise.resolve(resolveStatus()) }),
+  );
+  ipcMain.handle(compiledTreeChannel, async () => ipcReplyTransformer({ resolve: async () => resolveCompiledTree() }));
+  ipcMain.handle(compiledFileChannel, async (_event: unknown, relPath: unknown) =>
+    ipcReplyTransformer({ resolve: async () => resolveCompiledFile({ relPath }) }),
+  );
   // The run's console output goes back to the SENDER, not to a captured window handle: the reply
   // belongs to whoever asked for the run, and a captured handle would keep writing into a window
   // that may already be gone.
   ipcMain.handle(runChannel, async (event: IpcMainInvokeEvent, relPath: unknown) =>
-    resolveRun({
-      relPath,
-      onOutput: ({ chunk }: { chunk: string }): void => {
-        event.sender.send(runOutputChannel, chunk);
-      },
+    ipcReplyTransformer({
+      resolve: async () =>
+        resolveRun({
+          relPath,
+          onOutput: ({ chunk }: { chunk: string }): void => {
+            event.sender.send(runOutputChannel, chunk);
+          },
+        }),
     }),
   );
-  ipcMain.handle(savedRunChannel, async (_event: unknown, relPath: unknown) => resolveSavedRun({ relPath }));
+  ipcMain.handle(savedRunChannel, async (_event: unknown, relPath: unknown) =>
+    ipcReplyTransformer({ resolve: async () => resolveSavedRun({ relPath }) }),
+  );
   await app.whenReady();
 
   // Remove the application menu entirely so the Assayer window is a chromeless surface — no

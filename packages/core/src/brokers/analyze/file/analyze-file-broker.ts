@@ -2,7 +2,12 @@
  * PURPOSE: Turns a walked file into its FileAnalysis — projecting the entries, deriving the salient
  *   test cases per entry (one per reachable exit), building the per-line enrichment (each param's
  *   type on the entry line; each branch operand's type + representative value range on the branch
- *   line), and carrying through the dark spots the walk could not follow.
+ *   line), and carrying through both of the walk's admissions: the dark spots it could not follow,
+ *   and the branching scopes it read perfectly but nothing can drive.
+ *
+ *   Both admissions are projected from the WALK, not from the entries above them, because the entries
+ *   are where those scopes stop — a private helper is never projected as one, so there is nothing
+ *   there to filter and no way to notice it is gone.
  *
  *   It takes the WALK rather than source on purpose: the compile pipeline already walked the file to
  *   build its map, and parsing a second time here is what the single-parse seam exists to avoid.
@@ -11,7 +16,7 @@
  *
  * USAGE:
  * analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
- * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...] }
+ * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...], undriven: [...] }
  */
 import { fileAnalysisContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
@@ -23,19 +28,27 @@ import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-p
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { typeTextTransformer } from '../../../transformers/type-text/type-text-transformer';
 import { typeToRangeTransformer } from '../../../transformers/type-to-range/type-to-range-transformer';
+import { undrivenProjectionTransformer } from '../../../transformers/undriven-projection/undriven-projection-transformer';
 
 export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileAnalysis => {
   const extracted = analysisProjectionTransformer({ walked });
 
   if (!extracted.success) {
-    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [] });
+    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [] });
   }
 
   const functions = extracted.functions.map((fn) => ({
     entry: fn.entry,
     branches: fn.branches,
     exits: fn.exits,
-    cases: deriveCasesTransformer({ params: fn.entry.params, branches: fn.branches, exits: fn.exits }),
+    cases: deriveCasesTransformer({
+      params: fn.entry.params,
+      branches: fn.branches,
+      exits: fn.exits,
+      // Only a module scope is driven BY importing it, which is when its top-level bindings read the
+      // environment. A function is driven by calling it, long after its module ran and froze them.
+      envDrivable: fn.entry.access.kind === 'module',
+    }),
   }));
 
   const enrichment = extracted.functions.flatMap((fn) => [
@@ -75,5 +88,6 @@ export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileA
     functions,
     enrichment,
     darkSpots: darkSpotProjectionTransformer({ walked }),
+    undriven: undrivenProjectionTransformer({ walked }),
   });
 };

@@ -10,6 +10,12 @@
  *   It writes results in `afterAll` so a FAILING case still records its trace — the failure is
  *   exactly when the trace matters most.
  *
+ *   `requireFresh` is the one thing it does that the interpreter cannot. A module scope's body runs
+ *   once per load, so driving it a second time with different inputs means loading it a second time —
+ *   and the module registry belongs to the file Jest is running, which is this one. Resetting it is
+ *   Assayer's own machinery, not a control anyone is offered: no config, harness, or case can reach
+ *   it, and every file gets the same shim whether or not it has a module entry to use it.
+ *
  * USAGE:
  * assembleShimTransformer({ caseSetPath, adaptersPath, resultPath, runId });
  * // Returns the shim's JavaScript source
@@ -37,6 +43,10 @@ export const assembleShimTransformer = ({
       "const { dirname } = require('node:path');",
       `const caseSet = require(${JSON.stringify(caseSetPath)});`,
       'const subject = require(caseSet.modulePath);',
+      // Re-imports the module under whatever the case arranged, which is the only way to run a
+      // module scope's body again. The registry reset is Jest's, and only a file Jest is running can
+      // ask for it — which is why this cannot live in the interpreter.
+      'const requireFresh = () => { jest.resetModules(); return require(caseSet.modulePath); };',
       'const cases = [];',
       '',
       'describe(caseSet.relPath, () => {',
@@ -46,9 +56,9 @@ export const assembleShimTransformer = ({
       // as an interpolation of THIS file, not of the shim.
       "      it(entry.name + ' case ' + index, () => {",
       '        const result = jestInterpretCaseAdapter({',
-      // Resolved per ACCESS and per case: a method needs a fresh instance, and reading
-      // subject[entry.name] would find nothing for one.
-      '          entry: jestResolveEntryAdapter({ subject, name: entry.name, access: entry.access }),',
+      // Resolved per ACCESS and per case: a method needs a fresh instance, reading
+      // subject[entry.name] would find nothing for one, and a module scope is no property at all.
+      '          entry: jestResolveEntryAdapter({ subject, name: entry.name, access: entry.access, requireFresh }),',
       '          entryName: entry.name,',
       '          exitIds: entry.exitIds,',
       '          testCase,',
@@ -71,6 +81,12 @@ export const assembleShimTransformer = ({
       // Carried through, not recomputed: a gap is what Assayer could NOT drive, and a run that
       // reports only its passes reads as complete coverage of the file.
       '    gaps: caseSet.gaps,',
+      // Beside the gaps, never merged into them: a dark spot is syntax Assayer never understood, so
+      // it is Assayer's debt rather than a harness the reader owes.
+      '    darkSpots: caseSet.darkSpots,',
+      // The third channel, beside both: logic Assayer read perfectly and never drove. No harness
+      // closes it and the analyzer was not blind to it, so neither of the other two may absorb it.
+      '    undriven: caseSet.undriven,',
       '  }, null, 2));',
       '});',
       '',

@@ -66,6 +66,8 @@ export const AssayerFlow = async ({
       configDir: String(precheck.configDir),
       root: String(precheck.root),
       argv: argv.slice(1),
+      // Repo-wide, from the config the precheck already resolved — never a per-file decision.
+      darkSpots: String(precheck.config.darkSpots),
     });
   }
 

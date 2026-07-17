@@ -71,13 +71,14 @@ describe('StableBranchLayerResponder', () => {
       });
 
       expect(proxy.getSavedConfigJson()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"develop"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"develop","darkSpots":"warn"}',
       );
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',
         exclude: [],
         stableBranch: 'develop',
+        darkSpots: 'warn',
       });
     });
   });
@@ -96,7 +97,7 @@ describe('StableBranchLayerResponder', () => {
       });
 
       expect(proxy.getSavedConfigJson()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn"}',
       );
       expect(proxy.pickerCallCount()).toBe(0);
       expect(result).toStrictEqual({
@@ -104,6 +105,7 @@ describe('StableBranchLayerResponder', () => {
         repoRoot: '.',
         exclude: [],
         stableBranch: 'main',
+        darkSpots: 'warn',
       });
     });
   });
@@ -125,13 +127,14 @@ describe('StableBranchLayerResponder', () => {
       expect(proxy.pickerCallCount()).toBe(0);
       expect(proxy.promptWritten()).toBe(false);
       expect(proxy.getSavedConfigJson()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn"}',
       );
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',
         exclude: [],
         stableBranch: 'main',
+        darkSpots: 'warn',
       });
     });
   });

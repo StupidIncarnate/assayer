@@ -10,14 +10,20 @@
  *   stops writing cannot be told apart from one still being written — which is exactly the
  *   spinning-forever failure this panel exists to make impossible.
  *
+ *   It takes `failed` and not the Error: a run that could not happen produced no CLI bytes to show,
+ *   and its reason belongs to the detail panel, which is on screen for every failure this console is
+ *   not (it opens only on Run and can be dismissed). Holding a boolean rather than the message is what
+ *   keeps the one error from being printed on two surfaces.
+ *
  * USAGE:
- * <RunConsoleWidget output={output} running={running} error={runError} onHide={hide} />
+ * <RunConsoleWidget output={output} running={running} failed={runError !== null} onHide={hide} />
  * // Renders the CLI's report; the caller decides when the panel is mounted
  */
 import type { ReactElement } from 'react';
 import { Box, Group, Text, CloseButton, ScrollArea } from '@mantine/core';
 
 import { runConsoleStatics } from '../../statics/run-console/run-console-statics';
+import { runConsoleStatusTransformer } from '../../transformers/run-console-status/run-console-status-transformer';
 import type { RunConsole } from '../../contracts/run-console/run-console-contract';
 
 const PANEL_WIDTH = 380;
@@ -25,65 +31,67 @@ const PANEL_WIDTH = 380;
 export const RunConsoleWidget = ({
   output,
   running,
-  error,
+  failed = false,
   onHide,
 }: {
   output: RunConsole;
   running: boolean;
-  error?: Error | null;
+  failed?: boolean;
   onHide: () => void;
-}): ReactElement => (
-  <Box
-    data-testid="RUN_CONSOLE"
-    bg="dark.9"
-    style={{
-      width: PANEL_WIDTH,
-      flexShrink: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      borderLeft: '1px solid var(--mantine-color-dark-4)',
-    }}
-  >
-    <Group
-      justify="space-between"
-      gap="xs"
-      px="sm"
-      py={4}
-      bg="dark.7"
-      style={{ flexShrink: 0, borderBottom: '1px solid var(--mantine-color-dark-4)' }}
+}): ReactElement => {
+  const status = String(runConsoleStatusTransformer({ running, failed }));
+
+  return (
+    <Box
+      data-testid="RUN_CONSOLE"
+      bg="dark.9"
+      style={{
+        width: PANEL_WIDTH,
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        borderLeft: '1px solid var(--mantine-color-dark-4)',
+      }}
     >
-      <Text data-testid="RUN_CONSOLE_STATUS" fz="xs" fw={600} c={running ? 'yellow.5' : 'gray.4'}>
-        {running ? runConsoleStatics.status.running : runConsoleStatics.status.finished}
-      </Text>
-      <CloseButton data-testid="RUN_CONSOLE_HIDE" size="sm" onClick={onHide} aria-label="Hide the run console" />
-    </Group>
-
-    <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-      {/* The run could not HAPPEN — distinct from a failing case, and the CLI wrote no report for it. */}
-      {error === null || error === undefined ? null : (
-        <Text data-testid="RUN_CONSOLE_ERROR" c="red.4" fz="xs" ff="monospace" p="sm" style={{ whiteSpace: 'pre-wrap' }}>
-          {error.message}
-        </Text>
-      )}
-
-      {String(output) === '' ? (
-        <Text data-testid="RUN_CONSOLE_EMPTY" c="dimmed" fz="xs" p="sm">
-          {runConsoleStatics.waitingMessage}
-        </Text>
-      ) : (
+      <Group
+        justify="space-between"
+        gap="xs"
+        px="sm"
+        py={4}
+        bg="dark.7"
+        style={{ flexShrink: 0, borderBottom: '1px solid var(--mantine-color-dark-4)' }}
+      >
         <Text
-          data-testid="RUN_CONSOLE_OUTPUT"
-          component="pre"
-          c="gray.4"
+          data-testid="RUN_CONSOLE_STATUS"
           fz="xs"
-          ff="monospace"
-          p="sm"
-          m={0}
-          style={{ whiteSpace: 'pre-wrap' }}
+          fw={600}
+          c={runConsoleStatics.statusColour[status as keyof typeof runConsoleStatics.statusColour]}
         >
-          {String(output)}
+          {runConsoleStatics.status[status as keyof typeof runConsoleStatics.status]}
         </Text>
-      )}
-    </ScrollArea>
-  </Box>
-);
+        <CloseButton data-testid="RUN_CONSOLE_HIDE" size="sm" onClick={onHide} aria-label="Hide the run console" />
+      </Group>
+
+      <ScrollArea style={{ flex: 1, minHeight: 0 }}>
+        {String(output) === '' ? (
+          <Text data-testid="RUN_CONSOLE_EMPTY" c="dimmed" fz="xs" p="sm">
+            {failed ? runConsoleStatics.noOutputMessage : runConsoleStatics.waitingMessage}
+          </Text>
+        ) : (
+          <Text
+            data-testid="RUN_CONSOLE_OUTPUT"
+            component="pre"
+            c="gray.4"
+            fz="xs"
+            ff="monospace"
+            p="sm"
+            m={0}
+            style={{ whiteSpace: 'pre-wrap' }}
+          >
+            {String(output)}
+          </Text>
+        )}
+      </ScrollArea>
+    </Box>
+  );
+};

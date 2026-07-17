@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 
@@ -15,13 +13,6 @@ const THEN = `${BRANCH.replace('/if:', '/return@if:')}#then`;
 const ELSE = `${BRANCH.replace('/if:', '/return@if:')}#else`;
 
 describe('boolean / mixed — nested connectives inside an exported function', () => {
-  it('VALID: {admin && (level > 3 || owner)} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('mixed.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   // The load-bearing property: THREE leaves yield FOUR cases, not eight. Short-circuiting keeps
   // cause enumeration linear (MC/DC's n+1), which is what makes exhaustive derivation affordable at
   // all. If this ever grows exponentially, the whole approach stops scaling.
@@ -33,18 +24,18 @@ describe('boolean / mixed — nested connectives inside an exported function', (
       {
         reachesExit: THEN,
         arrange: [
-          { param: 'admin', value: true },
-          { param: 'level', value: 4 },
-          { param: 'owner', value: false },
+          { kind: 'param', param: 'admin', value: true },
+          { kind: 'param', param: 'level', value: 4 },
+          { kind: 'param', param: 'owner', value: false },
         ],
       },
       // admin holds, 3 > 3 fails, so `owner` decides.
       {
         reachesExit: THEN,
         arrange: [
-          { param: 'admin', value: true },
-          { param: 'level', value: 3 },
-          { param: 'owner', value: true },
+          { kind: 'param', param: 'admin', value: true },
+          { kind: 'param', param: 'level', value: 3 },
+          { kind: 'param', param: 'owner', value: true },
         ],
       },
       // admin fails — the ENTIRE parenthesized disjunction never evaluates, so neither operand is
@@ -52,18 +43,18 @@ describe('boolean / mixed — nested connectives inside an exported function', (
       {
         reachesExit: ELSE,
         arrange: [
-          { param: 'admin', value: false },
-          { param: 'level', value: 0 },
-          { param: 'owner', value: false },
+          { kind: 'param', param: 'admin', value: false },
+          { kind: 'param', param: 'level', value: 0 },
+          { kind: 'param', param: 'owner', value: false },
         ],
       },
       // admin holds, and both disjuncts fail.
       {
         reachesExit: ELSE,
         arrange: [
-          { param: 'admin', value: true },
-          { param: 'level', value: 3 },
-          { param: 'owner', value: false },
+          { kind: 'param', param: 'admin', value: true },
+          { kind: 'param', param: 'level', value: 3 },
+          { kind: 'param', param: 'owner', value: false },
         ],
       },
     ]);

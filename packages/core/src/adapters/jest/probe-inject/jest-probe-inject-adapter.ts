@@ -7,6 +7,11 @@
  *   real conditions. Here the checker sees the ORIGINAL AST and probes exist only in emitted JS.
  *   (It also dodges the splice's silent value bugs: `return (a, b)` yielding 1, `obj?.b.c` throwing.)
  *
+ *   The FILE can itself be a site, which is why the recursion cannot own every case. A module scope
+ *   completing — the file simply ending — is an exit like any other, and the only position that
+ *   observes it is after the last statement. `visitEachChild` never visits the file it descends, so
+ *   that one probe is appended here.
+ *
  *   `ts` is a parameter, not an import: it must be the module the HOST compiler is using — nodes from
  *   a second TypeScript instance are not interchangeable — and passing it keeps this testable without
  *   standing up a ts-jest instance.
@@ -30,11 +35,30 @@ export const jestProbeInjectAdapter = ({
   context: TS.TransformationContext;
   sourceFile: TS.SourceFile;
   sites: ProbeSite[];
-}): TS.SourceFile =>
-  // visitEachChild on the SourceFile rather than visitNode on it: the file is never itself a site, and
-  // this returns a SourceFile without a cast.
-  ts.visitEachChild(
+}): TS.SourceFile => {
+  const visited = ts.visitEachChild(
     sourceFile,
     (child) => probeVisitNodeLayerAdapter({ ts, context, sourceFile, sites, node: child }),
     context,
   );
+
+  const fileSite = sites.find(
+    (candidate) =>
+      candidate.kind === 'complete' &&
+      candidate.start === sourceFile.getStart(sourceFile) &&
+      candidate.end === sourceFile.getEnd(),
+  );
+
+  return fileSite === undefined
+    ? visited
+    : ts.factory.updateSourceFile(visited, [
+        ...visited.statements,
+        ts.factory.createExpressionStatement(
+          ts.factory.createCallExpression(
+            ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier('__P'), 'x'),
+            undefined,
+            [ts.factory.createStringLiteral(fileSite.id), ts.factory.createIdentifier('undefined')],
+          ),
+        ),
+      ]);
+};

@@ -13,7 +13,7 @@ describe('jestInterpretCaseAdapter', () => {
     it('VALID: {the entry reaches the predicted exit} => passes, recording the observed exit', () => {
       jestInterpretCaseAdapterProxy();
       const probe = ProbeRuntimeStub();
-      const testCase = DerivedTestCaseStub({ reachesExit: THEN, arrange: [{ param: 'score', value: 6 }] });
+      const testCase = DerivedTestCaseStub({ reachesExit: THEN, arrange: [{ kind: 'param', param: 'score', value: 6 }] });
 
       const result = jestInterpretCaseAdapter({
         entry: (score: number) => probe.x(THEN, score),
@@ -37,7 +37,7 @@ describe('jestInterpretCaseAdapter', () => {
     it('VALID: {the entry reaches a DIFFERENT exit} => fails, recording both exits', () => {
       jestInterpretCaseAdapterProxy();
       const probe = ProbeRuntimeStub();
-      const testCase = DerivedTestCaseStub({ reachesExit: THEN, arrange: [{ param: 'score', value: 0 }] });
+      const testCase = DerivedTestCaseStub({ reachesExit: THEN, arrange: [{ kind: 'param', param: 'score', value: 0 }] });
 
       const result = jestInterpretCaseAdapter({
         entry: (score: number) => probe.x(ELSE, score),

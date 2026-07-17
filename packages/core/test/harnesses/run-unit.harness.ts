@@ -8,16 +8,20 @@
  *   IS the interface both the CLI and the desktop consume, so "the run happened" and "the run is
  *   readable" are different claims and a test that only checks the former proves less than it looks.
  *
- *   Requires `npm run build` — the generated shim requires core's BUILT adapters by absolute path.
- *   Same precondition the CLI's own integration harness and the app e2e already carry.
+ *   The cache dir is EMPTIED between tests, never renamed. Isolation wants a clean directory; it does
+ *   not want a different one. Its path reaches the runner's Jest config, and ts-jest keeps one
+ *   TypeScript compiler per distinct config forever — so a fresh `mkdtemp` per test made every test
+ *   look like a new project and stranded a whole compiler each time, which OOM'd this file at ~4GB
+ *   once it drove the whole catalogue. Same path, wiped: same config, one compiler, flat memory.
+ *   The pid keeps it unique across parallel Jest workers.
  *
  * USAGE:
  * const engine = runUnitHarness();
- * // beforeEach makes a fresh temp cache dir; afterEach removes it (auto-wired by the harness transformer)
+ * // beforeEach empties the temp cache dir; afterEach removes it (auto-wired by the harness transformer)
  * const result = await engine.run({ relPath: 'packages/syntax-repository/src/boolean/and.ts', runId: 'r1' });
  * engine.savedRun({ runId: 'r1' }); // => the RunResult parsed back off disk
  */
-import { mkdtempSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -28,29 +32,29 @@ import { runUnitBroker } from '../../src/brokers/run/unit/run-unit-broker';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
 const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
+// Stable for the whole worker, unique across parallel ones — see the note above on why the path must
+// not change between tests.
+const CACHE_DIR = join(tmpdir(), `assayer-engine-${String(process.pid)}`);
 
 export const runUnitHarness = (): {
   beforeEach: () => void;
   afterEach: () => void;
-  distBuilt: () => boolean;
   run: ({ relPath, runId }: { relPath: string; runId: string }) => Promise<RunResult>;
   savedRun: ({ runId }: { runId: string }) => RunResult;
 } => {
-  let cacheDir = '';
-
   return {
     beforeEach: (): void => {
-      cacheDir = mkdtempSync(join(tmpdir(), 'assayer-engine-'));
+      rmSync(CACHE_DIR, { recursive: true, force: true });
+      mkdirSync(CACHE_DIR, { recursive: true });
     },
     afterEach: (): void => {
-      rmSync(cacheDir, { recursive: true, force: true });
+      rmSync(CACHE_DIR, { recursive: true, force: true });
     },
-    distBuilt: (): boolean => existsSync(join(CORE_ROOT, 'dist', 'adapters.js')),
     run: async ({ relPath, runId }: { relPath: string; runId: string }): Promise<RunResult> => {
       const absPath = join(SMOKE_REPO, relPath);
 
       return runUnitBroker({
-        cacheDir,
+        cacheDir: CACHE_DIR,
         coreRoot: CORE_ROOT,
         repoRoot: SMOKE_REPO,
         relPath,
@@ -61,6 +65,6 @@ export const runUnitHarness = (): {
       });
     },
     savedRun: ({ runId }: { runId: string }): RunResult =>
-      runResultContract.parse(JSON.parse(readFileSync(join(cacheDir, 'runs', runId, 'run.json'), 'utf8'))),
+      runResultContract.parse(JSON.parse(readFileSync(join(CACHE_DIR, 'runs', runId, 'run.json'), 'utf8'))),
   };
 };

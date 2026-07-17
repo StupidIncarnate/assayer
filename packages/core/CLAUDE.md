@@ -171,6 +171,33 @@ declared descriptor; other binding → widened type-graph read). Widening everyt
 `'get'|'post'|'delete'` to `string` and destroys the exhaustive per-member fan-out that makes switch
 analysis worth anything.
 
+**5.10 — The analyzer's project has NO ambient Node types, and the env rung is built on that.**
+`ts-morph-walk-file-adapter` parses with `useInMemoryFileSystem: true` and one source string: the
+standard library resolves, `node_modules` does not. Two consequences, and both are load-bearing:
+
+- It is what lets `read-env-operand` prove `process.env` rather than pattern-match it. An identifier
+  the file itself declares is NOT the global, and the checker answers that exactly — so a file with
+  its own `const process = { env: … }` is refused. The uniform rule is "no declaration in THIS source
+  file"; do not weaken it to "no symbol", because `Number` resolves (to the lib) while `process`
+  resolves to nothing, and only the file-scoped question covers both.
+- It caps the rung at **one hop through `Number`** — `const x = Number(process.env.X)`. `String` is
+  its exact inverse, so a representative value can be put back into the environment. A bare
+  `const mode = process.env.MODE` types as `any` here (no `@types/node`), so it has no domain to pick
+  a value from and stays honestly undriven — which means the very common
+  `process.env.NODE_ENV === 'production'` is NOT driven. Loading `@types/node` into the project is
+  what would widen it, and that is a real decision (parse cost on every file, a core dependency on
+  consumer-adjacent types, and every specimen's analysis changes) — not a tweak.
+
+**5.11 — An exit owes a probe SITE, minted where its id is minted.** Every handler that emits an exit
+emits its site in the same expression (`handle-if` per arm completion, `handle-function` per body,
+`handle-source-file` per file end). Derive sites in a second pass and a runtime observation can key
+under an id the analyzer never produced. Two site shapes, because two things are observed: an
+EXPRESSION exit is wrapped in place (value passes through, short-circuit preserved), while an
+IMPLICIT one — falling off the end of an arm, a body, or the file — has no expression at all, so its
+site is the statement CONTAINER and the probe is APPENDED (`kind: 'complete'`). An implicit exit with
+no site is unobservable, and a case predicting one reports "reached no exit" against code that
+reached it perfectly.
+
 ---
 
 ## 6. Adding a construct — the recipe
@@ -179,8 +206,20 @@ Do these in order. Skipping step 1 is how you end up asserting what the code doe
 should do.
 
 1. **Specimen first.** Add `smoke-repo/packages/syntax-repository/src/<construct>/<rung>.ts` + a
-   colocated `.test.ts`. If it's currently a dark spot, assert THAT first (a ratchet), then flip it.
+   colocated `.test.ts` holding only what is BESPOKE to that file (exact coverage IDs, the shape of
+   its analysis). If it's currently a dark spot, assert THAT first (a ratchet), then flip it.
    Adding a specimen also changes the e2e's compiled-surface counts — see §8.
+1b. **Declare it** in `packages/core/test/harnesses/specimen-registry.ts` — one line naming what the
+   file IS (`['access:named', 'branch:if']`), never what to test. The matrix walks the catalogue off
+   disk, so an undeclared specimen fails the catalogue check rather than being skipped, and the
+   declared traits alone decide which checks it owes. Everything universal (valid TypeScript,
+   determinism, produces a run artifact) then applies with nothing written.
+   **Author it by READING the file.** Never regenerate it from analyzer output: a matrix that asks
+   the analyzer what is in a file cannot notice the analyzer being wrong — it would agree with
+   itself, run fewer checks, and go green. That is P4 one level up, and the cross-check
+   (`analyze-file-broker.integration.test.ts`) is only worth its runtime because the two sides are
+   authored independently. A trait the analyzer cannot see, or a fact it sees that nobody declared,
+   fails there — which is what a forgotten trait looks like.
 2. **Handler.** `handle-<x>-layer-adapter.ts`. It emits its branch(es)/exit(s), and returns descents
    with `walkContextTransformer({ context, guardSteps: [...] })` per arm. It must not recurse, must not
    look at its parents, and must not know any other construct exists.
@@ -229,6 +268,18 @@ Two properties must hold and are cheap to check with a probe:
 - **`handler-result-layer-adapter` is a LEAF** — it imports nothing else in the folder. Shared handler
   vocabulary lives there because putting it beside the recursion makes the proxy graph circular
   (`walk-node.proxy → dispatch.proxy → handler.proxy → walk-node.proxy` = infinite recursion at runtime).
+- **An expression-level branch does not fit the guard model — which is why `ConditionalExpression` is a
+  dark spot, and why §6's recipe will not close it.** `guardPath` assumes a guard is a STATEMENT
+  enclosing STATEMENTS; a ternary's arms guard an expression SUBTREE. Two consequences follow, and a
+  handler addresses neither. `handle-exit` emits its exit BEFORE descending, handing the expression
+  `context` verbatim (`handle-exit-layer-adapter.ts:57`), and exits merge UPWARD
+  (`walk-node-layer-adapter.ts:36`) — so a branch inside a `return` cannot make that `return` retract
+  its own unguarded exit. `handle-if` inverts this with `readAccounted` ("the arm already returns, so
+  I owe no exit"), but for an expression branch the polarity reverses and nothing asks `handle-exit`
+  to stand down. Separately, `const x = cond ? y : z` needs value-flow tracking (follow the binding to
+  its use) before it could derive anything: `derive-cases` derives per exit from `exit.guardPath`, so a
+  branch no guardPath can mention derives zero cases and is inert decoration. The work is
+  exit-ownership + value-flow, not a handler.
 - **`*/` inside a doc comment terminates the comment.** Writing a scope path like `*module*/classify` in
   a `/** … */` block produces baffling TS1109/TS1005 parse errors. Don't put scope paths in comments.
 - **Tests may not contain conditionals** — including `result.success === true && result.x`. Assert the
@@ -238,6 +289,29 @@ Two properties must hold and are cheap to check with a probe:
   A test-only shim at the package root silently inflated the e2e's `ts N` count. Map jest aliases
   straight at core instead of adding shim files.
 - Adding a specimen changes three assertions in `packages/app/src/flows/app/surface-explorer.e2e.ts`:
-  the header count, the sorted file-leaf list, the sorted dir list.
+  the header count, the sorted file-leaf list, the sorted dir list — plus its line in
+  `specimen-registry.ts`, without which the catalogue check fails.
+- **The runner's Jest config must be IDENTICAL for every file.** ts-jest keeps one TypeScript
+  compiler per distinct config and never releases it, so anything per-file in the config strands a
+  whole compiler — ~370MB each, which is `assayer unit` OOM-ing partway through a real repo, not a
+  slow test. Which run to execute travels in the test-path pattern (`_`), never in `roots`/`testMatch`.
+  Two ways to break it, and the second is the one that looks innocent:
+  - naming the run's own directory in the config; and
+  - a harness minting a **fresh temp dir per test** — a new path is a new config just as surely, so
+    `run-unit.harness.ts` WIPES one stable path rather than renaming it.
+  Pinned by *"two different runs => the config is IDENTICAL"* in `jest-run-cli-adapter.test.ts`. If
+  you are about to make the config depend on the file, that test is the reason not to.
+- **One nested Jest run proves nothing about fifteen.** `run-unit-broker` calls `runCLI` in-process,
+  so the engine integration runs Jest inside Jest. That is fine and stays flat — but only while the
+  rule above holds; the memory cost is per CONFIG, and it does not show up until something drives the
+  whole catalogue at once.
+- **The wrapped runner executes COMPILED adapters, never your source.** The generated shim `require`s
+  `<coreRoot>/dist/adapters` by absolute path — that IS the product: a published core ships `dist`,
+  and a consumer's shim requires exactly that, so mapping it to TS source would test a path nothing
+  runs. The consequence is that `dist` and `src` disagreeing is a SILENT wrong answer — a stale
+  `dist` lets the integration suite pass against old compiled code while the unit suite passes
+  against new source, and neither notices. `jest.config.base.js` closes it with a `globalSetup` that
+  builds first, so every jest path is covered rather than only `npm run ward`. `tsc --build` is
+  content-hashed (an mtime bump alone rebuilds nothing), so the no-op costs ~0.2s. Do not remove it.
 - Coverage IDs are **cache-internal by ruling** — changing them costs only fixture rewrites, never a
   migration. Do not contort the design to preserve an ID string.

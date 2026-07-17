@@ -61,25 +61,52 @@ describe('RunConsoleWidget', () => {
   });
 
   describe('a run that could not happen', () => {
-    // The run never got far enough to write a report, so the panel would otherwise be empty for a
-    // failure the reader most needs to see.
-    it('ERROR: {the run threw} => the reason is shown in the console', () => {
+    // A run that could not happen writes no output, exactly as a quiet successful one does. Calling
+    // this "Finished" would report the failure as a success.
+    it('ERROR: {the run failed} => the status says Failed rather than Finished', () => {
+      RunConsoleWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: (
+          <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
+        ),
+      });
+
+      expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Failed');
+    });
+
+    // The console states the ABSENCE of output and points at the reason; the detail panel prints it.
+    // "Waiting for the CLI…" here would be a lie — the run is over and nothing more is coming.
+    it('ERROR: {the run failed before the CLI wrote} => says nothing was written and where the reason is', () => {
+      RunConsoleWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: (
+          <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
+        ),
+      });
+
+      expect(getByTestId('RUN_CONSOLE_EMPTY').textContent).toBe(
+        'The CLI wrote nothing — the Tests panel has the reason.',
+      );
+    });
+
+    // The CLI's bytes are still the CLI's. A failure does not suppress whatever it managed to write.
+    it('ERROR: {the run failed after the CLI wrote} => the output written so far is still shown', () => {
       RunConsoleWidgetProxy();
 
       const { getByTestId } = testingLibraryRenderAdapter({
         ui: (
           <RunConsoleWidget
-            output={RunConsoleStub({ value: '' })}
+            output={RunConsoleStub({ value: 'Assayer is updating caches\n' })}
             running={false}
-            error={new Error('assayer: the CLI is not built, so nothing can be run.')}
+            failed
             onHide={(): void => undefined}
           />
         ),
       });
 
-      expect(getByTestId('RUN_CONSOLE_ERROR').textContent).toBe(
-        'assayer: the CLI is not built, so nothing can be run.',
-      );
+      expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe('Assayer is updating caches\n');
     });
   });
 

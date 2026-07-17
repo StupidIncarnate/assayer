@@ -15,8 +15,8 @@ describe('runResultContract', () => {
             testCase: {
               reachesExit: 'grade/return@then',
               arrange: [
-                { param: 'score', value: 6 },
-                { param: 'bonus', value: 2 },
+                { kind: 'param', param: 'score', value: 6 },
+                { kind: 'param', param: 'bonus', value: 2 },
               ],
             },
             status: 'passed',
@@ -29,6 +29,8 @@ describe('runResultContract', () => {
           },
         ],
         gaps: [],
+        darkSpots: [],
+        undriven: [],
       });
     });
 
@@ -38,6 +40,36 @@ describe('runResultContract', () => {
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
       expect(run.gaps).toStrictEqual([{ name: 'find', reason: 'needs a harness' }]);
+    });
+
+    // A run with NO cases and no gaps is the shape this channel exists for: without it, a file whose
+    // only logic is a module-scope `if` reports exactly what a fully-covered file reports.
+    it('VALID: {a run whose only logic is undriven} => zero cases, and the reason why', () => {
+      const run = RunResultStub({
+        cases: [],
+        undriven: [
+          {
+            name: '*module*',
+            reason: 'it runs at import time, so no case drove its branches',
+            startLine: 1,
+            endLine: 8,
+          },
+        ],
+      });
+
+      expect({ cases: run.cases, gaps: run.gaps, darkSpots: run.darkSpots, undriven: run.undriven }).toStrictEqual({
+        cases: [],
+        gaps: [],
+        darkSpots: [],
+        undriven: [
+          {
+            name: '*module*',
+            reason: 'it runs at import time, so no case drove its branches',
+            startLine: 1,
+            endLine: 8,
+          },
+        ],
+      });
     });
 
     // A run that reached NO exit is a real outcome, not a malformed record: the entry threw, or could
@@ -79,6 +111,14 @@ describe('runResultContract', () => {
     it('INVALID: {no gaps} => throws, since an omitted gap reads as full coverage', () => {
       expect(() => {
         return runResultContract.parse({ runId: 'r1', relPath: 'src/f.ts', cases: [] });
+      }).toThrow(/Required/u);
+    });
+
+    // Optional would let the one run that most needs this channel — a file with nothing to drive —
+    // be the run that omits it.
+    it('INVALID: {no undriven} => throws, since an omitted admission reads as full coverage', () => {
+      expect(() => {
+        return runResultContract.parse({ runId: 'r1', relPath: 'src/f.ts', cases: [], gaps: [], darkSpots: [] });
       }).toThrow(/Required/u);
     });
   });

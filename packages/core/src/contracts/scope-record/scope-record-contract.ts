@@ -7,11 +7,16 @@
  *   is a tree but its output is a FLAT list of entry-rooted records, so a nested function is a
  *   sibling record with a longer path and every downstream consumer reads one uniform shape.
  *
+ *   The scope's EXTENT rides here because the walk is the only model that measures it: it holds the
+ *   node, and every projection downstream is pure. Both ends travel together — a consumer that marks
+ *   a scope on the source needs the region, not its first line, and re-deriving the second end from
+ *   anything but the node it came from is the reconstruction this architecture exists to forbid.
+ *
  * USAGE:
  * scopeRecordContract.parse({
  *   scopePath: ['Classifier', 'classify'], name: 'classify', kind: 'function', exported: true,
  *   params: [{ name: 'value', type: { kind: 'number' } }], returnType: { kind: 'string' },
- *   line: 2, branches: [], exits: [],
+ *   startLine: 2, endLine: 6, branches: [], exits: [],
  * });
  * // Returns a validated ScopeRecord (branded fields)
  */
@@ -35,7 +40,8 @@ export const scopeRecordContract = z.object({
   access: entryAccessContract,
   params: z.array(paramDescriptorContract),
   returnType: typeDescriptorContract,
-  line: lineNumberContract,
+  startLine: lineNumberContract,
+  endLine: lineNumberContract,
   branches: z.array(branchNodeContract),
   exits: z.array(exitNodeContract),
 });

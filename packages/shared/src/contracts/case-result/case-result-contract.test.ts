@@ -9,8 +9,8 @@ describe('caseResultContract', () => {
         testCase: {
           reachesExit: 'grade/return@then',
           arrange: [
-            { param: 'score', value: 6 },
-            { param: 'bonus', value: 2 },
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'param', param: 'bonus', value: 2 },
           ],
         },
         status: 'passed',
@@ -31,8 +31,8 @@ describe('caseResultContract', () => {
         testCase: {
           reachesExit: 'grade/return@then',
           arrange: [
-            { param: 'score', value: 6 },
-            { param: 'bonus', value: 2 },
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'param', param: 'bonus', value: 2 },
           ],
         },
         status: 'failed',

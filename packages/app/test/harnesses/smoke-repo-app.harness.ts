@@ -69,9 +69,22 @@ export const smokeRepoAppHarness = (): {
           writeFileSync(configPath, original);
           reject(error);
         });
-        child.on('close', (code) => {
+        // A signal-killed compile reports code=null and names the signal instead; Node sets exactly one
+        // of the two. Reporting that as an exit code would have to invent one, and the only value it
+        // could invent is a pass — after which the precondition holds, no manifest exists, and the
+        // scenario dies 30s later on a FILE_TREE that was never coming. The kill is the finding, so it
+        // is raised where it happens.
+        child.on('close', (code, signal) => {
           writeFileSync(configPath, original);
-          resolve(ExitCodeStub({ value: code ?? 0 }));
+          if (code === null) {
+            reject(
+              new Error(
+                `assayer: the CLI compile was killed by ${String(signal)} before it could write a cache manifest, so this test has no compiled surface to read. Re-run it; if the kill repeats, run \`node ${cliEntry} status\` in a temp config dir pointed at ${smokeRepoPath} to see what the CLI is dying of.`,
+              ),
+            );
+            return;
+          }
+          resolve(ExitCodeStub({ value: code }));
         });
       });
     },

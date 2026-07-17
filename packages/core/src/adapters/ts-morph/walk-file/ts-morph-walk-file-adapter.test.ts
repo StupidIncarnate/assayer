@@ -12,7 +12,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [],
+        probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 0 }],
         nodes: [],
         scopes: [
           ScopeRecordStub({
@@ -20,10 +20,11 @@ describe('tsMorphWalkFileAdapter', () => {
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 1,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 1 }],
           }),
         ],
@@ -40,17 +41,20 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [{ id: '*module*/classify/return@top', kind: 'exit', start: 59, end: 64 }],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 68 },
+          { id: '*module*/classify/return@top', kind: 'exit', start: 59, end: 64 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 4,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
           }),
           ScopeRecordStub({
@@ -87,6 +91,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 128 },
           { id: '*module*/outer/inner/return@top', kind: 'exit', start: 96, end: 97 },
           { id: '*module*/outer/return@top', kind: 'exit', start: 112, end: 124 },
         ],
@@ -96,16 +101,19 @@ describe('tsMorphWalkFileAdapter', () => {
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 7,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 7 }],
           }),
           ScopeRecordStub({
             scopePath: ['*module*', 'outer'],
             name: 'outer',
             returnType: { kind: 'number' },
+            startLine: 1,
+            endLine: 6,
             exits: [{ coverageId: '*module*/outer/return@top', kind: 'return', guardPath: [], line: 5 }],
           }),
           ScopeRecordStub({
@@ -116,7 +124,8 @@ describe('tsMorphWalkFileAdapter', () => {
             access: { kind: 'unreachable' },
             params: [{ name: 'n', type: { kind: 'number' } }],
             returnType: { kind: 'number' },
-            line: 2,
+            startLine: 2,
+            endLine: 4,
             exits: [{ coverageId: '*module*/outer/inner/return@top', kind: 'return', guardPath: [], line: 3 }],
           }),
         ],
@@ -152,22 +161,27 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [{ id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 73, end: 78 }],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
+          { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 73, end: 78 },
+        ],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 6,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 6 }],
           }),
           ScopeRecordStub({
             scopePath: ['*module*', 'Classifier', 'classify'],
-            line: 2,
+            startLine: 2,
+            endLine: 4,
             // Reached through an instance, never as a module property.
             access: { kind: 'method', className: 'Classifier', constructable: true },
             exits: [{ coverageId: '*module*/Classifier/classify/return@top', kind: 'return', guardPath: [], line: 3 }],
@@ -200,23 +214,27 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [{ id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 66, end: 71 }],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 79 },
+          { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 66, end: 71 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 6,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 6 }],
           }),
           ScopeRecordStub({
             scopePath: ['*module*', 'Classifier', 'classify'],
             exported: false,
-            line: 2,
+            startLine: 2,
+            endLine: 4,
             // Still a method — `access` says HOW it is reached, `exported` says WHETHER it can be.
             access: { kind: 'method', className: 'Classifier', constructable: true },
             exits: [{ coverageId: '*module*/Classifier/classify/return@top', kind: 'return', guardPath: [], line: 3 }],
@@ -249,17 +267,29 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [{ id: '*module*/run/return@top', kind: 'exit', start: 58, end: 77 }],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 81 },
+          { id: '*module*/run/return@top', kind: 'exit', start: 58, end: 77 },
+          // The callback's own exit. A concise arrow's body IS its return, so the site is that
+          // expression and the probe wraps it — passing the value through, exactly as `return x` is.
+          {
+            id: '*module*/run/fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,id:n/return@top',
+            kind: 'exit',
+            start: 75,
+            end: 76,
+          },
+        ],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 4,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
           }),
           ScopeRecordStub({
@@ -277,7 +307,8 @@ describe('tsMorphWalkFileAdapter', () => {
             access: { kind: 'unreachable' },
             params: [{ name: 'n', type: { kind: 'number' } }],
             returnType: { kind: 'number' },
-            line: 2,
+            startLine: 2,
+            endLine: 2,
             exits: [
               {
                 coverageId: '*module*/run/fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,id:n/return@top',
@@ -324,17 +355,21 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [{ id: '*module*/sumAll/return@top', kind: 'exit', start: 136, end: 141 }],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 145 },
+          { id: '*module*/sumAll/return@top', kind: 'exit', start: 136, end: 141 },
+        ],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 8,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 8 }],
           }),
           ScopeRecordStub({
@@ -342,6 +377,8 @@ describe('tsMorphWalkFileAdapter', () => {
             name: 'sumAll',
             params: [{ name: 'items', type: { kind: 'unknown', text: 'number[]' } }],
             returnType: { kind: 'number' },
+            startLine: 1,
+            endLine: 7,
             exits: [{ coverageId: '*module*/sumAll/return@top', kind: 'return', guardPath: [], line: 6 }],
           }),
         ],
@@ -372,17 +409,20 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [{ id: '*module*/pick/return@top', kind: 'exit', start: 55, end: 71 }],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 75 },
+          { id: '*module*/pick/return@top', kind: 'exit', start: 55, end: 71 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 4,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
           }),
           ScopeRecordStub({
@@ -419,23 +459,28 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        probeSites: [{ id: '*module*/greet/return@top', kind: 'exit', start: 77, end: 82 }],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
+          { id: '*module*/greet/return@top', kind: 'exit', start: 77, end: 82 }],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
             name: '*module*',
             kind: 'module',
             exported: false,
-            access: { kind: 'unreachable' },
+            access: { kind: 'module' },
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
-            line: 1,
+            startLine: 1,
+            endLine: 5,
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 5 }],
           }),
           ScopeRecordStub({
             scopePath: ['*module*', 'greet'],
             name: 'greet',
             params: [{ name: 'name', type: { kind: 'string' } }],
+            startLine: 1,
+            endLine: 4,
             exits: [{ coverageId: '*module*/greet/return@top', kind: 'return', guardPath: [], line: 3 }],
           }),
         ],

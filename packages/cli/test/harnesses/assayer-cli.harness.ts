@@ -5,8 +5,7 @@
  *   nothing. A test seeds an assayer.config.json / source files / a corrupt cache, then spawns the
  *   CLI as a child process with that dir as cwd and captures its stdout, stderr, and exit code.
  *   Owns all node:fs / node:child_process access so the colocated .integration.test.ts imports only
- *   this harness + stubs. Requires `tsc --build tsconfig.build.json` first so dist/bin/assayer.js
- *   exists.
+ *   this harness + stubs.
  *
  * USAGE:
  * const cli = assayerCliHarness();

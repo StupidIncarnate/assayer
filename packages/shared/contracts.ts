@@ -85,6 +85,12 @@ export * from './src/contracts/coverage-id/coverage-id.stub';
 export * from './src/contracts/representative-value/representative-value-contract';
 export * from './src/contracts/representative-value/representative-value.stub';
 
+export * from './src/contracts/env-var-name/env-var-name-contract';
+export * from './src/contracts/env-var-name/env-var-name.stub';
+
+export * from './src/contracts/env-value/env-value-contract';
+export * from './src/contracts/env-value/env-value.stub';
+
 export * from './src/contracts/predicate/predicate-contract';
 export * from './src/contracts/predicate/predicate.stub';
 
@@ -102,6 +108,9 @@ export * from './src/contracts/syntax-kind-name/syntax-kind-name.stub';
 
 export * from './src/contracts/dark-spot/dark-spot-contract';
 export * from './src/contracts/dark-spot/dark-spot.stub';
+
+export * from './src/contracts/undriven-entry/undriven-entry-contract';
+export * from './src/contracts/undriven-entry/undriven-entry.stub';
 
 export * from './src/contracts/guard-step/guard-step-contract';
 export * from './src/contracts/guard-step/guard-step.stub';
@@ -123,6 +132,9 @@ export * from './src/contracts/exit-node/exit-node.stub';
 
 export * from './src/contracts/derived-test-case/derived-test-case-contract';
 export * from './src/contracts/derived-test-case/derived-test-case.stub';
+
+export * from './src/contracts/arrange-text/arrange-text-contract';
+export * from './src/contracts/arrange-text/arrange-text.stub';
 
 export * from './src/contracts/line-enrichment/line-enrichment-contract';
 export * from './src/contracts/line-enrichment/line-enrichment.stub';

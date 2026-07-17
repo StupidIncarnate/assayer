@@ -13,7 +13,7 @@ describe('configGenerateBroker', () => {
       const result = await configGenerateBroker({ configDir: '/repo' });
 
       expect(proxy.getWrittenPath()).toBe('/repo/assayer.config.json');
-      expect(proxy.getWrittenContent()).toBe('{"version":"1","repoRoot":".","exclude":[]}');
+      expect(proxy.getWrittenContent()).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}');
       expect(result).toStrictEqual(AssayerConfigStub());
     });
   });

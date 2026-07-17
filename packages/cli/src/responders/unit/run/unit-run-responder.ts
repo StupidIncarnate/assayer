@@ -13,8 +13,13 @@
  *   `configDir` and `root` are two facts, not one: the cache lives under the config, the SOURCE lives
  *   under the root, and a config with a `repoRoot` puts them in different trees.
  *
+ *   A dark spot only fails the run when the repo asked for that (`darkSpots: 'error'`). It is
+ *   ASSAYER's debt — syntax it has no handler for — so failing by default would break every build
+ *   over work the caller cannot do. The report says so either way; the severity decides only whether
+ *   the exit code follows.
+ *
  * USAGE:
- * await UnitRunResponder({ configDir: '/repo', root: '/repo/smoke-repo', argv: ['src/a.ts'] });
+ * await UnitRunResponder({ configDir: '/repo', root: '/repo/smoke-repo', argv: ['src/a.ts'], darkSpots: 'warn' });
  * // Returns the report, or throws it when any case failed
  */
 import { runPathsBroker } from '@assayer/core/brokers';
@@ -30,10 +35,12 @@ export const UnitRunResponder = async ({
   configDir,
   root,
   argv,
+  darkSpots,
 }: {
   configDir: string;
   root: string;
   argv: readonly string[];
+  darkSpots: string;
 }): Promise<CliOutput> => {
   const paths = utilParseArgsAdapter({ argv }).map(String);
 
@@ -52,8 +59,9 @@ export const UnitRunResponder = async ({
 
   const report = unitReportFormatTransformer({ runs });
   const failed = runs.some((run) => run.cases.some((testCase) => String(testCase.status) === 'failed'));
+  const darkened = darkSpots === 'error' && runs.some((run) => run.darkSpots.length > 0);
 
-  if (failed) {
+  if (failed || darkened) {
     throw new CliExactOutputError({ message: String(report) });
   }
 

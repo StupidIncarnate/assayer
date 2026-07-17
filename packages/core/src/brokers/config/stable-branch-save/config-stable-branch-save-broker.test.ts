@@ -17,13 +17,14 @@ describe('configStableBranchSaveBroker', () => {
 
       expect(proxy.getWrittenPath()).toBe('/repo/assayer.config.json');
       expect(proxy.getWrittenContent()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main"}'
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn"}'
       );
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',
         exclude: [],
         stableBranch: 'main',
+        darkSpots: 'warn',
       });
     });
 
@@ -42,13 +43,14 @@ describe('configStableBranchSaveBroker', () => {
       });
 
       expect(proxy.getWrittenContent()).toBe(
-        '{"version":"1","repoRoot":"./smoke-repo","exclude":["dist"],"stableBranch":"master"}'
+        '{"version":"1","repoRoot":"./smoke-repo","exclude":["dist"],"stableBranch":"master","darkSpots":"warn"}'
       );
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: './smoke-repo',
         exclude: ['dist'],
         stableBranch: 'master',
+        darkSpots: 'warn',
       });
     });
   });

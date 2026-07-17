@@ -15,8 +15,10 @@ import type { CompiledTreeStub, CompiledFileViewStub } from '@assayer/shared/con
 
 export const SurfaceExplorerWidgetProxy = (): {
   setupTree: (params: { tree: ReturnType<typeof CompiledTreeStub> }) => void;
+  failTree: (params: { message: string }) => void;
   setupFile: (params: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }) => void;
   failFile: () => void;
+  failRun: (params: { message: string }) => void;
   clickFile: (params: { label: string }) => Promise<void>;
   clickRun: () => Promise<void>;
   hideRunConsole: () => Promise<void>;
@@ -44,11 +46,19 @@ export const SurfaceExplorerWidgetProxy = (): {
     setupTree: ({ tree }: { tree: ReturnType<typeof CompiledTreeStub> }): void => {
       treeProxy.setupTree({ tree });
     },
+    // Takes the message a real resolver would raise, so the test can assert the widget prints THAT
+    // sentence rather than one the widget composed.
+    failTree: ({ message }: { message: string }): void => {
+      treeProxy.rejects({ error: new Error(message) });
+    },
     setupFile: ({ relPath, fileView }: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }): void => {
       fileProxy.setupFile({ relPath, fileView });
     },
     failFile: (): void => {
       fileProxy.fails();
+    },
+    failRun: ({ message }: { message: string }): void => {
+      runProxy.runFails({ message });
     },
     clickFile: async ({ label }: { label: string }): Promise<void> => {
       await userEvent.click(screen.getByText(label));

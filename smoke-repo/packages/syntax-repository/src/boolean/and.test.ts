@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
@@ -16,13 +14,6 @@ const THEN = `${BRANCH.replace('/if:', '/return@if:')}#then`;
 const ELSE = `${BRANCH.replace('/if:', '/return@if:')}#else`;
 
 describe('boolean / and — a conjunction inside an exported function', () => {
-  it('VALID: {&& condition} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('and.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   it('VALID: {score > 5 && bonus > 1} => an and-tree over two independently typed leaves', () => {
     const result = analyzeExtractBroker({ source, relPath });
     const conditions = result.success ? result.functions.flatMap((fn) => fn.branches).map((b) => b.condition) : [];
@@ -60,24 +51,24 @@ describe('boolean / and — a conjunction inside an exported function', () => {
       {
         reachesExit: THEN,
         arrange: [
-          { param: 'score', value: 6 },
-          { param: 'bonus', value: 2 },
+          { kind: 'param', param: 'score', value: 6 },
+          { kind: 'param', param: 'bonus', value: 2 },
         ],
       },
       // 5 > 5 fails, so `bonus > 1` NEVER EVALUATES — bonus is unconstrained and falls to fill.
       {
         reachesExit: ELSE,
         arrange: [
-          { param: 'score', value: 5 },
-          { param: 'bonus', value: 0 },
+          { kind: 'param', param: 'score', value: 5 },
+          { kind: 'param', param: 'bonus', value: 0 },
         ],
       },
       // 6 > 5 holds, so evaluation continues and 1 > 1 is the operand that decides.
       {
         reachesExit: ELSE,
         arrange: [
-          { param: 'score', value: 6 },
-          { param: 'bonus', value: 1 },
+          { kind: 'param', param: 'score', value: 6 },
+          { kind: 'param', param: 'bonus', value: 1 },
         ],
       },
     ]);

@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { registerModuleMock, registerSpyOn } from '@dungeonmaster/testing/register-mock';
 
+import { replyValueLayerAdapterProxy } from './reply-value-layer-adapter.proxy';
+
 // Electron is unavailable in jest; replace the module with a minimal preload-context double.
 // `on`/`removeAllListeners` are part of it because the bridge does not only invoke: run output is
 // PUSHED from main, so the preload subscribes as well as asks.
@@ -18,9 +20,11 @@ registerModuleMock({
 
 export const electronPreloadBridgeAdapterProxy = (): {
   exposedBridgeKey: () => unknown;
+  mainAnswers: ({ valueRaw }: { valueRaw: unknown }) => void;
+  mainFails: ({ message }: { message: string }) => void;
   triggerGetCompiledTree: () => Promise<void>;
   triggerGetCompiledFile: ({ relPath }: { relPath: string }) => Promise<void>;
-  triggerRunFile: ({ relPath }: { relPath: string }) => Promise<void>;
+  triggerRunFile: ({ relPath }: { relPath: string }) => Promise<unknown>;
   triggerGetSavedRun: ({ relPath }: { relPath: string }) => Promise<void>;
   triggerOnRunOutput: () => void;
   triggerUnsubscribeRunOutput: () => void;
@@ -31,11 +35,18 @@ export const electronPreloadBridgeAdapterProxy = (): {
   invokedChannels: () => unknown[];
   lastInvokeArgs: () => unknown[];
 } => {
+  // Bare-invoked: the unwrap layer is pure, so it runs REAL here — a test asserting what the bridge
+  // answers is asserting the real envelope being read, not a double of it.
+  replyValueLayerAdapterProxy();
+
   const exposeSpy = registerSpyOn({ object: contextBridge, method: 'exposeInMainWorld' });
   const invokeSpy = registerSpyOn({ object: ipcRenderer, method: 'invoke' });
   const onSpy = registerSpyOn({ object: ipcRenderer, method: 'on' });
   const removeSpy = registerSpyOn({ object: ipcRenderer, method: 'removeAllListeners' });
-  invokeSpy.mockResolvedValue(undefined);
+  // Main answers with an IpcReply on every channel, never a bare payload, so the default has to be a
+  // reply too — a bare `undefined` here would be a shape main cannot send, and every bridge method
+  // would reject on it.
+  invokeSpy.mockResolvedValue({ success: true, valueRaw: undefined });
 
   // The proxy subscribes and records, so a test never needs its own collector to see what arrived.
   const state: { unsubscribe: (() => void) | undefined; chunks: unknown[] } = {
@@ -48,14 +59,26 @@ export const electronPreloadBridgeAdapterProxy = (): {
 
   return {
     exposedBridgeKey: (): unknown => exposeSpy.mock.calls.at(-1)?.[0],
+    mainAnswers: ({ valueRaw }: { valueRaw: unknown }): void => {
+      invokeSpy.mockResolvedValue({ success: true, valueRaw });
+    },
+    // Stands up a main process that FAILED. The message travels as data because that is what main
+    // does — so a test asserting what the renderer sees is asserting the real wire shape.
+    mainFails: ({ message }: { message: string }): void => {
+      invokeSpy.mockResolvedValue({ success: false, message });
+    },
     triggerGetCompiledTree: async (): Promise<void> => {
       await getApi()?.getCompiledTree?.();
     },
     triggerGetCompiledFile: async ({ relPath }: { relPath: string }): Promise<void> => {
       await getApi()?.getCompiledFile?.({ relPath });
     },
-    triggerRunFile: async ({ relPath }: { relPath: string }): Promise<void> => {
-      await getApi()?.runFile?.({ relPath });
+    // Hands back what the bridge answered (and rejects with what it threw), because for run the
+    // ANSWER is the thing under test: a failed run's message is product surface, not a side effect.
+    triggerRunFile: async ({ relPath }: { relPath: string }): Promise<unknown> => {
+      const answer: unknown = await getApi()?.runFile?.({ relPath });
+
+      return answer;
     },
     triggerGetSavedRun: async ({ relPath }: { relPath: string }): Promise<void> => {
       await getApi()?.getSavedRun?.({ relPath });

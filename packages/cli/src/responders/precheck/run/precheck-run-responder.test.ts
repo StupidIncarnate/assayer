@@ -21,6 +21,7 @@ describe('PrecheckRunResponder', () => {
       expect(result).toStrictEqual({
         configDir: filePathContract.parse('/repo'),
         root: filePathContract.parse('/repo'),
+        config,
       });
     });
 
@@ -40,6 +41,7 @@ describe('PrecheckRunResponder', () => {
       expect(result).toStrictEqual({
         configDir: filePathContract.parse('/repo'),
         root: filePathContract.parse('/repo/smoke-repo'),
+        config,
       });
     });
 

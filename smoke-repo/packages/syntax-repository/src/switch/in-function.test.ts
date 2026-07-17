@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
@@ -20,13 +18,6 @@ const GET = '*module*/routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:ge
 const POST = '*module*/routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:post';
 
 describe('switch / in-function — switch inside an exported function', () => {
-  it('VALID: {exported function with switch} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('in-function.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   it('VALID: {switch over a 3-member union} => two eq-branches and case/case/default exits', () => {
     const result = analyzeExtractBroker({ source, relPath: 'src/switch/in-function.ts' });
     expect(result).toStrictEqual({

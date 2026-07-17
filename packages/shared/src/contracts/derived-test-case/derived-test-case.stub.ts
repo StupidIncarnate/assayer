@@ -6,6 +6,6 @@ import type { DerivedTestCase } from './derived-test-case-contract';
 export const DerivedTestCaseStub = ({ ...props }: StubArgument<DerivedTestCase> = {}): DerivedTestCase =>
   derivedTestCaseContract.parse({
     reachesExit: 'formatGreeting/return@if-then',
-    arrange: [{ param: 'name', value: '' }],
+    arrange: [{ kind: 'param', param: 'name', value: '' }],
     ...props,
   });

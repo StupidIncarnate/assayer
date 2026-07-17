@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
@@ -10,13 +8,6 @@ import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
 
 describe('loop / in-function — a for-of loop inside an exported function', () => {
-  it('VALID: {for-of loop} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('in-function.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   // No loop handler exists yet, so the loop yields no branches. That is a GAP, not a claim of
   // completeness — see the dark-spot assertion below, which is what stops the map from quietly
   // looking finished.

@@ -7,12 +7,12 @@ describe('configValidateBroker', () => {
       configValidateBrokerProxy();
 
       const result = configValidateBroker({
-        config: { version: '1', repoRoot: '.', exclude: [] },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn' },
       });
 
       expect(result).toStrictEqual({
         success: true,
-        config: { version: '1', repoRoot: '.', exclude: [] },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn' },
       });
     });
   });
@@ -22,7 +22,7 @@ describe('configValidateBroker', () => {
       configValidateBrokerProxy();
 
       const result = configValidateBroker({
-        config: { version: '1', repoRoot: 123, exclude: [] },
+        config: { version: '1', repoRoot: 123, exclude: [], darkSpots: 'warn' },
       });
 
       expect(result).toStrictEqual({

@@ -16,13 +16,15 @@ export const CaseSetStub = ({ ...props }: StubArgument<CaseSet> = {}): CaseSet =
           {
             reachesExit: 'grade/return@then',
             arrange: [
-              { param: 'score', value: 6 },
-              { param: 'bonus', value: 2 },
+              { kind: 'param', param: 'score', value: 6 },
+              { kind: 'param', param: 'bonus', value: 2 },
             ],
           },
         ],
       },
     ],
     gaps: [],
+    darkSpots: [],
+    undriven: [],
     ...props,
   });

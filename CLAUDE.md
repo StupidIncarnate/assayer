@@ -194,6 +194,36 @@ injected dungeonmaster standards — Assayer never verifies itself with its own
 config format. Integration shape: run the CLI/analyzer against fixture repos,
 assert outputs (generated skeletons, EXACT error text, coverage reports).
 
+**Every specimen owes every applicable feature, and the matrix decides which.** The
+smoke-repo catalogue is walked off disk, never listed, so new syntax cannot arrive
+untested — an undeclared specimen fails rather than being skipped, and a suite that
+skipped a file looks exactly like one that passed it. A specimen DECLARES what it is
+(`specimen-registry.ts`); the harness decides what that owes. The declaration is
+authored by reading the file and NEVER generated from analyzer output — the matrix
+must be able to disagree with the analyzer, which is P4 one rung up. See
+`packages/core/CLAUDE.md` §6 before adding syntax.
+
+**Three admissions, never merged — they differ in WHO OWES the work.** A GAP is the
+caller's: "understood, but I cannot construct it" — a harness closes it. A DARK SPOT
+is ASSAYER's: "I never understood this syntax" — no harness can help, and telling
+the reader to fix their own for-loop is advice they cannot act on. UNDRIVEN is
+Assayer's too but a different debt: "understood perfectly, and my execution model
+cannot reach it" — a private is reachable only through its callers; a module scope
+whose branching turns only on values welded into its own source has no input to vary.
+No harness closes those, and the two owe DIFFERENT text because only one names a
+missing feature: call-graph following would reach the private, while a welded `const`
+is a branch decided at authoring time and no feature will ever drive it — so that one
+says what to change instead (read the operand from the environment). Never write an
+admission that reads as permanent when a feature would close it, and never write one
+that promises a feature that cannot exist. All three ride on `FileAnalysis`, not merely the run artifact: the
+reads-as-complete lie lives in the ANALYSIS, so a file admits them the moment it is
+opened, before anything runs. They report on separate lines and must never be merged
+— folding two together destroys the only thing they say. Severity is the GLOBAL `darkSpots:
+'warn' | 'error'` config toggle, defaulting to `warn` because failing a build over
+work only Assayer can do punishes the wrong party; it flips to `error` once the
+handler set covers the main constructs. Per-file suppression does not exist here
+either — same rule as every other don't-care.
+
 ## Anti-patterns (each one broke a real repo — see case-studies.md)
 
 - Exposing a raw runner control "just this once."

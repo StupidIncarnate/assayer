@@ -9,6 +9,12 @@
  *   already returns. That single rule is what makes a bare top-level `if` and an `if` inside a
  *   function the same handler instead of two near-copies.
  *
+ *   Each completion emits its PROBE SITE here too, from the same expression that mints the exit's id,
+ *   for the same reason a leaf does: derive the sites in a second pass and the runtime observation
+ *   could key under an id the analyzer never produced. The site is the ARM, because a completion has
+ *   no expression to wrap — falling off the end is observable only by a statement at the position it
+ *   happens.
+ *
  * USAGE:
  * handleIfLayerAdapter({ node: ifStatement, context });
  * // Returns a HandlerResult with the branch, per-arm descents, and any completion exits
@@ -18,6 +24,7 @@ import type { IfStatement } from 'ts-morph';
 
 import { branchNodeContract, exitNodeContract, guardStepContract } from '@assayer/shared/contracts';
 
+import { probeSiteContract } from '../../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../../contracts/walk-node/walk-node-contract';
 import { exitCoverageIdTransformer } from '../../../transformers/exit-coverage-id/exit-coverage-id-transformer';
@@ -73,21 +80,31 @@ export const handleIfLayerAdapter = ({
         }
         const guardPath = [...context.guardPath, step];
         const first = Node.isBlock(statement) ? statement.getStatements()[0] : statement;
+        const exitId = exitCoverageIdTransformer({ kind: 'exit', guardPath, scopePath: context.scopePath });
         return [
-          exitNodeContract.parse({
-            coverageId: exitCoverageIdTransformer({ kind: 'exit', guardPath, scopePath: context.scopePath }),
-            kind: 'implicit',
-            guardPath,
-            line: (first ?? statement).getStartLineNumber(),
-          }),
+          {
+            exit: exitNodeContract.parse({
+              coverageId: exitId,
+              kind: 'implicit',
+              guardPath,
+              line: (first ?? statement).getStartLineNumber(),
+            }),
+            // The arm itself: the probe is appended to it, because reaching its end IS the exit.
+            site: probeSiteContract.parse({
+              id: exitId,
+              kind: 'complete',
+              start: statement.getStart(),
+              end: statement.getEnd(),
+            }),
+          },
         ];
       })
     : [];
 
   return handlerResultLayerAdapter({
     branches: [branch],
-    exits: completions,
-    probeSites: readout.sites,
+    exits: completions.map(({ exit }) => exit),
+    probeSites: [...readout.sites, ...completions.map(({ site }) => site)],
     nodes: [
       walkNodeContract.parse({
         kind: node.getKindName(),

@@ -28,6 +28,7 @@ import { Node } from 'ts-morph';
 
 import { exitNodeContract, paramDescriptorContract } from '@assayer/shared/contracts';
 
+import { probeSiteContract } from '../../../contracts/probe-site/probe-site-contract';
 import { scopeRecordContract } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../../contracts/walk-node/walk-node-contract';
@@ -80,31 +81,63 @@ export const handleFunctionLayerAdapter = ({
   // Three shapes: no body at all (an overload signature) exits nowhere; a concise arrow
   // (`(n) => n`) has no statement to return from, so its body IS the single exit; a block
   // simply ENDING is an exit, unless its last statement already accounts for every path.
+  //
+  // Each exit's PROBE SITE rides with it, minted from the same expression as its id — the property
+  // every site in this walk holds, and the reason a runtime observation cannot key under an id the
+  // analyzer never produced. The two shapes are observed differently because they ARE different: a
+  // concise arrow's exit is an expression, so the probe wraps it and passes its value through; a
+  // block simply ending has no expression at all, so the probe is appended as its last statement.
+  const returnCoverageId = exitCoverageIdTransformer({ kind: 'return', guardPath: [], scopePath: scoped.scopePath });
+  const endCoverageId = exitCoverageIdTransformer({ kind: 'exit', guardPath: [], scopePath: scoped.scopePath });
+  const falls = block !== undefined && !readAccountedLayerAdapter({ node: statements.at(-1) });
   const exits =
     block === undefined
       ? body === undefined
         ? []
         : [
             exitNodeContract.parse({
-              coverageId: exitCoverageIdTransformer({ kind: 'return', guardPath: [], scopePath: scoped.scopePath }),
+              coverageId: returnCoverageId,
               kind: 'return',
               guardPath: [],
               line: body.getStartLineNumber(),
             }),
           ]
-      : readAccountedLayerAdapter({ node: statements.at(-1) })
-        ? []
-        : [
+      : falls
+        ? [
             exitNodeContract.parse({
-              coverageId: exitCoverageIdTransformer({ kind: 'exit', guardPath: [], scopePath: scoped.scopePath }),
+              coverageId: endCoverageId,
               kind: 'implicit',
               guardPath: [],
               line: block.getEndLineNumber(),
             }),
-          ];
+          ]
+        : [];
+  const probeSites =
+    block === undefined
+      ? body === undefined
+        ? []
+        : [
+            probeSiteContract.parse({
+              id: returnCoverageId,
+              kind: 'exit',
+              start: body.getStart(),
+              end: body.getEnd(),
+            }),
+          ]
+      : falls
+        ? [
+            probeSiteContract.parse({
+              id: endCoverageId,
+              kind: 'complete',
+              start: block.getStart(),
+              end: block.getEnd(),
+            }),
+          ]
+        : [];
 
   return handlerResultLayerAdapter({
     exits,
+    probeSites,
     nodes: [
       walkNodeContract.parse({
         kind: node.getKindName(),
@@ -123,7 +156,8 @@ export const handleFunctionLayerAdapter = ({
       access,
       params,
       returnType,
-      line: node.getStartLineNumber(),
+      startLine: node.getStartLineNumber(),
+      endLine: node.getEndLineNumber(),
       branches: [],
       exits: [],
     }),

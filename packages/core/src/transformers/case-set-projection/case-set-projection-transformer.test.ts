@@ -19,10 +19,12 @@ describe('caseSetProjectionTransformer', () => {
             name: 'formatGreeting',
             access: { kind: 'named' },
             exitIds: ['formatGreeting/return@if-then'],
-            cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ param: 'name', value: '' }] }],
+            cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] }],
           },
         ],
         gaps: [],
+        darkSpots: [],
+        undriven: [],
       });
     });
 
@@ -55,7 +57,7 @@ describe('caseSetProjectionTransformer', () => {
           name: 'classify',
           access: { kind: 'method', className: 'Classifier', constructable: true },
           exitIds: ['formatGreeting/return@if-then'],
-          cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ param: 'name', value: '' }] }],
+          cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] }],
         },
       ]);
     });
@@ -162,8 +164,9 @@ describe('caseSetProjectionTransformer', () => {
 
   describe('entries nothing can call', () => {
     // The module scope is analyzable but not RUNNABLE: its branches fire at require time and there is
-    // no function to invoke. It owes nothing, so it is not a gap either.
-    it('EDGE: {a *module* scope entry} => neither run nor reported, since nothing can invoke it', () => {
+    // no function to invoke. It is not a gap — no harness reaches it — so it is dropped from the
+    // entries and admitted on the `undriven` channel the analysis already filled in.
+    it('EDGE: {a *module* scope entry} => not driven, and not a gap either', () => {
       const analysis = FileAnalysisStub({
         functions: [
           FunctionAnalysisStub({
@@ -177,6 +180,14 @@ describe('caseSetProjectionTransformer', () => {
             },
           }),
         ],
+        undriven: [
+          {
+            name: '*module*',
+            reason: 'it runs at import time, so no case drove its branches',
+            startLine: 1,
+            endLine: 8,
+          },
+        ],
       });
 
       const result = caseSetProjectionTransformer({
@@ -185,7 +196,18 @@ describe('caseSetProjectionTransformer', () => {
         modulePath: '/abs/src/pure-statement.ts',
       });
 
-      expect({ entries: result.entries, gaps: result.gaps }).toStrictEqual({ entries: [], gaps: [] });
+      expect({ entries: result.entries, gaps: result.gaps, undriven: result.undriven }).toStrictEqual({
+        entries: [],
+        gaps: [],
+        undriven: [
+          {
+            name: '*module*',
+            reason: 'it runs at import time, so no case drove its branches',
+            startLine: 1,
+            endLine: 8,
+          },
+        ],
+      });
     });
 
     it('EMPTY: {an entry with no derived cases} => dropped, since there is nothing to drive', () => {

@@ -10,11 +10,15 @@
  *   Returning only configDir made every caller re-derive the root, and a caller that skipped that
  *   step read source from the wrong tree.
  *
+ *   The resolved `config` comes back for the same reason: it is already in hand here, and a caller
+ *   that had to re-read it would be a second place to get it wrong.
+ *
  * USAGE:
- * const { configDir, root } = await PrecheckRunResponder({ repoPath: '/repo' });
- * // Returns the config's directory and the resolved source root; throws CliExactOutputError
- * // (from whichever layer failed) without running the later stages
+ * const { configDir, root, config } = await PrecheckRunResponder({ repoPath: '/repo' });
+ * // Returns the config's directory, the resolved source root and the config itself; throws
+ * // CliExactOutputError (from whichever layer failed) without running the later stages
  */
+import type { AssayerConfig } from '@assayer/shared/contracts';
 import type { FilePath } from '@assayer/core/contracts';
 import { analyzerHashBroker, compileResolveRootBroker } from '@assayer/core/brokers';
 
@@ -27,7 +31,7 @@ export const PrecheckRunResponder = async ({
   repoPath,
 }: {
   repoPath: string;
-}): Promise<{ configDir: FilePath; root: FilePath }> => {
+}): Promise<{ configDir: FilePath; root: FilePath; config: AssayerConfig }> => {
   const resolved = await ConfigResolveLayerResponder({ repoPath });
   const config = await StableBranchLayerResponder({
     config: resolved.config,
@@ -44,5 +48,6 @@ export const PrecheckRunResponder = async ({
   return {
     configDir: resolved.configDir,
     root: compileResolveRootBroker({ repoRoot: config.repoRoot, configDir: String(resolved.configDir) }),
+    config,
   };
 };

@@ -1,7 +1,15 @@
 /**
- * PURPOSE: THE injection recursion — visits one node, then calls ITSELF on each child, wrapping any
+ * PURPOSE: THE injection recursion — visits one node, then calls ITSELF on each child, observing any
  *   node whose range matches a probe site. Children are visited FIRST so a nested site (a leaf inside
- *   a condition inside a returned expression) is wrapped before its parent is.
+ *   a condition inside a returned expression) is observed before its parent is.
+ *
+ *   Two shapes of observation, because two shapes of thing are observed. An expression site is
+ *   WRAPPED in place, which is what preserves short-circuit: the probe sits exactly where the
+ *   expression sat, so an operand the language skips never calls it. A `complete` site is a statement
+ *   container, and the probe is APPENDED to it — falling off the end of an arm is an event with no
+ *   expression and no syntax to wrap, so the only place to observe it is the position it happens at.
+ *   An arm that is a bare statement becomes a block to hold the probe, which changes nothing about it:
+ *   an if-arm may be either, and a block introduces no scope a `let` in it could escape from anyway.
  *
  *   The range lookup reads the ORIGINAL node, never the visited one: a rewritten node is synthetic
  *   and has no position in the source at all. This is why the plan is content-hash keyed — offsets
@@ -39,15 +47,30 @@ export const probeVisitNodeLayerAdapter = ({
 
   const site = sites.find((candidate) => candidate.start === start && candidate.end === end);
 
-  if (site === undefined || !ts.isExpression(visited)) {
+  if (site === undefined) {
     return visited;
+  }
+
+  const probe = ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier('__P'), site.kind === 'cond' ? 'c' : 'x'),
+    undefined,
+    // A completion has no value to carry, so the probe reports `undefined` — the event IS the fact.
+    site.kind === 'complete'
+      ? [ts.factory.createStringLiteral(site.id), ts.factory.createIdentifier('undefined')]
+      : [ts.factory.createStringLiteral(site.id), visited as TS.Expression],
+  );
+
+  if (site.kind === 'complete') {
+    const statement = ts.factory.createExpressionStatement(probe);
+
+    if (ts.isBlock(visited)) {
+      return ts.factory.updateBlock(visited, [...visited.statements, statement]);
+    }
+
+    return ts.isStatement(visited) ? ts.factory.createBlock([visited, statement], true) : visited;
   }
 
   // Wrapping IN PLACE is what preserves short-circuit: the probe call sits exactly where the
   // expression sat, so an operand the language skips never calls it.
-  return ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier('__P'), site.kind === 'cond' ? 'c' : 'x'),
-    undefined,
-    [ts.factory.createStringLiteral(site.id), visited],
-  );
+  return ts.isExpression(visited) ? probe : visited;
 };

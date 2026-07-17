@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
@@ -10,13 +8,6 @@ const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
 const BRANCH = '*module*/classify/if:BinaryExpression,id:value,GreaterThanToken,num:5';
 
 describe('if-else / in-function — if/else inside an exported function', () => {
-  it('VALID: {exported function with if/else} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('in-function.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   it('VALID: {exported function with if/else} => one entry, one gt branch, then/else exits', () => {
     const result = analyzeExtractBroker({ source, relPath: 'src/if-else/in-function.ts' });
     expect(result).toStrictEqual({

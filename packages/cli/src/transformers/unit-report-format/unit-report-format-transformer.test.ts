@@ -22,7 +22,7 @@ describe('unitReportFormatTransformer', () => {
             CaseResultStub({
               status: 'failed',
               observedExit: 'grade/return@else',
-              testCase: { reachesExit: 'grade/return@then', arrange: [{ param: 'score', value: 6 }] },
+              testCase: { reachesExit: 'grade/return@then', arrange: [{ kind: 'param', param: 'score', value: 6 }] },
             }),
           ],
         }),
@@ -95,6 +95,52 @@ describe('unitReportFormatTransformer', () => {
       const result = unitReportFormatTransformer({ runs: [RunResultStub({ cases: [] })] });
 
       expect(String(result)).toBe('packages/syntax-repository/src/boolean/and.ts  0/0 passed');
+    });
+  });
+
+  describe('undriven logic', () => {
+    // Without this line the report above is the WHOLE report for a file of pure module-scope
+    // branching — `0/0 passed`, which is exactly what an empty file prints.
+    it('VALID: {a file whose only logic is undriven} => named beside the honest 0/0, not hidden by it', () => {
+      const runs = [
+        RunResultStub({
+          cases: [],
+          undriven: [
+            {
+              name: '*module*',
+              reason: 'it runs at import time, so no case drove its branches',
+              startLine: 1,
+              endLine: 8,
+            },
+          ],
+        }),
+      ];
+
+      const result = unitReportFormatTransformer({ runs });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/boolean/and.ts  0/0 passed\n' +
+          '  UNDRIVEN *module* — it runs at import time, so no case drove its branches',
+      );
+    });
+
+    // Three channels, three debts — a gap is the reader's to close, a dark spot is Assayer's blind
+    // spot, and this is Assayer's reach. Merging any two would tell the reader the wrong thing to do.
+    it('VALID: {a gap and an undriven entry} => separate lines, never merged', () => {
+      const runs = [
+        RunResultStub({
+          gaps: [{ name: 'find', reason: 'needs a harness' }],
+          undriven: [{ name: 'inner', reason: 'it is not exported', startLine: 2, endLine: 8 }],
+        }),
+      ];
+
+      const result = unitReportFormatTransformer({ runs });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/boolean/and.ts  1/1 passed\n' +
+          '  GAP  find — needs a harness\n' +
+          '  UNDRIVEN inner — it is not exported',
+      );
     });
   });
 });

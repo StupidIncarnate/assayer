@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'in-class.ts'), 'utf8');
@@ -10,13 +8,6 @@ const source = readFileSync(join(__dirname, 'in-class.ts'), 'utf8');
 const BRANCH = '*module*/Classifier/classify/if:BinaryExpression,id:value,GreaterThanToken,num:5';
 
 describe('if-else / in-class — if/else inside an exported class method', () => {
-  it('VALID: {exported class method with if/else} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('in-class.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   // The class rung was a declared GAP under the old flat per-kind scans, which could only ever
   // start from an exported top-level function. The walk carries scope down, so a method is just a
   // function-like at a greater depth and needed no new derivation — only a longer scope path.

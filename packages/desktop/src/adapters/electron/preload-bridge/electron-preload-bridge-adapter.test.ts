@@ -78,6 +78,50 @@ describe('electronPreloadBridgeAdapter', () => {
 
       expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:run', 'src/index.ts']);
     });
+
+    it('VALID: {main answers a run result} => resolves with the payload, unwrapped from the reply', async () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+      proxy.mainAnswers({ valueRaw: { verdicts: [] } });
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+      });
+
+      const result = await proxy.triggerRunFile({ relPath: 'src/index.ts' });
+
+      expect(result).toStrictEqual({ verdicts: [] });
+    });
+
+    // The renderer-facing half of the P1 guarantee. Electron would have built
+    // `Error invoking remote method 'assayer:run': Error: <message>` had main thrown; main answers
+    // instead, so what the UI catches is the broker's own sentence and nothing else. Asserting the
+    // WHOLE message is the assertion — a prefix reappearing anywhere fails it.
+    it('ERROR: {main failed} => rejects with the main-process message alone, with no Electron prefix', async () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+      proxy.mainFails({
+        message: 'assayer: the run produced no result for src/switch/pure-statement.ts.\n\nCannot find run.json',
+      });
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+      });
+
+      await expect(proxy.triggerRunFile({ relPath: 'src/switch/pure-statement.ts' })).rejects.toThrow(
+        new Error('assayer: the run produced no result for src/switch/pure-statement.ts.\n\nCannot find run.json'),
+      );
+    });
   });
 
   describe('onRunOutput()', () => {

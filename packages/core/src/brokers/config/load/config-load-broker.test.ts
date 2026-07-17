@@ -5,13 +5,13 @@ describe('configLoadBroker', () => {
   describe('valid config file', () => {
     it('VALID: {configPath: file with valid config JSON} => returns the parsed config', async () => {
       const proxy = configLoadBrokerProxy();
-      proxy.hasContent({ content: '{"version":"1","repoRoot":".","exclude":[]}' });
+      proxy.hasContent({ content: '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}' });
 
       const result = await configLoadBroker({ configPath: '/repo/assayer.config.json' });
 
       expect(result).toStrictEqual({
         success: true,
-        data: { version: '1', repoRoot: '.', exclude: [] },
+        data: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn' },
       });
     });
   });

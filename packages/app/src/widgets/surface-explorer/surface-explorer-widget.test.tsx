@@ -36,12 +36,15 @@ describe('SurfaceExplorerWidget', () => {
     });
   });
 
+  // The three ways to have no tree. They reach this widget identically and ask the reader for
+  // opposite things, so each owns a surface of its own — and each test below asserts the OTHER two
+  // are absent, since a shared prompt is exactly how they collapsed into one.
   describe('with no compiled surface', () => {
-    it('EMPTY: {tree with no nodes} => renders the empty-surface prompt', async () => {
+    it('EMPTY: {tree with no nodes} => renders the empty-surface prompt, and neither the loading nor the error surface', async () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -50,6 +53,65 @@ describe('SurfaceExplorerWidget', () => {
       });
 
       expect(getByTestId('SURFACE_EMPTY').textContent).toBe('No compiled surface — run assayer');
+      expect(queryByTestId('SURFACE_LOADING')).toBe(null);
+      expect(queryByTestId('SURFACE_ERROR')).toBe(null);
+    });
+
+    // Asserted synchronously, before the fetch's microtask resolves — the one moment `loading` is the
+    // whole truth. "Run assayer" here would be an instruction the reader cannot act on and does not
+    // need to: the app is working and simply has not answered yet.
+    it('EMPTY: {the tree fetch still in flight} => renders the loading surface, not the empty prompt', () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
+
+      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+
+      expect(getByTestId('SURFACE_LOADING').textContent).toBe('Reading the compiled surface…');
+      expect(queryByTestId('SURFACE_EMPTY')).toBe(null);
+      expect(queryByTestId('SURFACE_ERROR')).toBe(null);
+    });
+
+    // The bug this surface exists for: a corrupt manifest told the reader to run assayer, which cannot
+    // fix it, forever. The resolver's sentence names both namespaces in conflict — VERBATIM, because it
+    // was written to be acted on without a human.
+    it('ERROR: {the tree fetch rejects} => prints the resolver message verbatim, and never the empty prompt', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.failTree({
+        message:
+          'Cannot resolve current namespace: expected exactly one working-tree entry without a commit among [branch-a, branch-b]',
+      });
+
+      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
+        },
+      });
+
+      expect(getByTestId('SURFACE_ERROR').textContent).toBe(
+        'Cannot resolve current namespace: expected exactly one working-tree entry without a commit among [branch-a, branch-b]',
+      );
+      expect(queryByTestId('SURFACE_EMPTY')).toBe(null);
+      expect(queryByTestId('SURFACE_LOADING')).toBe(null);
+    });
+
+    // A failure must not be reachable through the empty prompt either: the explorer shell is what the
+    // reader would otherwise try to use to fix it, and there is no tree to hang it on.
+    it('ERROR: {the tree fetch rejects} => renders no header and no file tree', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.failTree({ message: 'Assayer preload bridge unavailable: window.assayerBridge was not exposed.' });
+
+      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
+        },
+      });
+
+      expect(queryByTestId('EXPLORER_HEADER')).toBe(null);
+      expect(queryByTestId('FILE_TREE')).toBe(null);
     });
   });
 
@@ -251,6 +313,77 @@ describe('SurfaceExplorerWidget', () => {
 
       expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       expect(getByRole('textbox').textContent).toBe('const appModule = 1;');
+    });
+
+    // Both panels are mounted with the SAME fileRun.error, so this is the only level at which the
+    // one-copy rule can be checked at all — either widget alone looks correct in isolation.
+    it('ERROR: {a run that could not happen} => the reason is printed once, by the detail panel', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
+      });
+      proxy.setupFile({
+        relPath: 'packages/web/app.tsx',
+        fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
+      });
+      proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
+
+      const { getByTestId, queryAllByText } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
+        },
+      });
+      await proxy.clickFile({ label: 'app.tsx' });
+      await proxy.clickRun();
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('RUN_ERROR')).toBeInTheDocument();
+        },
+      });
+
+      // Asserts WHICH surfaces carry the text, not merely that it appears: a second copy anywhere
+      // lands in this array and fails, naming the offender.
+      expect(
+        queryAllByText('assayer: the CLI is not built, so nothing can be run.').map((element) =>
+          element.getAttribute('data-testid'),
+        ),
+      ).toStrictEqual(['RUN_ERROR']);
+    });
+
+    // Not printing the reason must not make the console lie about the run being over.
+    it('ERROR: {a run that could not happen} => the console states Failed without repeating the reason', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
+      });
+      proxy.setupFile({
+        relPath: 'packages/web/app.tsx',
+        fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
+      });
+      proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
+        },
+      });
+      await proxy.clickFile({ label: 'app.tsx' });
+      await proxy.clickRun();
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Failed');
+        },
+      });
+
+      expect(getByTestId('RUN_CONSOLE_EMPTY').textContent).toBe(
+        'The CLI wrote nothing — the Tests panel has the reason.',
+      );
     });
 
     it('VALID: {hide the console} => the console closes and the explorer stays as it was', async () => {

@@ -32,6 +32,7 @@ import { probeSiteContract } from '../../../contracts/probe-site/probe-site-cont
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { readConditionLayerAdapter } from './read-condition-layer-adapter';
+import { readEnvOperandLayerAdapter } from './read-env-operand-layer-adapter';
 import { readOperandTypeLayerAdapter } from './read-operand-type-layer-adapter';
 
 export interface ConditionTreeReadout {
@@ -106,12 +107,17 @@ export const readConditionTreeLayerAdapter = ({
 
   const readout = readConditionLayerAdapter({ condition });
   const id = coverageIdContract.parse(`${branchCoverageId}#leaf${path.map((index) => `.${index}`).join('')}`);
+  // WHERE the operand's value came from — a different question from what its type is, asked of a
+  // different reader. Recorded wherever it is true; whether an entry can be driven through it is
+  // policy, and policy lives in the projections.
+  const envVarName = readEnvOperandLayerAdapter({ node: readout.operandNode });
 
   return {
     condition: conditionNodeContract.parse({
       kind: 'leaf',
       id,
       ...(readout.operandName === undefined ? {} : { operandParamName: readout.operandName }),
+      ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
       operandType: readOperandTypeLayerAdapter({
         node: readout.operandNode,
         context,

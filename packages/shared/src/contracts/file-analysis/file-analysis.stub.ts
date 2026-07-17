@@ -38,10 +38,11 @@ export const FileAnalysisStub = ({ ...props }: StubArgument<FileAnalysis> = {}):
             line: 3,
           },
         ],
-        cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ param: 'name', value: '' }] }],
+        cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] }],
       },
     ],
     enrichment: [{ line: 1, symbol: 'name', typeText: 'string' }],
     darkSpots: [],
+    undriven: [],
     ...props,
   });

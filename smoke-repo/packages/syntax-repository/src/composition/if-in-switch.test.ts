@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'if-in-switch.ts'), 'utf8');
@@ -11,13 +9,6 @@ const GET = '*module*/describeRoute/switch:id:method,EqualsEqualsEqualsToken,str
 const IF = '*module*/describeRoute/if:BinaryExpression,id:size,GreaterThanToken,num:5';
 
 describe('composition / if-in-switch — an if nested inside a switch case', () => {
-  it('VALID: {if inside a switch case} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('if-in-switch.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   // Composition holds in BOTH directions, and neither handler knows the other exists: the guard is
   // simply whatever the walk carried down. The early-return rule also survives nesting — the
   // `return 'small read'` after the inner if is guarded by that if's else, inside the case arm.

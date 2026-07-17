@@ -9,6 +9,11 @@ const dungeonmasterTransformers = require(path.join(testingRoot, 'ts-jest/transf
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  // Builds packages/*/dist before any test runs, so the integration suite (whose generated shim
+  // requires core's COMPILED adapters) can never prove old code while the unit suite proves new
+  // source. Absolute via __dirname, never <rootDir>: this base is spread into every package's config,
+  // where <rootDir> is that package — a relative path would resolve to five different places.
+  globalSetup: path.join(__dirname, 'scripts/jest-global-setup.js'),
   setupFilesAfterEnv: [path.join(testingRoot, 'src/jest.setup.js')],
   testMatch: ['**/src/**/*.test.ts', '**/src/**/*.test.tsx', '**/bin/**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],

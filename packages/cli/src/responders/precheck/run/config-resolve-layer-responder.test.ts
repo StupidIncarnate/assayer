@@ -7,12 +7,12 @@ describe('ConfigResolveLayerResponder', () => {
     it('VALID: {repoPath: "/repo", config found in repoPath itself} => returns the loaded config, configDir, and configPath without generating a new config', async () => {
       const proxy = ConfigResolveLayerResponderProxy();
       proxy.configLivesIn({ levelsBelow: 0 });
-      proxy.hasContent({ content: '{"version":"1","repoRoot":".","exclude":[]}' });
+      proxy.hasContent({ content: '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}' });
 
       const result = await ConfigResolveLayerResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        config: { version: '1', repoRoot: '.', exclude: [] },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn' },
         configDir: '/repo',
         configPath: '/repo/assayer.config.json',
       });
@@ -28,7 +28,7 @@ describe('ConfigResolveLayerResponder', () => {
       const result = await ConfigResolveLayerResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        config: { version: '1', repoRoot: '.', exclude: [] },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn' },
         configDir: '/repo',
         configPath: '/repo/assayer.config.json',
       });

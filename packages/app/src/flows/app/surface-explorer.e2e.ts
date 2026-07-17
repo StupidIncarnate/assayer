@@ -12,22 +12,46 @@
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  *
  * The compiled surface is the granular syntax-repository: if-else and switch across three containment
- * rungs (pure-statement, in-function, in-class), the composition specimens, the loop dark-spot
- * ratchet, and the boolean connectives (and, or, not, mixed) = ts 15 tsx 0. Adding a specimen changes
- * the three surface assertions below (header count, file leaves, dirs) — see packages/core/CLAUDE.md.
+ * rungs (pure-statement, in-function, in-class), the composition specimens, the loop dark-spot ratchet,
+ * the two undriven-admission specimens, and the boolean connectives (and, or, not, mixed) = ts 17
+ * tsx 0. Adding a specimen changes the three surface assertions below (header count, file leaves,
+ * dirs) — see packages/core/CLAUDE.md.
  * The empty-state terminal is reached three ways via seeded/hermetic harnesses (emptySurfaceAppHarness,
  * noCacheAppHarness) and a cache-only-source proof (cacheOnlySourceAppHarness) — none depend on the
  * syntax-repository source. Each harness owns its own teardown.
+ * The tree-fetch FAILURE terminal sits beside them (unresolvableNamespaceAppHarness) and is the one
+ * scenario that can prove a resolver's P1 message reaches a reader intact: it asserts the exact
+ * sentence, so Electron's `Error invoking remote method` prefix reappearing fails the run. A unit test
+ * handing an Error straight to the widget cannot see that crossing at all.
  */
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 import { emptySurfaceAppHarness } from '../../../test/harnesses/empty-surface-app.harness';
 import { noCacheAppHarness } from '../../../test/harnesses/no-cache-app.harness';
 import { cacheOnlySourceAppHarness } from '../../../test/harnesses/cache-only-source-app.harness';
+import { unresolvableNamespaceAppHarness } from '../../../test/harnesses/unresolvable-namespace-app.harness';
+
+// The exact sentence currentNamespaceTransformer raises for the seeded two-working-tree manifest.
+// Asserted whole and unprefixed: this is the resolver's own text, and the reader acts on it.
+const UNRESOLVABLE_NAMESPACE_MESSAGE =
+  'Cannot resolve current namespace: expected exactly one working-tree entry without a commit among [branch-a, branch-b]';
 
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/switch/in-function.ts';
 const BOOLEAN_AND = 'packages/syntax-repository/src/boolean/and.ts';
+const UNDRIVEN_WELDED_OPERAND = 'packages/syntax-repository/src/undriven/welded-operand.ts';
+
+// The exact line the panel shows for undriven/welded-operand.ts — `UNDRIVEN <scope> — <reason>`, with
+// the reason authored in core's undrivenProjectionTransformer. Asserted whole for the same reason the
+// namespace message above is: this sentence is the entire content of the admission, and it is the only
+// thing standing between the reader and a file that reads as having nothing to test.
+const UNDRIVEN_WELDED_OPERAND_LINE =
+  'UNDRIVEN *module* — nothing about it varies, so no case could drive its branches anywhere they do ' +
+  'not already go: it runs at import time, and every operand its top-level branching turns on is ' +
+  'welded to a value written in this file. No harness closes this and no feature will — a branch with ' +
+  'one possible outcome is decided here, in the source, not at run time. Read an operand from the ' +
+  'environment instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X ' +
+  'an input, and each arm becomes a case that sets it and imports the module fresh.';
 
 test.describe('Compiled Surface Explorer', () => {
   const app = smokeRepoAppHarness();
@@ -38,6 +62,8 @@ test.describe('Compiled Surface Explorer', () => {
   wireHarnessLifecycle({ harness: noCacheApp });
   const cacheOnlyApp = cacheOnlySourceAppHarness();
   wireHarnessLifecycle({ harness: cacheOnlyApp });
+  const unresolvableApp = unresolvableNamespaceAppHarness();
+  wireHarnessLifecycle({ harness: unresolvableApp });
 
   test('VALID: {compiled syntax-repository cache, window opens at /} => header handshake + file tree, and clicking if-else/in-function.ts renders its cached source in CodeMirror', async () => {
     // Precondition: run the built CLI precheck, which compiles the syntax-repository into .assayer/cache.
@@ -48,13 +74,13 @@ test.describe('Compiled Surface Explorer', () => {
     const window = await app.launch();
 
     // obs-status-header (also proves obs-tree-bridge-call: header renders live cache data, so the
-    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 11 ts +
+    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 17 ts +
     // 0 tsx (the specimen .ts files; the co-located *.test.ts are excluded from the surface).
     // Branch segment is the current working-tree namespace (environment-dependent), so pin the stable
     // brand/root/repo prefix + exact counts and allow any non-space branch token.
     const header = window.getByTestId('EXPLORER_HEADER');
     await expect(header).toBeVisible({ timeout: 30_000 });
-    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 15 tsx 0$/u);
+    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 17 tsx 0$/u);
 
     // obs-tree-render: the left tree is rebuilt purely from the cache manifest relPaths. Assert the
     // exact file leaves (if-else and switch × three rungs each, plus the composition and loop
@@ -74,9 +100,11 @@ test.describe('Compiled Surface Explorer', () => {
       'nested-function.ts',
       'not.ts',
       'or.ts',
+      'private-function.ts',
       'pure-statement.ts',
       'pure-statement.ts',
       'switch-in-if.ts',
+      'welded-operand.ts',
     ]);
     const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
     expect([...dirNames].sort()).toStrictEqual([
@@ -88,6 +116,7 @@ test.describe('Compiled Surface Explorer', () => {
       'src',
       'switch',
       'syntax-repository',
+      'undriven',
     ]);
 
     // click-file -> request-file (obs-file-bridge-call): clicking the file (by its exact relPath, so
@@ -364,6 +393,40 @@ test.describe('Compiled Surface Explorer', () => {
     );
   });
 
+  test('VALID: {undriven/welded-operand.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async () => {
+    const exitCode = await app.compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNDRIVEN_WELDED_OPERAND}"]`).click();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+
+    // The whole assertion is the exactness, and only a REAL window can make it. The panel's own unit
+    // test hands the widget an UndrivenEntryStub carrying a reason the test itself wrote, so it would
+    // stay green if the admission never left the analyzer: `undriven` is derived in core, serialized
+    // into the cache blob, contract-parsed back out, and carried over Electron IPC before any pixel
+    // renders. Drop it at any one of those hops and every unit test still passes. This asserts the
+    // sentence core authored arrived intact across all of them.
+    const undriven = window.getByTestId('UNDRIVEN');
+    await expect(undriven).toBeVisible();
+    await expect(undriven).toHaveText(UNDRIVEN_WELDED_OPERAND_LINE);
+
+    // What dropping it would actually look like, and why it must be asserted rather than assumed.
+    // This file's ONLY entry is the undriven module scope, so with the admission gone the panel has
+    // no entries to list and falls to "No entries in this file" — a file of live top-level branching
+    // reported as having nothing to test. That is the reads-as-complete lie, and these two states are
+    // one `undriven.length` apart.
+    await expect(window.getByTestId('TESTS_EMPTY')).toHaveCount(0);
+
+    // The derived cases are real analyzer output and nothing will ever execute them, so the panel
+    // must not advertise them as pending tests, nor offer a Run whose verdict it already states in
+    // full. Both controls are absent because there is nothing here to drive.
+    await expect(window.getByTestId('TEST_CASE_ROW')).toHaveCount(0);
+    await expect(window.getByTestId('RUN_BUTTON')).toHaveCount(0);
+  });
+
   test('EMPTY: {cache manifest lists zero files, window opens at /} => explorer shows the "No compiled surface — run assayer" empty state and no file tree', async () => {
     // Precondition (seeded by the harness): a temp config dir whose cache manifest lists a single
     // working-tree namespace with ZERO files. window-open -> request-tree resolves an empty tree.
@@ -393,6 +456,33 @@ test.describe('Compiled Surface Explorer', () => {
     await expect(emptyState).toHaveText('No compiled surface — run assayer');
 
     // The [has files] branch is NOT taken: the header + file tree never render.
+    await expect(window.getByTestId('EXPLORER_HEADER')).toHaveCount(0);
+    await expect(window.getByTestId('FILE_TREE')).toHaveCount(0);
+  });
+
+  test('ERROR: {cache manifest has two working-tree namespaces, window opens at /} => the explorer prints the resolver\'s own message verbatim and unprefixed, and never the empty prompt', async () => {
+    // Precondition (seeded by the harness): a contract-valid manifest with TWO commitless namespace
+    // entries, so the desktop's currentNamespaceTransformer cannot resolve a current namespace.
+    // window-open -> request-tree REJECTS. This is the failure terminal beside the empty one above,
+    // and it must never be reachable through the same prompt: a reader told to "run assayer" here
+    // runs it and sees the identical sentence forever, because compiling is not what is broken.
+    const window = await unresolvableApp.launch();
+
+    // The whole assertion is the exactness. `toHaveText` with the full string proves three things at
+    // once that no unit test can: the resolver's sentence survived the IPC crossing intact, Electron's
+    // `Error invoking remote method '<channel>': ` prefix is ABSENT (the reply travelled as data, per
+    // ipcReplyTransformer), and the widget added no heading of its own. Naming the two conflicting
+    // namespaces is what makes it actionable — that detail is the reason verbatim matters.
+    const surfaceError = window.getByTestId('SURFACE_ERROR');
+    await expect(surfaceError).toBeVisible({ timeout: 30_000 });
+    await expect(surfaceError).toHaveText(UNRESOLVABLE_NAMESPACE_MESSAGE);
+
+    // The three no-tree states are distinct surfaces. A failure that also rendered the empty prompt
+    // would be the collapse this test exists to forbid.
+    await expect(window.getByTestId('SURFACE_EMPTY')).toHaveCount(0);
+    await expect(window.getByTestId('SURFACE_LOADING')).toHaveCount(0);
+
+    // The [has files] branch is NOT taken: there is no tree, so no shell to explore it with.
     await expect(window.getByTestId('EXPLORER_HEADER')).toHaveCount(0);
     await expect(window.getByTestId('FILE_TREE')).toHaveCount(0);
   });

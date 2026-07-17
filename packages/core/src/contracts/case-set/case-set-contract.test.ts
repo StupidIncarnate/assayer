@@ -16,14 +16,16 @@ describe('caseSetContract', () => {
               {
                 reachesExit: 'grade/return@then',
                 arrange: [
-                  { param: 'score', value: 6 },
-                  { param: 'bonus', value: 2 },
+                  { kind: 'param', param: 'score', value: 6 },
+                  { kind: 'param', param: 'bonus', value: 2 },
                 ],
               },
             ],
           },
         ],
         gaps: [],
+        darkSpots: [],
+        undriven: [],
       });
     });
 
@@ -31,6 +33,35 @@ describe('caseSetContract', () => {
     // empty set rather than to nothing: "analyzed, nothing runnable" must stay sayable.
     it('EMPTY: {no entries} => parses', () => {
       expect(CaseSetStub({ entries: [] }).entries).toStrictEqual([]);
+    });
+
+    // The pairing that makes an empty set MEAN something. Entries and undriven both empty is "there
+    // was nothing here"; empty entries beside a named undriven entry is "there is logic here and
+    // nothing drove it" — and the runner reads exactly this to decide there is nothing for Jest.
+    it('EMPTY: {no entries, one undriven} => parses, carrying why there is nothing to drive', () => {
+      const set = CaseSetStub({
+        entries: [],
+        undriven: [
+          {
+            name: '*module*',
+            reason: 'it runs at import time, so no case drove its branches',
+            startLine: 1,
+            endLine: 8,
+          },
+        ],
+      });
+
+      expect({ entries: set.entries, undriven: set.undriven }).toStrictEqual({
+        entries: [],
+        undriven: [
+          {
+            name: '*module*',
+            reason: 'it runs at import time, so no case drove its branches',
+            startLine: 1,
+            endLine: 8,
+          },
+        ],
+      });
     });
 
     // Required, not optional, for the reason darkSpots is: a set that can omit what it could not

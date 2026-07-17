@@ -17,18 +17,31 @@
  *   named, with a reason — never dropped silently and never driven anyway and reported as a failure
  *   of the analyzer.
  *
+ *   `darkSpots` and `undriven` are carried rather than recomputed: the shim writes the run artifact,
+ *   and the analysis is not in scope by then. All three are DIFFERENT admissions and never merge — a
+ *   gap is the caller's debt (understood, not constructable: write a harness), a dark spot is
+ *   Assayer's (syntax it never understood, which no harness can fix), and an undriven entry is
+ *   understood perfectly yet out of the runner's reach (a module scope, a private helper), which no
+ *   harness fixes either and which no dark spot may pretend was unparsed.
+ *
+ *   `undriven` is why an empty `entries` is a MEANINGFUL case set rather than a broken one. A file
+ *   whose only logic is a module-scope `if` derives nothing drivable, and this is the channel that
+ *   says so instead of letting it read as nothing to do.
+ *
  * USAGE:
- * caseSetContract.parse({ relPath: 'src/boolean/and.ts', modulePath: '/abs/and.ts', entries: [...], gaps: [] });
+ * caseSetContract.parse({ relPath: 'src/boolean/and.ts', modulePath: '/abs/and.ts', entries: [...], gaps: [], darkSpots: [], undriven: [] });
  * // Returns a validated CaseSet (branded fields)
  */
 import { z } from 'zod';
 
 import {
   coverageIdContract,
+  darkSpotContract,
   derivedTestCaseContract,
   entryAccessContract,
   relPathContract,
   symbolNameContract,
+  undrivenEntryContract,
 } from '@assayer/shared/contracts';
 
 export const caseSetContract = z.object({
@@ -48,6 +61,8 @@ export const caseSetContract = z.object({
       reason: z.string().min(1).brand<'CaseSetGapReason'>(),
     }),
   ),
+  darkSpots: z.array(darkSpotContract),
+  undriven: z.array(undrivenEntryContract),
 });
 
 export type CaseSet = z.infer<typeof caseSetContract>;

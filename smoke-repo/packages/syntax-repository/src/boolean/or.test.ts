@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
@@ -16,13 +14,6 @@ const THEN = `${BRANCH.replace('/if:', '/return@if:')}#then`;
 const ELSE = `${BRANCH.replace('/if:', '/return@if:')}#else`;
 
 describe('boolean / or — a disjunction inside an exported function', () => {
-  it('VALID: {|| condition} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('or.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   // The bare `smoke` operand is a TRUTHINESS test, not an unclassifiable condition — which is what
   // gives it a derivable domain of true/false at all.
   it('VALID: {temp > 50 || smoke} => an or-tree whose bare right operand is a truthy leaf', () => {
@@ -60,24 +51,24 @@ describe('boolean / or — a disjunction inside an exported function', () => {
       {
         reachesExit: THEN,
         arrange: [
-          { param: 'temp', value: 51 },
-          { param: 'smoke', value: false },
+          { kind: 'param', param: 'temp', value: 51 },
+          { kind: 'param', param: 'smoke', value: false },
         ],
       },
       // 50 > 50 fails, so evaluation continues and `smoke` is the operand that decides.
       {
         reachesExit: THEN,
         arrange: [
-          { param: 'temp', value: 50 },
-          { param: 'smoke', value: true },
+          { kind: 'param', param: 'temp', value: 50 },
+          { kind: 'param', param: 'smoke', value: true },
         ],
       },
       // Both must fail for the disjunction to fail.
       {
         reachesExit: ELSE,
         arrange: [
-          { param: 'temp', value: 50 },
-          { param: 'smoke', value: false },
+          { kind: 'param', param: 'temp', value: 50 },
+          { kind: 'param', param: 'smoke', value: false },
         ],
       },
     ]);

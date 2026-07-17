@@ -70,10 +70,11 @@ describe('deriveCasesTransformer', () => {
         params: [ParamDescriptorStub()],
         branches: [BranchNodeStub()],
         exits: [ExitNodeStub()],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
-        { reachesExit: 'formatGreeting/return@if-then', arrange: [{ param: 'name', value: '' }] },
+        { reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] },
       ]);
     });
 
@@ -88,10 +89,11 @@ describe('deriveCasesTransformer', () => {
         params: [ParamDescriptorStub()],
         branches: [BranchNodeStub()],
         exits: [elseExit],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
-        { reachesExit: 'formatGreeting/return@if-else', arrange: [{ param: 'name', value: 'a' }] },
+        { reachesExit: 'formatGreeting/return@if-else', arrange: [{ kind: 'param', param: 'name', value: 'a' }] },
       ]);
     });
   });
@@ -107,14 +109,15 @@ describe('deriveCasesTransformer', () => {
             guardPath: [{ branchCoverageId: 'grade/if:and', arm: 'then' }],
           }),
         ],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
         {
           reachesExit: 'grade/return@then',
           arrange: [
-            { param: 'score', value: 6 },
-            { param: 'bonus', value: 2 },
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'param', param: 'bonus', value: 2 },
           ],
         },
       ]);
@@ -133,6 +136,7 @@ describe('deriveCasesTransformer', () => {
             guardPath: [{ branchCoverageId: 'grade/if:and', arm: 'else' }],
           }),
         ],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
@@ -141,15 +145,15 @@ describe('deriveCasesTransformer', () => {
           // score fails, so bonus NEVER EVALUATES — it is unconstrained and falls to representative
           // fill rather than being pinned to a value the flow never reads.
           arrange: [
-            { param: 'score', value: 5 },
-            { param: 'bonus', value: 0 },
+            { kind: 'param', param: 'score', value: 5 },
+            { kind: 'param', param: 'bonus', value: 0 },
           ],
         },
         {
           reachesExit: 'grade/return@else',
           arrange: [
-            { param: 'score', value: 6 },
-            { param: 'bonus', value: 1 },
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'param', param: 'bonus', value: 1 },
           ],
         },
       ]);
@@ -168,21 +172,22 @@ describe('deriveCasesTransformer', () => {
             guardPath: [{ branchCoverageId: 'alarm/if:or', arm: 'then' }],
           }),
         ],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
         {
           reachesExit: 'alarm/return@then',
           arrange: [
-            { param: 'temp', value: 51 },
-            { param: 'smoke', value: false },
+            { kind: 'param', param: 'temp', value: 51 },
+            { kind: 'param', param: 'smoke', value: false },
           ],
         },
         {
           reachesExit: 'alarm/return@then',
           arrange: [
-            { param: 'temp', value: 50 },
-            { param: 'smoke', value: true },
+            { kind: 'param', param: 'temp', value: 50 },
+            { kind: 'param', param: 'smoke', value: true },
           ],
         },
       ]);
@@ -201,14 +206,15 @@ describe('deriveCasesTransformer', () => {
             guardPath: [{ branchCoverageId: 'alarm/if:or', arm: 'else' }],
           }),
         ],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
         {
           reachesExit: 'alarm/return@else',
           arrange: [
-            { param: 'temp', value: 50 },
-            { param: 'smoke', value: false },
+            { kind: 'param', param: 'temp', value: 50 },
+            { kind: 'param', param: 'smoke', value: false },
           ],
         },
       ]);
@@ -230,11 +236,12 @@ describe('deriveCasesTransformer', () => {
             guardPath: [{ branchCoverageId: 'gate/if:not', arm: 'else' }],
           }),
         ],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
-        { reachesExit: 'gate/return@then', arrange: [{ param: 'ready', value: false }] },
-        { reachesExit: 'gate/return@else', arrange: [{ param: 'ready', value: true }] },
+        { reachesExit: 'gate/return@then', arrange: [{ kind: 'param', param: 'ready', value: false }] },
+        { reachesExit: 'gate/return@else', arrange: [{ kind: 'param', param: 'ready', value: true }] },
       ]);
     });
   });
@@ -273,12 +280,13 @@ describe('deriveCasesTransformer', () => {
             guardPath: [{ branchCoverageId: "classify/if:status === 'a'", arm: 'else' }],
           }),
         ],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
-        { reachesExit: 'classify/return@if-then', arrange: [{ param: 'status', value: 'a' }] },
-        { reachesExit: 'classify/return@if-else', arrange: [{ param: 'status', value: 'b' }] },
-        { reachesExit: 'classify/return@if-else', arrange: [{ param: 'status', value: 'c' }] },
+        { reachesExit: 'classify/return@if-then', arrange: [{ kind: 'param', param: 'status', value: 'a' }] },
+        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'b' }] },
+        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'c' }] },
       ]);
     });
   });
@@ -339,12 +347,13 @@ describe('deriveCasesTransformer', () => {
             line: 8,
           }),
         ],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([
-        { reachesExit: "routeLabel/return@switch:'get'", arrange: [{ param: 'method', value: 'get' }] },
-        { reachesExit: "routeLabel/return@switch:'post'", arrange: [{ param: 'method', value: 'post' }] },
-        { reachesExit: 'routeLabel/return@switch:default', arrange: [{ param: 'method', value: 'delete' }] },
+        { reachesExit: "routeLabel/return@switch:'get'", arrange: [{ kind: 'param', param: 'method', value: 'get' }] },
+        { reachesExit: "routeLabel/return@switch:'post'", arrange: [{ kind: 'param', param: 'method', value: 'post' }] },
+        { reachesExit: 'routeLabel/return@switch:default', arrange: [{ kind: 'param', param: 'method', value: 'delete' }] },
       ]);
     });
   });
@@ -355,6 +364,7 @@ describe('deriveCasesTransformer', () => {
         params: [],
         branches: [],
         exits: [ExitNodeStub({ coverageId: 'run/exit@implicit', kind: 'implicit', guardPath: [], line: 5 })],
+        envDrivable: false,
       });
 
       expect(cases).toStrictEqual([{ reachesExit: 'run/exit@implicit', arrange: [] }]);

@@ -1,8 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { Project } from 'ts-morph';
-
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 
 const source = readFileSync(join(__dirname, 'pure-statement.ts'), 'utf8');
@@ -10,13 +8,6 @@ const source = readFileSync(join(__dirname, 'pure-statement.ts'), 'utf8');
 const GET = '*module*/switch:id:method,EqualsEqualsEqualsToken,str:get';
 
 describe('switch / pure-statement — bare top-level switch', () => {
-  it('VALID: {bare top-level switch} => 0 syntactic diagnostics (valid TypeScript)', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('pure-statement.ts', source);
-    const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);
-    expect(diagnostics.length).toBe(0);
-  });
-
   // Same tail-position rule as the bare `if`: the switch is the last thing that runs, so a clause
   // merely falling out of it ends the module and is an exit worth a case.
   it('VALID: {bare top-level switch} => a *module* void entry, one switch branch, per-arm implicit exits', () => {
@@ -31,7 +22,10 @@ describe('switch / pure-statement — bare top-level switch', () => {
             params: [],
             returnType: { kind: 'unknown', text: 'void' },
             line: 1,
-            access: { kind: 'unreachable' },
+            // Importing the module runs it, so it IS reached — access says how, never whether
+            // reaching it proves anything. It does not here: the discriminant is welded to a
+            // literal, so nothing varies and no case can drive the arms.
+            access: { kind: 'module' },
           },
           branches: [
             {

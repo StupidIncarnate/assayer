@@ -8,7 +8,7 @@ describe('UnitRunResponder', () => {
     it('VALID: {one path, all cases passed} => the report', async () => {
       UnitRunResponderProxy();
 
-      const result = await UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'] });
+      const result = await UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'], darkSpots: 'warn' });
 
       expect(String(result)).toBe('packages/syntax-repository/src/boolean/and.ts  1/1 passed');
     });
@@ -16,7 +16,7 @@ describe('UnitRunResponder', () => {
     it('VALID: {several paths} => are handed to the broker as given, in order', async () => {
       const proxy = UnitRunResponderProxy();
 
-      await UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts', 'src/b.ts'] });
+      await UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts', 'src/b.ts'], darkSpots: 'warn' });
 
       expect(proxy.getRelPaths()).toStrictEqual([
         RelPathStub({ value: 'src/a.ts' }),
@@ -27,7 +27,7 @@ describe('UnitRunResponder', () => {
     it('VALID: {a configDir} => is where the run reads and writes', async () => {
       const proxy = UnitRunResponderProxy();
 
-      await UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'] });
+      await UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'], darkSpots: 'warn' });
 
       expect(proxy.getConfigDir()).toBe(RelPathStub({ value: '/repo' }));
     });
@@ -42,7 +42,7 @@ describe('UnitRunResponder', () => {
         runs: [RunResultStub({ cases: [CaseResultStub({ status: 'failed', observedExit: 'grade/return@else' })] })],
       });
 
-      await expect(UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'] })).rejects.toThrow(/FAIL grade/u);
+      await expect(UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'], darkSpots: 'warn' })).rejects.toThrow(/FAIL grade/u);
     });
   });
 
@@ -52,7 +52,7 @@ describe('UnitRunResponder', () => {
     it('ERROR: {no paths} => throws the usage rather than running everything', async () => {
       UnitRunResponderProxy();
 
-      await expect(UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: [] })).rejects.toThrow(/no paths given/u);
+      await expect(UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: [], darkSpots: 'warn' })).rejects.toThrow(/no paths given/u);
     });
   });
 });

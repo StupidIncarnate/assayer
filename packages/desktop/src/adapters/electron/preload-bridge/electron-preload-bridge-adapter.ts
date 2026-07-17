@@ -25,6 +25,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 
+import { replyValueLayerAdapter } from './reply-value-layer-adapter';
+
 export const electronPreloadBridgeAdapter = ({
   bridgeKey,
   statusChannel,
@@ -43,13 +45,16 @@ export const electronPreloadBridgeAdapter = ({
   runOutputChannel: string;
 }): AdapterResult => {
   contextBridge.exposeInMainWorld(bridgeKey, {
-    getStatus: async (): Promise<unknown> => ipcRenderer.invoke(statusChannel),
-    getCompiledTree: async (): Promise<unknown> => ipcRenderer.invoke(compiledTreeChannel),
+    getStatus: async (): Promise<unknown> =>
+      replyValueLayerAdapter({ reply: await ipcRenderer.invoke(statusChannel) }),
+    getCompiledTree: async (): Promise<unknown> =>
+      replyValueLayerAdapter({ reply: await ipcRenderer.invoke(compiledTreeChannel) }),
     getCompiledFile: async ({ relPath }: { relPath: string }): Promise<unknown> =>
-      ipcRenderer.invoke(compiledFileChannel, relPath),
-    runFile: async ({ relPath }: { relPath: string }): Promise<unknown> => ipcRenderer.invoke(runChannel, relPath),
+      replyValueLayerAdapter({ reply: await ipcRenderer.invoke(compiledFileChannel, relPath) }),
+    runFile: async ({ relPath }: { relPath: string }): Promise<unknown> =>
+      replyValueLayerAdapter({ reply: await ipcRenderer.invoke(runChannel, relPath) }),
     getSavedRun: async ({ relPath }: { relPath: string }): Promise<unknown> =>
-      ipcRenderer.invoke(savedRunChannel, relPath),
+      replyValueLayerAdapter({ reply: await ipcRenderer.invoke(savedRunChannel, relPath) }),
     onRunOutput: ({ onChunk }: { onChunk: (params: { chunk: string }) => void }): (() => void) => {
       ipcRenderer.on(runOutputChannel, (_event: unknown, chunk: unknown): void => {
         onChunk({ chunk: String(chunk) });
