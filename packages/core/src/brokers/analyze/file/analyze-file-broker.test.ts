@@ -14,11 +14,6 @@ const MODULE_UNDRIVEN_REASON =
   'instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X an input, ' +
   'and each arm becomes a case that sets it and imports the module fresh.';
 
-const PRIVATE_UNDRIVEN_REASON =
-  'it is not exported, so nothing outside the module can call it and no case drove its branches. No ' +
-  'harness closes this — driving a private directly is not a test anyone wants, and covering it THROUGH ' +
-  'the callers that do reach it needs call-graph following, which Assayer does not do yet.';
-
 describe('analyzeFileBroker', () => {
   describe('exported function with a guard clause', () => {
     it('VALID: {formatGreeting} => one case per exit with arrange values from the operand range', () => {
@@ -122,6 +117,7 @@ describe('analyzeFileBroker', () => {
         enrichment: [{ line: 3, symbol: 'value', typeText: 'number', range: [6, 5] }],
         darkSpots: [],
         undriven: [{ name: '*module*', reason: MODULE_UNDRIVEN_REASON, startLine: 1, endLine: 8 }],
+        lints: [],
       });
     });
 
@@ -130,7 +126,7 @@ describe('analyzeFileBroker', () => {
     // drives them, and this is the line that says so instead of letting the file report a clean pass.
     // Its span is the whole 8-line file, because that is what a module scope IS. Read `value` from
     // the environment instead and this admission goes away — that is `if-else/pure-statement.ts`.
-    // The catalogue proves this end to end through `undriven/welded-operand.ts`.
+    // The catalogue proves this end to end through `sad-path/undriven-welded-const.ts`.
     it('VALID: {top-level if/else over a const} => admitted as undriven, since nothing about it varies', () => {
       analyzeFileBrokerProxy();
       const source =
@@ -170,10 +166,10 @@ describe('analyzeFileBroker', () => {
       expect(result.functions.map((fn) => fn.entry.name)).toStrictEqual(['outer']);
     });
 
-    // Not being an entry is the right call; saying nothing about it was not. `inner`'s `if` is real
-    // logic that no case reaches, and an analysis reporting one entry, zero branches and zero dark
-    // spots reads as a file fully understood — which it is, and fully COVERED, which it is not.
-    it('VALID: {a nested helper with a branch} => admitted as undriven, not left silent', () => {
+    // `inner`'s `if` is real logic, and `outer` passes its own `value` straight into `inner` — so the
+    // call graph reaches it and `inner` becomes a DRIVEN entry, its branch covered through `outer`,
+    // not admitted undriven. Its access names the caller the runner drives.
+    it('VALID: {a nested helper with a branch reached by passthrough} => driven through its caller, not undriven', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function outer(value: number): string {\n  function inner(n: number): string {\n    if (n > 5) {\n      return 'inner big';\n    }\n\n    return 'inner small';\n  }\n\n  return inner(value);\n}\n";
@@ -181,9 +177,16 @@ describe('analyzeFileBroker', () => {
 
       const result = analyzeFileBroker({ walked });
 
-      expect(result.undriven).toStrictEqual([
-        { name: 'inner', reason: PRIVATE_UNDRIVEN_REASON, startLine: 2, endLine: 8 },
-      ]);
+      expect({
+        entries: result.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access })),
+        undriven: result.undriven,
+      }).toStrictEqual({
+        entries: [
+          { name: 'outer', access: { kind: 'named' } },
+          { name: 'inner', access: { kind: 'through-caller', callerName: 'outer' } },
+        ],
+        undriven: [],
+      });
     });
 
     // It is NOT a dark spot, and calling it one would be a lie about the analyzer: the walk read
@@ -239,7 +242,7 @@ describe('analyzeFileBroker', () => {
 
       const result = analyzeFileBroker({ walked });
 
-      expect(result).toStrictEqual({ functions: [], enrichment: [], darkSpots: [], undriven: [] });
+      expect(result).toStrictEqual({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [] });
     });
   });
 });

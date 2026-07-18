@@ -145,4 +145,31 @@ describe('jestResolveEntryAdapter', () => {
       expect(result).toBe(undefined);
     });
   });
+
+  describe('through-caller entries', () => {
+    // The private is driven by calling its CALLER, not by finding the private on the module.
+    it('VALID: {a private driven through its caller} => resolves the caller, which drives the flow', () => {
+      jestResolveEntryAdapterProxy();
+
+      const result = jestResolveEntryAdapter({
+        subject: { outer: (value: number): boolean => value > 5, inner: undefined },
+        name: 'inner',
+        access: EntryAccessStub({ kind: 'through-caller', callerName: 'outer' }),
+      });
+
+      expect((result as (value: number) => boolean)(6)).toBe(true);
+    });
+
+    it('EMPTY: {the caller is not on the module} => undefined', () => {
+      jestResolveEntryAdapterProxy();
+
+      const result = jestResolveEntryAdapter({
+        subject: {},
+        name: 'inner',
+        access: EntryAccessStub({ kind: 'through-caller', callerName: 'outer' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+  });
 });

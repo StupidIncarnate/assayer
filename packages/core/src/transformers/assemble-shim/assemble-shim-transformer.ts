@@ -87,6 +87,9 @@ export const assembleShimTransformer = ({
       // The third channel, beside both: logic Assayer read perfectly and never drove. No harness
       // closes it and the analyzer was not blind to it, so neither of the other two may absorb it.
       '    undriven: caseSet.undriven,',
+      // The fourth: patterns the repo should change (dead surface). Carried so the responder can fail
+      // the run on them when the repo asked, exactly as it does for a dark spot.
+      '    lints: caseSet.lints,',
       '  }, null, 2));',
       '});',
       '',

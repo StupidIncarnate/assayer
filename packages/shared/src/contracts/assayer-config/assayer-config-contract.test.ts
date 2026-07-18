@@ -6,7 +6,9 @@ describe('assayerConfigContract', () => {
     it('VALID: {} => applies defaults in exact key order', () => {
       const result = assayerConfigContract.parse({});
 
-      expect(JSON.stringify(result)).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}');
+      expect(JSON.stringify(result)).toBe(
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error"}',
+      );
     });
 
     it('VALID: {repoRoot, exclude} => parses overrides', () => {
@@ -14,7 +16,13 @@ describe('assayerConfigContract', () => {
 
       const result = assayerConfigContract.parse(stub);
 
-      expect(result).toStrictEqual({ version: '1', repoRoot: './smoke-repo', exclude: ['dist'], darkSpots: 'warn' });
+      expect(result).toStrictEqual({
+        version: '1',
+        repoRoot: './smoke-repo',
+        exclude: ['dist'],
+        darkSpots: 'warn',
+        deadSurface: 'error',
+      });
     });
 
     it('VALID: {stableBranch: "main"} => parses optional field', () => {

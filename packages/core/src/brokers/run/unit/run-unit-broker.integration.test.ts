@@ -6,9 +6,17 @@ import { specimenCatalogue } from '../../../../test/harnesses/specimen-catalogue
 // injection, real wrapped Jest, real artifact.
 const AND_SPECIMEN = 'packages/syntax-repository/src/boolean/and.ts';
 const CLASS_SPECIMEN = 'packages/syntax-repository/src/if-else/in-class.ts';
-// The specimen that exists FOR the undriven admission, so this check cannot lose its subject to
-// someone making a syntax rung drivable.
-const MODULE_SPECIMEN = 'packages/syntax-repository/src/undriven/welded-operand.ts';
+// A permanent dead-end: a module scope on a welded const, undriven forever. This check cannot lose
+// its subject to someone making a syntax rung drivable.
+const MODULE_SPECIMEN = 'packages/syntax-repository/src/sad-path/undriven-welded-const.ts';
+// A private DRIVEN through its caller, and a private nothing consumes: the two Stage-B/C payoffs that
+// only a real run can prove — one that the interpreter judges correctly, one that rides the artifact.
+const NESTED_SPECIMEN = 'packages/syntax-repository/src/composition/nested-function.ts';
+const DEAD_SURFACE_SPECIMEN = 'packages/syntax-repository/src/sad-path/dead-surface.ts';
+// A module-scope switch driven by the environment: each case writes CODE and re-imports; the default
+// is reached with CODE unset (NaN matches no case). Only a real run proves the default's empty arrange
+// actually lands there.
+const SWITCH_ENV_SPECIMEN = 'packages/syntax-repository/src/switch/pure-statement.ts';
 
 // Every specimen on disk, not the two anyone thought to name. Walked rather than written down: a
 // literal list goes stale the moment someone adds syntax, and goes stale silently — which is how a
@@ -51,6 +59,37 @@ describe('runUnitBroker (integration)', () => {
         darkSpots: result.darkSpots,
         undriven: result.undriven.map((entry) => String(entry.name)),
       }).toStrictEqual({ cases: [], gaps: [], darkSpots: [], undriven: ['*module*'] });
+    });
+
+    // The Stage-B payoff, RUN and not merely derived: `inner` is unexported and driven through `outer`
+    // by cases that set `outer`'s own input. Every case passing proves the interpreter judges the
+    // folded cases correctly — the probe fires at inner's OWN exit, scoped to inner's exit ids — with
+    // no change to the interpreter. `outer`'s trivial case plus inner's two arms make three.
+    it('VALID: {a private driven through its caller} => every case passes, the inner branch covered through outer', async () => {
+      const result = await engine.run({ relPath: NESTED_SPECIMEN, runId: 'r-nested' });
+
+      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed', 'passed']);
+    });
+
+    // The Stage-C payoff: `greet` is driven and passes, while `unused` — a private nothing consumes —
+    // rides the run artifact as a dead-surface lint. The shim writes it beside the cases, so the
+    // responder can fail the build on it; a stub run could not carry it.
+    it('VALID: {a file with dead surface} => the real case passes AND the lint rides the artifact', async () => {
+      const result = await engine.run({ relPath: DEAD_SURFACE_SPECIMEN, runId: 'r-dead' });
+
+      expect({
+        cases: result.cases.map((testCase) => String(testCase.status)),
+        lints: result.lints.map((lint) => ({ rule: String(lint.rule), name: String(lint.name) })),
+      }).toStrictEqual({ cases: ['passed'], lints: [{ rule: 'dead-surface', name: 'unused' }] });
+    });
+
+    // A module-scope switch driven by the environment: each case writes CODE and re-imports fresh, the
+    // default is reached with CODE unset (Number(undefined) = NaN, matching no case). All three passing
+    // proves the switch reads its discriminant's env source and that the default's empty arrange lands.
+    it('VALID: {an env-driven module switch} => every case passes, default included', async () => {
+      const result = await engine.run({ relPath: SWITCH_ENV_SPECIMEN, runId: 'r-switch-env' });
+
+      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed', 'passed']);
     });
   });
 

@@ -25,6 +25,7 @@ describe('caseSetProjectionTransformer', () => {
         gaps: [],
         darkSpots: [],
         undriven: [],
+        lints: [],
       });
     });
 

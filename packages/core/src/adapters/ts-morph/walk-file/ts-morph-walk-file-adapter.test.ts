@@ -115,6 +115,15 @@ describe('tsMorphWalkFileAdapter', () => {
             startLine: 1,
             endLine: 6,
             exits: [{ coverageId: '*module*/outer/return@top', kind: 'return', guardPath: [], line: 5 }],
+            // `outer` passes its own `value` straight into the nested `inner`, unguarded — the edge a
+            // follower drives through.
+            calls: [
+              {
+                callee: { target: 'local', name: 'inner', startLine: 2 },
+                args: [{ kind: 'param-ref', paramName: 'value' }],
+                guardPath: [],
+              },
+            ],
           }),
           ScopeRecordStub({
             scopePath: ['*module*', 'outer', 'inner'],
@@ -298,6 +307,9 @@ describe('tsMorphWalkFileAdapter', () => {
             params: [{ name: 'items', type: { kind: 'unknown', text: 'number[]' } }],
             returnType: { kind: 'unknown', text: 'number[]' },
             exits: [{ coverageId: '*module*/run/return@top', kind: 'return', guardPath: [], line: 2 }],
+            // `items.map(...)` is a call to an unresolvable callee (a method), and its argument is the
+            // callback expression — opaque, not a param the caller passes straight through.
+            calls: [{ callee: { target: 'unresolved' }, args: [{ kind: 'opaque' }], guardPath: [] }],
           }),
           ScopeRecordStub({
             scopePath: ['*module*', 'run', 'fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,id:n'],

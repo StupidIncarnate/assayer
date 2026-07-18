@@ -18,9 +18,16 @@
  *   `module` and `unreachable` are separate kinds because they are separate facts, and one name for
  *   both is what made the environment invisible. A module scope IS reached — importing the module
  *   runs it — so the runner drives it by setting the inputs it reads and requiring it fresh. An
- *   unexported helper is reached by nothing: driving it directly would be testing a private. Whether
- *   a given module scope has any input worth setting is a further question this does not answer, and
- *   must not: access says how to reach an entry, never whether reaching it proves anything.
+ *   unexported helper is reached by nothing DIRECTLY: driving it directly would be testing a private.
+ *   Whether a given module scope has any input worth setting is a further question this does not
+ *   answer, and must not: access says how to reach an entry, never whether reaching it proves
+ *   anything.
+ *
+ *   `through-caller` is the exception that proves the rule: an unexported helper nothing can call
+ *   directly, but which a reachable caller reaches while passing its own input straight through. The
+ *   runner drives the CALLER (`callerName`, resolved as a named export) with the arrange, and the
+ *   probe observes the callee's own exits — so a private is covered where its logic lives, driven
+ *   through the surface that actually reaches it.
  *
  * USAGE:
  * entryAccessContract.parse({ kind: 'method', className: 'Classifier', constructable: true });
@@ -37,6 +44,7 @@ export const entryAccessContract = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('constructor'), className: symbolNameContract }),
   z.object({ kind: z.literal('module') }),
   z.object({ kind: z.literal('unreachable') }),
+  z.object({ kind: z.literal('through-caller'), callerName: symbolNameContract }),
 ]);
 
 export type EntryAccess = z.infer<typeof entryAccessContract>;

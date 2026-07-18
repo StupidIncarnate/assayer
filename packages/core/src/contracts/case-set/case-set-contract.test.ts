@@ -26,6 +26,7 @@ describe('caseSetContract', () => {
         gaps: [],
         darkSpots: [],
         undriven: [],
+        lints: [],
       });
     });
 

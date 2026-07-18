@@ -19,6 +19,7 @@ import type { WalkContext } from '../../../contracts/walk-context/walk-context-c
 import { walkNodeContract } from '../../../contracts/walk-node/walk-node-contract';
 import { significantSyntaxKindsStatics } from '../../../statics/significant-syntax-kinds/significant-syntax-kinds-statics';
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';
+import { handleCallLayerAdapter } from './handle-call-layer-adapter';
 import { handleClassLayerAdapter } from './handle-class-layer-adapter';
 import { handleExitLayerAdapter } from './handle-exit-layer-adapter';
 import { handleFunctionLayerAdapter } from './handle-function-layer-adapter';
@@ -69,6 +70,12 @@ export const dispatchNodeLayerAdapter = ({
   // A bare block (not a scope body) still sequences statements, so early-return guards survive it.
   if (Node.isBlock(node)) {
     return handleBlockLayerAdapter({ statements: node.getStatements(), context });
+  }
+
+  // A call is a use-def EDGE, not a scope: it records who it links to and descends its children so
+  // nothing inside the callee expression or arguments is dropped.
+  if (Node.isCallExpression(node)) {
+    return handleCallLayerAdapter({ node, context });
   }
 
   const kindName = node.getKindName();

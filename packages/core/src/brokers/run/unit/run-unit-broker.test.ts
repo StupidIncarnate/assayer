@@ -88,6 +88,7 @@ describe('runUnitBroker', () => {
           gaps: [],
           darkSpots: [],
           undriven: [{ name: '*module*', reason: MODULE_REASON, startLine: 1, endLine: 8 }],
+          lints: [],
         },
       });
     });

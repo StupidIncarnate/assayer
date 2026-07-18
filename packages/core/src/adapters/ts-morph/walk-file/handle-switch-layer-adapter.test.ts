@@ -67,6 +67,40 @@ describe('handleSwitchLayerAdapter', () => {
       ]);
     });
 
+    // The discriminant's env source is read exactly as an `if` reads its operand's, so a module-scope
+    // switch on `Number(process.env.X)` is driven by setting X rather than admitted undriven.
+    it('VALID: {a switch on Number(process.env.CODE)} => each leaf carries the discriminant`s env source', () => {
+      handleSwitchLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'const code = Number(process.env.CODE);\nswitch (code) {\n  case 1:\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerAdapter({
+        node,
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false, tail: true }),
+      });
+
+      expect(result.branches).toStrictEqual([
+        {
+          coverageId: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:1',
+          kind: 'switch',
+          condition: {
+            kind: 'leaf',
+            id: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:1#leaf',
+            operandParamName: 'code',
+            operandEnvVarName: 'CODE',
+            operandType: { kind: 'number' },
+            predicate: { kind: 'eq', literal: 1 },
+          },
+          startLine: 3,
+          endLine: 5,
+        },
+      ]);
+    });
+
     it('EDGE: {enum-member cases only} => no branches, since they are not desugared yet', () => {
       handleSwitchLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
@@ -187,6 +221,28 @@ describe('handleSwitchLayerAdapter', () => {
           guardPath: [{ branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'else' }],
           line: 7,
         },
+      ]);
+    });
+
+    // Each fall-out completion is PROBED on the clause's last non-break statement, so the switch can be
+    // driven: a probe after the `break` would be unreachable and never fire.
+    it('VALID: {tail switch whose clauses fall out} => a completion probe on each clause`s last non-break statement', () => {
+      handleSwitchLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'const code = Number(process.env.CODE);\nswitch (code) {\n  case 1:\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerAdapter({
+        node,
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false, tail: true }),
+      });
+
+      expect(result.probeSites).toStrictEqual([
+        { id: '*module*/exit@switch:id:code,EqualsEqualsEqualsToken,num:1#then', kind: 'complete', start: 69, end: 76 },
+        { id: '*module*/exit@switch:id:code,EqualsEqualsEqualsToken,num:1#else', kind: 'complete', start: 103, end: 110 },
       ]);
     });
 

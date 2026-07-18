@@ -26,6 +26,7 @@ import { analysisProjectionTransformer } from '../../../transformers/analysis-pr
 import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
 import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-projection/dark-spot-projection-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
+import { followCallsTransformer } from '../../../transformers/follow-calls/follow-calls-transformer';
 import { typeTextTransformer } from '../../../transformers/type-text/type-text-transformer';
 import { typeToRangeTransformer } from '../../../transformers/type-to-range/type-to-range-transformer';
 import { undrivenProjectionTransformer } from '../../../transformers/undriven-projection/undriven-projection-transformer';
@@ -34,22 +35,30 @@ export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileA
   const extracted = analysisProjectionTransformer({ walked });
 
   if (!extracted.success) {
-    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [] });
+    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [] });
   }
 
-  const functions = extracted.functions.map((fn) => ({
-    entry: fn.entry,
-    branches: fn.branches,
-    exits: fn.exits,
-    cases: deriveCasesTransformer({
-      params: fn.entry.params,
+  // Following the call graph is what turns a private helper from an admission into a driven entry:
+  // its branches are covered through the reachable caller that passes an input straight in, and the
+  // ones no caller can steer stay honestly undriven.
+  const followed = followCallsTransformer({ walked });
+
+  const functions = [
+    ...extracted.functions.map((fn) => ({
+      entry: fn.entry,
       branches: fn.branches,
       exits: fn.exits,
-      // Only a module scope is driven BY importing it, which is when its top-level bindings read the
-      // environment. A function is driven by calling it, long after its module ran and froze them.
-      envDrivable: fn.entry.access.kind === 'module',
-    }),
-  }));
+      cases: deriveCasesTransformer({
+        params: fn.entry.params,
+        branches: fn.branches,
+        exits: fn.exits,
+        // Only a module scope is driven BY importing it, which is when its top-level bindings read the
+        // environment. A function is driven by calling it, long after its module ran and froze them.
+        envDrivable: fn.entry.access.kind === 'module',
+      }),
+    })),
+    ...followed.followedEntries,
+  ];
 
   const enrichment = extracted.functions.flatMap((fn) => [
     ...fn.entry.params.map((param) => ({
@@ -88,6 +97,11 @@ export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileA
     functions,
     enrichment,
     darkSpots: darkSpotProjectionTransformer({ walked }),
-    undriven: undrivenProjectionTransformer({ walked }),
+    // The module welded-const admissions come from the walk; the private ones come from the call
+    // graph. They are separate questions with separate owners, joined here into the one channel.
+    undriven: [...undrivenProjectionTransformer({ walked }), ...followed.undriven],
+    // Dead surface — a private nothing consumes — comes from the call graph too, and is the repo's
+    // debt rather than Assayer's, so it rides its own channel.
+    lints: followed.lints,
   });
 };

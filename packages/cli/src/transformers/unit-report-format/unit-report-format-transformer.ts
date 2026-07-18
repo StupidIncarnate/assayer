@@ -57,9 +57,12 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
         'nothing inside it is covered',
     );
     const undriven = run.undriven.map((entry) => `  UNDRIVEN ${String(entry.name)} — ${String(entry.reason)}`);
+    // A fourth line, worded to name the REPO as the one who owes the change: a lint is a pattern to
+    // remove, not an admission Assayer owes. Unlike the three above, it can fail the build.
+    const lints = run.lints.map((lint) => `  LINT ${String(lint.name)} — ${String(lint.message)}`);
     const link = failures.length === 0 ? [] : [`  assayer detail ${String(run.runId)}`];
 
-    return [header, ...failed, ...gaps, ...darkSpots, ...undriven, ...link];
+    return [header, ...failed, ...gaps, ...darkSpots, ...undriven, ...lints, ...link];
   });
 
   return cliOutputContract.parse(lines.join('\n'));

@@ -42,11 +42,13 @@ export type SyntaxTrait =
   | 'access:constructor'
   | 'access:module'
   | 'access:unreachable'
+  | 'access:through-caller'
   | 'branch:if'
   | 'branch:switch'
   | 'param:union'
   | 'operand:env'
   | 'undriven'
+  | 'lint:dead-surface'
   | 'darkspot:ForOfStatement';
 
 export const syntaxTraits = (): {
@@ -92,7 +94,7 @@ export const syntaxTraits = (): {
         .flatMap((branch) => conditionLeavesTransformer({ condition: branch.condition }))
         .filter((leaf) => leaf.operandEnvVarName !== undefined)
         .map((): SyntaxTrait => 'operand:env');
-      // The admission a file owes about itself, and the reason the `undriven/` specimens can be
+      // The admission a file owes about itself, and the reason the `sad-path/` specimens can be
       // trusted to still prove the feature tomorrow. Without it, a specimen that quietly became
       // drivable would keep every trait it declares — its access and its branch kind do not move —
       // and the catalogue would lose the feature's coverage in silence. That is the exact failure
@@ -103,9 +105,13 @@ export const syntaxTraits = (): {
       // honestly anyway — an UndrivenEntry carries no access kind, so splitting it here would mean
       // re-deriving from the reason text a second opinion this model already holds.
       const undriven = analysis.undriven.map((): SyntaxTrait => 'undriven');
+      // The repo's debt, on its own channel: a dead-surface lint names a private nothing consumes.
+      // Like `undriven`, it gates a check and separates a specimen that quietly became consumed from
+      // one that stayed dead — so the catalogue cannot lose the feature's coverage in silence.
+      const lints = analysis.lints.map((lint) => `lint:${lint.rule}` as SyntaxTrait);
       const darkSpots = analysis.darkSpots.map((darkSpot) => `darkspot:${darkSpot.kind}` as SyntaxTrait);
 
-      return [...new Set([...access, ...branches, ...unions, ...envOperands, ...undriven, ...darkSpots])].sort();
+      return [...new Set([...access, ...branches, ...unions, ...envOperands, ...undriven, ...lints, ...darkSpots])].sort();
     },
   };
 };

@@ -31,6 +31,7 @@ describe('runResultContract', () => {
         gaps: [],
         darkSpots: [],
         undriven: [],
+        lints: [],
       });
     });
 

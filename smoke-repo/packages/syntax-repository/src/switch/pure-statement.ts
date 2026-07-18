@@ -1,8 +1,11 @@
-const method = 'get';
+const code = Number(process.env.CODE);
 
-switch (method) {
-  case 'get':
-    console.log('read');
+switch (code) {
+  case 1:
+    console.log('one');
+    break;
+  case 2:
+    console.log('two');
     break;
   default:
     console.log('other');

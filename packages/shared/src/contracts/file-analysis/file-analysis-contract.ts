@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
 import { functionAnalysisContract } from '../function-analysis/function-analysis-contract';
 import { lineEnrichmentContract } from '../line-enrichment/line-enrichment-contract';
+import { lintEntryContract } from '../lint-entry/lint-entry-contract';
 import { undrivenEntryContract } from '../undriven-entry/undriven-entry-contract';
 
 export const fileAnalysisContract = z.object({
@@ -27,6 +28,10 @@ export const fileAnalysisContract = z.object({
   enrichment: z.array(lineEnrichmentContract),
   darkSpots: z.array(darkSpotContract),
   undriven: z.array(undrivenEntryContract),
+  // A FOURTH channel: patterns the repo should CHANGE (a private nothing consumes), not admissions
+  // that Assayer cannot drive. Required for the same reason the others are — a file that can omit its
+  // own lints reads as clean when it is not.
+  lints: z.array(lintEntryContract),
 });
 
 export type FileAnalysis = z.infer<typeof fileAnalysisContract>;

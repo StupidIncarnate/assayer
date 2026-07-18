@@ -26,5 +26,6 @@ export const CaseSetStub = ({ ...props }: StubArgument<CaseSet> = {}): CaseSet =
     gaps: [],
     darkSpots: [],
     undriven: [],
+    lints: [],
     ...props,
   });

@@ -18,8 +18,12 @@
  *   over work the caller cannot do. The report says so either way; the severity decides only whether
  *   the exit code follows.
  *
+ *   A dead-surface LINT follows the same shape but flips the default: `deadSurface: 'error'` fails the
+ *   run because dead code is the REPO's debt, the party that can fix it. The report always names it;
+ *   the severity decides whether the exit code does.
+ *
  * USAGE:
- * await UnitRunResponder({ configDir: '/repo', root: '/repo/smoke-repo', argv: ['src/a.ts'], darkSpots: 'warn' });
+ * await UnitRunResponder({ configDir: '/repo', root: '/repo/smoke-repo', argv: ['src/a.ts'], darkSpots: 'warn', deadSurface: 'error' });
  * // Returns the report, or throws it when any case failed
  */
 import { runPathsBroker } from '@assayer/core/brokers';
@@ -36,11 +40,13 @@ export const UnitRunResponder = async ({
   root,
   argv,
   darkSpots,
+  deadSurface,
 }: {
   configDir: string;
   root: string;
   argv: readonly string[];
   darkSpots: string;
+  deadSurface: string;
 }): Promise<CliOutput> => {
   const paths = utilParseArgsAdapter({ argv }).map(String);
 
@@ -60,8 +66,9 @@ export const UnitRunResponder = async ({
   const report = unitReportFormatTransformer({ runs });
   const failed = runs.some((run) => run.cases.some((testCase) => String(testCase.status) === 'failed'));
   const darkened = darkSpots === 'error' && runs.some((run) => run.darkSpots.length > 0);
+  const linted = deadSurface === 'error' && runs.some((run) => run.lints.length > 0);
 
-  if (failed || darkened) {
+  if (failed || darkened || linted) {
     throw new CliExactOutputError({ message: String(report) });
   }
 

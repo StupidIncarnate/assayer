@@ -40,6 +40,12 @@ describe('entryAccessContract', () => {
 
       expect(result).toStrictEqual({ kind: 'unreachable' });
     });
+
+    it('VALID: {a private driven through its caller} => parses, carrying the caller to drive', () => {
+      const result = entryAccessContract.parse({ kind: 'through-caller', callerName: 'outer' });
+
+      expect(result).toStrictEqual({ kind: 'through-caller', callerName: 'outer' });
+    });
   });
 
   describe('invalid access shapes', () => {

@@ -1,64 +1,63 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'nested-function.ts'), 'utf8');
+const relPath = 'src/composition/nested-function.ts';
 
-describe('composition / nested-function — a function declared inside a function', () => {
-  // REGRESSION GUARD. `inner`'s `if` belongs to `inner`, not to `outer`. The old scans collected
-  // descendant nodes and re-derived ownership by climbing ancestors; the walk carries scope down,
-  // so a nested function's branches cannot leak into its parent.
+describe('composition / nested-function — a private driven through the caller that consumes it', () => {
+  // REGRESSION GUARD. `inner`'s `if` belongs to `inner`, not to `outer`: `outer` itself has no
+  // branches. The driven `inner` entry below carries that `if`; it must never leak up into `outer`.
   it('VALID: {nested function} => the inner if does NOT leak into the outer entry', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/composition/nested-function.ts' });
-    expect(result).toStrictEqual({
-      success: true,
-      functions: [
-        {
-          entry: {
-            name: 'outer',
-            scopePath: ['*module*', 'outer'],
-            params: [{ name: 'value', type: { kind: 'number' } }],
-            returnType: { kind: 'string' },
-            line: 1,
-            access: { kind: 'named' },
+    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const outer = analysis.functions.filter((fn) => String(fn.entry.name) === 'outer');
+
+    expect(outer.flatMap((fn) => fn.branches)).toStrictEqual([]);
+  });
+
+  // THE capability. `inner` is unexported, so nothing calls it directly — but `outer` reaches it and
+  // passes its own `value` straight in, so `inner`'s branch is DRIVEN through `outer`: each arm is a
+  // case that sets `outer`'s input, and the exit it asserts is `inner`'s own.
+  it('VALID: {a private reached by passthrough} => is driven THROUGH its caller, arranged in the caller param', () => {
+    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+
+    expect(analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
+      {
+        name: 'outer',
+        access: { kind: 'named' },
+        cases: [{ reachesExit: '*module*/outer/return@top', arrange: [{ kind: 'param', param: 'value', value: 0 }] }],
+      },
+      {
+        name: 'inner',
+        access: { kind: 'through-caller', callerName: 'outer' },
+        cases: [
+          {
+            reachesExit: '*module*/outer/inner/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then',
+            arrange: [{ kind: 'param', param: 'value', value: 6 }],
           },
-          branches: [],
-          exits: [{ coverageId: '*module*/outer/return@top', kind: 'return', guardPath: [], line: 10 }],
-        },
-      ],
-    });
+          {
+            reachesExit: '*module*/outer/inner/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else',
+            arrange: [{ kind: 'param', param: 'value', value: 5 }],
+          },
+        ],
+      },
+    ]);
   });
 
-  // EDGE, asserted so it cannot regress silently. `inner` IS walked (it is a real scope with its own
-  // branches and exits) but is not projected as an entry, because nothing outside the module can call
-  // it and driving it directly would be testing a private. Its logic is therefore owed coverage
-  // THROUGH `outer` — which needs call-graph following, a separate vertical.
-  it('EDGE: {nested function} => inner is not an entry of its own (its logic is owed through outer)', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/composition/nested-function.ts' });
-    const names = result.success ? result.functions.map((fn) => fn.entry.name) : [];
+  // The admission is GONE, not merely quieter: following the call graph reaches `inner`, so there is
+  // nothing left to admit. A file that once reported an undriven helper now reports a driven one.
+  it('VALID: {a private reached by passthrough} => leaves nothing undriven', () => {
+    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
-    expect(names).toStrictEqual(['outer']);
+    expect(analysis.undriven).toStrictEqual([]);
   });
 
-  // Not an entry, but not a secret either. `inner`'s `if` and two returns are real logic no case
-  // reaches, and the analysis above reports one entry with zero branches — which reads as a file
-  // fully covered unless something says otherwise. This is that something.
-  it('VALID: {nested function} => inner is ADMITTED as undriven rather than silently absent', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/composition/nested-function.ts' });
-    const analysis = analyzeFileBroker({ walked });
-
-    expect(analysis.undriven.map((entry) => String(entry.name))).toStrictEqual(['inner']);
-  });
-
-  // NOT a dark spot, and the distinction is the point: a dark spot means Assayer never understood the
-  // syntax, and it understood `inner` perfectly — branches, exits and all. Filing it there would blame
-  // the parser for what is only the runner's reach, and tell the reader nothing they can act on.
-  it('VALID: {nested function} => inner is not a dark spot, since the walk read it fine', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/composition/nested-function.ts' });
-    const analysis = analyzeFileBroker({ walked });
+  // NOT a dark spot: the walk read `inner` and its `if` perfectly. Following the calls is a reach
+  // question, never a parse one.
+  it('VALID: {nested function} => admits nothing as a dark spot', () => {
+    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
     expect(analysis.darkSpots).toStrictEqual([]);
   });

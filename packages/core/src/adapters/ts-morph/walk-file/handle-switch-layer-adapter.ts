@@ -16,8 +16,11 @@
  * handleSwitchLayerAdapter({ node: switchStatement, context });
  * // Returns a HandlerResult with one branch per literal case and per-clause descents
  */
+import { Node } from 'ts-morph';
+
 import { branchNodeContract, exitNodeContract, guardStepContract } from '@assayer/shared/contracts';
 
+import { probeSiteContract } from '../../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../../contracts/walk-node/walk-node-contract';
 import { exitCoverageIdTransformer } from '../../../transformers/exit-coverage-id/exit-coverage-id-transformer';
@@ -26,6 +29,7 @@ import { desugarSwitchLayerAdapter } from './desugar-switch-layer-adapter';
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
+import { readEnvOperandLayerAdapter } from './read-env-operand-layer-adapter';
 import { readOperandTypeLayerAdapter } from './read-operand-type-layer-adapter';
 import type { SwitchStatement } from 'ts-morph';
 
@@ -42,6 +46,10 @@ export const handleSwitchLayerAdapter = ({
     context,
     ...(desugared.discName === undefined ? {} : { name: desugared.discName }),
   });
+  // WHERE the discriminant's value came from, read exactly as an `if` reads its operand — so a
+  // module-scope switch on `Number(process.env.X)` is DRIVEN by setting X before import, not admitted
+  // undriven. A param or a welded const reads as no env source and this stays undefined.
+  const envVarName = readEnvOperandLayerAdapter({ node: desugared.discNode });
 
   // A `case` is already an equality test on one discriminant, so it IS a one-leaf condition tree —
   // the same shape an `if` builds, reached without a decomposition pass.
@@ -58,6 +66,7 @@ export const handleSwitchLayerAdapter = ({
         kind: 'leaf',
         id: `${caseInfo.branchCoverageId}#leaf`,
         ...(desugared.discName === undefined ? {} : { operandParamName: desugared.discName }),
+        ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
         operandType,
         predicate: { kind: 'eq', literal: caseInfo.literalValue },
       },
@@ -102,20 +111,32 @@ export const handleSwitchLayerAdapter = ({
           return [];
         }
         const guardPath = [...context.guardPath, ...clause.guards];
+        const exitId = exitCoverageIdTransformer({ kind: 'exit', guardPath, scopePath: context.scopePath });
+        // The completion probe rides the last statement that is NOT the `break`: falling out happens
+        // right after it, and a probe appended AFTER the break would be unreachable code that never
+        // fires. A clause with no statement to hold it (only a bare `break`) cannot be observed.
+        const probeTarget = clause.statements.filter((statement) => !Node.isBreakStatement(statement)).at(-1);
         return [
-          exitNodeContract.parse({
-            coverageId: exitCoverageIdTransformer({ kind: 'exit', guardPath, scopePath: context.scopePath }),
-            kind: 'implicit',
-            guardPath,
-            line: clause.statements[0]?.getStartLineNumber() ?? clause.start,
-          }),
+          {
+            exit: exitNodeContract.parse({
+              coverageId: exitId,
+              kind: 'implicit',
+              guardPath,
+              line: clause.statements[0]?.getStartLineNumber() ?? clause.start,
+            }),
+            sites:
+              probeTarget === undefined
+                ? []
+                : [probeSiteContract.parse({ id: exitId, kind: 'complete', start: probeTarget.getStart(), end: probeTarget.getEnd() })],
+          },
         ];
       })
     : [];
 
   return handlerResultLayerAdapter({
     branches,
-    exits: completions,
+    exits: completions.map((completion) => completion.exit),
+    probeSites: completions.flatMap((completion) => completion.sites),
     nodes: [
       walkNodeContract.parse({
         kind: node.getKindName(),

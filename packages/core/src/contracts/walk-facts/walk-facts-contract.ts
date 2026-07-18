@@ -13,6 +13,7 @@ import { z } from 'zod';
 
 import { branchNodeContract, exitNodeContract } from '@assayer/shared/contracts';
 
+import { callSiteContract } from '../call-site/call-site-contract';
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
 import { walkNodeContract } from '../walk-node/walk-node-contract';
@@ -21,6 +22,9 @@ export const walkFactsContract = z.object({
   scopes: z.array(scopeRecordContract),
   looseBranches: z.array(branchNodeContract),
   looseExits: z.array(exitNodeContract),
+  // Loose like branches/exits: a call belongs to the nearest enclosing scope and is claimed on the
+  // way back up by whichever node opened it.
+  looseCalls: z.array(callSiteContract),
   nodes: z.array(walkNodeContract),
   // Flat like `nodes`, not loose like branches/exits: a probe site is a position in the FILE, so no
   // scope ever claims it.

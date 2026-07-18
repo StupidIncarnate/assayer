@@ -203,26 +203,38 @@ authored by reading the file and NEVER generated from analyzer output — the ma
 must be able to disagree with the analyzer, which is P4 one rung up. See
 `packages/core/CLAUDE.md` §6 before adding syntax.
 
-**Three admissions, never merged — they differ in WHO OWES the work.** A GAP is the
+**Four admissions, never merged — they differ in WHO OWES the work.** A GAP is the
 caller's: "understood, but I cannot construct it" — a harness closes it. A DARK SPOT
 is ASSAYER's: "I never understood this syntax" — no harness can help, and telling
 the reader to fix their own for-loop is advice they cannot act on. UNDRIVEN is
 Assayer's too but a different debt: "understood perfectly, and my execution model
-cannot reach it" — a private is reachable only through its callers; a module scope
-whose branching turns only on values welded into its own source has no input to vary.
-No harness closes those, and the two owe DIFFERENT text because only one names a
-missing feature: call-graph following would reach the private, while a welded `const`
-is a branch decided at authoring time and no feature will ever drive it — so that one
-says what to change instead (read the operand from the environment). Never write an
-admission that reads as permanent when a feature would close it, and never write one
-that promises a feature that cannot exist. All three ride on `FileAnalysis`, not merely the run artifact: the
-reads-as-complete lie lives in the ANALYSIS, so a file admits them the moment it is
-opened, before anything runs. They report on separate lines and must never be merged
-— folding two together destroys the only thing they say. Severity is the GLOBAL `darkSpots:
-'warn' | 'error'` config toggle, defaulting to `warn` because failing a build over
-work only Assayer can do punishes the wrong party; it flips to `error` once the
-handler set covers the main constructs. Per-file suppression does not exist here
-either — same rule as every other don't-care.
+cannot reach it" — a module scope whose branching turns only on values welded into
+its own source has no input to vary, and a private reached only through a fixed
+argument has a branch decided at authoring time. A LINT is the REPO's debt: a pattern
+to change — a private nothing in its file consumes is dead surface, reachable from
+nowhere, so the reader deletes it or wires it up.
+
+The call graph IS followed (same-file): a private reached by a caller that passes its
+own input straight through is DRIVEN, its branch covered through that caller
+(`through-caller` access, the callee's exits arranged in the caller's params), never
+admitted. So an UNDRIVEN private and the welded module scope owe the same text — a
+branch with one possible outcome, decided in the source, that no feature will drive —
+while a private nothing calls is the LINT and a private some caller CAN steer is just
+driven. Never write an admission that reads as permanent when a feature would close it,
+and never write one that promises a feature that cannot exist. (Cross-file and
+npm-package call-following are a separate epic, gated on the coverage-ID cross-file
+scheme and the Q8 public-surface exemption; the callee link carries an `unresolved`
+target for everything the single-file parse cannot see.)
+
+All four ride on `FileAnalysis`, not merely the run artifact: the reads-as-complete lie
+lives in the ANALYSIS, so a file admits them the moment it is opened, before anything
+runs. They report on separate lines and must never be merged — folding two together
+destroys the only thing they say. Severity is a GLOBAL per-channel config toggle:
+`darkSpots: 'warn' | 'error'` defaults to `warn` because failing a build over work only
+Assayer can do punishes the wrong party (it flips to `error` once the handler set
+covers the main constructs), while `deadSurface: 'off' | 'warn' | 'error'` defaults to
+`error` because dead code is the repo's own debt to fix. Per-file suppression does not
+exist here either — same rule as every other don't-care.
 
 ## Anti-patterns (each one broke a real repo — see case-studies.md)
 

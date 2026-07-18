@@ -112,6 +112,9 @@ export * from './src/contracts/dark-spot/dark-spot.stub';
 export * from './src/contracts/undriven-entry/undriven-entry-contract';
 export * from './src/contracts/undriven-entry/undriven-entry.stub';
 
+export * from './src/contracts/lint-entry/lint-entry-contract';
+export * from './src/contracts/lint-entry/lint-entry.stub';
+
 export * from './src/contracts/guard-step/guard-step-contract';
 export * from './src/contracts/guard-step/guard-step.stub';
 

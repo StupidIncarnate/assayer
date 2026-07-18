@@ -80,7 +80,7 @@ describe('assayer CLI precheck flow (real built binary)', () => {
       const manifestExists = cli.exists({ relPath: '.assayer/cache/manifest.json' });
 
       expect(exitCode).toBe(0);
-      expect(generatedConfig).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}');
+      expect(generatedConfig).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error"}');
       expect(manifestExists).toBe(true);
       expect(stdout).toMatch(QUIET_STATUS_STDOUT);
     });

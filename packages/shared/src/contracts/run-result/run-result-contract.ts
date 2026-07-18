@@ -33,6 +33,7 @@ import { z } from 'zod';
 
 import { caseResultContract } from '../case-result/case-result-contract';
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
+import { lintEntryContract } from '../lint-entry/lint-entry-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
 import { runIdContract } from '../run-id/run-id-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
@@ -45,6 +46,9 @@ export const runResultContract = z.object({
   gaps: z.array(z.object({ name: symbolNameContract, reason: z.string().min(1).brand<'RunGapReason'>() })),
   darkSpots: z.array(darkSpotContract),
   undriven: z.array(undrivenEntryContract),
+  // The fourth channel — patterns the repo should change, carried so `assayer unit` can fail on them
+  // when the repo asked (`deadSurface: 'error'`), exactly as it fails on a dark spot under its toggle.
+  lints: z.array(lintEntryContract),
 });
 
 export type RunResult = z.infer<typeof runResultContract>;

@@ -32,6 +32,8 @@ import {
   typeDescriptorContract,
 } from '@assayer/shared/contracts';
 
+import { callSiteContract } from '../call-site/call-site-contract';
+
 export const scopeRecordContract = z.object({
   scopePath: z.array(symbolNameContract),
   name: symbolNameContract,
@@ -44,6 +46,10 @@ export const scopeRecordContract = z.object({
   endLine: lineNumberContract,
   branches: z.array(branchNodeContract),
   exits: z.array(exitNodeContract),
+  // The calls this scope makes, LOOSE facts claimed on the way up like branches and exits. Defaults
+  // to empty so the handlers that open a scope need not thread it — the walk fills it when it claims
+  // the scope's body.
+  calls: z.array(callSiteContract).default([]),
 });
 
 export type ScopeRecord = z.infer<typeof scopeRecordContract>;

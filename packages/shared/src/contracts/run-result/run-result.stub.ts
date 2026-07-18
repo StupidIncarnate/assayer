@@ -12,5 +12,6 @@ export const RunResultStub = ({ ...props }: StubArgument<RunResult> = {}): RunRe
     gaps: [],
     darkSpots: [],
     undriven: [],
+    lints: [],
     ...props,
   });

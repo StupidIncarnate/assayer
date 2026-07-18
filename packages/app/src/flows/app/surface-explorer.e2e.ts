@@ -13,9 +13,9 @@
  *
  * The compiled surface is the granular syntax-repository: if-else and switch across three containment
  * rungs (pure-statement, in-function, in-class), the composition specimens, the loop dark-spot ratchet,
- * the two undriven-admission specimens, and the boolean connectives (and, or, not, mixed) = ts 17
- * tsx 0. Adding a specimen changes the three surface assertions below (header count, file leaves,
- * dirs) — see packages/core/CLAUDE.md.
+ * the `sad-path/` dead-end specimens (two undriven shapes + a dead-surface lint), and the boolean
+ * connectives (and, or, not, mixed) = ts 18 tsx 0. Adding a specimen changes the three surface
+ * assertions below (header count, file leaves, dirs) — see packages/core/CLAUDE.md.
  * The empty-state terminal is reached three ways via seeded/hermetic harnesses (emptySurfaceAppHarness,
  * noCacheAppHarness) and a cache-only-source proof (cacheOnlySourceAppHarness) — none depend on the
  * syntax-repository source. Each harness owns its own teardown.
@@ -39,9 +39,19 @@ const UNRESOLVABLE_NAMESPACE_MESSAGE =
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/switch/in-function.ts';
 const BOOLEAN_AND = 'packages/syntax-repository/src/boolean/and.ts';
-const UNDRIVEN_WELDED_OPERAND = 'packages/syntax-repository/src/undriven/welded-operand.ts';
+const UNDRIVEN_WELDED_OPERAND = 'packages/syntax-repository/src/sad-path/undriven-welded-const.ts';
+const NESTED_FUNCTION = 'packages/syntax-repository/src/composition/nested-function.ts';
+const DEAD_SURFACE_UNCALLED = 'packages/syntax-repository/src/sad-path/dead-surface.ts';
 
-// The exact line the panel shows for undriven/welded-operand.ts — `UNDRIVEN <scope> — <reason>`, with
+// The exact line the panel shows for sad-path/dead-surface.ts — `LINT <name> — <message>`,
+// with the message authored in core's followCallsTransformer. Asserted whole for the reason the
+// undriven line is: the sentence IS the admission, and it must cross core -> cache -> IPC intact.
+const DEAD_SURFACE_LINT_LINE =
+  'LINT unused — nothing in this file calls it, so it is dead surface: an unexported helper is ' +
+  'reachable only from its own file, and nothing here reaches it. Delete it, or consume it from a ' +
+  'caller that passes an input straight through — which the follower would then drive.';
+
+// The exact line the panel shows for sad-path/undriven-welded-const.ts — `UNDRIVEN <scope> — <reason>`, with
 // the reason authored in core's undrivenProjectionTransformer. Asserted whole for the same reason the
 // namespace message above is: this sentence is the entire content of the admission, and it is the only
 // thing standing between the reader and a file that reads as having nothing to test.
@@ -74,13 +84,13 @@ test.describe('Compiled Surface Explorer', () => {
     const window = await app.launch();
 
     // obs-status-header (also proves obs-tree-bridge-call: header renders live cache data, so the
-    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 17 ts +
+    // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface: 18 ts +
     // 0 tsx (the specimen .ts files; the co-located *.test.ts are excluded from the surface).
     // Branch segment is the current working-tree namespace (environment-dependent), so pin the stable
     // brand/root/repo prefix + exact counts and allow any non-space branch token.
     const header = window.getByTestId('EXPLORER_HEADER');
     await expect(header).toBeVisible({ timeout: 30_000 });
-    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 17 tsx 0$/u);
+    await expect(header).toHaveText(/^Assayer \| smoke-repo assayer\/\S+ \| ts 18 tsx 0$/u);
 
     // obs-tree-render: the left tree is rebuilt purely from the cache manifest relPaths. Assert the
     // exact file leaves (if-else and switch × three rungs each, plus the composition and loop
@@ -89,6 +99,7 @@ test.describe('Compiled Surface Explorer', () => {
     const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
     expect([...fileNames].sort()).toStrictEqual([
       'and.ts',
+      'dead-surface.ts',
       'fallthrough-in-if.ts',
       'if-in-switch.ts',
       'in-class.ts',
@@ -100,11 +111,11 @@ test.describe('Compiled Surface Explorer', () => {
       'nested-function.ts',
       'not.ts',
       'or.ts',
-      'private-function.ts',
       'pure-statement.ts',
       'pure-statement.ts',
       'switch-in-if.ts',
-      'welded-operand.ts',
+      'undriven-welded-arg.ts',
+      'undriven-welded-const.ts',
     ]);
     const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
     expect([...dirNames].sort()).toStrictEqual([
@@ -113,10 +124,10 @@ test.describe('Compiled Surface Explorer', () => {
       'if-else',
       'loop',
       'packages',
+      'sad-path',
       'src',
       'switch',
       'syntax-repository',
-      'undriven',
     ]);
 
     // click-file -> request-file (obs-file-bridge-call): clicking the file (by its exact relPath, so
@@ -393,7 +404,7 @@ test.describe('Compiled Surface Explorer', () => {
     );
   });
 
-  test('VALID: {undriven/welded-operand.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async () => {
+  test('VALID: {sad-path/undriven-welded-const.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -425,6 +436,54 @@ test.describe('Compiled Surface Explorer', () => {
     // full. Both controls are absent because there is nothing here to drive.
     await expect(window.getByTestId('TEST_CASE_ROW')).toHaveCount(0);
     await expect(window.getByTestId('RUN_BUTTON')).toHaveCount(0);
+  });
+
+  test('VALID: {composition/nested-function.ts selected} => the private inner is DRIVEN through outer, its branch covered by cases arranged in the caller param', async () => {
+    const exitCode = await app.compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${NESTED_FUNCTION}"]`).click();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+
+    // The whole point of Stage B, proven across the real IPC crossing: `inner` is unexported, so
+    // nothing calls it directly — yet it is a DRIVEN entry here, its `n > 5` branch covered by cases
+    // that set `outer`'s own `value` (inner(6) reaches the then-return L4, inner(5) the else L7), while
+    // `outer` keeps its own trivial case. Nothing is admitted undriven: following the call graph
+    // reached it, and that fact travelled core -> cache -> IPC to this panel.
+    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    expect([...caseRows].sort()).toStrictEqual([
+      'not run inner(5) → reaches L7',
+      'not run inner(6) → reaches L4',
+      'not run outer(0) → reaches L10',
+    ]);
+    await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
+  });
+
+  test('VALID: {sad-path/dead-surface.ts selected} => the panel states the dead-surface LINT verbatim, beside the driven exported greet', async () => {
+    const exitCode = await app.compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${DEAD_SURFACE_UNCALLED}"]`).click();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+
+    // Stage C across the real crossing: `unused` is a private nothing consumes, so it is a dead-surface
+    // LINT — the repo's debt, on its own row, worded exactly as `assayer unit` prints it. Like the
+    // undriven admission, only a real window proves the sentence survived core -> cache -> IPC intact.
+    const lint = window.getByTestId('LINT');
+    await expect(lint).toBeVisible();
+    await expect(lint).toHaveText(DEAD_SURFACE_LINT_LINE);
+
+    // It is a LINT, not an undriven admission and not a dark spot: the other channels stay empty, and
+    // the exported `greet` beside it is still a driven entry.
+    await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
+    await expect(window.getByTestId('DARK_SPOT')).toHaveCount(0);
+    await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
   });
 
   test('EMPTY: {cache manifest lists zero files, window opens at /} => explorer shows the "No compiled surface — run assayer" empty state and no file tree', async () => {

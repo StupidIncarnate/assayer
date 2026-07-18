@@ -34,13 +34,14 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
   const probeSites = [...handled.probeSites, ...child.probeSites];
   const branches = [...handled.branches, ...child.looseBranches];
   const exits = [...handled.exits, ...child.looseExits];
+  const calls = [...handled.calls, ...child.looseCalls];
   const { opensScope } = handled;
 
   if (opensScope === undefined) {
-    return { scopes: child.scopes, looseBranches: branches, looseExits: exits, nodes, probeSites };
+    return { scopes: child.scopes, looseBranches: branches, looseExits: exits, looseCalls: calls, nodes, probeSites };
   }
 
-  const completed = scopeRecordContract.parse({ ...opensScope, branches, exits });
+  const completed = scopeRecordContract.parse({ ...opensScope, branches, exits, calls });
 
-  return { scopes: [completed, ...child.scopes], looseBranches: [], looseExits: [], nodes, probeSites };
+  return { scopes: [completed, ...child.scopes], looseBranches: [], looseExits: [], looseCalls: [], nodes, probeSites };
 };

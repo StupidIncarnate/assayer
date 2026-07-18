@@ -13,7 +13,7 @@
  *   close away, leaving the case rows reading "not run", is the reads-as-complete lie the panel exists
  *   to prevent.
  *
- *   Three admissions ride beside the cases, each answering "who owes this work?" differently, each on
+ *   Four admissions ride beside the cases, each answering "who owes this work?" differently, each on
  *   its own row, and never merged — merged, every one of them would order the reader to do something
  *   nobody can do:
  *   - a GAP is the READER's debt — understood, not constructable, so a harness closes it;
@@ -21,7 +21,9 @@
  *     promised for;
  *   - an UNDRIVEN entry is read perfectly and merely out of the runner's reach — no harness closes it
  *     either, but a named feature would, so its wording must never read as permanent.
- *   All three are worded exactly as `assayer unit` prints them; two surfaces over one artifact that
+ *   - a LINT is the REPO's debt — a pattern to change (a private nothing consumes), which is why,
+ *     alone among the four, it can fail the build.
+ *   All four are worded exactly as `assayer unit` prints them; two surfaces over one artifact that
  *   describe it differently are two artifacts to the reader.
  *
  *   Dark spots and undriven entries read from the ANALYSIS rather than a run, and sit outside the
@@ -75,6 +77,7 @@ export const DetailPanelWidget = ({
   // a click.
   const darkSpots = analysis === undefined ? [] : analysis.darkSpots;
   const undriven = analysis === undefined ? [] : analysis.undriven;
+  const lints = analysis === undefined ? [] : analysis.lints;
   // The entries a run will actually drive. An undriven entry keeps its admission row above and loses
   // its case list: nothing executes those cases, so listing them would promise tests the run reports
   // as 0/0.
@@ -177,9 +180,18 @@ export const DetailPanelWidget = ({
             </Text>
           ))}
 
-          {/* An undriven entry is an entry, so a file that has one is never "empty" — the admission
-              above IS this tab's content. */}
-          {functions.length === 0 && undriven.length === 0 ? (
+          {/* The fourth admission, and the only one that colours like a warning: it is the repo's to
+              fix, not Assayer's to admit. Outside the has-entries branch like the other file-facts —
+              a file whose only content is a dead private has no entries to hang it off. */}
+          {lints.map((lint) => (
+            <Text key={String(lint.name)} data-testid="LINT" c="orange.4" fz="xs" ff="monospace" mb="xs">
+              {`LINT ${String(lint.name)} — ${String(lint.message)}`}
+            </Text>
+          ))}
+
+          {/* An undriven entry or a lint is content, so a file that has one is never "empty" — the
+              admission above IS this tab's content. */}
+          {functions.length === 0 && undriven.length === 0 && lints.length === 0 ? (
             <Text data-testid="TESTS_EMPTY" c="dimmed" fz="sm">
               No entries in this file
             </Text>

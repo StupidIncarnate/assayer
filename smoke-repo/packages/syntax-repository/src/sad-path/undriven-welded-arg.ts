@@ -7,5 +7,5 @@ function decide(value: number): string {
 }
 
 export function report(value: number): string {
-  return decide(value);
+  return decide(3);
 }

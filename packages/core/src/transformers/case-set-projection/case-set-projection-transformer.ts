@@ -80,5 +80,6 @@ export const caseSetProjectionTransformer = ({
     })),
     darkSpots: analysis.darkSpots,
     undriven: analysis.undriven,
+    lints: analysis.lints,
   });
 };

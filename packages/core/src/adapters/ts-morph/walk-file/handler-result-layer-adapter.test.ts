@@ -11,6 +11,7 @@ describe('handlerResultLayerAdapter', () => {
       expect(handlerResultLayerAdapter({})).toStrictEqual({
         branches: [],
         exits: [],
+        calls: [],
         nodes: [],
         probeSites: [],
         descents: [],
@@ -23,6 +24,7 @@ describe('handlerResultLayerAdapter', () => {
       expect(handlerResultLayerAdapter({ nodes: [WalkNodeStub()] })).toStrictEqual({
         branches: [],
         exits: [],
+        calls: [],
         nodes: [WalkNodeStub()],
         probeSites: [],
         descents: [],
@@ -37,6 +39,7 @@ describe('handlerResultLayerAdapter', () => {
       expect(handlerResultLayerAdapter({ opensScope: ScopeRecordStub() })).toStrictEqual({
         branches: [],
         exits: [],
+        calls: [],
         nodes: [],
         probeSites: [],
         descents: [],

@@ -84,6 +84,7 @@ export const runUnitBroker = async ({
       gaps: caseSet.gaps,
       darkSpots: caseSet.darkSpots,
       undriven: caseSet.undriven,
+      lints: caseSet.lints,
     });
 
     await fsWriteFileAdapter({ path: resultPath, content: JSON.stringify(result) });

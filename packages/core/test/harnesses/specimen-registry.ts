@@ -36,14 +36,12 @@ const DECLARATIONS = {
   // Composition: both constructs in one file, which is the point of these rungs.
   [`${CATALOGUE}/composition/fallthrough-in-if.ts`]: ['access:named', 'branch:if', 'branch:switch'],
   [`${CATALOGUE}/composition/if-in-switch.ts`]: ['access:named', 'branch:if', 'branch:switch', 'param:union'],
-  // ONLY `outer`, and deliberately no `branch:if`. `inner` is walked but never projected as an entry
-  // — nothing outside the module can call it, and driving a private directly is not a test anyone
-  // wants — so its `if` belongs to `inner` and must not leak into `outer`. That logic is owed through
-  // `outer` by call-graph following, which does not exist yet. Declaring `branch:if` here would
-  // assert coverage this file does not have. The `undriven` that follows from that is INCIDENTAL —
-  // this file catalogues the nesting syntax, and `undriven/private-function.ts` is what proves the
-  // admission — but it is true of the file, so it is declared.
-  [`${CATALOGUE}/composition/nested-function.ts`]: ['access:named', 'undriven'],
+  // `outer` (named) plus `inner` DRIVEN through it (`access:through-caller`), carrying the `branch:if`
+  // that is `inner`'s own. `inner` is unexported, so nothing calls it directly — but `outer` passes
+  // its own `value` straight in, so the follower drives `inner`'s branch by driving `outer`. The
+  // branch belongs to `inner` and is reported on `inner`'s entry, never leaked into `outer`. No
+  // `undriven`: following the call graph reaches it, which is the whole point of this rung.
+  [`${CATALOGUE}/composition/nested-function.ts`]: ['access:named', 'access:through-caller', 'branch:if'],
   [`${CATALOGUE}/composition/switch-in-if.ts`]: ['access:named', 'branch:if', 'branch:switch', 'param:union'],
 
   // A class method is reached through an INSTANCE, not as a module property.
@@ -59,22 +57,25 @@ const DECLARATIONS = {
 
   [`${CATALOGUE}/switch/in-class.ts`]: ['access:method', 'branch:switch', 'param:union'],
   [`${CATALOGUE}/switch/in-function.ts`]: ['access:named', 'branch:switch', 'param:union'],
-  // Welded to `'get'`, and NOT because the feature needs a specimen — `undriven/` owns that. The env
-  // rung is one hop through `Number`, which inverts back to a string the environment can carry; a
-  // switch discriminates a string union, and no `Number` hop reaches one. A bare
-  // `const method = process.env.METHOD` types as `any` (the analyzer's project loads no ambient Node
-  // declarations), so it has no domain to pick a member from. This rung is undriven because the env
-  // rung does not reach it, and its `undriven` is as incidental as nested-function.ts's.
-  [`${CATALOGUE}/switch/pure-statement.ts`]: ['access:module', 'branch:switch', 'undriven'],
+  // The module-scope switch rung, DRIVEN the same way if-else/pure-statement.ts is: `code` comes from
+  // `Number(process.env.CODE)`, so the environment is its input and each case writes CODE and imports
+  // the module fresh. `operand:env` gates that check; the absence of `undriven` is the other half — a
+  // switch reads its discriminant's env source exactly as an `if` reads its operand's.
+  [`${CATALOGUE}/switch/pure-statement.ts`]: ['access:module', 'branch:switch', 'operand:env'],
 
-  // The two specimens that exist FOR the undriven admission rather than for a syntax rung — which is
-  // why they are grouped by the admission and named for its REASON. Every other folder here answers
-  // "what syntax is this?"; these answer "what does Assayer admit about it, and who owes the work?".
-  // Split in two because the reasons are, and a reason is the whole content of an admission: one is a
-  // debt no feature will ever pay, the other names the feature that would pay it. Each file's
-  // colocated test pins its sentence verbatim.
-  [`${CATALOGUE}/undriven/private-function.ts`]: ['access:named', 'undriven'],
-  [`${CATALOGUE}/undriven/welded-operand.ts`]: ['access:module', 'branch:if', 'undriven'],
+  // `sad-path/` — the PERMANENT dead-end admissions, one example each: cases no feature and no harness
+  // ever closes, so they stay red even when the plan is fully adopted. That is the entry price of this
+  // folder, and it is why a DARK SPOT (Assayer's own frontier debt, which flips to driven the moment a
+  // handler lands — the loop ratchet) and a GAP (closed by a user-authored harness) are NOT here; each
+  // gets fixed. Every other folder answers "what syntax is this?"; this one answers "what does Assayer
+  // permanently admit, and who owes the work?". Each file's colocated test pins its sentence verbatim.
+  //   - the two UNDRIVEN shapes owe the same "welded value, one outcome" text at different sites: a
+  //     value welded into a module const, and one welded into a call argument;
+  //   - the LINT is the REPO's debt — dead code the follower reaches from nowhere, which the repo, not
+  //     Assayer, must delete or wire up.
+  [`${CATALOGUE}/sad-path/undriven-welded-const.ts`]: ['access:module', 'branch:if', 'undriven'],
+  [`${CATALOGUE}/sad-path/undriven-welded-arg.ts`]: ['access:named', 'undriven'],
+  [`${CATALOGUE}/sad-path/dead-surface.ts`]: ['access:named', 'lint:dead-surface'],
 } as const;
 
 export const specimenRegistry = new Map<RelPath, readonly SyntaxTrait[]>(
@@ -95,9 +96,10 @@ export const uncataloguedTraits = {
     'nothing exercises the "reached through `new`, so it is a gap needing a harness" path that ' +
     'case-set-projection already implements',
   'access:unreachable':
-    'no ENTRY can carry it, which is why nothing here does: an unreachable scope is an unexported ' +
-    'helper, and analysis-projection only makes entries of exported functions and module scopes. ' +
-    'The trait is observed off the entries, so it cannot appear. `composition/nested-function.ts` ' +
-    'holds the private helper the walk records, and undriven-projection — which reads the walk, not ' +
-    'the entries — is what reports it',
+    'no ENTRY carries it. An unreachable scope is an unexported helper; the analysis makes it an ' +
+    'entry only when a caller drives it, and then the access is `through-caller`, not `unreachable`. ' +
+    'A helper no caller drives is reported on `undriven`, which carries no access kind. So the ' +
+    'unreachable access the walk records is real but never reaches the access field of an entry — ' +
+    '`composition/nested-function.ts` is the driven case, `sad-path/undriven-welded-arg.ts` the ' +
+    'admitted one.',
 } as const;

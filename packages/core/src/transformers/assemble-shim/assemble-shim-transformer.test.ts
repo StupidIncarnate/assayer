@@ -43,6 +43,7 @@ const EXPECTED = [
   '    gaps: caseSet.gaps,',
   '    darkSpots: caseSet.darkSpots,',
   '    undriven: caseSet.undriven,',
+  '    lints: caseSet.lints,',
   '  }, null, 2));',
   '});',
   '',

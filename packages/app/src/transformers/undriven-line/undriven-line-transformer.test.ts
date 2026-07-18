@@ -1,10 +1,9 @@
 import { undrivenLineTransformer } from './undriven-line-transformer';
 import { UndrivenEntryStub } from '@assayer/shared/contracts';
 
-// The reason strings the analysis actually carries, verbatim. They are DIFFERENT sentences because
-// they are different debts, and only one of them names a feature: a welded const is decided at
-// authoring time, so nothing will ever drive it and the reason says what to change instead, while a
-// private is merely out of reach of a call-graph follower that does not exist yet.
+// The reason strings the analysis actually carries, verbatim. Both are a welded value with one
+// possible outcome — one welded into a module const, one into a call argument — and both say so,
+// because the report and the window must describe one artifact the same way.
 const MODULE_REASON =
   'nothing about it varies, so no case could drive its branches anywhere they do not already go: it ' +
   'runs at import time, and every operand its top-level branching turns on is welded to a value ' +
@@ -13,10 +12,11 @@ const MODULE_REASON =
   'instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X an input, ' +
   'and each arm becomes a case that sets it and imports the module fresh.';
 
-const PRIVATE_REASON =
-  'it is not exported, so nothing outside the module can call it and no case drove its branches. No ' +
-  'harness closes this — driving a private directly is not a test anyone wants, and covering it THROUGH ' +
-  'the callers that do reach it needs call-graph following, which Assayer does not do yet.';
+const FIXED_ARG_REASON =
+  'it is reached only through arguments fixed in the source, so no case can steer it to another ' +
+  'branch: a caller welds a value into the call, and a branch with one possible outcome is decided ' +
+  'there, not at run time. No harness closes this — a caller that passed its own input straight ' +
+  'through instead would make each arm a case that sets it, and Assayer would drive it.';
 
 describe('undrivenLineTransformer', () => {
   describe('rendering an undriven entry', () => {
@@ -26,7 +26,7 @@ describe('undrivenLineTransformer', () => {
       expect(String(result)).toBe('UNDRIVEN *module* — it runs at import time, so no case drove its branches');
     });
 
-    // The line `assayer unit` prints for undriven/welded-operand.ts, to the byte.
+    // The line `assayer unit` prints for sad-path/undriven-welded-const.ts, to the byte.
     it('VALID: {the module-scope entry} => matches the CLI report line exactly', () => {
       const result = undrivenLineTransformer({
         entry: UndrivenEntryStub({ name: '*module*', reason: MODULE_REASON }),
@@ -35,13 +35,13 @@ describe('undrivenLineTransformer', () => {
       expect(String(result)).toBe(`UNDRIVEN *module* — ${MODULE_REASON}`);
     });
 
-    // The line `assayer unit` prints for undriven/private-function.ts, to the byte.
-    it('VALID: {the private-helper entry} => matches the CLI report line exactly', () => {
+    // The line `assayer unit` prints for sad-path/undriven-welded-arg.ts, to the byte.
+    it('VALID: {the fixed-arg private entry} => matches the CLI report line exactly', () => {
       const result = undrivenLineTransformer({
-        entry: UndrivenEntryStub({ name: 'decide', reason: PRIVATE_REASON }),
+        entry: UndrivenEntryStub({ name: 'decide', reason: FIXED_ARG_REASON }),
       });
 
-      expect(String(result)).toBe(`UNDRIVEN decide — ${PRIVATE_REASON}`);
+      expect(String(result)).toBe(`UNDRIVEN decide — ${FIXED_ARG_REASON}`);
     });
 
     // The reason is authored where the fact is found and passed through untouched. Rewording it here

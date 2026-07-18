@@ -16,6 +16,7 @@ import type { Node } from 'ts-morph';
 
 import type { BranchNode, ExitNode } from '@assayer/shared/contracts';
 
+import type { CallSite } from '../../../contracts/call-site/call-site-contract';
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
@@ -29,6 +30,8 @@ export interface Descent {
 export interface HandlerResult {
   branches: BranchNode[];
   exits: ExitNode[];
+  /** The calls this node made — loose, claimed by the enclosing scope like branches and exits. */
+  calls: CallSite[];
   nodes: WalkNode[];
   /** Where the instrumenter must wrap, keyed by the id the analyzer already derived. */
   probeSites: ProbeSite[];
@@ -43,6 +46,7 @@ export interface HandlerResult {
 export const handlerResultLayerAdapter = ({
   branches,
   exits,
+  calls,
   nodes,
   probeSites,
   descents,
@@ -50,6 +54,7 @@ export const handlerResultLayerAdapter = ({
 }: {
   branches?: BranchNode[];
   exits?: ExitNode[];
+  calls?: CallSite[];
   nodes?: WalkNode[];
   probeSites?: ProbeSite[];
   descents?: Descent[];
@@ -57,6 +62,7 @@ export const handlerResultLayerAdapter = ({
 }): HandlerResult => ({
   branches: branches ?? [],
   exits: exits ?? [],
+  calls: calls ?? [],
   nodes: nodes ?? [],
   probeSites: probeSites ?? [],
   descents: descents ?? [],

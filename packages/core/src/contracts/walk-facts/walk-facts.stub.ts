@@ -8,6 +8,7 @@ export const WalkFactsStub = ({ ...props }: StubArgument<WalkFacts> = {}): WalkF
     scopes: [],
     looseBranches: [],
     looseExits: [],
+    looseCalls: [],
     nodes: [],
     probeSites: [],
     ...props,

@@ -44,5 +44,6 @@ export const FileAnalysisStub = ({ ...props }: StubArgument<FileAnalysis> = {}):
     enrichment: [{ line: 1, symbol: 'name', typeText: 'string' }],
     darkSpots: [],
     undriven: [],
+    lints: [],
     ...props,
   });

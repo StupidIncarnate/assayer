@@ -13,7 +13,9 @@ describe('configGenerateBroker', () => {
       const result = await configGenerateBroker({ configDir: '/repo' });
 
       expect(proxy.getWrittenPath()).toBe('/repo/assayer.config.json');
-      expect(proxy.getWrittenContent()).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}');
+      expect(proxy.getWrittenContent()).toBe(
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error"}',
+      );
       expect(result).toStrictEqual(AssayerConfigStub());
     });
   });

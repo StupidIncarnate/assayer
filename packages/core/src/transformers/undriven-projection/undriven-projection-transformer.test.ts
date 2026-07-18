@@ -12,11 +12,6 @@ const MODULE_REASON =
   'instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X an input, ' +
   'and each arm becomes a case that sets it and imports the module fresh.';
 
-const PRIVATE_REASON =
-  'it is not exported, so nothing outside the module can call it and no case drove its branches. No ' +
-  'harness closes this — driving a private directly is not a test anyone wants, and covering it THROUGH ' +
-  'the callers that do reach it needs call-graph following, which Assayer does not do yet.';
-
 // The two module-scope shapes, and the ONLY difference between them: where the operand comes from.
 const WELDED_BRANCH = BranchNodeStub();
 const ENV_BRANCH = BranchNodeStub({
@@ -70,9 +65,11 @@ describe('undrivenProjectionTransformer', () => {
   });
 
   describe('a private helper that branches', () => {
-    // Not a dark spot — the walk read `inner` fine, branches and all — and not a gap, because no
-    // harness can reach a private. It is the same fact as the module scope, one rung down.
-    it('VALID: {a nested unexported function with a branch} => admitted, naming the call graph as why', () => {
+    // NOT this projection's business. Whether a private is driven, admitted undriven, or dead surface
+    // is a fact about its CALL EDGES — which only `follow-calls` reads. This projection sees the walk,
+    // not who calls whom, so it stays out of the private question entirely and owns only the module
+    // welded-const case above.
+    it('VALID: {an unreachable helper with a branch} => NOT admitted here, since that is follow-calls` job', () => {
       const walked = WalkFileResultStub({
         scopes: [
           ScopeRecordStub({ scopePath: ['*module*', 'outer'], name: 'outer', exported: true }),
@@ -88,9 +85,7 @@ describe('undrivenProjectionTransformer', () => {
         ],
       });
 
-      expect(undrivenProjectionTransformer({ walked })).toStrictEqual([
-        { name: 'inner', reason: PRIVATE_REASON, startLine: 2, endLine: 8 },
-      ]);
+      expect(undrivenProjectionTransformer({ walked })).toStrictEqual([]);
     });
   });
 

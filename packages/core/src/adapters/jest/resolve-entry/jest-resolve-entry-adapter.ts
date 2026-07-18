@@ -21,6 +21,12 @@
  *   makes every access kind the same shape to the interpreter — something to apply — which is why it
  *   needs no idea that a module is special.
  *
+ *   A `through-caller` entry is a private driven through the reachable caller that reaches it, so it
+ *   resolves to that CALLER — a named module property. The interpreter then applies it with the
+ *   arrange derived in the caller's parameter space, and judges by the callee's OWN exit ids, which
+ *   the flow reaches on the way through. The callee itself is never resolved: it has no module
+ *   property to find.
+ *
  * USAGE:
  * jestResolveEntryAdapter({ subject, name: 'classify', access: { kind: 'method', className: 'Classifier', constructable: true }, requireFresh });
  * // Returns the bound method, or undefined when the module does not carry it
@@ -64,6 +70,10 @@ export const jestResolveEntryAdapter = ({
 
   if (access.kind === 'module') {
     return requireFresh;
+  }
+
+  if (access.kind === 'through-caller') {
+    return subject[access.callerName];
   }
 
   return undefined;

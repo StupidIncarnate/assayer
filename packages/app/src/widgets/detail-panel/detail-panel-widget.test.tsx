@@ -8,6 +8,7 @@ import {
   FileAnalysisStub,
   FunctionAnalysisStub,
   LineNumberStub,
+  LintEntryStub,
   RunResultStub,
   UndrivenEntryStub,
 } from '@assayer/shared/contracts';
@@ -320,6 +321,39 @@ describe('DetailPanelWidget', () => {
       });
 
       expect(queryAllByTestId('UNDRIVEN')).toStrictEqual([]);
+    });
+  });
+
+  describe('dead-surface lints', () => {
+    // Read from the ANALYSIS like the other admissions, and worded exactly as `assayer unit` prints
+    // it — but it is the repo's debt, so it is the one row that can fail a build.
+    it('VALID: {analysis with a dead-surface lint} => it is stated with the CLI wording', () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({ lints: [LintEntryStub({ name: 'unused', message: 'nothing calls it' })] });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+
+      expect(getByTestId('LINT').textContent).toBe('LINT unused — nothing calls it');
+    });
+
+    // A file whose only content is a dead private is NOT empty: the lint is the tab's content, so the
+    // empty prompt must never appear beside it.
+    it('EDGE: {the only content is a lint} => the lint replaces the empty prompt', () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({ functions: [], lints: [LintEntryStub()] });
+
+      const { queryAllByTestId, getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+
+      expect(queryAllByTestId('TESTS_EMPTY')).toStrictEqual([]);
+      expect(getByTestId('LINT').textContent).toBe('LINT decide — nothing in this file calls it, so it is dead surface');
+    });
+
+    it('EMPTY: {analysis with no lints} => no lint row is rendered', () => {
+      DetailPanelWidgetProxy();
+
+      const { queryAllByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
+
+      expect(queryAllByTestId('LINT')).toStrictEqual([]);
     });
   });
 
