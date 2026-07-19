@@ -55,6 +55,47 @@ describe('undrivenProjectionTransformer', () => {
     });
   });
 
+  describe('the module label the surface shows instead of *module*', () => {
+    // With a relPath and no export, the label is the file basename — the reader never sees the internal
+    // `*module*`, while `name` stays `*module*` to key the driven/undriven match.
+    it('VALID: {a welded module, no export, with relPath} => admitted with the file basename as its label', () => {
+      const result = undrivenProjectionTransformer({
+        walked: moduleScopeWith({ branches: [WELDED_BRANCH] }),
+        relPath: 'src/sad-path/undriven-welded-const.ts',
+      });
+
+      expect(result).toStrictEqual([
+        { name: '*module*', label: 'undriven-welded-const.ts', reason: MODULE_REASON, startLine: 1, endLine: 8 },
+      ]);
+    });
+
+    // A single exported binding wins over the filename.
+    it('VALID: {a welded module with one export} => admitted with the export name as its label', () => {
+      const walked = WalkFileResultStub({
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            startLine: 1,
+            endLine: 8,
+            branches: [WELDED_BRANCH],
+            exportedBindings: ['config'],
+          }),
+        ],
+      });
+
+      const result = undrivenProjectionTransformer({ walked, relPath: 'src/welded.ts' });
+
+      expect(result).toStrictEqual([
+        { name: '*module*', label: 'config', reason: MODULE_REASON, startLine: 1, endLine: 8 },
+      ]);
+    });
+  });
+
   describe('a module scope the environment drives', () => {
     // The complement, and it must stay exact: the case set drives this entry, so admitting it here
     // too would have the run both drive it and say it could not. The env read is the whole difference

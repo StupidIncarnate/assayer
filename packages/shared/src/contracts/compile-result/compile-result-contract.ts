@@ -19,6 +19,7 @@ import { compileModeContract } from '../compile-mode/compile-mode-contract';
 import { fileCountContract } from '../file-count/file-count-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
+import { columnNumberContract } from '../column-number/column-number-contract';
 
 export const compileResultContract = z.object({
   status: compileStatusContract,
@@ -35,7 +36,7 @@ export const compileResultContract = z.object({
       namespace: namespaceNameContract,
       relPath: relPathContract,
       line: lineNumberContract,
-      column: z.number().int().positive().brand<'ColumnNumber'>(),
+      column: columnNumberContract,
       message: z.string().min(1).brand<'CompileErrorMessage'>(),
     }),
   ),

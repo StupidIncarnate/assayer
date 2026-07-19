@@ -128,7 +128,11 @@ repos don't start from zero; the config's classify list is the repo's own
 additions; a newly-seen import on NEITHER list is a HARD ERROR the LLM must
 reconcile ("mock or real?"). Dark spots from unbridged non-lexical hops are
 marked by default with a global config toggle to hide them visually (data
-retained either way).
+retained either way). This mock/real classification is distinct from — and now
+sits ON TOP OF — the resolver's structural classification: every import first
+RESOLVES to `local` / `package` / `builtin`, and a `package`/`builtin` boundary
+is typed by its pulled declared signature, so the typed black box at a package
+edge is a resolved, typed fact before any mock/real policy applies.
 
 Named state (one file per state, name = user-chosen key):
 
@@ -216,7 +220,11 @@ useContext, store write→read), keyed on discriminant + payload contract. Core
 still parses, owns all node/edge IDs, and traverses; the plugin supplies only
 the domain join-rule. Plugins are required ONLY to bridge a non-lexical edge,
 richly probe an effect, or supply a domain observation vocabulary — everything
-else is a typed black box (no plugin, e.g. lodash).
+else is a typed black box (no plugin, e.g. lodash). **The typed black box is
+BUILT for imports:** the resolver terminates the chain at a resolved import and
+resumes at its pulled declared signature (`{ params, returnType }`), no plugin
+and no dark spot; an import that resolves to nothing or ships no usable types is
+a build error instead.
 
 **Update (2026-07-05 — D25):** TypeScript is CORE, not a plugin (no language
 plugin). Plugins enrich the core-built base map in layers: SYSTEM plugins
@@ -227,7 +235,11 @@ contract = SEAM, concrete = ADAPTER. Plugins self-declare when they run (every
 file / on a syntax shape) — NOT glob config. Engine is two-phase: per-file
 passes MARK nodes + channel endpoints, core JOINS endpoints across files
 (websockets is the canonical join), a final pass RESOLVES flow over the complete
-graph. Plugin set = react, react-router, hono, mantine, redis, postgres,
+graph. **The cross-file import resolver is the first BUILT instance of this
+two-phase join:** the per-file walk MARKS raw `import` references + module edges;
+a post-compile stitch JOINS them across files/packages to canonical repo-relative
+definition keys (barrels followed, tsconfig-aware). Plugin set = react,
+react-router, hono, mantine, redis, postgres,
 websockets (codex stack); seams extracted from building these (build-first).
 Core also enumerates PACKAGE FUNCTION ENTRIES (a package's exported functions)
 as connection points via pure exports analysis — no plugin; server endpoints
@@ -242,10 +254,10 @@ Error Rendering, LLM Docs Surface (authoring docs + worked example).
 
 `.assayer/cache/` — the gitignored, disposable, content-hash-incremental home
 of everything derivable: maps, repo graphs, assembled test artifacts, the
-registry, run artifacts, projections, derived state presets. Determinism is
-the load-bearing property: a cold cache reproduces byte-identical artifacts,
-so cache loss is never a correctness event and CI persistence is purely an
-accelerator.
+registry, run artifacts, projections, derived state presets, the resolved-import
+index, and the external-signature cache. Determinism is the load-bearing
+property: a cold cache reproduces byte-identical artifacts, so cache loss is
+never a correctness event and CI persistence is purely an accelerator.
 
 Main capabilities:
 - Content-hash keys over every derivation input: file contents, Assayer
@@ -259,6 +271,15 @@ Main capabilities:
   are never persisted — recomputed on demand from git blobs.
 - Total, free regeneration (D10): nothing committed keys on cache content;
   map-node IDs live and die inside one cache generation.
+- Resolved-import index (`resolved/<namespace>.json`): the derived stitch
+  output, each import reconciled to its canonical definition
+  (`local`/`package`/`builtin`). Per-file blobs stay pure (raw references
+  only), keyed on content; the index is keyed on repo layout + tsconfig hash,
+  so a file move re-resolves without re-parsing.
+- External-signature cache (`external-signatures/<declHash>.json`): one
+  package/builtin callable's declared input/output types, read once through
+  the second node_modules-aware project and keyed on the `.d.ts` byte content
+  (machine-independent, not the version string), reused by every importer.
 - Pipeline persist/restore between runs as optimization only (D15).
 
 Cross-references: implements D13, D10, the cache half of the artifact
@@ -433,6 +454,21 @@ cannot be traced (Q3 non-lexical hops, dynamic dispatch, opaque spreads) the
 map MARKS "not followed here" rather than silently omitting the edge — this
 makes Q3 a completeness property of the PRODUCT (the map is the deliverable the
 human spot-checks), not an analyzer nicety.
+
+**Update — cross-file / npm import resolution BUILT (the lexical cross-module
+half of C1).** A post-compile STITCH turns each raw `import` reference the
+per-file walk records into a resolved edge by lookup, never re-parsing: it
+reconciles the specifier — through TypeScript's own module resolution, spelling-
+and alias-immune — to a canonical repo-relative definition key, follows re-export
+barrels to the definition (seen-set), and classifies `local` / `package` /
+`builtin`. A called `package`/`builtin` edge carries the declared
+`{ params, returnType }` of its callable, read out of band through a SECOND,
+node_modules-aware project (the hermetic analyzer walk is never given
+node_modules) and cached by `.d.ts` byte hash. An import that resolves to nothing,
+uses a dynamic/computed specifier, or ships no usable types is a hard BUILD ERROR
+at the call site — the same class as a parse failure, distinct from a dark spot.
+This is the LEXICAL cross-module half of C1; Q3's non-lexical hops (bus/WS/store/
+context) remain the separate, still-undesigned half.
 
 Dependencies: AST Analyzer Core, Cache Subsystem, Configuration Subsystem.
 

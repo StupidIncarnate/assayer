@@ -52,5 +52,7 @@ export const tsMorphWalkFileAdapter = ({
     scopes: walked.scopes,
     nodes: walked.nodes,
     probeSites: walked.probeSites,
+    moduleEdges: walked.moduleEdges,
+    globalUses: walked.globalUses,
   });
 };

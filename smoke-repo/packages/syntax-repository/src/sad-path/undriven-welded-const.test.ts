@@ -27,9 +27,13 @@ describe('sad-path / undriven-welded-const — a module scope whose branch turns
   // vary. No harness closes it and no feature will — this stays undriven even when the plan is fully
   // adopted.
   it('VALID: {a module scope over a welded const} => admitted as undriven, with the reason that says no feature will close it', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
 
-    expect(analysis.undriven).toStrictEqual([{ name: '*module*', reason: MODULE_REASON, startLine: 1, endLine: 8 }]);
+    // The module has no exported binding, so its label is the file basename — the reader never sees the
+    // internal `*module*`, while `name` stays `*module*` to key the driven/undriven match.
+    expect(analysis.undriven).toStrictEqual([
+      { name: '*module*', label: 'undriven-welded-const.ts', reason: MODULE_REASON, startLine: 1, endLine: 8 },
+    ]);
   });
 
   // WHY the admission is owed, stated as evidence: the analyzer reads both arms and derives one case

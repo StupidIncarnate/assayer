@@ -39,6 +39,12 @@ export const undrivenEntryContract = z.object({
   reason: z.string().min(1).brand<'UndrivenReason'>(),
   startLine: lineNumberContract,
   endLine: lineNumberContract,
+  // The human label a surface shows instead of the internal `name`, present only for a MODULE undriven
+  // entry: the single exported binding's name, else the file basename (`undriven-welded-const.ts`).
+  // `name` stays `*module*` because it keys the driven/undriven match; `label` is DISPLAY only, so the
+  // report and the window never read the internal scope root. A private undriven entry (a real function
+  // name) carries none and shows its `name`.
+  label: symbolNameContract.optional(),
 });
 
 export type UndrivenEntry = z.infer<typeof undrivenEntryContract>;

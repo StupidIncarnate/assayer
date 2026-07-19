@@ -25,12 +25,18 @@ import { resolve, join } from 'node:path';
 import { entryAccessContract, branchNodeContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
+import { nodeModuleBuiltinsAdapter } from '../../src/adapters/node-module/builtins/node-module-builtins-adapter';
 import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
 import { conditionLeavesTransformer } from '../../src/transformers/condition-leaves/condition-leaves-transformer';
+import { moduleGraphProjectionTransformer } from '../../src/transformers/module-graph-projection/module-graph-projection-transformer';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
 const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
+
+// The authoritative node-builtin name set, so a specifier like `path` (no `node:` prefix) still
+// classifies as a builtin exactly as the resolver's own builtin check does — never as a package.
+const BUILTINS = new Set(nodeModuleBuiltinsAdapter().map(String));
 
 // Closed and literal, so a specimen declaring a trait that does not exist fails to typecheck rather
 // than silently never matching. `darkspot:*` is enumerated rather than open for the same reason: a
@@ -47,6 +53,19 @@ export type SyntaxTrait =
   | 'branch:switch'
   | 'param:union'
   | 'operand:env'
+  // A call target the single-file walk records as an IMPORT and cannot itself resolve — classified by
+  // the module specifier's LITERAL VALUE (a relative path, a node builtin, or a bare package), which is
+  // the same fork TypeScript's own module resolution takes. The stitch (compile-resolve-graph-broker)
+  // turns each into a real definition edge; here the trait only names WHICH of the three an import site
+  // exercises, so the catalogue proves every classification the resolver must handle has a specimen.
+  | 'callee:import-local'
+  | 'callee:package'
+  | 'callee:node-builtin'
+  // An AMBIENT-EXTERNAL identifier the file uses without importing (`console`, `process`) — recorded by
+  // the walk as a global use it cannot itself resolve (the lib resolves `Number`; it does not resolve
+  // `process`), for the stitch to type against `@types/node`'s global scope. Named off the module
+  // graph's `globalUses`, so a specimen that reaches an ambient global cannot go undeclared.
+  | 'callee:node-global'
   | 'undriven'
   | 'lint:dead-surface'
   | 'darkspot:ForOfStatement';
@@ -111,7 +130,36 @@ export const syntaxTraits = (): {
       const lints = analysis.lints.map((lint) => `lint:${lint.rule}` as SyntaxTrait);
       const darkSpots = analysis.darkSpots.map((darkSpot) => `darkspot:${darkSpot.kind}` as SyntaxTrait);
 
-      return [...new Set([...access, ...branches, ...unions, ...envOperands, ...undriven, ...lints, ...darkSpots])].sort();
+      // The cross-file half: an IMPORT the single-file walk recorded but cannot follow. Classified off
+      // the module graph rather than the FileAnalysis (which carries only in-file entries), by the
+      // specifier's LITERAL VALUE — relative ⇒ local, `node:`/known-builtin ⇒ builtin, else ⇒ package.
+      // Reads the EDGES (import declarations), not the references, so an imported binding used as a
+      // value (`const s = sep`) is classified the same as one that is called — a node builtin whose
+      // ambient types are absent must not be CALLED in the compiled surface, so its specimen imports a
+      // value, and the trait still has to name it.
+      const graph = moduleGraphProjectionTransformer({
+        walked: tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath }),
+      });
+      const callees = graph.edges.flatMap((edge): SyntaxTrait[] => {
+        const specifier = edge.specifier === undefined ? undefined : String(edge.specifier);
+        if (edge.kind !== 'import' || specifier === undefined) {
+          return [];
+        }
+        return specifier.startsWith('.') || specifier.startsWith('/')
+          ? ['callee:import-local']
+          : specifier.startsWith('node:') || BUILTINS.has(specifier)
+            ? ['callee:node-builtin']
+            : ['callee:package'];
+      });
+      // An ambient global the file reaches without importing — yes/no, like the import callee traits.
+      // Named off the SAME graph's `globalUses`, so `console.log`/`process.env` earns the trait no
+      // matter which scope uses it, and a specimen that quietly stopped touching an ambient global
+      // loses the trait rather than silently keeping the feature's coverage.
+      const globals = graph.globalUses.length > 0 ? (['callee:node-global'] as SyntaxTrait[]) : [];
+
+      return [
+        ...new Set([...access, ...branches, ...unions, ...envOperands, ...callees, ...globals, ...undriven, ...lints, ...darkSpots]),
+      ].sort();
     },
   };
 };

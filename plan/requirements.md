@@ -26,8 +26,10 @@
    test format" — D17 killed human-facing config files.)
 3. **Coverage-ID scheme (ACTIVE DISCUSSION below):** "coverage ID" is used as
    settled vocabulary throughout — it is NOT yet designed. Cache-internal only;
-   gates case addressing, diff-view correspondence quality (D18), and C1's
-   cross-file presumption.
+   gates case addressing, diff-view correspondence quality (D18), and cross-file
+   case DRIVING (arranging a callee's branches through a caller across a file
+   boundary — the module-boundary EDGE resolution C1 presumed is already built,
+   the import resolver).
 4. **Q7 (below):** R12 lists many product surfaces + D14's desktop app — which
    subset to build was in question. **(RESOLVED BY REMOVAL — there is no
    phasing/subset; every review surface and tooling piece is core functionality,
@@ -212,6 +214,17 @@ loss and travels with branches," nothing more.
    explorer state lists, needed-state gap reports, and registry pair
    inventories. Hand-authored states (committed, named) OVERRIDE these where
    wired in the harness.
+7. **Resolved-import index** (`cache/resolved/<namespace>.json`) — the DERIVED
+   stitch output: every import reconciled to its canonical definition
+   (`local` repo-relative path / `package` / `builtin`), with call-site
+   positions. Keyed on repo layout + tsconfig hash, rebuilt when the file set or
+   tsconfig changes; per-file blobs stay pure (raw references only), so a file
+   move re-resolves without re-parsing.
+8. **External-signature cache** (`cache/external-signatures/<declHash>.json`) —
+   one package/builtin callable's declared input/output types
+   (`{ params, returnType }`), read once through the second, node_modules-aware
+   project and keyed on the `.d.ts` byte content (machine-independent, not the
+   version string), reused by every importer.
 
 **Pipeline note (D15):** CI may persist/restore `cache/` between runs purely as
 an accelerator; a cold cache reproduces byte-identical artifacts (D13
@@ -1208,6 +1221,13 @@ the LLM's corrective instruction surface:
     domain observation vocabulary. Everything else is a typed BLACK BOX — the
     chain terminates at its input and resumes at its typed output, no plugin and
     no dark spot beyond the ordinary boundary. (Lodash never gets a plugin.)
+    **BUILT for import boundaries.** The cross-file / npm resolver realizes this
+    typed black box for imports: a call to an imported name resolves to its
+    definition (`local` / `package` / `builtin`), a called package or builtin
+    resumes at its pulled declared signature (`{ params, returnType }` read out of
+    band via the second, node_modules-aware project) — the typed output — and an
+    import that resolves to nothing, or ships no usable types, is a hard BUILD
+    ERROR at the call site rather than a dark spot.
   - **Instance scope:** a channel/provider/store is assumed to be a single
     module-global per token. Multiple live instances (nested providers,
     per-render stores) are a dark spot rather than fully tree-resolved.
@@ -1255,7 +1275,13 @@ the LLM's corrective instruction surface:
     nodes and channel ENDPOINTS; core JOINS endpoints across files/packages
     (`websockets` is the canonical cross-package join); a final pass RESOLVES
     flow/reachability/consumption over the COMPLETED graph — because cross-file
-    channels complete flows no single-file pass can see.
+    channels complete flows no single-file pass can see. **The cross-file import
+    resolver is the first concrete instance of this two-phase model:** the per-file
+    walk MARKS raw `import` references + module edges (specifier value + imported
+    name, never opening the other file); a post-compile stitch JOINS them across
+    files/packages to canonical repo-relative definition keys (barrels followed
+    with a seen-set, tsconfig-aware module resolution). Cross-file DRIVING over the
+    joined graph remains a later rung.
   - **"Layer" (ordering) and "contribution kind" are separate axes.** A plugin's
     layer sets when it enriches the map; a plugin may contribute several kinds
     (map structure, channels, test-case definitions, instrumentation,
@@ -1315,7 +1341,10 @@ the LLM's corrective instruction surface:
   - **Edges:** data-flow (value → transform → sink/effect/output); links (where
     inputs come from / where outputs + effects go — cross-file, channel, or a
     dark spot when unresolved); consumption (which downstream sites actually use
-    a value).
+    a value). **Cross-file IMPORT links are BUILT:** the resolver reconciles each
+    to a canonical repo-relative definition key (or a `package`/`builtin` target
+    with its pulled signature); an import link that cannot resolve is a build
+    error, not a dark spot (a channel link with no bridging plugin still is).
   The map must be QUERYABLE IN BOTH DIRECTIONS, because two concrete jobs need
   it:
   - **Arrange derivation (forward walk):** from an entry, walk the transitive set
@@ -1348,9 +1377,13 @@ the LLM's corrective instruction surface:
   sink's generated cases must include transforms applied UPSTREAM in the chain
   (filters, sorts, mutations) that live at other lines of the same file — the
   analyzer traces source → transforms → sink, not just the sink line. Cross-file
-  chains: presumed handled by per-file coverage at the module boundary (each file
-  tests its own transforms) — confirm when the coverage-ID scheme is designed.
-  Direct consequence for the parser epic: per-line syntax scanning is
+  chains: handled by per-file coverage at the module boundary (each file tests its
+  own transforms), now BACKED by the import resolver — each import at the boundary
+  reconciles to a canonical file-qualified definition key (repo-relative path +
+  imported symbol), and `package`/`builtin` boundaries are typed by their pulled
+  declared signatures, so the module boundary is a resolved, typed edge rather than
+  a presumption. Cross-file DRIVING of a callee's branches through a caller remains
+  a later rung. Direct consequence for the parser epic: per-line syntax scanning is
   insufficient; intra-file data-flow analysis is a core requirement. Emerging
   principle (now three occurrences — chain transforms, optional props,
   passthroughs): obligations key off CONSUMPTION, never declaration —
@@ -1492,7 +1525,9 @@ the LLM's corrective instruction surface:
   the enclosing scope path (e.g. `processOrder/if:order.total>limit`) — survives
   reordering, breaks exactly when the logic changes, which is the desired "is the
   requirement still true?" prompt. Backend branch code is the hard case; React
-  is easier. Also gates C1's cross-file presumption.
+  is easier. Also gates cross-file case DRIVING (C1's module-boundary EDGE
+  resolution is already built — the import resolver — but arranging a callee's
+  branches through a caller across a file boundary awaits this scheme).
   **Architecture ruling (user, sanity-checked): two-stage invalidation; IDs are
   map-node identities.** Pipeline: file/config content hash (cheap gate, D13) →
   rebuild maps (C2) → map DIFF (semantic gate) → test regen only on map delta.

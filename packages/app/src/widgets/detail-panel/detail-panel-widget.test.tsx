@@ -5,13 +5,54 @@ import {
   CaseResultStub,
   DarkSpotStub,
   EntrySignatureStub,
+  ExternalSignatureStub,
   FileAnalysisStub,
   FunctionAnalysisStub,
   LineNumberStub,
   LintEntryStub,
+  RelPathStub,
+  ResolvedEdgeStub,
   RunResultStub,
   UndrivenEntryStub,
 } from '@assayer/shared/contracts';
+
+// A DRIVEN module entry with its single export — reached by IMPORTING, so it takes no params and shows
+// a bare label, never `*module*` and never `()`.
+const MODULE_EXPORT_ANALYSIS = FileAnalysisStub({
+  functions: [
+    FunctionAnalysisStub({
+      entry: EntrySignatureStub({
+        name: '*module*',
+        scopePath: ['*module*'],
+        params: [],
+        access: { kind: 'module' },
+        exportName: 'message',
+      }),
+      branches: [],
+      exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
+      cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+    }),
+  ],
+  enrichment: [],
+});
+
+// A DRIVEN module entry with NO export — its label falls back to the selected file's basename.
+const MODULE_NO_EXPORT_ANALYSIS = FileAnalysisStub({
+  functions: [
+    FunctionAnalysisStub({
+      entry: EntrySignatureStub({
+        name: '*module*',
+        scopePath: ['*module*'],
+        params: [],
+        access: { kind: 'module' },
+      }),
+      branches: [],
+      exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
+      cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+    }),
+  ],
+  enrichment: [],
+});
 
 // The real module-scope shape: nothing can call it, and it takes no params — which is why its derived
 // cases all arrange nothing and each claims a different exit from identical setup.
@@ -62,6 +103,32 @@ describe('DetailPanelWidget', () => {
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-status'))).toStrictEqual([
         'not-run',
       ]);
+    });
+
+    // A module entry is IMPORTED, not called: it shows a bare label (its single export) with no `()`,
+    // never the internal `*module*`, in both the title and the case row.
+    it('VALID: {a driven module entry with one export} => title and case read the export name, no ()', () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/import-local/uses-greeting.ts' })} />,
+      });
+
+      expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message → reaches L4');
+    });
+
+    // With no export, the label falls back to the selected file's basename — the reader never sees the
+    // internal `*module*`.
+    it('VALID: {a driven module entry with no export} => title and case read the file basename', () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/node-global/uses-console.ts' })} />,
+      });
+
+      expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('uses-console.ts · 1 cases');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run uses-console.ts → reaches L4');
     });
   });
 
@@ -235,7 +302,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({
         functions: [FunctionAnalysisStub({ entry: MODULE_ENTRY })],
-        undriven: [UndrivenEntryStub({ name: '*module*' })],
+        undriven: [UndrivenEntryStub({ name: '*module*', label: 'undriven-welded-const.ts' })],
       });
 
       const { queryAllByTestId, getByTestId } = testingLibraryRenderAdapter({
@@ -245,7 +312,7 @@ describe('DetailPanelWidget', () => {
       expect(queryAllByTestId('TEST_CASE_ROW')).toStrictEqual([]);
       expect(queryAllByTestId('TEST_ENTRY')).toStrictEqual([]);
       expect(getByTestId('UNDRIVEN').textContent).toBe(
-        'UNDRIVEN *module* — it runs at import time, so no case drove its branches',
+        'UNDRIVEN undriven-welded-const.ts — it runs at import time, so no case drove its branches',
       );
     });
 
@@ -354,6 +421,148 @@ describe('DetailPanelWidget', () => {
       const { queryAllByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
 
       expect(queryAllByTestId('LINT')).toStrictEqual([]);
+    });
+  });
+
+  describe('the Contracts tab', () => {
+    // A resolved edge is a fact about the FILE, read from the resolved index — its own dedicated tab
+    // shows each edge's TYPE CONTRACT, no run required. A local cross-file import carries the target
+    // file's exported signature, shown in the same currency as a package/global one.
+    it('VALID: {a local resolved edge with the target signature} => renders symbol, source path, — input, and return', async () => {
+      const detail = DetailPanelWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: './greeting',
+        importedName: 'greeting',
+        target: {
+          kind: 'local',
+          relPath: 'src/import-local/greeting.ts',
+          signature: ExternalSignatureStub({ params: [], returnType: { kind: 'string' } }),
+        },
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
+      });
+      await detail.openContractsTab();
+
+      expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greeting');
+      expect(getByTestId('CONTRACT_SOURCE').textContent).toBe("import './greeting' → src/import-local/greeting.ts");
+      expect(getByTestId('CONTRACT_INPUT').textContent).toBe('—');
+      expect(getByTestId('CONTRACT_OUTPUT').textContent).toBe('returns string');
+    });
+
+    // The typed black box: a package import shows its declared parameter and return types at the edge —
+    // one `name: type` input line (the star) and the return line.
+    it('VALID: {a package resolved edge with a signature} => renders the input contract and return', async () => {
+      const detail = DetailPanelWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: 'vendored-pkg',
+        importedName: 'greet',
+        target: {
+          kind: 'package',
+          packageName: 'vendored-pkg',
+          signature: ExternalSignatureStub({
+            params: [{ name: 'name', type: { kind: 'string' } }],
+            returnType: { kind: 'string' },
+          }),
+        },
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
+      });
+      await detail.openContractsTab();
+
+      expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greet');
+      expect(getByTestId('CONTRACT_SOURCE').textContent).toBe('pkg vendored-pkg');
+      expect(getByTestId('CONTRACT_INPUT').textContent).toBe('name: string');
+      expect(getByTestId('CONTRACT_OUTPUT').textContent).toBe('returns string');
+    });
+
+    // An ambient global is USED, never imported — its source is `global`, with the called method's
+    // signature the stitch pulled from `@types/node`'s global scope.
+    it('VALID: {an ambient global resolved edge with a signature} => renders global source, input, and return', async () => {
+      const detail = DetailPanelWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: undefined,
+        importedName: undefined,
+        target: {
+          kind: 'global',
+          name: 'console',
+          member: 'log',
+          signature: ExternalSignatureStub({
+            params: [{ name: 'data', type: { kind: 'unknown', text: 'any[]' } }],
+            returnType: { kind: 'unknown', text: 'void' },
+          }),
+        },
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
+      });
+      await detail.openContractsTab();
+
+      expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('console.log');
+      expect(getByTestId('CONTRACT_SOURCE').textContent).toBe('global');
+      expect(getByTestId('CONTRACT_INPUT').textContent).toBe('data: any[]');
+      expect(getByTestId('CONTRACT_OUTPUT').textContent).toBe('returns void');
+    });
+
+    // A member-access global (`process.env`) is not callable — it shows a `type` line instead of a
+    // return, and its input contract is empty (a — rather than a param).
+    it('VALID: {a member-access global with a type} => renders a type line and a — input', async () => {
+      const detail = DetailPanelWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: undefined,
+        importedName: undefined,
+        target: { kind: 'global', name: 'process', member: 'env', type: { kind: 'unknown', text: 'ProcessEnv' } },
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
+      });
+      await detail.openContractsTab();
+
+      expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('process.env');
+      expect(getByTestId('CONTRACT_INPUT').textContent).toBe('—');
+      expect(getByTestId('CONTRACT_OUTPUT').textContent).toBe('type ProcessEnv');
+    });
+
+    // The Contracts tab is separate from the Tests tab: a file that only re-exports has no entries
+    // (the Tests tab reads "No entries in this file") yet its import contract still shows on Contracts.
+    it('EDGE: {a resolved edge but no entries} => Tests reads empty while Contracts shows the entry', async () => {
+      const detail = DetailPanelWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: './greeting',
+        importedName: 'greeting',
+        target: {
+          kind: 'local',
+          relPath: 'src/import-local/greeting.ts',
+          signature: ExternalSignatureStub({ params: [], returnType: { kind: 'string' } }),
+        },
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub({ functions: [], enrichment: [] })} resolvedEdges={[edge]} />,
+      });
+
+      expect(getByTestId('TESTS_EMPTY').textContent).toBe('No entries in this file');
+
+      await detail.openContractsTab();
+
+      expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greeting');
+    });
+
+    it('EMPTY: {no resolvedEdges} => the Contracts tab reads its empty prompt', async () => {
+      const detail = DetailPanelWidgetProxy();
+
+      const { getByTestId, queryAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
+      });
+      await detail.openContractsTab();
+
+      expect(queryAllByTestId('CONTRACT_ENTRY')).toStrictEqual([]);
+      expect(getByTestId('CONTRACTS_EMPTY').textContent).toBe('No contracts for this file');
     });
   });
 

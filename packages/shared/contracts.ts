@@ -28,6 +28,9 @@ export * from './src/contracts/content-hash/content-hash.stub';
 export * from './src/contracts/line-number/line-number-contract';
 export * from './src/contracts/line-number/line-number.stub';
 
+export * from './src/contracts/column-number/column-number-contract';
+export * from './src/contracts/column-number/column-number.stub';
+
 export * from './src/contracts/branch-name/branch-name-contract';
 export * from './src/contracts/branch-name/branch-name.stub';
 
@@ -102,6 +105,36 @@ export * from './src/contracts/type-descriptor/type-descriptor.stub';
 
 export * from './src/contracts/symbol-name/symbol-name-contract';
 export * from './src/contracts/symbol-name/symbol-name.stub';
+
+export * from './src/contracts/module-specifier/module-specifier-contract';
+export * from './src/contracts/module-specifier/module-specifier.stub';
+
+export * from './src/contracts/module-edge/module-edge-contract';
+export * from './src/contracts/module-edge/module-edge.stub';
+
+export * from './src/contracts/module-reference/module-reference-contract';
+export * from './src/contracts/module-reference/module-reference.stub';
+
+export * from './src/contracts/global-use/global-use-contract';
+export * from './src/contracts/global-use/global-use.stub';
+
+export * from './src/contracts/file-module-graph/file-module-graph-contract';
+export * from './src/contracts/file-module-graph/file-module-graph.stub';
+
+export * from './src/contracts/package-name/package-name-contract';
+export * from './src/contracts/package-name/package-name.stub';
+
+export * from './src/contracts/resolution-failure-reason/resolution-failure-reason-contract';
+export * from './src/contracts/resolution-failure-reason/resolution-failure-reason.stub';
+
+export * from './src/contracts/resolved-edge/resolved-edge-contract';
+export * from './src/contracts/resolved-edge/resolved-edge.stub';
+
+export * from './src/contracts/resolved-index/resolved-index-contract';
+export * from './src/contracts/resolved-index/resolved-index.stub';
+
+export * from './src/contracts/external-signature/external-signature-contract';
+export * from './src/contracts/external-signature/external-signature.stub';
 
 export * from './src/contracts/syntax-kind-name/syntax-kind-name-contract';
 export * from './src/contracts/syntax-kind-name/syntax-kind-name.stub';

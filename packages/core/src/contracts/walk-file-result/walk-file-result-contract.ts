@@ -11,7 +11,7 @@
  */
 import { z } from 'zod';
 
-import { lineNumberContract } from '@assayer/shared/contracts';
+import { columnNumberContract, globalUseContract, lineNumberContract, moduleEdgeContract } from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
@@ -23,12 +23,18 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     scopes: z.array(scopeRecordContract),
     nodes: z.array(walkNodeContract),
     probeSites: z.array(probeSiteContract),
+    // The file's import/re-export declarations, flat and unclaimed by any scope — the raw half of
+    // the cross-file graph a later stitch pass resolves.
+    moduleEdges: z.array(moduleEdgeContract),
+    // The ambient-external identifiers the file uses (`console`, `process`) — the other raw half a
+    // later stitch resolves against `@types/node`'s global scope.
+    globalUses: z.array(globalUseContract),
   }),
   z.object({
     success: z.literal(false),
     error: z.object({
       line: lineNumberContract,
-      column: z.number().int().positive().brand<'ColumnNumber'>(),
+      column: columnNumberContract,
       message: z.string().min(1).brand<'ExtractErrorMessage'>(),
     }),
   }),

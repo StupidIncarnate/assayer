@@ -63,6 +63,44 @@ describe('caseSetProjectionTransformer', () => {
       ]);
     });
 
+    // A module that CONSUMES an external (calls an import or an ambient global) is projected with no
+    // branches — importing it runs the call and reaches its single exit. It is runnable: its one
+    // structural happy-path case arranges nothing and asserts only that it reaches the module's exit.
+    it('VALID: {a branchless consumption module scope} => runnable, deriving its one happy-path case', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: {
+              name: '*module*',
+              scopePath: ['*module*'],
+              params: [],
+              returnType: { kind: 'unknown', text: 'void' },
+              line: 1,
+              access: { kind: 'module' },
+            },
+            branches: [],
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
+            cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/uses-greeting.ts',
+        modulePath: '/abs/src/uses-greeting.ts',
+      });
+
+      expect(result.entries).toStrictEqual([
+        {
+          name: '*module*',
+          access: { kind: 'module' },
+          exitIds: ['*module*/exit@top'],
+          cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+        },
+      ]);
+    });
+
     it('VALID: {a default export} => runnable, since `default` reaches it', () => {
       const analysis = FileAnalysisStub({
         functions: [
@@ -209,6 +247,35 @@ describe('caseSetProjectionTransformer', () => {
           },
         ],
       });
+    });
+
+    // A module that BRANCHES on values welded into its own source (no env operand) is NOT runnable:
+    // its cases arrange the same nothing and claim different exits, so at most one could hold. Only a
+    // branchless consumption module or a module reading an env operand is driven — this stays dropped,
+    // and the walk's undriven channel admits it separately.
+    it('EDGE: {a module scope branching on welded-in values, no env operand} => dropped, not runnable', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: {
+              name: '*module*',
+              scopePath: ['*module*'],
+              params: [],
+              returnType: { kind: 'unknown', text: 'void' },
+              line: 1,
+              access: { kind: 'module' },
+            },
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/welded.ts',
+        modulePath: '/abs/src/welded.ts',
+      });
+
+      expect({ entries: result.entries, gaps: result.gaps }).toStrictEqual({ entries: [], gaps: [] });
     });
 
     it('EMPTY: {an entry with no derived cases} => dropped, since there is nothing to drive', () => {

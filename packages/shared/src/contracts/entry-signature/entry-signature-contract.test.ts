@@ -18,6 +18,15 @@ describe('entrySignatureContract', () => {
 
       expect(result).toStrictEqual(entry);
     });
+
+    // A module entry labelled by its single exported binding.
+    it('VALID: {exportName: message} => carries the module label', () => {
+      const entry = EntrySignatureStub({ name: '*module*', scopePath: ['*module*'], params: [], exportName: 'message' });
+
+      const result = entrySignatureContract.parse(entry);
+
+      expect(result).toStrictEqual(entry);
+    });
   });
 
   describe('invalid entry signatures', () => {

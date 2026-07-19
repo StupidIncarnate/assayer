@@ -1,6 +1,9 @@
 /**
- * PURPOSE: Resolves a single compiled file's view (source lines + map nodes) from the cache,
- *   for the current (commitless) namespace of a target repo.
+ * PURPOSE: Resolves a single compiled file's view (source lines + map nodes + the cross-file imports
+ *   THIS file makes) from the cache, for the current (commitless) namespace of a target repo. The
+ *   resolved edges come from the namespace's resolved index filtered to `from === relPath`, so the
+ *   detail panel can render each import's canonical target (a sibling file, an npm package, or a node
+ *   builtin) and any declared external signature.
  *
  * USAGE:
  * const view = await compiledFileResolveBroker({
@@ -14,6 +17,7 @@ import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
 import { cacheLoadBlobBroker } from '../../cache/load-blob/cache-load-blob-broker';
+import { cacheLoadResolvedIndexBroker } from '../../cache/load-resolved-index/cache-load-resolved-index-broker';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
 import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 
@@ -25,7 +29,7 @@ export const compiledFileResolveBroker = async ({
   relPath: RelPath;
 }): Promise<CompiledFileView> => {
   const manifest = await cacheLoadManifestBroker({ repoPath });
-  const { files } = currentNamespaceTransformer({ manifest });
+  const { namespaceName, files } = currentNamespaceTransformer({ manifest });
   const entry = files.find((file) => file.relPath === relPath);
 
   if (entry === undefined) {
@@ -33,6 +37,9 @@ export const compiledFileResolveBroker = async ({
   }
 
   const blob = await cacheLoadBlobBroker({ repoPath, contentHash: entry.contentHash });
+  const resolvedIndex = await cacheLoadResolvedIndexBroker({ repoPath, namespace: namespaceName });
+  const resolvedEdges =
+    resolvedIndex === undefined ? [] : resolvedIndex.edges.filter((edge) => edge.from === relPath);
 
   return compiledFileViewContract.parse({
     relPath,
@@ -40,5 +47,6 @@ export const compiledFileResolveBroker = async ({
     displayLines: blob.displayLines,
     nodes: blob.nodes,
     ...(blob.analysis === undefined ? {} : { analysis: blob.analysis }),
+    resolvedEdges,
   });
 };

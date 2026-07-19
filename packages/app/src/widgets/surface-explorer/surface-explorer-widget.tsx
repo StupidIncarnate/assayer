@@ -151,6 +151,8 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                     </Flex>
                     <DetailPanelWidget
                       analysis={fileView === null ? undefined : fileView.analysis}
+                      resolvedEdges={fileView === null ? undefined : fileView.resolvedEdges}
+                      relPath={selectedRelPath}
                       hoveredLine={hoveredLine}
                       run={fileRun.run}
                       running={fileRun.running}

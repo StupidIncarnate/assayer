@@ -105,6 +105,31 @@ describe('compileRunBroker', () => {
     });
   });
 
+  describe('a current file with an unresolvable import (net-new run)', () => {
+    it("ERROR: {clean parse, but an import resolves to nothing} => status errors with the resolver's namespace/relPath/line/column/message and never writes the manifest", async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'feature-x' });
+      proxy.queueCurrentFiles({ contents: ["import { foo } from './missing';\nfoo();\n"] });
+      proxy.resolvesWithError({ relPath: 'current-0.ts', line: 1, column: 10, message: "cannot resolve import './missing'" });
+      const config = AssayerConfigStub();
+
+      const result = await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(result).toStrictEqual({
+        status: 'errors',
+        results: [{ namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 1 }],
+        errors: [
+          { namespace: 'feature-x', relPath: 'current-0.ts', line: 1, column: 10, message: "cannot resolve import './missing'" },
+        ],
+      });
+    });
+  });
+
   describe('a current file that fails to parse (incremental run)', () => {
     it('ERROR: {incremental run, one current file with invalid syntax} => returns status errors and never writes the manifest', async () => {
       const proxy = compileRunBrokerProxy();
@@ -175,6 +200,41 @@ describe('compileRunBroker', () => {
         },
         repoName: 'repo',
         rootFolderName: 'repo',
+      });
+    });
+  });
+
+  describe('a resolver error with both a stable branch and the current branch resolved', () => {
+    it("ERROR: {stableBranch and currentBranch both processed, resolver returns an error} => status errors carrying the SAME resolution error under BOTH namespaces (stable is stitched too)", async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'feature-x' });
+      const stableContent = 'export const stable = 1;\n';
+      proxy.stableChanged({
+        sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+        lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
+        fileContents: [stableContent],
+      });
+      proxy.queueCurrentFiles({ contents: ['export const current = 1;\n'] });
+      proxy.resolvesWithError({ relPath: 'src/x.ts', line: 3, column: 10, message: "cannot resolve import './missing'" });
+      const config = AssayerConfigStub({ stableBranch: 'master' });
+
+      const result = await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(result).toStrictEqual({
+        status: 'errors',
+        results: [
+          { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
+          { namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 1 },
+        ],
+        errors: [
+          { namespace: 'master', relPath: 'src/x.ts', line: 3, column: 10, message: "cannot resolve import './missing'" },
+          { namespace: 'feature-x', relPath: 'src/x.ts', line: 3, column: 10, message: "cannot resolve import './missing'" },
+        ],
       });
     });
   });

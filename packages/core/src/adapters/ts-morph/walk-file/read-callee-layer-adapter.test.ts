@@ -30,12 +30,54 @@ describe('readCalleeLayerAdapter', () => {
     });
   });
 
-  describe('callees the single-file parse cannot resolve to a same-file function', () => {
-    it('VALID: {an imported callee} => unresolved, since the callee lives in another file', () => {
+  describe('a call to an imported name', () => {
+    it('VALID: {a named import} => an import link carrying the specifier and the imported name', () => {
       readCalleeLayerAdapterProxy();
 
       const result = readCalleeLayerAdapter({
         callee: calleeOf({ source: "import { foo } from './other';\nexport const q = 1;\nfoo();\n" }),
+      });
+
+      expect(result).toStrictEqual({ target: 'import', specifier: './other', importedName: 'foo' });
+    });
+
+    it('VALID: {an aliased import} => the imported SOURCE name, never the local alias', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({ source: "import { bar as baz } from './other';\nexport const q = 1;\nbaz();\n" }),
+      });
+
+      expect(result).toStrictEqual({ target: 'import', specifier: './other', importedName: 'bar' });
+    });
+
+    it('VALID: {a default import} => an import link with the imported name "default"', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({ source: "import qux from './other';\nexport const q = 1;\nqux();\n" }),
+      });
+
+      expect(result).toStrictEqual({ target: 'import', specifier: './other', importedName: 'default' });
+    });
+
+    it('VALID: {a bare package import} => an import link carrying the package specifier', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({ source: "import { readFileSync } from 'fs';\nexport const q = 1;\nreadFileSync('x');\n" }),
+      });
+
+      expect(result).toStrictEqual({ target: 'import', specifier: 'fs', importedName: 'readFileSync' });
+    });
+  });
+
+  describe('callees the single-file parse cannot resolve', () => {
+    it('VALID: {a namespace-member call} => unresolved, since the callee is not a plain identifier', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({ source: "import * as ns from './other';\nexport const q = 1;\nns.member();\n" }),
       });
 
       expect(result).toStrictEqual({ target: 'unresolved' });

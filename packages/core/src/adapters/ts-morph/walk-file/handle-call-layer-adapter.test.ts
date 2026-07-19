@@ -40,6 +40,7 @@ describe('handleCallLayerAdapter', () => {
           callee: { target: 'local', name: 'inner', startLine: 1 },
           args: [{ kind: 'param-ref', paramName: 'value' }],
           guardPath: [],
+          position: { line: 5, column: 10 },
         },
       ]);
     });
@@ -54,6 +55,7 @@ describe('handleCallLayerAdapter', () => {
           callee: { target: 'local', name: 'inner', startLine: 1 },
           args: [{ kind: 'param-ref', paramName: 'value' }],
           guardPath: [{ branchCoverageId: 'outer/if:id:flag', arm: 'else' }],
+          position: { line: 5, column: 10 },
         },
       ]);
     });

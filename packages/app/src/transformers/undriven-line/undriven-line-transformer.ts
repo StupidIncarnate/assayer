@@ -1,7 +1,9 @@
 /**
  * PURPOSE: Renders one undriven entry as the sentence the detail panel shows for it — the scope's
- *   name and why nothing drove it. Matches `assayer unit`'s UNDRIVEN line, so the report and the
- *   window describe one artifact identically.
+ *   human LABEL and why nothing drove it. A module entry shows its `label` (its single exported binding
+ *   or the file basename) rather than the internal `*module*`; a private undriven entry shows its own
+ *   name. Matches `assayer unit`'s UNDRIVEN line, so the report and the window describe one artifact
+ *   identically.
  *
  *   The reason is passed through from the analysis VERBATIM and never rewritten here. It is P1 product
  *   surface authored where the fact is found, and it carries a promise this surface must not quietly
@@ -24,4 +26,4 @@ import { undrivenLineContract } from '../../contracts/undriven-line/undriven-lin
 import type { UndrivenLine } from '../../contracts/undriven-line/undriven-line-contract';
 
 export const undrivenLineTransformer = ({ entry }: { entry: UndrivenEntry }): UndrivenLine =>
-  undrivenLineContract.parse(`UNDRIVEN ${String(entry.name)} — ${String(entry.reason)}`);
+  undrivenLineContract.parse(`UNDRIVEN ${String(entry.label ?? entry.name)} — ${String(entry.reason)}`);

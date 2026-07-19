@@ -15,7 +15,7 @@
  *   syntax error from the same walk.
  *
  * USAGE:
- * analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+ * analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
  * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...], undriven: [...] }
  */
 import { fileAnalysisContract } from '@assayer/shared/contracts';
@@ -31,7 +31,7 @@ import { typeTextTransformer } from '../../../transformers/type-text/type-text-t
 import { typeToRangeTransformer } from '../../../transformers/type-to-range/type-to-range-transformer';
 import { undrivenProjectionTransformer } from '../../../transformers/undriven-projection/undriven-projection-transformer';
 
-export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileAnalysis => {
+export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult; relPath?: string }): FileAnalysis => {
   const extracted = analysisProjectionTransformer({ walked });
 
   if (!extracted.success) {
@@ -99,7 +99,10 @@ export const analyzeFileBroker = ({ walked }: { walked: WalkFileResult }): FileA
     darkSpots: darkSpotProjectionTransformer({ walked }),
     // The module welded-const admissions come from the walk; the private ones come from the call
     // graph. They are separate questions with separate owners, joined here into the one channel.
-    undriven: [...undrivenProjectionTransformer({ walked }), ...followed.undriven],
+    undriven: [
+      ...undrivenProjectionTransformer({ walked, ...(relPath === undefined ? {} : { relPath }) }),
+      ...followed.undriven,
+    ],
     // Dead surface — a private nothing consumes — comes from the call graph too, and is the repo's
     // debt rather than Assayer's, so it rides its own channel.
     lints: followed.lints,

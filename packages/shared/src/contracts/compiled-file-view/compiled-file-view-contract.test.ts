@@ -18,6 +18,45 @@ describe('compiledFileViewContract', () => {
 
       expect(result.nodes).toStrictEqual([]);
     });
+
+    it('EMPTY: {view without resolvedEdges} => defaults resolvedEdges to an empty array', () => {
+      const result = compiledFileViewContract.parse({
+        relPath: 'src/foo.ts',
+        displayLines: [],
+        nodes: [],
+      });
+
+      expect(result.resolvedEdges).toStrictEqual([]);
+    });
+
+    it('VALID: {view with one resolved local edge} => carries the edge through', () => {
+      const result = compiledFileViewContract.parse({
+        relPath: 'src/a/caller.ts',
+        displayLines: [],
+        nodes: [],
+        resolvedEdges: [
+          {
+            from: 'src/a/caller.ts',
+            specifier: '../b/foo',
+            importedName: 'foo',
+            line: 1,
+            column: 1,
+            target: { kind: 'local', relPath: 'src/b/foo.ts' },
+          },
+        ],
+      });
+
+      expect(result.resolvedEdges).toStrictEqual([
+        {
+          from: 'src/a/caller.ts',
+          specifier: '../b/foo',
+          importedName: 'foo',
+          line: 1,
+          column: 1,
+          target: { kind: 'local', relPath: 'src/b/foo.ts' },
+        },
+      ]);
+    });
   });
 
   describe('invalid compiled file views', () => {

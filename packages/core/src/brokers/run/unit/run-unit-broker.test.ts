@@ -87,7 +87,7 @@ describe('runUnitBroker', () => {
           cases: [],
           gaps: [],
           darkSpots: [],
-          undriven: [{ name: '*module*', reason: MODULE_REASON, startLine: 1, endLine: 8 }],
+          undriven: [{ name: '*module*', label: 'pure-statement.ts', reason: MODULE_REASON, startLine: 1, endLine: 8 }],
           lints: [],
         },
       });

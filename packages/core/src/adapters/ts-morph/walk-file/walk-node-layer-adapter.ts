@@ -30,18 +30,45 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
   });
 
   const nodes = [...handled.nodes, ...child.nodes];
-  // Probe sites are positions in the FILE, so they never belong to a scope and are never claimed.
+  // Probe sites, module edges and global uses are positions/facts in the FILE, so they never belong
+  // to a scope and are never claimed.
   const probeSites = [...handled.probeSites, ...child.probeSites];
+  const moduleEdges = [...handled.moduleEdges, ...child.moduleEdges];
+  const globalUses = [...handled.globalUses, ...child.globalUses];
   const branches = [...handled.branches, ...child.looseBranches];
   const exits = [...handled.exits, ...child.looseExits];
   const calls = [...handled.calls, ...child.looseCalls];
+  const valueUses = [...handled.valueUses, ...child.looseValueUses];
+  const exportedBindings = [...handled.exportedBindings, ...child.looseExportedBindings];
   const { opensScope } = handled;
 
   if (opensScope === undefined) {
-    return { scopes: child.scopes, looseBranches: branches, looseExits: exits, looseCalls: calls, nodes, probeSites };
+    return {
+      scopes: child.scopes,
+      looseBranches: branches,
+      looseExits: exits,
+      looseCalls: calls,
+      looseValueUses: valueUses,
+      looseExportedBindings: exportedBindings,
+      nodes,
+      probeSites,
+      moduleEdges,
+      globalUses,
+    };
   }
 
-  const completed = scopeRecordContract.parse({ ...opensScope, branches, exits, calls });
+  const completed = scopeRecordContract.parse({ ...opensScope, branches, exits, calls, valueUses, exportedBindings });
 
-  return { scopes: [completed, ...child.scopes], looseBranches: [], looseExits: [], looseCalls: [], nodes, probeSites };
+  return {
+    scopes: [completed, ...child.scopes],
+    looseBranches: [],
+    looseExits: [],
+    looseCalls: [],
+    looseValueUses: [],
+    looseExportedBindings: [],
+    nodes,
+    probeSites,
+    moduleEdges,
+    globalUses,
+  };
 };

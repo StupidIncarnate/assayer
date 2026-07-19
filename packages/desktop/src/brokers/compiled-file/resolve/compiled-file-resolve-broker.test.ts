@@ -1,4 +1,11 @@
-import { AssayerCacheManifestStub, CompiledFileBlobStub, FileAnalysisStub, RelPathStub } from '@assayer/shared/contracts';
+import {
+  AssayerCacheManifestStub,
+  CompiledFileBlobStub,
+  FileAnalysisStub,
+  RelPathStub,
+  ResolvedEdgeStub,
+  ResolvedIndexStub,
+} from '@assayer/shared/contracts';
 
 import { compiledFileResolveBroker } from './compiled-file-resolve-broker';
 import { compiledFileResolveBrokerProxy } from './compiled-file-resolve-broker.proxy';
@@ -6,7 +13,7 @@ import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 describe('compiledFileResolveBroker', () => {
   describe('successful resolve', () => {
-    it('VALID: {relPath present in current namespace} => resolves the compiled file view', async () => {
+    it('VALID: {relPath present in current namespace} => resolves the compiled file view with no edges', async () => {
       const manifest = AssayerCacheManifestStub({
         namespaces: {
           main: {
@@ -27,7 +34,7 @@ describe('compiledFileResolveBroker', () => {
 
       const { displayLines, nodes, contentHash } = blob;
 
-      expect(result).toStrictEqual({ relPath: 'src/index.ts', contentHash, displayLines, nodes });
+      expect(result).toStrictEqual({ relPath: 'src/index.ts', contentHash, displayLines, nodes, resolvedEdges: [] });
     });
 
     it('VALID: {blob carries analysis} => resolves the view including the analysis', async () => {
@@ -47,6 +54,32 @@ describe('compiledFileResolveBroker', () => {
       });
 
       expect(result.analysis).toStrictEqual(analysis);
+    });
+
+    it('VALID: {resolved index has edges from this file and others} => keeps only the edges whose from is this file', async () => {
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+      const ownEdge = ResolvedEdgeStub({
+        from: 'src/index.ts',
+        specifier: './greeting',
+        importedName: 'greeting',
+        target: { kind: 'local', relPath: 'src/greeting.ts' },
+      });
+      const otherEdge = ResolvedEdgeStub({ from: 'src/other.ts', specifier: './x', importedName: 'x' });
+      const index = ResolvedIndexStub({ edges: [ownEdge, otherEdge] });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub() });
+      proxy.setupResolvedIndex({ index });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/repo' }),
+        relPath: RelPathStub({ value: 'src/index.ts' }),
+      });
+
+      expect(result.resolvedEdges).toStrictEqual([ownEdge]);
     });
   });
 

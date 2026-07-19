@@ -1,8 +1,9 @@
 /**
- * PURPOSE: The detail-view right panel — two tabs over a file's derived analysis. The Enrichment
+ * PURPOSE: The detail-view right panel — three tabs over a file's derived analysis. The Enrichment
  *   tab lists per-line data facts (symbol, type, and the representative value range for branch
  *   operands); the Tests tab lists, per entry, the salient test cases Assayer would generate (arrange
- *   values in, the exit each reaches). When a code line is hovered (hoveredLine), the rows whose
+ *   values in, the exit each reaches); the Contracts tab is a DevTools-style inspector of the type
+ *   contracts at the file's edges (below). When a code line is hovered (hoveredLine), the rows whose
  *   coverage runs through that line are highlighted and the rest are dimmed, so the gutter counts
  *   read as "these cases". Pure prop-driven; shows empty prompts when nothing is derived.
  *
@@ -36,19 +37,30 @@
  *   `drivenFunctionsTransformer` owns that narrowing; the code viewer's gutter reads through the same
  *   one, so neither surface counts a case the other cannot.
  *
+ *   The cross-file imports and ambient globals the file uses (`resolvedEdges`, already scoped to this
+ *   file — each edge's `from` IS this path) live in their OWN dedicated Contracts tab, never mixed in
+ *   with the admissions: if the app rendered the file at all, its imports ARE resolved (an unresolvable
+ *   one is a hard build error with no cache to open), so there is no `RESOLVED` noise to state — what
+ *   is useful is the TYPE CONTRACT. Each edge renders as a DevTools-style inspector entry: the symbol,
+ *   its source (`import '<path>' → <def>`, `pkg <name>`, or `global`), a structured INPUT contract
+ *   (one `name: type` line per param — the star of the section, `—` when there are none), and an
+ *   OUTPUT/return type line; a member-access global (`process.env`) shows its member `type` instead.
+ *   Teal/positive colour, distinct from the admissions.
+ *
  * USAGE:
- * <DetailPanelWidget analysis={fileView.analysis} hoveredLine={hoveredLine} runError={fileRun.error} />
- * // Renders the Enrichment / Tests tabbed panel, highlighting rows tied to the hovered line
+ * <DetailPanelWidget analysis={fileView.analysis} resolvedEdges={fileView.resolvedEdges} relPath={selectedRelPath} hoveredLine={hoveredLine} runError={fileRun.error} />
+ * // Renders the Enrichment / Tests / Contracts tabbed panel, highlighting rows tied to the hovered line
  */
 import type { ReactElement } from 'react';
 import { Box, Tabs, Text, Stack, Button, Group } from '@mantine/core';
-import type { FileAnalysis, LineNumber, RunResult } from '@assayer/shared/contracts';
-import { arrangeTextTransformer } from '@assayer/shared/transformers';
+import type { FileAnalysis, LineNumber, RelPath, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
+import { arrangeTextTransformer, moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 
 import { caseRunStatusTransformer } from '../../transformers/case-run-status/case-run-status-transformer';
 import { caseTouchedLinesTransformer } from '../../transformers/case-touched-lines/case-touched-lines-transformer';
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
 import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
+import { resolvedEdgeContractTransformer } from '../../transformers/resolved-edge-contract/resolved-edge-contract-transformer';
 import { undrivenLineTransformer } from '../../transformers/undriven-line/undriven-line-transformer';
 import { runStatusStatics } from '../../statics/run-status/run-status-statics';
 
@@ -58,6 +70,8 @@ export interface DetailPanelWidgetProps {
   run?: RunResult | undefined;
   running?: boolean;
   runError?: Error | null;
+  resolvedEdges?: readonly ResolvedEdge[] | undefined;
+  relPath?: RelPath | null;
   onRun?: () => void;
 }
 
@@ -67,6 +81,8 @@ export const DetailPanelWidget = ({
   run,
   running,
   runError,
+  resolvedEdges,
+  relPath,
   onRun,
 }: DetailPanelWidgetProps): ReactElement => {
   const enrichment = analysis === undefined ? [] : analysis.enrichment;
@@ -78,6 +94,10 @@ export const DetailPanelWidget = ({
   const darkSpots = analysis === undefined ? [] : analysis.darkSpots;
   const undriven = analysis === undefined ? [] : analysis.undriven;
   const lints = analysis === undefined ? [] : analysis.lints;
+  // The cross-file imports this file makes, already resolved to their canonical definitions by the
+  // stitch pass. A positive fact about the FILE (not a run and not an admission), so it sits outside
+  // the has-entries branch and shows the moment the file is opened.
+  const edges = resolvedEdges ?? [];
   // The entries a run will actually drive. An undriven entry keeps its admission row above and loses
   // its case list: nothing executes those cases, so listing them would promise tests the run reports
   // as 0/0.
@@ -99,6 +119,9 @@ export const DetailPanelWidget = ({
           </Tabs.Tab>
           <Tabs.Tab value="tests" data-testid="TAB_TESTS">
             Tests
+          </Tabs.Tab>
+          <Tabs.Tab value="contracts" data-testid="TAB_CONTRACTS">
+            Contracts
           </Tabs.Tab>
         </Tabs.List>
 
@@ -224,12 +247,31 @@ export const DetailPanelWidget = ({
                 </Text>
               ))}
 
-              {functions.map((fn) => (
-                <Box key={fn.entry.name} data-testid="TEST_ENTRY">
-                  <Text ff="monospace" fz="xs" fw={600} c="gray.1">
-                    {`${fn.entry.name}(${fn.entry.params.map((param) => param.name).join(', ')}) · ${fn.cases.length} cases`}
-                  </Text>
-                  <Stack gap={2} mt={4}>
+              {functions.map((fn) => {
+                // A module entry is reached by IMPORTING it, not calling it, so it shows a bare LABEL
+                // (its single exported binding, else the file basename) with no `()` — never the
+                // internal `*module*`. A function/method entry keeps `name(params)`.
+                const isModule = fn.entry.access.kind === 'module';
+                const entryLabel =
+                  isModule && relPath !== undefined && relPath !== null
+                    ? String(
+                        moduleEntryLabelTransformer({
+                          ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }),
+                          relPath: String(relPath),
+                        }),
+                      )
+                    : String(fn.entry.exportName ?? fn.entry.name);
+
+                return (
+                  <Box key={fn.entry.name} data-testid="TEST_ENTRY">
+                    <Text ff="monospace" fz="xs" fw={600} c="gray.1">
+                      {isModule
+                        ? `${entryLabel} · ${fn.cases.length} cases`
+                        : `${entryLabel}(${fn.entry.params
+                            .map((param) => param.name)
+                            .join(', ')}) · ${fn.cases.length} cases`}
+                    </Text>
+                    <Stack gap={2} mt={4}>
                     {fn.cases.map((testCase) => {
                       const exit = fn.exits.find((candidate) => candidate.coverageId === testCase.reachesExit);
                       const touched = caseTouchedLinesTransformer({
@@ -263,13 +305,68 @@ export const DetailPanelWidget = ({
                           >
                             {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
                           </Text>
-                          {`${fn.entry.name}(${arrangeTextTransformer({ arrange: testCase.arrange })}) → reaches L${exit?.line ?? '?'}`}
+                          {isModule
+                            ? `${entryLabel} → reaches L${exit?.line ?? '?'}`
+                            : `${entryLabel}(${arrangeTextTransformer({
+                                arrange: testCase.arrange,
+                              })}) → reaches L${exit?.line ?? '?'}`}
                         </Text>
                       );
                     })}
-                  </Stack>
-                </Box>
-              ))}
+                    </Stack>
+                  </Box>
+                );
+              })}
+            </Stack>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="contracts" p="sm">
+          {edges.length === 0 ? (
+            <Text data-testid="CONTRACTS_EMPTY" c="dimmed" fz="sm">
+              No contracts for this file
+            </Text>
+          ) : (
+            <Stack gap="sm">
+              {/* Each resolved import / ambient global as a DevTools-style inspector entry: symbol +
+                  source, then the structured INPUT contract (one `name: type` per param — the star,
+                  `—` when there are none), then the OUTPUT/return (or a member `type`) line. Teal /
+                  positive colour, distinct from the admissions on the Tests tab. */}
+              {edges.map((edge) => {
+                const view = resolvedEdgeContractTransformer({ edge });
+
+                return (
+                  <Box
+                    key={`${String(edge.line)}:${String(edge.column)}:${view.symbol}`}
+                    data-testid="CONTRACT_ENTRY"
+                  >
+                    <Text data-testid="CONTRACT_SYMBOL" ff="monospace" fz="xs" fw={600} c="teal.3">
+                      {view.symbol}
+                    </Text>
+                    <Text data-testid="CONTRACT_SOURCE" ff="monospace" fz="xs" c="teal.6">
+                      {view.source}
+                    </Text>
+                    <Stack gap={0} mt={2} pl="xs" style={{ borderLeft: '2px solid var(--mantine-color-teal-9)' }}>
+                      {view.inputs.length === 0 ? (
+                        <Text data-testid="CONTRACT_INPUT" ff="monospace" fz="xs" c="teal.4">
+                          —
+                        </Text>
+                      ) : (
+                        view.inputs.map((line) => (
+                          <Text key={line} data-testid="CONTRACT_INPUT" ff="monospace" fz="xs" c="teal.4">
+                            {line}
+                          </Text>
+                        ))
+                      )}
+                      {view.output === undefined ? null : (
+                        <Text data-testid="CONTRACT_OUTPUT" ff="monospace" fz="xs" c="teal.4">
+                          {view.output}
+                        </Text>
+                      )}
+                    </Stack>
+                  </Box>
+                );
+              })}
             </Stack>
           )}
         </Tabs.Panel>

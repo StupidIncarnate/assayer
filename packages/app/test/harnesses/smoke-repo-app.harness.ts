@@ -56,7 +56,15 @@ export const smokeRepoAppHarness = (): {
       const configPath = join(configDir, 'assayer.config.json');
       writeFileSync(
         configPath,
-        JSON.stringify({ repoRoot: smokeRepoPath, exclude: [], stableBranch: 'master' }),
+        // The `npm-package/` example imports `vendored-fixture`, a hand-authored fixture that lives
+        // OUTSIDE this repoRoot and is wired in as a `file:` dependency — so it resolves through
+        // node_modules as a real external package (never part of the analyzed surface) and its declared
+        // signature is pulled as the typed black box, exactly as a published npm dep would.
+        JSON.stringify({
+          repoRoot: smokeRepoPath,
+          exclude: [],
+          stableBranch: 'master',
+        }),
       );
       configDirRef.current = configDir;
       const original = readFileSync(configPath);

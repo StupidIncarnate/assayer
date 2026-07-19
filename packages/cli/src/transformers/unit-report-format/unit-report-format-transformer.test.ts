@@ -101,13 +101,14 @@ describe('unitReportFormatTransformer', () => {
   describe('undriven logic', () => {
     // Without this line the report above is the WHOLE report for a file of pure module-scope
     // branching — `0/0 passed`, which is exactly what an empty file prints.
-    it('VALID: {a file whose only logic is undriven} => named beside the honest 0/0, not hidden by it', () => {
+    it('VALID: {a file whose only logic is undriven} => named by its LABEL, not the internal *module*, beside the honest 0/0', () => {
       const runs = [
         RunResultStub({
           cases: [],
           undriven: [
             {
               name: '*module*',
+              label: 'undriven-welded-const.ts',
               reason: 'it runs at import time, so no case drove its branches',
               startLine: 1,
               endLine: 8,
@@ -118,9 +119,11 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
+      // The report shows the module's label (its file basename here), never the internal *module* —
+      // exactly what the desktop panel shows, so the two describe one artifact identically.
       expect(String(result)).toBe(
         'packages/syntax-repository/src/boolean/and.ts  0/0 passed\n' +
-          '  UNDRIVEN *module* — it runs at import time, so no case drove its branches',
+          '  UNDRIVEN undriven-welded-const.ts — it runs at import time, so no case drove its branches',
       );
     });
 

@@ -23,6 +23,7 @@ import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-fil
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { mapProjectionTransformer } from '../../../transformers/map-projection/map-projection-transformer';
+import { moduleGraphProjectionTransformer } from '../../../transformers/module-graph-projection/module-graph-projection-transformer';
 
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
@@ -71,7 +72,8 @@ export const compileProcessFileBroker = async ({
     hash: cryptoSha256Adapter({ content: text }),
   }));
 
-  const analysis = analyzeFileBroker({ walked });
+  const analysis = analyzeFileBroker({ walked, relPath });
+  const moduleGraph = moduleGraphProjectionTransformer({ walked });
 
   const blob = compiledFileBlobContract.parse({
     relPath: relPathContract.parse(relPath),
@@ -79,6 +81,7 @@ export const compileProcessFileBroker = async ({
     nodes: extracted.nodes,
     displayLines,
     analysis,
+    moduleGraph,
   });
 
   await fsMkdirAdapter({ path: blobsDir });

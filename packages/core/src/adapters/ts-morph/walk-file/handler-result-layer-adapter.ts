@@ -14,11 +14,12 @@
  */
 import type { Node } from 'ts-morph';
 
-import type { BranchNode, ExitNode } from '@assayer/shared/contracts';
+import type { BranchNode, ExitNode, GlobalUse, ModuleEdge, SymbolName } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../../contracts/call-site/call-site-contract';
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
+import type { ValueUse } from '../../../contracts/value-use/value-use-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import type { WalkNode } from '../../../contracts/walk-node/walk-node-contract';
 
@@ -32,9 +33,17 @@ export interface HandlerResult {
   exits: ExitNode[];
   /** The calls this node made — loose, claimed by the enclosing scope like branches and exits. */
   calls: CallSite[];
+  /** The value uses this node made — loose, claimed by the enclosing scope on its own channel. */
+  valueUses: ValueUse[];
+  /** The exported top-level binding names this node declared — loose, claimed on its own channel. */
+  exportedBindings: SymbolName[];
   nodes: WalkNode[];
   /** Where the instrumenter must wrap, keyed by the id the analyzer already derived. */
   probeSites: ProbeSite[];
+  /** Import/re-export edges this node declared — flat file-level facts, never scope-claimed. */
+  moduleEdges: ModuleEdge[];
+  /** Ambient-external identifiers this node used (`console`, `process`) — flat file-level facts. */
+  globalUses: GlobalUse[];
   descents: Descent[];
   /**
    * Passed in with empty branches/exits — the walk fills them from the scope body's loose facts.
@@ -47,24 +56,36 @@ export const handlerResultLayerAdapter = ({
   branches,
   exits,
   calls,
+  valueUses,
+  exportedBindings,
   nodes,
   probeSites,
+  moduleEdges,
+  globalUses,
   descents,
   opensScope,
 }: {
   branches?: BranchNode[];
   exits?: ExitNode[];
   calls?: CallSite[];
+  valueUses?: ValueUse[];
+  exportedBindings?: SymbolName[];
   nodes?: WalkNode[];
   probeSites?: ProbeSite[];
+  moduleEdges?: ModuleEdge[];
+  globalUses?: GlobalUse[];
   descents?: Descent[];
   opensScope?: ScopeRecord;
 }): HandlerResult => ({
   branches: branches ?? [],
   exits: exits ?? [],
   calls: calls ?? [],
+  valueUses: valueUses ?? [],
+  exportedBindings: exportedBindings ?? [],
   nodes: nodes ?? [],
   probeSites: probeSites ?? [],
+  moduleEdges: moduleEdges ?? [],
+  globalUses: globalUses ?? [],
   descents: descents ?? [],
   ...(opensScope === undefined ? {} : { opensScope }),
 });

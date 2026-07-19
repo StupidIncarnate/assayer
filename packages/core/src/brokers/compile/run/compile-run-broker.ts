@@ -1,8 +1,10 @@
 /**
  * PURPOSE: Runs one compile pass across the current working-tree namespace and the optional
  *   stable-branch namespace -- planning each, processing every target through the content-hash
- *   cache in order (stable first, then current), streaming progress, and writing the resulting
- *   cache manifest only when every target parses cleanly. When currentBranch === stableBranch
+ *   cache in order (stable first, then current), stitching each processed namespace's cross-file
+ *   imports to their definitions, streaming progress, and writing the resulting cache manifest and
+ *   per-namespace resolved indexes only when every target parses AND every import resolves. When
+ *   currentBranch === stableBranch
  *   (working ON the stable trunk) the two manifest namespaces collide on one key; CURRENT WINS --
  *   the working-tree index (irrecoverable uncommitted edits) overwrites the committed stable index
  *   (a pure function of ref + blob store, recomputable on demand).
@@ -29,9 +31,11 @@ import { compilePlanCurrentBroker } from '../plan-current/compile-plan-current-b
 import { gitCurrentBranchBroker } from '../../git/current-branch/git-current-branch-broker';
 
 import { manifestWriteBroker } from '../../manifest/write/manifest-write-broker';
+import { resolvedIndexWriteBroker } from '../../resolved-index/write/resolved-index-write-broker';
 
 import { pathBasenameAdapter } from '../../../adapters/path/basename/path-basename-adapter';
 
+import { compileResolveGraphBroker } from '../resolve-graph/compile-resolve-graph-broker';
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';
 
@@ -114,6 +118,30 @@ export const compileRunBroker = async ({
     }),
   );
 
+  // The stitch: resolve every reference/edge in each processed namespace to its canonical definition.
+  // Its unresolvable/dynamic-import failures are build errors of the same class as a parse failure —
+  // mapped with the owning namespace and folded into `errors`, so the gate below flips the status and
+  // the responder prints `relPath:line:column message` with no responder change. The current namespace
+  // is always resolved; the stable namespace is resolved only when it was (re)processed this run — a
+  // SKIPPED stable is unchanged, so its resolved index already sits on disk from the compile that made
+  // it.
+  const resolved = await compileResolveGraphBroker({
+    root: String(root),
+    blobsDir,
+    cacheDir: `${configDir}/.assayer/cache`,
+    files: currentProcessed.index,
+  });
+
+  const resolvedStable =
+    stable === undefined || stable.resultEntry.mode === 'skipped'
+      ? undefined
+      : await compileResolveGraphBroker({
+          root: String(root),
+          blobsDir,
+          cacheDir: `${configDir}/.assayer/cache`,
+          files: stable.manifestNamespace.files,
+        });
+
   const currentMode = previousManifest === undefined ? 'net-new' : 'incremental';
 
   const results = [
@@ -126,7 +154,22 @@ export const compileRunBroker = async ({
     ...error,
   }));
 
-  const errors = [...(stable === undefined ? [] : stable.errors), ...currentErrors];
+  const resolveErrors = resolved.errors.map((error) => ({
+    namespace: namespaceNameContract.parse(String(currentBranch)),
+    ...error,
+  }));
+
+  const stableResolveErrors =
+    stable === undefined || resolvedStable === undefined
+      ? []
+      : resolvedStable.errors.map((error) => ({ namespace: stable.resultEntry.namespace, ...error }));
+
+  const errors = [
+    ...(stable === undefined ? [] : stable.errors),
+    ...stableResolveErrors,
+    ...currentErrors,
+    ...resolveErrors,
+  ];
 
   if (errors.length > 0) {
     return compileResultContract.parse({ status: 'errors', results, errors });
@@ -150,6 +193,15 @@ export const compileRunBroker = async ({
   };
 
   await manifestWriteBroker({ configDir, manifest: assayerCacheManifestContract.parse(manifest) });
+
+  // Write STABLE first, then CURRENT: on a currentBranch === stableBranch collision the two resolved
+  // indexes share one namespace file and the last write wins, so the working-tree resolution overwrites
+  // the committed-ref one — mirroring the manifest namespace collision above.
+  if (stable !== undefined && resolvedStable !== undefined) {
+    await resolvedIndexWriteBroker({ configDir, namespace: String(stable.resultEntry.namespace), index: resolvedStable.index });
+  }
+
+  await resolvedIndexWriteBroker({ configDir, namespace: String(currentBranch), index: resolved.index });
 
   return compileResultContract.parse({ status: 'ok', results, errors: [] });
 };

@@ -12,8 +12,12 @@ describe('handlerResultLayerAdapter', () => {
         branches: [],
         exits: [],
         calls: [],
+        valueUses: [],
+        exportedBindings: [],
         nodes: [],
         probeSites: [],
+        moduleEdges: [],
+        globalUses: [],
         descents: [],
       });
     });
@@ -25,8 +29,12 @@ describe('handlerResultLayerAdapter', () => {
         branches: [],
         exits: [],
         calls: [],
+        valueUses: [],
+        exportedBindings: [],
         nodes: [WalkNodeStub()],
         probeSites: [],
+        moduleEdges: [],
+        globalUses: [],
         descents: [],
       });
     });
@@ -40,8 +48,12 @@ describe('handlerResultLayerAdapter', () => {
         branches: [],
         exits: [],
         calls: [],
+        valueUses: [],
+        exportedBindings: [],
         nodes: [],
         probeSites: [],
+        moduleEdges: [],
+        globalUses: [],
         descents: [],
         opensScope: ScopeRecordStub(),
       });

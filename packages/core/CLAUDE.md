@@ -71,6 +71,12 @@ exactly its own — which is why no node ever has to ask "which function am I in
 Handlers describe descent; the core performs it (R15: *core owns all traversal; plugins never parse*).
 That inversion is why a `switch` handler needs zero knowledge of `if`.
 
+**Resolution is a separate post-compile stitch — the walk still never crosses a file.** A call to an
+imported name records a raw `import` reference (the module-specifier's literal VALUE + the imported
+name) and keeps going; the walk never opens the imported file, so import cycles are a non-event at walk
+time. A second pass, over already-finished per-file blobs, turns those references into resolved edges by
+LOOKUP, not by re-parsing (§9). One parse per file still holds.
+
 ---
 
 ## 4. Where to make a change
@@ -87,6 +93,12 @@ That inversion is why a `switch` handler needs zero knowledge of `if`.
 | change reachability | `read-terminal` **or** `read-accounted` — they are different questions, read §5.8 first |
 | change what counts as a dark spot | `statics/significant-syntax-kinds` |
 | change what becomes an entry | `transformers/analysis-projection` (policy lives there, not in the walk) |
+| change what a call TARGETS (local / import / unresolved arms) | `read-callee-layer-adapter` |
+| record an import / re-export edge | `handle-import-layer-adapter` / `handle-export-layer-adapter` + their routes in `dispatch-node`; projected by `transformers/module-graph-projection` |
+| record an ambient global USE (`console`, `process`) | `handle-member-access-layer-adapter` (member forms) / `handle-call` (bare-identifier global calls) + `read-ambient-root-layer-adapter`; projected as `globalUses` by `transformers/module-graph-projection` |
+| change import resolution (the stitch) | `brokers/compile/resolve-graph` + `adapters/typescript/{read-config,resolve-module}` |
+| read an external (npm / node) signature | `brokers/external-signature/read` + `adapters/ts-morph/read-external-signature` (the SECOND, node_modules-aware project — §5.10) |
+| read an ambient global / called-builtin signature | `brokers/external-signature/read-global` + `adapters/ts-morph/read-global-signature` (probes the SAME second project's GLOBAL scope — a builtin resolves only in the checker, never a `.d.ts` path) |
 
 **`dispatch-node` is the only place that ROUTES** — i.e. the only place that decides *which handler
 owns a node*. That is the invariant; it is not "no other file may say `Node.isX`". Plenty of files
@@ -188,6 +200,14 @@ standard library resolves, `node_modules` does not. Two consequences, and both a
   what would widen it, and that is a real decision (parse cost on every file, a core dependency on
   consumer-adjacent types, and every specimen's analysis changes) — not a tweak.
 
+External types are read WITHOUT weakening any of this. When a resolved import needs its declared
+input/output types, a SEPARATE, node_modules-aware project reads them out of band —
+`adapters/ts-morph/read-external-signature` opens `new Project` WITHOUT `useInMemoryFileSystem`,
+rooted at the consumer repo so `node_modules`/`@types` resolve, and reads DECLARED types only
+(P4-safe). This second project is the sanctioned way to read externals; the hermetic walk above is
+never given `node_modules`, which is exactly what keeps the `process.env` proof intact. The two
+projects stay strictly separate.
+
 **5.11 — An exit owes a probe SITE, minted where its id is minted.** Every handler that emits an exit
 emits its site in the same expression (`handle-if` per arm completion, `handle-function` per body,
 `handle-source-file` per file end). Derive sites in a second pass and a runtime observation can key
@@ -208,7 +228,7 @@ should do.
 1. **Specimen first.** Add `smoke-repo/packages/syntax-repository/src/<construct>/<rung>.ts` + a
    colocated `.test.ts` holding only what is BESPOKE to that file (exact coverage IDs, the shape of
    its analysis). If it's currently a dark spot, assert THAT first (a ratchet), then flip it.
-   Adding a specimen also changes the e2e's compiled-surface counts — see §8.
+   The surface e2e derives its expected surface off disk, so it needs no edit for a new file — see §8.
 1b. **Declare it** in `packages/core/test/harnesses/specimen-registry.ts` — one line naming what the
    file IS (`['access:named', 'branch:if']`), never what to test. The matrix walks the catalogue off
    disk, so an undeclared specimen fails the catalogue check rather than being skipped, and the
@@ -288,8 +308,10 @@ Two properties must hold and are cheap to check with a probe:
 - **Adding any non-test `.ts` to the syntax-repository package makes it part of the analysed surface.**
   A test-only shim at the package root silently inflated the e2e's `ts N` count. Map jest aliases
   straight at core instead of adding shim files.
-- Adding a specimen changes three assertions in `packages/app/src/flows/app/surface-explorer.e2e.ts`:
-  the header count, the sorted file-leaf list, the sorted dir list — plus its line in
+- Adding a specimen needs NO edit to the surface e2e. `packages/app/src/flows/app/surface-tree.e2e.ts`
+  derives the compiled surface — the header `ts N` count, the sorted file-leaf list, the sorted dir
+  list — off disk via `syntaxSurfaceHarness` (the same `.ts`-excluding-`.test.ts` inclusion rule the
+  compiler uses), so it self-maintains. The one edit a new specimen still requires is its line in
   `specimen-registry.ts`, without which the catalogue check fails.
 - **The runner's Jest config must be IDENTICAL for every file.** ts-jest keeps one TypeScript
   compiler per distinct config and never releases it, so anything per-file in the config strands a
@@ -315,3 +337,52 @@ Two properties must hold and are cheap to check with a probe:
   content-hashed (an mtime bump alone rebuilds nothing), so the no-op costs ~0.2s. Do not remove it.
 - Coverage IDs are **cache-internal by ruling** — changing them costs only fixture rewrites, never a
   migration. Do not contort the design to preserve an ID string.
+
+---
+
+## 9. Cross-file & external resolution (the stitch)
+
+The walk parses one file and records what leaves it as raw references (an `import` callee arm on a
+call site; flat `moduleEdge`s for import/re-export statements). A separate post-compile **stitch** turns
+those into resolved edges. It never re-parses source — it reads already-finished blobs back from
+`blobsDir` (a reused file is not re-analyzed in-run, so its record is on disk) and reconciles by lookup.
+
+- **Reconcile on the definition site, never the specifier string.** Different spellings (`../b/foo` vs
+  `../../b/foo`) and aliases (`@app/foo`) resolve — through TypeScript's own `ts.resolveModuleName`
+  (`adapters/typescript/resolve-module`, config via `adapters/typescript/read-config`) — to one
+  canonical repo-relative `(file, symbol)`. Re-export barrels are followed to the definition with a
+  seen-set (recursion, not `while(true)`); the seen-set is the only guard a cycle needs, because the
+  walk never recursed across the file in the first place.
+- **Classify `local` / `package` / `builtin` / `unresolved`.** `brokers/compile/resolve-graph` emits
+  resolved edges + resolution errors. A `local` target is keyed by its in-repo definition path; a
+  `package`/`builtin` target is keyed by package name.
+- **External signatures via the SECOND project (§5.10).** A CALLED package or builtin edge carries the
+  declared `{ params, returnType }` of its callable — read through `adapters/ts-morph/read-external-signature`
+  and fed through the EXISTING `read-type-fact → type-descriptor` pipeline, so no new type language —
+  cached by `.d.ts` byte hash at `.assayer/cache/external-signatures/<declHash>.json` and reused by
+  every importer. An import that ships no usable types raises `no-usable-types`.
+- **Ambient globals + typed builtins via the SECOND project's GLOBAL scope.** A free identifier the
+  hermetic walk cannot type (`console`, `process`, `Buffer` — resolving to a host lib or to nothing,
+  never to the ES lib) is recorded WITHOUT resolving as a `globalUse`, and a CALLED node builtin
+  (`import { join } from 'node:path'; join(a,b)`) is read the same way. The stitch resolves each by
+  PROBING the second project — a called reference yields a `{params,returnType}` signature, a member
+  access (`process.env`) its member type — cached at `.assayer/cache/global-signatures/<hash>.json`.
+  Each resolves to a `{ kind: 'global', name, member?, signature?/type? }` resolved-edge arm (a called
+  builtin instead enriches its `builtin` edge with a signature). A resolved edge is emitted for EVERY
+  use so a candidate is never invisible; a CALLED use `@types/node` cannot type is additionally a
+  no-usable-types build error at the call site (a member access that cannot be typed is merely
+  recorded). This is the sanctioned way node stuff gets a cache entry; the hermetic walk stays typeless
+  (§5.10 is untouched, and `read-env-operand` still proves `process.env` on its own).
+- **Cache split keeps it honest.** Per-file blobs stay content-keyed and pure (raw references + module
+  edges). The resolved index is DERIVED, keyed on repo layout + tsconfig hash, rebuilt when the file set
+  or tsconfig changes; written to `.assayer/cache/resolved/<namespace>.json`. A pure file move re-parses
+  nothing (blobs are content-addressed) and re-resolves edges against the new layout, so a
+  moved-but-not-updated import surfaces as a broken link, never a stale pointer.
+- **Resolution failure is a BUILD ERROR, not a dark spot — the distinction is WHO OWES the fix.** A dark
+  spot is Assayer admitting it never understood some syntax (its debt, unactionable for the reader). An
+  unresolvable import is understood perfectly and simply broken or opaque, so it is the REPO's to fix:
+  it surfaces at the call site (`relPath:line:column message`, P1) through `compile-run-broker`'s
+  existing `errors[]` — exit 1, the same class as a parse failure — with reason
+  `cannot-resolve-specifier` / `dynamic-or-computed-specifier` / `no-usable-types`. Never route one
+  through the dark-spot channel; telling the reader to fix their own for-loop is a dark spot's problem,
+  telling them to fix a broken import is a build error they can act on.

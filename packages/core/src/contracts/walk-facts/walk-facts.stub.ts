@@ -9,7 +9,11 @@ export const WalkFactsStub = ({ ...props }: StubArgument<WalkFacts> = {}): WalkF
     looseBranches: [],
     looseExits: [],
     looseCalls: [],
+    looseValueUses: [],
+    looseExportedBindings: [],
     nodes: [],
     probeSites: [],
+    moduleEdges: [],
+    globalUses: [],
     ...props,
   });

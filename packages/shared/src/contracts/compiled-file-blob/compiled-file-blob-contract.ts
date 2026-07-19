@@ -18,6 +18,7 @@ import { contentHashContract } from '../content-hash/content-hash-contract';
 import { mapNodeContract } from '../map-node/map-node-contract';
 import { sourceLineContract } from '../source-line/source-line-contract';
 import { fileAnalysisContract } from '../file-analysis/file-analysis-contract';
+import { fileModuleGraphContract } from '../file-module-graph/file-module-graph-contract';
 
 export const compiledFileBlobContract = z.object({
   relPath: relPathContract,
@@ -26,6 +27,9 @@ export const compiledFileBlobContract = z.object({
   // Raw per-line source for DISPLAY only (the code viewer / raw-blob view). Never read by analysis.
   displayLines: z.array(sourceLineContract),
   analysis: fileAnalysisContract.optional(),
+  // The file's raw, unresolved module graph (imports/re-exports it declares, imported names it
+  // calls) — the per-file input a later cross-file stitch pass resolves. Empty when the file has none.
+  moduleGraph: fileModuleGraphContract.default({ edges: [], references: [] }),
 });
 
 export type CompiledFileBlob = z.infer<typeof compiledFileBlobContract>;

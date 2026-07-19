@@ -26,6 +26,12 @@
         "../../../packages/core/src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter"
       ],
       "@assayer/core/analyze-file": ["../../../packages/core/src/brokers/analyze/file/analyze-file-broker"],
+      // The cross-file example rungs assert their MODULE GRAPH — the raw imports/re-exports and the
+      // references into imported names the walk records for a later stitch to resolve — which is a
+      // projection of the walk, so it too rides alongside the walk adapter.
+      "@assayer/core/module-graph": [
+        "../../../packages/core/src/transformers/module-graph-projection/module-graph-projection-transformer"
+      ],
       "@assayer/shared/contracts": ["../../../packages/shared/contracts"]
     }
   },

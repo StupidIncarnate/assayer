@@ -9,3 +9,4 @@
 // Subpath export entry for @assayer/shared/transformers
 
 export * from './src/transformers/arrange-text/arrange-text-transformer';
+export * from './src/transformers/module-entry-label/module-entry-label-transformer';

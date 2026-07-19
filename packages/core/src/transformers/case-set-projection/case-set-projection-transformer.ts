@@ -7,14 +7,17 @@
  *   never on its name:
  *   - `unreachable` (an unexported helper) is not runnable, so it is not driven — but it is not
  *     silent either: the analysis already admitted it in `undriven`, which is carried through below;
- *   - a `module` scope is driven only when the environment gives it something to vary. Importing it
- *     runs it, so a case that writes the variables its branching reads and imports it fresh really
- *     does choose an arm. A module branching only on values welded into its own source has no such
- *     input: every case it derives arranges nothing, so the cases are identical setups claiming
- *     different exits and at most one could hold. Driving those would fail a case against correct
- *     code, so it is admitted in `undriven` instead — keyed on the same question, so the two stay
- *     exact complements. Dropping it and saying nothing is what let a file with real top-level
- *     branching report the same thing a fully covered file reports;
+ *   - a `module` scope is driven two ways. It is driven when the environment gives its BRANCHING
+ *     something to vary: importing it runs it, so a case that writes the variables its branching reads
+ *     and imports it fresh really does choose an arm. It is ALSO driven when it has NO branching — a
+ *     module projected here with zero branches is a pure CONSUMPTION site (it calls an import or an
+ *     ambient global, the only other reason a module becomes an entry), so importing it runs the call
+ *     and its one happy-path case reaches the module's single exit. A module branching only on values
+ *     welded into its own source has neither: every case it derives arranges nothing, so the cases are
+ *     identical setups claiming different exits and at most one could hold. Driving those would fail a
+ *     case against correct code, so it is admitted in `undriven` instead — keyed on the same question,
+ *     so the two stay exact complements. Dropping it and saying nothing is what let a file with real
+ *     top-level branching report the same thing a fully covered file reports;
  *   - a `method` whose class needs constructor arguments IS a gap: something real is untested and
  *     needs a harness, so it is named rather than dropped;
  *   - a `constructor` is a gap too: it is reached through `new`, which the runner does not model, and
@@ -54,7 +57,16 @@ export const caseSetProjectionTransformer = ({
     (fn) =>
       fn.entry.access.kind !== 'unreachable' &&
       fn.cases.length > 0 &&
-      (fn.entry.access.kind !== 'module' || envOperandsTransformer({ branches: fn.branches }).length > 0),
+      // A module scope is runnable in two ways. It is driven when the environment gives it something to
+      // vary — an env operand its branching reads. It is ALSO runnable when it has no branching at all:
+      // a module projected here with zero branches is a pure CONSUMPTION site (it calls an import or an
+      // ambient global — the only other reason analysis-projection admits a module), so importing it
+      // runs the call and its one structural happy-path case reaches the module's single exit. A module
+      // that branches on welded-in values with no env operand stays undriven — its cases arrange the
+      // same nothing and claim different exits, so at most one could hold.
+      (fn.entry.access.kind !== 'module' ||
+        fn.branches.length === 0 ||
+        envOperandsTransformer({ branches: fn.branches }).length > 0),
   );
   const blocked = owed.filter(
     (fn) => fn.entry.access.kind === 'constructor' || (fn.entry.access.kind === 'method' && !fn.entry.access.constructable),

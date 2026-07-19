@@ -33,6 +33,7 @@ import {
 } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
+import { valueUseContract } from '../value-use/value-use-contract';
 
 export const scopeRecordContract = z.object({
   scopePath: z.array(symbolNameContract),
@@ -50,6 +51,15 @@ export const scopeRecordContract = z.object({
   // to empty so the handlers that open a scope need not thread it — the walk fills it when it claims
   // the scope's body.
   calls: z.array(callSiteContract).default([]),
+  // The value uses this scope makes — bindings referenced as values (`const s = sep`), a data flow
+  // that is not a call. LOOSE and claimed exactly like `calls`, on its OWN channel so it never risks
+  // the follow-calls machinery, which assumes a call is a real invocation. Defaults to empty.
+  valueUses: z.array(valueUseContract).default([]),
+  // The names this scope EXPORTS — the declared bindings of its top-level `export const`/`let`
+  // statements (`export const message = …` ⇒ `['message']`). LOOSE and claimed on its own channel like
+  // `calls`; only a module scope ever collects any, since exports are top-level. A projection reads
+  // these to LABEL a module entry by its single exported binding — DISPLAY only, never identity.
+  exportedBindings: z.array(symbolNameContract).default([]),
 });
 
 export type ScopeRecord = z.infer<typeof scopeRecordContract>;

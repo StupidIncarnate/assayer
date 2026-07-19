@@ -1,7 +1,12 @@
 import { ScopeRecordStub } from '../../../contracts/scope-record/scope-record.stub';
 import { WalkNodeStub } from '../../../contracts/walk-node/walk-node.stub';
+import { moduleGraphProjectionTransformer } from '../../../transformers/module-graph-projection/module-graph-projection-transformer';
 import { tsMorphWalkFileAdapter } from './ts-morph-walk-file-adapter';
 import { tsMorphWalkFileAdapterProxy } from './ts-morph-walk-file-adapter.proxy';
+
+const IMPORTS_AND_CALL_SINGLE = "import { foo } from './y';\nexport function run(): void {\n  foo();\n}\n";
+const IMPORTS_AND_CALL_DOUBLE = 'import { foo } from "./y";\nexport function run(): void {\n  foo();\n}\n';
+const IMPORTS_AND_CALL_MINIFIED = "import {foo} from './y';export function run():void{foo();}";
 
 describe('tsMorphWalkFileAdapter', () => {
   describe('module scope', () => {
@@ -12,6 +17,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 0 }],
         nodes: [],
         scopes: [
@@ -41,6 +48,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 68 },
           { id: '*module*/classify/return@top', kind: 'exit', start: 59, end: 64 }],
@@ -90,6 +99,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 128 },
           { id: '*module*/outer/inner/return@top', kind: 'exit', start: 96, end: 97 },
@@ -122,6 +133,7 @@ describe('tsMorphWalkFileAdapter', () => {
                 callee: { target: 'local', name: 'inner', startLine: 2 },
                 args: [{ kind: 'param-ref', paramName: 'value' }],
                 guardPath: [],
+                position: { line: 5, column: 10 },
               },
             ],
           }),
@@ -170,6 +182,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
           { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 73, end: 78 },
@@ -223,6 +237,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 79 },
           { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 66, end: 71 }],
@@ -276,6 +292,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 81 },
           { id: '*module*/run/return@top', kind: 'exit', start: 58, end: 77 },
@@ -309,7 +327,9 @@ describe('tsMorphWalkFileAdapter', () => {
             exits: [{ coverageId: '*module*/run/return@top', kind: 'return', guardPath: [], line: 2 }],
             // `items.map(...)` is a call to an unresolvable callee (a method), and its argument is the
             // callback expression — opaque, not a param the caller passes straight through.
-            calls: [{ callee: { target: 'unresolved' }, args: [{ kind: 'opaque' }], guardPath: [] }],
+            calls: [
+              { callee: { target: 'unresolved' }, args: [{ kind: 'opaque' }], guardPath: [], position: { line: 2, column: 10 } },
+            ],
           }),
           ScopeRecordStub({
             scopePath: ['*module*', 'run', 'fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,id:n'],
@@ -367,6 +387,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 145 },
           { id: '*module*/sumAll/return@top', kind: 'exit', start: 136, end: 141 },
@@ -421,6 +443,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 75 },
           { id: '*module*/pick/return@top', kind: 'exit', start: 55, end: 71 }],
@@ -471,6 +495,8 @@ describe('tsMorphWalkFileAdapter', () => {
 
       expect(result).toStrictEqual({
         success: true,
+        globalUses: [],
+        moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
           { id: '*module*/greet/return@top', kind: 'exit', start: 77, end: 82 }],
@@ -505,6 +531,58 @@ describe('tsMorphWalkFileAdapter', () => {
             endLine: 4,
           }),
         ],
+      });
+    });
+  });
+
+  describe('module edges', () => {
+    it('VALID: {a file that imports and calls an imported name} => the walk records the edge and the call reference', () => {
+      tsMorphWalkFileAdapterProxy();
+
+      const walked = tsMorphWalkFileAdapter({ source: IMPORTS_AND_CALL_SINGLE, relPath: 'src/a.ts' });
+      const graph = moduleGraphProjectionTransformer({ walked });
+
+      expect(graph).toStrictEqual({
+        edges: [{ kind: 'import', specifier: './y', bindings: [{ kind: 'named', name: 'foo' }], line: 1, column: 1 }],
+        references: [{ specifier: './y', importedName: 'foo', line: 3, column: 3 }],
+        globalUses: [],
+      });
+    });
+  });
+
+  describe('module-graph determinism', () => {
+    it('VALID: {the same source walked twice} => byte-identical module graphs', () => {
+      tsMorphWalkFileAdapterProxy();
+
+      const first = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source: IMPORTS_AND_CALL_SINGLE, relPath: 'src/a.ts' }) });
+      const second = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source: IMPORTS_AND_CALL_SINGLE, relPath: 'src/a.ts' }) });
+
+      expect(JSON.stringify(first)).toBe(JSON.stringify(second));
+    });
+  });
+
+  describe('module-graph formatting immunity', () => {
+    it('VALID: {single vs double quotes} => an identical module graph, positions included', () => {
+      tsMorphWalkFileAdapterProxy();
+
+      const single = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source: IMPORTS_AND_CALL_SINGLE, relPath: 'src/a.ts' }) });
+      const double = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source: IMPORTS_AND_CALL_DOUBLE, relPath: 'src/a.ts' }) });
+
+      expect(single).toStrictEqual(double);
+    });
+
+    it('VALID: {minified vs formatted} => identical edge and reference IDENTITY, though positions move', () => {
+      tsMorphWalkFileAdapterProxy();
+
+      const formatted = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source: IMPORTS_AND_CALL_SINGLE, relPath: 'src/a.ts' }) });
+      const minified = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source: IMPORTS_AND_CALL_MINIFIED, relPath: 'src/a.ts' }) });
+
+      expect({
+        edges: minified.edges.map((edge) => ({ kind: edge.kind, specifier: edge.specifier, bindings: edge.bindings })),
+        references: minified.references.map((reference) => ({ specifier: reference.specifier, importedName: reference.importedName })),
+      }).toStrictEqual({
+        edges: formatted.edges.map((edge) => ({ kind: edge.kind, specifier: edge.specifier, bindings: edge.bindings })),
+        references: formatted.references.map((reference) => ({ specifier: reference.specifier, importedName: reference.importedName })),
       });
     });
   });

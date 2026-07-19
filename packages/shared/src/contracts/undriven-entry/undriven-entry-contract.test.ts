@@ -21,6 +21,16 @@ describe('undrivenEntryContract', () => {
 
       expect(result).toStrictEqual(entry);
     });
+
+    // A module entry keeps `name: '*module*'` for matching but shows a `label` — the reader never sees
+    // the internal scope root.
+    it('VALID: {a module entry with a label} => parses the display label beside the name', () => {
+      const entry = UndrivenEntryStub({ name: '*module*', label: 'undriven-welded-const.ts' });
+
+      const result = undrivenEntryContract.parse(entry);
+
+      expect(result).toStrictEqual(entry);
+    });
   });
 
   describe('invalid undriven entries', () => {

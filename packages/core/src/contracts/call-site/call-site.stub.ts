@@ -8,5 +8,6 @@ export const CallSiteStub = ({ ...props }: StubArgument<CallSite> = {}): CallSit
     callee: { target: 'local', name: 'inner', startLine: 2 },
     args: [{ kind: 'param-ref', paramName: 'value' }],
     guardPath: [],
+    position: { line: 2, column: 3 },
     ...props,
   });

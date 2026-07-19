@@ -25,6 +25,13 @@ constraints; the plan docs win on detail. For how the ANALYZER works, read
 repo. Verify with BOTH `npm run ward` and `npm run test:syntax` — the specimen
 catalogue is not in ward's graph.
 
+**Critical:** Do not document historical state. CLAUDE.md files, code comments, JSDoc, and
+test descriptions should describe what the code does NOW — never "used to do", "previously",
+"historically", or "before the X fix". Git is the history. If the current design needs
+rationale, state the rationale in present tense ("keys on toolUseId because…") not as a
+contrast with a deleted implementation. When you remove code, remove every comment that
+refers to what was removed.
+
 ## Driving the desktop app by hand (an LLM can inspect the real UI)
 
 **A plain browser at the dev URL is a dead end.** The renderer's every fact
@@ -140,7 +147,13 @@ capture side-by-side at diff time. **No per-site waivers exist** —
 the only don't-care is a GLOBAL rule/obligation toggle in config (per-site
 suppression is an LLM abuse vector; if you don't care somewhere, you care
 nowhere). Everything in
-`.assayer/` commits EXCEPT `cache/`. **Map-node IDs NEVER key committed
+`.assayer/` commits EXCEPT `cache/`. Beyond the assembled test files, `cache/` also
+holds two derived import-resolution artifacts, both content-keyed and rebuilt on
+demand: the resolved-import index per namespace (`cache/resolved/<namespace>.json` —
+each import reconciled to its canonical definition) and the external-signature cache
+(`cache/external-signatures/<declHash>.json` — one package/builtin callable's declared
+input/output types, keyed on the `.d.ts` byte hash and reused by every importer).
+**Map-node IDs NEVER key committed
 artifacts** — they are cache-internal; committed things key on user-chosen
 names + file paths. Expectations are DERIVED (inputs, source literals, models,
 consumer demands) — there is no authored "answers" artifact. **There is NO approval workflow:** the semantic diff is a ref-to-ref
@@ -221,10 +234,19 @@ admitted. So an UNDRIVEN private and the welded module scope owe the same text �
 branch with one possible outcome, decided in the source, that no feature will drive —
 while a private nothing calls is the LINT and a private some caller CAN steer is just
 driven. Never write an admission that reads as permanent when a feature would close it,
-and never write one that promises a feature that cannot exist. (Cross-file and
-npm-package call-following are a separate epic, gated on the coverage-ID cross-file
-scheme and the Q8 public-surface exemption; the callee link carries an `unresolved`
-target for everything the single-file parse cannot see.)
+and never write one that promises a feature that cannot exist. (An `import` callee link is
+RESOLVED: a post-compile stitch reconciles each import — via TypeScript's own module
+resolution — to its canonical definition, classified `local` (a sibling file, keyed by its
+repo-relative definition path with re-export barrels followed through) / `package` /
+`builtin`, and pulls the declared input/output types of a called package or builtin through
+a second, node_modules-aware project. An import that cannot be resolved is a hard BUILD ERROR
+at the call site, the same class as a parse failure — a broken specifier
+(`cannot-resolve-specifier`), a dynamic/computed specifier (`dynamic-or-computed-specifier`),
+or a dependency shipping no usable types (`no-usable-types`) — NOT one of the four admissions;
+the reader fixes the import, not their own code. What stays admitted is cross-file DRIVING:
+arranging a callee's branches through a caller across a file boundary needs the cross-file
+coverage-ID scheme and is a later rung. The callee link carries `unresolved` only for what a
+single-file parse genuinely cannot name — a method or computed callee, a namespace member.)
 
 All four ride on `FileAnalysis`, not merely the run artifact: the reads-as-complete lie
 lives in the ANALYSIS, so a file admits them the moment it is opened, before anything

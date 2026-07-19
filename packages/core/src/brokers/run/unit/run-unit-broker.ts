@@ -59,7 +59,7 @@ export const runUnitBroker = async ({
   analyzerContentHash: string;
 }): Promise<RunResult> => {
   const walked = tsMorphWalkFileAdapter({ source, relPath });
-  const analysis = analyzeFileBroker({ walked });
+  const analysis = analyzeFileBroker({ walked, relPath });
   const contentHash = cryptoSha256Adapter({ content: source });
 
   const probeDir = `${cacheDir}/probes`;

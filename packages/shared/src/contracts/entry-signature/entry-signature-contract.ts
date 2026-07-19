@@ -33,6 +33,12 @@ export const entrySignatureContract = z.object({
   returnType: typeDescriptorContract,
   line: lineNumberContract,
   access: entryAccessContract,
+  // The human label for a MODULE entry — the name of the single exported top-level binding its
+  // tracked flow is attached to (`message`, `separator`). Present only when the module has exactly
+  // one exported value binding; a side-effect-only module or one with several exports has none, and
+  // the surface falls back to the file basename. Never keys identity (that stays `*module*`-rooted in
+  // `scopePath`) — DISPLAY only. Absent for function/method entries, which show `name(params)`.
+  exportName: symbolNameContract.optional(),
 });
 
 export type EntrySignature = z.infer<typeof entrySignatureContract>;

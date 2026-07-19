@@ -21,16 +21,23 @@
  *   is, since a span recovered any other way could drift from the scope these branches were counted in.
  *
  * USAGE:
- * undrivenProjectionTransformer({ walked });
- * // Returns [{ name: '*module*', reason: 'nothing about it varies…', startLine: 1, endLine: 8 }]
+ * undrivenProjectionTransformer({ walked, relPath: 'src/sad-path/undriven-welded-const.ts' });
+ * // Returns [{ name: '*module*', label: 'undriven-welded-const.ts', reason: '…', startLine: 1, endLine: 8 }]
  */
+import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 import { undrivenEntryContract } from '@assayer/shared/contracts';
 import type { UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
 import { envOperandsTransformer } from '../env-operands/env-operands-transformer';
 
-export const undrivenProjectionTransformer = ({ walked }: { walked: WalkFileResult }): UndrivenEntry[] =>
+export const undrivenProjectionTransformer = ({
+  walked,
+  relPath,
+}: {
+  walked: WalkFileResult;
+  relPath?: string;
+}): UndrivenEntry[] =>
   walked.success
     ? walked.scopes
         .filter(
@@ -39,9 +46,17 @@ export const undrivenProjectionTransformer = ({ walked }: { walked: WalkFileResu
             scope.branches.length > 0 &&
             envOperandsTransformer({ branches: scope.branches }).length === 0,
         )
-        .map((scope) =>
-          undrivenEntryContract.parse({
+        .map((scope) => {
+          const exportName = scope.exportedBindings.length === 1 ? scope.exportedBindings[0] : undefined;
+          // The module scope renders by its LABEL, never the internal `*module*`: the single exported
+          // binding when there is one, else the file basename. `name` stays `*module*` because it keys
+          // the driven/undriven match; `label` is DISPLAY only. Without a relPath (a synthetic caller),
+          // the label falls away and the surface shows the name.
+          const label =
+            relPath === undefined ? undefined : moduleEntryLabelTransformer({ ...(exportName === undefined ? {} : { exportName }), relPath });
+          return undrivenEntryContract.parse({
             name: scope.name,
+            ...(label === undefined ? {} : { label }),
             startLine: scope.startLine,
             endLine: scope.endLine,
             reason:
@@ -52,6 +67,6 @@ export const undrivenProjectionTransformer = ({ walked }: { walked: WalkFileResu
               'Read an operand from the environment instead and Assayer drives it: a top-level ' +
               '`const x = Number(process.env.X)` makes X an input, and each arm becomes a case that ' +
               'sets it and imports the module fresh.',
-          }),
-        )
+          });
+        })
     : [];
