@@ -11,13 +11,13 @@ describe('probePlanProjectionTransformer', () => {
     it('VALID: {a walk with probe sites} => the sites, keyed by the content hash they were computed against', () => {
       const result = probePlanProjectionTransformer({
         walked: WalkFileResultStub({ probeSites: [ProbeSiteStub()] }),
-        relPath: 'src/boolean/and.ts',
+        relPath: 'src/happy-path/boolean/and/and.ts',
         contentHash: HASH,
       });
 
       expect(result).toStrictEqual({
         contentHash: HASH,
-        relPath: 'src/boolean/and.ts',
+        relPath: 'src/happy-path/boolean/and/and.ts',
         sites: [
           {
             id: 'grade/if:BinaryExpression,id:score,GreaterThanToken,num:5#leaf',

@@ -111,7 +111,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
 
       const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/import-local/uses-greeting.ts' })} />,
+        ui: <DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts' })} />,
       });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');
@@ -124,7 +124,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
 
       const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/node-global/uses-console.ts' })} />,
+        ui: <DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/node-global/uses-console/uses-console.ts' })} />,
       });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('uses-console.ts · 1 cases');
@@ -302,7 +302,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({
         functions: [FunctionAnalysisStub({ entry: MODULE_ENTRY })],
-        undriven: [UndrivenEntryStub({ name: '*module*', label: 'undriven-welded-const.ts' })],
+        undriven: [UndrivenEntryStub({ name: '*module*', label: 'welded-const.ts' })],
       });
 
       const { queryAllByTestId, getByTestId } = testingLibraryRenderAdapter({
@@ -312,7 +312,7 @@ describe('DetailPanelWidget', () => {
       expect(queryAllByTestId('TEST_CASE_ROW')).toStrictEqual([]);
       expect(queryAllByTestId('TEST_ENTRY')).toStrictEqual([]);
       expect(getByTestId('UNDRIVEN').textContent).toBe(
-        'UNDRIVEN undriven-welded-const.ts — it runs at import time, so no case drove its branches',
+        'UNDRIVEN welded-const.ts — it runs at import time, so no case drove its branches',
       );
     });
 
@@ -435,7 +435,7 @@ describe('DetailPanelWidget', () => {
         importedName: 'greeting',
         target: {
           kind: 'local',
-          relPath: 'src/import-local/greeting.ts',
+          relPath: 'src/happy-path/import-local/uses-greeting/greeting.ts',
           signature: ExternalSignatureStub({ params: [], returnType: { kind: 'string' } }),
         },
       });
@@ -446,7 +446,7 @@ describe('DetailPanelWidget', () => {
       await detail.openContractsTab();
 
       expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greeting');
-      expect(getByTestId('CONTRACT_SOURCE').textContent).toBe("import './greeting' → src/import-local/greeting.ts");
+      expect(getByTestId('CONTRACT_SOURCE').textContent).toBe("import './greeting' → src/happy-path/import-local/uses-greeting/greeting.ts");
       expect(getByTestId('CONTRACT_INPUT').textContent).toBe('—');
       expect(getByTestId('CONTRACT_OUTPUT').textContent).toBe('returns string');
     });
@@ -537,7 +537,7 @@ describe('DetailPanelWidget', () => {
         importedName: 'greeting',
         target: {
           kind: 'local',
-          relPath: 'src/import-local/greeting.ts',
+          relPath: 'src/happy-path/import-local/uses-greeting/greeting.ts',
           signature: ExternalSignatureStub({ params: [], returnType: { kind: 'string' } }),
         },
       });

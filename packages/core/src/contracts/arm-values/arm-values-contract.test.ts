@@ -10,13 +10,38 @@ describe('armValuesContract', () => {
 
       expect(result).toStrictEqual(armValues);
     });
+
+    // Both arms of an unread predicate are OPEN domains, and that has to parse: it is how an
+    // unrecognized predicate declines to narrow anything.
+    it('EMPTY: {both arms unconstrained} => parses to two open domains', () => {
+      const result = armValuesContract.parse({ satisfying: {}, violating: {} });
+
+      expect(result).toStrictEqual({
+        satisfying: {
+          minExclusive: false,
+          maxExclusive: false,
+          lengthMinExclusive: false,
+          lengthMaxExclusive: false,
+          lengthExcluded: [],
+          excluded: [],
+        },
+        violating: {
+          minExclusive: false,
+          maxExclusive: false,
+          lengthMinExclusive: false,
+          lengthMaxExclusive: false,
+          lengthExcluded: [],
+          excluded: [],
+        },
+      });
+    });
   });
 
   describe('invalid arm values', () => {
-    it('INVALID: {satisfying: [{}]} => throws validation error', () => {
+    it('INVALID: {satisfying: "everything"} => throws validation error', () => {
       expect(() => {
-        return armValuesContract.parse({ satisfying: [{}], violating: [] });
-      }).toThrow(/Invalid input/u);
+        return armValuesContract.parse({ satisfying: 'everything', violating: {} });
+      }).toThrow(/Expected object, received string/u);
     });
   });
 });

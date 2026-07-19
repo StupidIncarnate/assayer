@@ -13,41 +13,41 @@
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 
-const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
-const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/switch/in-function.ts';
-const BOOLEAN_AND = 'packages/syntax-repository/src/boolean/and.ts';
-const NESTED_FUNCTION = 'packages/syntax-repository/src/composition/nested-function.ts';
+const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
+const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
+const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
+const NESTED_FUNCTION = 'packages/syntax-repository/src/happy-path/composition/nested-function/nested-function.ts';
 
 // The remaining branch/pure rungs, each selected by exact relPath and asserted in ONE launch (compile
 // + launch once, walk many). Class rungs (if-else / switch in a method), the three boolean shapes, the
 // composition rungs, and the branchless pure function + method.
-const IF_ELSE_IN_CLASS = 'packages/syntax-repository/src/if-else/in-class.ts';
-const SWITCH_IN_CLASS = 'packages/syntax-repository/src/switch/in-class.ts';
-const BOOLEAN_OR = 'packages/syntax-repository/src/boolean/or.ts';
-const BOOLEAN_NOT = 'packages/syntax-repository/src/boolean/not.ts';
-const BOOLEAN_MIXED = 'packages/syntax-repository/src/boolean/mixed.ts';
-const SWITCH_IN_IF = 'packages/syntax-repository/src/composition/switch-in-if.ts';
-const IF_IN_SWITCH = 'packages/syntax-repository/src/composition/if-in-switch.ts';
-const FALLTHROUGH_IN_IF = 'packages/syntax-repository/src/composition/fallthrough-in-if.ts';
-const PURE_FUNCTION = 'packages/syntax-repository/src/pure/function.ts';
-const PURE_CLASS = 'packages/syntax-repository/src/pure/class.ts';
+const IF_ELSE_IN_CLASS = 'packages/syntax-repository/src/happy-path/if-else/in-class/in-class.ts';
+const SWITCH_IN_CLASS = 'packages/syntax-repository/src/happy-path/switch/in-class/in-class.ts';
+const BOOLEAN_OR = 'packages/syntax-repository/src/happy-path/boolean/or/or.ts';
+const BOOLEAN_NOT = 'packages/syntax-repository/src/happy-path/boolean/not/not.ts';
+const BOOLEAN_MIXED = 'packages/syntax-repository/src/happy-path/boolean/mixed/mixed.ts';
+const SWITCH_IN_IF = 'packages/syntax-repository/src/happy-path/composition/switch-in-if/switch-in-if.ts';
+const IF_IN_SWITCH = 'packages/syntax-repository/src/happy-path/composition/if-in-switch/if-in-switch.ts';
+const FALLTHROUGH_IN_IF = 'packages/syntax-repository/src/happy-path/composition/fallthrough-in-if/fallthrough-in-if.ts';
+const PURE_FUNCTION = 'packages/syntax-repository/src/happy-path/function/function.ts';
+const PURE_CLASS = 'packages/syntax-repository/src/happy-path/class/class.ts';
 
 // The module-scope entries — the two env-DRIVEN pure statements (labelled by filename), and the five
 // consumption modules, each labelled by its single exported binding (Slice-12) or, for the side-effect
 // console call, its filename.
-const IF_ELSE_PURE_STATEMENT = 'packages/syntax-repository/src/if-else/pure-statement.ts';
-const SWITCH_PURE_STATEMENT = 'packages/syntax-repository/src/switch/pure-statement.ts';
-const USES_GREETING = 'packages/syntax-repository/src/import-local/uses-greeting.ts';
-const USES_BUILTIN = 'packages/syntax-repository/src/node-builtin/uses-builtin.ts';
-const CALLS_JOIN = 'packages/syntax-repository/src/node-builtin/calls-join.ts';
-const USES_PACKAGE = 'packages/syntax-repository/src/npm-package/uses-package.ts';
-const USES_CONSOLE = 'packages/syntax-repository/src/node-global/uses-console.ts';
+const IF_ELSE_PURE_STATEMENT = 'packages/syntax-repository/src/happy-path/if-else/pure-statement/pure-statement.ts';
+const SWITCH_PURE_STATEMENT = 'packages/syntax-repository/src/happy-path/switch/pure-statement/pure-statement.ts';
+const USES_GREETING = 'packages/syntax-repository/src/happy-path/import-local/uses-greeting/uses-greeting.ts';
+const USES_BUILTIN = 'packages/syntax-repository/src/happy-path/node-builtin/uses-builtin/uses-builtin.ts';
+const CALLS_JOIN = 'packages/syntax-repository/src/happy-path/node-builtin/calls-join/calls-join.ts';
+const USES_PACKAGE = 'packages/syntax-repository/src/happy-path/npm-package/uses-package/uses-package.ts';
+const USES_CONSOLE = 'packages/syntax-repository/src/happy-path/node-global/uses-console/uses-console.ts';
 
 test.describe('Compiled Surface Explorer — Tests tab', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
 
-  test('VALID: {if-else/in-function.ts selected} => the Tests tab lists the 2 derived cases and hovering L3 highlights the then-case', async () => {
+  test('VALID: {happy-path/if-else/in-function/in-function.ts selected} => the Tests tab lists the 2 derived cases and hovering L3 highlights the then-case', async () => {
     // Precondition: compile the syntax-repository into .assayer/cache, then open the file's compiled view.
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
@@ -85,7 +85,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     );
   });
 
-  test('VALID: {switch/in-function.ts selected} => the switch over a 3-member union derives 3 exhaustive cases (one per label + the default\'s single uncovered member) and hovering the default return highlights only that case', async () => {
+  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the switch over a 3-member union derives 3 exhaustive cases (one per label + the default\'s single uncovered member) and hovering the default return highlights only that case', async () => {
     // Precondition: compile the syntax-repository into .assayer/cache, then open the switch file's view.
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
@@ -120,7 +120,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
   });
 
-  test('VALID: {boolean/and.ts selected} => the compound condition derives one case per CAUSE (1 then + 2 else)', async () => {
+  test('VALID: {happy-path/boolean/and/and.ts selected} => the compound condition derives one case per CAUSE (1 then + 2 else)', async () => {
     // Precondition: compile the syntax-repository into .assayer/cache, then open the && specimen.
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
@@ -149,7 +149,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     ]);
   });
 
-  test('VALID: {composition/nested-function.ts selected} => the private inner is DRIVEN through outer, its branch covered by cases arranged in the caller param', async () => {
+  test('VALID: {happy-path/composition/nested-function/nested-function.ts selected} => the private inner is DRIVEN through outer, its branch covered by cases arranged in the caller param', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 

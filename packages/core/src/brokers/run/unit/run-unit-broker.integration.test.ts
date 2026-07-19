@@ -1,31 +1,36 @@
+import { bucketVerdict } from '../../../../test/harnesses/bucket-verdict';
 import { runUnitHarness } from '../../../../test/harnesses/run-unit.harness';
 import { specimenCatalogue } from '../../../../test/harnesses/specimen-catalogue';
 
 // The colocated unit test mocks EVERYTHING — the proxy hands back a stub run and Jest never executes
 // — so it cannot notice the engine breaking. This drives the real thing: real analysis, real probe
 // injection, real wrapped Jest, real artifact.
-const AND_SPECIMEN = 'packages/syntax-repository/src/boolean/and.ts';
-const CLASS_SPECIMEN = 'packages/syntax-repository/src/if-else/in-class.ts';
+const AND_SPECIMEN = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
+const CLASS_SPECIMEN = 'packages/syntax-repository/src/happy-path/if-else/in-class/in-class.ts';
 // A permanent dead-end: a module scope on a welded const, undriven forever. This check cannot lose
 // its subject to someone making a syntax rung drivable.
-const MODULE_SPECIMEN = 'packages/syntax-repository/src/sad-path/undriven-welded-const.ts';
+const MODULE_SPECIMEN = 'packages/syntax-repository/src/sad-path/undriven/welded-const/welded-const.ts';
 // A private DRIVEN through its caller, and a private nothing consumes: the two Stage-B/C payoffs that
 // only a real run can prove — one that the interpreter judges correctly, one that rides the artifact.
-const NESTED_SPECIMEN = 'packages/syntax-repository/src/composition/nested-function.ts';
-const DEAD_SURFACE_SPECIMEN = 'packages/syntax-repository/src/sad-path/dead-surface.ts';
+const NESTED_SPECIMEN = 'packages/syntax-repository/src/happy-path/composition/nested-function/nested-function.ts';
+const DEAD_SURFACE_SPECIMEN = 'packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts';
 // A module-scope switch driven by the environment: each case writes CODE and re-imports; the default
 // is reached with CODE unset (NaN matches no case). Only a real run proves the default's empty arrange
 // actually lands there.
-const SWITCH_ENV_SPECIMEN = 'packages/syntax-repository/src/switch/pure-statement.ts';
+const SWITCH_ENV_SPECIMEN = 'packages/syntax-repository/src/happy-path/switch/pure-statement/pure-statement.ts';
 
-// Every specimen on disk, not the two anyone thought to name. Walked rather than written down: a
-// literal list goes stale the moment someone adds syntax, and goes stale silently — which is how a
-// whole rung came to have its run untested.
+// Every eponymous ROOT on disk paired with the bucket its folder declares — not the handful anyone
+// thought to name. Walked rather than written down: a literal list goes stale the moment someone adds
+// syntax, and goes stale silently — which is how a whole rung came to have its run untested. Children
+// ride their root and are driven separately, only for the artifact floor.
 //
 // Driving all of them in one process is only affordable because the runner reuses one ts-jest
 // compiler across runs; when each run had its own config this file OOM'd at ~4GB.
-const ALL_SPECIMENS = specimenCatalogue()
-  .relPaths()
+const ROOTS = specimenCatalogue()
+  .roots()
+  .map((root) => [String(root.relPath), root.bucket] as const);
+const CHILDREN = specimenCatalogue()
+  .children()
   .map((relPath) => String(relPath));
 
 describe('runUnitBroker (integration)', () => {
@@ -93,14 +98,30 @@ describe('runUnitBroker (integration)', () => {
     });
   });
 
-  describe('every specimen in the catalogue produces an artifact', () => {
+  describe('every eponymous root runs to the verdict its bucket declares', () => {
     const engine = runUnitHarness();
 
-    // THE floor, and a specimen pays nothing to get it: whatever a file contains, running it must
-    // leave a readable artifact behind. The artifact IS the interface — the CLI prints from it, the
-    // desktop renders from it — so a run that executed and wrote nothing is indistinguishable from
-    // no run at all, and both surfaces can only report it as a raw ENOENT on a cache path.
-    it.each(ALL_SPECIMENS)('VALID: {%s} => a run leaves a readable artifact', async (relPath) => {
+    // THE driver. A root's folder DECLARES its run verdict — happy-path means running it comes out
+    // clean (≥1 case, all passed, no admission), sad-path means it does not — and running the real
+    // engine and comparing is the run-side twin of the analyzer's declared-vs-observed cross-check.
+    // The bucket is authored by a human choosing the folder; the verdict is what the engine did; a
+    // specimen that quietly started passing, or quietly broke, disagrees with its own folder and fails
+    // here. Passing the verdict also proves the floor a run owes: it left a readable artifact to judge.
+    it.each(ROOTS)('VALID: {%s} => runs %s', async (relPath, bucket) => {
+      const result = await engine.run({ relPath, runId: `r-${relPath.replace(/[^a-z0-9]/giu, '-')}` });
+
+      expect(bucketVerdict({ result })).toBe(bucket);
+    });
+  });
+
+  describe('every helper child still produces a readable artifact', () => {
+    const engine = runUnitHarness();
+
+    // A child is not judged against a bucket — it rides its root — but running it must still leave a
+    // readable artifact, the floor every specimen owes. The artifact IS the interface: the CLI prints
+    // from it, the desktop renders from it, so a run that executed and wrote nothing is
+    // indistinguishable from no run at all, reported by both surfaces as a raw ENOENT on a cache path.
+    it.each(CHILDREN)('VALID: {%s} => a run leaves a readable artifact', async (relPath) => {
       const result = await engine.run({ relPath, runId: `r-${relPath.replace(/[^a-z0-9]/giu, '-')}` });
 
       expect(String(result.relPath)).toBe(relPath);

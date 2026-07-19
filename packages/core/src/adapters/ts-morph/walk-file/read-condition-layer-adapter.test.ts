@@ -63,13 +63,25 @@ describe('readConditionLayerAdapter', () => {
   });
 
   describe('the predicate it parses', () => {
-    it('VALID: {name.length === 0} => a length-eq-zero predicate', () => {
+    it('VALID: {name.length === 0} => a length-eq predicate carrying the threshold', () => {
       readConditionLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (name.length === 0) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
-      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'length-eq-zero' });
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'length-eq', literal: 0 });
+    });
+
+    // The right-hand literal is read whether or not the left side is `.length`. Suppressing it there
+    // left every length comparison but the two against zero with no threshold to classify, so they all
+    // came back `unrecognized` and constrained nothing.
+    it('VALID: {name.length >= 2} => a length-gte predicate carrying the non-zero threshold', () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (name.length >= 2) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'length-gte', literal: 2 });
     });
 
     it('VALID: {value > 5} => a gt predicate carrying the literal VALUE', () => {

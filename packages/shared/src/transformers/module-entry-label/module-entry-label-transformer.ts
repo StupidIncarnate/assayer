@@ -14,7 +14,7 @@
  *   the label is what a reader sees, not what the cache keys on.
  *
  * USAGE:
- * moduleEntryLabelTransformer({ exportName, relPath: 'src/import-local/uses-greeting.ts' });
+ * moduleEntryLabelTransformer({ exportName, relPath: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts' });
  * // Returns 'message' when exportName is set, else 'uses-greeting.ts'
  */
 import { symbolNameContract } from '../../contracts/symbol-name/symbol-name-contract';

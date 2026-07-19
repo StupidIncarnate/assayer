@@ -176,7 +176,7 @@ one model. Two parses is how the old map and analysis could disagree about the s
 They differ for an `if`-with-else whose arms fall through: *accounted for* (each arm gets a completion
 exit) but does NOT *always exit* (code after it runs on both arms). Merging them is a real soundness
 bug — it guards a trailing `return` by an arm it doesn't depend on and keys it under a wrong ID.
-Pinned by `smoke-repo/.../composition/fallthrough-in-if`.
+Pinned by `smoke-repo/.../happy-path/composition/fallthrough-in-if`.
 
 **5.9 — Don't "simplify" operand typing.** `read-operand-type` deliberately keeps TWO rules (param →
 declared descriptor; other binding → widened type-graph read). Widening everything collapses
@@ -225,15 +225,22 @@ reached it perfectly.
 Do these in order. Skipping step 1 is how you end up asserting what the code does instead of what it
 should do.
 
-1. **Specimen first.** Add `smoke-repo/packages/syntax-repository/src/<construct>/<rung>.ts` + a
-   colocated `.test.ts` holding only what is BESPOKE to that file (exact coverage IDs, the shape of
-   its analysis). If it's currently a dark spot, assert THAT first (a ratchet), then flip it.
-   The surface e2e derives its expected surface off disk, so it needs no edit for a new file — see §8.
+1. **Specimen first.** Add `smoke-repo/packages/syntax-repository/src/<bucket>/<category>/<rung>/<rung>.ts`
+   + a colocated `<rung>.test.ts` holding only what is BESPOKE to that file (exact coverage IDs, the
+   shape of its analysis). The catalogue is bucketed by RUN VERDICT: `<bucket>` is `happy-path/` if
+   running the root file comes out clean (≥1 case, all passed, no admission) or `sad-path/` if it is
+   meant to come out unclean (a failing case, or a dark spot / gap / undriven / lint). Category folders
+   group examples; every example is its own eponymous folder (`<rung>/<rung>.ts`), so a multi-file rung
+   keeps helper children beside its root. A ratchet that flips — a dark spot the day its handler lands —
+   MOVES from `sad-path/` to `happy-path/`. If it's currently a dark spot, assert THAT first (a
+   ratchet), then flip it. The surface e2e derives its expected surface off disk, so it needs no edit
+   for a new file — see §8.
 1b. **Declare it** in `packages/core/test/harnesses/specimen-registry.ts` — one line naming what the
    file IS (`['access:named', 'branch:if']`), never what to test. The matrix walks the catalogue off
    disk, so an undeclared specimen fails the catalogue check rather than being skipped, and the
    declared traits alone decide which checks it owes. Everything universal (valid TypeScript,
-   determinism, produces a run artifact) then applies with nothing written.
+   determinism, produces a run artifact, sits at `<bucket>/…/<name>/<name>.ts`, and runs to the
+   verdict its bucket declares) then applies with nothing written.
    **Author it by READING the file.** Never regenerate it from analyzer output: a matrix that asks
    the analyzer what is in a file cannot notice the analyzer being wrong — it would agree with
    itself, run fewer checks, and go green. That is P4 one level up, and the cross-check

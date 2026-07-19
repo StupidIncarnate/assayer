@@ -5,8 +5,8 @@ describe('caseSetContract', () => {
   describe('valid case sets', () => {
     it('VALID: {stub default} => parses the entry with its own exit ids and cases', () => {
       expect(caseSetContract.parse(CaseSetStub())).toStrictEqual({
-        relPath: 'src/boolean/and.ts',
-        modulePath: '/abs/src/boolean/and.ts',
+        relPath: 'src/happy-path/boolean/and/and.ts',
+        modulePath: '/abs/src/happy-path/boolean/and/and.ts',
         entries: [
           {
             name: 'grade',

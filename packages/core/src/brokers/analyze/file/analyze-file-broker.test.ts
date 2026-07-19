@@ -125,8 +125,8 @@ describe('analyzeFileBroker', () => {
     // operand is a const welded to a literal, so at most one of them could ever execute. Nothing
     // drives them, and this is the line that says so instead of letting the file report a clean pass.
     // Its span is the whole 8-line file, because that is what a module scope IS. Read `value` from
-    // the environment instead and this admission goes away — that is `if-else/pure-statement.ts`.
-    // The catalogue proves this end to end through `sad-path/undriven-welded-const.ts`.
+    // the environment instead and this admission goes away — that is `happy-path/if-else/pure-statement/pure-statement.ts`.
+    // The catalogue proves this end to end through `sad-path/undriven/welded-const/welded-const.ts`.
     it('VALID: {top-level if/else over a const} => admitted as undriven, since nothing about it varies', () => {
       analyzeFileBrokerProxy();
       const source =

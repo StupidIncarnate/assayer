@@ -11,7 +11,7 @@ describe('resolvedEdgeContractTransformer', () => {
           importedName: 'greeting',
           target: {
             kind: 'local',
-            relPath: 'src/import-local/greeting.ts',
+            relPath: 'src/happy-path/import-local/uses-greeting/greeting.ts',
             signature: ExternalSignatureStub({ params: [], returnType: { kind: 'string' } }),
           },
         }),
@@ -19,7 +19,7 @@ describe('resolvedEdgeContractTransformer', () => {
 
       expect(result).toStrictEqual({
         symbol: 'greeting',
-        source: "import './greeting' → src/import-local/greeting.ts",
+        source: "import './greeting' → src/happy-path/import-local/uses-greeting/greeting.ts",
         inputs: [],
         output: 'returns string',
       });

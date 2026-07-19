@@ -75,14 +75,14 @@ describe('electronDesktopBootAdapter', () => {
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async ({ relPath }) => {
-          expect(relPath).toBe('src/boolean/and.ts');
+          expect(relPath).toBe('src/happy-path/boolean/and/and.ts');
 
           return Promise.resolve(run);
         },
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
       });
 
-      const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/boolean/and.ts' });
+      const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/boolean/and/and.ts' });
 
       expect(result).toStrictEqual({ success: true, valueRaw: run });
     });
@@ -112,7 +112,7 @@ describe('electronDesktopBootAdapter', () => {
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
       });
 
-      await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/boolean/and.ts' });
+      await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/boolean/and/and.ts' });
 
       expect(proxy.sentToRenderer()).toStrictEqual([
         ['assayer:run-output', 'Assayer is updating caches\n'],
@@ -140,7 +140,7 @@ describe('electronDesktopBootAdapter', () => {
         resolveSavedRun: async () => Promise.resolve(run),
       });
 
-      const result = await proxy.invokeHandler({ channel: 'assayer:saved-run', arg: 'src/boolean/and.ts' });
+      const result = await proxy.invokeHandler({ channel: 'assayer:saved-run', arg: 'src/happy-path/boolean/and/and.ts' });
 
       expect(result).toStrictEqual({ success: true, valueRaw: run });
     });
@@ -166,15 +166,15 @@ describe('electronDesktopBootAdapter', () => {
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () =>
-          Promise.reject(new Error('assayer: the run produced no result for src/switch/pure-statement.ts.')),
+          Promise.reject(new Error('assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.')),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
       });
 
-      const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/switch/pure-statement.ts' });
+      const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/switch/pure-statement/pure-statement.ts' });
 
       expect(result).toStrictEqual({
         success: false,
-        message: 'assayer: the run produced no result for src/switch/pure-statement.ts.',
+        message: 'assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.',
       });
     });
 

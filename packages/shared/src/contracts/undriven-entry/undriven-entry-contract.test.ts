@@ -25,7 +25,7 @@ describe('undrivenEntryContract', () => {
     // A module entry keeps `name: '*module*'` for matching but shows a `label` — the reader never sees
     // the internal scope root.
     it('VALID: {a module entry with a label} => parses the display label beside the name', () => {
-      const entry = UndrivenEntryStub({ name: '*module*', label: 'undriven-welded-const.ts' });
+      const entry = UndrivenEntryStub({ name: '*module*', label: 'welded-const.ts' });
 
       const result = undrivenEntryContract.parse(entry);
 

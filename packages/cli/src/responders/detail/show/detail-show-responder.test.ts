@@ -12,7 +12,7 @@ describe('DetailShowResponder', () => {
       const result = await DetailShowResponder({ configDir: '/repo', argv: ['r-1784093000000'] });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/boolean/and.ts  run r-1784093000000\n' +
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  PASSED grade(6, 2)\n' +
           '    predicted grade/return@then\n' +
           '    cond  grade/if:x#leaf.0 true  true\n' +

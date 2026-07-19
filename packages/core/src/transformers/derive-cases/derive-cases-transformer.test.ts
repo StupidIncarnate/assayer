@@ -66,14 +66,14 @@ const NOT_BRANCH = BranchNodeStub({
 describe('deriveCasesTransformer', () => {
   describe('guarded exits', () => {
     it('VALID: {if-then exit} => arranges the empty string reaching the then exit', () => {
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: [ParamDescriptorStub()],
         branches: [BranchNodeStub()],
         exits: [ExitNodeStub()],
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         { reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] },
       ]);
     });
@@ -85,14 +85,14 @@ describe('deriveCasesTransformer', () => {
         line: 6,
       });
 
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: [ParamDescriptorStub()],
         branches: [BranchNodeStub()],
         exits: [elseExit],
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         { reachesExit: 'formatGreeting/return@if-else', arrange: [{ kind: 'param', param: 'name', value: 'a' }] },
       ]);
     });
@@ -100,7 +100,7 @@ describe('deriveCasesTransformer', () => {
 
   describe('compound conditions fan out per CAUSE', () => {
     it('VALID: {a && b, then} => ONE case, since a conjunction holds exactly one way', () => {
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: NUMBER_PARAMS,
         branches: [AND_BRANCH],
         exits: [
@@ -112,7 +112,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         {
           reachesExit: 'grade/return@then',
           arrange: [
@@ -127,7 +127,7 @@ describe('deriveCasesTransformer', () => {
     // SAME arrange values, so the then-case and the else-case were identical and one of them claimed
     // an exit its own values cannot reach. Two DISTINCT causes, two distinct arrangements.
     it('VALID: {a && b, else} => TWO cases: a failed (b never ran), or a held and b failed', () => {
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: NUMBER_PARAMS,
         branches: [AND_BRANCH],
         exits: [
@@ -139,7 +139,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         {
           reachesExit: 'grade/return@else',
           // score fails, so bonus NEVER EVALUATES — it is unconstrained and falls to representative
@@ -160,7 +160,7 @@ describe('deriveCasesTransformer', () => {
     });
 
     it('VALID: {a || b, then} => TWO cases, since a disjunction holds two ways', () => {
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({ name: 'temp', type: { kind: 'number' } }),
           ParamDescriptorStub({ name: 'smoke', type: { kind: 'boolean' } }),
@@ -175,7 +175,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         {
           reachesExit: 'alarm/return@then',
           arrange: [
@@ -194,7 +194,7 @@ describe('deriveCasesTransformer', () => {
     });
 
     it('VALID: {a || b, else} => ONE case, since a disjunction fails only when both fail', () => {
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({ name: 'temp', type: { kind: 'number' } }),
           ParamDescriptorStub({ name: 'smoke', type: { kind: 'boolean' } }),
@@ -209,7 +209,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         {
           reachesExit: 'alarm/return@else',
           arrange: [
@@ -223,7 +223,7 @@ describe('deriveCasesTransformer', () => {
     it('VALID: {!ready} => the arms INVERT, so then arranges false and else arranges true', () => {
       const params = [ParamDescriptorStub({ name: 'ready', type: { kind: 'boolean' } })];
 
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params,
         branches: [NOT_BRANCH],
         exits: [
@@ -239,7 +239,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         { reachesExit: 'gate/return@then', arrange: [{ kind: 'param', param: 'ready', value: false }] },
         { reachesExit: 'gate/return@else', arrange: [{ kind: 'param', param: 'ready', value: true }] },
       ]);
@@ -267,7 +267,7 @@ describe('deriveCasesTransformer', () => {
         },
       });
 
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 'status', type: unionType })],
         branches: [branch],
         exits: [
@@ -283,7 +283,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         { reachesExit: 'classify/return@if-then', arrange: [{ kind: 'param', param: 'status', value: 'a' }] },
         { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'b' }] },
         { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'c' }] },
@@ -324,7 +324,7 @@ describe('deriveCasesTransformer', () => {
         },
       });
 
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 'method', type: unionType })],
         branches: [getBranch, postBranch],
         exits: [
@@ -350,7 +350,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([
+      expect(result.cases).toStrictEqual([
         { reachesExit: "routeLabel/return@switch:'get'", arrange: [{ kind: 'param', param: 'method', value: 'get' }] },
         { reachesExit: "routeLabel/return@switch:'post'", arrange: [{ kind: 'param', param: 'method', value: 'post' }] },
         { reachesExit: 'routeLabel/return@switch:default', arrange: [{ kind: 'param', param: 'method', value: 'delete' }] },
@@ -360,14 +360,86 @@ describe('deriveCasesTransformer', () => {
 
   describe('unguarded exits', () => {
     it('EMPTY: {no params, implicit exit} => arranges nothing reaching the implicit exit', () => {
-      const cases = deriveCasesTransformer({
+      const result = deriveCasesTransformer({
         params: [],
         branches: [],
         exits: [ExitNodeStub({ coverageId: 'run/exit@implicit', kind: 'implicit', guardPath: [], line: 5 })],
         envDrivable: false,
       });
 
-      expect(cases).toStrictEqual([{ reachesExit: 'run/exit@implicit', arrange: [] }]);
+      expect(result.cases).toStrictEqual([{ reachesExit: 'run/exit@implicit', arrange: [] }]);
+    });
+  });
+
+  describe('exits no value can reach', () => {
+    // `>= 1` then `<= 1`: falling past both needs a value under 1 AND over 1. Reporting it beats
+    // deriving a case, because the case's values could not come from the guards — it would reach some
+    // other exit and read as an Assayer bug rather than as the dead branch it is.
+    it('VALID: {guards that contradict} => no case for that exit, and the exit reported with its guards', () => {
+      const lower = BranchNodeStub({
+        coverageId: 'classify/if:gte',
+        startLine: 2,
+        condition: {
+          kind: 'leaf',
+          id: 'classify/if:gte#leaf',
+          operandParamName: 'value',
+          operandType: { kind: 'number' },
+          predicate: { kind: 'gte', literal: 1 },
+        },
+      });
+      const upper = BranchNodeStub({
+        coverageId: 'classify/if:lte',
+        startLine: 6,
+        condition: {
+          kind: 'leaf',
+          id: 'classify/if:lte#leaf',
+          operandParamName: 'value',
+          operandType: { kind: 'number' },
+          predicate: { kind: 'lte', literal: 1 },
+        },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'value', type: { kind: 'number' } })],
+        branches: [lower, upper],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'classify/return@dead',
+            guardPath: [
+              { branchCoverageId: 'classify/if:gte', arm: 'else' },
+              { branchCoverageId: 'classify/if:lte', arm: 'else' },
+            ],
+            line: 10,
+          }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [{ line: 10, guardLines: [2, 6] }],
+      });
+    });
+
+    // An exit reachable by ANY cause is reachable — only some of its arrangements went missing. Taking
+    // one dead cause as proof would report an exit that a different route reaches perfectly well.
+    it('EDGE: {one cause dead, another live} => still cased, and never reported', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'temp', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'smoke', type: { kind: 'boolean' } }),
+        ],
+        branches: [OR_BRANCH],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'alarm/return@then',
+            guardPath: [{ branchCoverageId: 'alarm/if:or', arm: 'then' }],
+          }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result.unreachableExits).toStrictEqual([]);
     });
   });
 });

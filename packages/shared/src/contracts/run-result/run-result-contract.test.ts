@@ -8,7 +8,7 @@ describe('runResultContract', () => {
 
       expect(runResultContract.parse(run)).toStrictEqual({
         runId: 'r-1784093000000',
-        relPath: 'packages/syntax-repository/src/boolean/and.ts',
+        relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts',
         cases: [
           {
             entryName: 'grade',

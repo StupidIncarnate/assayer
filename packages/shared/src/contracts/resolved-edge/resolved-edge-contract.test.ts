@@ -27,7 +27,7 @@ describe('resolvedEdgeContract', () => {
         column: 1,
         target: {
           kind: 'local',
-          relPath: 'src/import-local/greeting.ts',
+          relPath: 'src/happy-path/import-local/uses-greeting/greeting.ts',
           signature: { params: [], returnType: { kind: 'string' } },
         },
       });
@@ -40,7 +40,7 @@ describe('resolvedEdgeContract', () => {
         column: 1,
         target: {
           kind: 'local',
-          relPath: 'src/import-local/greeting.ts',
+          relPath: 'src/happy-path/import-local/uses-greeting/greeting.ts',
           signature: { params: [], returnType: { kind: 'string' } },
         },
       });
@@ -96,7 +96,7 @@ describe('resolvedEdgeContract', () => {
 
     it('VALID: {a builtin target used as a value carrying its member type} => keyed by builtin name with a type', () => {
       const result = resolvedEdgeContract.parse({
-        from: 'src/node-builtin/uses-builtin.ts',
+        from: 'src/happy-path/node-builtin/uses-builtin/uses-builtin.ts',
         specifier: 'node:path',
         importedName: 'sep',
         line: 1,
@@ -105,7 +105,7 @@ describe('resolvedEdgeContract', () => {
       });
 
       expect(result).toStrictEqual({
-        from: 'src/node-builtin/uses-builtin.ts',
+        from: 'src/happy-path/node-builtin/uses-builtin/uses-builtin.ts',
         specifier: 'node:path',
         importedName: 'sep',
         line: 1,

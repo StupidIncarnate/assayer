@@ -2,7 +2,7 @@
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer detail panel's CONTRACTS tab — the
  *   resolved external import rendered as a typed input/output contract. Compiles the smoke-repo
  *   syntax-repository into a PER-TEST temp cache, launches the REAL built Electron app, selects
- *   npm-package/uses-package.ts, opens the Contracts tab, and asserts the symbol, its `pkg <name>`
+ *   happy-path/npm-package/uses-package/uses-package.ts, opens the Contracts tab, and asserts the symbol, its `pkg <name>`
  *   source, the structured `name: type` input line, and the `returns <type>` output — the typed black
  *   box carried across the real IPC crossing.
  *
@@ -13,21 +13,21 @@
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 
-const USES_PACKAGE = 'packages/syntax-repository/src/npm-package/uses-package.ts';
+const USES_PACKAGE = 'packages/syntax-repository/src/happy-path/npm-package/uses-package/uses-package.ts';
 // The remaining resolved-edge shapes: a LOCAL import (with its resolved def path + external signature),
 // a CALLED node builtin (its signature), a node builtin bound as a VALUE (its declared type, not a
 // signature), the two ambient-global forms (a member-access type + a called-method signature), and a
 // file with no imports at all (the empty prompt).
-const USES_GREETING = 'packages/syntax-repository/src/import-local/uses-greeting.ts';
-const CALLS_JOIN = 'packages/syntax-repository/src/node-builtin/calls-join.ts';
-const USES_BUILTIN = 'packages/syntax-repository/src/node-builtin/uses-builtin.ts';
-const USES_PROCESS = 'packages/syntax-repository/src/node-global/uses-process.ts';
-const USES_CONSOLE = 'packages/syntax-repository/src/node-global/uses-console.ts';
-const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
+const USES_GREETING = 'packages/syntax-repository/src/happy-path/import-local/uses-greeting/uses-greeting.ts';
+const CALLS_JOIN = 'packages/syntax-repository/src/happy-path/node-builtin/calls-join/calls-join.ts';
+const USES_BUILTIN = 'packages/syntax-repository/src/happy-path/node-builtin/uses-builtin/uses-builtin.ts';
+const USES_PROCESS = 'packages/syntax-repository/src/happy-path/node-global/uses-process/uses-process.ts';
+const USES_CONSOLE = 'packages/syntax-repository/src/happy-path/node-global/uses-console/uses-console.ts';
+const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 
-const GREETING_DEF = 'packages/syntax-repository/src/import-local/greeting.ts';
+const GREETING_DEF = 'packages/syntax-repository/src/happy-path/import-local/uses-greeting/greeting.ts';
 
-// The exact contract-inspector cells the Contracts tab shows for npm-package/uses-package.ts — the
+// The exact contract-inspector cells the Contracts tab shows for happy-path/npm-package/uses-package/uses-package.ts — the
 // symbol, its `pkg <name>` source, the structured `name: type` INPUT line, and the `returns <type>`
 // output. `vendored-fixture` lives outside the analyzed root as a `file:` dependency, so the stitch
 // classifies it a real external package and pulls its declared `(name: string) => string` as the typed
@@ -43,7 +43,7 @@ test.describe('Compiled Surface Explorer — Contracts tab', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
 
-  test('VALID: {npm-package/uses-package.ts selected} => the Contracts tab renders the resolved external package import as an input/output contract — the typed black box across the real IPC crossing', async () => {
+  test('VALID: {happy-path/npm-package/uses-package/uses-package.ts selected} => the Contracts tab renders the resolved external package import as an input/output contract — the typed black box across the real IPC crossing', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 

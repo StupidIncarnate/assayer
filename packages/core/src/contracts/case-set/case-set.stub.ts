@@ -5,8 +5,8 @@ import type { CaseSet } from './case-set-contract';
 
 export const CaseSetStub = ({ ...props }: StubArgument<CaseSet> = {}): CaseSet =>
   caseSetContract.parse({
-    relPath: 'src/boolean/and.ts',
-    modulePath: '/abs/src/boolean/and.ts',
+    relPath: 'src/happy-path/boolean/and/and.ts',
+    modulePath: '/abs/src/happy-path/boolean/and/and.ts',
     entries: [
       {
         name: 'grade',

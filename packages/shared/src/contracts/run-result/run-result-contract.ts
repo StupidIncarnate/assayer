@@ -26,7 +26,7 @@
  *   logic is undriven reports `cases: [], gaps: [], darkSpots: []` — byte-identical to full coverage.
  *
  * USAGE:
- * runResultContract.parse({ runId: 'r-17840…', relPath: 'src/boolean/and.ts', cases: [...], gaps: [], darkSpots: [], undriven: [] });
+ * runResultContract.parse({ runId: 'r-17840…', relPath: 'src/happy-path/boolean/and/and.ts', cases: [...], gaps: [], darkSpots: [], undriven: [] });
  * // Returns a validated RunResult (branded fields)
  */
 import { z } from 'zod';

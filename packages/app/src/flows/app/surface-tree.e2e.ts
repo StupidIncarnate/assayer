@@ -19,14 +19,14 @@ import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 import { syntaxSurfaceHarness } from '../../../test/harnesses/syntax-surface.harness';
 
-const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
+const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 
 test.describe('Compiled Surface Explorer — shell + file tree', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
   const surface = syntaxSurfaceHarness();
 
-  test('VALID: {compiled syntax-repository cache, window opens at /} => header handshake + file tree, and clicking if-else/in-function.ts renders its cached source in CodeMirror', async () => {
+  test('VALID: {compiled syntax-repository cache, window opens at /} => header handshake + file tree, and clicking happy-path/if-else/in-function/in-function.ts renders its cached source in CodeMirror', async () => {
     // Precondition: run the built CLI precheck, which compiles the syntax-repository into .assayer/cache.
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);

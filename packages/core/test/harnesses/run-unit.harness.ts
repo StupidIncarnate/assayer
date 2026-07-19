@@ -18,7 +18,7 @@
  * USAGE:
  * const engine = runUnitHarness();
  * // beforeEach empties the temp cache dir; afterEach removes it (auto-wired by the harness transformer)
- * const result = await engine.run({ relPath: 'packages/syntax-repository/src/boolean/and.ts', runId: 'r1' });
+ * const result = await engine.run({ relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts', runId: 'r1' });
  * engine.savedRun({ runId: 'r1' }); // => the RunResult parsed back off disk
  */
 import { mkdirSync, readFileSync, rmSync } from 'node:fs';

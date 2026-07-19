@@ -31,10 +31,10 @@ describe('replyValueLayerAdapter', () => {
         replyValueLayerAdapter({
           reply: {
             success: false,
-            message: 'assayer: the run produced no result for src/switch/pure-statement.ts.',
+            message: 'assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.',
           },
         }),
-      ).toThrow(new Error('assayer: the run produced no result for src/switch/pure-statement.ts.'));
+      ).toThrow(new Error('assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.'));
     });
   });
 

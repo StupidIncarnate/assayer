@@ -19,7 +19,7 @@ describe('branchNodeContract', () => {
           coverageId: 'formatGreeting/if:BinaryExpression,id:name',
           kind: 'loop',
           operandType: { kind: 'string' },
-          predicate: { kind: 'length-eq-zero' },
+          predicate: { kind: 'length-eq', literal: 0 },
           startLine: 2,
           endLine: 4,
         });

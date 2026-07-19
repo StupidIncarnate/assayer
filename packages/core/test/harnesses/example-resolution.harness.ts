@@ -42,16 +42,16 @@ const NODE_TYPES_DTS =
   'declare var process: { env: ProcessEnv; cwd(): string };\n' +
   "declare module 'node:path' {\n  export function join(...paths: string[]): string;\n}\n";
 
-const USES_CONSOLE = `${CATALOGUE}/node-global/uses-console.ts`;
-const USES_PROCESS = `${CATALOGUE}/node-global/uses-process.ts`;
-const CALLS_JOIN = `${CATALOGUE}/node-builtin/calls-join.ts`;
+const USES_CONSOLE = `${CATALOGUE}/happy-path/node-global/uses-console/uses-console.ts`;
+const USES_PROCESS = `${CATALOGUE}/happy-path/node-global/uses-process/uses-process.ts`;
+const CALLS_JOIN = `${CATALOGUE}/happy-path/node-builtin/calls-join/calls-join.ts`;
 
 // The committed example specimens, resolved as one set exactly as a compile would resolve them: the
 // imported definition, the sibling that calls it, the vendored-package call, and the node-builtin value.
-const GREETING = `${CATALOGUE}/import-local/greeting.ts`;
-const USES_GREETING = `${CATALOGUE}/import-local/uses-greeting.ts`;
-const USES_PACKAGE = `${CATALOGUE}/npm-package/uses-package.ts`;
-const USES_BUILTIN = `${CATALOGUE}/node-builtin/uses-builtin.ts`;
+const GREETING = `${CATALOGUE}/happy-path/import-local/uses-greeting/greeting.ts`;
+const USES_GREETING = `${CATALOGUE}/happy-path/import-local/uses-greeting/uses-greeting.ts`;
+const USES_PACKAGE = `${CATALOGUE}/happy-path/npm-package/uses-package/uses-package.ts`;
+const USES_BUILTIN = `${CATALOGUE}/happy-path/node-builtin/uses-builtin/uses-builtin.ts`;
 
 type ResolveResult = Awaited<ReturnType<typeof compileResolveGraphBroker>>;
 
@@ -120,7 +120,7 @@ export const exampleResolutionHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-example-broken-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      const relPath = `${CATALOGUE}/import-local/broken.ts`;
+      const relPath = `${CATALOGUE}/happy-path/import-local/broken.ts`;
       mkdirSync(join(dir, dirname(relPath)), { recursive: true });
       writeFileSync(join(dir, relPath), BROKEN_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');

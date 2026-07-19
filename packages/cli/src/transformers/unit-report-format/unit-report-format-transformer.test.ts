@@ -7,7 +7,7 @@ describe('unitReportFormatTransformer', () => {
     it('VALID: {all cases passed} => one line per file, no noise', () => {
       const result = unitReportFormatTransformer({ runs: [RunResultStub()] });
 
-      expect(String(result)).toBe('packages/syntax-repository/src/boolean/and.ts  1/1 passed');
+      expect(String(result)).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed');
     });
   });
 
@@ -31,7 +31,7 @@ describe('unitReportFormatTransformer', () => {
       const result = unitReportFormatTransformer({ runs });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/boolean/and.ts  1/2 passed\n' +
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/2 passed\n' +
           '  FAIL grade(6)\n' +
           '    predicted grade/return@then\n' +
           '    reached grade/return@else\n' +
@@ -51,7 +51,7 @@ describe('unitReportFormatTransformer', () => {
       const result = unitReportFormatTransformer({ runs });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/boolean/and.ts  0/1 passed\n' +
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/1 passed\n' +
           '  FAIL grade(6, 2)\n' +
           '    predicted grade/return@then\n' +
           '    threw before reaching an exit: boom\n' +
@@ -83,7 +83,7 @@ describe('unitReportFormatTransformer', () => {
       const result = unitReportFormatTransformer({ runs });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/boolean/and.ts  1/1 passed\n  GAP  find — needs a harness',
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n  GAP  find — needs a harness',
       );
     });
   });
@@ -94,7 +94,7 @@ describe('unitReportFormatTransformer', () => {
     it('EMPTY: {a file that derived no cases} => its header, with the count honest', () => {
       const result = unitReportFormatTransformer({ runs: [RunResultStub({ cases: [] })] });
 
-      expect(String(result)).toBe('packages/syntax-repository/src/boolean/and.ts  0/0 passed');
+      expect(String(result)).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/0 passed');
     });
   });
 
@@ -108,7 +108,7 @@ describe('unitReportFormatTransformer', () => {
           undriven: [
             {
               name: '*module*',
-              label: 'undriven-welded-const.ts',
+              label: 'welded-const.ts',
               reason: 'it runs at import time, so no case drove its branches',
               startLine: 1,
               endLine: 8,
@@ -122,8 +122,8 @@ describe('unitReportFormatTransformer', () => {
       // The report shows the module's label (its file basename here), never the internal *module* —
       // exactly what the desktop panel shows, so the two describe one artifact identically.
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/boolean/and.ts  0/0 passed\n' +
-          '  UNDRIVEN undriven-welded-const.ts — it runs at import time, so no case drove its branches',
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/0 passed\n' +
+          '  UNDRIVEN welded-const.ts — it runs at import time, so no case drove its branches',
       );
     });
 
@@ -140,7 +140,7 @@ describe('unitReportFormatTransformer', () => {
       const result = unitReportFormatTransformer({ runs });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/boolean/and.ts  1/1 passed\n' +
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  GAP  find — needs a harness\n' +
           '  UNDRIVEN inner — it is not exported',
       );

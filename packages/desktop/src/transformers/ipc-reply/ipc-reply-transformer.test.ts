@@ -30,13 +30,13 @@ describe('ipcReplyTransformer', () => {
       const result = await ipcReplyTransformer({
         resolve: async () =>
           Promise.reject(
-            new Error('assayer: the run produced no result for src/switch/pure-statement.ts.\n\nCannot find run.json'),
+            new Error('assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.\n\nCannot find run.json'),
           ),
       });
 
       expect(result).toStrictEqual({
         success: false,
-        message: 'assayer: the run produced no result for src/switch/pure-statement.ts.\n\nCannot find run.json',
+        message: 'assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.\n\nCannot find run.json',
       });
     });
 

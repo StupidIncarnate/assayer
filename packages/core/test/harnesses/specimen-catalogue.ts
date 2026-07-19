@@ -19,10 +19,10 @@
  *
  * USAGE:
  * specimenCatalogue().relPaths();
- * // ['packages/syntax-repository/src/boolean/and.ts', ...] — sorted, smoke-repo-relative
+ * // ['packages/syntax-repository/src/happy-path/boolean/and/and.ts', ...] — sorted, smoke-repo-relative
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { resolve, join, relative, sep, basename } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { resolve, join, relative, sep, basename, dirname } from 'node:path';
 
 import { Project, ts } from 'ts-morph';
 import { errorMessageContract } from '@dungeonmaster/shared/contracts';
@@ -36,6 +36,9 @@ const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 
 export const specimenCatalogue = (): {
   relPaths: () => RelPath[];
+  roots: () => { relPath: RelPath; bucket: 'happy-path' | 'sad-path' }[];
+  children: () => RelPath[];
+  structuralErrors: () => ErrorMessage[];
   syntacticErrors: (params: { relPath: string }) => ErrorMessage[];
 } => ({
   relPaths: (): RelPath[] =>
@@ -46,6 +49,47 @@ export const specimenCatalogue = (): {
       .map((entry) => relative(SMOKE_REPO, join(entry.parentPath, entry.name)).split(sep).join('/'))
       .sort()
       .map((relPath) => relPathContract.parse(relPath)),
+
+  // The EPONYMOUS specimens — a file that names its own folder (`boolean/and/and.ts`) — paired with
+  // the bucket their path declares. These are the roots whose run verdict the bucket claims; the
+  // driver checks each against it.
+  roots: (): { relPath: RelPath; bucket: 'happy-path' | 'sad-path' }[] =>
+    specimenCatalogue()
+      .relPaths()
+      .filter((relPath) => basename(String(relPath), '.ts') === basename(dirname(String(relPath))))
+      .map((relPath) => ({
+        relPath,
+        bucket: relative(CATALOGUE_DIR, join(SMOKE_REPO, String(relPath))).split(sep)[0] as 'happy-path' | 'sad-path',
+      })),
+
+  // The helper CHILDREN — every other file in an example folder (`uses-greeting/greeting.ts`). They
+  // ride their root and are never checked against a bucket on their own.
+  children: (): RelPath[] =>
+    specimenCatalogue()
+      .relPaths()
+      .filter((relPath) => basename(String(relPath), '.ts') !== basename(dirname(String(relPath)))),
+
+  // The `<bucket>/…/<name>/<name>.ts` invariant, checked off disk and returned as named violations so
+  // the test asserts an empty list. Every specimen sits under a known bucket and owes its colocated
+  // `.test.ts`; every child must share its folder with the eponymous root it rides, so a folder cannot
+  // hold orphan helpers with no root to belong to.
+  structuralErrors: (): ErrorMessage[] =>
+    specimenCatalogue()
+      .relPaths()
+      .flatMap((relPath): ErrorMessage[] => {
+        const rel = String(relPath);
+        const abs = join(SMOKE_REPO, rel);
+        const [bucket] = relative(CATALOGUE_DIR, abs).split(sep);
+        const eponymous = basename(rel, '.ts') === basename(dirname(rel));
+
+        return [
+          bucket !== 'happy-path' && bucket !== 'sad-path' ? `${rel}: not under happy-path/ or sad-path/` : null,
+          existsSync(abs.replace(/\.ts$/u, '.test.ts')) ? null : `${rel}: missing its colocated ${basename(rel, '.ts')}.test.ts`,
+          eponymous || existsSync(join(dirname(abs), `${basename(dirname(rel))}.ts`))
+            ? null
+            : `${rel}: orphan child — its folder has no eponymous ${basename(dirname(rel))}.ts`,
+        ].flatMap((message) => (message === null ? [] : [errorMessageContract.parse(message)]));
+      }),
 
   syntacticErrors: ({ relPath }: { relPath: string }): ErrorMessage[] => {
     const project = new Project({ useInMemoryFileSystem: true });

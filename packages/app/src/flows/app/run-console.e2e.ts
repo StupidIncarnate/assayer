@@ -1,7 +1,7 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer RUN flow + console. Compiles the smoke-repo
  *   syntax-repository into a PER-TEST temp cache, launches the REAL built Electron app, selects
- *   boolean/and.ts, and drives the Run action — the ONE assertion that proves the desktop's spawn of
+ *   happy-path/boolean/and/and.ts, and drives the Run action — the ONE assertion that proves the desktop's spawn of
  *   the same binary a human types actually terminates and streams the real CLI report. Also covers the
  *   negative: opening a file and never clicking Run leaves no console and executes nothing.
  *
@@ -12,10 +12,10 @@
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 
-const BOOLEAN_AND = 'packages/syntax-repository/src/boolean/and.ts';
-const RUN_GAP_SPECIMEN = 'packages/syntax-repository/src/run-gap/needs-ctor-arg.ts';
+const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
+const RUN_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts';
 
-// The two GAP lines a RUN surfaces for run-gap/needs-ctor-arg.ts — `GAP <name> — <reason>`, both authored
+// The two GAP lines a RUN surfaces for sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts — `GAP <name> — <reason>`, both authored
 // in core's case-set-projection. `Repo`'s constructor needs a `url`, so no instance can be built: the
 // constructor (reached through `new`) and the method `find` are BOTH understood-but-unconstructable, the
 // caller's debt to close with a harness. They ride beside the file's one driven entry `tally`, and appear
@@ -29,7 +29,7 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
 
-  test('VALID: {boolean/and.ts open, click Run} => the run finishes and every derived case reads the CLI verdict, with no run error', async () => {
+  test('VALID: {happy-path/boolean/and/and.ts open, click Run} => the run finishes and every derived case reads the CLI verdict, with no run error', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -101,7 +101,7 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(3);
   });
 
-  test('VALID: {run-gap/needs-ctor-arg.ts open, click Run} => the run drives the one buildable entry and surfaces the two GAP rows for the unconstructable class', async () => {
+  test('VALID: {sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives the one buildable entry and surfaces the two GAP rows for the unconstructable class', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 

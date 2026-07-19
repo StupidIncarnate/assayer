@@ -105,7 +105,7 @@ describe('electronPreloadBridgeAdapter', () => {
     it('ERROR: {main failed} => rejects with the main-process message alone, with no Electron prefix', async () => {
       const proxy = electronPreloadBridgeAdapterProxy();
       proxy.mainFails({
-        message: 'assayer: the run produced no result for src/switch/pure-statement.ts.\n\nCannot find run.json',
+        message: 'assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.\n\nCannot find run.json',
       });
 
       electronPreloadBridgeAdapter({
@@ -118,8 +118,8 @@ describe('electronPreloadBridgeAdapter', () => {
         runOutputChannel: 'assayer:run-output',
       });
 
-      await expect(proxy.triggerRunFile({ relPath: 'src/switch/pure-statement.ts' })).rejects.toThrow(
-        new Error('assayer: the run produced no result for src/switch/pure-statement.ts.\n\nCannot find run.json'),
+      await expect(proxy.triggerRunFile({ relPath: 'src/happy-path/switch/pure-statement/pure-statement.ts' })).rejects.toThrow(
+        new Error('assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.\n\nCannot find run.json'),
       );
     });
   });

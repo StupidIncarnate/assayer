@@ -12,13 +12,13 @@
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 
-const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
+const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 
 test.describe('Compiled Surface Explorer — Raw JSON tab', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
 
-  test('VALID: {if-else/in-function.ts selected, switch to Raw JSON tab} => shows the full cache blob (relPath + contentHash + derived analysis) at full width and hides the right detail panel', async () => {
+  test('VALID: {happy-path/if-else/in-function/in-function.ts selected, switch to Raw JSON tab} => shows the full cache blob (relPath + contentHash + derived analysis) at full width and hides the right detail panel', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -42,7 +42,7 @@ test.describe('Compiled Surface Explorer — Raw JSON tab', () => {
 
     // The JSON carries the file's relPath, the content-hash blob key, and the DERIVED analysis
     // (coverage IDs) — i.e. exactly what the compiler wrote to .assayer/cache.
-    await expect(rawBlob).toContainText('"relPath": "packages/syntax-repository/src/if-else/in-function.ts"');
+    await expect(rawBlob).toContainText('"relPath": "packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts"');
     await expect(rawBlob).toContainText('"contentHash":');
     // The exit ID names the BRANCH it crossed, not just the arm — two sibling `then`-returns in one
     // scope would otherwise key identically, and the ref-to-ref diff keys on exactly this.

@@ -41,6 +41,16 @@ describe('analyzeFileBroker (integration)', () => {
     });
   });
 
+  describe('the catalogue obeys the bucket layout', () => {
+    // The `<bucket>/…/<name>/<name>.ts` shape, checked off disk: every specimen under happy-path/ or
+    // sad-path/, every example a folder named for its root file, every root with a colocated test, and
+    // no orphan child in a folder with no root. A misfiled or misnamed specimen names itself here
+    // rather than silently escaping the bucket driver that keys on the layout.
+    it('VALID: {every specimen on disk} => sits at <bucket>/…/<name>/<name>.ts with its colocated test', () => {
+      expect(specimenCatalogue().structuralErrors().map((message) => String(message))).toStrictEqual([]);
+    });
+  });
+
   describe('what the analyzer sees matches what each specimen declares', () => {
     // THE linchpin, and it runs both directions. Declared-but-unseen is a regression: the analyzer
     // stopped understanding a construct. Seen-but-undeclared is a forgotten trait: someone changed a

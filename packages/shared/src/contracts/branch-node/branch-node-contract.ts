@@ -13,7 +13,7 @@
  * USAGE:
  * branchNodeContract.parse({
  *   coverageId: 'formatGreeting/if:BinaryExpression,id:name,…', kind: 'if',
- *   condition: { kind: 'leaf', id: '…#leaf', operandParamName: 'name', operandType: { kind: 'string' }, predicate: { kind: 'length-eq-zero' } },
+ *   condition: { kind: 'leaf', id: '…#leaf', operandParamName: 'name', operandType: { kind: 'string' }, predicate: { kind: 'length-eq', literal: 0 } },
  *   startLine: 2, endLine: 4,
  * });
  * // Returns a validated BranchNode (branded fields)

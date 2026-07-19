@@ -16,7 +16,7 @@ describe('UnitRunResponder', () => {
         deadSurface: 'error',
       });
 
-      expect(String(result)).toBe('packages/syntax-repository/src/boolean/and.ts  1/1 passed');
+      expect(String(result)).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed');
     });
 
     it('VALID: {several paths} => are handed to the broker as given, in order', async () => {
@@ -90,7 +90,7 @@ describe('UnitRunResponder', () => {
       });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/boolean/and.ts  1/1 passed\n' +
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  LINT decide — nothing in this file calls it, so it is dead surface',
       );
     });

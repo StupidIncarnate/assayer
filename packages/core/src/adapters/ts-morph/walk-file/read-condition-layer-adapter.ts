@@ -6,12 +6,16 @@
  *   here. A condition that is not a comparison yields an `unrecognized` predicate and the whole
  *   expression as its operand.
  *
+ *   The right-hand literal is read the same way whether or not the left side is `.length`: a length
+ *   comparison states a THRESHOLD, and dropping it left every length check but the two against zero
+ *   with nothing to classify.
+ *
  *   It takes the condition EXPRESSION rather than the `if` that owns it, so a ternary, a `while`,
  *   or a `do` can reuse it unchanged when their handlers arrive.
  *
  * USAGE:
  * readConditionLayerAdapter({ condition: ifStatement.getExpression() });
- * // Returns { operandNode, operandName: 'name', predicate: { kind: 'length-eq-zero' } }
+ * // Returns { operandNode, operandName: 'name', predicate: { kind: 'length-eq', literal: 0 } }
  */
 import { Node } from 'ts-morph';
 
@@ -32,11 +36,10 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
   const right = binary?.getRight();
   const opKind = binary === undefined ? '' : binary.getOperatorToken().getKindName();
   const isLengthAccess = left !== undefined && Node.isPropertyAccessExpression(left) && left.getName() === 'length';
-  const rightIsZero = right !== undefined && Node.isNumericLiteral(right) && right.getLiteralValue() === 0;
   const operandNode: Node =
     left === undefined ? condition : isLengthAccess && Node.isPropertyAccessExpression(left) ? left.getExpression() : left;
   const rightLiteral =
-    isLengthAccess || right === undefined
+    right === undefined
       ? undefined
       : Node.isStringLiteral(right)
         ? representativeValueContract.parse(right.getLiteralValue())
@@ -56,7 +59,6 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
       opKind,
       isLengthAccess,
       ...(rightLiteral === undefined ? {} : { rightLiteral }),
-      rightIsZero,
     }),
   };
 };

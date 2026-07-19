@@ -12,7 +12,7 @@ export const BranchNodeStub = ({ ...props }: StubArgument<BranchNode> = {}): Bra
       id: 'formatGreeting/if:name.length===0#leaf',
       operandParamName: 'name',
       operandType: { kind: 'string' },
-      predicate: { kind: 'length-eq-zero' },
+      predicate: { kind: 'length-eq', literal: 0 },
     },
     startLine: 2,
     endLine: 4,

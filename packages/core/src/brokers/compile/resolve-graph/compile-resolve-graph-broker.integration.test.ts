@@ -11,19 +11,19 @@ describe('compileResolveGraphBroker (integration)', () => {
       expect({ edges: result.index.edges, errors: result.errors }).toStrictEqual({
         edges: [
           {
-            from: 'packages/syntax-repository/src/import-local/uses-greeting.ts',
+            from: 'packages/syntax-repository/src/happy-path/import-local/uses-greeting/uses-greeting.ts',
             specifier: './greeting',
             importedName: 'greeting',
             line: 1,
             column: 1,
             target: {
               kind: 'local',
-              relPath: 'packages/syntax-repository/src/import-local/greeting.ts',
+              relPath: 'packages/syntax-repository/src/happy-path/import-local/uses-greeting/greeting.ts',
               signature: { params: [], returnType: { kind: 'string' } },
             },
           },
           {
-            from: 'packages/syntax-repository/src/node-builtin/uses-builtin.ts',
+            from: 'packages/syntax-repository/src/happy-path/node-builtin/uses-builtin/uses-builtin.ts',
             specifier: 'node:path',
             importedName: 'sep',
             line: 1,
@@ -31,7 +31,7 @@ describe('compileResolveGraphBroker (integration)', () => {
             target: { kind: 'builtin', packageName: 'path' },
           },
           {
-            from: 'packages/syntax-repository/src/npm-package/uses-package.ts',
+            from: 'packages/syntax-repository/src/happy-path/npm-package/uses-package/uses-package.ts',
             specifier: 'vendored-fixture',
             importedName: 'greet',
             line: 1,
@@ -50,7 +50,7 @@ describe('compileResolveGraphBroker (integration)', () => {
         edges: [],
         errors: [
           {
-            relPath: 'packages/syntax-repository/src/import-local/broken.ts',
+            relPath: 'packages/syntax-repository/src/happy-path/import-local/broken.ts',
             line: 1,
             column: 1,
             message: "cannot resolve import './missing'",
@@ -65,7 +65,7 @@ describe('compileResolveGraphBroker (integration)', () => {
       expect({ edges: result.index.edges, errors: result.errors }).toStrictEqual({
         edges: [
           {
-            from: 'packages/syntax-repository/src/node-builtin/calls-join.ts',
+            from: 'packages/syntax-repository/src/happy-path/node-builtin/calls-join/calls-join.ts',
             specifier: 'node:path',
             importedName: 'join',
             line: 1,
@@ -77,7 +77,7 @@ describe('compileResolveGraphBroker (integration)', () => {
             },
           },
           {
-            from: 'packages/syntax-repository/src/node-global/uses-console.ts',
+            from: 'packages/syntax-repository/src/happy-path/node-global/uses-console/uses-console.ts',
             line: 3,
             column: 1,
             target: {
@@ -88,13 +88,13 @@ describe('compileResolveGraphBroker (integration)', () => {
             },
           },
           {
-            from: 'packages/syntax-repository/src/node-global/uses-process.ts',
+            from: 'packages/syntax-repository/src/happy-path/node-global/uses-process/uses-process.ts',
             line: 1,
             column: 21,
             target: { kind: 'global', name: 'process', member: 'env', type: { kind: 'unknown', text: 'ProcessEnv' } },
           },
           {
-            from: 'packages/syntax-repository/src/node-global/uses-process.ts',
+            from: 'packages/syntax-repository/src/happy-path/node-global/uses-process/uses-process.ts',
             line: 3,
             column: 20,
             target: { kind: 'global', name: 'process', member: 'cwd', signature: { params: [], returnType: { kind: 'string' } } },

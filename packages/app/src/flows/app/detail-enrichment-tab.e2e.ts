@@ -13,19 +13,19 @@
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 
-const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
-const BOOLEAN_AND = 'packages/syntax-repository/src/boolean/and.ts';
+const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
+const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
 // Union-member ranges on a switch discriminant, a class-method's per-line facts, and a consumption
 // module with no enrichable line (nothing to derive a value for).
-const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/switch/in-function.ts';
-const IF_ELSE_IN_CLASS = 'packages/syntax-repository/src/if-else/in-class.ts';
-const USES_GREETING = 'packages/syntax-repository/src/import-local/uses-greeting.ts';
+const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
+const IF_ELSE_IN_CLASS = 'packages/syntax-repository/src/happy-path/if-else/in-class/in-class.ts';
+const USES_GREETING = 'packages/syntax-repository/src/happy-path/import-local/uses-greeting/uses-greeting.ts';
 
 test.describe('Compiled Surface Explorer — Enrichment tab', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
 
-  test('VALID: {if-else/in-function.ts selected, Enrichment tab} => lists the per-line facts (param symbol + type, branch operand range { 6, 5 })', async () => {
+  test('VALID: {happy-path/if-else/in-function/in-function.ts selected, Enrichment tab} => lists the per-line facts (param symbol + type, branch operand range { 6, 5 })', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -45,7 +45,7 @@ test.describe('Compiled Surface Explorer — Enrichment tab', () => {
     ]);
   });
 
-  test('VALID: {boolean/and.ts selected, Enrichment tab} => both operands of the compound condition get their range on the branch line', async () => {
+  test('VALID: {happy-path/boolean/and/and.ts selected, Enrichment tab} => both operands of the compound condition get their range on the branch line', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 

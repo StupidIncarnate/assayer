@@ -61,11 +61,11 @@ describe('undrivenProjectionTransformer', () => {
     it('VALID: {a welded module, no export, with relPath} => admitted with the file basename as its label', () => {
       const result = undrivenProjectionTransformer({
         walked: moduleScopeWith({ branches: [WELDED_BRANCH] }),
-        relPath: 'src/sad-path/undriven-welded-const.ts',
+        relPath: 'src/sad-path/undriven/welded-const/welded-const.ts',
       });
 
       expect(result).toStrictEqual([
-        { name: '*module*', label: 'undriven-welded-const.ts', reason: MODULE_REASON, startLine: 1, endLine: 8 },
+        { name: '*module*', label: 'welded-const.ts', reason: MODULE_REASON, startLine: 1, endLine: 8 },
       ]);
     });
 

@@ -21,8 +21,8 @@
  *   is, since a span recovered any other way could drift from the scope these branches were counted in.
  *
  * USAGE:
- * undrivenProjectionTransformer({ walked, relPath: 'src/sad-path/undriven-welded-const.ts' });
- * // Returns [{ name: '*module*', label: 'undriven-welded-const.ts', reason: '…', startLine: 1, endLine: 8 }]
+ * undrivenProjectionTransformer({ walked, relPath: 'src/sad-path/undriven/welded-const/welded-const.ts' });
+ * // Returns [{ name: '*module*', label: 'welded-const.ts', reason: '…', startLine: 1, endLine: 8 }]
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 import { undrivenEntryContract } from '@assayer/shared/contracts';

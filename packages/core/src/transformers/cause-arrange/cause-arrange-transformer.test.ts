@@ -42,12 +42,15 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual([
-        [
-          { kind: 'param', param: 'score', value: 6 },
-          { kind: 'param', param: 'bonus', value: 2 },
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [
+          [
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'param', param: 'bonus', value: 2 },
+          ],
         ],
-      ]);
+      });
     });
 
     it('VALID: {want false} => the VIOLATING value, which is how negation is realized', () => {
@@ -57,13 +60,16 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual([
-        [
-          { kind: 'param', param: 'score', value: 5 },
-          // bonus is unconstrained by this cause, so it falls to representative fill.
-          { kind: 'param', param: 'bonus', value: 0 },
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [
+          [
+            { kind: 'param', param: 'score', value: 5 },
+            // bonus is unconstrained by this cause, so it falls to representative fill.
+            { kind: 'param', param: 'bonus', value: 0 },
+          ],
         ],
-      ]);
+      });
     });
   });
 
@@ -94,10 +100,13 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual([
-        [{ kind: 'param', param: 'status', value: 'b' }],
-        [{ kind: 'param', param: 'status', value: 'c' }],
-      ]);
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [
+          [{ kind: 'param', param: 'status', value: 'b' }],
+          [{ kind: 'param', param: 'status', value: 'c' }],
+        ],
+      });
     });
   });
 
@@ -137,10 +146,51 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual([[{ kind: 'param', param: 'method', value: 'delete' }]]);
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [[{ kind: 'param', param: 'method', value: 'delete' }]],
+      });
     });
 
-    it('EDGE: {contradictory requirements on one operand} => representative fill, so the exit still yields a case', () => {
+    // THE case the domain model exists for. Two bounds that OVERLAP have to yield a value inside the
+    // overlap: sampling each predicate first lands on 100 and 11, which share no member, and the fill
+    // that stood in for them reached a different exit and failed a case against correct code.
+    it('VALID: {<= 100 and > 10 on one operand} => a value inside the band, not a fill', () => {
+      const result = causeArrangeTransformer({
+        requirements: [
+          {
+            leaf: ConditionLeafStub({
+              id: 'b#leaf.0',
+              operandParamName: 'size',
+              operandType: { kind: 'number' },
+              predicate: { kind: 'gt', literal: 100 },
+            }),
+            want: false,
+          },
+          {
+            leaf: ConditionLeafStub({
+              id: 'b#leaf.1',
+              operandParamName: 'size',
+              operandType: { kind: 'number' },
+              predicate: { kind: 'gt', literal: 10 },
+            }),
+            want: true,
+          },
+        ],
+        params: [ParamDescriptorStub({ name: 'size', type: { kind: 'number' } })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [[{ kind: 'param', param: 'size', value: 100 }]],
+      });
+    });
+
+    // Contradictory requirements are reported, never filled. A fill would have to come from somewhere
+    // other than the guards, so its case reaches a different exit and reads as an Assayer bug rather
+    // than as the dead branch it is.
+    it('EDGE: {contradictory requirements on one operand} => unreachable, with no arrangement', () => {
       const result = causeArrangeTransformer({
         requirements: [
           { leaf: SCORE_LEAF, want: true },
@@ -158,7 +208,7 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual([[{ kind: 'param', param: 'score', value: 0 }]]);
+      expect(result).toStrictEqual({ unreachable: true, arrangements: [] });
     });
   });
 
@@ -173,9 +223,12 @@ describe('causeArrangeTransformer', () => {
         envDrivable: true,
       });
 
-      // `6` is what the range engine picked for `> 5`; `'6'` is what the environment can hold, and
+      // `6` is what the domain engine picked for `> 5`; `'6'` is what the environment can hold, and
       // `Number('6')` is 6 again — which is why the rung stops at the one coercion with an inverse.
-      expect(result).toStrictEqual([[{ kind: 'env', name: 'VALUE', value: '6' }]]);
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [[{ kind: 'env', name: 'VALUE', value: '6' }]],
+      });
     });
 
     it('VALID: {env operand, want false} => the violating value, so the other arm is chosen', () => {
@@ -185,7 +238,10 @@ describe('causeArrangeTransformer', () => {
         envDrivable: true,
       });
 
-      expect(result).toStrictEqual([[{ kind: 'env', name: 'VALUE', value: '5' }]]);
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [[{ kind: 'env', name: 'VALUE', value: '5' }]],
+      });
     });
 
     // Reading the environment is a fact about the CODE; being driven by it is a fact about the ENTRY.
@@ -198,7 +254,7 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual([[]]);
+      expect(result).toStrictEqual({ unreachable: false, arrangements: [[]] });
     });
   });
 
@@ -215,11 +271,42 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual([[{ kind: 'param', param: 'score', value: 0 }]]);
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [[{ kind: 'param', param: 'score', value: 0 }]],
+      });
+    });
+
+    // An UNREAD predicate must never make a path look impossible: the reader would be told to delete
+    // code the analyzer simply could not follow. Unrecognized constrains nothing, so it fills.
+    it('EDGE: {an unrecognized predicate} => reachable, filled from the type', () => {
+      const result = causeArrangeTransformer({
+        requirements: [
+          {
+            leaf: ConditionLeafStub({
+              id: 'x#leaf',
+              operandParamName: 'score',
+              operandType: { kind: 'number' },
+              predicate: { kind: 'unrecognized' },
+            }),
+            want: true,
+          },
+        ],
+        params: [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [[{ kind: 'param', param: 'score', value: 0 }]],
+      });
     });
 
     it('EMPTY: {no requirements, no params} => a single empty arrangement', () => {
-      expect(causeArrangeTransformer({ requirements: [], params: [], envDrivable: false })).toStrictEqual([[]]);
+      expect(causeArrangeTransformer({ requirements: [], params: [], envDrivable: false })).toStrictEqual({
+        unreachable: false,
+        arrangements: [[]],
+      });
     });
   });
 });

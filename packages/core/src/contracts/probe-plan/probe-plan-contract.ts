@@ -9,7 +9,7 @@
  *   That is invalidation by content — never a version bump.
  *
  * USAGE:
- * probePlanContract.parse({ contentHash: 'a3f…', relPath: 'src/boolean/and.ts', sites: [...] });
+ * probePlanContract.parse({ contentHash: 'a3f…', relPath: 'src/happy-path/boolean/and/and.ts', sites: [...] });
  * // Returns a validated ProbePlan
  */
 import { z } from 'zod';

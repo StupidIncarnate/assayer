@@ -26,6 +26,7 @@ import { analysisProjectionTransformer } from '../../../transformers/analysis-pr
 import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
 import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-projection/dark-spot-projection-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
+import { domainValuesTransformer } from '../../../transformers/domain-values/domain-values-transformer';
 import { followCallsTransformer } from '../../../transformers/follow-calls/follow-calls-transformer';
 import { typeTextTransformer } from '../../../transformers/type-text/type-text-transformer';
 import { typeToRangeTransformer } from '../../../transformers/type-to-range/type-to-range-transformer';
@@ -43,22 +44,41 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // ones no caller can steer stay honestly undriven.
   const followed = followCallsTransformer({ walked });
 
+  const derived = extracted.functions.map((fn) => ({
+    fn,
+    result: deriveCasesTransformer({
+      params: fn.entry.params,
+      branches: fn.branches,
+      exits: fn.exits,
+      // Only a module scope is driven BY importing it, which is when its top-level bindings read the
+      // environment. A function is driven by calling it, long after its module ran and froze them.
+      envDrivable: fn.entry.access.kind === 'module',
+    }),
+  }));
+
   const functions = [
-    ...extracted.functions.map((fn) => ({
+    ...derived.map(({ fn, result }) => ({
       entry: fn.entry,
       branches: fn.branches,
       exits: fn.exits,
-      cases: deriveCasesTransformer({
-        params: fn.entry.params,
-        branches: fn.branches,
-        exits: fn.exits,
-        // Only a module scope is driven BY importing it, which is when its top-level bindings read the
-        // environment. A function is driven by calling it, long after its module ran and froze them.
-        envDrivable: fn.entry.access.kind === 'module',
-      }),
+      cases: result.cases,
     })),
     ...followed.followedEntries,
   ];
+
+  // An exit whose guards contradict each other is dead code, and dead code is the REPO's debt — the
+  // same channel and the same reasoning as an unconsumed private. The message names both the dead line
+  // and the guards that killed it, because "unreachable" alone leaves the reader hunting for which
+  // comparison to fix.
+  const unreachableLints = derived.flatMap(({ fn, result }) =>
+    result.unreachableExits.map((unreachable) => ({
+      rule: 'unreachable-exit',
+      name: fn.entry.name,
+      message: `\`${String(fn.entry.name)}\` can never reach the exit on line ${String(unreachable.line)}: the guards on ${unreachable.guardLines.length === 1 ? 'line' : 'lines'} ${unreachable.guardLines.map((line) => String(line)).join(', ')} cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.`,
+      startLine: unreachable.line,
+      endLine: unreachable.line,
+    })),
+  );
 
   const enrichment = extracted.functions.flatMap((fn) => [
     ...fn.entry.params.map((param) => ({
@@ -86,7 +106,12 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
             line: branch.startLine,
             symbol: leaf.operandParamName,
             typeText: typeTextTransformer({ type: leaf.operandType }),
-            range: [...armValues.satisfying, ...armValues.violating],
+            // Display only, so each arm is realized on its own — this is the range a reader sees
+            // beside the line, never a constraint anything derives from.
+            range: [
+              ...domainValuesTransformer({ domain: armValues.satisfying }),
+              ...domainValuesTransformer({ domain: armValues.violating }),
+            ],
           },
         ];
       }),
@@ -103,8 +128,9 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
       ...undrivenProjectionTransformer({ walked, ...(relPath === undefined ? {} : { relPath }) }),
       ...followed.undriven,
     ],
-    // Dead surface — a private nothing consumes — comes from the call graph too, and is the repo's
-    // debt rather than Assayer's, so it rides its own channel.
-    lints: followed.lints,
+    // Dead surface — a private nothing consumes — comes from the call graph; an unreachable exit comes
+    // from the guard arithmetic. Both are the repo's debt rather than Assayer's, so both ride the lint
+    // channel rather than any of the three admissions.
+    lints: [...followed.lints, ...unreachableLints],
   });
 };

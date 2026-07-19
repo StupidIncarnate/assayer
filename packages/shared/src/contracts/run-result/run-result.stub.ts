@@ -7,7 +7,7 @@ import type { RunResult } from './run-result-contract';
 export const RunResultStub = ({ ...props }: StubArgument<RunResult> = {}): RunResult =>
   runResultContract.parse({
     runId: 'r-1784093000000',
-    relPath: 'packages/syntax-repository/src/boolean/and.ts',
+    relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts',
     cases: [CaseResultStub()],
     gaps: [],
     darkSpots: [],

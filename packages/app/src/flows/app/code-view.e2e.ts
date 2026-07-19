@@ -12,10 +12,10 @@
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 
-const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/if-else/in-function.ts';
-const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/switch/in-function.ts';
-const BOOLEAN_AND = 'packages/syntax-repository/src/boolean/and.ts';
-const LOOP_IN_FUNCTION = 'packages/syntax-repository/src/loop/in-function.ts';
+const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
+const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
+const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
+const LOOP_IN_FUNCTION = 'packages/syntax-repository/src/sad-path/loop/in-function/in-function.ts';
 
 // The exact dark-spot tooltip the shaded region's gutter icon carries — the same sentence the detail
 // panel prints, sourced from core's dark-spot channel (the `for…of` ratchet).
@@ -27,7 +27,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
 
-  test('VALID: {if-else/in-function.ts selected} => CodeMirror renders the cached blob with a line gutter, syntax highlighting, and the exact cached lines, and the count gutter reads 2/1/1', async () => {
+  test('VALID: {happy-path/if-else/in-function/in-function.ts selected} => CodeMirror renders the cached blob with a line gutter, syntax highlighting, and the exact cached lines, and the count gutter reads 2/1/1', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -47,7 +47,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
     await expect(codePanel.locator('.cm-line span').first()).toBeVisible();
 
     // obs-code-from-cache: the rendered text equals the cached blob's lines[] for this relPath — the
-    // exact bytes the compiler stored for if-else/in-function.ts. The source ends with a trailing
+    // exact bytes the compiler stored for happy-path/if-else/in-function/in-function.ts. The source ends with a trailing
     // newline, so the compiler's per-line split records a final empty line[] entry — 8 lines total.
     const codeLines = await codePanel.locator('.cm-line').allTextContents();
     expect(codeLines).toStrictEqual([
@@ -68,7 +68,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
     expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '1']);
   });
 
-  test('VALID: {switch/in-function.ts selected} => the count gutter reads 2/1/2/1/1 across the discriminant and exit lines', async () => {
+  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the count gutter reads 2/1/2/1/1 across the discriminant and exit lines', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -87,7 +87,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
     expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '2', '1', '1']);
   });
 
-  test('VALID: {boolean/and.ts selected} => the count gutter reads 3/1/2 through the guard and both exits', async () => {
+  test('VALID: {happy-path/boolean/and/and.ts selected} => the count gutter reads 3/1/2 through the guard and both exits', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -104,7 +104,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
     expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['3', '1', '2']);
   });
 
-  test('VALID: {loop/in-function.ts selected} => the for…of body (L4-L6) is shaded as a dark spot and its gutter icon carries the admission tooltip', async () => {
+  test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the for…of body (L4-L6) is shaded as a dark spot and its gutter icon carries the admission tooltip', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 

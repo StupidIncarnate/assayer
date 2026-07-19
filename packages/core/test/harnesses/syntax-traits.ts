@@ -16,7 +16,7 @@
  *   collecting cases.
  *
  * USAGE:
- * syntaxTraits().observed({ relPath: 'packages/syntax-repository/src/boolean/and.ts' });
+ * syntaxTraits().observed({ relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts' });
  * // ['access:named', 'branch:if'] — sorted, deduped
  */
 import { readFileSync } from 'node:fs';
@@ -68,6 +68,11 @@ export type SyntaxTrait =
   | 'callee:node-global'
   | 'undriven'
   | 'lint:dead-surface'
+  // The repo's OTHER debt: an exit whose guards cannot all hold, so no value reaches it. Named off the
+  // same lint channel as dead surface, and gating a check for the same reason — a specimen whose dead
+  // branch quietly became reachable would keep every other trait it declares, and the catalogue would
+  // lose the feature's coverage without a single test turning red.
+  | 'lint:unreachable-exit'
   | 'darkspot:ForOfStatement';
 
 export const syntaxTraits = (): {

@@ -20,12 +20,12 @@ describe('ipcReplyContract', () => {
     it('VALID: {success: false, message} => carries the message verbatim', () => {
       const result = ipcReplyContract.parse({
         success: false,
-        message: 'assayer: the run produced no result for src/switch/pure-statement.ts.',
+        message: 'assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.',
       });
 
       expect(result).toStrictEqual({
         success: false,
-        message: 'assayer: the run produced no result for src/switch/pure-statement.ts.',
+        message: 'assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.',
       });
     });
   });

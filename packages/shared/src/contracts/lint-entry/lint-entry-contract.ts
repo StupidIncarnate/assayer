@@ -6,10 +6,15 @@
  *   drive this"; a lint says "this should not be here". The reader's action is to change the code, not
  *   to write a harness or wait on a feature.
  *
- *   `dead-surface` is the first rule: an unexported helper nothing in its file consumes. Nothing
- *   outside the module can reach an unexported symbol, so a private no caller reaches is dead code —
- *   the repo's debt, which is why, unlike a dark spot, failing a build over it punishes the right
- *   party.
+ *   `dead-surface`: an unexported helper nothing in its file consumes. Nothing outside the module can
+ *   reach an unexported symbol, so a private no caller reaches is dead code — the repo's debt, which
+ *   is why, unlike a dark spot, failing a build over it punishes the right party.
+ *
+ *   `unreachable-exit`: an exit whose guards cannot all hold at once, so no input reaches it. It is a
+ *   lint for the same reason `dead-surface` is — the code is understood perfectly and simply cannot
+ *   run, so the reader fixes a threshold or deletes the branch. It is deliberately NOT a gap or an
+ *   undriven entry: those say "Assayer cannot drive this", while this says the LANGUAGE cannot, and
+ *   no harness or future feature will ever close it.
  *
  * USAGE:
  * lintEntryContract.parse({ rule: 'dead-surface', name: 'decide', message: 'nothing calls it…', startLine: 1, endLine: 7 });
@@ -21,7 +26,7 @@ import { lineNumberContract } from '../line-number/line-number-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const lintEntryContract = z.object({
-  rule: z.enum(['dead-surface']).brand<'LintRule'>(),
+  rule: z.enum(['dead-surface', 'unreachable-exit']).brand<'LintRule'>(),
   name: symbolNameContract,
   message: z.string().min(1).brand<'LintMessage'>(),
   startLine: lineNumberContract,

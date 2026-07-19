@@ -44,7 +44,7 @@ export const throughCallerCasesTransformer = ({
     branches: callee.branches,
     exits: callee.exits,
     envDrivable: false,
-  }).map((testCase) => {
+  }).cases.map((testCase) => {
     const byCallerParam = new Map<SymbolName, RepresentativeValue>(
       testCase.arrange.flatMap((binding) => {
         if (binding.kind !== 'param') {

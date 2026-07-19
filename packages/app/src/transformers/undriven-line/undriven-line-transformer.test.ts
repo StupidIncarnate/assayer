@@ -26,17 +26,17 @@ describe('undrivenLineTransformer', () => {
       expect(String(result)).toBe('UNDRIVEN *module* — it runs at import time, so no case drove its branches');
     });
 
-    // The line `assayer unit` prints for sad-path/undriven-welded-const.ts, to the byte. A module entry
+    // The line `assayer unit` prints for sad-path/undriven/welded-const/welded-const.ts, to the byte. A module entry
     // shows its LABEL (the file basename here), never the internal `*module*` the name still carries.
     it('VALID: {the module-scope entry} => matches the CLI report line exactly, by its label', () => {
       const result = undrivenLineTransformer({
-        entry: UndrivenEntryStub({ name: '*module*', label: 'undriven-welded-const.ts', reason: MODULE_REASON }),
+        entry: UndrivenEntryStub({ name: '*module*', label: 'welded-const.ts', reason: MODULE_REASON }),
       });
 
-      expect(String(result)).toBe(`UNDRIVEN undriven-welded-const.ts — ${MODULE_REASON}`);
+      expect(String(result)).toBe(`UNDRIVEN welded-const.ts — ${MODULE_REASON}`);
     });
 
-    // The line `assayer unit` prints for sad-path/undriven-welded-arg.ts, to the byte.
+    // The line `assayer unit` prints for sad-path/undriven/welded-arg/welded-arg.ts, to the byte.
     it('VALID: {the fixed-arg private entry} => matches the CLI report line exactly', () => {
       const result = undrivenLineTransformer({
         entry: UndrivenEntryStub({ name: 'decide', reason: FIXED_ARG_REASON }),

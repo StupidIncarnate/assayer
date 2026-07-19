@@ -12,24 +12,24 @@
 import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
 import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
 
-const UNDRIVEN_WELDED_OPERAND = 'packages/syntax-repository/src/sad-path/undriven-welded-const.ts';
-const DEAD_SURFACE_UNCALLED = 'packages/syntax-repository/src/sad-path/dead-surface.ts';
-const UNDRIVEN_WELDED_ARG = 'packages/syntax-repository/src/sad-path/undriven-welded-arg.ts';
-const LOOP_IN_FUNCTION = 'packages/syntax-repository/src/loop/in-function.ts';
+const UNDRIVEN_WELDED_OPERAND = 'packages/syntax-repository/src/sad-path/undriven/welded-const/welded-const.ts';
+const DEAD_SURFACE_UNCALLED = 'packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts';
+const UNDRIVEN_WELDED_ARG = 'packages/syntax-repository/src/sad-path/undriven/welded-arg/welded-arg.ts';
+const LOOP_IN_FUNCTION = 'packages/syntax-repository/src/sad-path/loop/in-function/in-function.ts';
 
-// The exact line the panel shows for sad-path/undriven-welded-const.ts — `UNDRIVEN <scope> — <reason>`, with
+// The exact line the panel shows for sad-path/undriven/welded-const/welded-const.ts — `UNDRIVEN <scope> — <reason>`, with
 // the reason authored in core's undrivenProjectionTransformer. Asserted whole for the same reason the
 // namespace message is: this sentence is the entire content of the admission, and it is the only
 // thing standing between the reader and a file that reads as having nothing to test.
 const UNDRIVEN_WELDED_OPERAND_LINE =
-  'UNDRIVEN undriven-welded-const.ts — nothing about it varies, so no case could drive its branches anywhere they do ' +
+  'UNDRIVEN welded-const.ts — nothing about it varies, so no case could drive its branches anywhere they do ' +
   'not already go: it runs at import time, and every operand its top-level branching turns on is ' +
   'welded to a value written in this file. No harness closes this and no feature will — a branch with ' +
   'one possible outcome is decided here, in the source, not at run time. Read an operand from the ' +
   'environment instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X ' +
   'an input, and each arm becomes a case that sets it and imports the module fresh.';
 
-// The exact line the panel shows for sad-path/dead-surface.ts — `LINT <name> — <message>`,
+// The exact line the panel shows for sad-path/dead-surface/dead-surface.ts — `LINT <name> — <message>`,
 // with the message authored in core's followCallsTransformer. Asserted whole for the reason the
 // undriven line is: the sentence IS the admission, and it must cross core -> cache -> IPC intact.
 const DEAD_SURFACE_LINT_LINE =
@@ -47,7 +47,7 @@ const UNDRIVEN_WELDED_ARG_LINE =
   'decided there, not at run time. No harness closes this — a caller that passed its own input straight ' +
   'through instead would make each arm a case that sets it, and Assayer would drive it.';
 
-// The exact DARK SPOT line for loop/in-function.ts — `DARK <kind> at L<a>-L<b> in <scope> — …`, worded by
+// The exact DARK SPOT line for sad-path/loop/in-function/in-function.ts — `DARK <kind> at L<a>-L<b> in <scope> — …`, worded by
 // core's dark-spot channel (the loop ratchet: no handler exists for `for…of` yet, so it is ADMITTED, not
 // skipped). The scope path joins with slashes, so it cannot be written in a doc comment.
 const LOOP_DARK_SPOT_LINE =
@@ -58,7 +58,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
   const app = smokeRepoAppHarness();
   wireHarnessLifecycle({ harness: app });
 
-  test('VALID: {sad-path/undriven-welded-const.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async () => {
+  test('VALID: {sad-path/undriven/welded-const/welded-const.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -92,7 +92,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     await expect(window.getByTestId('RUN_BUTTON')).toHaveCount(0);
   });
 
-  test('VALID: {sad-path/dead-surface.ts selected} => the panel states the dead-surface LINT verbatim, beside the driven exported greet', async () => {
+  test('VALID: {sad-path/dead-surface/dead-surface.ts selected} => the panel states the dead-surface LINT verbatim, beside the driven exported greet', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -116,7 +116,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
   });
 
-  test('VALID: {loop/in-function.ts selected} => the panel states the ForOfStatement DARK SPOT verbatim, and no other admission channel co-renders', async () => {
+  test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the panel states the ForOfStatement DARK SPOT verbatim, and no other admission channel co-renders', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
@@ -141,7 +141,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
   });
 
-  test('VALID: {sad-path/undriven-welded-arg.ts selected} => the panel states the welded-ARGUMENT UNDRIVEN admission verbatim, distinct from the welded-const shape, with no other channel co-rendering', async () => {
+  test('VALID: {sad-path/undriven/welded-arg/welded-arg.ts selected} => the panel states the welded-ARGUMENT UNDRIVEN admission verbatim, distinct from the welded-const shape, with no other channel co-rendering', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
 
