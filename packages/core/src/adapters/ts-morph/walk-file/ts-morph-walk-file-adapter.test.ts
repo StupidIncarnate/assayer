@@ -1,3 +1,5 @@
+import { BranchNodeStub, ConditionLeafStub } from '@assayer/shared/contracts';
+
 import { ScopeRecordStub } from '../../../contracts/scope-record/scope-record.stub';
 import { WalkNodeStub } from '../../../contracts/walk-node/walk-node.stub';
 import { moduleGraphProjectionTransformer } from '../../../transformers/module-graph-projection/module-graph-projection-transformer';
@@ -435,11 +437,24 @@ describe('tsMorphWalkFileAdapter', () => {
       });
     });
 
-    it('VALID: {ternary in a return} => is recorded as unhandled, because no ternary handler exists yet', () => {
+    it('VALID: {ternary in a return} => splits into two guarded return exits, the ConditionalExpression handled', () => {
       tsMorphWalkFileAdapterProxy();
       const source = 'export function pick(flag: boolean): string {\n  return flag ? "a" : "b";\n}\n';
 
       const result = tsMorphWalkFileAdapter({ source, relPath: 'src/pick.ts' });
+
+      const branch = BranchNodeStub({
+        coverageId: '*module*/pick/ternary:id:flag',
+        kind: 'ternary',
+        condition: ConditionLeafStub({
+          id: '*module*/pick/ternary:id:flag#leaf',
+          operandParamName: 'flag',
+          operandType: { kind: 'boolean' },
+          predicate: { kind: 'truthy' },
+        }),
+        startLine: 2,
+        endLine: 2,
+      });
 
       expect(result).toStrictEqual({
         success: true,
@@ -447,7 +462,10 @@ describe('tsMorphWalkFileAdapter', () => {
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 75 },
-          { id: '*module*/pick/return@top', kind: 'exit', start: 55, end: 71 }],
+          { id: '*module*/pick/ternary:id:flag#leaf', kind: 'cond', start: 55, end: 59 },
+          { id: '*module*/pick/return@ternary:id:flag#then', kind: 'exit', start: 62, end: 65 },
+          { id: '*module*/pick/return@ternary:id:flag#else', kind: 'exit', start: 68, end: 71 },
+        ],
         scopes: [
           ScopeRecordStub({
             scopePath: ['*module*'],
@@ -465,7 +483,21 @@ describe('tsMorphWalkFileAdapter', () => {
             scopePath: ['*module*', 'pick'],
             name: 'pick',
             params: [{ name: 'flag', type: { kind: 'boolean' } }],
-            exits: [{ coverageId: '*module*/pick/return@top', kind: 'return', guardPath: [], line: 2 }],
+            branches: [branch],
+            exits: [
+              {
+                coverageId: '*module*/pick/return@ternary:id:flag#then',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: '*module*/pick/ternary:id:flag', arm: 'then' }],
+                line: 2,
+              },
+              {
+                coverageId: '*module*/pick/return@ternary:id:flag#else',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: '*module*/pick/ternary:id:flag', arm: 'else' }],
+                line: 2,
+              },
+            ],
           }),
         ],
         nodes: [
@@ -481,7 +513,7 @@ describe('tsMorphWalkFileAdapter', () => {
             scopePath: ['*module*', 'pick'],
             startLine: 2,
             endLine: 2,
-            handled: false,
+            handled: true,
           }),
         ],
       });

@@ -32,6 +32,18 @@ const FALLTHROUGH_IN_IF = 'packages/syntax-repository/src/happy-path/composition
 const PURE_FUNCTION = 'packages/syntax-repository/src/happy-path/function/function.ts';
 const PURE_CLASS = 'packages/syntax-repository/src/happy-path/class/class.ts';
 
+// The ternary / short-circuit / value-position conditional rungs. Exit-position ternaries (block return
+// and concise arrow), the nested-ternary recursion, the assumed ternaries (`||`/`&&`/`??` read as a
+// controlling operand), and the value-flow `const x = ternary; return x` tail — each selected by exact
+// relPath and asserted per-arm, one derived case per reachable path.
+const TERNARY_RETURN_BASIC = 'packages/syntax-repository/src/happy-path/ternary/return-basic/return-basic.ts';
+const TERNARY_RETURN_NESTED = 'packages/syntax-repository/src/happy-path/ternary/return-nested/return-nested.ts';
+const TERNARY_ARROW_BASIC = 'packages/syntax-repository/src/happy-path/ternary/arrow-basic/arrow-basic.ts';
+const TERNARY_VALUE_BASIC = 'packages/syntax-repository/src/happy-path/ternary/value-basic/value-basic.ts';
+const SHORT_CIRCUIT_OR_CHAIN = 'packages/syntax-repository/src/happy-path/short-circuit/or-chain/or-chain.ts';
+const SHORT_CIRCUIT_AND_CHAIN = 'packages/syntax-repository/src/happy-path/short-circuit/and-chain/and-chain.ts';
+const SHORT_CIRCUIT_NULLISH = 'packages/syntax-repository/src/happy-path/short-circuit/nullish/nullish.ts';
+
 // The module-scope entries — the two env-DRIVEN pure statements (labelled by filename), and the five
 // consumption modules, each labelled by its single exported binding (Slice-12) or, for the side-effect
 // console call, its filename.
@@ -149,6 +161,42 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     ]);
   });
 
+  test('VALID: {happy-path/ternary/return-basic/return-basic.ts selected} => the exit-position ternary splits into a then/else return, one case per arm, and hovering the ternary line highlights both', async () => {
+    // Precondition: compile the syntax-repository into .assayer/cache, then open the ternary file's view.
+    const exitCode = await app.compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_RETURN_BASIC}"]`).click();
+
+    const codePanel = window.getByTestId('EXPLORER_CODE');
+    await expect(codePanel.locator('.cm-editor')).toBeVisible();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+
+    // `return n > 5 ? 'big' : 'small'` is two guarded returns: the condition is one ternary branch, each
+    // arm a return exit. n=6 takes the then-arm, n=5 the else — both derived from the operand's type,
+    // never from running the code (P4). Both exits sit on the ternary's own line (L2).
+    const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
+    await expect(entryTitle).toHaveText('classify(n) · 2 cases');
+    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    expect([...caseRows].sort()).toStrictEqual([
+      'not run classify(5) → reaches L2',
+      'not run classify(6) → reaches L2',
+    ]);
+
+    // Hover transition — before hover: no case row is highlighted.
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveCount(0);
+
+    // Hover the ternary line (L2): the condition and BOTH arms share that single line, so every case runs
+    // through it — both rows highlight (data-match=true) and none dims. A single-line ternary couples its
+    // whole case set to its one line, which is exactly what the gutter/hover coupling must show.
+    await codePanel.locator('.cm-line').nth(1).hover();
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveCount(2);
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(0);
+  });
+
   test('VALID: {happy-path/composition/nested-function/nested-function.ts selected} => the private inner is DRIVEN through outer, its branch covered by cases arranged in the caller param', async () => {
     const exitCode = await app.compile();
     expect(exitCode).toBe(0);
@@ -263,6 +311,70 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('greet(name) · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run greet("abc123") → reaches L3',
+    ]);
+
+    // Ternary in a block return — the condition is one branch, each arm a guarded return, both on L2.
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_RETURN_BASIC}"]`).click();
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('classify(n) · 2 cases');
+    expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run classify(5) → reaches L2',
+      'not run classify(6) → reaches L2',
+    ]);
+
+    // Nested ternary in the else arm — `g >= 90 ? a : g >= 80 ? b : c` recurses into three per-leaf exits.
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_RETURN_NESTED}"]`).click();
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('grade(g) · 3 cases');
+    expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run grade(79) → reaches L2',
+      'not run grade(89) → reaches L2',
+      'not run grade(90) → reaches L2',
+    ]);
+
+    // Concise-arrow body that IS a ternary — the exit-owning arrow splits without ever reaching an exit
+    // statement, so both arm returns sit on the arrow's own line (L1).
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_ARROW_BASIC}"]`).click();
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('classify(n) · 2 cases');
+    expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run classify(5) → reaches L1',
+      'not run classify(6) → reaches L1',
+    ]);
+
+    // Assumed ternary `||` chain — `a || b || 'default'` flattens its left spine to one branch per
+    // controlling operand, one exit per path: a truthy; a empty + b truthy; both empty → the fall-through.
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_OR_CHAIN}"]`).click();
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pick(a, b) · 3 cases');
+    expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run pick("", "") → reaches L2',
+      'not run pick("", "abc123") → reaches L2',
+      'not run pick("abc123", "abc123") → reaches L2',
+    ]);
+
+    // Assumed ternary `&&` chain — the mirror: each operand's FALSY case short-circuits, the all-truthy
+    // path falls through to the last operand.
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_AND_CHAIN}"]`).click();
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('all(a, b, c) · 3 cases');
+    expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run all(false, false, false) → reaches L2',
+      'not run all(true, false, false) → reaches L2',
+      'not run all(true, true, false) → reaches L2',
+    ]);
+
+    // Assumed ternary `??` — the operand's non-nullishness is the branch: non-null returns it, null/undefined
+    // falls through to the right operand.
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_NULLISH}"]`).click();
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('orElse(a, b) · 2 cases');
+    expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run orElse("abc123", "abc123") → reaches L2',
+      'not run orElse(null, "abc123") → reaches L2',
+    ]);
+
+    // Value-position value-flow — `const label = n > 5 ? a : b; return label` collapses to the same split
+    // an exit-position ternary gets, the binding never appearing.
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_VALUE_BASIC}"]`).click();
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('classify(n) · 2 cases');
+    expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run classify(5) → reaches L2',
+      'not run classify(6) → reaches L2',
     ]);
   });
 

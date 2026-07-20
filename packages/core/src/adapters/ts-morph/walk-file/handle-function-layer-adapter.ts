@@ -40,6 +40,7 @@ import { walkContextTransformer } from '../../../transformers/walk-context/walk-
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
+import { readConditionalExitLayerAdapter } from './read-conditional-exit-layer-adapter';
 import { readConditionTreeLayerAdapter } from './read-condition-tree-layer-adapter';
 import { readEntryAccessLayerAdapter } from './read-entry-access-layer-adapter';
 import { readExportFlagLayerAdapter } from './read-export-flag-layer-adapter';
@@ -102,6 +103,25 @@ export const handleFunctionLayerAdapter = ({
   const block = body !== undefined && Node.isBlock(body) ? body : undefined;
   const statements = block === undefined ? [] : block.getStatements();
 
+  // The block handler owns sequential flow, so it — not this handler — is where a value-flow tail
+  // (`const x = cond ? y : z; return x`) collapses to a per-arm split. When it does, it hands back the
+  // split's branches/exits/probe sites/nodes as well as its descents, and this scope CLAIMS them via
+  // `opensScope` exactly as it claims a concise-arrow ternary's. A plain block emits none, so merging
+  // is a no-op there. No double-count: a value-flow tail return is `readAccounted`, so `falls` is false
+  // and no end exit is added.
+  const blockResult = block === undefined ? undefined : handleBlockLayerAdapter({ statements, context: scoped });
+
+  // A concise arrow whose body IS a ternary (`(n) => n > 5 ? 'big' : 'small'`) never passes through
+  // `handle-exit` — this handler emits its return exit. When that body is a ternary, `read-conditional-exit`
+  // OWNS the split instead: the arm exits, the branch, the probe sites and descents it hands back
+  // REPLACE the single-return path below, and the emitted branch/exits are claimed by the scope this
+  // handler opens.
+  const conciseBodyReadout =
+    block === undefined && body !== undefined
+      ? readConditionalExitLayerAdapter({ expression: body, kind: 'return', context: scoped })
+      : undefined;
+  const conciseTernary = conciseBodyReadout?.conditional === true ? conciseBodyReadout.result : undefined;
+
   // A boolean predicate whose WHOLE body returns one comparison (`return n > 50`, or a concise arrow
   // that IS that comparison) publishes its decomposed condition as a signature. A caller's opaque
   // `if (pred(x))` leaf composes against this — the callee's comparison rebased onto the argument the
@@ -143,51 +163,62 @@ export const handleFunctionLayerAdapter = ({
   const endCoverageId = exitCoverageIdTransformer({ kind: 'exit', guardPath: [], scopePath: scoped.scopePath });
   const falls = block !== undefined && !readAccountedLayerAdapter({ node: statements.at(-1) });
   const exits =
-    block === undefined
-      ? body === undefined
-        ? []
+    conciseTernary === undefined
+      ? block === undefined
+        ? body === undefined
+          ? []
+          : [
+              exitNodeContract.parse({
+                coverageId: returnCoverageId,
+                kind: 'return',
+                guardPath: [],
+                line: body.getStartLineNumber(),
+              }),
+            ]
         : [
-            exitNodeContract.parse({
-              coverageId: returnCoverageId,
-              kind: 'return',
-              guardPath: [],
-              line: body.getStartLineNumber(),
-            }),
+            ...(falls
+              ? [
+                  exitNodeContract.parse({
+                    coverageId: endCoverageId,
+                    kind: 'implicit',
+                    guardPath: [],
+                    line: block.getEndLineNumber(),
+                  }),
+                ]
+              : []),
+            ...(blockResult?.exits ?? []),
           ]
-      : falls
-        ? [
-            exitNodeContract.parse({
-              coverageId: endCoverageId,
-              kind: 'implicit',
-              guardPath: [],
-              line: block.getEndLineNumber(),
-            }),
-          ]
-        : [];
+      : conciseTernary.exits;
   const probeSites =
-    block === undefined
-      ? body === undefined
-        ? []
+    conciseTernary === undefined
+      ? block === undefined
+        ? body === undefined
+          ? []
+          : [
+              probeSiteContract.parse({
+                id: returnCoverageId,
+                kind: 'exit',
+                start: body.getStart(),
+                end: body.getEnd(),
+              }),
+            ]
         : [
-            probeSiteContract.parse({
-              id: returnCoverageId,
-              kind: 'exit',
-              start: body.getStart(),
-              end: body.getEnd(),
-            }),
+            ...(falls
+              ? [
+                  probeSiteContract.parse({
+                    id: endCoverageId,
+                    kind: 'complete',
+                    start: block.getStart(),
+                    end: block.getEnd(),
+                  }),
+                ]
+              : []),
+            ...(blockResult?.probeSites ?? []),
           ]
-      : falls
-        ? [
-            probeSiteContract.parse({
-              id: endCoverageId,
-              kind: 'complete',
-              start: block.getStart(),
-              end: block.getEnd(),
-            }),
-          ]
-        : [];
+      : conciseTernary.probeSites;
 
   return handlerResultLayerAdapter({
+    branches: conciseTernary === undefined ? (blockResult?.branches ?? []) : conciseTernary.branches,
     exits,
     probeSites,
     nodes: [
@@ -199,6 +230,7 @@ export const handleFunctionLayerAdapter = ({
         endLine: node.getEndLineNumber(),
         handled: true,
       }),
+      ...(conciseTernary === undefined ? (blockResult?.nodes ?? []) : conciseTernary.nodes),
     ],
     opensScope: scopeRecordContract.parse({
       scopePath: scoped.scopePath,
@@ -215,10 +247,12 @@ export const handleFunctionLayerAdapter = ({
       ...(predicateSignature === undefined ? {} : { predicateSignature }),
     }),
     descents:
-      block === undefined
-        ? body === undefined
-          ? []
-          : [{ node: body, context: scoped }]
-        : handleBlockLayerAdapter({ statements, context: scoped }).descents,
+      conciseTernary === undefined
+        ? block === undefined
+          ? body === undefined
+            ? []
+            : [{ node: body, context: scoped }]
+          : (blockResult?.descents ?? [])
+        : conciseTernary.descents,
   });
 };

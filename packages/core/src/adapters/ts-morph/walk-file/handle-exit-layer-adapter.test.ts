@@ -135,4 +135,37 @@ describe('handleExitLayerAdapter', () => {
       });
     });
   });
+
+  describe('a ternary in the returned position delegates the split', () => {
+    it('VALID: {return value > 5 ? a : b} => two guarded exits instead of one @top exit', () => {
+      handleExitLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return value > 5 ? "big" : "small";\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
+
+      const result = handleExitLayerAdapter({ node, context: UNGUARDED_CONTEXT });
+
+      expect(result.exits.map((exit) => String(exit.coverageId))).toStrictEqual([
+        'classify/return@ternary:BinaryExpression,id:value,GreaterThanToken,num:5#then',
+        'classify/return@ternary:BinaryExpression,id:value,GreaterThanToken,num:5#else',
+      ]);
+    });
+
+    it('VALID: {return value > 5 ? a : b} => emits the ternary branch and marks the ConditionalExpression handled', () => {
+      handleExitLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return value > 5 ? "big" : "small";\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
+
+      const result = handleExitLayerAdapter({ node, context: UNGUARDED_CONTEXT });
+
+      expect({
+        branchKinds: result.branches.map((branch) => String(branch.kind)),
+        nodes: result.nodes.map((walkNode) => ({ kind: String(walkNode.kind), handled: walkNode.handled })),
+      }).toStrictEqual({
+        branchKinds: ['ternary'],
+        nodes: [{ kind: 'ConditionalExpression', handled: true }],
+      });
+    });
+  });
 });

@@ -10,8 +10,9 @@
  *   It DOES descend the returned expression, even though the exit is what a derived case drives
  *   toward and the value it carries is never the assertion (P4). The expression is not analysed for
  *   its value — it is descended because things worth finding hide in it: `return xs.map((n) => …)`
- *   contains a whole scope, and `return a ? b : c` contains a branch this analyzer must at least
- *   admit it cannot follow. Skipping it would silently drop both.
+ *   contains a whole scope. When that expression IS a ternary it hands off to
+ *   `read-conditional-exit`, which OWNS the exit: it retracts this handler's single unguarded exit and
+ *   emits one guarded exit per arm instead. Any other expression keeps the single-exit path verbatim.
  *
  * USAGE:
  * handleExitLayerAdapter({ node: returnStatement, context });
@@ -26,6 +27,7 @@ import { probeSiteContract } from '../../../contracts/probe-site/probe-site-cont
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { exitCoverageIdTransformer } from '../../../transformers/exit-coverage-id/exit-coverage-id-transformer';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
+import { readConditionalExitLayerAdapter } from './read-conditional-exit-layer-adapter';
 
 export const handleExitLayerAdapter = ({
   node,
@@ -36,6 +38,16 @@ export const handleExitLayerAdapter = ({
 }): ReturnType<typeof handlerResultLayerAdapter> => {
   const kind = Node.isThrowStatement(node) ? 'throw' : 'return';
   const expression = node.getExpression();
+
+  // A ternary in the returned/thrown position is two guarded exits, so `read-conditional-exit` owns
+  // the split. Only when it is NOT a ternary does the single unguarded exit below stand.
+  if (expression !== undefined) {
+    const conditional = readConditionalExitLayerAdapter({ expression, kind, context });
+    if (conditional.conditional) {
+      return conditional.result;
+    }
+  }
+
   const coverageId = exitCoverageIdTransformer({ kind, guardPath: context.guardPath, scopePath: context.scopePath });
 
   return handlerResultLayerAdapter({

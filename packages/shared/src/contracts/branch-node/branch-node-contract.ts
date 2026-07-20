@@ -1,5 +1,5 @@
 /**
- * PURPOSE: Contract for a branch node — a conditional construct (if/switch) in an entry,
+ * PURPOSE: Contract for a branch node — a conditional construct (if/switch/ternary) in an entry,
  *   carrying its cache-internal coverage ID (the whole condition's structural projection), the
  *   decomposed CONDITION TREE it tests, and its rendered line span. Identity is fully AST-derived —
  *   no source-text field.
@@ -29,7 +29,7 @@ export const branchNodeContract = z.object({
   // Exactly the kinds the walk EMITS — a handler exists for each. Syntax the walk cannot follow is a
   // dark spot, not a branch, so naming a kind here that nothing emits would oblige every consumer to
   // handle a case that cannot occur. Add a kind when its handler lands, never before.
-  kind: z.enum(['if', 'switch']).brand<'BranchKind'>(),
+  kind: z.enum(['if', 'switch', 'ternary']).brand<'BranchKind'>(),
   condition: conditionNodeContract,
   startLine: lineNumberContract,
   endLine: lineNumberContract,

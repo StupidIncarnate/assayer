@@ -5,6 +5,8 @@ import { jestProbeRuntimeAdapterProxy } from './jest-probe-runtime-adapter.proxy
 
 const LEAF = CoverageIdStub({ value: 'grade/if:x#leaf.0' });
 const EXIT = CoverageIdStub({ value: 'grade/return@then' });
+const OC_THEN = CoverageIdStub({ value: 'len/return@then' });
+const OC_ELSE = CoverageIdStub({ value: 'len/return@else' });
 
 describe('jestProbeRuntimeAdapter', () => {
   describe('returning values untouched', () => {
@@ -69,6 +71,42 @@ describe('jestProbeRuntimeAdapter', () => {
       probe.x(EXIT, 'pass');
 
       expect(probe.events).toStrictEqual([{ id: 'grade/return@then', kind: 'exit', valueText: "'pass'" }]);
+    });
+  });
+
+  describe('the optional-access observation', () => {
+    // `s?.length` with `s` non-null: the accessor reads the member and the THEN exit is recorded with
+    // its value; the return is the member value untouched.
+    it('VALID: {oc with a non-null receiver} => reads the member, records the then exit, returns the member value', () => {
+      jestProbeRuntimeAdapterProxy();
+      const probe = jestProbeRuntimeAdapter();
+
+      const returned = probe.oc(OC_THEN, OC_ELSE, 'abc123', (r) => String(r).length);
+
+      expect(returned).toBe(6);
+      expect(probe.events).toStrictEqual([{ id: 'len/return@then', kind: 'exit', valueText: '6' }]);
+    });
+
+    // `s?.length` with `s` null: the access short-circuits to `undefined` WITHOUT touching the member,
+    // and the ELSE exit is recorded — the null path is observed even though it has no source expression.
+    it('EMPTY: {oc with a null receiver} => records the else exit, returns undefined, never touching the member', () => {
+      jestProbeRuntimeAdapterProxy();
+      const probe = jestProbeRuntimeAdapter();
+
+      const returned = probe.oc(OC_THEN, OC_ELSE, null, (r) => String(r).length);
+
+      expect(returned).toBe(undefined);
+      expect(probe.events).toStrictEqual([{ id: 'len/return@else', kind: 'exit', valueText: 'undefined' }]);
+    });
+
+    it('EMPTY: {oc with an undefined receiver} => also takes the else exit', () => {
+      jestProbeRuntimeAdapterProxy();
+      const probe = jestProbeRuntimeAdapter();
+
+      const returned = probe.oc(OC_THEN, OC_ELSE, undefined, (r) => String(r).length);
+
+      expect(returned).toBe(undefined);
+      expect(probe.events).toStrictEqual([{ id: 'len/return@else', kind: 'exit', valueText: 'undefined' }]);
     });
   });
 

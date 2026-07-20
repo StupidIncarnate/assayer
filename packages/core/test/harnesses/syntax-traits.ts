@@ -52,6 +52,7 @@ export type SyntaxTrait =
   | 'access:through-caller'
   | 'branch:if'
   | 'branch:switch'
+  | 'branch:ternary'
   | 'param:union'
   | 'operand:env'
   // A call target the single-file walk records as an IMPORT and cannot itself resolve — classified by
@@ -74,7 +75,11 @@ export type SyntaxTrait =
   // branch quietly became reachable would keep every other trait it declares, and the catalogue would
   // lose the feature's coverage without a single test turning red.
   | 'lint:unreachable-exit'
-  | 'darkspot:ForOfStatement';
+  | 'darkspot:ForOfStatement'
+  // A ternary the walk understands but cannot yet split into cases where it sits — v1 value-flow reaches
+  // only the adjacent `const x = cond ? y : z; return x` tail, so a ternary in ARGUMENT position stays an
+  // admitted dark spot. A ratchet: the day the reverse-map rung lands, its specimen moves sad-path → happy.
+  | 'darkspot:ConditionalExpression';
 
 export const syntaxTraits = (): {
   analyze: (params: { relPath: string }) => FileAnalysis;

@@ -111,6 +111,40 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/node-global/uses-console/uses-console.ts`]: ['access:module', 'callee:node-global'],
   [`${CATALOGUE}/happy-path/node-global/uses-process/uses-process.ts`]: ['access:module', 'callee:node-global'],
 
+  // ternary in EXIT position — the condition is a real branch, each arm a guarded exit of the return's
+  // own kind. `return-basic` is the plainest block return; `return-nested` nests a ternary in the else
+  // arm, proving the per-arm recursion fans out to one exit per leaf; `arrow-basic` is the concise
+  // arrow whose body IS the ternary, exercising the `handle-function` exit-owning site that never
+  // reaches `handle-exit`. All three read their operand from a param, so each is DRIVEN.
+  [`${CATALOGUE}/happy-path/ternary/return-basic/return-basic.ts`]: ['access:named', 'branch:ternary'],
+  [`${CATALOGUE}/happy-path/ternary/return-nested/return-nested.ts`]: ['access:named', 'branch:ternary'],
+  [`${CATALOGUE}/happy-path/ternary/arrow-basic/arrow-basic.ts`]: ['access:named', 'branch:ternary'],
+  // VALUE position, driven: `const label = n > 5 ? 'big' : 'small'; return label` IS `return n > 5 ? …`
+  // because `label` flows straight to the return. The block seam collapses the tail pair to the same
+  // per-arm split an exit ternary gets, so it reads as a plain `branch:ternary` DRIVEN by `n` — no dark
+  // spot, one case per arm.
+  [`${CATALOGUE}/happy-path/ternary/value-basic/value-basic.ts`]: ['access:named', 'branch:ternary'],
+
+  // ASSUMED ternaries in EXIT position — a short-circuit `&&`/`||` chain, split per operand. Each
+  // controlling operand becomes a `ternary` branch on its truthiness and each operand a guarded exit,
+  // so a chain of N operands owes N-1 branches and N exits. Both use ≥3 operands, proving the
+  // left-associative spine flattens rather than reading only the outermost binary. `or-chain` returns
+  // the first truthy operand (falling through to a literal default); `and-chain` is the `&&` mirror,
+  // returning the first falsy operand (its last operand the free fall-through). Each operand is a param,
+  // so both are DRIVEN.
+  [`${CATALOGUE}/happy-path/short-circuit/or-chain/or-chain.ts`]: ['access:named', 'branch:ternary'],
+  [`${CATALOGUE}/happy-path/short-circuit/and-chain/and-chain.ts`]: ['access:named', 'branch:ternary'],
+  // `??` in exit position — the controlling operand is read as a `non-nullish` leaf (not truthy), so
+  // `a ?? b` fans out to the first non-null operand's exit and the null fall-through's. The else arm
+  // arranges the operand to `null`, a value the `??` operator inherently admits.
+  [`${CATALOGUE}/happy-path/short-circuit/nullish/nullish.ts`]: ['access:named', 'branch:ternary'],
+  // A SINGLE-LEVEL optional property access `a?.b` in exit position — an assumed ternary on the
+  // receiver's non-nullishness, reusing the same `non-nullish` leaf `??` reads. `s` non-null returns
+  // `s.length` (the then exit), `s` null short-circuits to `undefined` (the else exit). Its ONE
+  // `optional` probe site observes both, so the null path — which has no expression to wrap — is still
+  // driven: `s: string` reuses the B2 string+null machinery, no object representative-value needed.
+  [`${CATALOGUE}/happy-path/optional-chain/basic/basic.ts`]: ['access:named', 'branch:ternary'],
+
   // switch.
   [`${CATALOGUE}/happy-path/switch/in-class/in-class.ts`]: ['access:method', 'branch:switch', 'param:union'],
   [`${CATALOGUE}/happy-path/switch/in-function/in-function.ts`]: ['access:named', 'branch:switch', 'param:union'],
@@ -133,6 +167,13 @@ const DECLARATIONS = {
   // A dark spot: no loop handler exists yet, so the for-of is ADMITTED rather than skipped. This is the
   // RATCHET that migrates buckets — the day a loop handler lands it runs clean and moves to happy-path.
   [`${CATALOGUE}/sad-path/loop/in-function/in-function.ts`]: ['access:named', 'darkspot:ForOfStatement'],
+
+  // A ternary in ARGUMENT position (`return label(n > 5 ? 'big' : 'small')`). v1 value-flow reaches only
+  // the adjacent `const`+`return` tail, so a ternary consumed by a call arg has no exit to split and
+  // stays an admitted `darkspot:ConditionalExpression`. The BOUNDARY ratchet: the day the reverse-map
+  // rung lands it moves sad-path → happy-path. `label` is a branchless private consumed by `pick`, so it
+  // projects as no entry of its own; the file's one entry is `pick` (access:named).
+  [`${CATALOGUE}/sad-path/ternary/arg-position/arg-position.ts`]: ['access:named', 'darkspot:ConditionalExpression'],
 
   // A run GAP. A class whose constructor needs arguments cannot be instantiated, so both the
   // constructor (reached through `new`, which the runner never models) and its method are named GAPS by

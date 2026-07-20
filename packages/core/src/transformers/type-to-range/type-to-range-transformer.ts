@@ -38,7 +38,7 @@ export const typeToRangeTransformer = ({
 }: {
   type: TypeDescriptor;
   predicateKind: string;
-  literal?: string | number | boolean;
+  literal?: string | number | boolean | null;
 }): ArmValues => {
   const rep = representativeValueTransformer({ type });
   const num = typeof literal === 'number' ? literal : 0;
@@ -134,6 +134,15 @@ export const typeToRangeTransformer = ({
             ? { satisfying: { members: [false] }, violating: { members: [true] } }
             : { satisfying: { members: [''] }, violating: { members: [rep] } },
       );
+    // The `??` operand: satisfying is a NON-null value drawn from the type (`rep`, which the
+    // representative transformer never returns null for), violating is `null`. `null` is nullish, so
+    // it reaches the fall-through arm at runtime whatever the operand's non-null half is. The value is
+    // derived from the declared type, never from executing the code (P4).
+    case 'non-nullish':
+      return armValuesContract.parse({
+        satisfying: { members: [rep] },
+        violating: { members: [null] },
+      });
     default:
       // Unrecognized: constrain NOTHING on either arm. A predicate the analyzer could not read must
       // not narrow anything, or an unread guard would be able to prove a reachable exit impossible.

@@ -163,8 +163,9 @@ required, not optional: an analysis that can omit its own blind spots reads as c
 trusted, which is worse than no analysis.
 
 Corollary: **descend expressions.** `handle-exit` descends the returned expression — not to analyse the
-value (P4 forbids that) but because `return xs.map((n) => …)` contains a whole scope and
-`return a ? b : c` contains a branch we must at least admit we can't follow. Skipping it drops both.
+value (P4 forbids that) but because `return xs.map((n) => …)` contains a whole scope. A `return a ? b :
+c` is split per arm by `read-conditional-exit` before that descent; any other expression is descended
+whole. Skipping the descent drops the scopes and calls hiding in it.
 
 **5.7 — Never parse twice.** `walk-file` runs once; the analysis and map are pure projections of that
 one model. Two parses is how the old map and analysis could disagree about the same file.
@@ -295,18 +296,26 @@ Two properties must hold and are cheap to check with a probe:
 - **`handler-result-layer-adapter` is a LEAF** — it imports nothing else in the folder. Shared handler
   vocabulary lives there because putting it beside the recursion makes the proxy graph circular
   (`walk-node.proxy → dispatch.proxy → handler.proxy → walk-node.proxy` = infinite recursion at runtime).
-- **An expression-level branch does not fit the guard model — which is why `ConditionalExpression` is a
-  dark spot, and why §6's recipe will not close it.** `guardPath` assumes a guard is a STATEMENT
-  enclosing STATEMENTS; a ternary's arms guard an expression SUBTREE. Two consequences follow, and a
-  handler addresses neither. `handle-exit` emits its exit BEFORE descending, handing the expression
-  `context` verbatim (`handle-exit-layer-adapter.ts:57`), and exits merge UPWARD
-  (`walk-node-layer-adapter.ts:36`) — so a branch inside a `return` cannot make that `return` retract
-  its own unguarded exit. `handle-if` inverts this with `readAccounted` ("the arm already returns, so
-  I owe no exit"), but for an expression branch the polarity reverses and nothing asks `handle-exit`
-  to stand down. Separately, `const x = cond ? y : z` needs value-flow tracking (follow the binding to
-  its use) before it could derive anything: `derive-cases` derives per exit from `exit.guardPath`, so a
-  branch no guardPath can mention derives zero cases and is inert decoration. The work is
-  exit-ownership + value-flow, not a handler.
+- **An expression-level branch is EXIT-OWNERSHIP, not a handler — which is why §6's recipe does not
+  reach it.** `guardPath` assumes a guard is a STATEMENT enclosing STATEMENTS; a ternary's arms guard
+  an expression SUBTREE. `handle-exit` emits its exit BEFORE descending and exits merge UPWARD
+  (`walk-node-layer-adapter.ts`), so a branch inside a `return` cannot make that `return` retract its
+  own unguarded exit from the outside. The exit's OWNER splits it instead: an exit-position ternary
+  (`return`/`throw cond ? a : b`, and a concise-arrow body that IS a ternary) is handed to
+  `read-conditional-exit-layer-adapter`, which reads the condition as a `ternary` branch and emits one
+  guarded exit per arm (recursing for nested ternaries) — delegated from `handle-exit` (block-bodied
+  return/throw) and from `handle-function` (the concise-arrow body, which never reaches `handle-exit`).
+  A non-ternary expression returns the `{ conditional: false }` sentinel, so the single-exit path is
+  unchanged. VALUE-POSITION value-flow rides the SAME split, at the block seam: `read-value-flow-exit`
+  matches an adjacent `const x = <conditional>; return x`/`throw x` tail (single const binding, the exit
+  expression EXACTLY that identifier by SYMBOL, a solver-drivable condition) and hands `handle-block` the
+  same per-arm split — `x` never appears, the exit is `return cond ? y : z`. `handle-block` drops the two
+  consumed statements from its descent and folds the facts in; `handle-function` MERGES the block
+  result's branches/exits/probe-sites/nodes (not just its descents), and the scope claims them via
+  `opensScope`. What stays the marked `ConditionalExpression` dark spot is what that tight
+  `≡ return cond ? y : z` equivalence does not cover: a non-adjacent or transformed use (`return x + 1`,
+  `f(x)`), `let`/reassignment, an opaque (non-drivable) condition, and argument-position or JSX ternaries
+  — reachable only through the later def-site-derived reverse-map rung, not v1.
 - **`*/` inside a doc comment terminates the comment.** Writing a scope path like `*module*/classify` in
   a `/** … */` block produces baffling TS1109/TS1005 parse errors. Don't put scope paths in comments.
 - **Tests may not contain conditionals** — including `result.success === true && result.x`. Assert the

@@ -9,6 +9,10 @@
  *   intersect. Every comparison operator exists on both axes, so the zero case is nothing special —
  *   `s.length === 0` is `length-eq` carrying 0, exactly as `s.length === 3` carries 3.
  *
+ *   `non-nullish` is the nullish-coalescing operand's test: `a ?? b` returns `a` when it is neither
+ *   null nor undefined, and falls through to `b` otherwise. It carries no literal — it partitions the
+ *   operand's declared type into its non-null values (satisfying) and null (violating).
+ *
  * USAGE:
  * predicateContract.parse({ kind: 'length-eq', literal: 0 });
  * predicateContract.parse({ kind: 'eq', literal: 'blocked' });
@@ -35,6 +39,7 @@ export const predicateContract = z.object({
       'lte',
       'truthy',
       'falsy',
+      'non-nullish',
       'unrecognized',
     ])
     .brand<'PredicateKind'>(),

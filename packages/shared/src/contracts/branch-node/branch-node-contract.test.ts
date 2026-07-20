@@ -10,6 +10,14 @@ describe('branchNodeContract', () => {
 
       expect(result).toStrictEqual(node);
     });
+
+    it('VALID: {kind: "ternary"} => parses, since the ternary handler emits it', () => {
+      const node = BranchNodeStub({ kind: 'ternary' });
+
+      const result = branchNodeContract.parse(node);
+
+      expect(result).toStrictEqual(node);
+    });
   });
 
   describe('invalid branch nodes', () => {

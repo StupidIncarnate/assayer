@@ -50,6 +50,36 @@ describe('probeVisitNodeLayerAdapter', () => {
     });
   });
 
+  describe('the optional-access rewrite', () => {
+    // `s?.length` occupies [10, 19) in `const x = s?.length;`. The nullish path has no expression to
+    // wrap, so the whole access becomes a runtime call that observes BOTH exits from one span.
+    const OPT_SOURCE = 'const x = s?.length;';
+    const OPT_SITE = ProbeSiteStub({
+      id: 'len/return@then',
+      elseId: 'len/return@else',
+      kind: 'optional',
+      start: 10,
+      end: 19,
+    });
+
+    it('VALID: {an optional site over `s?.length`} => rewrites it to `__P.oc(then, else, s, r => r.length)`', () => {
+      probeVisitNodeLayerAdapterProxy();
+      const sourceFile = ts.createSourceFile('f.ts', OPT_SOURCE, ts.ScriptTarget.ES2022, true);
+
+      const result = ts.transform(sourceFile, [
+        (context) => (file) =>
+          ts.visitEachChild(
+            file,
+            (child) => probeVisitNodeLayerAdapter({ ts, context, sourceFile: file, sites: [OPT_SITE], node: child }),
+            context,
+          ),
+      ]);
+      const printed = result.transformed.map((out) => ts.createPrinter().printFile(out)).join('');
+
+      expect(printed.trim()).toBe('const x = __P.oc("len/return@then", "len/return@else", s, r => r.length);');
+    });
+  });
+
   describe('nodes that are not expressions', () => {
     it('EDGE: {a site whose range covers a statement} => not wrapped, since a statement is not an expression', () => {
       probeVisitNodeLayerAdapterProxy();

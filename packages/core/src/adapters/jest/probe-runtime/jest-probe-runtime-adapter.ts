@@ -50,5 +50,25 @@ export const jestProbeRuntimeAdapter = (): ProbeRuntime => {
 
       return value;
     },
+    // `a?.b`: the receiver's nullishness alone decides which exit is reached, and the two paths are
+    // mutually exclusive at runtime, so exactly one exit event is recorded. The nullish path takes the
+    // `elseId` exit carrying `undefined` (its true value) WITHOUT touching the member, so short-circuit
+    // and value semantics match `a?.b` exactly.
+    oc: (thenId, elseId, receiver, access): unknown => {
+      if (receiver === undefined || receiver === null) {
+        events.push(
+          traceEventContract.parse({ id: elseId, kind: 'exit', valueText: renderTraceValueTransformer({ value: undefined }) }),
+        );
+
+        return undefined;
+      }
+
+      const value = access(receiver);
+      events.push(
+        traceEventContract.parse({ id: thenId, kind: 'exit', valueText: renderTraceValueTransformer({ value }) }),
+      );
+
+      return value;
+    },
   };
 };

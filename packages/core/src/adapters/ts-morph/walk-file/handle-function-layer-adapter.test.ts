@@ -196,4 +196,91 @@ describe('handleFunctionLayerAdapter', () => {
       expect(result.opensScope?.predicateSignature).toBe(undefined);
     });
   });
+
+  describe('a concise-arrow body that IS a ternary', () => {
+    it('VALID: {`(value) => value > 5 ? a : b`} => the split exits replace the single return exit', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export const classify = (value: number): string => value > 5 ? "big" : "small";\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.exits.map((exit) => String(exit.coverageId))).toStrictEqual([
+        '*module*/classify/return@ternary:BinaryExpression,id:value,GreaterThanToken,num:5#then',
+        '*module*/classify/return@ternary:BinaryExpression,id:value,GreaterThanToken,num:5#else',
+      ]);
+    });
+
+    it('VALID: {`(value) => value > 5 ? a : b`} => the opened scope claims the ternary branch', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export const classify = (value: number): string => value > 5 ? "big" : "small";\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.branches.map((branch) => String(branch.kind))).toStrictEqual(['ternary']);
+    });
+
+    it('VALID: {`(value) => value > 5 ? a : b`} => descends the condition and each arm, not the whole body', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export const classify = (value: number): string => value > 5 ? "big" : "small";\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual([
+        'BinaryExpression',
+        'StringLiteral',
+        'StringLiteral',
+      ]);
+    });
+  });
+
+  describe('a block-bodied function with a value-flow `const x = ternary; return x` tail', () => {
+    it('VALID: {const label = value > 5 ? a : b; return label} => the scope claims the split exits the block folded in', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export function classify(value: number): string {\n  const label = value > 5 ? "big" : "small";\n  return label;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.exits.map((exit) => String(exit.coverageId))).toStrictEqual([
+        '*module*/classify/return@ternary:BinaryExpression,id:value,GreaterThanToken,num:5#then',
+        '*module*/classify/return@ternary:BinaryExpression,id:value,GreaterThanToken,num:5#else',
+      ]);
+    });
+
+    it('VALID: {const label = value > 5 ? a : b; return label} => merges the ternary branch, no falling-off end exit', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export function classify(value: number): string {\n  const label = value > 5 ? "big" : "small";\n  return label;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect({
+        branchKinds: result.branches.map((branch) => String(branch.kind)),
+        exitKinds: result.exits.map((exit) => String(exit.kind)),
+      }).toStrictEqual({ branchKinds: ['ternary'], exitKinds: ['return', 'return'] });
+    });
+  });
 });

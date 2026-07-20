@@ -21,5 +21,17 @@ export const ProbeRuntimeStub = (): ProbeRuntime => {
 
       return value;
     },
+    oc: (thenId: string, elseId: string, receiver: unknown, access: (receiver: unknown) => unknown): unknown => {
+      if (receiver === undefined || receiver === null) {
+        events.push(traceEventContract.parse({ id: elseId, kind: 'exit', valueText: String(undefined) }));
+
+        return undefined;
+      }
+
+      const value = access(receiver);
+      events.push(traceEventContract.parse({ id: thenId, kind: 'exit', valueText: String(value) }));
+
+      return value;
+    },
   });
 };

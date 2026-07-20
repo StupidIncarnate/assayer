@@ -146,6 +146,20 @@ describe('typeToRangeTransformer', () => {
     });
   });
 
+  describe('non-nullish predicate', () => {
+    // The `??` operand: satisfying is a non-null value drawn from the type, violating is null. Null is
+    // the value the fall-through arm needs, and it is drawn from the declared type, never from running
+    // the code.
+    it('VALID: {string, non-nullish} => the representative value satisfies, null violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'non-nullish' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['abc123'] }),
+        violating: ValueDomainStub({ members: [null] }),
+      });
+    });
+  });
+
   describe('unrecognized predicates', () => {
     // Both arms OPEN, and this is a safety property rather than a default. A predicate the analyzer
     // could not read must be incapable of narrowing anything — otherwise an unread guard could make a

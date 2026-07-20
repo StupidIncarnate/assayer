@@ -22,6 +22,18 @@ describe('probeSiteContract', () => {
         end: 5,
       });
     });
+
+    it('VALID: {kind: "optional" with an elseId} => parses the two-exit optional-access site', () => {
+      expect(
+        probeSiteContract.parse({ id: 'len/return@then', elseId: 'len/return@else', kind: 'optional', start: 8, end: 17 }),
+      ).toStrictEqual({
+        id: 'len/return@then',
+        elseId: 'len/return@else',
+        kind: 'optional',
+        start: 8,
+        end: 17,
+      });
+    });
   });
 
   describe('invalid probe sites', () => {

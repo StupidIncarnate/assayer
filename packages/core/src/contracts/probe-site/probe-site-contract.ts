@@ -14,6 +14,11 @@
  *     of an arm is an event with no value and no syntax, so the only way to observe it is to put a
  *     statement where it happens. Without this kind an implicit exit is unobservable, and a case
  *     predicting one can only ever report "reached no exit" against code that reached it perfectly.
+ *   - `optional` names a SINGLE-LEVEL optional property access `a?.b` in exit position, and it is the
+ *     one site that observes TWO exits from one span: the receiver-nullish path has no expression to
+ *     wrap (it short-circuits to `undefined`), so the instrumenter rewrites `a?.b` into a runtime call
+ *     that fires `id` when the receiver is non-null and `elseId` when it is nullish. `elseId` rides on
+ *     this kind alone — the null path's exit id, minted where the site is.
  *
  *   `start`/`end` are character offsets, and they are the reason a probe plan is a CACHE-INTERNAL
  *   SIDECAR that is never diffed and never rides in the analysis blob: a coverage ID must not move
@@ -30,9 +35,12 @@ import { coverageIdContract } from '@assayer/shared/contracts';
 
 export const probeSiteContract = z.object({
   id: coverageIdContract,
-  kind: z.enum(['cond', 'exit', 'complete']).brand<'ProbeKind'>(),
+  kind: z.enum(['cond', 'exit', 'complete', 'optional']).brand<'ProbeKind'>(),
   start: z.number().int().min(0).brand<'SourceOffset'>(),
   end: z.number().int().min(0).brand<'SourceOffset'>(),
+  // Present ONLY on an `optional` site — the exit id fired when the receiver is nullish. The `id`
+  // above is the non-null path's exit; both are observed from this one physical span.
+  elseId: coverageIdContract.optional(),
 });
 
 export type ProbeSite = z.infer<typeof probeSiteContract>;
