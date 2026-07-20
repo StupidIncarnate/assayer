@@ -51,16 +51,24 @@ export const syntaxSurfaceHarness = (): {
       .sort()
       .map((value) => RelPathStub({ value })),
 
-  // The FILE_TREE_DIR nodes are every directory segment on the way to a specimen, smoke-repo-relative
-  // (`packages`, `syntax-repository`, `src`, then each construct folder) — deduped and sorted.
-  dirNames: (): ReturnType<typeof FolderNameStub>[] =>
-    [
-      ...new Set(
-        readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-          .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts'))
-          .flatMap((entry) => relative(SMOKE_REPO, entry.parentPath).split(sep)),
-      ),
-    ]
+  // The FILE_TREE_DIR nodes are the directory nodes the tree renders — one per DISTINCT directory PATH on
+  // the way to a specimen. Deduping the full smoke-repo-relative paths collapses a shared prefix
+  // (`packages`, `syntax-repository`, `src`, the happy-path/sad-path buckets) to one node, while sibling
+  // paths that share a basename stay distinct — in-function ×3, in-class/length/pure-statement/unreachable
+  // ×2 — each rendered showing that basename, exactly as the tree does. Projected to the basename and
+  // sorted to match the asserted [...dirNames].sort().
+  dirNames: (): ReturnType<typeof FolderNameStub>[] => {
+    const dirPaths = new Set(
+      readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts'))
+        .flatMap((entry) => {
+          const segments = relative(SMOKE_REPO, entry.parentPath).split(sep);
+          return [...segments.keys()].map((index) => segments.slice(0, index + 1).join(sep));
+        }),
+    );
+    return [...dirPaths]
+      .map((dirPath) => dirPath.slice(dirPath.lastIndexOf(sep) + 1))
       .sort()
-      .map((value) => FolderNameStub({ value })),
+      .map((value) => FolderNameStub({ value }));
+  },
 });
