@@ -34,12 +34,14 @@ import type { RepresentativeValue } from '@assayer/shared/contracts';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 import { isLengthInDomainGuard } from '../../guards/is-length-in-domain/is-length-in-domain-guard';
 import { isWithinDomainBoundsGuard } from '../../guards/is-within-domain-bounds/is-within-domain-bounds-guard';
+import { representativeValueStatics } from '../../statics/representative-value/representative-value-statics';
 import { lengthCandidatesTransformer } from '../length-candidates/length-candidates-transformer';
 
-// The one character every realized string is built from. Deterministic by construction: the guards
-// bounded a LENGTH and said nothing about content, so any filler would satisfy them and only a fixed
-// one keeps generated cases byte-stable.
-const FILLER = 'a';
+// A length-bounded string is built by slicing this pattern to the required length. The guards bounded
+// a LENGTH and said nothing about content, so any deterministic filler satisfies them; a
+// multi-character pattern keeps the realized string readable and never the empty string or a run of
+// one letter.
+const PATTERN = representativeValueStatics.string;
 
 export const domainValuesTransformer = ({ domain }: { domain: ValueDomain }): RepresentativeValue[] => {
   if (domain.members !== undefined) {
@@ -55,7 +57,10 @@ export const domainValuesTransformer = ({ domain }: { domain: ValueDomain }): Re
 
   if (lengths !== undefined) {
     return lengths
-      .map((length) => representativeValueContract.parse(FILLER.repeat(Number(length))))
+      .map((length) => {
+        const size = Number(length);
+        return representativeValueContract.parse(PATTERN.repeat(Math.ceil(size / PATTERN.length)).slice(0, size));
+      })
       .filter((candidate) => !domain.excluded.includes(candidate))
       .slice(0, 1);
   }

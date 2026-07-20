@@ -31,9 +31,9 @@ describe('length / bounded-name — two length comparisons on one operand, joint
   // the ceiling ('aaaaaa'). They are different flows and cannot share a case.
   it('VALID: {an operand bounded from both sides} => one string satisfying both bounds', () => {
     expect(tier.cases.map((testCase) => testCase.arrange)).toStrictEqual([
-      [{ kind: 'param', param: 'name', value: 'aa' }],
+      [{ kind: 'param', param: 'name', value: 'ab' }],
       [{ kind: 'param', param: 'name', value: '' }],
-      [{ kind: 'param', param: 'name', value: 'aaaaaa' }],
+      [{ kind: 'param', param: 'name', value: 'abc123' }],
     ]);
   });
 

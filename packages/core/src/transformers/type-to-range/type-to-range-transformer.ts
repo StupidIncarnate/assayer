@@ -124,7 +124,7 @@ export const typeToRangeTransformer = ({
           ? { satisfying: { excluded: [0] }, violating: { members: [0] } }
           : type.kind === 'boolean'
             ? { satisfying: { members: [true] }, violating: { members: [false] } }
-            : { satisfying: { members: ['a'] }, violating: { members: [''] } },
+            : { satisfying: { members: [rep] }, violating: { members: [''] } },
       );
     case 'falsy':
       return armValuesContract.parse(
@@ -132,7 +132,7 @@ export const typeToRangeTransformer = ({
           ? { satisfying: { members: [0] }, violating: { excluded: [0] } }
           : type.kind === 'boolean'
             ? { satisfying: { members: [false] }, violating: { members: [true] } }
-            : { satisfying: { members: [''] }, violating: { members: ['a'] } },
+            : { satisfying: { members: [''] }, violating: { members: [rep] } },
       );
     default:
       // Unrecognized: constrain NOTHING on either arm. A predicate the analyzer could not read must

@@ -37,25 +37,6 @@ describe('compiledFileResolveBroker', () => {
       expect(result).toStrictEqual({ relPath: 'src/index.ts', contentHash, displayLines, nodes, resolvedEdges: [] });
     });
 
-    it('VALID: {blob carries analysis} => resolves the view including the analysis', async () => {
-      const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64) }] } },
-      });
-      const analysis = FileAnalysisStub();
-      const blob = CompiledFileBlobStub({ analysis });
-
-      const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob });
-
-      const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
-        relPath: RelPathStub({ value: 'src/index.ts' }),
-      });
-
-      expect(result.analysis).toStrictEqual(analysis);
-    });
-
     it('VALID: {resolved index has edges from this file and others} => keeps only the edges whose from is this file', async () => {
       const manifest = AssayerCacheManifestStub({
         namespaces: { main: { files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64) }] } },
@@ -80,6 +61,79 @@ describe('compiledFileResolveBroker', () => {
       });
 
       expect(result.resolvedEdges).toStrictEqual([ownEdge]);
+    });
+  });
+
+  describe('cross-file predicate overlay', () => {
+    it('VALID: {caller with a cross-file import-predicate guard} => serves the composed cases and the unreachable-exit lint', async () => {
+      const composed = FileAnalysisStub({
+        lints: [
+          {
+            rule: 'unreachable-exit',
+            name: 'pick',
+            message:
+              '`pick` can never reach the exit on line 10: the guards on lines 5, 9 cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.',
+            startLine: 10,
+            endLine: 10,
+          },
+        ],
+      });
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/pick.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: FileAnalysisStub() }) });
+      // Config dir is /config; the source root resolves a level away to /repo. The overlay must be
+      // handed the SOURCE root, not the config dir.
+      proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
+      proxy.composesTo({ analysis: composed });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/config' }),
+        relPath: RelPathStub({ value: 'src/pick.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(composed);
+      expect(proxy.composeReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts' });
+    });
+
+    it('VALID: {plain caller with no imported-predicate guard} => serves the persisted analysis unchanged', async () => {
+      const analysis = FileAnalysisStub();
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/grade.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/grade.ts', analysis }) });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/repo' }),
+        relPath: RelPathStub({ value: 'src/grade.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(analysis);
+    });
+
+    it('EMPTY: {caller source cannot be read} => falls back to the opaque persisted analysis', async () => {
+      const analysis = FileAnalysisStub();
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/pick.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis }) });
+      proxy.sourceMissing();
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/repo' }),
+        relPath: RelPathStub({ value: 'src/pick.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(analysis);
     });
   });
 

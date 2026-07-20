@@ -71,7 +71,7 @@ describe('domainValuesTransformer', () => {
     it('VALID: {2 <= length <= 5} => one string satisfying both length bounds', () => {
       const result = domainValuesTransformer({ domain: ValueDomainStub({ lengthMin: 2, lengthMax: 5 }) });
 
-      expect(result).toStrictEqual(['aa']);
+      expect(result).toStrictEqual(['ab']);
     });
 
     it('VALID: {length === 0} => the empty string', () => {

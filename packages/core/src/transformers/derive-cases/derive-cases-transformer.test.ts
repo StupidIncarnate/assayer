@@ -146,7 +146,7 @@ describe('deriveCasesTransformer', () => {
           // fill rather than being pinned to a value the flow never reads.
           arrange: [
             { kind: 'param', param: 'score', value: 5 },
-            { kind: 'param', param: 'bonus', value: 0 },
+            { kind: 'param', param: 'bonus', value: 7 },
           ],
         },
         {

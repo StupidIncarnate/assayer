@@ -6,6 +6,7 @@ import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-writ
 import { jestRunCliAdapterProxy } from '../../../adapters/jest/run-cli/jest-run-cli-adapter.proxy';
 import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
+import { composeCrossFilePredicatesBrokerProxy } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
 
 export const runUnitBrokerProxy = (): {
   setupSavedRun: ({ run }: { run: unknown }) => void;
@@ -18,6 +19,7 @@ export const runUnitBrokerProxy = (): {
   fsMkdirAdapterProxy();
   tsMorphWalkFileAdapterProxy();
   analyzeFileBrokerProxy();
+  composeCrossFilePredicatesBrokerProxy();
 
   const runner = jestRunCliAdapterProxy();
   const exists = fsExistsAdapterProxy();

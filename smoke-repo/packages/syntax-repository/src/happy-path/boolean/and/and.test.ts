@@ -60,7 +60,7 @@ describe('boolean / and — a conjunction inside an exported function', () => {
         reachesExit: ELSE,
         arrange: [
           { kind: 'param', param: 'score', value: 5 },
-          { kind: 'param', param: 'bonus', value: 0 },
+          { kind: 'param', param: 'bonus', value: 7 },
         ],
       },
       // 6 > 5 holds, so evaluation continues and 1 > 1 is the operand that decides.

@@ -83,14 +83,14 @@ describe('throughCallerCasesTransformer', () => {
           reachesExit: 'inner/return@then',
           arrange: [
             { kind: 'param', param: 'value', value: 6 },
-            { kind: 'param', param: 'extra', value: 0 },
+            { kind: 'param', param: 'extra', value: 7 },
           ],
         },
         {
           reachesExit: 'inner/return@else',
           arrange: [
             { kind: 'param', param: 'value', value: 5 },
-            { kind: 'param', param: 'extra', value: 0 },
+            { kind: 'param', param: 'extra', value: 7 },
           ],
         },
       ]);

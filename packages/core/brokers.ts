@@ -35,3 +35,5 @@ export * from './src/brokers/run/paths/run-paths-broker';
 export * from './src/brokers/run/load/run-load-broker';
 export * from './src/brokers/run/id/run-id-broker';
 export * from './src/brokers/run/find/run-find-broker';
+
+export * from './src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';

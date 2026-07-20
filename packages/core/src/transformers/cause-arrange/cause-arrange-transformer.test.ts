@@ -66,7 +66,7 @@ describe('causeArrangeTransformer', () => {
           [
             { kind: 'param', param: 'score', value: 5 },
             // bonus is unconstrained by this cause, so it falls to representative fill.
-            { kind: 'param', param: 'bonus', value: 0 },
+            { kind: 'param', param: 'bonus', value: 7 },
           ],
         ],
       });
@@ -273,7 +273,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
-        arrangements: [[{ kind: 'param', param: 'score', value: 0 }]],
+        arrangements: [[{ kind: 'param', param: 'score', value: 7 }]],
       });
     });
 
@@ -298,7 +298,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
-        arrangements: [[{ kind: 'param', param: 'score', value: 0 }]],
+        arrangements: [[{ kind: 'param', param: 'score', value: 7 }]],
       });
     });
 

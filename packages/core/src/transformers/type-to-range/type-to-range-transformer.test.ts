@@ -123,6 +123,29 @@ describe('typeToRangeTransformer', () => {
     });
   });
 
+  describe('truthy and falsy predicates', () => {
+    // A truthy string's non-empty member is the representative value, not a single letter — the same
+    // 'abc123' every unconstrained string fills. It reads clearly and never collides with the empty
+    // string it is the negation of.
+    it('VALID: {string, truthy} => the representative value satisfies, the empty string violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'truthy' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['abc123'] }),
+        violating: ValueDomainStub({ members: [''] }),
+      });
+    });
+
+    it('VALID: {string, falsy} => the empty string satisfies, the representative value violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'falsy' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: [''] }),
+        violating: ValueDomainStub({ members: ['abc123'] }),
+      });
+    });
+  });
+
   describe('unrecognized predicates', () => {
     // Both arms OPEN, and this is a safety property rather than a default. A predicate the analyzer
     // could not read must be incapable of narrowing anything — otherwise an unread guard could make a

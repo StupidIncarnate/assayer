@@ -27,7 +27,7 @@ describe('composition / nested-function — a private driven through the caller 
       {
         name: 'outer',
         access: { kind: 'named' },
-        cases: [{ reachesExit: '*module*/outer/return@top', arrange: [{ kind: 'param', param: 'value', value: 0 }] }],
+        cases: [{ reachesExit: '*module*/outer/return@top', arrange: [{ kind: 'param', param: 'value', value: 7 }] }],
       },
       {
         name: 'inner',

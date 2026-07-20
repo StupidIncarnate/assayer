@@ -142,7 +142,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
       // score fails its own test, so bonus never evaluates and is left at its fill value.
-      'not run grade(5, 0) → reaches L6',
+      'not run grade(5, 7) → reaches L6',
       // score passes, so bonus is the operand that decides.
       'not run grade(6, 1) → reaches L6',
       'not run grade(6, 2) → reaches L3',
@@ -168,7 +168,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     expect([...caseRows].sort()).toStrictEqual([
       'not run inner(5) → reaches L7',
       'not run inner(6) → reaches L4',
-      'not run outer(0) → reaches L10',
+      'not run outer(7) → reaches L10',
     ]);
     await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
   });
@@ -219,7 +219,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_MIXED}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('route(admin, level, owner) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run route(false, 0, false) → reaches L6',
+      'not run route(false, 7, false) → reaches L6',
       'not run route(true, 3, false) → reaches L6',
       'not run route(true, 3, true) → reaches L3',
       'not run route(true, 4, false) → reaches L3',
@@ -240,7 +240,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run describeRoute("get", 5) → reaches L8',
       'not run describeRoute("get", 6) → reaches L5',
-      'not run describeRoute("post", 0) → reaches L10',
+      'not run describeRoute("post", 7) → reaches L10',
     ]);
 
     // Composition — a fall-through `switch` inside an `if`: read-accounted vs read-terminal keep it at one
@@ -248,21 +248,21 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${FALLTHROUGH_IN_IF}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('tally(value, mode) · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run tally(0, "a") → reaches L13',
+      'not run tally(7, "abc123") → reaches L11',
     ]);
 
     // Branchless pure function — one exit, one derived case.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${PURE_FUNCTION}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('add(a, b) · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run add(0, 0) → reaches L2',
+      'not run add(7, 7) → reaches L2',
     ]);
 
     // Branchless constructable method — the zero-arg class means the runner can build one, so it is DRIVEN.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${PURE_CLASS}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('greet(name) · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run greet("a") → reaches L3',
+      'not run greet("abc123") → reaches L3',
     ]);
   });
 

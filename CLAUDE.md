@@ -63,6 +63,18 @@ killing the window. From there the page is fully scriptable: screenshot, click
 by testid, and call the bridge directly. `window.assayerBridge.getCompiledTree()`
 answers over real IPC.
 
+**The smoke-repo is the example repo.** `smoke-repo/packages/syntax-repository`
+is the canonical surface — the same catalogue the e2e drives — so point `--repo`
+at a cache compiled from it, never a random repo. Populate that cache the way the
+e2e does (source of truth: `packages/app/test/harnesses/smoke-repo-app.harness.ts`):
+write an `assayer.config.json` whose `repoRoot` is the ABSOLUTE smoke-repo path,
+run `node packages/cli/dist/bin/assayer.js status` with `cwd` set to that config
+dir — the precheck compiles the surface into that dir's `.assayer/cache/` — then
+launch with `--repo <configDir>`. `repoRoot` says where the SOURCE is read; the
+config dir is where the cache is written and what `--repo` points at. Every
+specimen — `cross-file-guards`, `same-file-predicate`, the switch/boolean rungs —
+is then a file in the tree.
+
 The flags:
 
 - `--repo` picks the repo whose `.assayer/cache/` is read. The window only lists

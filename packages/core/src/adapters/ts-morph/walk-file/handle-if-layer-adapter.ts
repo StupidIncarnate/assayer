@@ -114,9 +114,18 @@ export const handleIfLayerAdapter = ({
         handled: true,
       }),
     ],
-    descents: arms.map(({ step, statement }) => ({
-      node: statement,
-      context: walkContextTransformer({ context, guardSteps: [step] }),
-    })),
+    descents: [
+      // The condition runs BEFORE either arm is chosen, so it descends under the enclosing guards —
+      // never a then/else step — with `tail` cleared, because an expression can never end the scope.
+      // This is what routes a call sited in the condition (`if (exceedsLimit(size))`) to handle-call
+      // so the edge is recorded; reading the condition for its predicate alone marks the branch but
+      // never the call inside it. An ordinary comparison descends through the no-op default and adds
+      // nothing.
+      { node: node.getExpression(), context: walkContextTransformer({ context, tail: false }) },
+      ...arms.map(({ step, statement }) => ({
+        node: statement,
+        context: walkContextTransformer({ context, guardSteps: [step] }),
+      })),
+    ],
   });
 };

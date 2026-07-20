@@ -26,6 +26,11 @@
         "../../../packages/core/src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter"
       ],
       "@assayer/core/analyze-file": ["../../../packages/core/src/brokers/analyze/file/analyze-file-broker"],
+      // The cross-file predicate compose is a CONSUME-TIME overlay applied on top of a file analysis,
+      // so a specimen asserting composed guards imports it beside the analyze-file broker.
+      "@assayer/core/compose-cross-file": [
+        "../../../packages/core/src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker"
+      ],
       // The cross-file example rungs assert their MODULE GRAPH — the raw imports/re-exports and the
       // references into imported names the walk records for a later stitch to resolve — which is a
       // projection of the walk, so it too rides alongside the walk adapter.

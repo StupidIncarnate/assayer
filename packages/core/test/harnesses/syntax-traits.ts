@@ -28,6 +28,7 @@ import type { FileAnalysis } from '@assayer/shared/contracts';
 import { nodeModuleBuiltinsAdapter } from '../../src/adapters/node-module/builtins/node-module-builtins-adapter';
 import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
+import { composeCrossFilePredicatesBroker } from '../../src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
 import { conditionLeavesTransformer } from '../../src/transformers/condition-leaves/condition-leaves-transformer';
 import { moduleGraphProjectionTransformer } from '../../src/transformers/module-graph-projection/module-graph-projection-transformer';
 
@@ -80,10 +81,20 @@ export const syntaxTraits = (): {
   observed: (params: { relPath: string }) => SyntaxTrait[];
   declaredByContracts: () => SyntaxTrait[];
 } => {
-  const analyze = ({ relPath }: { relPath: string }): FileAnalysis =>
-    analyzeFileBroker({
-      walked: tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath }),
+  // Cross-file predicate composition is a CONSUME-TIME overlay, not part of the per-file blob — so the
+  // harness applies it exactly as a run does, giving `observed()` the composed guards and any
+  // unreachable-exit lint the run reports. A specimen with no imported-predicate guard passes straight
+  // through untouched.
+  const analyze = ({ relPath }: { relPath: string }): FileAnalysis => {
+    const walked = tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath });
+
+    return composeCrossFilePredicatesBroker({
+      analysis: analyzeFileBroker({ walked }),
+      walked,
+      root: SMOKE_REPO,
+      relPath,
     });
+  };
 
   return {
     analyze,

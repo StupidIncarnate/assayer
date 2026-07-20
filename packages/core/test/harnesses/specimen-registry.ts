@@ -52,6 +52,12 @@ const DECLARATIONS = {
   // branch belongs to `inner` and is reported on `inner`'s entry, never leaked into `outer`. No
   // `undriven`: following the call graph reaches it, which is the whole point of this rung.
   [`${CATALOGUE}/happy-path/composition/nested-function/nested-function.ts`]: ['access:named', 'access:through-caller', 'branch:if'],
+  // `classify` (named) guards on `tooBig(x)`, a same-file boolean predicate whose body is `return
+  // n > 50`. The walk reads that guard as a lone opaque `truthy` leaf over the call; compose swaps it
+  // for `tooBig`'s own comparison rebased onto `x`, so `classify`'s one `branch:if` derives the sound
+  // pair. `tooBig` is a branchless private, projected as no entry of its own — the file has exactly one
+  // `access:named` entry and admits nothing.
+  [`${CATALOGUE}/happy-path/composition/same-file-predicate/same-file-predicate.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/composition/switch-in-if/switch-in-if.ts`]: ['access:named', 'branch:if', 'branch:switch', 'param:union'],
 
   // if-else. A class method is reached through an INSTANCE, not as a module property.
@@ -157,13 +163,19 @@ const DECLARATIONS = {
   //     fall-through exit needs a value both under 1 and over 1.
   //   - `cross-file-guards` + its two predicate helpers are the CROSS-FILE rung. The contradiction
   //     (`> 50` returns first, so `> 100` can never hold) exists in no single file, which is the point.
-  //     The walk currently sees neither threshold — a call in an `if` condition reads as bare truthiness
-  //     on `any` and leaves no reference for the stitch — so all three cases arrange the same value and
-  //     TWO of them fail against correct code, which is what puts the root in sad-path today. Each
-  //     helper (`exceeds-limit`, `within-budget`) is a CHILD, `access:named` alone; the root
-  //     `cross-file-guards` adds the relative imports it cannot yet see through.
+  //     The consume-time compose overlay follows each `if`-condition call to its sibling predicate and
+  //     rebases the callee's threshold onto `size`, so both guards reach the branch model: the two
+  //     reachable exits get sound cases and the dead middle exit rides a `lint:unreachable-exit`, which
+  //     keeps the root in sad-path (a lint is an unclean run). Each helper (`exceeds-limit`,
+  //     `within-budget`) is a CHILD, `access:named` alone; the root adds the relative imports whose
+  //     predicates it composes and the unreachable-exit lint their contradiction yields.
   [`${CATALOGUE}/sad-path/unreachable/sequential-guards/sequential-guards.ts`]: ['access:named', 'branch:if', 'lint:unreachable-exit'],
-  [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/cross-file-guards.ts`]: ['access:named', 'branch:if', 'callee:import-local'],
+  [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/cross-file-guards.ts`]: [
+    'access:named',
+    'branch:if',
+    'callee:import-local',
+    'lint:unreachable-exit',
+  ],
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/exceeds-limit.ts`]: ['access:named'],
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/within-budget.ts`]: ['access:named'],
 

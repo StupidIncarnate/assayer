@@ -18,6 +18,11 @@ const DEAD_SURFACE_SPECIMEN = 'packages/syntax-repository/src/sad-path/dead-surf
 // is reached with CODE unset (NaN matches no case). Only a real run proves the default's empty arrange
 // actually lands there.
 const SWITCH_ENV_SPECIMEN = 'packages/syntax-repository/src/happy-path/switch/pure-statement/pure-statement.ts';
+// Two imported predicates guarding one value, whose thresholds contradict (`> 50` returns first, so
+// `> 100` can never hold). Only a real run proves the cross-file compose overlay reaches the sibling
+// definitions, rebases both guards onto `size`, and that the surviving two cases actually execute the
+// exits they predict while the dead middle exit rides the artifact as an unreachable-exit lint.
+const CROSS_FILE_GUARDS_SPECIMEN = 'packages/syntax-repository/src/sad-path/unreachable/cross-file-guards/cross-file-guards.ts';
 
 // Every eponymous ROOT on disk paired with the bucket its folder declares — not the handful anyone
 // thought to name. Walked rather than written down: a literal list goes stale the moment someone adds
@@ -95,6 +100,19 @@ describe('runUnitBroker (integration)', () => {
       const result = await engine.run({ relPath: SWITCH_ENV_SPECIMEN, runId: 'r-switch-env' });
 
       expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed', 'passed']);
+    });
+
+    // The cross-file compose payoff, RUN and not merely derived: with both imported guards rebased onto
+    // `size`, the two reachable exits get sound values (51 reaches `rejected`, 50 reaches `queued`) and
+    // both pass against the real siblings, while the contradiction between `> 50` and `> 100` leaves the
+    // middle exit dead and rides the artifact as an unreachable-exit lint the responder can fail on.
+    it('VALID: {two imported guards whose thresholds contradict} => both cases pass AND the unreachable-exit lint rides the artifact', async () => {
+      const result = await engine.run({ relPath: CROSS_FILE_GUARDS_SPECIMEN, runId: 'r-cross-file' });
+
+      expect({
+        cases: result.cases.map((testCase) => String(testCase.status)),
+        lints: result.lints.map((lint) => ({ rule: String(lint.rule), name: String(lint.name) })),
+      }).toStrictEqual({ cases: ['passed', 'passed'], lints: [{ rule: 'unreachable-exit', name: 'upload' }] });
     });
   });
 

@@ -1,11 +1,12 @@
 /**
  * PURPOSE: Barrel export for @assayer/core test proxies — consumed by other packages' proxies
  *   (via `@assayer/core/testing`) so they can compose core's broker proxies in tests: status +
- *   docs, plus the ten CLI-facing precheck/compile brokers (config find/generate/load/validate/
- *   hash/save-stable, git detect-stable, manifest load/trash, compile run).
+ *   docs, the CLI-facing precheck/compile brokers (config find/generate/load/validate/hash/
+ *   save-stable, git detect-stable, manifest load/trash, compile run), and the serve-time
+ *   cross-file predicate compose proxy plus the ts-morph walk proxy the desktop re-parses through.
  *
  * USAGE:
- * import { compileRunBrokerProxy, configFindBrokerProxy } from '@assayer/core/testing';
+ * import { compileRunBrokerProxy, composeCrossFilePredicatesBrokerProxy } from '@assayer/core/testing';
  */
 
 // Subpath export entry for @assayer/core/testing
@@ -33,3 +34,6 @@ export * from './src/brokers/compile/resolve-root/compile-resolve-root-broker.pr
 export * from './src/brokers/run/paths/run-paths-broker.proxy';
 export * from './src/brokers/run/load/run-load-broker.proxy';
 export * from './src/brokers/run/find/run-find-broker.proxy';
+
+export * from './src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
+export * from './src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';

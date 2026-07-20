@@ -203,6 +203,53 @@ describe('analyzeFileBroker', () => {
     });
   });
 
+  describe('same-file predicate composition', () => {
+    // `classify` guards on `tooBig(x)`, whose whole body is `return n > 50`. The single-file walk reads
+    // that guard as a lone opaque `truthy` leaf over the call, so both arms would derive the same `x`.
+    // The broker composes the leaf against the same-file predicate BEFORE deriving cases, swapping it
+    // for `tooBig`'s own `n > 50` rebased onto `x`, so derive-cases yields the sound pair: then wants
+    // x > 50, else wants x <= 50. Drop the compose step and this asserts against the opaque leaf.
+    it('VALID: {caller guarded by a same-file boolean predicate} => branch and cases carry the callee comparison rebased onto x', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "function tooBig(n: number): boolean {\n  return n > 50;\n}\n\nexport function classify(x: number): string {\n  if (tooBig(x)) {\n    return 'big';\n  }\n\n  return 'small';\n}\n";
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/same-file-predicate.ts' });
+
+      const result = analyzeFileBroker({ walked });
+
+      expect(result.functions.map((fn) => ({ name: fn.entry.name, branches: fn.branches, cases: fn.cases }))).toStrictEqual([
+        {
+          name: 'classify',
+          branches: [
+            {
+              coverageId: '*module*/classify/if:CallExpression,id:tooBig,id:x',
+              kind: 'if',
+              condition: {
+                kind: 'leaf',
+                id: '*module*/classify/if:CallExpression,id:tooBig,id:x#leaf',
+                operandParamName: 'x',
+                operandType: { kind: 'number' },
+                predicate: { kind: 'gt', literal: 50 },
+              },
+              startLine: 6,
+              endLine: 8,
+            },
+          ],
+          cases: [
+            {
+              reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#then',
+              arrange: [{ kind: 'param', param: 'x', value: 51 }],
+            },
+            {
+              reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#else',
+              arrange: [{ kind: 'param', param: 'x', value: 50 }],
+            },
+          ],
+        },
+      ]);
+    });
+  });
+
   describe('dark spots', () => {
     it('VALID: {for-of loop} => carried into the analysis rather than silently dropped', () => {
       analyzeFileBrokerProxy();

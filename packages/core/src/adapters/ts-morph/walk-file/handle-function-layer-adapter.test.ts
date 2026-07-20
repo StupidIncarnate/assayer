@@ -111,4 +111,89 @@ describe('handleFunctionLayerAdapter', () => {
       expect(result.descents).toStrictEqual([]);
     });
   });
+
+  describe('the predicate signature it publishes', () => {
+    it('VALID: {branchless predicate `return n > 50`} => opens a scope carrying its comparison as predicateSignature', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function tooBig(n: number): boolean {\n  return n > 50;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toStrictEqual({
+        kind: 'leaf',
+        id: '*module*/tooBig/predicate#leaf',
+        operandParamName: 'n',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'gt', literal: 50 },
+      });
+    });
+
+    it('VALID: {`return a > 1 && b < 2`} => publishes the whole and-tree, every leaf a real comparison', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'function combo(a: number, b: number): boolean {\n  return a > 1 && b < 2;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toStrictEqual({
+        kind: 'and',
+        left: {
+          kind: 'leaf',
+          id: '*module*/combo/predicate#leaf.0',
+          operandParamName: 'a',
+          operandType: { kind: 'number' },
+          predicate: { kind: 'gt', literal: 1 },
+        },
+        right: {
+          kind: 'leaf',
+          id: '*module*/combo/predicate#leaf.1',
+          operandParamName: 'b',
+          operandType: { kind: 'number' },
+          predicate: { kind: 'lt', literal: 2 },
+        },
+      });
+    });
+
+    it('EDGE: {`return "x"` (a string literal)} => publishes NO signature, since the leaf is not a comparison', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(n: number): string {\n  return "x";\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toBe(undefined);
+    });
+
+    it('EDGE: {`return flag` (a bare boolean identifier)} => publishes NO signature, since a truthy leaf constrains nothing', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(flag: boolean): boolean {\n  return flag;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toBe(undefined);
+    });
+
+    it('EDGE: {`return isFoo(n)` (a nested call)} => publishes NO signature, since the callee cannot be typed here', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'function f(n: number): boolean {\n  return isFoo(n);\n}\ndeclare function isFoo(n: number): boolean;\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toBe(undefined);
+    });
+  });
 });

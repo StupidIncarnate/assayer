@@ -24,6 +24,7 @@ import { z } from 'zod';
 
 import {
   branchNodeContract,
+  conditionNodeContract,
   entryAccessContract,
   exitNodeContract,
   lineNumberContract,
@@ -60,6 +61,13 @@ export const scopeRecordContract = z.object({
   // `calls`; only a module scope ever collects any, since exports are top-level. A projection reads
   // these to LABEL a module entry by its single exported binding — DISPLAY only, never identity.
   exportedBindings: z.array(symbolNameContract).default([]),
+  // The decomposed condition this scope's body RETURNS, present only when the scope is a boolean
+  // predicate whose whole body is `return <comparison>` (`function tooBig(n){ return n > 50 }`). It is
+  // what a caller's opaque `if (tooBig(x))` leaf composes against: the callee's comparison, rebased
+  // onto the argument the caller passed. Absent for any body that is not a single comparison return —
+  // a bare `return flag`, `return "x"`, or a call — so a leaf that could not be composed anyway is
+  // never offered a signature to compose from.
+  predicateSignature: conditionNodeContract.optional(),
 });
 
 export type ScopeRecord = z.infer<typeof scopeRecordContract>;

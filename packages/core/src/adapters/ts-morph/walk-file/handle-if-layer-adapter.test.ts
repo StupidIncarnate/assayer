@@ -86,6 +86,7 @@ describe('handleIfLayerAdapter', () => {
       const result = handleIfLayerAdapter({ node, context: TAIL_CONTEXT });
 
       expect(result.descents.map((descent) => descent.context.guardPath)).toStrictEqual([
+        [],
         [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' }],
       ]);
     });
@@ -99,6 +100,7 @@ describe('handleIfLayerAdapter', () => {
       const result = handleIfLayerAdapter({ node, context: TAIL_CONTEXT });
 
       expect(result.descents.map((descent) => descent.context.guardPath)).toStrictEqual([
+        [],
         [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' }],
         [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' }],
       ]);
@@ -116,6 +118,7 @@ describe('handleIfLayerAdapter', () => {
       const result = handleIfLayerAdapter({ node, context: NESTED_GUARD_CONTEXT });
 
       expect(result.descents.map((descent) => descent.context.guardPath)).toStrictEqual([
+        [{ branchCoverageId: 'classify/if:id:flag', arm: 'then' }],
         [
           { branchCoverageId: 'classify/if:id:flag', arm: 'then' },
           { branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' },
@@ -131,7 +134,7 @@ describe('handleIfLayerAdapter', () => {
 
       const result = handleIfLayerAdapter({ node, context: TAIL_CONTEXT });
 
-      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['ReturnStatement']);
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['BinaryExpression', 'ReturnStatement']);
     });
   });
 

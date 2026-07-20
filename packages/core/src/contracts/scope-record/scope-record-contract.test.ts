@@ -33,6 +33,25 @@ describe('scopeRecordContract', () => {
 
       expect(result).toStrictEqual(record);
     });
+
+    it('VALID: {a boolean predicate scope} => carries its decomposed return comparison as predicateSignature', () => {
+      const record = ScopeRecordStub({
+        scopePath: ['*module*', 'tooBig'],
+        name: 'tooBig',
+        returnType: { kind: 'boolean' },
+        predicateSignature: {
+          kind: 'leaf',
+          id: '*module*/tooBig/predicate#leaf',
+          operandParamName: 'n',
+          operandType: { kind: 'number' },
+          predicate: { kind: 'gt', literal: 50 },
+        },
+      });
+
+      const result = scopeRecordContract.parse(record);
+
+      expect(result).toStrictEqual(record);
+    });
   });
 
   describe('invalid scope records', () => {

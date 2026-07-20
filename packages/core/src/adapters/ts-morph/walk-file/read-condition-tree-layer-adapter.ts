@@ -112,12 +112,20 @@ export const readConditionTreeLayerAdapter = ({
   // policy, and policy lives in the projections.
   const envVarName = readEnvOperandLayerAdapter({ node: readout.operandNode });
 
+  // A CALL operand reads as opaque `truthy` here, because a single-file parse cannot type the callee.
+  // Anchoring the call's position — the SAME coordinate its call site records — is the foreign key a
+  // later compose pass joins on to swap this leaf for the callee's own predicate.
+  const callPosition = Node.isCallExpression(readout.operandNode)
+    ? readout.operandNode.getSourceFile().getLineAndColumnAtPos(readout.operandNode.getStart())
+    : undefined;
+
   return {
     condition: conditionNodeContract.parse({
       kind: 'leaf',
       id,
       ...(readout.operandName === undefined ? {} : { operandParamName: readout.operandName }),
       ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
+      ...(callPosition === undefined ? {} : { operandCallPosition: { line: callPosition.line, column: callPosition.column } }),
       operandType: readOperandTypeLayerAdapter({
         node: readout.operandNode,
         context,

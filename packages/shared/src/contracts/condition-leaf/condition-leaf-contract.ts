@@ -15,6 +15,14 @@
  *   wherever it is true — whether an entry can actually be driven through it is policy, and policy
  *   lives in the projections.
  *
+ *   `operandCallPosition` anchors WHERE a call operand is written, keyed to the same source coordinate
+ *   the call site records. It appears when the operand is a CALL (`if (tooBig(x))`), whose predicate
+ *   reads as bare `truthy` because a single-file parse cannot type the callee. The position is the
+ *   foreign key that lets a compose pass join this leaf back to the call site it came from, and from
+ *   there to the callee's own predicate — swapping the opaque leaf for the callee's comparison rebased
+ *   onto the caller's argument. It is DISPLAY-inert identity plumbing: a coordinate the parse already
+ *   holds, never re-derived.
+ *
  * USAGE:
  * conditionLeafContract.parse({
  *   kind: 'leaf', id: 'grade/if:…#leaf.0',
@@ -24,8 +32,10 @@
  */
 import { z } from 'zod';
 
+import { columnNumberContract } from '../column-number/column-number-contract';
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
+import { lineNumberContract } from '../line-number/line-number-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
@@ -35,6 +45,7 @@ export const conditionLeafContract = z.object({
   id: coverageIdContract,
   operandParamName: symbolNameContract.optional(),
   operandEnvVarName: envVarNameContract.optional(),
+  operandCallPosition: z.object({ line: lineNumberContract, column: columnNumberContract }).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,
 });

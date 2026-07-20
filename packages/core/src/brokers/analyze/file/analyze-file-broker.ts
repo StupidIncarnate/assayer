@@ -23,13 +23,11 @@ import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
-import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
+import { composePredicatesTransformer } from '../../../transformers/compose-predicates/compose-predicates-transformer';
 import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-projection/dark-spot-projection-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
-import { domainValuesTransformer } from '../../../transformers/domain-values/domain-values-transformer';
+import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
 import { followCallsTransformer } from '../../../transformers/follow-calls/follow-calls-transformer';
-import { typeTextTransformer } from '../../../transformers/type-text/type-text-transformer';
-import { typeToRangeTransformer } from '../../../transformers/type-to-range/type-to-range-transformer';
 import { undrivenProjectionTransformer } from '../../../transformers/undriven-projection/undriven-projection-transformer';
 
 export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult; relPath?: string }): FileAnalysis => {
@@ -39,12 +37,17 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [] });
   }
 
+  // A caller's opaque `if (helper(x))` guard is composed with the same-file predicate it calls BEFORE
+  // any case is derived: the lone truthy leaf becomes the callee's own comparison rebased onto the
+  // caller's argument, so derive-cases and enrichment both read the sound guard, not the opaque one.
+  const composed = composePredicatesTransformer({ functions: extracted.functions, walked });
+
   // Following the call graph is what turns a private helper from an admission into a driven entry:
   // its branches are covered through the reachable caller that passes an input straight in, and the
   // ones no caller can steer stay honestly undriven.
   const followed = followCallsTransformer({ walked });
 
-  const derived = extracted.functions.map((fn) => ({
+  const derived = composed.map((fn) => ({
     fn,
     result: deriveCasesTransformer({
       params: fn.entry.params,
@@ -80,43 +83,10 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     })),
   );
 
-  const enrichment = extracted.functions.flatMap((fn) => [
-    ...fn.entry.params.map((param) => ({
-      line: fn.entry.line,
-      symbol: param.name,
-      typeText: typeTextTransformer({ type: param.type }),
-    })),
-    // Enrichment shows a PARAM's type + representative range on the branch line — once per LEAF, so
-    // `if (score > 5 && bonus > 1)` enriches both operands. Reading the branch as a single operand
-    // showed neither: a compound condition had no param name to report at all.
-    // A leaf whose operand is not a simple param has no meaningful symbol/type/range, so it is
-    // skipped.
-    ...fn.branches.flatMap((branch) =>
-      conditionLeavesTransformer({ condition: branch.condition }).flatMap((leaf) => {
-        if (leaf.operandParamName === undefined) {
-          return [];
-        }
-        const armValues = typeToRangeTransformer({
-          type: leaf.operandType,
-          predicateKind: leaf.predicate.kind,
-          ...(leaf.predicate.literal === undefined ? {} : { literal: leaf.predicate.literal }),
-        });
-        return [
-          {
-            line: branch.startLine,
-            symbol: leaf.operandParamName,
-            typeText: typeTextTransformer({ type: leaf.operandType }),
-            // Display only, so each arm is realized on its own — this is the range a reader sees
-            // beside the line, never a constraint anything derives from.
-            range: [
-              ...domainValuesTransformer({ domain: armValues.satisfying }),
-              ...domainValuesTransformer({ domain: armValues.violating }),
-            ],
-          },
-        ];
-      }),
-    ),
-  ]);
+  // Enrichment shows each param's type on the entry line and, once per branch LEAF, that operand's
+  // type + representative range on the branch line — derived from the COMPOSED functions, so a
+  // rebased call-guard enriches its real comparison, not the opaque one.
+  const enrichment = fileEnrichmentTransformer({ functions: composed });
 
   return fileAnalysisContract.parse({
     functions,

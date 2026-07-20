@@ -38,6 +38,7 @@ import { assembleShimTransformer } from '../../../transformers/assemble-shim/ass
 import { caseSetProjectionTransformer } from '../../../transformers/case-set-projection/case-set-projection-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
+import { composeCrossFilePredicatesBroker } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker';
 
 export const runUnitBroker = async ({
   cacheDir,
@@ -59,7 +60,16 @@ export const runUnitBroker = async ({
   analyzerContentHash: string;
 }): Promise<RunResult> => {
   const walked = tsMorphWalkFileAdapter({ source, relPath });
-  const analysis = analyzeFileBroker({ walked, relPath });
+  // A caller's opaque `if (helper(x))` guard over an IMPORTED predicate is composed here, at consume
+  // time, against the sibling on disk — the same-file compose inside `analyzeFileBroker` refuses
+  // imports because the per-file blob never reads another file. Applied before the case set is
+  // projected, so the runnable cases and any unreachable-exit lint reflect the composed guard.
+  const analysis = composeCrossFilePredicatesBroker({
+    analysis: analyzeFileBroker({ walked, relPath }),
+    walked,
+    root: repoRoot,
+    relPath,
+  });
   const contentHash = cryptoSha256Adapter({ content: source });
 
   const probeDir = `${cacheDir}/probes`;

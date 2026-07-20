@@ -4,12 +4,12 @@ import { representativeValueTransformer } from './representative-value-transform
 
 describe('representativeValueTransformer', () => {
   describe('primitive descriptors', () => {
-    it('VALID: {type: string} => returns "a"', () => {
-      expect(representativeValueTransformer({ type: { kind: 'string' } })).toBe('a');
+    it('VALID: {type: string} => returns "abc123"', () => {
+      expect(representativeValueTransformer({ type: { kind: 'string' } })).toBe('abc123');
     });
 
-    it('VALID: {type: number} => returns 0', () => {
-      expect(representativeValueTransformer({ type: { kind: 'number' } })).toBe(0);
+    it('VALID: {type: number} => returns 7', () => {
+      expect(representativeValueTransformer({ type: { kind: 'number' } })).toBe(7);
     });
 
     it('VALID: {type: boolean} => returns false', () => {
@@ -33,12 +33,12 @@ describe('representativeValueTransformer', () => {
       ).toBe('x');
     });
 
-    it('EMPTY: {type: union with no members} => returns "a"', () => {
-      expect(representativeValueTransformer({ type: TypeDescriptorStub({ kind: 'union', members: [] }) })).toBe('a');
+    it('EMPTY: {type: union with no members} => returns "abc123"', () => {
+      expect(representativeValueTransformer({ type: TypeDescriptorStub({ kind: 'union', members: [] }) })).toBe('abc123');
     });
 
-    it('VALID: {type: unknown} => returns "a"', () => {
-      expect(representativeValueTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Date' }) })).toBe('a');
+    it('VALID: {type: unknown} => returns "abc123"', () => {
+      expect(representativeValueTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Date' }) })).toBe('abc123');
     });
   });
 });

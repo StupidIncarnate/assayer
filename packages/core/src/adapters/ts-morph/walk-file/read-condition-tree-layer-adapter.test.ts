@@ -296,4 +296,40 @@ describe('readConditionTreeLayerAdapter', () => {
       });
     });
   });
+
+  describe('a call operand anchors its position', () => {
+    // A CALL operand reads as opaque `truthy` — a single-file parse cannot type the callee — so the
+    // leaf instead records WHERE the call is written. That coordinate is the SAME one the call site
+    // records (its `getStart()`), the foreign key a later compose pass joins on to swap this leaf for
+    // the callee's own predicate.
+    it('VALID: {if (exceedsLimit(size))} => a truthy leaf carrying the call’s getStart coordinate', () => {
+      readConditionTreeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function exceedsLimit(n: number): boolean;\nif (exceedsLimit(size)) {}\n',
+      );
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionTreeLayerAdapter({
+        condition,
+        context: WalkContextStub({
+          scopePath: ['route'],
+          guardPath: [],
+          params: [{ name: 'size', type: { kind: 'number' } }],
+          exported: true,
+        }),
+        branchCoverageId: BRANCH,
+        path: [],
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandCallPosition: { line: 2, column: 5 },
+        operandType: { kind: 'boolean' },
+        predicate: { kind: 'truthy' },
+      });
+    });
+  });
 });

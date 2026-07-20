@@ -19,7 +19,7 @@ describe('unreachable / exceeds-limit — a predicate function, the shape a call
         entry: expect.objectContaining({ name: 'exceedsLimit', access: { kind: 'named' } }),
         branches: [],
         exits: [expect.objectContaining({ kind: 'return', guardPath: [], line: 2 })],
-        cases: [expect.objectContaining({ arrange: [{ kind: 'param', param: 'size', value: 0 }] })],
+        cases: [expect.objectContaining({ arrange: [{ kind: 'param', param: 'size', value: 7 }] })],
       }),
     ]);
   });

@@ -32,6 +32,24 @@ describe('conditionLeafContract', () => {
         predicate: { kind: 'truthy' },
       });
     });
+
+    it('VALID: {a call operand truthy leaf} => carries the operandCallPosition that joins it to its call site', () => {
+      const result = conditionLeafContract.parse({
+        kind: 'leaf',
+        id: 'stub/if:CallExpression,id:tooBig#leaf',
+        operandCallPosition: { line: 6, column: 7 },
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'truthy' },
+      });
+
+      expect(result).toStrictEqual({
+        kind: 'leaf',
+        id: 'stub/if:CallExpression,id:tooBig#leaf',
+        operandCallPosition: { line: 6, column: 7 },
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'truthy' },
+      });
+    });
   });
 
   describe('invalid leaves', () => {

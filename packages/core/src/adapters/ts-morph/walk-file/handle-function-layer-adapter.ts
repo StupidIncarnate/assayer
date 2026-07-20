@@ -32,16 +32,40 @@ import { probeSiteContract } from '../../../contracts/probe-site/probe-site-cont
 import { scopeRecordContract } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../../contracts/walk-node/walk-node-contract';
+import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
+import { coverageIdTransformer } from '../../../transformers/coverage-id/coverage-id-transformer';
 import { exitCoverageIdTransformer } from '../../../transformers/exit-coverage-id/exit-coverage-id-transformer';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { walkContextTransformer } from '../../../transformers/walk-context/walk-context-transformer';
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
+import { readConditionTreeLayerAdapter } from './read-condition-tree-layer-adapter';
 import { readEntryAccessLayerAdapter } from './read-entry-access-layer-adapter';
 import { readExportFlagLayerAdapter } from './read-export-flag-layer-adapter';
 import { readFunctionNameLayerAdapter } from './read-function-name-layer-adapter';
 import { readTypeFactLayerAdapter } from './read-type-fact-layer-adapter';
+
+// The predicate kinds carrying a real COMPARISON — the operand's value or its length measured against
+// a threshold. A predicate signature is published ONLY when every leaf of the body's returned
+// condition is one of these; a `truthy`/`falsy`/`unrecognized` leaf (a bare `return flag`,
+// `return "x"`, or a nested call) constrains nothing, so a caller composing its guard against it would
+// gain nothing over the opaque leaf it began with. Read as strings, exactly as `type-to-range` reads a
+// predicate kind.
+const COMPARISON_PREDICATE_KINDS = new Set([
+  'eq',
+  'neq',
+  'length-eq',
+  'length-neq',
+  'length-gt',
+  'length-gte',
+  'length-lt',
+  'length-lte',
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+]);
 
 export type FunctionLikeNode =
   | FunctionDeclaration
@@ -77,6 +101,34 @@ export const handleFunctionLayerAdapter = ({
 
   const block = body !== undefined && Node.isBlock(body) ? body : undefined;
   const statements = block === undefined ? [] : block.getStatements();
+
+  // A boolean predicate whose WHOLE body returns one comparison (`return n > 50`, or a concise arrow
+  // that IS that comparison) publishes its decomposed condition as a signature. A caller's opaque
+  // `if (pred(x))` leaf composes against this — the callee's comparison rebased onto the argument the
+  // caller passed — turning two identical derived cases into the sound pair. Gated to a SINGLE
+  // comparison return: any leaf that is not a real comparison carries no constraint, so no signature is
+  // published and the caller's leaf stays opaque.
+  const onlyStatement = statements.length === 1 ? statements[0] : undefined;
+  const returnStatement =
+    onlyStatement !== undefined && Node.isReturnStatement(onlyStatement) ? onlyStatement : undefined;
+  const predicateReturnExpr =
+    block === undefined ? (body !== undefined && !Node.isBlock(body) ? body : undefined) : returnStatement?.getExpression();
+  const predicateReadout =
+    predicateReturnExpr === undefined
+      ? undefined
+      : readConditionTreeLayerAdapter({
+          condition: predicateReturnExpr,
+          context: scoped,
+          branchCoverageId: coverageIdTransformer({ scopePath: scoped.scopePath, segment: 'predicate' }),
+          path: [],
+        });
+  const predicateSignature =
+    predicateReadout !== undefined &&
+    conditionLeavesTransformer({ condition: predicateReadout.condition }).every((leaf) =>
+      COMPARISON_PREDICATE_KINDS.has(leaf.predicate.kind),
+    )
+      ? predicateReadout.condition
+      : undefined;
 
   // Three shapes: no body at all (an overload signature) exits nowhere; a concise arrow
   // (`(n) => n`) has no statement to return from, so its body IS the single exit; a block
@@ -160,6 +212,7 @@ export const handleFunctionLayerAdapter = ({
       endLine: node.getEndLineNumber(),
       branches: [],
       exits: [],
+      ...(predicateSignature === undefined ? {} : { predicateSignature }),
     }),
     descents:
       block === undefined

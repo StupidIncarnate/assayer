@@ -1,21 +1,27 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
+import { composeCrossFilePredicatesBroker } from '@assayer/core/compose-cross-file';
 import { moduleGraphProjectionTransformer } from '@assayer/core/module-graph';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 
-const source = readFileSync(join(__dirname, 'cross-file-guards.ts'), 'utf8');
-const relPath = 'src/sad-path/unreachable/cross-file-guards/cross-file-guards.ts';
+// The compose is a CONSUME-TIME overlay: the per-file blob never reads another file, so the caller's
+// opaque `if (exceedsLimit(size))` guard is joined to its sibling definition here, exactly as a run
+// does — root is the repo root the run passes, relPath the caller's path under it.
+const relPath = 'packages/syntax-repository/src/sad-path/unreachable/cross-file-guards/cross-file-guards.ts';
+const root = resolve(__dirname, '../../../../../..');
+const source = readFileSync(resolve(root, relPath), 'utf8');
 const walked = tsMorphWalkFileAdapter({ source, relPath });
-const analysis = analyzeFileBroker({ walked });
+const analysis = composeCrossFilePredicatesBroker({ analysis: analyzeFileBroker({ walked }), walked, root, relPath });
 const graph = moduleGraphProjectionTransformer({ walked });
 const upload = analysis.functions[0];
 
 describe('unreachable / cross-file-guards — two imported predicates guarding one value, whose thresholds contradict', () => {
-  // The bug, stated once: `exceedsLimit` returns for everything over 50, so `size` is at most 50 by the
-  // second guard, and `withinBudget`'s `> 100` can never hold. `'priority'` is dead. It is dead in
-  // neither file alone — `upload` never names a threshold, and each predicate is correct by itself.
+  // The contradiction, stated once: `exceedsLimit` returns for everything over 50, so `size` is at most
+  // 50 by the second guard, and `withinBudget`'s `> 100` can never hold. `'priority'` is dead. It is
+  // dead in neither file alone — `upload` never names a threshold, and each predicate is correct by
+  // itself — so only composing the two exposes it.
   it('VALID: {two imported guards} => three exits, the middle one reached only through both calls', () => {
     expect(upload.exits.map((exit) => ({ arms: exit.guardPath.map((step) => String(step.arm)), line: exit.line }))).toStrictEqual([
       { arms: ['then'], line: 6 },
@@ -24,51 +30,103 @@ describe('unreachable / cross-file-guards — two imported predicates guarding o
     ]);
   });
 
-  // THE RATCHET, first half: the guards are OPAQUE. A call in a condition reads as a bare truthiness
-  // check on `any` — the hermetic walk cannot type an imported callee, so neither threshold reaches the
-  // branch model. Whatever resolves this must put the callee's returned comparison in the caller's
-  // hands; a guard path of two `truthy` leaves carries no arithmetic to do.
-  it('VALID: {if (exceedsLimit(size))} => an opaque truthiness leaf, the threshold nowhere in the model', () => {
-    expect(upload.branches.map((branch) => branch.condition)).toStrictEqual([
-      expect.objectContaining({ kind: 'leaf', operandType: { kind: 'unknown', text: 'any' }, predicate: { kind: 'truthy' } }),
-      expect.objectContaining({ kind: 'leaf', operandType: { kind: 'unknown', text: 'any' }, predicate: { kind: 'truthy' } }),
+  // The compose reaches each imported callee, reads its published predicate signature, and rebases it
+  // onto the argument `upload` passed: the opaque truthy leaf over `exceedsLimit(size)` becomes `size >
+  // 50`, and the one over `withinBudget(size)` becomes `size > 100`. The branch coverage ids and line
+  // spans are preserved, so the exits keyed under them still join.
+  it('VALID: {if (exceedsLimit(size))} => the callee threshold rebased onto size, in the caller coverage space', () => {
+    expect(upload.branches).toStrictEqual([
+      {
+        coverageId: '*module*/upload/if:CallExpression,id:exceedsLimit,id:size',
+        kind: 'if',
+        condition: {
+          kind: 'leaf',
+          id: '*module*/upload/if:CallExpression,id:exceedsLimit,id:size#leaf',
+          operandParamName: 'size',
+          operandType: { kind: 'number' },
+          predicate: { kind: 'gt', literal: 50 },
+        },
+        startLine: 5,
+        endLine: 7,
+      },
+      {
+        coverageId: '*module*/upload/if:CallExpression,id:withinBudget,id:size',
+        kind: 'if',
+        condition: {
+          kind: 'leaf',
+          id: '*module*/upload/if:CallExpression,id:withinBudget,id:size#leaf',
+          operandParamName: 'size',
+          operandType: { kind: 'number' },
+          predicate: { kind: 'gt', literal: 100 },
+        },
+        startLine: 9,
+        endLine: 11,
+      },
     ]);
   });
 
-  // THE RATCHET, second half, and the more surprising one: the import EDGES are recorded but the calls
-  // are not. A call sited in an `if` condition leaves no reference for the stitch to resolve, so the
-  // link `upload → exceedsLimit` does not exist even as an unresolved fact. Cross-file driving cannot
-  // start from a graph that never marked the call — this is the first thing the rung has to fix.
-  it('VALID: {calls inside if-conditions} => two import edges and no call references at all', () => {
-    expect(graph).toStrictEqual({
-      edges: [
-        { kind: 'import', specifier: './exceeds-limit', bindings: [{ kind: 'named', name: 'exceedsLimit' }], line: 1, column: 1 },
-        { kind: 'import', specifier: './within-budget', bindings: [{ kind: 'named', name: 'withinBudget' }], line: 2, column: 1 },
-      ],
-      references: [],
-      globalUses: [],
-    });
+  // Enrichment is RE-DERIVED off the composed branches, not carried through from the persisted blob:
+  // the opaque `truthy` call-leaves had no param operand and enriched only the `size` param line, but
+  // once each leaf becomes `size > 50` / `size > 100`, both guard lines carry `size`'s range. The
+  // persisted blob would show only the entry-param row; the overlay must show all three.
+  it('VALID: {the composed guards} => enrichment carries the param line and both rebased guard lines', () => {
+    expect(analysis.enrichment).toStrictEqual([
+      { line: 4, symbol: 'size', typeText: 'number' },
+      { line: 5, symbol: 'size', typeText: 'number', range: [51, 50] },
+      { line: 9, symbol: 'size', typeText: 'number', range: [101, 100] },
+    ]);
   });
 
-  // THE RATCHET, third half: with both guards opaque there is no domain to pick from, so all three
-  // cases arrange the same 0 and two of them fail against correct code. Nothing admits the blindness —
-  // no dark spot, no undriven entry — so the analysis reads as complete while understanding neither
-  // guard. Flip all of this together when the callee's constraint reaches the caller.
-  it('VALID: {an unseeable guard} => one value for every exit, and no channel admits the gap', () => {
+  // With both thresholds in the model, derive-cases yields the two reachable exits (51 rejected, 50
+  // queued) and reports the middle exit as unreachable — dead code the repo owns, so it rides the LINT
+  // channel with the two guard lines that contradict. Nothing is admitted on the other channels: the
+  // guards are understood perfectly, so no dark spot and no undriven entry.
+  it('VALID: {the composed guards} => two sound cases and an unreachable-exit lint, no other admission', () => {
     expect({
-      arranged: upload.cases.map((testCase) => testCase.arrange),
+      arranged: upload.cases,
       darkSpots: analysis.darkSpots,
       undriven: analysis.undriven,
       lints: analysis.lints,
     }).toStrictEqual({
       arranged: [
-        [{ kind: 'param', param: 'size', value: 0 }],
-        [{ kind: 'param', param: 'size', value: 0 }],
-        [{ kind: 'param', param: 'size', value: 0 }],
+        {
+          reachesExit: '*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#then',
+          arrange: [{ kind: 'param', param: 'size', value: 51 }],
+        },
+        {
+          reachesExit: '*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#else/if:CallExpression,id:withinBudget,id:size#else',
+          arrange: [{ kind: 'param', param: 'size', value: 50 }],
+        },
       ],
       darkSpots: [],
       undriven: [],
-      lints: [],
+      lints: [
+        {
+          rule: 'unreachable-exit',
+          name: 'upload',
+          message:
+            '`upload` can never reach the exit on line 10: the guards on lines 5, 9 cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.',
+          startLine: 10,
+          endLine: 10,
+        },
+      ],
+    });
+  });
+
+  // The module graph is what the compose reconciles against: each call sited in an `if` condition is
+  // recorded as an import reference (keyed at the call site inside each guard, L5/L9), beside the two
+  // import edges. That reference IS the foreign key the overlay follows to the sibling predicate.
+  it('VALID: {calls inside if-conditions} => two import edges AND their two call references', () => {
+    expect(graph).toStrictEqual({
+      edges: [
+        { kind: 'import', specifier: './exceeds-limit', bindings: [{ kind: 'named', name: 'exceedsLimit' }], line: 1, column: 1 },
+        { kind: 'import', specifier: './within-budget', bindings: [{ kind: 'named', name: 'withinBudget' }], line: 2, column: 1 },
+      ],
+      references: [
+        { specifier: './exceeds-limit', importedName: 'exceedsLimit', line: 5, column: 7 },
+        { specifier: './within-budget', importedName: 'withinBudget', line: 9, column: 7 },
+      ],
+      globalUses: [],
     });
   });
 });

@@ -18,7 +18,7 @@ describe('unreachable / within-budget — the second predicate function, whose t
         entry: expect.objectContaining({ name: 'withinBudget', access: { kind: 'named' } }),
         branches: [],
         exits: [expect.objectContaining({ kind: 'return', guardPath: [], line: 2 })],
-        cases: [expect.objectContaining({ arrange: [{ kind: 'param', param: 'size', value: 0 }] })],
+        cases: [expect.objectContaining({ arrange: [{ kind: 'param', param: 'size', value: 7 }] })],
       }),
     ]);
   });

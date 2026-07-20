@@ -33,8 +33,8 @@ describe('function — a branchless exported function', () => {
           {
             reachesExit: '*module*/add/return@top',
             arrange: [
-              { kind: 'param', param: 'a', value: 0 },
-              { kind: 'param', param: 'b', value: 0 },
+              { kind: 'param', param: 'a', value: 7 },
+              { kind: 'param', param: 'b', value: 7 },
             ],
           },
         ],

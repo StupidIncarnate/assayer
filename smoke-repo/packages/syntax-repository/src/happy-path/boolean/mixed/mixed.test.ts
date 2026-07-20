@@ -44,7 +44,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
         reachesExit: ELSE,
         arrange: [
           { kind: 'param', param: 'admin', value: false },
-          { kind: 'param', param: 'level', value: 0 },
+          { kind: 'param', param: 'level', value: 7 },
           { kind: 'param', param: 'owner', value: false },
         ],
       },
