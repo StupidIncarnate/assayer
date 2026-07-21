@@ -91,6 +91,7 @@ LOOKUP, not by re-parsing (§9). One parse per file still holds.
 | change what identity is | `project-node-layer-adapter` |
 | change operand typing | `read-operand-type-layer-adapter` (read §5.9 first) |
 | change reachability | `read-terminal` **or** `read-accounted` — they are different questions, read §5.8 first |
+| decide whether a branch is DRIVABLE (steerable) | `transformers/derive-cases` — the ONE gate, every branch construct alike (§5.12); never a per-construct or per-position gate |
 | change what counts as a dark spot | `statics/significant-syntax-kinds` |
 | change what becomes an entry | `transformers/analysis-projection` (policy lives there, not in the walk) |
 | change what a call TARGETS (local / import / unresolved arms) | `read-callee-layer-adapter` |
@@ -219,6 +220,24 @@ site is the statement CONTAINER and the probe is APPENDED (`kind: 'complete'`). 
 no site is unobservable, and a case predicting one reports "reached no exit" against code that
 reached it perfectly.
 
+**5.12 — One syntax, one channel; decide drivability ONCE, never per position.** The same form is read
+the same way no matter what encloses it. Position may pick a LENS — never a per-position VARIANT of one.
+The value/exit lens has a single reader: a conditional expression (a ternary, a `&&`/`||`/`??` chain, a
+`?.`) is handed to `read-conditional-exit` in EVERY value position — `return`, `throw`, a concise-arrow
+body, and the value-flow `const x = …; return x` tail — and split into per-arm exits identically each
+time. (An expression AS A CONDITION is the OTHER lens — `if`, a ternary's own condition, a `??`/`?.`
+non-nullishness — read by `read-condition` / `read-condition-tree` / `read-nullish-leaf`. `a && b` is one
+predicate in `if (a && b)` and two value-paths in `return a && b` because those are different lenses, not
+two readers for one lens.)
+
+Whether a branch can be STEERED is likewise decided in ONE place — the `derive-cases` steerability gate —
+for `if`, ternary, `&&`/`||`/`??` and `?.` alike: every condition leaf a param or env operand ⇒ cases,
+otherwise ⇒ admitted UNDRIVEN. The incident this forbids: a `?.` receiver was gated on `context.params`
+INSIDE `read-conditional-exit`, and `read-value-flow-exit` carried its own drivability gate — so one
+`cond ? a : b` came out three ways (split, single-exit, or dark spot) by nothing but whether it sat in a
+`return`, behind a `const`, or after a `?.`. Both gates were deleted. Asking "is this drivable?" anywhere
+but `derive-cases`, or reading one lens two ways by position, re-opens it.
+
 ---
 
 ## 6. Adding a construct — the recipe
@@ -313,9 +332,11 @@ Two properties must hold and are cheap to check with a probe:
   consumed statements from its descent and folds the facts in; `handle-function` MERGES the block
   result's branches/exits/probe-sites/nodes (not just its descents), and the scope claims them via
   `opensScope`. What stays the marked `ConditionalExpression` dark spot is what that tight
-  `≡ return cond ? y : z` equivalence does not cover: a non-adjacent or transformed use (`return x + 1`,
-  `f(x)`), `let`/reassignment, an opaque (non-drivable) condition, and argument-position or JSX ternaries
-  — reachable only through the later def-site-derived reverse-map rung, not v1.
+  `≡ return cond ? y : z` equivalence STRUCTURALLY cannot reach: a non-adjacent or transformed use
+  (`return x + 1`, `f(x)`), `let`/reassignment, and argument-position or JSX ternaries — reachable only
+  through the later def-site-derived reverse-map rung, not v1. A non-drivable CONDITION is NOT a dark
+  spot: the branch is emitted and the `derive-cases` steerability gate (§5.12) admits it UNDRIVEN, never
+  a spurious case.
 - **`*/` inside a doc comment terminates the comment.** Writing a scope path like `*module*/classify` in
   a `/** … */` block produces baffling TS1109/TS1005 parse errors. Don't put scope paths in comments.
 - **Tests may not contain conditionals** — including `result.success === true && result.x`. Assert the
