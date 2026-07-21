@@ -66,6 +66,36 @@ describe('readValueFlowExitLayerAdapter', () => {
         consumedKinds: ['VariableStatement', 'ThrowStatement'],
       });
     });
+
+    // An OPAQUE condition (a call, a non-param local) splits the SAME as any other tail — drivability
+    // is not gated here. The split hands the derivation a branch it cannot steer, which is admitted
+    // undriven downstream, exactly as an opaque `if` or exit ternary is.
+    it('VALID: {`const x = g(n) ? a : b; return x`} => an opaque condition splits, drivability handled downstream', () => {
+      readValueFlowExitLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function g(n: number): boolean;\nfunction classify(n: number): string {\n  const x = g(n) ? "big" : "small";\n  return x;\n}\n',
+      );
+      const statements = sourceFile.getFunctionOrThrow('classify').getStatements();
+
+      const result = readValueFlowExitLayerAdapter({ statements, context: CONTEXT });
+
+      expect({
+        matched: result.matched,
+        branchIds: result.result.branches.map((branch) => String(branch.coverageId)),
+        exitIds: result.result.exits.map((exit) => String(exit.coverageId)),
+        consumedKinds: result.consumed.map((statement) => statement.getKindName()),
+      }).toStrictEqual({
+        matched: true,
+        branchIds: ['*module*/classify/ternary:CallExpression,id:g,id:n'],
+        exitIds: [
+          '*module*/classify/return@ternary:CallExpression,id:g,id:n#then',
+          '*module*/classify/return@ternary:CallExpression,id:g,id:n#else',
+        ],
+        consumedKinds: ['VariableStatement', 'ReturnStatement'],
+      });
+    });
   });
 
   describe('the shapes it refuses (each stays the marked ConditionalExpression dark spot)', () => {
@@ -113,25 +143,6 @@ describe('readValueFlowExitLayerAdapter', () => {
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function classify(n: number): string {\n  let x = n > 5 ? "big" : "small";\n  return x;\n}\n',
-      );
-      const statements = sourceFile.getFunctionOrThrow('classify').getStatements();
-
-      const result = readValueFlowExitLayerAdapter({ statements, context: CONTEXT });
-
-      expect({
-        matched: result.matched,
-        consumed: result.consumed,
-        branches: result.result.branches,
-        exits: result.result.exits,
-      }).toStrictEqual({ matched: false, consumed: [], branches: [], exits: [] });
-    });
-
-    it('EDGE: {`const x = g(n) ? a : b; return x`} => an OPAQUE (non-drivable) condition does not match', () => {
-      readValueFlowExitLayerAdapterProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'src/f.ts',
-        'declare function g(n: number): boolean;\nfunction classify(n: number): string {\n  const x = g(n) ? "big" : "small";\n  return x;\n}\n',
       );
       const statements = sourceFile.getFunctionOrThrow('classify').getStatements();
 

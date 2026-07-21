@@ -418,6 +418,7 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [],
         unreachableExits: [{ line: 10, guardLines: [2, 6] }],
+        undrivenBranches: [],
       });
     });
 
@@ -440,6 +441,104 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.unreachableExits).toStrictEqual([]);
+    });
+  });
+
+  describe('un-steerable branches — nothing can arrange which arm runs', () => {
+    // `if (g())`: the leaf is a lone `truthy` over a call, with no param and no env operand. Both arms
+    // would arrange the SAME (empty) inputs, so neither exit can be told from the other — the bug this
+    // gate closes. The exits derive NOTHING and the branch is admitted undriven, its line named.
+    const OPAQUE_CALL_BRANCH = BranchNodeStub({
+      coverageId: 'opaqueIf/if:call',
+      startLine: 3,
+      condition: {
+        kind: 'leaf',
+        id: 'opaqueIf/if:call#leaf',
+        operandType: { kind: 'boolean' },
+        predicate: { kind: 'truthy' },
+      },
+    });
+
+    it('VALID: {an opaque call guard} => no case for its exits, and the branch admitted undriven with no operand', () => {
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [OPAQUE_CALL_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'opaqueIf/return@then', guardPath: [{ branchCoverageId: 'opaqueIf/if:call', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'opaqueIf/return@else', guardPath: [{ branchCoverageId: 'opaqueIf/if:call', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3 }] });
+    });
+
+    // `const u = s; if (u > 5)`: the operand IS a named binding, but `u` is not a param of the entry —
+    // only `s` is — so it cannot be arranged either. The admission names the un-arrangeable operand.
+    const NON_PARAM_BRANCH = BranchNodeStub({
+      coverageId: 'nonParam/if:u',
+      startLine: 3,
+      condition: {
+        kind: 'leaf',
+        id: 'nonParam/if:u#leaf',
+        operandParamName: 'u',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'gt', literal: 5 },
+      },
+    });
+
+    it('VALID: {a non-param local operand} => no case for its exits, and the branch admitted undriven naming the operand', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 's', type: { kind: 'number' } })],
+        branches: [NON_PARAM_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'nonParam/return@then', guardPath: [{ branchCoverageId: 'nonParam/if:u', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'nonParam/return@else', guardPath: [{ branchCoverageId: 'nonParam/if:u', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'u' }] });
+    });
+
+    // The env operand is the pivot `envDrivable` turns on: a module scope reading `VALUE` from the
+    // environment IS drivable, so the branch is steerable and derives its per-arm cases.
+    const ENV_BRANCH = BranchNodeStub({
+      coverageId: 'mod/if:value',
+      startLine: 3,
+      condition: {
+        kind: 'leaf',
+        id: 'mod/if:value#leaf',
+        operandParamName: 'value',
+        operandEnvVarName: 'VALUE',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'gt', literal: 5 },
+      },
+    });
+    const ENV_EXITS = [
+      ExitNodeStub({ coverageId: 'mod/exit@then', kind: 'implicit', guardPath: [{ branchCoverageId: 'mod/if:value', arm: 'then' }], line: 4 }),
+      ExitNodeStub({ coverageId: 'mod/exit@else', kind: 'implicit', guardPath: [{ branchCoverageId: 'mod/if:value', arm: 'else' }], line: 6 }),
+    ];
+
+    it('VALID: {an env operand, envDrivable} => steerable, so each arm derives a case that sets the variable', () => {
+      const result = deriveCasesTransformer({ params: [], branches: [ENV_BRANCH], exits: ENV_EXITS, envDrivable: true });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesExit: 'mod/exit@then', arrange: [{ kind: 'env', name: 'VALUE', value: '6' }] },
+          { reachesExit: 'mod/exit@else', arrange: [{ kind: 'env', name: 'VALUE', value: '5' }] },
+        ],
+        unreachableExits: [],
+        undrivenBranches: [],
+      });
+    });
+
+    // The SAME branch is un-steerable when the entry is NOT env-driven — a function's captured `const`
+    // is frozen by the time it is called, so setting the variable then changes nothing.
+    it('VALID: {an env operand, NOT envDrivable} => un-steerable, so no case and the branch admitted undriven', () => {
+      const result = deriveCasesTransformer({ params: [], branches: [ENV_BRANCH], exits: ENV_EXITS, envDrivable: false });
+
+      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'value' }] });
     });
   });
 });

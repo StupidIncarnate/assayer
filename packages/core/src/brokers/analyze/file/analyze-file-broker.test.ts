@@ -108,10 +108,10 @@ describe('analyzeFileBroker', () => {
                 line: 6,
               },
             ],
-            cases: [
-              { reachesExit: `${MODULE_BRANCH.replace('/if:', '/exit@if:')}#then`, arrange: [] },
-              { reachesExit: `${MODULE_BRANCH.replace('/if:', '/exit@if:')}#else`, arrange: [] },
-            ],
+            // A welded module scope is un-steerable: `value` is a const, neither a param nor an env
+            // operand, so the derivation emits NO case rather than two spurious ones that arrange the
+            // same nothing. The whole-module undriven admission below is what marks it.
+            cases: [],
           },
         ],
         enrichment: [{ line: 3, symbol: 'value', typeText: 'number', range: [6, 5] }],
@@ -121,12 +121,12 @@ describe('analyzeFileBroker', () => {
       });
     });
 
-    // The two cases above are DERIVED from an arrange of `[]` — there is nothing to set, because the
-    // operand is a const welded to a literal, so at most one of them could ever execute. Nothing
-    // drives them, and this is the line that says so instead of letting the file report a clean pass.
-    // Its span is the whole 8-line file, because that is what a module scope IS. Read `value` from
-    // the environment instead and this admission goes away — that is `happy-path/if-else/pure-statement/pure-statement.ts`.
-    // The catalogue proves this end to end through `sad-path/undriven/welded-const/welded-const.ts`.
+    // The branch above is un-steerable — its operand is a const welded to a literal, neither a param
+    // nor an env operand — so the derivation arranges NOTHING and this is the line that says so instead
+    // of letting the file report a clean pass. Its span is the whole 8-line file, because that is what
+    // a module scope IS. Read `value` from the environment instead and this admission goes away — that
+    // is `happy-path/if-else/pure-statement/pure-statement.ts`. The catalogue proves this end to end
+    // through `sad-path/undriven/welded-const/welded-const.ts`.
     it('VALID: {top-level if/else over a const} => admitted as undriven, since nothing about it varies', () => {
       analyzeFileBrokerProxy();
       const source =

@@ -12,9 +12,11 @@
  *
  *   It is an OVERLAY, applied where a run is consumed, never inside the per-file blob: the persisted
  *   blob stays child-independent (it never reads another file), so resolving the sibling is done here,
- *   per run, against the repo on disk. It changes ONLY a caller's branch conditions and the cases +
- *   lints those imply; the branch coverage ids, kinds, line spans, exits, enrichment, dark spots and
- *   undriven admissions are preserved, so the exits keyed under each branch still join. Every
+ *   per run, against the repo on disk. It changes ONLY a caller's branch conditions and the cases,
+ *   lints, and branch-level undriven admissions those imply — a guard rebased onto a caller param is
+ *   now steerable, so the leaf the per-file view admitted undriven drops out. The branch coverage ids,
+ *   kinds, line spans, exits, enrichment, dark spots, and whole-module/private undriven admissions are
+ *   preserved, so the exits keyed under each branch still join. Every
  *   precondition that fails is a silent no-op: a non-truthy leaf, a leaf with no call position, a
  *   package/builtin/unresolved callee, a sibling that published no predicate signature, or a signature
  *   whose operand the caller did not pass straight through all leave the branch as the walk read it. A
@@ -37,6 +39,7 @@ import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/res
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
 import { rebasePredicateConditionTransformer } from '../../../transformers/rebase-predicate-condition/rebase-predicate-condition-transformer';
+import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
 
 export const composeCrossFilePredicatesBroker = ({
   analysis,
@@ -169,7 +172,7 @@ export const composeCrossFilePredicatesBroker = ({
     // lint. Only a function with a rebased branch re-derives — so a same-file unreachable already
     // linted upstream is never re-counted here, and a composed guard path that now contradicts is.
     if (!branches.some((branch, index) => branch !== fn.branches[index])) {
-      return { fn, lints: [] };
+      return { fn, lints: [], undriven: [], staleUndrivenKeys: [] };
     }
 
     const derived = deriveCasesTransformer({
@@ -188,8 +191,20 @@ export const composeCrossFilePredicatesBroker = ({
         startLine: unreachable.line,
         endLine: unreachable.line,
       })),
+      // The FRESH branch admissions the recomposed function owes — a guard rebased onto a caller param
+      // is now steerable, so a leaf the per-file view admitted undriven drops out here.
+      undriven: undrivenBranchTransformer({ entryName: fn.entry.name, undrivenBranches: derived.undrivenBranches }),
+      // The keys of the STALE admissions the per-file analyze put on this function's branches — keyed by
+      // name + branch line (rebasing preserves the line), so the reconciliation drops exactly those and
+      // re-adds the fresh set above.
+      staleUndrivenKeys: fn.branches.map((branch) => `${String(fn.entry.name)}#${String(branch.startLine)}`),
     };
   });
+
+  // Only a re-derived function's branch admissions move: its stale per-file entries are dropped and its
+  // fresh ones added. The whole-module and private admissions, and any branch admission on an untouched
+  // function, ride through unchanged.
+  const staleUndrivenKeys = new Set(composed.flatMap((entry) => entry.staleUndrivenKeys));
 
   return fileAnalysisContract.parse({
     functions: composed.map((entry) => entry.fn),
@@ -201,7 +216,12 @@ export const composeCrossFilePredicatesBroker = ({
       functions: composed.map((entry) => entry.fn).filter((fn) => fn.entry.access.kind !== 'through-caller'),
     }),
     darkSpots: analysis.darkSpots,
-    undriven: analysis.undriven,
+    undriven: [
+      ...analysis.undriven.filter(
+        (entry) => !staleUndrivenKeys.has(`${String(entry.name)}#${String(entry.startLine)}`),
+      ),
+      ...composed.flatMap((entry) => entry.undriven),
+    ],
     lints: [...analysis.lints, ...composed.flatMap((entry) => entry.lints)],
   });
 };

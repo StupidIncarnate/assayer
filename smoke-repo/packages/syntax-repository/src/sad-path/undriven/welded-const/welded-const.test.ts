@@ -7,10 +7,6 @@ import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 const source = readFileSync(join(__dirname, 'welded-const.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/welded-const/welded-const.ts';
 
-const BRANCH = '*module*/if:BinaryExpression,id:level,GreaterThanToken,num:5';
-const THEN = `${BRANCH.replace('/if:', '/exit@if:')}#then`;
-const ELSE = `${BRANCH.replace('/if:', '/exit@if:')}#else`;
-
 // The reason the analysis carries, verbatim. Pinned HERE rather than left to the transformer's own
 // unit test because that test authors the sentence it then asserts; this one reads what the analyzer
 // actually said about a real file, which is the only way the two can disagree.
@@ -36,16 +32,14 @@ describe('undriven / welded-const — a module scope whose branch turns on a con
     ]);
   });
 
-  // WHY the admission is owed, stated as evidence: the analyzer reads both arms and derives one case
-  // per exit — both arrange NOTHING, so at most one could ever execute. That is what "undriven" means
-  // here, and why a run reports 0/0 rather than failing a case against correct code.
-  it('VALID: {a welded operand} => both derived cases arrange nothing, so nothing chooses an arm', () => {
+  // WHY the admission is owed, stated as evidence: the branch is un-steerable — `level` is a const,
+  // neither a param nor an env operand — so nothing can arrange which arm runs. The derivation emits
+  // NO case rather than two that arrange the same nothing, which is why a run reports 0/0 rather than
+  // failing a case against correct code.
+  it('VALID: {a welded operand} => no case is derived, since nothing can choose an arm', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
-    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesExit: THEN, arrange: [] },
-      { reachesExit: ELSE, arrange: [] },
-    ]);
+    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
   });
 
   // The span is the whole file, because that is what a module scope IS, and it is the only entry.

@@ -196,6 +196,15 @@ const DECLARATIONS = {
   //   - `welded-arg`: a private reached only through a caller that welds its argument.
   [`${CATALOGUE}/sad-path/undriven/welded-const/welded-const.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/welded-arg/welded-arg.ts`]: ['access:named', 'undriven'],
+  // UNDRIVEN at the BRANCH, not the whole scope — the deciding value is neither a param nor an env
+  // operand, so no case can steer which arm runs. Uniform across branch shapes: the ONLY difference
+  // between the two is `if` vs `ternary`. `opaqueIf` guards on a same-file call `decide()`; the
+  // derivation cannot arrange a call's result, so its exits derive no case and the branch is admitted
+  // undriven at its own line. `opaqueTernary` proves the exact same admission for a ternary condition,
+  // one rung of the derivation, not two. `decide` is a branchless private the file calls, projected as
+  // no entry of its own — the file's one entry is the named export.
+  [`${CATALOGUE}/sad-path/undriven/opaque-if/opaque-if.ts`]: ['access:named', 'branch:if', 'undriven'],
+  [`${CATALOGUE}/sad-path/undriven/opaque-ternary/opaque-ternary.ts`]: ['access:named', 'branch:ternary', 'undriven'],
 
   // UNREACHABLE — guards that contradict, whose finding is a BUILD ERROR (an unreachable-exit lint)
   // rather than a case. An exit behind guards that cannot all hold is dead in the source, so no input

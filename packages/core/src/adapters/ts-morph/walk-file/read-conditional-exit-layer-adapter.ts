@@ -18,11 +18,11 @@
  *     evaluates fires its probe.
  *   - a SINGLE-LEVEL optional property access `a?.b` (`return a?.b`) is an assumed ternary on the
  *     receiver's non-nullishness — `a` non-nullish returns `a.b` (the `then` exit), `a` nullish
- *     short-circuits to `undefined` (the `else` exit) — with `a` read as a `non-nullish` leaf. Only a
- *     PARAM-bound bare-identifier receiver splits, because only a param's null path is arrangeable; a
- *     non-param or computed receiver, deeper chains, optional calls and optional element access all keep
- *     the single-exit path. Its ONE `optional` probe site observes both exits, because the null path has
- *     no expression to wrap.
+ *     short-circuits to `undefined` (the `else` exit) — with `a` read as a `non-nullish` leaf. A
+ *     bare-identifier receiver splits; drivability is handled uniformly downstream, so a non-param
+ *     receiver splits too and the derivation admits its branch undriven. A computed receiver, deeper
+ *     chains, optional calls and optional element access all keep the single-exit path. Its ONE
+ *     `optional` probe site observes both exits, because the null path has no expression to wrap.
  *
  *   Either way it hands back the branches, exits, probe sites, walk node, and descents for the caller
  *   to return verbatim (R15 intact — the reader walks its own subtree, the core walks the descents).
@@ -193,19 +193,18 @@ export const readConditionalExitLayerAdapter = ({
   // A SINGLE-LEVEL optional property access `a?.b` in exit position is an assumed ternary on the
   // receiver's non-nullishness: `a` non-nullish returns `a.b`, `a` nullish short-circuits to
   // `undefined`. It reads as `a != null ? a.b : undefined` — the same `then`/`else` shape a ternary
-  // uses, with the receiver read as the `non-nullish` leaf a `??` operand reads. Only a PARAM-bound
-  // bare-identifier receiver splits: the null path is arrangeable only when the receiver is a drivable
-  // operand (a param), so a non-param or computed receiver keeps the single-exit path. Deeper chains (`a?.b?.c`, `a?.b.c`),
+  // uses, with the receiver read as the `non-nullish` leaf a `??` operand reads. A BARE-identifier
+  // receiver splits; drivability is decided uniformly downstream, so a non-param receiver
+  // (`const u = s; return u?.length`) splits too and the derivation admits its branch undriven, exactly
+  // as every other un-steerable branch. Deeper chains (`a?.b?.c`, `a?.b.c`),
   // optional calls (`a?.()`) and optional element access (`a?.[i]`) are not this node — `a?.b.c`'s outer
   // access carries no `?.`, and the rest are not `PropertyAccessExpression` — so they fall through
   // unchanged.
   if (Node.isPropertyAccessExpression(expression) && expression.hasQuestionDotToken()) {
     const receiver = expression.getExpression();
-    // Split ONLY when the receiver is one of the enclosing scope's PARAMS: the nullish path arranges the
-    // receiver to null, which the arrange layer can drive only for a param. A non-param identifier
-    // (`const u = s; return u?.length`) is honestly left single-exit rather than shipping an else case
-    // no input can reach — a case that cannot reach its exit is worse than no case at all.
-    if (Node.isIdentifier(receiver) && context.params.some((param) => String(param.name) === receiver.getText())) {
+    // A bare-identifier receiver splits; whether its null path can be arranged is a derivation question,
+    // answered there uniformly for every branch, not gated here.
+    if (Node.isIdentifier(receiver)) {
       // The branch keys on the WHOLE optional-access projection (receiver + `?.` + property), so it
       // never collides with a `??` on the same receiver — the two owe different exits over one operand.
       const branchCoverageId = coverageIdTransformer({

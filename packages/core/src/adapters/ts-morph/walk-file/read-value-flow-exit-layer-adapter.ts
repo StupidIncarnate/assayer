@@ -11,12 +11,9 @@
  *   (ternary or `&&`/`||`/`??`), immediately followed by (b) a `return`/`throw` whose expression is
  *   EXACTLY `x` — matched by SYMBOL (`getSymbol()` identity), never by text.
  *
- *   GATE (soundness): it splits ONLY when every controlling condition is solver-drivable — each branch
- *   leaf's operand a param or an env var. An opaque condition (a call, an untyped local) would give both
- *   split exits identical `exit-causes`, so both derived cases would arrange the same inputs and one
- *   would fail against correct code. When the gate fails it returns the no-match sentinel, so the const
- *   initializer descends normally and the ternary stays the honest `ConditionalExpression` dark spot —
- *   never a fabricated fill.
+ *   Drivability is NOT gated here: a tail whose condition turns on a call or a non-param local splits
+ *   the same as any other, and the derivation admits its branch undriven — the uniform outcome every
+ *   un-steerable branch gets, whether it sits in an `if`, an exit ternary, or this value-flow tail.
  *
  *   On a match it hands back the split's branches/exits/probe sites/walk node/descents (obtained by
  *   delegating to `read-conditional-exit`, keeping this thin) plus the two consumed statements, so the
@@ -31,7 +28,6 @@ import { Node, VariableDeclarationKind } from 'ts-morph';
 import type { Statement } from 'ts-morph';
 
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
-import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readConditionalExitLayerAdapter } from './read-conditional-exit-layer-adapter';
 
@@ -108,19 +104,6 @@ export const readValueFlowExitLayerAdapter = ({
   // (`const x = f(); return x`) returns the sentinel, so this matches only a real conditional.
   const conditional = readConditionalExitLayerAdapter({ expression: initializer, kind, context });
   if (!conditional.conditional) {
-    return NO_MATCH;
-  }
-
-  // GATE: every controlling condition must be solver-drivable. A branch leaf whose operand is neither a
-  // param nor an env var (a call, an untyped local) cannot be arranged to satisfy vs violate, so the
-  // split would be unsound — leave it as the marked dark spot instead.
-  const leaves = conditional.result.branches.flatMap((branch) =>
-    conditionLeavesTransformer({ condition: branch.condition }),
-  );
-  const drivable =
-    leaves.length > 0 &&
-    leaves.every((leaf) => leaf.operandParamName !== undefined || leaf.operandEnvVarName !== undefined);
-  if (!drivable) {
     return NO_MATCH;
   }
 

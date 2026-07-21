@@ -28,6 +28,7 @@ import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-p
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
 import { followCallsTransformer } from '../../../transformers/follow-calls/follow-calls-transformer';
+import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
 import { undrivenProjectionTransformer } from '../../../transformers/undriven-projection/undriven-projection-transformer';
 
 export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult; relPath?: string }): FileAnalysis => {
@@ -73,6 +74,19 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // same channel and the same reasoning as an unconsumed private. The message names both the dead line
   // and the guards that killed it, because "unreachable" alone leaves the reader hunting for which
   // comparison to fix.
+  // A module scope whose top-level branching is all welded is admitted whole by the projection below;
+  // its per-branch admissions would double-count it, so they are suppressed against that projection's
+  // names. A NAMED entry the projection never claims keeps its per-branch admissions — an opaque
+  // `if (g())` or a non-param local `if (u > 5)` names the branch a case cannot steer.
+  const moduleUndriven = undrivenProjectionTransformer({ walked, ...(relPath === undefined ? {} : { relPath }) });
+  const moduleUndrivenNames = new Set(moduleUndriven.map((entry) => String(entry.name)));
+
+  const branchUndriven = derived.flatMap(({ fn, result }) =>
+    moduleUndrivenNames.has(String(fn.entry.name))
+      ? []
+      : undrivenBranchTransformer({ entryName: fn.entry.name, undrivenBranches: result.undrivenBranches }),
+  );
+
   const unreachableLints = derived.flatMap(({ fn, result }) =>
     result.unreachableExits.map((unreachable) => ({
       rule: 'unreachable-exit',
@@ -92,12 +106,10 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     functions,
     enrichment,
     darkSpots: darkSpotProjectionTransformer({ walked }),
-    // The module welded-const admissions come from the walk; the private ones come from the call
-    // graph. They are separate questions with separate owners, joined here into the one channel.
-    undriven: [
-      ...undrivenProjectionTransformer({ walked, ...(relPath === undefined ? {} : { relPath }) }),
-      ...followed.undriven,
-    ],
+    // Three sources feed the one channel: the whole welded MODULE scope from the walk, the fixed-arg
+    // PRIVATE from the call graph, and the un-steerable BRANCH from the derivation. Separate questions,
+    // separate owners, never merged.
+    undriven: [...moduleUndriven, ...followed.undriven, ...branchUndriven],
     // Dead surface — a private nothing consumes — comes from the call graph; an unreachable exit comes
     // from the guard arithmetic. Both are the repo's debt rather than Assayer's, so both ride the lint
     // channel rather than any of the three admissions.
