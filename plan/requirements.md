@@ -195,8 +195,10 @@ loss and travels with branches," nothing more.
    demand. Keyed by the stub's stable identity carried in the file PATH, never a
    map-node ID. Combined with the derived stub at read time and NEVER persisted
    merged; the overlay is in no cache hash, so editing it never invalidates the
-   derived index. A correction whose type/property no longer exists is a P1
-   "rectify this stub" build error (the `errors[]` channel, exit 1).
+   derived index. A correction that no longer resolves — its type/property gone,
+   or its value unable to satisfy a guard that reads the property (dead code under
+   the human's truth) — is a P1 "rectify this stub" build error (the `errors[]`
+   channel, exit 1), caught before any test runs.
 10. **The `.gitignore` entry** for `.assayer/cache/` (written by init).
 
 ### Generated into `.assayer/cache/` (gitignored, disposable, rebuilt on demand)
@@ -236,7 +238,9 @@ loss and travels with branches," nothing more.
    version string), reused by every importer.
 9. **Stub index** (`cache/stubs/<namespace>.json`) — the DERIVED per-namespace
    stub repository: each stubbed object TYPE (its full property list spliced with
-   per-property value demands, plus its readers) and each `process.env` property
+   per-property value demands, plus its readers; only NAMED types are stubbable —
+   an anonymous/structural shape degrades to `undriven` with a name-it nudge) and
+   each `process.env` property
    (guessed values + readers). A twin of the resolved index, keyed on repo layout
    + tsconfig hash, rebuilt when the file set or tsconfig changes. The committed
    `assayer/stubs/` overlay combines with it at read time; the overlay is in no

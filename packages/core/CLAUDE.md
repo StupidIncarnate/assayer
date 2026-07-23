@@ -279,7 +279,7 @@ salient, the rest are the grayed breadth. A converging branch is therefore NOT d
 buckets (a bucket may constrain a branch its flow never reaches; that arm is SOUND) stay in the full set
 as grayed twins. Effects are not modeled, so two buckets differing only by a side effect over-collapse in
 the salient subset; the full set still carries both. The cross-system stub repository (the value demands
-objects/arrays/env carry) is a SEPARATE artifact — `plan/requirements.md` D22/D23, `plan/stub-repository.md`.
+objects/arrays/env carry) is a SEPARATE artifact — `plan/requirements.md` D22/D23 (artifact inventory #9).
 
 ---
 
