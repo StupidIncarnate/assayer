@@ -38,7 +38,8 @@ describe('undrivenLineTransformer', () => {
       expect(String(result)).toBe(`UNDRIVEN opaque-module.ts — ${MODULE_REASON}`);
     });
 
-    // The line `assayer unit` prints for sad-path/undriven/welded-arg/welded-arg.ts, to the byte.
+    // The line `assayer unit` prints for a fixed-arg private — one reached only through a guarded call,
+    // so no case can steer it — rendered by its own name, to the byte.
     it('VALID: {the fixed-arg private entry} => matches the CLI report line exactly', () => {
       const result = undrivenLineTransformer({
         entry: UndrivenEntryStub({ name: 'decide', reason: FIXED_ARG_REASON }),

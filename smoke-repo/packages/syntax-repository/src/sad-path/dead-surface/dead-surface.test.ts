@@ -17,9 +17,9 @@ const DEAD_SURFACE_MESSAGE =
   'input straight through — which the follower would then drive.';
 
 describe('dead-surface — an unexported helper nothing consumes', () => {
-  // THE lint. It rides a DIFFERENT channel from undriven: this says "change the code", not "Assayer
-  // cannot drive it". Reached-by-nobody is what separates it from undriven/welded-arg, where a caller
-  // does reach the private but welds its argument.
+  // THE lint. Reached-by-nobody is what separates it from unreachable/welded-arg, where a caller DOES
+  // reach the private by welding a literal argument — so that one is EVALUATED (a driven case plus an
+  // unreachable-exit), while this one is reachable from nowhere and is the repo's to delete.
   it('VALID: {an unexported helper reached by nobody} => emitted as a dead-surface lint', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
