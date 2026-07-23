@@ -13,10 +13,10 @@ const relPath = 'src/sad-path/undriven/returned-closure/returned-closure.ts';
 // closed-over `threshold`, neither an input a case at `makeClassifier` controls, so it is UNDRIVEN.
 const REACHED_FN_REASON =
   'it is an inline function this file reaches without calling it by name — returned to a caller ' +
-  '(`return (n) => …`) or invoked in place (`((n) => …)(x)`) — so it is not dead surface. But no input ' +
-  'any case controls decides the value its parameter binds to: a returned function is applied by ' +
-  'whoever receives it, and an immediately-invoked one is applied to arguments fixed in the source. No ' +
-  'harness closes this yet.';
+  '(`return (n) => …`), or invoked in place with an argument no case can resolve — so it is not dead ' +
+  'surface. But no input any case controls decides the value its parameter binds to: a returned function ' +
+  'is applied by whoever receives it, and an env-sourced or opaque invocation argument is not one this ' +
+  'file provides. No harness closes this yet.';
 
 describe('undriven / returned-closure — a function that RETURNS a branching closure', () => {
   // REACHED via the return, so NOT a dead-surface lint. It rides the undriven channel — "Assayer cannot

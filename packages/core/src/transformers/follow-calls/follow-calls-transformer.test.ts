@@ -1,6 +1,7 @@
 import { BranchNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
+import { InvokedFnStub } from '../../contracts/invoked-fn/invoked-fn.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { WalkFileResultStub } from '../../contracts/walk-file-result/walk-file-result.stub';
 import { followCallsTransformer } from './follow-calls-transformer';
@@ -90,7 +91,46 @@ describe('followCallsTransformer', () => {
       }).toStrictEqual({
         followed: [{ name: 'inner', access: { kind: 'through-caller', callerName: 'report' } }],
         undriven: [],
-        unreachable: [{ name: 'inner', unreachableExits: [{ line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 } }] }],
+        unreachable: [
+          { name: 'inner', access: { kind: 'through-caller', callerName: 'report' }, unreachableExits: [{ line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 } }] },
+        ],
+      });
+    });
+  });
+
+  describe('an inline function invoked in place with a welded literal (an IIFE)', () => {
+    it('VALID: {((n) => { if (n > 5) … })(7)} => a module-driven entry, its welded-dead arm an unreachable exit, nothing undriven', () => {
+      const walked = WalkFileResultStub({
+        scopes: [branchingPrivate({ name: 'arrow' })],
+        reachedFns: [2],
+        invokedFns: [InvokedFnStub({ startLine: 2, args: CallSiteStub({ args: [{ kind: 'literal', value: 7 }] }).args })],
+      });
+
+      const result = followCallsTransformer({ walked });
+
+      expect({
+        followed: result.followedEntries.map((fn) => fn.entry.access),
+        undriven: result.undriven,
+        unreachable: result.unreachable.map((entry) => ({ access: entry.access, unreachableExits: entry.unreachableExits })),
+      }).toStrictEqual({
+        followed: [{ kind: 'module' }],
+        undriven: [],
+        unreachable: [
+          { access: { kind: 'module' }, unreachableExits: [{ line: 6, guardLines: [2], welded: { line: 2, operand: 'n', value: 7 } }] },
+        ],
+      });
+    });
+
+    // A returned closure (in reachedFns but NOT invokedFns) is applied by an external caller, so it stays
+    // UNDRIVEN — the IIFE drive must not bleed into it.
+    it('VALID: {a returned closure, not invoked in place} => stays undriven, not driven', () => {
+      const walked = WalkFileResultStub({ scopes: [branchingPrivate({ name: 'closure' })], reachedFns: [2], invokedFns: [] });
+
+      const result = followCallsTransformer({ walked });
+
+      expect({ followed: result.followedEntries, undriven: result.undriven.map((entry) => entry.name) }).toStrictEqual({
+        followed: [],
+        undriven: ['closure'],
       });
     });
   });

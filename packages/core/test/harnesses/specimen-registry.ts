@@ -72,13 +72,19 @@ const DECLARATIONS = {
   //     exactly as a declaration and its `if` drives; the arrow syntax changes nothing.
   //   - `nested` is a nested function DRIVEN through the caller that passes its own param straight in:
   //     `outer` (named) plus `inner` (`access:through-caller`) carrying `inner`'s own `branch:if`, never
-  //     leaked into `outer`. No `undriven` — following the call graph reaches it. (Reached-but-admitted
-  //     function shapes — a callback, a returned closure, an IIFE, an uncalled nested function — run
-  //     UNCLEAN, so they live under sad-path/ by admission, not here.)
+  //     leaked into `outer`. No `undriven` — following the call graph reaches it.
+  //   - `iife` is an immediately-invoked function expression driven at MODULE LOAD: it runs when the file
+  //     is imported, so its env-BODY read (`const n = Number(process.env.SIZE)`) makes the environment an
+  //     input and each arm is a case that sets the variable, exactly like the module-scope env branch one
+  //     scope deeper. Its entry ACCESS is `module` (the surface renders it by the file's label); it owes
+  //     `operand:env` and `callee:node-global` (`process.env`). (A welded-ARGUMENT IIFE runs UNCLEAN — one
+  //     arm a case, the other an unreachable-exit — so it lives under sad-path/unreachable/iife. A callback,
+  //     a returned closure, or an uncalled nested function is admitted, so those live under sad-path/ too.)
   [`${CATALOGUE}/happy-path/function/declaration/declaration.ts`]: ['access:named'],
   [`${CATALOGUE}/happy-path/function/expression/expression.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/function/arrow/arrow.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/function/nested/nested.ts`]: ['access:named', 'access:through-caller', 'branch:if'],
+  [`${CATALOGUE}/happy-path/function/iife/iife.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'operand:env'],
   // A branchless class method — reached through an instance; its class has no explicit constructor, so
   // the runner builds one and the method is `constructable` (DRIVEN, not a gap).
   [`${CATALOGUE}/happy-path/class/class.ts`]: ['access:method'],
@@ -292,11 +298,6 @@ const DECLARATIONS = {
   // whoever applies the returned function and `threshold` is closed over, neither an input a case
   // controls, so it is admitted UNDRIVEN. `makeClassifier` is the sole `access:named` entry.
   [`${CATALOGUE}/sad-path/undriven/returned-closure/returned-closure.ts`]: ['access:named', 'undriven'],
-  // An immediately-invoked function expression (`((n) => { if (n > 5) … })(7)`). The arrow is INVOKED in
-  // place, so it is reached (not dead surface), but applied to the welded argument `7`, so its branch
-  // has one outcome no case can steer ⇒ UNDRIVEN, the immediate-invocation twin of welded-arg. `label`
-  // receives a string, so the module scope is no entry of its own — the file has no `access:*` entry.
-  [`${CATALOGUE}/sad-path/undriven/iife/iife.ts`]: ['undriven'],
 
   // ENV-as-OBJECT: `process.env` is an object, and its properties feed the stub stitch REGARDLESS of
   // drivability. `multi-read` reads two: `CODE` via `Number(process.env.CODE)` in a switch (DRIVEN, one
@@ -330,6 +331,11 @@ const DECLARATIONS = {
   //     caller's argument rather than the callee's own source, but the finding is the same lint.
   //   - `const-array-branch`: the array twin — `const items = [1, 2, 3]; if (items.length > 2)` — the
   //     branch on the welded array's fixed LENGTH (3) evaluates the same way, its lint naming the length.
+  //   - `iife`: the module-load twin — `((n) => { if (n > 5) … })(7)` welds `7` into the arrow's `n` at
+  //     the INVOCATION, so importing the file EVALUATES it: the `if` arm is a module-driven case
+  //     (`access:module`, the surface rendering it by the file's label) and the fall-through an
+  //     unreachable-exit lint naming `n` welded to `7`. The welded literal lives in the invocation rather
+  //     than the scope's own source or a caller's call, but the finding is the same lint.
   //   - `sequential-guards` is the whole contradiction rung in one function: `>= 1` then `<= 1 || === 0`,
   //     so the fall-through exit needs a value both under 1 and over 1.
   //   - `cross-file-guards` + its two predicate helpers are the CROSS-FILE rung. The contradiction
@@ -343,6 +349,7 @@ const DECLARATIONS = {
   [`${CATALOGUE}/sad-path/unreachable/welded-const/welded-const.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/welded-arg/welded-arg.ts`]: ['access:named', 'access:through-caller', 'branch:if', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/const-array-branch/const-array-branch.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
+  [`${CATALOGUE}/sad-path/unreachable/iife/iife.ts`]: ['access:module', 'branch:if', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/sequential-guards/sequential-guards.ts`]: ['access:named', 'branch:if', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/cross-file-guards.ts`]: [
     'access:named',

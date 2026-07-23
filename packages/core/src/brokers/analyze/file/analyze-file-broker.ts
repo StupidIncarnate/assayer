@@ -20,7 +20,7 @@
  * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...], undriven: [...] }
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
-import { fileAnalysisContract } from '@assayer/shared/contracts';
+import { fileAnalysisContract, symbolNameContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -127,11 +127,18 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
 
   // A FOLLOWED entry's dead exits ride the same channel: a caller welding a literal into a private's
   // call (`report(){ return decide(3) }`) kills the arm that value cannot satisfy, exactly as a welded
-  // `const` does in the scope's own source. The entry is a private, never a module, so its `name` IS its
-  // display name — no `*module*` label to translate.
-  const followedUnreachableLints = followed.unreachable.flatMap(({ name, unreachableExits }) =>
-    unreachableLintTransformer({ name, displayName: name, unreachableExits }),
-  );
+  // `const` does in the scope's own source. A `through-caller` private reads by its OWN name; a
+  // module-load IIFE (`((n) => …)(7)`) reads by the file's LABEL and keys under `*module*`, never the
+  // arrow's structural name — exactly as the scope's own welded const does.
+  const followedUnreachableLints = followed.unreachable.flatMap(({ name, access, unreachableExits }) => {
+    const isModule = access.kind === 'module';
+
+    return unreachableLintTransformer({
+      name: isModule ? symbolNameContract.parse('*module*') : name,
+      displayName: isModule && relPath !== undefined ? moduleEntryLabelTransformer({ relPath }) : name,
+      unreachableExits,
+    });
+  });
 
   // Enrichment shows each param's type on the entry line and, once per branch LEAF, that operand's
   // type + representative range on the branch line — derived from the COMPOSED functions, so a

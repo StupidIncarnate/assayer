@@ -14,9 +14,15 @@
  *     call is an array iteration over one of the host's array params, the callback's parameter is the
  *     array element, and its branches are DRIVEN by steering that array (`through-callback-cases`); any
  *     other reached callback stays UNDRIVEN until its own driving rung exists.
- *   - As a RETURNED or IMMEDIATELY-INVOKED inline function (`return (n) => …`, `((n) => …)(x)`): the
- *     walk records its start line flat on the file, so it too is REACHED, not dead — but its parameter
- *     is set by whoever applies it (an external caller, or welded call arguments), so it is UNDRIVEN.
+ *   - As an IMMEDIATELY-INVOKED inline function — an IIFE, `((n) => …)(x)`: the walk records its start
+ *     line AND its invocation arguments. An IIFE runs at module LOAD, so it is DRIVEN as an extension of
+ *     the module scope (`through-invocation-cases`) — by the environment its body reads, or a value the
+ *     invocation welds into a parameter (the live arm a case, the dead arm an unreachable-exit lint). Its
+ *     entry ACCESS is `module`. An invocation argument v1 cannot propagate (an env-sourced or opaque
+ *     expression) leaves it UNDRIVEN, like the shape below.
+ *   - As a RETURNED inline function (`return (n) => …`): the walk records its start line flat, so it is
+ *     REACHED, not dead — but its parameter is set by whoever applies it, an EXTERNAL caller, so no input
+ *     any case controls decides it, and it is UNDRIVEN.
  *
  *   The split between the admissions is WHO owes the work. A reached-but-unsteerable private is
  *   UNDRIVEN — Assayer understood it and cannot steer its branch, an admission it owns. A private
@@ -29,11 +35,12 @@
  * //   unreachable: [{ name, unreachableExits }] }
  */
 import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { FunctionAnalysis, LintEntry, SymbolName, UndrivenEntry } from '@assayer/shared/contracts';
+import type { EntryAccess, FunctionAnalysis, LintEntry, SymbolName, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
 import { throughCallbackCasesTransformer } from '../through-callback-cases/through-callback-cases-transformer';
 import { throughCallerCasesTransformer } from '../through-caller-cases/through-caller-cases-transformer';
+import { throughInvocationCasesTransformer } from '../through-invocation-cases/through-invocation-cases-transformer';
 
 // Array iteration methods whose callback's FIRST parameter is the element (`map`, `filter`, `forEach`,
 // …). `reduce`/`reduceRight` are excluded: their first callback parameter is the accumulator, not the
@@ -55,10 +62,10 @@ const CALLBACK_UNDRIVEN_REASON =
 
 const REACHED_FN_REASON =
   'it is an inline function this file reaches without calling it by name — returned to a caller ' +
-  '(`return (n) => …`) or invoked in place (`((n) => …)(x)`) — so it is not dead surface. But no input ' +
-  'any case controls decides the value its parameter binds to: a returned function is applied by ' +
-  'whoever receives it, and an immediately-invoked one is applied to arguments fixed in the source. No ' +
-  'harness closes this yet.';
+  '(`return (n) => …`), or invoked in place with an argument no case can resolve — so it is not dead ' +
+  'surface. But no input any case controls decides the value its parameter binds to: a returned function ' +
+  'is applied by whoever receives it, and an env-sourced or opaque invocation argument is not one this ' +
+  'file provides. No harness closes this yet.';
 
 const DEAD_SURFACE_MESSAGE =
   'nothing in this file calls it, so it is dead surface: an unexported helper is reachable only from ' +
@@ -73,13 +80,13 @@ export const followCallsTransformer = ({
   followedEntries: FunctionAnalysis[];
   undriven: UndrivenEntry[];
   lints: LintEntry[];
-  unreachable: { name: SymbolName; unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits'] }[];
+  unreachable: { name: SymbolName; access: EntryAccess; unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits'] }[];
 } => {
   if (!walked.success) {
     return { followedEntries: [], undriven: [], lints: [], unreachable: [] };
   }
 
-  const { scopes, reachedFns } = walked;
+  const { scopes, reachedFns, invokedFns } = walked;
   const reachable = scopes.filter((scope) => scope.access.kind === 'named');
 
   const results = scopes
@@ -144,7 +151,16 @@ export const followCallsTransformer = ({
       // the reached function's start line flat on the file, so this is a membership test.
       const reachedFn = reachedFns.some((line) => String(line) === String(callee.startLine));
 
-      return { callee, callbackReach, callbackArrayParam, callbackDrivable, reachedFn, driver: drives[0], isCalled };
+      // Reached by IMMEDIATE INVOCATION (an IIFE): the walk records its start line AND its invocation
+      // arguments. An IIFE runs at module load, so it is driven as module-load code — by the environment
+      // it reads or a value the invocation welds into a parameter. It DRIVES when that yields a case or an
+      // unreachable exit; otherwise (an opaque or env-sourced ARGUMENT v1 does not propagate) it stays
+      // undriven like a returned closure.
+      const invoked = invokedFns.find((entry) => String(entry.startLine) === String(callee.startLine));
+      const invocation = invoked !== undefined && callbackReach === undefined ? throughInvocationCasesTransformer({ arrow: callee, args: invoked.args }) : undefined;
+      const invocationDrives = invocation !== undefined && (invocation.analysis.cases.length > 0 || invocation.unreachableExits.length > 0);
+
+      return { callee, callbackReach, callbackArrayParam, callbackDrivable, reachedFn, invocation, invocationDrives, driver: drives[0], isCalled };
     });
 
   // The followed entries, each with any exits its driving proved unreachable. A through-caller entry
@@ -157,9 +173,15 @@ export const followCallsTransformer = ({
       callbackReach,
       callbackArrayParam,
       callbackDrivable,
+      invocation,
+      invocationDrives,
       driver,
     }): { analysis: FunctionAnalysis; unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits']; name: SymbolName }[] => {
       if (callbackReach === undefined) {
+        // An IIFE that drives: its arrow becomes a module-access entry driven by importing the file.
+        if (invocationDrives && invocation !== undefined) {
+          return [{ analysis: invocation.analysis, unreachableExits: invocation.unreachableExits, name: callee.name }];
+        }
         if (driver === undefined) {
           return [];
         }
@@ -180,14 +202,16 @@ export const followCallsTransformer = ({
 
   return {
     followedEntries: followed.map(({ analysis }) => analysis),
-    // The exits a welded argument killed, keyed to the followed entry that owns them — turned into
-    // unreachable-exit lints by `analyze-file-broker`, the same conversion a directly-derived scope's get.
-    unreachable: followed.flatMap(({ name, unreachableExits }) =>
-      unreachableExits.length === 0 ? [] : [{ name, unreachableExits }],
+    // The exits a welded value killed, keyed to the followed entry that owns them — turned into
+    // unreachable-exit lints by `analyze-file-broker`, the same conversion a directly-derived scope's
+    // get. The entry's ACCESS travels with them so the lint reads by the right subject: a `through-caller`
+    // private by its own name, a module-load IIFE by the file's label (never the arrow's structural name).
+    unreachable: followed.flatMap(({ analysis, unreachableExits }) =>
+      unreachableExits.length === 0 ? [] : [{ name: analysis.entry.name, access: analysis.entry.access, unreachableExits }],
     ),
     // Reached but unsteerable: understood, not drivable — Assayer's admission. Both the not-yet-steerable
     // callback and a private reached through an unresolvable argument ride here, each worded by WHY.
-    undriven: results.flatMap(({ callee, callbackReach, callbackDrivable, reachedFn, driver, isCalled }) => {
+    undriven: results.flatMap(({ callee, callbackReach, callbackDrivable, reachedFn, invocationDrives, driver, isCalled }) => {
       if (callbackReach !== undefined) {
         return callbackDrivable
           ? []
@@ -200,8 +224,10 @@ export const followCallsTransformer = ({
               }),
             ];
       }
-      // Reached by return or immediate invocation: not dead, but its parameter is not steerable here.
-      if (reachedFn) {
+      // Reached by return or immediate invocation but NOT driven: a returned closure (applied by an
+      // external caller), or an IIFE whose invocation argument v1 cannot propagate (an env-sourced or
+      // opaque argument). A driven IIFE is a followed entry above, not admitted here.
+      if (reachedFn && !invocationDrives) {
         return [
           undrivenEntryContract.parse({
             name: callee.name,
