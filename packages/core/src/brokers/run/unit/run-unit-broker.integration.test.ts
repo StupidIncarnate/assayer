@@ -7,9 +7,10 @@ import { specimenCatalogue } from '../../../../test/harnesses/specimen-catalogue
 // injection, real wrapped Jest, real artifact.
 const AND_SPECIMEN = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
 const CLASS_SPECIMEN = 'packages/syntax-repository/src/happy-path/if-else/in-class/in-class.ts';
-// A permanent dead-end: a module scope on a welded const, undriven forever. This check cannot lose
-// its subject to someone making a syntax rung drivable.
-const MODULE_SPECIMEN = 'packages/syntax-repository/src/sad-path/undriven/welded-const/welded-const.ts';
+// A permanent dead-end: a module scope branching on `Math.random()`, undriven forever. Non-determinism
+// is the definitive "you cannot test this branch" — no input picks the arm and no evaluation resolves
+// it — so this check cannot lose its subject to someone making a syntax rung drivable.
+const MODULE_SPECIMEN = 'packages/syntax-repository/src/sad-path/undriven/opaque-module/opaque-module.ts';
 // A private DRIVEN through its caller, and a private nothing consumes: the two Stage-B/C payoffs that
 // only a real run can prove — one that the interpreter judges correctly, one that rides the artifact.
 const NESTED_SPECIMEN = 'packages/syntax-repository/src/happy-path/function/nested/nested.ts';
@@ -60,11 +61,11 @@ describe('runUnitBroker (integration)', () => {
       expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed']);
     });
 
-    // Its `if` is real, its two derived cases both arrange NOTHING — the operand is a const welded to
-    // a literal — so at most one could ever execute and driving them would fail a case against
-    // correct code. The honest run drives neither and says why: an artifact of `cases: []` alone is
-    // what a fully covered file leaves behind.
-    it('VALID: {a module-scope specimen} => zero cases, and the undriven logic named rather than implied', async () => {
+    // Its `if` is real, but its operand is `Math.random()` — an opaque call the analyzer can neither
+    // steer nor evaluate — so the derivation emits NO case rather than a spurious one that would fail
+    // against correct code. The honest run drives nothing and says why: an artifact of `cases: []` plus
+    // the named undriven admission is what a genuinely undrivable module leaves behind.
+    it('VALID: {an opaque module-scope specimen} => zero cases, and the undriven logic named rather than implied', async () => {
       const result = await engine.run({ relPath: MODULE_SPECIMEN, runId: 'r-module' });
 
       expect({

@@ -32,6 +32,7 @@ import { probeSiteContract } from '../../../contracts/probe-site/probe-site-cont
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { readConditionLayerAdapter } from './read-condition-layer-adapter';
+import { readConstOperandLayerAdapter } from './read-const-operand-layer-adapter';
 import { readEnvOperandLayerAdapter } from './read-env-operand-layer-adapter';
 import { readOperandTypeLayerAdapter } from './read-operand-type-layer-adapter';
 
@@ -112,6 +113,11 @@ export const readConditionTreeLayerAdapter = ({
   // policy, and policy lives in the projections.
   const envVarName = readEnvOperandLayerAdapter({ node: readout.operandNode });
 
+  // Whether the operand is WELDED to a same-file constant — a value the analyzer EVALUATES rather than
+  // an input a case sets. A scalar `const` welds a value, an array `const` welds its length. Recorded
+  // wherever true; the derivation reads it as a single-value domain and drives the live arm.
+  const constOperand = readConstOperandLayerAdapter({ node: readout.operandNode });
+
   // A CALL operand reads as opaque `truthy` here, because a single-file parse cannot type the callee.
   // Anchoring the call's position — the SAME coordinate its call site records — is the foreign key a
   // later compose pass joins on to swap this leaf for the callee's own predicate.
@@ -133,6 +139,8 @@ export const readConditionTreeLayerAdapter = ({
       ...(readout.operandPropertyPath === undefined ? {} : { operandPropertyPath: readout.operandPropertyPath }),
       ...(readout.operandTypeRef === undefined ? {} : { operandTypeRef: readout.operandTypeRef }),
       ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
+      ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
+      ...(constOperand?.length === undefined ? {} : { operandConstLength: constOperand.length }),
       ...(callPosition === undefined ? {} : { operandCallPosition: { line: callPosition.line, column: callPosition.column } }),
       operandType: readOperandTypeLayerAdapter({
         node: readout.operandNode,

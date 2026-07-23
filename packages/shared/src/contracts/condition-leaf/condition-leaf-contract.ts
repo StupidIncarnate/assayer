@@ -32,6 +32,16 @@
  *   admitted UNDRIVEN in the per-file blob and DRIVEN at consume time by `stub-realize`, which arranges
  *   the object param from the merged stub view.
  *
+ *   `operandConstValue` and `operandConstLength` record that the operand's value is WELDED to a known
+ *   constant in the source — a scalar operand bound to a same-file `const x = <literal>`
+ *   (`operandConstValue`), or an array operand whose `.length` is fixed by a `const xs = [ … ]` literal
+ *   (`operandConstLength`). Unlike a param or an env read, a welded constant is not an INPUT a case
+ *   sets; it is a single value the analyzer EVALUATES. The derivation treats it as a single-value
+ *   domain, so the arm that value satisfies is a real case and the arm it violates is an
+ *   `unreachable-exit`. It is the same fact `operandEnvVarName` is — WHERE the value came from, read by
+ *   its own checker-based reader (`read-const-operand`) — recorded wherever true; whether it drives is
+ *   policy the derivation owns.
+ *
  * USAGE:
  * conditionLeafContract.parse({
  *   kind: 'leaf', id: 'grade/if:…#leaf.0',
@@ -42,10 +52,12 @@
 import { z } from 'zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
+import { constLengthContract } from '../const-length/const-length-contract';
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { predicateContract } from '../predicate/predicate-contract';
+import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 
@@ -56,6 +68,8 @@ export const conditionLeafContract = z.object({
   operandPropertyPath: z.array(symbolNameContract).min(1).optional(),
   operandTypeRef: symbolNameContract.optional(),
   operandEnvVarName: envVarNameContract.optional(),
+  operandConstValue: representativeValueContract.optional(),
+  operandConstLength: constLengthContract.optional(),
   operandCallPosition: z.object({ line: lineNumberContract, column: columnNumberContract }).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,

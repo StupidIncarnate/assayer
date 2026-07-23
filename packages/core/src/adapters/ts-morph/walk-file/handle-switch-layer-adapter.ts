@@ -29,6 +29,7 @@ import { desugarSwitchLayerAdapter } from './desugar-switch-layer-adapter';
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
+import { readConstOperandLayerAdapter } from './read-const-operand-layer-adapter';
 import { readEnvOperandLayerAdapter } from './read-env-operand-layer-adapter';
 import { readOperandTypeLayerAdapter } from './read-operand-type-layer-adapter';
 import type { SwitchStatement } from 'ts-morph';
@@ -50,6 +51,9 @@ export const handleSwitchLayerAdapter = ({
   // module-scope switch on `Number(process.env.X)` is DRIVEN by setting X before import, not admitted
   // undriven. A param or a welded const reads as no env source and this stays undefined.
   const envVarName = readEnvOperandLayerAdapter({ node: desugared.discNode });
+  // Whether the discriminant is welded to a same-file `const` — evaluated, not steered, exactly as an
+  // `if` operand is: the case whose literal matches is live and the rest are unreachable exits.
+  const constOperand = readConstOperandLayerAdapter({ node: desugared.discNode });
 
   // A `case` is already an equality test on one discriminant, so it IS a one-leaf condition tree —
   // the same shape an `if` builds, reached without a decomposition pass.
@@ -67,6 +71,7 @@ export const handleSwitchLayerAdapter = ({
         id: `${caseInfo.branchCoverageId}#leaf`,
         ...(desugared.discName === undefined ? {} : { operandParamName: desugared.discName }),
         ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
+        ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
         operandType,
         predicate: { kind: 'eq', literal: caseInfo.literalValue },
       },

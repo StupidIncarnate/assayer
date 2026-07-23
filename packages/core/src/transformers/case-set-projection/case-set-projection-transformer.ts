@@ -3,21 +3,18 @@
  *   drive, plus the named gaps it cannot, plus what it understood and never drove.
  *
  *   The split is the interesting part, and it is policy rather than fact, which is why it lives here
- *   and not in the walk. It keys on the entry's ACCESS — what it takes to lay hands on the entry —
- *   never on its name:
- *   - `unreachable` (an unexported helper) is not runnable, so it is not driven — but it is not
- *     silent either: the analysis already admitted it in `undriven`, which is carried through below;
- *   - a `module` scope is driven two ways. It is driven when the environment gives its BRANCHING
- *     something to vary: importing it runs it, so a case that writes the variables its branching reads
- *     and imports it fresh really does choose an arm. It is ALSO driven when it has NO branching — a
- *     module projected here with zero branches is a pure CONSUMPTION site (it calls an import or an
- *     ambient global, the only other reason a module becomes an entry), so importing it runs the call
- *     and its one happy-path case reaches the module's single exit. A module branching only on values
- *     welded into its own source has neither: every case it derives arranges nothing, so the cases are
- *     identical setups claiming different exits and at most one could hold. Driving those would fail a
- *     case against correct code, so it is admitted in `undriven` instead — keyed on the same question,
- *     so the two stay exact complements. Dropping it and saying nothing is what let a file with real
- *     top-level branching report the same thing a fully covered file reports;
+ *   and not in the walk. But WHETHER an entry is drivable is decided upstream by `derive-cases` and
+ *   read off ONE fact here — did it produce cases (§5.12) — never re-derived per access kind:
+ *   - `unreachable` (an unexported helper) is never runnable directly, so it is filtered out — but it
+ *     is not silent either: the analysis already admitted it in `undriven`, carried through below;
+ *   - a `module` scope earns cases three ways, all resolved before it reaches here: the environment
+ *     gives its branching something to vary (a case writes the variables and imports it fresh); a
+ *     welded constant is EVALUATED to its live arm (the dead arm rides `unreachable-exit`, so there is
+ *     exactly one real case, never two claiming different exits); or it is a branchless CONSUMPTION
+ *     site (it calls an import or an ambient global — the only other reason a module becomes an entry —
+ *     so importing it runs the call and its one happy-path case reaches the module's single exit). A
+ *     module whose branch turns on an OPAQUE operand earns no case at all, so it is admitted in
+ *     `undriven` instead of dropped silently;
  *   - a `method` whose class needs constructor arguments IS a gap: something real is untested and
  *     needs a harness, so it is named rather than dropped;
  *   - a `constructor` is a gap too: it is reached through `new`, which the runner does not model, and
@@ -41,7 +38,6 @@
  */
 import { caseSetContract } from '../../contracts/case-set/case-set-contract';
 import type { CaseSet } from '../../contracts/case-set/case-set-contract';
-import { envOperandsTransformer } from '../env-operands/env-operands-transformer';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 export const caseSetProjectionTransformer = ({
@@ -53,21 +49,13 @@ export const caseSetProjectionTransformer = ({
   relPath: string;
   modulePath: string;
 }): CaseSet => {
-  const owed = analysis.functions.filter(
-    (fn) =>
-      fn.entry.access.kind !== 'unreachable' &&
-      fn.cases.length > 0 &&
-      // A module scope is runnable in two ways. It is driven when the environment gives it something to
-      // vary — an env operand its branching reads. It is ALSO runnable when it has no branching at all:
-      // a module projected here with zero branches is a pure CONSUMPTION site (it calls an import or an
-      // ambient global — the only other reason analysis-projection admits a module), so importing it
-      // runs the call and its one structural happy-path case reaches the module's single exit. A module
-      // that branches on welded-in values with no env operand stays undriven — its cases arrange the
-      // same nothing and claim different exits, so at most one could hold.
-      (fn.entry.access.kind !== 'module' ||
-        fn.branches.length === 0 ||
-        envOperandsTransformer({ branches: fn.branches }).length > 0),
-  );
+  // An entry is runnable iff it produced cases — that ONE fact decides it, because `derive-cases` has
+  // already resolved drivability (§5.12). A module scope is no exception: it earns cases when the
+  // environment gives its branching something to vary, when a welded constant is EVALUATED to its live
+  // arm (the dead arm rides `unreachable-exit`, never a bogus second case), or when it is a branchless
+  // CONSUMPTION site whose single import/global call reaches its one exit. A module whose branch turns
+  // on an opaque operand earns no case at all and is admitted in `undriven` instead.
+  const owed = analysis.functions.filter((fn) => fn.entry.access.kind !== 'unreachable' && fn.cases.length > 0);
   const blocked = owed.filter(
     (fn) => fn.entry.access.kind === 'constructor' || (fn.entry.access.kind === 'method' && !fn.entry.access.constructable),
   );

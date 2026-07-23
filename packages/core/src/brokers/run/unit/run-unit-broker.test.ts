@@ -6,17 +6,19 @@ import { runUnitBrokerProxy } from './run-unit-broker.proxy';
 const SOURCE = 'export function grade(score: number): string {\n  if (score > 5) {\n    return "pass";\n  }\n\n  return "fail";\n}\n';
 
 // Module scope, and nothing else: real branching that runs at require time, with no function anything
-// can call. This is the shape that used to reach Jest, be refused for having no `it()`, and surface as
-// an ENOENT on a cache path.
-const MODULE_SOURCE = "const value = 7;\n\nif (value > 5) {\n  console.log('big');\n} else {\n  console.log('small');\n}\n";
+// can call AND nothing the analyzer can steer or evaluate — its operand is `Math.random()`, an opaque
+// call. This is the shape that used to reach Jest, be refused for having no `it()`, and surface as an
+// ENOENT on a cache path.
+const MODULE_SOURCE = "if (Math.random() > 0.5) {\n  console.log('heads');\n} else {\n  console.log('tails');\n}\n";
 
 const MODULE_REASON =
-  'nothing about it varies, so no case could drive its branches anywhere they do not already go: it ' +
-  'runs at import time, and every operand its top-level branching turns on is welded to a value ' +
-  'written in this file. No harness closes this and no feature will — a branch with one possible ' +
-  'outcome is decided here, in the source, not at run time. Read an operand from the environment ' +
-  'instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X an input, ' +
-  'and each arm becomes a case that sets it and imports the module fresh.';
+  'nothing about it varies, so no case could drive its branches anywhere they do not ' +
+  'already go: it runs at import time, and its top-level branching turns on a value the ' +
+  'analyzer can neither set nor resolve — not a parameter, not read from the environment, ' +
+  'and not a literal constant it can fold, but an opaque one (a call result, an imported ' +
+  'value, a computed expression). Read an operand from the environment instead and Assayer ' +
+  'drives it: a top-level `const x = Number(process.env.X)` makes X an input, and each arm ' +
+  'becomes a case that sets it and imports the module fresh.';
 
 describe('runUnitBroker', () => {
   describe('the artifact it returns', () => {
@@ -72,8 +74,8 @@ describe('runUnitBroker', () => {
         cacheDir: '/cache',
         coreRoot: '/core',
         repoRoot: '/repo',
-        relPath: 'src/pure-statement.ts',
-        absPath: '/repo/src/pure-statement.ts',
+        relPath: 'src/opaque-module.ts',
+        absPath: '/repo/src/opaque-module.ts',
         source: MODULE_SOURCE,
         runId: 'r1',
         analyzerContentHash: 'abc',
@@ -83,11 +85,11 @@ describe('runUnitBroker', () => {
         runnerStarted: false,
         result: {
           runId: 'r1',
-          relPath: 'src/pure-statement.ts',
+          relPath: 'src/opaque-module.ts',
           cases: [],
           gaps: [],
           darkSpots: [],
-          undriven: [{ name: '*module*', label: 'pure-statement.ts', reason: MODULE_REASON, startLine: 1, endLine: 8 }],
+          undriven: [{ name: '*module*', label: 'opaque-module.ts', reason: MODULE_REASON, startLine: 1, endLine: 6 }],
           lints: [],
         },
       });
@@ -102,8 +104,8 @@ describe('runUnitBroker', () => {
         cacheDir: '/cache',
         coreRoot: '/core',
         repoRoot: '/repo',
-        relPath: 'src/pure-statement.ts',
-        absPath: '/repo/src/pure-statement.ts',
+        relPath: 'src/opaque-module.ts',
+        absPath: '/repo/src/opaque-module.ts',
         source: MODULE_SOURCE,
         runId: 'r1',
         analyzerContentHash: 'abc',

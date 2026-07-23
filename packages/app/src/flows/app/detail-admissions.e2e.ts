@@ -3,7 +3,7 @@
  *   UNDRIVEN and LINT lines that keep a file from reading as "nothing to test". Compiles the smoke-repo
  *   syntax-repository into a PER-TEST temp cache, launches the REAL built Electron app, selects a
  *   sad-path specimen, and asserts the admission sentence VERBATIM (core-authored P1 text that must
- *   cross core -> cache -> IPC intact). Covers the welded-const UNDRIVEN and the dead-surface LINT.
+ *   cross core -> cache -> IPC intact). Covers the opaque-module UNDRIVEN and the dead-surface LINT.
  *
  * USAGE:
  * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-admissions.e2e.ts
@@ -11,22 +11,23 @@
  */
 import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
-const UNDRIVEN_WELDED_OPERAND = 'packages/syntax-repository/src/sad-path/undriven/welded-const/welded-const.ts';
+const UNDRIVEN_OPAQUE_MODULE = 'packages/syntax-repository/src/sad-path/undriven/opaque-module/opaque-module.ts';
 const DEAD_SURFACE_UNCALLED = 'packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts';
 const UNDRIVEN_WELDED_ARG = 'packages/syntax-repository/src/sad-path/undriven/welded-arg/welded-arg.ts';
 const LOOP_IN_FUNCTION = 'packages/syntax-repository/src/sad-path/loop/in-function/in-function.ts';
 
-// The exact line the panel shows for sad-path/undriven/welded-const/welded-const.ts — `UNDRIVEN <scope> — <reason>`, with
-// the reason authored in core's undrivenProjectionTransformer. Asserted whole for the same reason the
-// namespace message is: this sentence is the entire content of the admission, and it is the only
-// thing standing between the reader and a file that reads as having nothing to test.
-const UNDRIVEN_WELDED_OPERAND_LINE =
-  'UNDRIVEN welded-const.ts — nothing about it varies, so no case could drive its branches anywhere they do ' +
-  'not already go: it runs at import time, and every operand its top-level branching turns on is ' +
-  'welded to a value written in this file. No harness closes this and no feature will — a branch with ' +
-  'one possible outcome is decided here, in the source, not at run time. Read an operand from the ' +
-  'environment instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X ' +
-  'an input, and each arm becomes a case that sets it and imports the module fresh.';
+// The exact line the panel shows for sad-path/undriven/opaque-module/opaque-module.ts — `UNDRIVEN
+// <scope> — <reason>`, with the reason authored in core's undrivenProjectionTransformer. Asserted whole
+// for the same reason the namespace message is: this sentence is the entire content of the admission,
+// and it is the only thing standing between the reader and a file that reads as having nothing to test.
+const UNDRIVEN_OPAQUE_MODULE_LINE =
+  'UNDRIVEN opaque-module.ts — nothing about it varies, so no case could drive its branches anywhere they do ' +
+  'not already go: it runs at import time, and its top-level branching turns on a value the analyzer ' +
+  'can neither set nor resolve — not a parameter, not read from the environment, and not a literal ' +
+  'constant it can fold, but an opaque one (a call result, an imported value, a computed expression). ' +
+  'Read an operand from the environment instead and Assayer drives it: a top-level ' +
+  '`const x = Number(process.env.X)` makes X an input, and each arm becomes a case that sets it and ' +
+  'imports the module fresh.';
 
 // The exact line the panel shows for sad-path/dead-surface/dead-surface.ts — `LINT <name> — <message>`,
 // with the message authored in core's followCallsTransformer. Asserted whole for the reason the
@@ -54,9 +55,9 @@ const LOOP_DARK_SPOT_LINE =
   'is covered';
 
 test.describe('Compiled Surface Explorer — admission rows', () => {
-  test('VALID: {sad-path/undriven/welded-const/welded-const.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async ({ smokeWindow: window }) => {
+  test('VALID: {sad-path/undriven/opaque-module/opaque-module.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNDRIVEN_WELDED_OPERAND}"]`).click();
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNDRIVEN_OPAQUE_MODULE}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // The whole assertion is the exactness, and only a REAL window can make it. The panel's own unit
@@ -67,7 +68,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     // sentence core authored arrived intact across all of them.
     const undriven = window.getByTestId('UNDRIVEN');
     await expect(undriven).toBeVisible();
-    await expect(undriven).toHaveText(UNDRIVEN_WELDED_OPERAND_LINE);
+    await expect(undriven).toHaveText(UNDRIVEN_OPAQUE_MODULE_LINE);
 
     // What dropping it would actually look like, and why it must be asserted rather than assumed.
     // This file's ONLY entry is the undriven module scope, so with the admission gone the panel has

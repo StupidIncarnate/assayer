@@ -1,16 +1,17 @@
 import { undrivenLineTransformer } from './undriven-line-transformer';
 import { UndrivenEntryStub } from '@assayer/shared/contracts';
 
-// The reason strings the analysis actually carries, verbatim. Both are a welded value with one
-// possible outcome — one welded into a module const, one into a call argument — and both say so,
-// because the report and the window must describe one artifact the same way.
+// The reason strings the analysis actually carries, verbatim, so the report and the window describe
+// one artifact the same way. The module reason is a module scope branching on an OPAQUE operand
+// (`Math.random()`); the fixed-arg reason is a private reached through a welded call argument.
 const MODULE_REASON =
-  'nothing about it varies, so no case could drive its branches anywhere they do not already go: it ' +
-  'runs at import time, and every operand its top-level branching turns on is welded to a value ' +
-  'written in this file. No harness closes this and no feature will — a branch with one possible ' +
-  'outcome is decided here, in the source, not at run time. Read an operand from the environment ' +
-  'instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X an input, ' +
-  'and each arm becomes a case that sets it and imports the module fresh.';
+  'nothing about it varies, so no case could drive its branches anywhere they do not ' +
+  'already go: it runs at import time, and its top-level branching turns on a value the ' +
+  'analyzer can neither set nor resolve — not a parameter, not read from the environment, ' +
+  'and not a literal constant it can fold, but an opaque one (a call result, an imported ' +
+  'value, a computed expression). Read an operand from the environment instead and Assayer ' +
+  'drives it: a top-level `const x = Number(process.env.X)` makes X an input, and each arm ' +
+  'becomes a case that sets it and imports the module fresh.';
 
 const FIXED_ARG_REASON =
   'it is reached only through arguments fixed in the source, so no case can steer it to another ' +
@@ -26,14 +27,15 @@ describe('undrivenLineTransformer', () => {
       expect(String(result)).toBe('UNDRIVEN *module* — it runs at import time, so no case drove its branches');
     });
 
-    // The line `assayer unit` prints for sad-path/undriven/welded-const/welded-const.ts, to the byte. A module entry
-    // shows its LABEL (the file basename here), never the internal `*module*` the name still carries.
+    // The line `assayer unit` prints for sad-path/undriven/opaque-module/opaque-module.ts, to the byte.
+    // A module entry shows its LABEL (the file basename here), never the internal `*module*` the name
+    // still carries.
     it('VALID: {the module-scope entry} => matches the CLI report line exactly, by its label', () => {
       const result = undrivenLineTransformer({
-        entry: UndrivenEntryStub({ name: '*module*', label: 'welded-const.ts', reason: MODULE_REASON }),
+        entry: UndrivenEntryStub({ name: '*module*', label: 'opaque-module.ts', reason: MODULE_REASON }),
       });
 
-      expect(String(result)).toBe(`UNDRIVEN welded-const.ts — ${MODULE_REASON}`);
+      expect(String(result)).toBe(`UNDRIVEN opaque-module.ts — ${MODULE_REASON}`);
     });
 
     // The line `assayer unit` prints for sad-path/undriven/welded-arg/welded-arg.ts, to the byte.

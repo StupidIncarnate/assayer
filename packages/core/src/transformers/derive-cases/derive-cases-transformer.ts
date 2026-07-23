@@ -42,7 +42,17 @@
  * //   undrivenBranches: [{ line, operand? }, …] }
  */
 import { derivedTestCaseContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { BranchNode, ConditionNode, DerivedTestCase, ExitNode, LineNumber, ParamDescriptor, SymbolName } from '@assayer/shared/contracts';
+import type {
+  BranchNode,
+  ConditionNode,
+  ConstLength,
+  DerivedTestCase,
+  ExitNode,
+  LineNumber,
+  ParamDescriptor,
+  RepresentativeValue,
+  SymbolName,
+} from '@assayer/shared/contracts';
 
 import { caseSignatureContract } from '../../contracts/case-signature/case-signature-contract';
 import type { CaseSignature } from '../../contracts/case-signature/case-signature-contract';
@@ -66,11 +76,40 @@ export const deriveCasesTransformer = ({
   returnPredicate?: ConditionNode;
 }): {
   cases: DerivedTestCase[];
-  unreachableExits: { line: LineNumber; guardLines: LineNumber[] }[];
+  unreachableExits: {
+    line: LineNumber;
+    guardLines: LineNumber[];
+    welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
+  }[];
   undrivenBranches: { line: LineNumber; operand?: SymbolName }[];
 } => {
   const lineByBranch = new Map(branches.map((branch) => [branch.coverageId, branch.startLine]));
   const paramNames = new Set(params.map((param) => String(param.name)));
+
+  // A branch decided by a WELDED constant: its dead arm is unreachable not because guards contradict
+  // but because the single value forces the other arm. Recorded per branch so the lint can say WHY
+  // accurately — `level` welded to `7` — rather than "the guards cannot all hold at once".
+  const weldedByBranch = new Map(
+    branches.flatMap((branch) => {
+      const weldedLeaf = conditionLeavesTransformer({ condition: branch.condition }).find(
+        (leaf) => leaf.operandConstValue !== undefined || leaf.operandConstLength !== undefined,
+      );
+
+      return weldedLeaf === undefined
+        ? []
+        : [
+            [
+              String(branch.coverageId),
+              {
+                line: branch.startLine,
+                ...(weldedLeaf.operandParamName === undefined ? {} : { operand: weldedLeaf.operandParamName }),
+                ...(weldedLeaf.operandConstValue === undefined ? {} : { value: weldedLeaf.operandConstValue }),
+                ...(weldedLeaf.operandConstLength === undefined ? {} : { length: weldedLeaf.operandConstLength }),
+              },
+            ] as const,
+          ];
+    }),
+  );
 
   // A branch whose every leaf has an arrangeable operand — a PLAIN SCALAR param, or an env var when the
   // entry is env-driven — is STEERABLE and enumerates its arms as normal. Any other branch cannot have
@@ -85,7 +124,12 @@ export const deriveCasesTransformer = ({
           (leaf.operandParamName !== undefined &&
             leaf.operandPropertyPath === undefined &&
             paramNames.has(String(leaf.operandParamName))) ||
-          (leaf.operandEnvVarName !== undefined && envDrivable)
+          (leaf.operandEnvVarName !== undefined && envDrivable) ||
+          // A leaf WELDED to a same-file constant is arrangeable without an input: the analyzer knows
+          // its single value, so `cause-arrange` seeds a single-value domain and the derivation reaches
+          // the live arm while the dead arm falls out as an unreachable exit.
+          leaf.operandConstValue !== undefined ||
+          leaf.operandConstLength !== undefined
         ),
     );
 
@@ -205,6 +249,12 @@ export const deriveCasesTransformer = ({
       return [];
     }
 
+    // The welded branch on this exit's guard path, if any — the accurate reason the arm is dead.
+    const [welded] = exit.guardPath.flatMap((step) => {
+      const entry = weldedByBranch.get(String(step.branchCoverageId));
+      return entry === undefined ? [] : [entry];
+    });
+
     return [
       {
         line: exit.line,
@@ -212,6 +262,7 @@ export const deriveCasesTransformer = ({
           const line = lineByBranch.get(step.branchCoverageId);
           return line === undefined ? [] : [line];
         }),
+        ...(welded === undefined ? {} : { welded }),
       },
     ];
   });

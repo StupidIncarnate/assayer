@@ -6,13 +6,10 @@ const GREETING_BRANCH =
   '*module*/formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,id:length,EqualsEqualsEqualsToken,num:0';
 const MODULE_BRANCH = '*module*/if:BinaryExpression,id:value,GreaterThanToken,num:5';
 
-const MODULE_UNDRIVEN_REASON =
-  'nothing about it varies, so no case could drive its branches anywhere they do not already go: it ' +
-  'runs at import time, and every operand its top-level branching turns on is welded to a value ' +
-  'written in this file. No harness closes this and no feature will — a branch with one possible ' +
-  'outcome is decided here, in the source, not at run time. Read an operand from the environment ' +
-  'instead and Assayer drives it: a top-level `const x = Number(process.env.X)` makes X an input, ' +
-  'and each arm becomes a case that sets it and imports the module fresh.';
+const MODULE_UNREACHABLE_MESSAGE =
+  '`welded-operand.ts` can never reach the exit on line 6: `value` is welded to `7`, so the branch on ' +
+  'line 3 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm ' +
+  'should be deleted.';
 
 describe('analyzeFileBroker', () => {
   describe('exported function with a guard clause', () => {
@@ -59,14 +56,19 @@ describe('analyzeFileBroker', () => {
     });
   });
 
-  describe('bare top-level if/else (module scope)', () => {
-    it('VALID: {top-level if/else over a const} => a *module* entry with a per-arm case each', () => {
+  describe('bare top-level if/else (module scope over a welded const)', () => {
+    // `value` is welded to `7`, so the analyzer EVALUATES the branch rather than shrugging: the `then`
+    // arm is a real case (importing the module runs it and reaches that exit, arranging nothing — a
+    // welded value is not a settable input), and the `else` arm is dead code that rides an
+    // unreachable-exit lint. It is no longer admitted undriven — the analyzer knows exactly which arm
+    // runs. The catalogue proves this end to end through `sad-path/unreachable/welded-const`.
+    it('VALID: {top-level if/else over a welded const} => the live arm is a case, the dead arm an unreachable-exit lint', () => {
       analyzeFileBrokerProxy();
       const source =
         "const value = 7;\n\nif (value > 5) {\n  console.log('big');\n} else {\n  console.log('small');\n}\n";
       const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/welded-operand.ts' });
 
-      const result = analyzeFileBroker({ walked });
+      const result = analyzeFileBroker({ walked, relPath: 'src/welded-operand.ts' });
 
       expect(result).toStrictEqual({
         functions: [
@@ -87,6 +89,7 @@ describe('analyzeFileBroker', () => {
                   kind: 'leaf',
                   id: `${MODULE_BRANCH}#leaf`,
                   operandParamName: 'value',
+                  operandConstValue: 7,
                   operandType: { kind: 'number' },
                   predicate: { kind: 'gt', literal: 5 },
                 },
@@ -108,37 +111,42 @@ describe('analyzeFileBroker', () => {
                 line: 6,
               },
             ],
-            // A welded module scope is un-steerable: `value` is a const, neither a param nor an env
-            // operand, so the derivation emits NO case rather than two spurious ones that arrange the
-            // same nothing. The whole-module undriven admission below is what marks it.
-            cases: [],
+            // The live `then` arm: importing the module runs it with `value` welded to 7, reaching that
+            // exit. It arranges nothing — the welded value is fixed in the source, not a settable input.
+            cases: [{ reachesExit: `${MODULE_BRANCH.replace('/if:', '/exit@if:')}#then`, arrange: [], salient: true }],
           },
         ],
         enrichment: [{ line: 3, symbol: 'value', typeText: 'number', range: [6, 5] }],
         darkSpots: [],
-        undriven: [{ name: '*module*', reason: MODULE_UNDRIVEN_REASON, startLine: 1, endLine: 8 }],
-        lints: [],
+        undriven: [],
+        lints: [
+          {
+            rule: 'unreachable-exit',
+            name: '*module*',
+            message: MODULE_UNREACHABLE_MESSAGE,
+            startLine: 6,
+            endLine: 6,
+          },
+        ],
         declaredTypes: [],
       });
     });
 
-    // The branch above is un-steerable — its operand is a const welded to a literal, neither a param
-    // nor an env operand — so the derivation arranges NOTHING and this is the line that says so instead
-    // of letting the file report a clean pass. Its span is the whole 8-line file, because that is what
-    // a module scope IS. Read `value` from the environment instead and this admission goes away — that
-    // is `happy-path/if-else/pure-statement/pure-statement.ts`. The catalogue proves this end to end
-    // through `sad-path/undriven/welded-const/welded-const.ts`.
-    it('VALID: {top-level if/else over a const} => admitted as undriven, since nothing about it varies', () => {
+    // The dead `else` arm rides the LINT channel, not `undriven`: the language cannot run it (given the
+    // welded value), which is the repo's debt to fix — delete the arm or change the const. The message
+    // names the operand and its welded value, never "the guards cannot all hold at once".
+    it('VALID: {a welded const module} => the dead arm is an unreachable-exit lint, and nothing is undriven', () => {
       analyzeFileBrokerProxy();
       const source =
         "const value = 7;\n\nif (value > 5) {\n  console.log('big');\n} else {\n  console.log('small');\n}\n";
       const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/welded-operand.ts' });
 
-      const result = analyzeFileBroker({ walked });
+      const result = analyzeFileBroker({ walked, relPath: 'src/welded-operand.ts' });
 
-      expect(result.undriven).toStrictEqual([
-        { name: '*module*', reason: MODULE_UNDRIVEN_REASON, startLine: 1, endLine: 8 },
-      ]);
+      expect({ undriven: result.undriven, lints: result.lints }).toStrictEqual({
+        undriven: [],
+        lints: [{ rule: 'unreachable-exit', name: '*module*', message: MODULE_UNREACHABLE_MESSAGE, startLine: 6, endLine: 6 }],
+      });
     });
   });
 

@@ -49,6 +49,7 @@ import { envValueContract } from '@assayer/shared/contracts';
 import type { ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
+import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 import { isDomainEmptyGuard } from '../../guards/is-domain-empty/is-domain-empty-guard';
 import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
@@ -67,6 +68,29 @@ export const causeArrangeTransformer = ({
   params: ParamDescriptor[];
   envDrivable: boolean;
 }): { unreachable: boolean; arrangements: DerivedTestCase['arrange'][] } => {
+  // A WELDED operand is a single-value domain to start from — `{members:[7]}` for a scalar const,
+  // `{lengthMin:3, lengthMax:3}` for an array const's length. The guard arm values below intersect onto
+  // it, so `{7} ∩ (>5)` stays `{7}` (the arm is reachable) while `{7} ∩ (<=5)` is empty (unreachable).
+  // It is not an input a case sets; the analyzer evaluates it, so no `env`/`param` binding carries it.
+  const constSeed = requirements.reduce<Map<SymbolName, ValueDomain>>((acc, requirement) => {
+    const operand = requirement.leaf.operandParamName;
+
+    if (operand === undefined) {
+      return acc;
+    }
+
+    if (requirement.leaf.operandConstValue !== undefined) {
+      return acc.set(operand, valueDomainContract.parse({ members: [requirement.leaf.operandConstValue] }));
+    }
+
+    if (requirement.leaf.operandConstLength !== undefined) {
+      const length = requirement.leaf.operandConstLength;
+      return acc.set(operand, valueDomainContract.parse({ lengthMin: length, lengthMax: length }));
+    }
+
+    return acc;
+  }, new Map<SymbolName, ValueDomain>());
+
   const domainByOperand = requirements.reduce<Map<SymbolName, ValueDomain>>((acc, requirement) => {
     const operand = requirement.leaf.operandParamName;
 
@@ -84,7 +108,7 @@ export const causeArrangeTransformer = ({
     const existing = acc.get(operand);
 
     return acc.set(operand, existing === undefined ? domain : intersectDomainsTransformer({ left: existing, right: domain }));
-  }, new Map<SymbolName, ValueDomain>());
+  }, constSeed);
 
   // One operand nothing can satisfy is enough: the cause as a whole cannot happen, so there is no
   // arrangement to return and the exit behind it is unreachable through this cause.

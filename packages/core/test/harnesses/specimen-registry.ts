@@ -260,18 +260,18 @@ const DECLARATIONS = {
   // array) is what separates a driven/undriven callback from this dead one.
   [`${CATALOGUE}/sad-path/dead-surface/uncalled-nested/uncalled-nested.ts`]: ['access:named', 'lint:dead-surface'],
 
-  // UNDRIVEN, the two "welded value, one outcome" shapes at different sites — logic Assayer reads
-  // perfectly and no case can steer, because the deciding operand is welded into the source. Distinct
-  // from a gap (no harness closes them) and from a dark spot (the syntax is understood). Each file's
-  // colocated test pins its verbatim reason.
-  //   - `welded-const`: a value welded into a module const;
+  // UNDRIVEN — logic Assayer reads perfectly but no case can steer, because the deciding operand is
+  // neither a param, an env read, nor a literal constant the analyzer can fold. Distinct from a gap (no
+  // harness closes them) and from a dark spot (the syntax is understood). Each file's colocated test
+  // pins its verbatim reason. (A welded LITERAL constant is a different case — the analyzer EVALUATES
+  // it into a live arm plus an unreachable-exit, so those specimens live under `sad-path/unreachable/`.)
   //   - `welded-arg`: a private reached only through a caller that welds its argument.
-  //   - `const-array-branch`: the array twin of `welded-const` — a module branch on `items.length` of a
-  //     welded const array. The `.length` of a module const is neither a scalar param nor an env read,
-  //     so it is un-steerable and the branch is admitted UNDRIVEN, exactly as a welded scalar const is.
-  [`${CATALOGUE}/sad-path/undriven/welded-const/welded-const.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'undriven'],
-  [`${CATALOGUE}/sad-path/undriven/const-array-branch/const-array-branch.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'undriven'],
+  //   - `opaque-module`: a module scope branching on `Math.random()` — an opaque call result, neither a
+  //     param nor an env read nor a foldable constant, so no input picks the arm and no evaluation
+  //     resolves it. The permanent-undriven module anchor: non-determinism is the definitive "you
+  //     cannot test this branch", which no harness or future feature will ever change.
   [`${CATALOGUE}/sad-path/undriven/welded-arg/welded-arg.ts`]: ['access:named', 'undriven'],
+  [`${CATALOGUE}/sad-path/undriven/opaque-module/opaque-module.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'undriven'],
   // UNDRIVEN at the BRANCH, not the whole scope — the deciding value is neither a param nor an env
   // operand, so no case can steer which arm runs. Uniform across branch shapes: the ONLY difference
   // between the two is `if` vs `ternary`. `opaqueIf` guards on a same-file call `decide()`; the
@@ -317,11 +317,17 @@ const DECLARATIONS = {
     'undriven',
   ],
 
-  // UNREACHABLE — guards that contradict, whose finding is a BUILD ERROR (an unreachable-exit lint)
-  // rather than a case. An exit behind guards that cannot all hold is dead in the source, so no input
-  // reaches it. The rung adds arithmetic over the guard path, not syntax, so the traits look ordinary.
-  //   - `sequential-guards` is the whole rung in one function: `>= 1` then `<= 1 || === 0`, so the
-  //     fall-through exit needs a value both under 1 and over 1.
+  // UNREACHABLE — an exit no input reaches, whose finding is a BUILD ERROR (an unreachable-exit lint)
+  // rather than a case. Two causes, both dead in the source: guards that CONTRADICT, and a WELDED
+  // constant that forces one arm. The rung adds arithmetic over the guard path, not syntax.
+  //   - `welded-const`: `const level = 7; if (level > 5)` — the analyzer EVALUATES the welded value, so
+  //     the `then` arm is a real case and the `else` arm is an unreachable-exit lint naming `level` and
+  //     its welded `7`. A welded literal is decided in the source, not steered, yet it is not undriven:
+  //     the analyzer knows exactly which arm runs. It reaches `console.log`, so it owes `callee:node-global`.
+  //   - `const-array-branch`: the array twin — `const items = [1, 2, 3]; if (items.length > 2)` — the
+  //     branch on the welded array's fixed LENGTH (3) evaluates the same way, its lint naming the length.
+  //   - `sequential-guards` is the whole contradiction rung in one function: `>= 1` then `<= 1 || === 0`,
+  //     so the fall-through exit needs a value both under 1 and over 1.
   //   - `cross-file-guards` + its two predicate helpers are the CROSS-FILE rung. The contradiction
   //     (`> 50` returns first, so `> 100` can never hold) exists in no single file, which is the point.
   //     The consume-time compose overlay follows each `if`-condition call to its sibling predicate and
@@ -330,6 +336,8 @@ const DECLARATIONS = {
   //     keeps the root in sad-path (a lint is an unclean run). Each helper (`exceeds-limit`,
   //     `within-budget`) is a CHILD, `access:named` alone; the root adds the relative imports whose
   //     predicates it composes and the unreachable-exit lint their contradiction yields.
+  [`${CATALOGUE}/sad-path/unreachable/welded-const/welded-const.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
+  [`${CATALOGUE}/sad-path/unreachable/const-array-branch/const-array-branch.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/sequential-guards/sequential-guards.ts`]: ['access:named', 'branch:if', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/cross-file-guards.ts`]: [
     'access:named',

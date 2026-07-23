@@ -2,6 +2,7 @@ import { desugarSwitchLayerAdapterProxy } from './desugar-switch-layer-adapter.p
 import { handleBlockLayerAdapterProxy } from './handle-block-layer-adapter.proxy';
 import { handlerResultLayerAdapterProxy } from './handler-result-layer-adapter.proxy';
 import { readAccountedLayerAdapterProxy } from './read-accounted-layer-adapter.proxy';
+import { readConstOperandLayerAdapterProxy } from './read-const-operand-layer-adapter.proxy';
 import { readEnvOperandLayerAdapterProxy } from './read-env-operand-layer-adapter.proxy';
 import { readOperandTypeLayerAdapterProxy } from './read-operand-type-layer-adapter.proxy';
 
@@ -10,6 +11,7 @@ export const handleSwitchLayerAdapterProxy = (): Record<PropertyKey, never> => {
   handleBlockLayerAdapterProxy();
   handlerResultLayerAdapterProxy();
   readAccountedLayerAdapterProxy();
+  readConstOperandLayerAdapterProxy();
   readEnvOperandLayerAdapterProxy();
   readOperandTypeLayerAdapterProxy();
 

@@ -40,6 +40,9 @@ export * from './src/contracts/namespace-name/namespace-name.stub';
 export * from './src/contracts/file-count/file-count-contract';
 export * from './src/contracts/file-count/file-count.stub';
 
+export * from './src/contracts/const-length/const-length-contract';
+export * from './src/contracts/const-length/const-length.stub';
+
 export * from './src/contracts/repo-name/repo-name-contract';
 export * from './src/contracts/repo-name/repo-name.stub';
 

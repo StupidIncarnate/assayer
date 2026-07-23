@@ -19,6 +19,7 @@
  * analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
  * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...], undriven: [...] }
  */
+import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 import { fileAnalysisContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
@@ -32,6 +33,7 @@ import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment
 import { followCallsTransformer } from '../../../transformers/follow-calls/follow-calls-transformer';
 import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
 import { undrivenProjectionTransformer } from '../../../transformers/undriven-projection/undriven-projection-transformer';
+import { unreachableLintTransformer } from '../../../transformers/unreachable-lint/unreachable-lint-transformer';
 
 export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult; relPath?: string }): FileAnalysis => {
   const extracted = analysisProjectionTransformer({ walked });
@@ -79,11 +81,30 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // same channel and the same reasoning as an unconsumed private. The message names both the dead line
   // and the guards that killed it, because "unreachable" alone leaves the reader hunting for which
   // comparison to fix.
-  // A module scope whose top-level branching is all welded is admitted whole by the projection below;
-  // its per-branch admissions would double-count it, so they are suppressed against that projection's
-  // names. A NAMED entry the projection never claims keeps its per-branch admissions — an opaque
+  // A MODULE scope is wholly undriven only when derive-cases could neither drive nor evaluate it — no
+  // cases, no unreachable exits, and its branching all admitted undriven. Deferring to derive-cases
+  // keeps the drivability decision in ONE place (§5.12): a welded-const module scope now EVALUATES (a
+  // live case plus an unreachable exit) rather than being blanket-admitted, so only a genuinely opaque
+  // operand (a call result, an import, a computed const) still reads as a whole-scope undriven here.
+  // Its per-branch admissions would double-count it, so they are suppressed against the projection's
+  // names below. A NAMED entry the projection never claims keeps its per-branch admissions — an opaque
   // `if (g())` or a non-param local `if (u > 5)` names the branch a case cannot steer.
-  const moduleUndriven = undrivenProjectionTransformer({ walked, ...(relPath === undefined ? {} : { relPath }) });
+  const whollyUndrivenModuleNames = new Set(
+    derived
+      .filter(
+        ({ fn, result }) =>
+          fn.entry.access.kind === 'module' &&
+          fn.branches.length > 0 &&
+          result.cases.length === 0 &&
+          result.unreachableExits.length === 0,
+      )
+      .map(({ fn }) => String(fn.entry.name)),
+  );
+  const moduleUndriven = undrivenProjectionTransformer({
+    walked,
+    undrivenModuleNames: whollyUndrivenModuleNames,
+    ...(relPath === undefined ? {} : { relPath }),
+  });
   const moduleUndrivenNames = new Set(moduleUndriven.map((entry) => String(entry.name)));
 
   const branchUndriven = derived.flatMap(({ fn, result }) =>
@@ -92,15 +113,17 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
       : undrivenBranchTransformer({ entryName: fn.entry.name, undrivenBranches: result.undrivenBranches }),
   );
 
-  const unreachableLints = derived.flatMap(({ fn, result }) =>
-    result.unreachableExits.map((unreachable) => ({
-      rule: 'unreachable-exit',
-      name: fn.entry.name,
-      message: `\`${String(fn.entry.name)}\` can never reach the exit on line ${String(unreachable.line)}: the guards on ${unreachable.guardLines.length === 1 ? 'line' : 'lines'} ${unreachable.guardLines.map((line) => String(line)).join(', ')} cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.`,
-      startLine: unreachable.line,
-      endLine: unreachable.line,
-    })),
-  );
+  // A module scope's lint reads by its LABEL, never the internal `*module*`: the reader meets the file
+  // basename (or its single export), exactly as the undriven admission does. A named entry keeps its
+  // own name. The lint's `name` field still keys on `fn.entry.name` for the driven/undriven match.
+  const unreachableLints = derived.flatMap(({ fn, result }) => {
+    const displayName =
+      fn.entry.access.kind === 'module' && relPath !== undefined
+        ? moduleEntryLabelTransformer({ ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }), relPath })
+        : fn.entry.name;
+
+    return unreachableLintTransformer({ name: fn.entry.name, displayName, unreachableExits: result.unreachableExits });
+  });
 
   // Enrichment shows each param's type on the entry line and, once per branch LEAF, that operand's
   // type + representative range on the branch line — derived from the COMPOSED functions, so a
