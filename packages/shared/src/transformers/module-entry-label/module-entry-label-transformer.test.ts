@@ -22,7 +22,7 @@ describe('moduleEntryLabelTransformer', () => {
 
     it('VALID: {a nested relPath} => only the last path segment', () => {
       const result = moduleEntryLabelTransformer({
-        relPath: 'packages/syntax-repository/src/sad-path/undriven/welded-const/welded-const.ts',
+        relPath: 'packages/syntax-repository/src/sad-path/unreachable/welded-const/welded-const.ts',
       });
 
       expect(String(result)).toBe('welded-const.ts');

@@ -30,8 +30,8 @@ describe('switch / pure-statement — a bare top-level switch DRIVEN by the envi
   });
 
   // The whole point of the env rung: NO admission. Driving CODE picks the arm, so this is not undriven
-  // — the exact complement of sad-path/undriven/welded-const/welded-const.ts, which switches (in spirit) on a value
-  // welded into the source and therefore cannot be driven at all.
+  // — the exact complement of sad-path/undriven/opaque-module/opaque-module.ts, which switches (in spirit) on an
+  // opaque value the analyzer can neither set nor evaluate and therefore cannot be driven at all.
   it('VALID: {an env-driven switch} => admits nothing as undriven or dark', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
