@@ -85,13 +85,26 @@ The flags:
 - `ASSAYER_HEADLESS=1` creates the window hidden. That is what the e2e run needs,
   where no display exists.
 
+**`npm run dev` runs three watchers under `concurrently`:** `tsc --build --watch`
+recompiles every referenced project into its `dist/`, the Vite server hot-reloads
+the renderer (Fast Refresh, reached through `ASSAYER_DEV=1`), and `nodemon`
+restarts the Electron main process whenever a watched `dist/` changes.
+`nodemon.json` watches desktop's own `dist/` plus the sibling `core`/`shared`
+`dist/` — the siblings named explicitly because nodemon's watcher roots at the
+desktop package and never climbs out of it. So editing main-process, preload, or
+analyzer code reopens the window; editing renderer code swaps in place.
+
 **`npm run dev` clears the field first** (`predev` → `dev:stop`), so a second one
 never stacks a window or dies against the dev server's `strictPort`. Two details
 in `dev:stop` are load-bearing, not noise:
 
 - The bracket in `pkill -f '[d]esktop-main.js'` keeps the pattern from matching
   the shell running it. Spell it plainly and the script kills its own parent
-  instead of the app.
+  instead of the app. `nodemon` supervises that process, so its `--exec` names
+  `desktop-main.js` on nodemon's OWN argv — the same pattern then reaps the
+  supervisor, not just the window it spawned. Move that command into
+  `nodemon.json` and an orphaned supervisor survives `dev:stop` to respawn
+  against the next run.
 - The server dies by PORT (`fuser -k 6273/tcp`). Matching on `vite` would reach
   into whatever unrelated repo is also running one.
 

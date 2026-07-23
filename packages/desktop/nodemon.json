@@ -1,0 +1,6 @@
+{
+  "watch": ["dist", "../core/dist", "../shared/dist"],
+  "ext": "js",
+  "ignore": ["**/*.test.js"],
+  "delay": 500
+}
