@@ -11,8 +11,7 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/stub-repository.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const CROSS_FILE_KEY = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/types.ts#Config';
 const BRANCH_LOCAL_KEY = 'packages/syntax-repository/src/happy-path/object/branch-local/branch-local.ts#Config';
@@ -21,15 +20,7 @@ const CROSS_FILE_READER_A = 'packages/syntax-repository/src/happy-path/object/cr
 const CROSS_FILE_READER_B = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/reader-b.ts';
 
 test.describe('Stub Repository view', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
-
-  test('VALID: {compiled syntax-repository cache, nav to /stubs} => renders object + env stubs with readers, values, unknown, the merged overlay correction, and the nav switches views', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {compiled syntax-repository cache, nav to /stubs} => renders object + env stubs with readers, values, unknown, the merged overlay correction, and the nav switches views', async ({ smokeWindow: window }) => {
     // The nav is the shell around every view. It resolves as soon as the window paints.
     await expect(window.getByTestId('EXPLORER_NAV')).toBeVisible({ timeout: 30_000 });
     await expect(window.getByTestId('STUB_NAV')).toBeVisible();

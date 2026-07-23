@@ -15,8 +15,7 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-tests-tab.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect, reloadSmokeRunMode } from '../../../test/harnesses/e2e-fixtures';
 
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
@@ -64,16 +63,7 @@ const USES_PACKAGE = 'packages/syntax-repository/src/happy-path/npm-package/uses
 const USES_CONSOLE = 'packages/syntax-repository/src/happy-path/node-global/uses-console/uses-console.ts';
 
 test.describe('Compiled Surface Explorer — Tests tab', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
-
-  test('VALID: {happy-path/if-else/in-function/in-function.ts selected} => the Tests tab lists the 2 derived cases and hovering L3 highlights the then-case', async () => {
-    // Precondition: compile the syntax-repository into .assayer/cache, then open the file's compiled view.
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/if-else/in-function/in-function.ts selected} => the Tests tab lists the 2 derived cases and hovering L3 highlights the then-case', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_IN_FUNCTION}"]`).click();
 
@@ -105,13 +95,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     );
   });
 
-  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the switch over a 3-member union derives 3 exhaustive cases (one per label + the default\'s single uncovered member) and hovering the default return highlights only that case', async () => {
-    // Precondition: compile the syntax-repository into .assayer/cache, then open the switch file's view.
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the switch over a 3-member union derives 3 exhaustive cases (one per label + the default\'s single uncovered member) and hovering the default return highlights only that case', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_FUNCTION}"]`).click();
 
@@ -140,13 +124,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
   });
 
-  test('VALID: {happy-path/boolean/and/and.ts selected} => the compound condition derives one case per CAUSE (1 then + 2 else)', async () => {
-    // Precondition: compile the syntax-repository into .assayer/cache, then open the && specimen.
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/boolean/and/and.ts selected} => the compound condition derives one case per CAUSE (1 then + 2 else)', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
 
@@ -177,13 +155,10 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
   });
 
-  test('VALID: {and.ts under runMode intelligent} => the full breadth still renders but the non-salient twin grays out (data-running=false) while the salient rows stay live and badged', async () => {
-    // The ONLY difference from the thorough walk above is the seeded config runMode — proof it is a
+  test('VALID: {and.ts under runMode intelligent} => the full breadth still renders but the non-salient twin grays out (data-running=false) while the salient rows stay live and badged', async ({ smokeWindow: window }) => {
+    // The ONLY difference from the thorough walk above is the display-only runMode — proof it is a
     // display lens, not a change to what is derived or run. The title keeps the FULL count either way.
-    const exitCode = await app.compile({ runMode: 'intelligent' });
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
+    await reloadSmokeRunMode({ window, runMode: 'intelligent' });
 
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
@@ -203,12 +178,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
   });
 
-  test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the ordinary [7] salient', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the ordinary [7] salient', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${ARRAY_ELEMENT_LENGTH}"]`).click();
 
@@ -234,13 +204,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(1);
   });
 
-  test('VALID: {happy-path/ternary/return-basic/return-basic.ts selected} => the exit-position ternary splits into a then/else return, one case per arm, and hovering the ternary line highlights both', async () => {
-    // Precondition: compile the syntax-repository into .assayer/cache, then open the ternary file's view.
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/ternary/return-basic/return-basic.ts selected} => the exit-position ternary splits into a then/else return, one case per arm, and hovering the ternary line highlights both', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_RETURN_BASIC}"]`).click();
 
@@ -270,12 +234,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(0);
   });
 
-  test('VALID: {happy-path/composition/nested-function/nested-function.ts selected} => the private inner is DRIVEN through outer, its branch covered by cases arranged in the caller param', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/function/nested/nested.ts selected} => the private inner is DRIVEN through outer, its branch covered by cases arranged in the caller param', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${NESTED_FUNCTION}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -294,11 +253,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
   });
 
-  test('VALID: {compile+launch once, walk the class/boolean/composition/pure rungs} => each file\'s Tests tab lists its exact entry title and derived cases', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
+  test('VALID: {compile+launch once, walk the class/boolean/composition/pure rungs} => each file\'s Tests tab lists its exact entry title and derived cases', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
 
     // Each file is selected by its exact relPath; gating on the (unique) entry title lets the case-row
@@ -464,11 +419,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     ]);
   });
 
-  test('VALID: {compile+launch once, walk the module-scope + consumption entries} => each is a DRIVEN module entry labelled by export-or-filename, its case row carrying no args', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
+  test('VALID: {compile+launch once, walk the module-scope + consumption entries} => each is a DRIVEN module entry labelled by export-or-filename, its case row carrying no args', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
 
     // A module scope DRIVEN from `process.env` — labelled by its filename, no `()`, and its case rows

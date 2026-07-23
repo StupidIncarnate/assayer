@@ -10,8 +10,7 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-enrichment-tab.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
@@ -22,15 +21,7 @@ const IF_ELSE_IN_CLASS = 'packages/syntax-repository/src/happy-path/if-else/in-c
 const USES_GREETING = 'packages/syntax-repository/src/happy-path/import-local/uses-greeting/uses-greeting.ts';
 
 test.describe('Compiled Surface Explorer — Enrichment tab', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
-
-  test('VALID: {happy-path/if-else/in-function/in-function.ts selected, Enrichment tab} => lists the per-line facts (param symbol + type, branch operand range { 6, 5 })', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/if-else/in-function/in-function.ts selected, Enrichment tab} => lists the per-line facts (param symbol + type, branch operand range { 6, 5 })', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_IN_FUNCTION}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -45,12 +36,7 @@ test.describe('Compiled Surface Explorer — Enrichment tab', () => {
     ]);
   });
 
-  test('VALID: {happy-path/boolean/and/and.ts selected, Enrichment tab} => both operands of the compound condition get their range on the branch line', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/boolean/and/and.ts selected, Enrichment tab} => both operands of the compound condition get their range on the branch line', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -67,11 +53,7 @@ test.describe('Compiled Surface Explorer — Enrichment tab', () => {
     ]);
   });
 
-  test('VALID: {compile+launch once, walk a switch, a class method, and an import-only module} => union-member ranges, class-method facts, and the empty prompt', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
+  test('VALID: {compile+launch once, walk a switch, a class method, and an import-only module} => union-member ranges, class-method facts, and the empty prompt', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
 
     // Switch discriminant: each `case` line's range is the whole union, rotated so the matched member is

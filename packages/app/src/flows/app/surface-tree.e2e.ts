@@ -15,25 +15,15 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/surface-tree.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 import { syntaxSurfaceHarness } from '../../../test/harnesses/syntax-surface.harness';
 
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 
 test.describe('Compiled Surface Explorer — shell + file tree', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
   const surface = syntaxSurfaceHarness();
 
-  test('VALID: {compiled syntax-repository cache, window opens at /} => header handshake + file tree, and clicking happy-path/if-else/in-function/in-function.ts renders its cached source in CodeMirror', async () => {
-    // Precondition: run the built CLI precheck, which compiles the syntax-repository into .assayer/cache.
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    // window-open: the Electron window opens the renderer at the '/' hash route.
-    const window = await app.launch();
-
+  test('VALID: {compiled syntax-repository cache, window opens at /} => header handshake + file tree, and clicking happy-path/if-else/in-function/in-function.ts renders its cached source in CodeMirror', async ({ smokeWindow: window }) => {
     // obs-status-header (also proves obs-tree-bridge-call: header renders live cache data, so the
     // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface, derived off
     // disk by the same inclusion rule the compiler uses (specimen .ts files; co-located *.test.ts

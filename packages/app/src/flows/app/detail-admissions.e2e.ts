@@ -9,8 +9,7 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-admissions.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const UNDRIVEN_WELDED_OPERAND = 'packages/syntax-repository/src/sad-path/undriven/welded-const/welded-const.ts';
 const DEAD_SURFACE_UNCALLED = 'packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts';
@@ -55,15 +54,7 @@ const LOOP_DARK_SPOT_LINE =
   'is covered';
 
 test.describe('Compiled Surface Explorer — admission rows', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
-
-  test('VALID: {sad-path/undriven/welded-const/welded-const.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {sad-path/undriven/welded-const/welded-const.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNDRIVEN_WELDED_OPERAND}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -92,12 +83,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     await expect(window.getByTestId('RUN_BUTTON')).toHaveCount(0);
   });
 
-  test('VALID: {sad-path/dead-surface/dead-surface.ts selected} => the panel states the dead-surface LINT verbatim, beside the driven exported greet', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {sad-path/dead-surface/dead-surface.ts selected} => the panel states the dead-surface LINT verbatim, beside the driven exported greet', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${DEAD_SURFACE_UNCALLED}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -116,12 +102,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
   });
 
-  test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the panel states the ForOfStatement DARK SPOT verbatim, and no other admission channel co-renders', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the panel states the ForOfStatement DARK SPOT verbatim, and no other admission channel co-renders', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${LOOP_IN_FUNCTION}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -141,12 +122,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
   });
 
-  test('VALID: {sad-path/undriven/welded-arg/welded-arg.ts selected} => the panel states the welded-ARGUMENT UNDRIVEN admission verbatim, distinct from the welded-const shape, with no other channel co-rendering', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {sad-path/undriven/welded-arg/welded-arg.ts selected} => the panel states the welded-ARGUMENT UNDRIVEN admission verbatim, distinct from the welded-const shape, with no other channel co-rendering', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNDRIVEN_WELDED_ARG}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();

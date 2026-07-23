@@ -9,8 +9,7 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/run-console.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
 const RUN_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts';
@@ -26,15 +25,7 @@ const RUN_GAP_METHOD_LINE =
   'GAP find — its class needs constructor arguments, so no instance can be built to drive it — needs a harness';
 
 test.describe('Compiled Surface Explorer — Run flow + console', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
-
-  test('VALID: {happy-path/boolean/and/and.ts open, click Run} => the run finishes and every derived case reads the CLI verdict, with no run error', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/boolean/and/and.ts open, click Run} => the run finishes and every derived case reads the CLI verdict, with no run error', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -84,12 +75,7 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     expect((codeBox?.width ?? 0) > 300).toBe(true);
   });
 
-  test('VALID: {app opened and a file selected, Run never clicked} => no run console and no run happens', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {app opened and a file selected, Run never clicked} => no run console and no run happens', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -101,12 +87,7 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(3);
   });
 
-  test('VALID: {sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives the one buildable entry and surfaces the two GAP rows for the unconstructable class', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives the one buildable entry and surfaces the two GAP rows for the unconstructable class', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${RUN_GAP_SPECIMEN}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();

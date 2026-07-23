@@ -10,8 +10,7 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-contracts-tab.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const USES_PACKAGE = 'packages/syntax-repository/src/happy-path/npm-package/uses-package/uses-package.ts';
 // The remaining resolved-edge shapes: a LOCAL import (with its resolved def path + external signature),
@@ -40,15 +39,7 @@ const USES_PACKAGE_CONTRACT_INPUT = 'name: string';
 const USES_PACKAGE_CONTRACT_OUTPUT = 'returns string';
 
 test.describe('Compiled Surface Explorer — Contracts tab', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
-
-  test('VALID: {happy-path/npm-package/uses-package/uses-package.ts selected} => the Contracts tab renders the resolved external package import as an input/output contract — the typed black box across the real IPC crossing', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/npm-package/uses-package/uses-package.ts selected} => the Contracts tab renders the resolved external package import as an input/output contract — the typed black box across the real IPC crossing', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${USES_PACKAGE}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -69,11 +60,7 @@ test.describe('Compiled Surface Explorer — Contracts tab', () => {
     await expect(window.getByTestId('CONTRACT_OUTPUT')).toHaveText(USES_PACKAGE_CONTRACT_OUTPUT);
   });
 
-  test('VALID: {compile+launch once, walk the local/builtin/global edge shapes} => each renders its own source form and typed contract, and an import-free file shows the empty prompt', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
+  test('VALID: {compile+launch once, walk the local/builtin/global edge shapes} => each renders its own source form and typed contract, and an import-free file shows the empty prompt', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
 
     // LOCAL import: the source names the specifier AND the resolved definition path, and the stitch

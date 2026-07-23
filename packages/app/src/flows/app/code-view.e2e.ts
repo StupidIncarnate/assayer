@@ -9,8 +9,7 @@
  * npm run ward -- --only e2e -- packages/app/src/flows/app/code-view.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, wireHarnessLifecycle } from '../../../test/harnesses/e2e-fixtures';
-import { smokeRepoAppHarness } from '../../../test/harnesses/smoke-repo-app.harness';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
@@ -24,15 +23,7 @@ const LOOP_DARK_SPOT_LINE =
   'is covered';
 
 test.describe('Compiled Surface Explorer — code view', () => {
-  const app = smokeRepoAppHarness();
-  wireHarnessLifecycle({ harness: app });
-
-  test('VALID: {happy-path/if-else/in-function/in-function.ts selected} => CodeMirror renders the cached blob with a line gutter, syntax highlighting, and the exact cached lines, and the count gutter reads 2/1/1', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/if-else/in-function/in-function.ts selected} => CodeMirror renders the cached blob with a line gutter, syntax highlighting, and the exact cached lines, and the count gutter reads 2/1/1', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_IN_FUNCTION}"]`).click();
 
@@ -68,12 +59,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
     expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '1']);
   });
 
-  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the count gutter reads 2/1/2/1/1 across the discriminant and exit lines', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the count gutter reads 2/1/2/1/1 across the discriminant and exit lines', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_FUNCTION}"]`).click();
 
@@ -87,12 +73,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
     expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '2', '1', '1']);
   });
 
-  test('VALID: {happy-path/boolean/and/and.ts selected} => the count gutter reads 3/1/2 through the guard and both exits', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {happy-path/boolean/and/and.ts selected} => the count gutter reads 3/1/2 through the guard and both exits', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
 
@@ -104,12 +85,7 @@ test.describe('Compiled Surface Explorer — code view', () => {
     expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['3', '1', '2']);
   });
 
-  test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the for…of body (L4-L6) is shaded as a dark spot and its gutter icon carries the admission tooltip', async () => {
-    const exitCode = await app.compile();
-    expect(exitCode).toBe(0);
-
-    const window = await app.launch();
-
+  test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the for…of body (L4-L6) is shaded as a dark spot and its gutter icon carries the admission tooltip', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${LOOP_IN_FUNCTION}"]`).click();
 
