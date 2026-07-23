@@ -23,6 +23,10 @@ const SWITCH_ENV_SPECIMEN = 'packages/syntax-repository/src/happy-path/switch/pu
 // definitions, rebases both guards onto `size`, and that the surviving two cases actually execute the
 // exits they predict while the dead middle exit rides the artifact as an unreachable-exit lint.
 const CROSS_FILE_GUARDS_SPECIMEN = 'packages/syntax-repository/src/sad-path/unreachable/cross-file-guards/cross-file-guards.ts';
+// An object-member branch driven by stub-realize, carrying a COMMITTED `mode` correction under
+// `smoke-repo/assayer/stubs/`. Only a real run proves the overlay reaches the merged stub view and a
+// human-supplied value becomes an arrange a case actually executes.
+const BRANCH_LOCAL_SPECIMEN = 'packages/syntax-repository/src/happy-path/object/branch-local/branch-local.ts';
 
 // Every eponymous ROOT on disk paired with the bucket its folder declares — not the handful anyone
 // thought to name. Walked rather than written down: a literal list goes stale the moment someone adds
@@ -103,16 +107,37 @@ describe('runUnitBroker (integration)', () => {
     });
 
     // The cross-file compose payoff, RUN and not merely derived: with both imported guards rebased onto
-    // `size`, the two reachable exits get sound values (51 reaches `rejected`, 50 reaches `queued`) and
-    // both pass against the real siblings, while the contradiction between `> 50` and `> 100` leaves the
-    // middle exit dead and rides the artifact as an unreachable-exit lint the responder can fail on.
-    it('VALID: {two imported guards whose thresholds contradict} => both cases pass AND the unreachable-exit lint rides the artifact', async () => {
+    // `size`, the FULL input-bucket set is three cases — the two reachable exits get sound values that
+    // pass against the real siblings, plus one grayed breadth twin that converges on a reached exit and
+    // passes too — while the contradiction between `> 50` and `> 100` leaves the middle exit dead and
+    // rides the artifact as an unreachable-exit lint the responder can fail on.
+    it('VALID: {two imported guards whose thresholds contradict} => all three cases pass AND the unreachable-exit lint rides the artifact', async () => {
       const result = await engine.run({ relPath: CROSS_FILE_GUARDS_SPECIMEN, runId: 'r-cross-file' });
 
       expect({
         cases: result.cases.map((testCase) => String(testCase.status)),
         lints: result.lints.map((lint) => ({ rule: String(lint.rule), name: String(lint.name) })),
-      }).toStrictEqual({ cases: ['passed', 'passed'], lints: [{ rule: 'unreachable-exit', name: 'upload' }] });
+      }).toStrictEqual({ cases: ['passed', 'passed', 'passed'], lints: [{ rule: 'unreachable-exit', name: 'upload' }] });
+    });
+
+    // The stub-repository payoff, RUN and not merely derived: `decide(config)` branches on `config.mode`,
+    // and the committed overlay corrects `mode` to the AUTHORITATIVE set `['a','dev','prod','staging']`.
+    // Stub-realize arranges the object param from that merged view, so each arm runs with a HUMAN-supplied
+    // value — a P4-safe INPUT: the then arm the corrected `a` the guard admits, the else arm the corrected
+    // `dev` — and both reach the exit derivation predicted.
+    it('VALID: {an object-member branch with a committed mode correction} => both arms pass, each arranging a corrected value', async () => {
+      const result = await engine.run({ relPath: BRANCH_LOCAL_SPECIMEN, runId: 'r-branch-local' });
+
+      expect({
+        statuses: result.cases.map((testCase) => String(testCase.status)),
+        arranges: result.cases.map((testCase) => testCase.testCase.arrange),
+      }).toStrictEqual({
+        statuses: ['passed', 'passed'],
+        arranges: [
+          [{ kind: 'object', param: 'config', value: { mode: 'a' } }],
+          [{ kind: 'object', param: 'config', value: { mode: 'dev' } }],
+        ],
+      });
     });
   });
 

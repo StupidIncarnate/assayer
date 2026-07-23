@@ -23,6 +23,15 @@
  *   onto the caller's argument. It is DISPLAY-inert identity plumbing: a coordinate the parse already
  *   holds, never re-derived.
  *
+ *   `operandPropertyPath` and `operandTypeRef` record an OBJECT-MEMBER operand (`if (config.mode ===
+ *   'a')`): `operandParamName` is the root the read starts from (`config`), `operandPropertyPath` the
+ *   `.member` chain off it (`['mode']`, or `['user','role']` for `user.role`), and `operandTypeRef` the
+ *   syntactic type-reference NAME the root param declares (`Config`). Together they are the foreign key
+ *   the stub stitch joins on to attach the branched literal to the property's value demand on that
+ *   type's definition. A leaf carrying `operandPropertyPath` is not SCALAR-arrangeable, so its branch is
+ *   admitted UNDRIVEN in the per-file blob and DRIVEN at consume time by `stub-realize`, which arranges
+ *   the object param from the merged stub view.
+ *
  * USAGE:
  * conditionLeafContract.parse({
  *   kind: 'leaf', id: 'grade/if:…#leaf.0',
@@ -44,6 +53,8 @@ export const conditionLeafContract = z.object({
   kind: z.literal('leaf'),
   id: coverageIdContract,
   operandParamName: symbolNameContract.optional(),
+  operandPropertyPath: z.array(symbolNameContract).min(1).optional(),
+  operandTypeRef: symbolNameContract.optional(),
   operandEnvVarName: envVarNameContract.optional(),
   operandCallPosition: z.object({ line: lineNumberContract, column: columnNumberContract }).optional(),
   operandType: typeDescriptorContract,

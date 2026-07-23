@@ -1,4 +1,4 @@
-import { CompiledTreeStub, CompiledFileViewStub, RunResultStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub, CompiledFileViewStub, RunResultStub, StubViewStub } from '@assayer/shared/contracts';
 
 import { electronDesktopBootAdapter } from './electron-desktop-boot-adapter';
 import { electronDesktopBootAdapterProxy } from './electron-desktop-boot-adapter.proxy';
@@ -13,11 +13,13 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
@@ -28,6 +30,7 @@ describe('electronDesktopBootAdapter', () => {
         'assayer:status',
         'assayer:compiled-tree',
         'assayer:compiled-file',
+        'assayer:stubs',
         'assayer:run',
         'assayer:saved-run',
       ]);
@@ -41,11 +44,13 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async ({ relPath }) => {
           expect(relPath).toBe('src/foo.ts');
 
@@ -68,11 +73,13 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async ({ relPath }) => {
           expect(relPath).toBe('src/happy-path/boolean/and/and.ts');
@@ -97,11 +104,13 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async ({ onOutput }) => {
           onOutput({ chunk: 'Assayer is updating caches\n' });
@@ -130,11 +139,13 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.reject(new Error('savedRun must never execute a run')),
         resolveSavedRun: async () => Promise.resolve(run),
@@ -143,6 +154,33 @@ describe('electronDesktopBootAdapter', () => {
       const result = await proxy.invokeHandler({ channel: 'assayer:saved-run', arg: 'src/happy-path/boolean/and/and.ts' });
 
       expect(result).toStrictEqual({ success: true, valueRaw: run });
+    });
+
+    // The stubs channel answers with the merged StubView the /stubs view renders. Like the tree, it
+    // takes no argument — the resolver reads the whole namespace's stub repository.
+    it('VALID: {invokeHandler on stubsChannel} => answers with the merged StubView', async () => {
+      const proxy = electronDesktopBootAdapterProxy();
+      const view = StubViewStub();
+
+      await electronDesktopBootAdapter({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveStubs: async () => Promise.resolve(view),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+      });
+
+      const result = await proxy.invokeHandler({ channel: 'assayer:stubs' });
+
+      expect(result).toStrictEqual({ success: true, valueRaw: view });
     });
   });
 
@@ -159,11 +197,13 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () =>
           Promise.reject(new Error('assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.')),
@@ -185,6 +225,7 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -192,6 +233,7 @@ describe('electronDesktopBootAdapter', () => {
           throw new Error('assayer: no config found at /repo. Run `assayer init` to create one.');
         },
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
@@ -205,6 +247,34 @@ describe('electronDesktopBootAdapter', () => {
       });
     });
 
+    it('ERROR: {resolveStubs rejects with a P1 error} => the stubs handler ANSWERS with the message, verbatim', async () => {
+      const proxy = electronDesktopBootAdapterProxy();
+
+      await electronDesktopBootAdapter({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveStubs: async () =>
+          Promise.reject(new Error('assayer: cannot read /repo/assayer.config.json. Run `assayer status` in that repo to generate one.')),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+      });
+
+      const result = await proxy.invokeHandler({ channel: 'assayer:stubs' });
+
+      expect(result).toStrictEqual({
+        success: false,
+        message: 'assayer: cannot read /repo/assayer.config.json. Run `assayer status` in that repo to generate one.',
+      });
+    });
+
     it('ERROR: {resolveCompiledFile rejects} => the compiled-file handler ANSWERS with the message, verbatim', async () => {
       const proxy = electronDesktopBootAdapterProxy();
 
@@ -212,11 +282,13 @@ describe('electronDesktopBootAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
         resolveStatus: () => DesktopStatusStub(),
         resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
         resolveCompiledFile: async () => Promise.reject(new Error('assayer: src/foo.ts is not in the compiled cache.')),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),

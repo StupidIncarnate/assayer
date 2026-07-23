@@ -3,8 +3,10 @@
  *   serializable TypeDescriptor — the SINGLE place any type is turned into the analysis model, so no
  *   two bits of code encode type semantics. Primitives map straight across; a literal becomes a
  *   `literal` descriptor; a union collapses to a `union` descriptor ONLY when every member is a
- *   literal (otherwise it degrades to `unknown` carrying the union's display text). Recurses over
- *   union members, so nested/enumerated shapes are handled by the same one unit.
+ *   literal (otherwise it degrades to `unknown` carrying the union's display text); an ARRAY maps to
+ *   an `array` descriptor over its element, and an OBJECT to an `object` descriptor carrying its name
+ *   (when named) and property list. Recurses over union members, array elements and object
+ *   properties, so nested/enumerated shapes are handled by the same one unit.
  *
  * USAGE:
  * typeDescriptorTransformer({ fact: { flavor: 'string' } });
@@ -34,6 +36,17 @@ export const typeDescriptorTransformer = ({ fact }: { fact: TypeFact }): TypeDes
           })
         : typeDescriptorContract.parse({ kind: 'unknown', text: fact.text });
     }
+    case 'array':
+      return typeDescriptorContract.parse({ kind: 'array', element: typeDescriptorTransformer({ fact: fact.element }) });
+    case 'object':
+      return typeDescriptorContract.parse({
+        kind: 'object',
+        ...(fact.typeName === undefined ? {} : { typeName: fact.typeName }),
+        properties: fact.properties.map((property) => ({
+          name: property.name,
+          type: typeDescriptorTransformer({ fact: property.fact }),
+        })),
+      });
     case 'other':
       return typeDescriptorContract.parse({ kind: 'unknown', text: fact.text });
     default:

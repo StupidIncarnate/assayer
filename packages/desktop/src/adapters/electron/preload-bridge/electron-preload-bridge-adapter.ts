@@ -16,6 +16,7 @@
  *   statusChannel: 'assayer:status',
  *   compiledTreeChannel: 'assayer:compiled-tree',
  *   compiledFileChannel: 'assayer:compiled-file',
+ *   stubsChannel: 'assayer:stubs',
  *   runChannel: 'assayer:run',
  *   savedRunChannel: 'assayer:saved-run',
  *   runOutputChannel: 'assayer:run-output',
@@ -32,6 +33,7 @@ export const electronPreloadBridgeAdapter = ({
   statusChannel,
   compiledTreeChannel,
   compiledFileChannel,
+  stubsChannel,
   runChannel,
   savedRunChannel,
   runOutputChannel,
@@ -40,6 +42,7 @@ export const electronPreloadBridgeAdapter = ({
   statusChannel: string;
   compiledTreeChannel: string;
   compiledFileChannel: string;
+  stubsChannel: string;
   runChannel: string;
   savedRunChannel: string;
   runOutputChannel: string;
@@ -51,6 +54,8 @@ export const electronPreloadBridgeAdapter = ({
       replyValueLayerAdapter({ reply: await ipcRenderer.invoke(compiledTreeChannel) }),
     getCompiledFile: async ({ relPath }: { relPath: string }): Promise<unknown> =>
       replyValueLayerAdapter({ reply: await ipcRenderer.invoke(compiledFileChannel, relPath) }),
+    getStubs: async (): Promise<unknown> =>
+      replyValueLayerAdapter({ reply: await ipcRenderer.invoke(stubsChannel) }),
     runFile: async ({ relPath }: { relPath: string }): Promise<unknown> =>
       replyValueLayerAdapter({ reply: await ipcRenderer.invoke(runChannel, relPath) }),
     getSavedRun: async ({ relPath }: { relPath: string }): Promise<unknown> =>

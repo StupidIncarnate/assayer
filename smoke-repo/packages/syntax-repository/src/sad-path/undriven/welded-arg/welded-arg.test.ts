@@ -34,7 +34,7 @@ describe('undriven / welded-arg — a private reached only through a welded lite
       {
         name: 'report',
         access: { kind: 'named' },
-        cases: [{ reachesExit: '*module*/report/return@top', arrange: [{ kind: 'param', param: 'value', value: 7 }] }],
+        cases: [{ reachesExit: '*module*/report/return@top', arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true }],
       },
     ]);
   });

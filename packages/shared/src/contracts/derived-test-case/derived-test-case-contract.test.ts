@@ -18,6 +18,18 @@ describe('derivedTestCaseContract', () => {
 
       expect(result).toStrictEqual(testCase);
     });
+
+    it('VALID: {no salient field} => defaults salient to true so stale cache blobs read as all-salient', () => {
+      const result = derivedTestCaseContract.parse({ reachesExit: 'run/exit@implicit', arrange: [] });
+
+      expect(result).toStrictEqual({ reachesExit: 'run/exit@implicit', arrange: [], salient: true });
+    });
+
+    it('VALID: {salient: false} => preserved as the not-must-run flag', () => {
+      const result = derivedTestCaseContract.parse({ reachesExit: 'run/exit@implicit', arrange: [], salient: false });
+
+      expect(result).toStrictEqual({ reachesExit: 'run/exit@implicit', arrange: [], salient: false });
+    });
   });
 
   describe('invalid derived test cases', () => {

@@ -29,7 +29,7 @@ const smokeRepoPath = join(__dirname, '..', '..', '..', '..', 'smoke-repo');
 
 export const smokeRepoAppHarness = (): {
   afterEach: () => Promise<void>;
-  compile: () => Promise<ExitCode>;
+  compile: (params?: { runMode?: 'thorough' | 'intelligent' }) => Promise<ExitCode>;
   launch: () => Promise<Page>;
 } => {
   const running: ElectronApplication[] = [];
@@ -43,7 +43,7 @@ export const smokeRepoAppHarness = (): {
         cleanup();
       });
     },
-    compile: async (): Promise<ExitCode> => {
+    compile: async ({ runMode }: { runMode?: 'thorough' | 'intelligent' } = {}): Promise<ExitCode> => {
       // Create THIS test's hermetic cache dir (wireHarnessLifecycle wires afterEach only, so the temp
       // dir is minted here on the first call, not in a beforeEach). basename(configDir) === 'assayer'
       // so the manifest's repoName reads 'assayer' — matching the header assertion.
@@ -60,10 +60,13 @@ export const smokeRepoAppHarness = (): {
         // OUTSIDE this repoRoot and is wired in as a `file:` dependency — so it resolves through
         // node_modules as a real external package (never part of the analyzed surface) and its declared
         // signature is pulled as the typed black box, exactly as a published npm dep would.
+        // `runMode` is display-only and excluded from configHashBroker, so seeding it changes neither the
+        // cache nor the manifest hash — it only tells the desktop's status payload which cases to gray.
         JSON.stringify({
           repoRoot: smokeRepoPath,
           exclude: [],
           stableBranch: 'master',
+          ...(runMode === undefined ? {} : { runMode }),
         }),
       );
       configDirRef.current = configDir;

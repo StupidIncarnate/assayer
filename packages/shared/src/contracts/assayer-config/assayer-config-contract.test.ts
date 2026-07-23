@@ -7,7 +7,7 @@ describe('assayerConfigContract', () => {
       const result = assayerConfigContract.parse({});
 
       expect(JSON.stringify(result)).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error"}',
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","runMode":"thorough"}',
       );
     });
 
@@ -22,7 +22,14 @@ describe('assayerConfigContract', () => {
         exclude: ['dist'],
         darkSpots: 'warn',
         deadSurface: 'error',
+        runMode: 'thorough',
       });
+    });
+
+    it('VALID: {runMode: "intelligent"} => preserved as the display-only execution-subset toggle', () => {
+      const result = assayerConfigContract.parse({ runMode: 'intelligent' });
+
+      expect(result.runMode).toBe('intelligent');
     });
 
     it('VALID: {stableBranch: "main"} => parses optional field', () => {

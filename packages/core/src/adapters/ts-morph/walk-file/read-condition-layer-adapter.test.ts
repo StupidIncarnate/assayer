@@ -62,6 +62,51 @@ describe('readConditionLayerAdapter', () => {
     });
   });
 
+  describe('object-member operands', () => {
+    it('VALID: {config.mode === "a"} => records the root param, property path, and root type-reference', () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'interface Config { mode: string }\nexport function decide(config: Config): string {\n  if (config.mode === "a") { return "x"; }\n  return "y";\n}\n',
+      );
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionLayerAdapter({ condition });
+
+      expect({
+        operandName: result.operandName,
+        operandRootName: result.operandRootName,
+        operandPropertyPath: result.operandPropertyPath,
+        operandTypeRef: result.operandTypeRef,
+      }).toStrictEqual({
+        operandName: undefined,
+        operandRootName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+      });
+    });
+
+    it('EDGE: {a.b > c on an undeclared root} => the property path is read but no type-reference resolves', () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (a.b > c) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionLayerAdapter({ condition });
+
+      expect({
+        operandRootName: result.operandRootName,
+        operandPropertyPath: result.operandPropertyPath,
+        operandTypeRef: result.operandTypeRef,
+      }).toStrictEqual({
+        operandRootName: 'a',
+        operandPropertyPath: ['b'],
+        operandTypeRef: undefined,
+      });
+    });
+  });
+
   describe('the predicate it parses', () => {
     it('VALID: {name.length === 0} => a length-eq predicate carrying the threshold', () => {
       readConditionLayerAdapterProxy();

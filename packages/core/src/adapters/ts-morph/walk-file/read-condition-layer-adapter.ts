@@ -13,6 +13,12 @@
  *   It takes the condition EXPRESSION rather than the `if` that owns it, so a ternary, a `while`,
  *   or a `do` can reuse it unchanged when their handlers arrive.
  *
+ *   An OBJECT-MEMBER operand (`config.mode`) is read past the property access: `operandRootName` is the
+ *   leftmost identifier (`config`), `operandPropertyPath` the `.member` chain off it (`['mode']`), and
+ *   `operandTypeRef` the type-reference NAME the root param declares (`Config`, read off
+ *   `param.getTypeNode()` — a §5.1-sanctioned type-reference name). The predicate and the operand's own
+ *   type read exactly as for any other operand; the extra fields are the stub stitch's foreign key.
+ *
  * USAGE:
  * readConditionLayerAdapter({ condition: ifStatement.getExpression() });
  * // Returns { operandNode, operandName: 'name', predicate: { kind: 'length-eq', literal: 0 } }
@@ -23,10 +29,14 @@ import { representativeValueContract, symbolNameContract } from '@assayer/shared
 import type { Predicate, SymbolName } from '@assayer/shared/contracts';
 
 import { predicateTransformer } from '../../../transformers/predicate/predicate-transformer';
+import { readPropertyPathLayerAdapter } from './read-property-path-layer-adapter';
 
 export interface ConditionReadout {
   operandNode: Node;
   operandName?: SymbolName;
+  operandRootName?: SymbolName;
+  operandPropertyPath?: SymbolName[];
+  operandTypeRef?: SymbolName;
   predicate: Predicate;
 }
 
@@ -52,9 +62,25 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
               : undefined;
   const operandName = Node.isIdentifier(operandNode) ? symbolNameContract.parse(operandNode.getText()) : undefined;
 
+  // An object-member operand is read PAST the property access: the leftmost identifier is the root the
+  // read starts from, the `.member` chain is what it reads off it, and the root param's declared
+  // type-reference name is the join key the stub stitch attaches the branched literal through.
+  const property = Node.isPropertyAccessExpression(operandNode)
+    ? readPropertyPathLayerAdapter({ node: operandNode })
+    : undefined;
+  const rootNode = property?.root;
+  const operandRootName = rootNode !== undefined && Node.isIdentifier(rootNode) ? symbolNameContract.parse(rootNode.getText()) : undefined;
+  const rootParam = rootNode?.getSymbol()?.getDeclarations().find((declaration) => Node.isParameterDeclaration(declaration));
+  const rootTypeNode = rootParam !== undefined && Node.isParameterDeclaration(rootParam) ? rootParam.getTypeNode() : undefined;
+  const operandTypeRef =
+    rootTypeNode !== undefined && Node.isTypeReference(rootTypeNode) ? symbolNameContract.parse(rootTypeNode.getTypeName().getText()) : undefined;
+
   return {
     operandNode,
     ...(operandName === undefined ? {} : { operandName }),
+    ...(operandRootName === undefined ? {} : { operandRootName }),
+    ...(property === undefined || property.path.length === 0 ? {} : { operandPropertyPath: property.path }),
+    ...(operandTypeRef === undefined ? {} : { operandTypeRef }),
     predicate: predicateTransformer({
       opKind,
       isLengthAccess,

@@ -4,6 +4,7 @@ import { electronDesktopBootAdapterProxy } from '../../../adapters/electron/desk
 import { statusResolveBrokerProxy } from '../../../brokers/status/resolve/status-resolve-broker.proxy';
 import { compiledTreeResolveBrokerProxy } from '../../../brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy';
 import { compiledFileResolveBrokerProxy } from '../../../brokers/compiled-file/resolve/compiled-file-resolve-broker.proxy';
+import { stubIndexResolveBrokerProxy } from '../../../brokers/stub-index/resolve/stub-index-resolve-broker.proxy';
 import { repoSourceRootBrokerProxy } from '../../../brokers/repo/source-root/repo-source-root-broker.proxy';
 import { runExecuteBrokerProxy } from '../../../brokers/run/execute/run-execute-broker.proxy';
 import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
@@ -18,6 +19,7 @@ export const DesktopMainBootResponderProxy = (): {
   // compiled-tree/compiled-file/run brokers would ever run — see enforce-proxy-child-creation.
   compiledTreeResolveBrokerProxy();
   compiledFileResolveBrokerProxy();
+  stubIndexResolveBrokerProxy();
   repoSourceRootBrokerProxy();
   runExecuteBrokerProxy();
   runFindBrokerProxy();

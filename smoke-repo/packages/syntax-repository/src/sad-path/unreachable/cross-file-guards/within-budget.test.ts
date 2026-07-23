@@ -11,14 +11,18 @@ const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, re
 describe('unreachable / within-budget — the second predicate function, whose threshold contradicts the first', () => {
   // Identical in shape to `exceeds-limit`, and correct on its own terms: nothing here is wrong until
   // `upload` calls it after already returning for everything over 50. That separation is the point of
-  // the rung — the contradiction exists in no single file, so no single-file pass can find it.
-  it('VALID: {return size > 100} => one entry, one exit, no branch', () => {
+  // the rung — the contradiction exists in no single file, so no single-file pass can find it. Its
+  // branchless `size > 100` splits into two salient cases just as `exceeds-limit` does.
+  it('VALID: {return size > 100} => one entry, one exit, two salient cases (101 satisfies, 100 violates)', () => {
     expect(analysis.functions).toStrictEqual([
       expect.objectContaining({
         entry: expect.objectContaining({ name: 'withinBudget', access: { kind: 'named' } }),
         branches: [],
         exits: [expect.objectContaining({ kind: 'return', guardPath: [], line: 2 })],
-        cases: [expect.objectContaining({ arrange: [{ kind: 'param', param: 'size', value: 7 }] })],
+        cases: [
+          { reachesExit: '*module*/withinBudget/return@top', arrange: [{ kind: 'param', param: 'size', value: 101 }], salient: true },
+          { reachesExit: '*module*/withinBudget/return@top', arrange: [{ kind: 'param', param: 'size', value: 100 }], salient: true },
+        ],
       }),
     ]);
   });

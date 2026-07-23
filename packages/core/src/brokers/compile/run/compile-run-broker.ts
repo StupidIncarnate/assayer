@@ -36,6 +36,10 @@ import { resolvedIndexWriteBroker } from '../../resolved-index/write/resolved-in
 import { pathBasenameAdapter } from '../../../adapters/path/basename/path-basename-adapter';
 
 import { compileResolveGraphBroker } from '../resolve-graph/compile-resolve-graph-broker';
+import { compileStubGraphBroker } from '../stub-graph/compile-stub-graph-broker';
+import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
+import { stubOverlayReconcileBroker } from '../../stub-overlay/reconcile/stub-overlay-reconcile-broker';
+import { stubContradictionsTransformer } from '../../../transformers/stub-contradictions/stub-contradictions-transformer';
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';
 
@@ -202,6 +206,51 @@ export const compileRunBroker = async ({
   }
 
   await resolvedIndexWriteBroker({ configDir, namespace: String(currentBranch), index: resolved.index });
+
+  // The stub stitch: derive each namespace's stub index (object types' per-property value demands
+  // spliced onto their full property lists) from the SAME finished blobs, keyed on the SAME layout +
+  // tsconfig hash the resolved index carries — never re-resolved. It rides the same error gate above
+  // and the same collision rule: write STABLE first, CURRENT last, so a currentBranch === stableBranch
+  // collision keeps the working-tree stubs. A SKIPPED stable is unchanged, so its stub index already
+  // sits on disk from the compile that made it.
+  if (stable !== undefined && resolvedStable !== undefined) {
+    await compileStubGraphBroker({
+      configDir,
+      namespace: String(stable.resultEntry.namespace),
+      blobsDir,
+      resolvedIndex: resolvedStable.index,
+      files: stable.manifestNamespace.files,
+    });
+  }
+
+  const currentStub = await compileStubGraphBroker({
+    configDir,
+    namespace: String(currentBranch),
+    blobsDir,
+    resolvedIndex: resolved.index,
+    files: currentProcessed.index,
+  });
+
+  // The committed overlay (`assayer/stubs/`) reconciles against the DERIVED stub index it does NOT
+  // belong to on the SAME errors[] channel as a broken import (exit 1). Two ways an overlay is wrong,
+  // reported together: a correction naming a type/property that no longer exists is STALE (reconcile),
+  // and a correction whose authoritative values cannot satisfy a branch guard that reads the property
+  // is a CONTRADICTION — dead code under the human's truth, caught BEFORE running (stub-contradictions,
+  // over the guards the stub stitch gathered from the same blobs). The overlay is in no hash, so the
+  // derived cache written above stays valid — only the run fails, so the human rectifies the overlay
+  // and reruns against an unchanged, already-warm cache.
+  const overlay = await stubOverlayLoadBroker({ repoRoot: String(root) });
+  const overlayErrors = [
+    ...stubOverlayReconcileBroker({ index: currentStub.index, overlays: overlay }),
+    ...stubContradictionsTransformer({ guards: currentStub.guards, overlays: overlay }),
+  ].map((error) => ({
+    namespace: namespaceNameContract.parse(String(currentBranch)),
+    ...error,
+  }));
+
+  if (overlayErrors.length > 0) {
+    return compileResultContract.parse({ status: 'errors', results, errors: overlayErrors });
+  }
 
   return compileResultContract.parse({ status: 'ok', results, errors: [] });
 };

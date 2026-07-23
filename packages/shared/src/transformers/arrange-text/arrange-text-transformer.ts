@@ -14,9 +14,12 @@
  *   argument nothing accepts, naming neither the variable that actually decided the arm nor the fact
  *   that it was the environment. Error text is product surface (P1), and that line was a lie in it.
  *
+ *   An `object` param is an argument too, so it renders positionally like a scalar param — as the
+ *   object literal a reader would pass, its properties in the same sorted order the arrange carries.
+ *
  * USAGE:
  * arrangeTextTransformer({ arrange: testCase.arrange });
- * // Returns '6, 2' for params, or 'LEVEL="6"' for an environment read
+ * // Returns '6, 2' for params, 'LEVEL="6"' for an environment read, or '{"mode":"dev"}' for an object
  */
 import { arrangeTextContract } from '../../contracts/arrange-text/arrange-text-contract';
 import type { ArrangeText } from '../../contracts/arrange-text/arrange-text-contract';
@@ -30,5 +33,7 @@ export const arrangeTextTransformer = ({ arrange }: { arrange: DerivedTestCase['
           ? `${String(binding.name)}=${JSON.stringify(binding.value)}`
           : JSON.stringify(binding.value),
       )
+      // `binding.value` is a scalar for a param, the property map for an object — `JSON.stringify`
+      // renders both as the literal a reader would pass, so a single arm covers them.
       .join(', '),
   );

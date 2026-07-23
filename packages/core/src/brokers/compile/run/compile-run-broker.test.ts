@@ -130,6 +130,72 @@ describe('compileRunBroker', () => {
     });
   });
 
+  describe('a committed stub overlay that no longer resolves against the derived index', () => {
+    it("ERROR: {clean run, overlay names a type absent from the current stub index} => status errors with the overlay's rectify-this-stub P1 under the current namespace, cache still written", async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'feature-x' });
+      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n'] });
+      proxy.manifestWriteSucceeds();
+      proxy.overlayStale();
+      const config = AssayerConfigStub();
+
+      const result = await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(result).toStrictEqual({
+        status: 'errors',
+        results: [{ namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 1 }],
+        errors: [
+          {
+            namespace: 'feature-x',
+            relPath: 'assayer/stubs/objects/src/gone.ts/Gone.json',
+            line: 1,
+            column: 1,
+            message: "type 'src/gone.ts#Gone' no longer exists (renamed, moved, or deleted) — rectify this stub",
+          },
+        ],
+      });
+      expect(proxy.wasManifestWritten()).toBe(true);
+    });
+  });
+
+  describe('a committed stub overlay whose corrected values contradict a branch guard', () => {
+    it("ERROR: {clean run, overlay corrects mode to a set that cannot satisfy mode === 'a'} => status errors with the contradiction P1 under the current namespace, cache still written", async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'feature-x' });
+      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n'] });
+      proxy.manifestWriteSucceeds();
+      proxy.overlayContradicts();
+      const config = AssayerConfigStub();
+
+      const result = await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(result).toStrictEqual({
+        status: 'errors',
+        results: [{ namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 1 }],
+        errors: [
+          {
+            namespace: 'feature-x',
+            relPath: 'assayer/stubs/objects/src/config/config.ts/Config.json',
+            line: 1,
+            column: 1,
+            message: "corrected values for property 'mode' cannot satisfy the guard at src/decide.ts:6 (needs 'mode' === 'a') — rectify this stub",
+          },
+        ],
+      });
+      expect(proxy.wasManifestWritten()).toBe(true);
+    });
+  });
+
   describe('a current file that fails to parse (incremental run)', () => {
     it('ERROR: {incremental run, one current file with invalid syntax} => returns status errors and never writes the manifest', async () => {
       const proxy = compileRunBrokerProxy();

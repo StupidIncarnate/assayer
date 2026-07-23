@@ -64,6 +64,9 @@ export const analysisProjectionTransformer = ({ walked }: { walked: WalkFileResu
       },
       branches: scope.branches,
       exits: scope.exits,
+      // Carried onto the entry so derive-cases can split a branchless predicate's true/false return
+      // into two cases. Present only for a single-comparison-return body; inert for everything else.
+      ...(scope.predicateSignature === undefined ? {} : { predicateSignature: scope.predicateSignature }),
     })),
   });
 };

@@ -1,6 +1,7 @@
 import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
 import { DetailPanelWidget } from './detail-panel-widget';
 import { DetailPanelWidgetProxy } from './detail-panel-widget.proxy';
+import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
 import {
   CaseResultStub,
   DarkSpotStub,
@@ -15,6 +16,30 @@ import {
   RunResultStub,
   UndrivenEntryStub,
 } from '@assayer/shared/contracts';
+
+// One entry with a salient case and its grayed breadth twin — both reaching the same exit, so the
+// second is the non-salient breadth. Drives the badge (rides every salient row) and the runMode gray
+// (the non-salient twin dims only under 'intelligent'). Cases render in array order: salient, then twin.
+const SALIENT_AND_BREADTH_ANALYSIS = FileAnalysisStub({
+  functions: [
+    FunctionAnalysisStub({
+      entry: EntrySignatureStub({
+        name: '*module*',
+        scopePath: ['*module*'],
+        params: [],
+        access: { kind: 'module' },
+        exportName: 'thing',
+      }),
+      branches: [],
+      exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
+      cases: [
+        { reachesExit: '*module*/exit@top', arrange: [], salient: true },
+        { reachesExit: '*module*/exit@top', arrange: [{ kind: 'env', name: 'X', value: '1' }], salient: false },
+      ],
+    }),
+  ],
+  enrichment: [],
+});
 
 // A DRIVEN module entry with its single export — reached by IMPORTING, so it takes no params and shows
 // a bare label, never `*module*` and never `()`.
@@ -608,6 +633,83 @@ describe('DetailPanelWidget', () => {
       });
 
       expect(getByTestId('RUN_ERROR').textContent).toBe('the CLI is not built');
+    });
+  });
+
+  describe('the salient badge and run mode', () => {
+    // The badge marks the execution subset and rides EVERY salient row regardless of runMode — a
+    // reviewer sees which cases are must-run even in thorough mode. The non-salient breadth twin has none.
+    it('VALID: {a salient case beside its grayed breadth twin} => only the salient row carries the INTELLIGENT badge', () => {
+      DetailPanelWidgetProxy();
+
+      const { getAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />,
+      });
+
+      expect(getAllByTestId('INTELLIGENT_BADGE').map((element) => element.textContent)).toStrictEqual([
+        'INTELLIGENT',
+      ]);
+    });
+
+    // The full breadth is always in the DOM (the title keeps the full count); the badge does not enter
+    // the row's own text, so the case content reads the same whether or not a row is badged.
+    it('VALID: {a salient case beside its breadth twin} => both rows render, badge never in the row text', () => {
+      DetailPanelWidgetProxy();
+
+      const { getAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/x/thing.ts' })} />,
+      });
+
+      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
+        'not run thing → reaches L4',
+        'not run thing → reaches L4',
+      ]);
+    });
+
+    // thorough is the reviewer reading every derived case as live — nothing grays, whatever its salience.
+    it('VALID: {runMode: thorough} => every row is live (data-running true) regardless of salience', () => {
+      DetailPanelWidgetProxy();
+      const {runMode} = StatusViewStub({ runMode: 'thorough' });
+
+      const { getAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />,
+      });
+
+      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
+        'true',
+        'true',
+      ]);
+    });
+
+    // intelligent grays the non-salient breadth so only the salient subset reads as running — the first
+    // (salient) row stays live, the twin goes data-running=false.
+    it('VALID: {runMode: intelligent} => the non-salient breadth grays out while the salient row stays live', () => {
+      DetailPanelWidgetProxy();
+      const {runMode} = StatusViewStub({ runMode: 'intelligent' });
+
+      const { getAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />,
+      });
+
+      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
+        'true',
+        'false',
+      ]);
+    });
+
+    // A panel not told a runMode is thorough by default — a repo without the config still shows every
+    // case live rather than guessing them grayed.
+    it('EMPTY: {no runMode prop} => defaults to thorough, every row live', () => {
+      DetailPanelWidgetProxy();
+
+      const { getAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />,
+      });
+
+      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
+        'true',
+        'true',
+      ]);
     });
   });
 

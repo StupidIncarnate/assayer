@@ -44,6 +44,9 @@ export const throughCallerCasesTransformer = ({
     branches: callee.branches,
     exits: callee.exits,
     envDrivable: false,
+    // A branchless private predicate driven through its caller splits its true/false return the same
+    // way a directly-analyzed one does — the callee's own comparison, never a recorded output (P4).
+    ...(callee.predicateSignature === undefined ? {} : { returnPredicate: callee.predicateSignature }),
   }).cases.map((testCase) => {
     const byCallerParam = new Map<SymbolName, RepresentativeValue>(
       testCase.arrange.flatMap((binding) => {

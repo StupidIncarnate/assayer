@@ -94,6 +94,9 @@ export * from './src/contracts/env-var-name/env-var-name.stub';
 export * from './src/contracts/env-value/env-value-contract';
 export * from './src/contracts/env-value/env-value.stub';
 
+export * from './src/contracts/env-read/env-read-contract';
+export * from './src/contracts/env-read/env-read.stub';
+
 export * from './src/contracts/predicate/predicate-contract';
 export * from './src/contracts/predicate/predicate.stub';
 
@@ -102,6 +105,9 @@ export * from './src/contracts/type-text/type-text.stub';
 
 export * from './src/contracts/type-descriptor/type-descriptor-contract';
 export * from './src/contracts/type-descriptor/type-descriptor.stub';
+
+export * from './src/contracts/declared-type/declared-type-contract';
+export * from './src/contracts/declared-type/declared-type.stub';
 
 export * from './src/contracts/symbol-name/symbol-name-contract';
 export * from './src/contracts/symbol-name/symbol-name.stub';
@@ -132,6 +138,27 @@ export * from './src/contracts/resolved-edge/resolved-edge.stub';
 
 export * from './src/contracts/resolved-index/resolved-index-contract';
 export * from './src/contracts/resolved-index/resolved-index.stub';
+
+export * from './src/contracts/stub-key/stub-key-contract';
+export * from './src/contracts/stub-key/stub-key.stub';
+
+export * from './src/contracts/property-demand/property-demand-contract';
+export * from './src/contracts/property-demand/property-demand.stub';
+
+export * from './src/contracts/object-stub/object-stub-contract';
+export * from './src/contracts/object-stub/object-stub.stub';
+
+export * from './src/contracts/env-stub/env-stub-contract';
+export * from './src/contracts/env-stub/env-stub.stub';
+
+export * from './src/contracts/stub-index/stub-index-contract';
+export * from './src/contracts/stub-index/stub-index.stub';
+
+export * from './src/contracts/stub-overlay/stub-overlay-contract';
+export * from './src/contracts/stub-overlay/stub-overlay.stub';
+
+export * from './src/contracts/stub-view/stub-view-contract';
+export * from './src/contracts/stub-view/stub-view.stub';
 
 export * from './src/contracts/external-signature/external-signature-contract';
 export * from './src/contracts/external-signature/external-signature.stub';

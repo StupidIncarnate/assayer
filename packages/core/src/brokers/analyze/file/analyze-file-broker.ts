@@ -1,9 +1,10 @@
 /**
- * PURPOSE: Turns a walked file into its FileAnalysis — projecting the entries, deriving the salient
- *   test cases per entry (one per reachable exit), building the per-line enrichment (each param's
- *   type on the entry line; each branch operand's type + representative value range on the branch
- *   line), and carrying through both of the walk's admissions: the dark spots it could not follow,
- *   and the branching scopes it read perfectly but nothing can drive.
+ * PURPOSE: Turns a walked file into its FileAnalysis — projecting the entries, deriving the full
+ *   input-bucket case set per entry (one case per distinguished input combination, each marked
+ *   `salient` or grayed), building the per-line enrichment (each param's type on the entry line; each
+ *   branch operand's type + representative value range on the branch line), and carrying through both
+ *   of the walk's admissions: the dark spots it could not follow, and the branching scopes it read
+ *   perfectly but nothing can drive.
  *
  *   Both admissions are projected from the WALK, not from the entries above them, because the entries
  *   are where those scopes stop — a private helper is never projected as one, so there is nothing
@@ -25,6 +26,7 @@ import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-fi
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
 import { composePredicatesTransformer } from '../../../transformers/compose-predicates/compose-predicates-transformer';
 import { darkSpotProjectionTransformer } from '../../../transformers/dark-spot-projection/dark-spot-projection-transformer';
+import { declaredTypesProjectionTransformer } from '../../../transformers/declared-types-projection/declared-types-projection-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
 import { followCallsTransformer } from '../../../transformers/follow-calls/follow-calls-transformer';
@@ -35,7 +37,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   const extracted = analysisProjectionTransformer({ walked });
 
   if (!extracted.success) {
-    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [] });
+    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
   }
 
   // A caller's opaque `if (helper(x))` guard is composed with the same-file predicate it calls BEFORE
@@ -57,6 +59,9 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
       // Only a module scope is driven BY importing it, which is when its top-level bindings read the
       // environment. A function is driven by calling it, long after its module ran and froze them.
       envDrivable: fn.entry.access.kind === 'module',
+      // A branchless boolean predicate (`function tooBig(n){ return n > 50 }`) carries its return
+      // comparison here so derive-cases splits its true/false return into two salient cases.
+      ...(fn.predicateSignature === undefined ? {} : { returnPredicate: fn.predicateSignature }),
     }),
   }));
 
@@ -114,5 +119,8 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     // from the guard arithmetic. Both are the repo's debt rather than Assayer's, so both ride the lint
     // channel rather than any of the three admissions.
     lints: [...followed.lints, ...unreachableLints],
+    // The file's locally-declared object shapes, read straight from the walk's enumerated object
+    // descriptors — the full property list later phases splice per-property value demands onto.
+    declaredTypes: declaredTypesProjectionTransformer({ walked }),
   });
 };

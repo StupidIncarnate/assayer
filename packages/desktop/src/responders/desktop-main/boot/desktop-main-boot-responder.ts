@@ -18,6 +18,7 @@ import { electronDesktopBootAdapter } from '../../../adapters/electron/desktop-b
 import { statusResolveBroker } from '../../../brokers/status/resolve/status-resolve-broker';
 import { compiledTreeResolveBroker } from '../../../brokers/compiled-tree/resolve/compiled-tree-resolve-broker';
 import { compiledFileResolveBroker } from '../../../brokers/compiled-file/resolve/compiled-file-resolve-broker';
+import { stubIndexResolveBroker } from '../../../brokers/stub-index/resolve/stub-index-resolve-broker';
 import { repoSourceRootBroker } from '../../../brokers/repo/source-root/repo-source-root-broker';
 import { runExecuteBroker } from '../../../brokers/run/execute/run-execute-broker';
 import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
@@ -32,13 +33,15 @@ export const DesktopMainBootResponder = async ({
     statusChannel: desktopBridgeStatics.channels.status,
     compiledTreeChannel: desktopBridgeStatics.channels.compiledTree,
     compiledFileChannel: desktopBridgeStatics.channels.compiledFile,
+    stubsChannel: desktopBridgeStatics.channels.stubs,
     runChannel: desktopBridgeStatics.channels.run,
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
     runOutputChannel: desktopBridgeStatics.channels.runOutput,
-    resolveStatus: () => statusResolveBroker({ repoPath }),
+    resolveStatus: async () => statusResolveBroker({ repoPath }),
     resolveCompiledTree: async () => compiledTreeResolveBroker({ repoPath }),
     resolveCompiledFile: async ({ relPath }) =>
       compiledFileResolveBroker({ repoPath, relPath: relPathContract.parse(relPath) }),
+    resolveStubs: async () => stubIndexResolveBroker({ repoPath }),
     resolveRun: async ({ relPath, onOutput }) =>
       runExecuteBroker({
         repoPath: String(repoPath),

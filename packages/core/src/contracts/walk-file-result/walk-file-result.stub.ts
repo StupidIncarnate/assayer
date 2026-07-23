@@ -11,5 +11,6 @@ export const WalkFileResultStub = ({ ...props }: StubArgument<WalkFileResult> = 
     probeSites: [],
     moduleEdges: [],
     globalUses: [],
+    envReads: [],
     ...props,
   });

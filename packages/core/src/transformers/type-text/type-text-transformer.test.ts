@@ -28,5 +28,31 @@ describe('typeTextTransformer', () => {
         }),
       ).toBe('"a" | string');
     });
+
+    it('VALID: {type: array of number} => renders "number[]"', () => {
+      expect(typeTextTransformer({ type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }) })).toBe('number[]');
+    });
+
+    it('VALID: {type: named object} => renders the type name', () => {
+      expect(
+        typeTextTransformer({
+          type: TypeDescriptorStub({ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
+        }),
+      ).toBe('Config');
+    });
+
+    it('VALID: {type: anonymous object} => renders the braced property list', () => {
+      expect(
+        typeTextTransformer({
+          type: TypeDescriptorStub({
+            kind: 'object',
+            properties: [
+              { name: 'a', type: { kind: 'string' } },
+              { name: 'b', type: { kind: 'number' } },
+            ],
+          }),
+        }),
+      ).toBe('{ a: string; b: number }');
+    });
   });
 });

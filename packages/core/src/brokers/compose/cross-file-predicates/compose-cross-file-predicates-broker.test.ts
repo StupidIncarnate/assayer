@@ -49,10 +49,12 @@ describe('composeCrossFilePredicatesBroker', () => {
           {
             reachesExit: '*module*/classify/return@if:CallExpression,id:big,id:n#then',
             arrange: [{ kind: 'param', param: 'n', value: 51 }],
+            salient: true,
           },
           {
             reachesExit: '*module*/classify/return@if:CallExpression,id:big,id:n#else',
             arrange: [{ kind: 'param', param: 'n', value: 50 }],
+            salient: true,
           },
         ],
         lints: [],
@@ -61,7 +63,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   });
 
   describe('a caller whose two imported guards contradict', () => {
-    it('VALID: {over(n) > 50 then under(n) > 100} => the middle exit is unreachable and rides an unreachable-exit lint', () => {
+    it('VALID: {over(n) > 50 then under(n) > 100} => the first exit takes two buckets, the middle is unreachable', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE });
       proxy.setupSibling({ fileName: '/repo/src/under.ts', source: UNDER_PREDICATE });
@@ -74,14 +76,24 @@ describe('composeCrossFilePredicatesBroker', () => {
         cases: result.functions.flatMap((fn) => fn.cases),
         lints: result.lints,
       }).toStrictEqual({
+        // `over(n)` returns 'a' before `under` runs, so the first exit is reached by two input buckets:
+        // n=101 (both guards would hold) and n=100 (the off-path bucket where under fails but is never
+        // reached). Same exit, same value, so n=101 is salient and n=100 the grayed breadth twin.
         cases: [
           {
             reachesExit: '*module*/pick/return@if:CallExpression,id:over,id:n#then',
-            arrange: [{ kind: 'param', param: 'n', value: 51 }],
+            arrange: [{ kind: 'param', param: 'n', value: 101 }],
+            salient: true,
+          },
+          {
+            reachesExit: '*module*/pick/return@if:CallExpression,id:over,id:n#then',
+            arrange: [{ kind: 'param', param: 'n', value: 100 }],
+            salient: false,
           },
           {
             reachesExit: '*module*/pick/return@if:CallExpression,id:over,id:n#else/if:CallExpression,id:under,id:n#else',
             arrange: [{ kind: 'param', param: 'n', value: 50 }],
+            salient: true,
           },
         ],
         lints: [

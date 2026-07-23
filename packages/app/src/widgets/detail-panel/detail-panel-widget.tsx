@@ -1,11 +1,18 @@
 /**
  * PURPOSE: The detail-view right panel — three tabs over a file's derived analysis. The Enrichment
  *   tab lists per-line data facts (symbol, type, and the representative value range for branch
- *   operands); the Tests tab lists, per entry, the salient test cases Assayer would generate (arrange
- *   values in, the exit each reaches); the Contracts tab is a DevTools-style inspector of the type
+ *   operands); the Tests tab lists, per entry, the FULL input-bucket set of test cases Assayer would
+ *   generate (arrange values in, the exit each reaches) — every salient case carrying an INTELLIGENT
+ *   badge marking the execution subset; the Contracts tab is a DevTools-style inspector of the type
  *   contracts at the file's edges (below). When a code line is hovered (hoveredLine), the rows whose
  *   coverage runs through that line are highlighted and the rest are dimmed, so the gutter counts
  *   read as "these cases". Pure prop-driven; shows empty prompts when nothing is derived.
+ *
+ *   `runMode` is a display-only lens over that same full set: `intelligent` grays the non-salient
+ *   breadth (each grayed row marked `data-running="false"`) so a reviewer reads only the salient
+ *   subset, while `thorough` — the default, and any runMode the panel is not told — shows every row
+ *   live. It never changes which cases exist or which the run engine executes; the entry title keeps
+ *   the FULL count.
  *
  *   This panel is the SINGLE surface that shows a run error (`runError`), and no other may repeat it.
  *   It owns the error because it is the only one on screen for every failure: `useFileRunBinding`
@@ -63,6 +70,8 @@ import { drivenFunctionsTransformer } from '../../transformers/driven-functions/
 import { resolvedEdgeContractTransformer } from '../../transformers/resolved-edge-contract/resolved-edge-contract-transformer';
 import { undrivenLineTransformer } from '../../transformers/undriven-line/undriven-line-transformer';
 import { runStatusStatics } from '../../statics/run-status/run-status-statics';
+import { runModeStatics } from '../../statics/run-mode/run-mode-statics';
+import type { RunMode } from '../../contracts/status-view/status-view-contract';
 
 export interface DetailPanelWidgetProps {
   analysis: FileAnalysis | undefined;
@@ -72,6 +81,7 @@ export interface DetailPanelWidgetProps {
   runError?: Error | null;
   resolvedEdges?: readonly ResolvedEdge[] | undefined;
   relPath?: RelPath | null;
+  runMode?: RunMode;
   onRun?: () => void;
 }
 
@@ -83,6 +93,7 @@ export const DetailPanelWidget = ({
   runError,
   resolvedEdges,
   relPath,
+  runMode,
   onRun,
 }: DetailPanelWidgetProps): ReactElement => {
   const enrichment = analysis === undefined ? [] : analysis.enrichment;
@@ -280,37 +291,62 @@ export const DetailPanelWidget = ({
                       });
                       const isMatch = active && touched.some((line) => line === hoveredLine);
                       const status = String(caseRunStatusTransformer({ run, testCase }));
+                      // Display-only: under 'intelligent' the non-salient breadth grays out; 'thorough'
+                      // (the default, and any runMode the panel is not told) leaves every row live. This
+                      // never changes what the run engine executes — only how a reviewer reads the set.
+                      const grayed = runMode === 'intelligent' && !testCase.salient;
 
                       return (
-                        <Text
+                        <Group
                           key={`${testCase.reachesExit}#${arrangeTextTransformer({ arrange: testCase.arrange })}`}
-                          data-testid="TEST_CASE_ROW"
-                          data-match={isMatch ? 'true' : 'false'}
-                          data-status={status}
-                          ff="monospace"
-                          fz="xs"
-                          c={active && !isMatch ? 'dark.3' : 'gray.4'}
-                          style={{
-                            backgroundColor: isMatch ? 'var(--mantine-color-blue-9)' : undefined,
-                            borderRadius: 2,
-                            paddingInline: 4,
-                          }}
+                          gap={6}
+                          wrap="nowrap"
+                          align="baseline"
                         >
                           <Text
-                            span
-                            data-testid="CASE_STATUS"
+                            data-testid="TEST_CASE_ROW"
+                            data-match={isMatch ? 'true' : 'false'}
+                            data-status={status}
+                            data-running={grayed ? 'false' : 'true'}
+                            ff="monospace"
                             fz="xs"
-                            fw={600}
-                            c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
+                            c={grayed || (active && !isMatch) ? 'dark.3' : 'gray.4'}
+                            style={{
+                              backgroundColor: !grayed && isMatch ? 'var(--mantine-color-blue-9)' : undefined,
+                              borderRadius: 2,
+                              paddingInline: 4,
+                            }}
                           >
-                            {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
+                            <Text
+                              span
+                              data-testid="CASE_STATUS"
+                              fz="xs"
+                              fw={600}
+                              c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
+                            >
+                              {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
+                            </Text>
+                            {isModule
+                              ? `${entryLabel} → reaches L${exit?.line ?? '?'}`
+                              : `${entryLabel}(${arrangeTextTransformer({
+                                  arrange: testCase.arrange,
+                                })}) → reaches L${exit?.line ?? '?'}`}
                           </Text>
-                          {isModule
-                            ? `${entryLabel} → reaches L${exit?.line ?? '?'}`
-                            : `${entryLabel}(${arrangeTextTransformer({
-                                arrange: testCase.arrange,
-                              })}) → reaches L${exit?.line ?? '?'}`}
-                        </Text>
+                          {/* The salient (must-run) marker — its own inline span like CASE_STATUS, but a
+                              SIBLING of the row so it never enters the row's asserted text. It rides every
+                              salient row regardless of runMode; a non-salient row shows none. */}
+                          {testCase.salient ? (
+                            <Text
+                              span
+                              data-testid="INTELLIGENT_BADGE"
+                              fz="xs"
+                              fw={600}
+                              c={runModeStatics.colour.intelligent}
+                            >
+                              {runModeStatics.marker.intelligent}
+                            </Text>
+                          ) : null}
+                        </Group>
                       );
                     })}
                     </Stack>

@@ -11,6 +11,8 @@ declare global {
       getStatus?: () => Promise<unknown>;
       getCompiledTree?: () => Promise<unknown>;
       getCompiledFile?: (params: { relPath: string }) => Promise<unknown>;
+      // The merged stub view (derived stub index + committed overlay) the /stubs view renders.
+      getStubs?: () => Promise<unknown>;
       // Separate all the way across the bridge: reading what a file's last run said must never be
       // able to start one.
       runFile?: (params: { relPath: string }) => Promise<unknown>;

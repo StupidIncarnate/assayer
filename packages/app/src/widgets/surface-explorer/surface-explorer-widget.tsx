@@ -30,6 +30,7 @@ import type { CompiledFileView, LineNumber, RelPath } from '@assayer/shared/cont
 
 import { useCompiledTreeBinding } from '../../bindings/use-compiled-tree/use-compiled-tree-binding';
 import { useFileRunBinding } from '../../bindings/use-file-run/use-file-run-binding';
+import { useAssayerStatusBinding } from '../../bindings/use-assayer-status/use-assayer-status-binding';
 import { compiledFileFetchBroker } from '../../brokers/compiled-file/fetch/compiled-file-fetch-broker';
 import { ExplorerHeaderWidget } from '../explorer-header/explorer-header-widget';
 import { FileTreeWidget } from '../file-tree/file-tree-widget';
@@ -45,6 +46,10 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   // `treeError`, not `error`: this widget is within reach of three unrelated failures — the tree
   // fetch, a file load, and a run — and only the first one belongs to it.
   const { data: tree, loading, error: treeError } = useCompiledTreeBinding();
+  // The repo's display-only runMode rides the status handshake (config is not on the serve path). It
+  // decides only whether the detail panel grays the non-salient breadth; a not-yet-answered status
+  // reads as `thorough`, so every case shows live until told otherwise.
+  const { data: status } = useAssayerStatusBinding();
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
   const [selectedRelPath, setSelectedRelPath] = useState<RelPath | null>(null);
   const [hoveredLine, setHoveredLine] = useState<LineNumber | null>(null);
@@ -71,7 +76,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
     <Box
       data-testid="SURFACE_EXPLORER"
       bg="dark.8"
-      style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
     >
       {/* A failure is settled BEFORE `loading` is read: the binding fetches once and never retries, so
           an error is the final word on this tree — and the binding lowers `loading` one microtask after
@@ -157,6 +162,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                       run={fileRun.run}
                       running={fileRun.running}
                       runError={fileRun.error}
+                      {...(status?.runMode === undefined ? {} : { runMode: status.runMode })}
                       onRun={handleRun}
                     />
                   </Flex>

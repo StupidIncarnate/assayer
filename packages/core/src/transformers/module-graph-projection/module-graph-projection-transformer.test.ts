@@ -16,6 +16,7 @@ describe('moduleGraphProjectionTransformer', () => {
         edges: [{ kind: 'import', specifier: './other', bindings: [{ kind: 'named', name: 'foo' }], line: 1, column: 1 }],
         references: [],
         globalUses: [],
+        envReads: [],
       });
     });
   });
@@ -38,6 +39,31 @@ describe('moduleGraphProjectionTransformer', () => {
         globalUses: [
           { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 2, column: 3 },
           { name: 'process', member: 'env', called: false, args: [], line: 4, column: 5 },
+        ],
+        envReads: [],
+      });
+    });
+  });
+
+  describe('env reads', () => {
+    it('VALID: {walked with repeated env reads} => deduped by (property, literals), first kept', () => {
+      const walked = WalkFileResultStub({
+        envReads: [
+          { property: 'MODE', literals: ['production'] },
+          { property: 'CODE', literals: [] },
+          { property: 'MODE', literals: ['production'] },
+        ],
+      });
+
+      const result = moduleGraphProjectionTransformer({ walked });
+
+      expect(result).toStrictEqual({
+        edges: [],
+        references: [],
+        globalUses: [],
+        envReads: [
+          { property: 'MODE', literals: ['production'] },
+          { property: 'CODE', literals: [] },
         ],
       });
     });
@@ -67,6 +93,7 @@ describe('moduleGraphProjectionTransformer', () => {
           { specifier: './y', importedName: 'bar', line: 8, column: 3 },
         ],
         globalUses: [],
+        envReads: [],
       });
     });
 
@@ -90,6 +117,7 @@ describe('moduleGraphProjectionTransformer', () => {
         edges: [],
         references: [{ specifier: './y', importedName: 'foo', line: 3, column: 3 }],
         globalUses: [],
+        envReads: [],
       });
     });
 
@@ -107,7 +135,7 @@ describe('moduleGraphProjectionTransformer', () => {
 
       const result = moduleGraphProjectionTransformer({ walked });
 
-      expect(result).toStrictEqual({ edges: [], references: [], globalUses: [] });
+      expect(result).toStrictEqual({ edges: [], references: [], globalUses: [], envReads: [] });
     });
   });
 
@@ -120,7 +148,7 @@ describe('moduleGraphProjectionTransformer', () => {
 
       const result = moduleGraphProjectionTransformer({ walked });
 
-      expect(result).toStrictEqual({ edges: [], references: [], globalUses: [] });
+      expect(result).toStrictEqual({ edges: [], references: [], globalUses: [], envReads: [] });
     });
   });
 

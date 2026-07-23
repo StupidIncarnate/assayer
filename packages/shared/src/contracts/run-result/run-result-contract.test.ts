@@ -18,6 +18,7 @@ describe('runResultContract', () => {
                 { kind: 'param', param: 'score', value: 6 },
                 { kind: 'param', param: 'bonus', value: 2 },
               ],
+              salient: true,
             },
             status: 'passed',
             observedExit: 'grade/return@then',
@@ -80,7 +81,7 @@ describe('runResultContract', () => {
         cases: [
           {
             entryName: 'grade',
-            testCase: { reachesExit: 'grade/return@then', arrange: [] },
+            testCase: { reachesExit: 'grade/return@then', arrange: [], salient: true },
             status: 'failed',
             trace: [],
             message: 'reached no exit in grade',
@@ -91,7 +92,7 @@ describe('runResultContract', () => {
       expect(run.cases).toStrictEqual([
         {
           entryName: 'grade',
-          testCase: { reachesExit: 'grade/return@then', arrange: [] },
+          testCase: { reachesExit: 'grade/return@then', arrange: [], salient: true },
           status: 'failed',
           trace: [],
           message: 'reached no exit in grade',

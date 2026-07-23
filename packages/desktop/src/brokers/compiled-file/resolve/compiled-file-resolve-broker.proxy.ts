@@ -1,6 +1,11 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { composeCrossFilePredicatesBroker } from '@assayer/core/brokers';
-import { composeCrossFilePredicatesBrokerProxy, tsMorphWalkFileAdapterProxy } from '@assayer/core/testing';
+import { composeCrossFilePredicatesBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
+import {
+  composeCrossFilePredicatesBrokerProxy,
+  stubRealizeBrokerProxy,
+  stubOverlayLoadBrokerProxy,
+  tsMorphWalkFileAdapterProxy,
+} from '@assayer/core/testing';
 
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
 import { cacheLoadBlobBrokerProxy } from '../../cache/load-blob/cache-load-blob-broker.proxy';
@@ -39,6 +44,15 @@ export const compiledFileResolveBrokerProxy = (): {
   // Default: a same-reference pass-through, so a file with no imported-predicate guard serves its
   // persisted analysis untouched.
   composeHandle.mockImplementation(({ analysis }) => analysis);
+  // The object-arrange overlay is mocked at the same seam for the same reason: driving an object-member
+  // branch reaches for the type definition + the committed overlay on disk. Its child proxy satisfies
+  // structure; the direct registerMock is the intercept, a same-reference pass-through by default.
+  stubRealizeBrokerProxy();
+  stubOverlayLoadBrokerProxy();
+  const stubRealizeHandle = registerMock({ fn: stubRealizeBroker });
+  stubRealizeHandle.mockImplementation(({ analysis }) => analysis);
+  const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
+  overlayLoadHandle.mockResolvedValue([]);
 
   // The { root, relPath } the broker hands the overlay, captured off the real call so a test can
   // prove the SOURCE root (not the config dir) is threaded.

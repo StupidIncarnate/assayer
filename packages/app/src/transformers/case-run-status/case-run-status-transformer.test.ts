@@ -1,4 +1,4 @@
-import { RunResultStub, CaseResultStub } from '@assayer/shared/contracts';
+import { RunResultStub, CaseResultStub, DerivedTestCaseStub } from '@assayer/shared/contracts';
 
 import { caseRunStatusTransformer } from './case-run-status-transformer';
 
@@ -18,6 +18,16 @@ describe('caseRunStatusTransformer', () => {
       const result = caseRunStatusTransformer({ run, testCase: CaseResultStub().testCase });
 
       expect(String(result)).toBe('failed');
+    });
+
+    // salient is a must-run display opinion, not identity: an all-salient blob still matches a run
+    // whose case carries the same exit and arrange, so a query differing ONLY in salient resolves.
+    it('VALID: {run case salient, query not-salient, same exit+arrange} => matches, ignoring salient', () => {
+      const run = RunResultStub({ cases: [CaseResultStub({ testCase: DerivedTestCaseStub({ salient: true }) })] });
+
+      const result = caseRunStatusTransformer({ run, testCase: DerivedTestCaseStub({ salient: false }) });
+
+      expect(String(result)).toBe('passed');
     });
   });
 

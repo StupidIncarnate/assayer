@@ -24,6 +24,7 @@ export const electronPreloadBridgeAdapterProxy = (): {
   mainFails: ({ message }: { message: string }) => void;
   triggerGetCompiledTree: () => Promise<void>;
   triggerGetCompiledFile: ({ relPath }: { relPath: string }) => Promise<void>;
+  triggerGetMergedView: () => Promise<void>;
   triggerRunFile: ({ relPath }: { relPath: string }) => Promise<unknown>;
   triggerGetSavedRun: ({ relPath }: { relPath: string }) => Promise<void>;
   triggerOnRunOutput: () => void;
@@ -72,6 +73,9 @@ export const electronPreloadBridgeAdapterProxy = (): {
     },
     triggerGetCompiledFile: async ({ relPath }: { relPath: string }): Promise<void> => {
       await getApi()?.getCompiledFile?.({ relPath });
+    },
+    triggerGetMergedView: async (): Promise<void> => {
+      await getApi()?.getStubs?.();
     },
     // Hands back what the bridge answered (and rejects with what it threw), because for run the
     // ANSWER is the thing under test: a failed run's message is product surface, not a side effect.

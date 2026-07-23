@@ -77,6 +77,33 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/function/function.ts`]: ['access:named'],
   [`${CATALOGUE}/happy-path/class/class.ts`]: ['access:method'],
 
+  // Type-reading rungs — branchless functions whose whole point is the PARAM shape the walk reads.
+  //   - `element-length` takes `number[]`: the walk reads the ARRAY's element type structurally rather
+  //     than dropping it into an opaque `unknown`. `param:array` gates that check. Branchless and DRIVEN
+  //     with one case; no object shape, so no declaredTypes.
+  //   - `local-shape` takes a locally-declared `interface Config`: the walk ENUMERATES the same-file
+  //     object type's full property list (§5.10 — only local declarations resolve in the hermetic walk),
+  //     and it is projected into the file's `declaredTypes`. `param:object` gates that. Branchless and
+  //     DRIVEN with one case.
+  [`${CATALOGUE}/happy-path/array/element-length/element-length.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/object/local-shape/local-shape.ts`]: ['access:named', 'param:object'],
+
+  // Object-member branches, DRIVEN at consume time by stub-realize: it arranges the object param from the
+  // merged stub view (derived per-property demands + the committed `assayer/stubs/` overlay), so each arm
+  // becomes a driven case and the per-file `undriven` admission drops — a clean run, hence happy-path.
+  // These DRIVE via stub-realize; they still capture the operand:property fact the stub view keys on.
+  //   - `branch-local` declares `Config` and reads `config.mode` in one file (`param:object`), and a
+  //     committed correction (`assayer/stubs/.../Config.json`) proves a human value flows into a real case.
+  //   - `cross-file-shape` (ROOT) + `reader-b` each import `Config` (`callee:import-local`) and guard on a
+  //     member of it; stub-realize resolves the import and reads the shape off `types.ts` to arrange the
+  //     unknown-in-the-hermetic-walk param. No `param:object` — the imported param types as `unknown`.
+  //   - `types.ts` (CHILD) declares the interface and a branchless `withDefaults(config: Config)` that
+  //     enumerates its full shape (`param:object`) — the definition stub-realize reads, not a reader.
+  [`${CATALOGUE}/happy-path/object/branch-local/branch-local.ts`]: ['access:named', 'branch:if', 'operand:property', 'param:object'],
+  [`${CATALOGUE}/happy-path/object/cross-file-shape/cross-file-shape.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property'],
+  [`${CATALOGUE}/happy-path/object/cross-file-shape/reader-b.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property'],
+  [`${CATALOGUE}/happy-path/object/cross-file-shape/types.ts`]: ['access:named', 'param:object'],
+
   // The cross-file example rungs — one per classification the resolver must make, so the catalogue
   // proves each import shape has a specimen. Analyzed single-file here (the stitch that resolves them
   // to definitions is exercised by the resolve-graph harnesses); the trait names WHICH shape.
@@ -166,7 +193,9 @@ const DECLARATIONS = {
 
   // A dark spot: no loop handler exists yet, so the for-of is ADMITTED rather than skipped. This is the
   // RATCHET that migrates buckets — the day a loop handler lands it runs clean and moves to happy-path.
-  [`${CATALOGUE}/sad-path/loop/in-function/in-function.ts`]: ['access:named', 'darkspot:ForOfStatement'],
+  // `sumAll(items: number[])` also owes `param:array`: the walk reads its array element type whether or
+  // not it can follow the loop that consumes it.
+  [`${CATALOGUE}/sad-path/loop/in-function/in-function.ts`]: ['access:named', 'param:array', 'darkspot:ForOfStatement'],
 
   // A ternary in ARGUMENT position (`return label(n > 5 ? 'big' : 'small')`). v1 value-flow reaches only
   // the adjacent `const`+`return` tail, so a ternary consumed by a call arg has no exit to split and
@@ -205,6 +234,24 @@ const DECLARATIONS = {
   // no entry of its own — the file's one entry is the named export.
   [`${CATALOGUE}/sad-path/undriven/opaque-if/opaque-if.ts`]: ['access:named', 'branch:if', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/opaque-ternary/opaque-ternary.ts`]: ['access:named', 'branch:ternary', 'undriven'],
+
+  // ENV-as-OBJECT: `process.env` is an object, and its properties feed the stub stitch REGARDLESS of
+  // drivability. `multi-read` reads two: `CODE` via `Number(process.env.CODE)` in a switch (DRIVEN, one
+  // env case per arm, `operand:env`), and `MODE` via a bare `process.env.MODE === 'production'` compare
+  // (UNDRIVEN — it types as `any` in the hermetic walk, §5.10). The bare compare is the `env:property`
+  // capture: its literal is a real stub demand even though no case can steer the arm. So the file drives
+  // the switch clean but ADMITS the `if` undriven — an unclean run, hence sad-path. The env stubs it
+  // contributes (`process.env#CODE` → guessed `[1,2,7]`, `process.env#MODE` → `['abc123','production']`)
+  // are asserted in `compile-stub-graph-broker.integration.test.ts`, independent of this run verdict.
+  [`${CATALOGUE}/sad-path/env-object/multi-read/multi-read.ts`]: [
+    'access:module',
+    'branch:if',
+    'branch:switch',
+    'callee:node-global',
+    'env:property',
+    'operand:env',
+    'undriven',
+  ],
 
   // UNREACHABLE — guards that contradict, whose finding is a BUILD ERROR (an unreachable-exit lint)
   // rather than a case. An exit behind guards that cannot all hold is dead in the source, so no input

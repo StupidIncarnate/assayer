@@ -18,6 +18,7 @@ describe('npm-package / uses-package — a call into a function imported from a 
       edges: [{ kind: 'import', specifier: 'vendored-fixture', bindings: [{ kind: 'named', name: 'greet' }], line: 1, column: 1 }],
       references: [{ specifier: 'vendored-fixture', importedName: 'greet', line: 3, column: 22 }],
       globalUses: [],
+      envReads: [],
     });
   });
 
@@ -39,7 +40,7 @@ describe('npm-package / uses-package — a call into a function imported from a 
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

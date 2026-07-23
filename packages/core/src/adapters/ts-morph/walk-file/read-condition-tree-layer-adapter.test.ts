@@ -86,6 +86,42 @@ describe('readConditionTreeLayerAdapter', () => {
     });
   });
 
+  describe('object-member operand', () => {
+    it('VALID: {config.mode === "a"} => a leaf naming the root param, its property path, and root type-ref', () => {
+      readConditionTreeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'interface Config { mode: string }\nexport function decide(config: Config): string {\n  if (config.mode === "a") { return "x"; }\n  return "y";\n}\n',
+      );
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionTreeLayerAdapter({
+        condition,
+        context: WalkContextStub({
+          scopePath: ['decide'],
+          guardPath: [],
+          params: [{ name: 'config', type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] } }],
+          exported: true,
+        }),
+        branchCoverageId: BRANCH,
+        path: [],
+      });
+
+      // The operand's OWN type is the property type `string` read off the access node — never the whole
+      // `Config` object descriptor the root param carries.
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+    });
+  });
+
   describe('connectives', () => {
     it('VALID: {score > 5 && bonus > 1} => an and over two independently typed leaves', () => {
       readConditionTreeLayerAdapterProxy();

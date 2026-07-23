@@ -1,3 +1,5 @@
+import { registerMock } from '@dungeonmaster/testing/register-mock';
+
 import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
 import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
@@ -7,6 +9,9 @@ import { jestRunCliAdapterProxy } from '../../../adapters/jest/run-cli/jest-run-
 import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import { composeCrossFilePredicatesBrokerProxy } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
+import { stubRealizeBrokerProxy } from '../../stub/realize/stub-realize-broker.proxy';
+import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
+import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
 
 export const runUnitBrokerProxy = (): {
   setupSavedRun: ({ run }: { run: unknown }) => void;
@@ -20,6 +25,13 @@ export const runUnitBrokerProxy = (): {
   tsMorphWalkFileAdapterProxy();
   analyzeFileBrokerProxy();
   composeCrossFilePredicatesBrokerProxy();
+  stubRealizeBrokerProxy();
+  // The overlay load is mocked wholesale to an EMPTY overlay: reading committed corrections off disk is
+  // I/O a unit test does not stage, so stub-realize sees no correction and its object-arrange overlay is
+  // a same-reference no-op. The child proxy satisfies structure; the direct registerMock is the intercept.
+  stubOverlayLoadBrokerProxy();
+  const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
+  overlayLoadHandle.mockResolvedValue([]);
 
   const runner = jestRunCliAdapterProxy();
   const exists = fsExistsAdapterProxy();

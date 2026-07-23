@@ -21,11 +21,11 @@ describe('switch / pure-statement — a bare top-level switch DRIVEN by the envi
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesExit: CASE_1_EXIT, arrange: [{ kind: 'env', name: 'CODE', value: '1' }] },
-      { reachesExit: CASE_2_EXIT, arrange: [{ kind: 'env', name: 'CODE', value: '2' }] },
+      { reachesExit: CASE_1_EXIT, arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
+      { reachesExit: CASE_2_EXIT, arrange: [{ kind: 'env', name: 'CODE', value: '2' }], salient: true },
       // The default is reached when CODE is neither 1 nor 2 — including unset, which is `Number(undefined)`
       // = NaN, matching no case. So it needs no binding of its own.
-      { reachesExit: DEFAULT_EXIT, arrange: [] },
+      { reachesExit: DEFAULT_EXIT, arrange: [], salient: true },
     ]);
   });
 

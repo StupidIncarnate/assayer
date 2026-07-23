@@ -188,7 +188,16 @@ loss and travels with branches," nothing more.
    artifacts like everything derived.)*
 8. **Repo-local plugins** (`.assayer/plugins/`) — custom probes/rules/adapters
    the LLM authored for this repo (R15 contract, not published as packages).
-9. **The `.gitignore` entry** for `.assayer/cache/` (written by init).
+9. **Stub corrections** (`assayer/stubs/` folder) — human overrides of the
+   DERIVED stub index (`cache/stubs/`): per object type
+   (`objects/<definitionRelPath>/<TypeName>.json`) or env property
+   (`env/<PROPERTY>.json`), the corrected values that REPLACE the guessed/derived
+   demand. Keyed by the stub's stable identity carried in the file PATH, never a
+   map-node ID. Combined with the derived stub at read time and NEVER persisted
+   merged; the overlay is in no cache hash, so editing it never invalidates the
+   derived index. A correction whose type/property no longer exists is a P1
+   "rectify this stub" build error (the `errors[]` channel, exit 1).
+10. **The `.gitignore` entry** for `.assayer/cache/` (written by init).
 
 ### Generated into `.assayer/cache/` (gitignored, disposable, rebuilt on demand)
 
@@ -225,6 +234,13 @@ loss and travels with branches," nothing more.
    (`{ params, returnType }`), read once through the second, node_modules-aware
    project and keyed on the `.d.ts` byte content (machine-independent, not the
    version string), reused by every importer.
+9. **Stub index** (`cache/stubs/<namespace>.json`) — the DERIVED per-namespace
+   stub repository: each stubbed object TYPE (its full property list spliced with
+   per-property value demands, plus its readers) and each `process.env` property
+   (guessed values + readers). A twin of the resolved index, keyed on repo layout
+   + tsconfig hash, rebuilt when the file set or tsconfig changes. The committed
+   `assayer/stubs/` overlay combines with it at read time; the overlay is in no
+   hash, so an overlay edit never invalidates this index.
 
 **Pipeline note (D15):** CI may persist/restore `cache/` between runs purely as
 an accelerator; a cold cache reproduces byte-identical artifacts (D13

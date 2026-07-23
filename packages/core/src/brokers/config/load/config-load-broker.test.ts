@@ -11,7 +11,7 @@ describe('configLoadBroker', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        data: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error' },
+        data: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', runMode: 'thorough' },
       });
     });
   });

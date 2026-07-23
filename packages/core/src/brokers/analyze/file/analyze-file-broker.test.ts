@@ -25,8 +25,8 @@ describe('analyzeFileBroker', () => {
       const result = analyzeFileBroker({ walked });
 
       expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-        { reachesExit: `${GREETING_BRANCH.replace('/if:', '/return@if:')}#then`, arrange: [{ kind: 'param', param: 'name', value: '' }] },
-        { reachesExit: `${GREETING_BRANCH.replace('/if:', '/return@if:')}#else`, arrange: [{ kind: 'param', param: 'name', value: 'a' }] },
+        { reachesExit: `${GREETING_BRANCH.replace('/if:', '/return@if:')}#then`, arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
+        { reachesExit: `${GREETING_BRANCH.replace('/if:', '/return@if:')}#else`, arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
       ]);
     });
 
@@ -118,6 +118,7 @@ describe('analyzeFileBroker', () => {
         darkSpots: [],
         undriven: [{ name: '*module*', reason: MODULE_UNDRIVEN_REASON, startLine: 1, endLine: 8 }],
         lints: [],
+        declaredTypes: [],
       });
     });
 
@@ -239,10 +240,12 @@ describe('analyzeFileBroker', () => {
             {
               reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#then',
               arrange: [{ kind: 'param', param: 'x', value: 51 }],
+              salient: true,
             },
             {
               reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#else',
               arrange: [{ kind: 'param', param: 'x', value: 50 }],
+              salient: true,
             },
           ],
         },
@@ -289,7 +292,7 @@ describe('analyzeFileBroker', () => {
 
       const result = analyzeFileBroker({ walked });
 
-      expect(result).toStrictEqual({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [] });
+      expect(result).toStrictEqual({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
     });
   });
 });

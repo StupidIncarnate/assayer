@@ -28,8 +28,10 @@ describe('boolean / mixed — nested connectives inside an exported function', (
           { kind: 'param', param: 'level', value: 4 },
           { kind: 'param', param: 'owner', value: false },
         ],
+        salient: true,
       },
-      // admin holds, 3 > 3 fails, so `owner` decides.
+      // admin holds, 3 > 3 fails, so `owner` decides. Same then exit as the first case, so it is the
+      // grayed breadth twin.
       {
         reachesExit: THEN,
         arrange: [
@@ -37,6 +39,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
           { kind: 'param', param: 'level', value: 3 },
           { kind: 'param', param: 'owner', value: true },
         ],
+        salient: false,
       },
       // admin fails — the ENTIRE parenthesized disjunction never evaluates, so neither operand is
       // constrained.
@@ -47,8 +50,10 @@ describe('boolean / mixed — nested connectives inside an exported function', (
           { kind: 'param', param: 'level', value: 7 },
           { kind: 'param', param: 'owner', value: false },
         ],
+        salient: true,
       },
-      // admin holds, and both disjuncts fail.
+      // admin holds, and both disjuncts fail. Same else exit as the third case, so it is the grayed
+      // breadth twin.
       {
         reachesExit: ELSE,
         arrange: [
@@ -56,6 +61,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
           { kind: 'param', param: 'level', value: 3 },
           { kind: 'param', param: 'owner', value: false },
         ],
+        salient: false,
       },
     ]);
   });

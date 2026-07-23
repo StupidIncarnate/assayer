@@ -39,6 +39,8 @@ import { caseSetProjectionTransformer } from '../../../transformers/case-set-pro
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { composeCrossFilePredicatesBroker } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker';
+import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
+import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 
 export const runUnitBroker = async ({
   cacheDir,
@@ -64,11 +66,21 @@ export const runUnitBroker = async ({
   // time, against the sibling on disk — the same-file compose inside `analyzeFileBroker` refuses
   // imports because the per-file blob never reads another file. Applied before the case set is
   // projected, so the runnable cases and any unreachable-exit lint reflect the composed guard.
-  const analysis = composeCrossFilePredicatesBroker({
+  const composed = composeCrossFilePredicatesBroker({
     analysis: analyzeFileBroker({ walked, relPath }),
     walked,
     root: repoRoot,
     relPath,
+  });
+  // Then the object-arrange overlay: an `if (config.mode === 'a')` the per-file walk admitted UNDRIVEN
+  // is DRIVEN here from the merged stub view — the derived per-property demands combined with the
+  // committed `assayer/stubs/` overlay, read fresh per run and NEVER persisted (the twin of compose).
+  const analysis = stubRealizeBroker({
+    analysis: composed,
+    walked,
+    root: repoRoot,
+    relPath,
+    overlays: await stubOverlayLoadBroker({ repoRoot }),
   });
   const contentHash = cryptoSha256Adapter({ content: source });
 

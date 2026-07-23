@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Wraps the Electron main-process boot sequence — registers the status, compiled-tree,
- *   compiled-file, run and saved-run IPC handlers, waits for app-ready, opens the BrowserWindow
+ *   compiled-file, stubs, run and saved-run IPC handlers, waits for app-ready, opens the BrowserWindow
  *   (with the preload + renderer URL it resolves), and wires quit-on-all-closed. The single Electron
  *   main-process I/O boundary.
  *
@@ -9,11 +9,13 @@
  *   statusChannel: 'assayer:status',
  *   compiledTreeChannel: 'assayer:compiled-tree',
  *   compiledFileChannel: 'assayer:compiled-file',
+ *   stubsChannel: 'assayer:stubs',
  *   runChannel: 'assayer:run',
  *   savedRunChannel: 'assayer:saved-run',
  *   resolveStatus,
  *   resolveCompiledTree,
  *   resolveCompiledFile,
+ *   resolveStubs,
  *   resolveRun,
  *   resolveSavedRun,
  * });
@@ -24,7 +26,7 @@ import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
-import type { CompiledTree, CompiledFileView, RunResult } from '@assayer/shared/contracts';
+import type { CompiledTree, CompiledFileView, RunResult, StubView } from '@assayer/shared/contracts';
 
 import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
@@ -33,24 +35,28 @@ export const electronDesktopBootAdapter = async ({
   statusChannel,
   compiledTreeChannel,
   compiledFileChannel,
+  stubsChannel,
   runChannel,
   savedRunChannel,
   runOutputChannel,
   resolveStatus,
   resolveCompiledTree,
   resolveCompiledFile,
+  resolveStubs,
   resolveRun,
   resolveSavedRun,
 }: {
   statusChannel: string;
   compiledTreeChannel: string;
   compiledFileChannel: string;
+  stubsChannel: string;
   runChannel: string;
   savedRunChannel: string;
   runOutputChannel: string;
-  resolveStatus: () => DesktopStatus;
+  resolveStatus: () => DesktopStatus | Promise<DesktopStatus>;
   resolveCompiledTree: () => Promise<CompiledTree>;
   resolveCompiledFile: (params: { relPath: unknown }) => Promise<CompiledFileView>;
+  resolveStubs: () => Promise<StubView>;
   resolveRun: (params: {
     relPath: unknown;
     onOutput: (params: { chunk: string }) => void;
@@ -75,6 +81,7 @@ export const electronDesktopBootAdapter = async ({
   ipcMain.handle(compiledFileChannel, async (_event: unknown, relPath: unknown) =>
     ipcReplyTransformer({ resolve: async () => resolveCompiledFile({ relPath }) }),
   );
+  ipcMain.handle(stubsChannel, async () => ipcReplyTransformer({ resolve: async () => resolveStubs() }));
   // The run's console output goes back to the SENDER, not to a captured window handle: the reply
   // belongs to whoever asked for the run, and a captured handle would keep writing into a window
   // that may already be gone.

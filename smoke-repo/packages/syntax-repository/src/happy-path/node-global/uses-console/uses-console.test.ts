@@ -19,6 +19,7 @@ describe('node-global / uses-console — an ambient console.log call the file ne
       edges: [],
       references: [],
       globalUses: [{ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 3, column: 1 }],
+      envReads: [],
     });
   });
 
@@ -40,7 +41,7 @@ describe('node-global / uses-console — an ambient console.log call the file ne
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

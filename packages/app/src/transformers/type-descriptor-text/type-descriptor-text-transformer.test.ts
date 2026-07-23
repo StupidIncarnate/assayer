@@ -53,6 +53,38 @@ describe('typeDescriptorTextTransformer', () => {
     });
   });
 
+  describe('array types', () => {
+    it('VALID: {array of string} => renders "string[]"', () => {
+      const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'array', element: { kind: 'string' } }) });
+
+      expect(String(result)).toBe('string[]');
+    });
+  });
+
+  describe('object types', () => {
+    it('VALID: {named object} => renders the type name', () => {
+      const result = typeDescriptorTextTransformer({
+        type: TypeDescriptorStub({ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
+      });
+
+      expect(String(result)).toBe('Config');
+    });
+
+    it('VALID: {anonymous object} => renders the braced property list', () => {
+      const result = typeDescriptorTextTransformer({
+        type: TypeDescriptorStub({
+          kind: 'object',
+          properties: [
+            { name: 'a', type: { kind: 'string' } },
+            { name: 'b', type: { kind: 'number' } },
+          ],
+        }),
+      });
+
+      expect(String(result)).toBe('{ a: string; b: number }');
+    });
+  });
+
   describe('opaque types', () => {
     it('VALID: {kind: unknown, text: "Date"} => renders the carried type text', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Date' }) });

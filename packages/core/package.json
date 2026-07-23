@@ -21,6 +21,12 @@
       "require": "./dist/contracts.js",
       "types": "./dist/contracts.d.ts"
     },
+    "./transformers": {
+      "source": "./transformers.ts",
+      "import": "./dist/transformers.js",
+      "require": "./dist/transformers.js",
+      "types": "./dist/transformers.d.ts"
+    },
     "./testing": {
       "source": "./testing.ts",
       "import": "./dist/testing.js",

@@ -28,6 +28,44 @@ describe('typeDescriptorContract', () => {
         ],
       });
     });
+
+    it('VALID: {kind: "array", element} => parses the element descriptor', () => {
+      const result = typeDescriptorContract.parse({ kind: 'array', element: { kind: 'number' } });
+
+      expect(result).toStrictEqual({ kind: 'array', element: { kind: 'number' } });
+    });
+
+    it('VALID: {kind: "object", typeName, properties} => parses the named property list', () => {
+      const result = typeDescriptorContract.parse({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [
+          { name: 'mode', type: { kind: 'string' } },
+          { name: 'retries', type: { kind: 'number' } },
+        ],
+      });
+
+      expect(result).toStrictEqual({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [
+          { name: 'mode', type: { kind: 'string' } },
+          { name: 'retries', type: { kind: 'number' } },
+        ],
+      });
+    });
+
+    it('VALID: {kind: "object", no typeName} => parses a keyless anonymous object', () => {
+      const result = typeDescriptorContract.parse({
+        kind: 'object',
+        properties: [{ name: 'a', type: { kind: 'string' } }],
+      });
+
+      expect(result).toStrictEqual({
+        kind: 'object',
+        properties: [{ name: 'a', type: { kind: 'string' } }],
+      });
+    });
   });
 
   describe('invalid type descriptors', () => {

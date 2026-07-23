@@ -26,6 +26,7 @@ export const desktopBridgeStatics = {
     status: 'assayer:status',
     compiledTree: 'assayer:compiled-tree',
     compiledFile: 'assayer:compiled-file',
+    stubs: 'assayer:stubs',
     run: 'assayer:run',
     savedRun: 'assayer:saved-run',
     runOutput: 'assayer:run-output',

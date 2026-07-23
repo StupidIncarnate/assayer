@@ -71,7 +71,7 @@ describe('StableBranchLayerResponder', () => {
       });
 
       expect(proxy.getSavedConfigJson()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"develop","darkSpots":"warn","deadSurface":"error"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"develop","darkSpots":"warn","deadSurface":"error","runMode":"thorough"}',
       );
       expect(result).toStrictEqual({
         version: '1',
@@ -80,6 +80,7 @@ describe('StableBranchLayerResponder', () => {
         stableBranch: 'develop',
         darkSpots: 'warn',
         deadSurface: 'error',
+        runMode: 'thorough',
       });
     });
   });
@@ -98,7 +99,7 @@ describe('StableBranchLayerResponder', () => {
       });
 
       expect(proxy.getSavedConfigJson()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","runMode":"thorough"}',
       );
       expect(proxy.pickerCallCount()).toBe(0);
       expect(result).toStrictEqual({
@@ -108,6 +109,7 @@ describe('StableBranchLayerResponder', () => {
         stableBranch: 'main',
         darkSpots: 'warn',
         deadSurface: 'error',
+        runMode: 'thorough',
       });
     });
   });
@@ -129,7 +131,7 @@ describe('StableBranchLayerResponder', () => {
       expect(proxy.pickerCallCount()).toBe(0);
       expect(proxy.promptWritten()).toBe(false);
       expect(proxy.getSavedConfigJson()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","runMode":"thorough"}',
       );
       expect(result).toStrictEqual({
         version: '1',
@@ -138,6 +140,7 @@ describe('StableBranchLayerResponder', () => {
         stableBranch: 'main',
         darkSpots: 'warn',
         deadSurface: 'error',
+        runMode: 'thorough',
       });
     });
   });

@@ -12,7 +12,7 @@ describe('configValidateBroker', () => {
 
       expect(result).toStrictEqual({
         success: true,
-        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error' },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', runMode: 'thorough' },
       });
     });
   });

@@ -36,6 +36,7 @@ describe('function — a branchless exported function', () => {
               { kind: 'param', param: 'a', value: 7 },
               { kind: 'param', param: 'b', value: 7 },
             ],
+            salient: true,
           },
         ],
       },

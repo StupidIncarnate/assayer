@@ -19,6 +19,7 @@ describe('import-local / uses-greeting — a call into a function imported from 
       edges: [{ kind: 'import', specifier: './greeting', bindings: [{ kind: 'named', name: 'greeting' }], line: 1, column: 1 }],
       references: [{ specifier: './greeting', importedName: 'greeting', line: 3, column: 24 }],
       globalUses: [],
+      envReads: [],
     });
   });
 
@@ -41,7 +42,7 @@ describe('import-local / uses-greeting — a call into a function imported from 
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

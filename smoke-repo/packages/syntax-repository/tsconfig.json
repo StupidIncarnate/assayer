@@ -31,6 +31,11 @@
       "@assayer/core/compose-cross-file": [
         "../../../packages/core/src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker"
       ],
+      // Object-arrange (stub-realize) is the OTHER consume-time overlay: an object-member branch is
+      // DRIVEN from the merged stub view, so an object specimen asserting driven cases imports it too.
+      "@assayer/core/stub-realize": [
+        "../../../packages/core/src/brokers/stub/realize/stub-realize-broker"
+      ],
       // The cross-file example rungs assert their MODULE GRAPH — the raw imports/re-exports and the
       // references into imported names the walk records for a later stitch to resolve — which is a
       // projection of the walk, so it too rides alongside the walk adapter.

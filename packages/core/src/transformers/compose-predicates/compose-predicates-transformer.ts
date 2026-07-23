@@ -45,6 +45,9 @@ export const composePredicatesTransformer = ({
   return functions.map((fn) => ({
     entry: fn.entry,
     exits: fn.exits,
+    // The entry's own return predicate is unaffected by rebasing a caller's call-guard, so it rides
+    // through untouched — derive-cases reads it to split a branchless predicate's two return values.
+    ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
     branches: fn.branches.map((branch) => {
       const leaf = branch.condition;
 

@@ -11,7 +11,13 @@
  */
 import { z } from 'zod';
 
-import { columnNumberContract, globalUseContract, lineNumberContract, moduleEdgeContract } from '@assayer/shared/contracts';
+import {
+  columnNumberContract,
+  envReadContract,
+  globalUseContract,
+  lineNumberContract,
+  moduleEdgeContract,
+} from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
@@ -29,6 +35,9 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     // The ambient-external identifiers the file uses (`console`, `process`) — the other raw half a
     // later stitch resolves against `@types/node`'s global scope.
     globalUses: z.array(globalUseContract),
+    // The `process.env.<X>` property reads the file makes — the raw half the stub stitch folds into
+    // per-property env stubs.
+    envReads: z.array(envReadContract),
   }),
   z.object({
     success: z.literal(false),

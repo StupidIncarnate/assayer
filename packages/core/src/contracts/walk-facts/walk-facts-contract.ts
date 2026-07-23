@@ -13,6 +13,7 @@ import { z } from 'zod';
 
 import {
   branchNodeContract,
+  envReadContract,
   exitNodeContract,
   globalUseContract,
   moduleEdgeContract,
@@ -48,6 +49,8 @@ export const walkFactsContract = z.object({
   // Flat like `moduleEdges`: an ambient-external identifier the file uses (`console`, `process`) is a
   // fact about the FILE, not a scope.
   globalUses: z.array(globalUseContract),
+  // Flat like `globalUses`: a `process.env.<X>` property read is a fact about the FILE, not a scope.
+  envReads: z.array(envReadContract),
 });
 
 export type WalkFacts = z.infer<typeof walkFactsContract>;

@@ -30,6 +30,7 @@ describe('useAssayerStatusBinding', () => {
           version: '1.0.0',
           message: 'Assayer core online',
           repoPath: '/home/user/project',
+          runMode: 'thorough',
         },
       });
     });

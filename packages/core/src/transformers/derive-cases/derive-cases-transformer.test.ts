@@ -1,4 +1,4 @@
-import { ParamDescriptorStub, BranchNodeStub, ExitNodeStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub, BranchNodeStub, ConditionNodeStub, ExitNodeStub, TypeDescriptorStub } from '@assayer/shared/contracts';
 
 import { deriveCasesTransformer } from './derive-cases-transformer';
 
@@ -74,7 +74,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] },
+        { reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
       ]);
     });
 
@@ -93,7 +93,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'formatGreeting/return@if-else', arrange: [{ kind: 'param', param: 'name', value: 'a' }] },
+        { reachesExit: 'formatGreeting/return@if-else', arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
       ]);
     });
   });
@@ -119,14 +119,16 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'score', value: 6 },
             { kind: 'param', param: 'bonus', value: 2 },
           ],
+          salient: true,
         },
       ]);
     });
 
     // The bug this whole decomposition exists for: read as ONE opaque operand, both arms derived the
     // SAME arrange values, so the then-case and the else-case were identical and one of them claimed
-    // an exit its own values cannot reach. Two DISTINCT causes, two distinct arrangements.
-    it('VALID: {a && b, else} => TWO cases: a failed (b never ran), or a held and b failed', () => {
+    // an exit its own values cannot reach. Two DISTINCT causes, two distinct arrangements — but both
+    // reach the same else exit and return the same value, so the first is salient and the second grayed.
+    it('VALID: {a && b, else} => TWO cases (second grayed): a failed (b never ran), or a held and b failed', () => {
       const result = deriveCasesTransformer({
         params: NUMBER_PARAMS,
         branches: [AND_BRANCH],
@@ -148,6 +150,7 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'score', value: 5 },
             { kind: 'param', param: 'bonus', value: 7 },
           ],
+          salient: true,
         },
         {
           reachesExit: 'grade/return@else',
@@ -155,11 +158,12 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'score', value: 6 },
             { kind: 'param', param: 'bonus', value: 1 },
           ],
+          salient: false,
         },
       ]);
     });
 
-    it('VALID: {a || b, then} => TWO cases, since a disjunction holds two ways', () => {
+    it('VALID: {a || b, then} => TWO cases (second grayed), since a disjunction holds two ways', () => {
       const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({ name: 'temp', type: { kind: 'number' } }),
@@ -182,6 +186,7 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'temp', value: 51 },
             { kind: 'param', param: 'smoke', value: false },
           ],
+          salient: true,
         },
         {
           reachesExit: 'alarm/return@then',
@@ -189,6 +194,7 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'temp', value: 50 },
             { kind: 'param', param: 'smoke', value: true },
           ],
+          salient: false,
         },
       ]);
     });
@@ -216,6 +222,7 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'temp', value: 50 },
             { kind: 'param', param: 'smoke', value: false },
           ],
+          salient: true,
         },
       ]);
     });
@@ -240,14 +247,14 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'gate/return@then', arrange: [{ kind: 'param', param: 'ready', value: false }] },
-        { reachesExit: 'gate/return@else', arrange: [{ kind: 'param', param: 'ready', value: true }] },
+        { reachesExit: 'gate/return@then', arrange: [{ kind: 'param', param: 'ready', value: false }], salient: true },
+        { reachesExit: 'gate/return@else', arrange: [{ kind: 'param', param: 'ready', value: true }], salient: true },
       ]);
     });
   });
 
   describe('literal-union operand', () => {
-    it('VALID: {eq on a 3-member union} => then binds the member, else fans out one case per other member', () => {
+    it('VALID: {eq on a 3-member union} => then binds the member, else fans out one case per other member (second grayed)', () => {
       const unionType = TypeDescriptorStub({
         kind: 'union',
         members: [
@@ -284,9 +291,9 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'classify/return@if-then', arrange: [{ kind: 'param', param: 'status', value: 'a' }] },
-        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'b' }] },
-        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'c' }] },
+        { reachesExit: 'classify/return@if-then', arrange: [{ kind: 'param', param: 'status', value: 'a' }], salient: true },
+        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'b' }], salient: true },
+        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'c' }], salient: false },
       ]);
     });
   });
@@ -351,9 +358,9 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: "routeLabel/return@switch:'get'", arrange: [{ kind: 'param', param: 'method', value: 'get' }] },
-        { reachesExit: "routeLabel/return@switch:'post'", arrange: [{ kind: 'param', param: 'method', value: 'post' }] },
-        { reachesExit: 'routeLabel/return@switch:default', arrange: [{ kind: 'param', param: 'method', value: 'delete' }] },
+        { reachesExit: "routeLabel/return@switch:'get'", arrange: [{ kind: 'param', param: 'method', value: 'get' }], salient: true },
+        { reachesExit: "routeLabel/return@switch:'post'", arrange: [{ kind: 'param', param: 'method', value: 'post' }], salient: true },
+        { reachesExit: 'routeLabel/return@switch:default', arrange: [{ kind: 'param', param: 'method', value: 'delete' }], salient: true },
       ]);
     });
   });
@@ -367,7 +374,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result.cases).toStrictEqual([{ reachesExit: 'run/exit@implicit', arrange: [] }]);
+      expect(result.cases).toStrictEqual([{ reachesExit: 'run/exit@implicit', arrange: [], salient: true }]);
     });
   });
 
@@ -501,6 +508,38 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'u' }] });
     });
 
+    // `if (config.mode === 'a')`: the leaf names its ROOT param `config`, but the deciding read is the
+    // property `config.mode`, which cannot be arranged — arranging an object param's property is a later
+    // phase. So even though `config` IS a param, the `operandPropertyPath` keeps the branch un-steerable,
+    // and the admission names the full `config.mode` read rather than the bare root.
+    const OBJECT_MEMBER_BRANCH = BranchNodeStub({
+      coverageId: 'decide/if:member',
+      startLine: 3,
+      condition: {
+        kind: 'leaf',
+        id: 'decide/if:member#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'a' },
+      },
+    });
+
+    it('VALID: {an object-member operand over a param} => un-steerable, no case, admission names the property read', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'config', type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] } })],
+        branches: [OBJECT_MEMBER_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'decide/return@then', guardPath: [{ branchCoverageId: 'decide/if:member', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'decide/return@else', guardPath: [{ branchCoverageId: 'decide/if:member', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'config.mode' }] });
+    });
+
     // The env operand is the pivot `envDrivable` turns on: a module scope reading `VALUE` from the
     // environment IS drivable, so the branch is steerable and derives its per-arm cases.
     const ENV_BRANCH = BranchNodeStub({
@@ -525,8 +564,8 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesExit: 'mod/exit@then', arrange: [{ kind: 'env', name: 'VALUE', value: '6' }] },
-          { reachesExit: 'mod/exit@else', arrange: [{ kind: 'env', name: 'VALUE', value: '5' }] },
+          { reachesExit: 'mod/exit@then', arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], salient: true },
+          { reachesExit: 'mod/exit@else', arrange: [{ kind: 'env', name: 'VALUE', value: '5' }], salient: true },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -539,6 +578,82 @@ describe('deriveCasesTransformer', () => {
       const result = deriveCasesTransformer({ params: [], branches: [ENV_BRANCH], exits: ENV_EXITS, envDrivable: false });
 
       expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'value' }] });
+    });
+  });
+
+  describe('branchless predicate — the true/false return split', () => {
+    const PRED_EXIT = ExitNodeStub({ coverageId: 'pred/return@top', kind: 'return', guardPath: [], line: 2 });
+
+    // A branchless boolean predicate has ONE exit for both return values, so a single representative
+    // fill could never show `size > 50` distinguishing anything. The returnPredicate axis splits the
+    // one exit into two cases — the satisfying side and the violating side — and both are salient,
+    // because they return DIFFERENT booleans out of the same exit.
+    it('VALID: {return size > 50} => two salient cases, one per side of the comparison', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'size', type: { kind: 'number' } })],
+        branches: [],
+        exits: [PRED_EXIT],
+        envDrivable: false,
+        returnPredicate: ConditionNodeStub({ id: 'pred#leaf', operandParamName: 'size', predicate: { kind: 'gt', literal: 50 } }),
+      });
+
+      expect(result.cases).toStrictEqual([
+        { reachesExit: 'pred/return@top', arrange: [{ kind: 'param', param: 'size', value: 51 }], salient: true },
+        { reachesExit: 'pred/return@top', arrange: [{ kind: 'param', param: 'size', value: 50 }], salient: true },
+      ]);
+    });
+
+    // An un-steerable returnPredicate (its operand is not a param of this entry) is OMITTED, not
+    // admitted undriven — a branchless predicate is always callable, it just cannot distinguish its
+    // two return values, so it falls back to the one representative-fill case.
+    it('VALID: {a predicate over a non-param} => the axis is dropped, one fill case, nothing undriven', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'size', type: { kind: 'number' } })],
+        branches: [],
+        exits: [PRED_EXIT],
+        envDrivable: false,
+        returnPredicate: ConditionNodeStub({ id: 'pred#leaf', operandParamName: 'other', predicate: { kind: 'gt', literal: 50 } }),
+      });
+
+      expect(result).toStrictEqual({
+        cases: [{ reachesExit: 'pred/return@top', arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        unreachableExits: [],
+        undrivenBranches: [],
+      });
+    });
+  });
+
+  describe('converging branches — off-path buckets on one exit', () => {
+    // Two independent guards that both fall through to the SAME trailing return. The cross product is
+    // four input buckets — each a distinct combination the logic can tell apart — but they all reach
+    // the one exit and return the same value, so exactly ONE is salient and the other three are the
+    // grayed breadth. Constraining a branch whose flow the trailing return never depends on is a SOUND
+    // off-path arm.
+    it('VALID: {two converging guards} => four cases on one exit, exactly one salient', () => {
+      const aBranch = BranchNodeStub({
+        coverageId: 'tally/if:a',
+        startLine: 2,
+        condition: { kind: 'leaf', id: 'tally/if:a#leaf', operandParamName: 'a', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 5 } },
+      });
+      const bBranch = BranchNodeStub({
+        coverageId: 'tally/if:b',
+        startLine: 4,
+        condition: { kind: 'leaf', id: 'tally/if:b#leaf', operandParamName: 'b', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 5 } },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'a', type: { kind: 'number' } }), ParamDescriptorStub({ name: 'b', type: { kind: 'number' } })],
+        branches: [aBranch, bBranch],
+        exits: [ExitNodeStub({ coverageId: 'tally/return@top', kind: 'return', guardPath: [], line: 6 })],
+        envDrivable: false,
+      });
+
+      expect(result.cases).toStrictEqual([
+        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 6 }], salient: true },
+        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
+        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 6 }], salient: false },
+        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
+      ]);
     });
   });
 });

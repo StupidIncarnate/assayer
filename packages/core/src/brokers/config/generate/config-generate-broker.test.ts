@@ -14,7 +14,7 @@ describe('configGenerateBroker', () => {
 
       expect(proxy.getWrittenPath()).toBe('/repo/assayer.config.json');
       expect(proxy.getWrittenContent()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error"}',
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","runMode":"thorough"}',
       );
       expect(result).toStrictEqual(AssayerConfigStub());
     });

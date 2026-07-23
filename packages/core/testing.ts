@@ -36,4 +36,6 @@ export * from './src/brokers/run/load/run-load-broker.proxy';
 export * from './src/brokers/run/find/run-find-broker.proxy';
 
 export * from './src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
+export * from './src/brokers/stub/realize/stub-realize-broker.proxy';
+export * from './src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy';
 export * from './src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';

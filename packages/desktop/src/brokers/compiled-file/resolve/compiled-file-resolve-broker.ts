@@ -21,7 +21,7 @@
  */
 import { compiledFileViewContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
-import { composeCrossFilePredicatesBroker } from '@assayer/core/brokers';
+import { composeCrossFilePredicatesBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
 import { tsMorphWalkFileAdapter } from '@assayer/core/adapters';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
@@ -52,21 +52,31 @@ export const compiledFileResolveBroker = async ({
   const resolvedEdges =
     resolvedIndex === undefined ? [] : resolvedIndex.edges.filter((edge) => edge.from === relPath);
 
-  // Overlay the cross-file predicate compose on the persisted (child-independent) analysis, at serve
-  // time, against the caller source on disk under the SOURCE root (not the config dir). A missing
-  // source, or a blob that carries no analysis, serves the opaque analysis untouched — the overlay is
-  // a same-reference no-op for a file with no imported-predicate guard either way.
+  // Overlay the consume-time passes on the persisted (child-independent) analysis, at serve time,
+  // against the caller source on disk under the SOURCE root (not the config dir). A missing source, or a
+  // blob that carries no analysis, serves the opaque analysis untouched — both overlays are same-
+  // reference no-ops for a file they do not touch.
   const root = blob.analysis === undefined ? undefined : await repoSourceRootBroker({ repoPath });
   const source =
     root === undefined ? undefined : await nodeFsReadSourceAdapter({ absPath: `${String(root)}/${String(relPath)}` });
-  const analysis =
-    blob.analysis === undefined || root === undefined || source === undefined
+  const walked =
+    source === undefined ? undefined : tsMorphWalkFileAdapter({ source: String(source), relPath: String(relPath) });
+  const composed =
+    blob.analysis === undefined || root === undefined || walked === undefined
       ? blob.analysis
-      : composeCrossFilePredicatesBroker({
-          analysis: blob.analysis,
-          walked: tsMorphWalkFileAdapter({ source: String(source), relPath: String(relPath) }),
+      : composeCrossFilePredicatesBroker({ analysis: blob.analysis, walked, root: String(root), relPath: String(relPath) });
+  // The object-arrange overlay on top: an object-member branch (`if (config.mode === 'a')`) is DRIVEN
+  // from the merged stub view — the derived per-property demands combined with the committed
+  // `assayer/stubs/` overlay under the SAME source root, read fresh per serve and never persisted.
+  const analysis =
+    composed === undefined || root === undefined || walked === undefined
+      ? composed
+      : stubRealizeBroker({
+          analysis: composed,
+          walked,
           root: String(root),
           relPath: String(relPath),
+          overlays: await stubOverlayLoadBroker({ repoRoot: String(root) }),
         });
 
   return compiledFileViewContract.parse({

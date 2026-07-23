@@ -1,6 +1,8 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { ResolvedIndexStub } from '@assayer/shared/contracts';
+import { ResolvedIndexStub, StubIndexStub, StubOverlayStub } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
+
+import { PropertyGuardStub } from '../../../contracts/property-guard/property-guard.stub';
 
 import { compileResolveRootBrokerProxy } from '../resolve-root/compile-resolve-root-broker.proxy';
 import { pathBasenameAdapterProxy } from '../../../adapters/path/basename/path-basename-adapter.proxy';
@@ -11,6 +13,11 @@ import { stableNamespaceLayerBrokerProxy } from './stable-namespace-layer-broker
 import { manifestWriteBrokerProxy } from '../../manifest/write/manifest-write-broker.proxy';
 import { compileResolveGraphBroker } from '../resolve-graph/compile-resolve-graph-broker';
 import { compileResolveGraphBrokerProxy } from '../resolve-graph/compile-resolve-graph-broker.proxy';
+import { compileStubGraphBroker } from '../stub-graph/compile-stub-graph-broker';
+import { compileStubGraphBrokerProxy } from '../stub-graph/compile-stub-graph-broker.proxy';
+import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
+import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
+import { stubOverlayReconcileBrokerProxy } from '../../stub-overlay/reconcile/stub-overlay-reconcile-broker.proxy';
 import { resolvedIndexWriteBroker } from '../../resolved-index/write/resolved-index-write-broker';
 import { resolvedIndexWriteBrokerProxy } from '../../resolved-index/write/resolved-index-write-broker.proxy';
 
@@ -22,6 +29,8 @@ export const compileRunBrokerProxy = (): {
   stableChangedCommitUnresolvable: (params: { lsTreeStdout: string; fileContents: readonly string[] }) => void;
   manifestWriteSucceeds: () => void;
   resolvesWithError: (params: { relPath: string; line: number; column: number; message: string }) => void;
+  overlayStale: () => void;
+  overlayContradicts: () => void;
   getWrittenManifest: () => unknown;
   wasManifestWritten: () => boolean;
   getProcessedFileCount: () => FileCount;
@@ -39,10 +48,21 @@ export const compileRunBrokerProxy = (): {
   // so here it returns a clean resolution unless a test asks for a build error.
   compileResolveGraphBrokerProxy();
   resolvedIndexWriteBrokerProxy();
+  compileStubGraphBrokerProxy();
   const resolveHandle = registerMock({ fn: compileResolveGraphBroker });
   const resolvedWriteHandle = registerMock({ fn: resolvedIndexWriteBroker });
+  const stubGraphHandle = registerMock({ fn: compileStubGraphBroker });
   resolveHandle.mockResolvedValue({ index: ResolvedIndexStub(), errors: [] });
   resolvedWriteHandle.mockResolvedValue({ success: true });
+  stubGraphHandle.mockResolvedValue({ index: StubIndexStub(), guards: [] });
+
+  // The overlay LOAD is replaced wholesale (its own tests cover reading `assayer/stubs/`); it defaults
+  // to no committed overlay. The overlay RECONCILE runs REAL against the mocked current stub index, so
+  // a staged stale overlay drives its own P1 error through the errors[] gate.
+  stubOverlayLoadBrokerProxy();
+  stubOverlayReconcileBrokerProxy();
+  const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
+  overlayLoadHandle.mockResolvedValue([]);
 
   return {
     onCurrentBranch: ({ name }: { name: string }): void => {
@@ -95,6 +115,18 @@ export const compileRunBrokerProxy = (): {
       message: string;
     }): void => {
       resolveHandle.mockResolvedValue({ index: ResolvedIndexStub(), errors: [{ relPath, line, column, message }] });
+    },
+    overlayStale: (): void => {
+      overlayLoadHandle.mockResolvedValue([
+        StubOverlayStub({ key: 'src/gone.ts#Gone', overlayPath: 'assayer/stubs/objects/src/gone.ts/Gone.json' }),
+      ]);
+    },
+    // A committed correction that RESOLVES (its type + property are in the derived index, so reconcile is
+    // silent) but whose authoritative values (`dev`, `prod`, `staging`) can never satisfy the `mode === 'a'`
+    // guard the stub stitch gathered — a pre-run contradiction on the same errors[] channel.
+    overlayContradicts: (): void => {
+      stubGraphHandle.mockResolvedValue({ index: StubIndexStub(), guards: [PropertyGuardStub()] });
+      overlayLoadHandle.mockResolvedValue([StubOverlayStub()]);
     },
     getWrittenManifest: (): unknown => manifestProxy.getWrittenManifest(),
     wasManifestWritten: (): boolean => manifestProxy.wasWritten(),

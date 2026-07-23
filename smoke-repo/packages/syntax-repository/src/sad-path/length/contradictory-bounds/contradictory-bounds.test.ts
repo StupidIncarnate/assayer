@@ -32,8 +32,10 @@ describe('length / contradictory-bounds — a length guard nested inside one tha
   });
 
   // THE PAYOFF. `'impossible'` needs a string both shorter and longer than one character, so it gets no
-  // case at all. The two live exits still get theirs, each realized from its own intersected axis:
-  // '' is shorter than one character, 'a' is not.
+  // case at all. The live exits still get theirs, each realized from its own intersected axis: '' is
+  // shorter than one character, 'a' is not. The outer `else` exit (index 2) is reached by two input
+  // buckets — length exactly one ('a') and length over one ('ab', the off-path bucket whose inner guard
+  // would hold but whose flow never reaches it) — so it carries the salient 'ab' and the grayed 'a'.
   it('VALID: {an exit no length can reach} => no case for it, and the live exits arranged correctly', () => {
     expect({
       caseTargets: tag.cases.map((testCase) =>
@@ -43,9 +45,10 @@ describe('length / contradictory-bounds — a length guard nested inside one tha
       darkSpots: analysis.darkSpots,
       undriven: analysis.undriven,
     }).toStrictEqual({
-      caseTargets: [1, 2],
+      caseTargets: [1, 2, 2],
       arranged: [
         [{ kind: 'param', param: 'word', value: '' }],
+        [{ kind: 'param', param: 'word', value: 'ab' }],
         [{ kind: 'param', param: 'word', value: 'a' }],
       ],
       darkSpots: [],

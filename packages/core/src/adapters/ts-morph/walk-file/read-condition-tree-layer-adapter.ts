@@ -119,11 +119,19 @@ export const readConditionTreeLayerAdapter = ({
     ? readout.operandNode.getSourceFile().getLineAndColumnAtPos(readout.operandNode.getStart())
     : undefined;
 
+  // A plain identifier is its own param; an object-member read (`config.mode`) names its ROOT param
+  // instead, alongside the property path and type-ref the stub stitch joins on. The operand's TYPE is
+  // still read off the operand node itself (the property's type), never off the root param — passing
+  // the root as `name` would return the whole object descriptor instead of `string`.
+  const operandParamName = readout.operandName ?? readout.operandRootName;
+
   return {
     condition: conditionNodeContract.parse({
       kind: 'leaf',
       id,
-      ...(readout.operandName === undefined ? {} : { operandParamName: readout.operandName }),
+      ...(operandParamName === undefined ? {} : { operandParamName }),
+      ...(readout.operandPropertyPath === undefined ? {} : { operandPropertyPath: readout.operandPropertyPath }),
+      ...(readout.operandTypeRef === undefined ? {} : { operandTypeRef: readout.operandTypeRef }),
       ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
       ...(callPosition === undefined ? {} : { operandCallPosition: { line: callPosition.line, column: callPosition.column } }),
       operandType: readOperandTypeLayerAdapter({

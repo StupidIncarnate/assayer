@@ -29,6 +29,7 @@ import { nodeModuleBuiltinsAdapter } from '../../src/adapters/node-module/builti
 import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
 import { composeCrossFilePredicatesBroker } from '../../src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
+import { stubRealizeBroker } from '../../src/brokers/stub/realize/stub-realize-broker';
 import { conditionLeavesTransformer } from '../../src/transformers/condition-leaves/condition-leaves-transformer';
 import { moduleGraphProjectionTransformer } from '../../src/transformers/module-graph-projection/module-graph-projection-transformer';
 
@@ -54,7 +55,22 @@ export type SyntaxTrait =
   | 'branch:switch'
   | 'branch:ternary'
   | 'param:union'
+  | 'param:array'
+  | 'param:object'
   | 'operand:env'
+  // A branch whose operand is an OBJECT-MEMBER read (`if (config.mode === 'a')`) — the walk records the
+  // property path and the root's type-reference on the leaf, but arranging an object param's property is
+  // a later phase, so the branch is admitted UNDRIVEN. A ratchet: it flips to a driven case the day
+  // object arrange (stub-realize) lands. Gated so a specimen that quietly stopped capturing the
+  // property fact loses the trait rather than keeping the feature's coverage in silence.
+  | 'operand:property'
+  // A branch that reads a `process.env.<X>` property directly as its operand and compares it against a
+  // literal (`process.env.MODE === 'production'`) — the env-object capture the stub stitch guesses from.
+  // Distinct from `operand:env`, which is the DRIVABLE `Number(process.env.X)` discriminant: a bare
+  // env-member comparison is UNDRIVEN (§5.10 — it types as `any`), yet its literal is a real stub demand.
+  // Named off the module graph's `envReads`, so a specimen that stopped capturing the env property loses
+  // the trait rather than keeping the feature's coverage in silence.
+  | 'env:property'
   // A call target the single-file walk records as an IMPORT and cannot itself resolve — classified by
   // the module specifier's LITERAL VALUE (a relative path, a node builtin, or a bare package), which is
   // the same fork TypeScript's own module resolution takes. The stitch (compile-resolve-graph-broker)
@@ -86,19 +102,23 @@ export const syntaxTraits = (): {
   observed: (params: { relPath: string }) => SyntaxTrait[];
   declaredByContracts: () => SyntaxTrait[];
 } => {
-  // Cross-file predicate composition is a CONSUME-TIME overlay, not part of the per-file blob — so the
-  // harness applies it exactly as a run does, giving `observed()` the composed guards and any
-  // unreachable-exit lint the run reports. A specimen with no imported-predicate guard passes straight
-  // through untouched.
+  // Cross-file predicate composition AND object-arrange (stub-realize) are CONSUME-TIME overlays, not
+  // part of the per-file blob — so the harness applies both exactly as a run does, giving `observed()`
+  // the composed guards, the driven object-member branches, and any admission the run reports. Both are
+  // same-reference no-ops for a specimen they do not touch. Overlays are EMPTY here: the catalogue drives
+  // from the DERIVED demands, so an object-member branch flips its `undriven` trait without any committed
+  // correction — a human correction only changes the arrange VALUES, proven separately by a real run.
   const analyze = ({ relPath }: { relPath: string }): FileAnalysis => {
     const walked = tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath });
 
-    return composeCrossFilePredicatesBroker({
+    const composed = composeCrossFilePredicatesBroker({
       analysis: analyzeFileBroker({ walked }),
       walked,
       root: SMOKE_REPO,
       relPath,
     });
+
+    return stubRealizeBroker({ analysis: composed, walked, root: SMOKE_REPO, relPath, overlays: [] });
   };
 
   return {
@@ -125,6 +145,18 @@ export const syntaxTraits = (): {
         .flatMap((fn) => fn.entry.params)
         .filter((param) => param.type.kind === 'union')
         .map((): SyntaxTrait => 'param:union');
+      // Same yes/no shape as `param:union`, and each gates its own check: an ARRAY param proves the
+      // walk reads element types, an OBJECT param proves it enumerates a local shape's properties.
+      // Without them the array/object specimens would look like plain branchless functions and the
+      // catalogue could lose the type-reading feature's coverage in silence.
+      const arrays = analysis.functions
+        .flatMap((fn) => fn.entry.params)
+        .filter((param) => param.type.kind === 'array')
+        .map((): SyntaxTrait => 'param:array');
+      const objects = analysis.functions
+        .flatMap((fn) => fn.entry.params)
+        .filter((param) => param.type.kind === 'object')
+        .map((): SyntaxTrait => 'param:object');
       // Same yes/no shape, and it earns a trait for the same reason `param:union` does: a check is
       // gated on it. It is what separates the two identically-shaped module-scope specimens — one
       // reads its operand from the environment and is driven, one does not and is admitted undriven
@@ -134,6 +166,19 @@ export const syntaxTraits = (): {
         .flatMap((branch) => conditionLeavesTransformer({ condition: branch.condition }))
         .filter((leaf) => leaf.operandEnvVarName !== undefined)
         .map((): SyntaxTrait => 'operand:env');
+      // Same yes/no shape as `operand:env`, gating its own check: a branch leaf reading an object member
+      // (`config.mode`) carries an `operandPropertyPath`, which the walk records for the stub stitch.
+      // Without it the object-member specimen would look like a plain opaque undriven branch and the
+      // catalogue could lose the property-capture feature's coverage in silence.
+      // A TYPED object member (`config.mode`, root type-ref `Config`) carries both `operandPropertyPath`
+      // and `operandTypeRef` — the join key the stub stitch keys the object stub on. A `process.env.<X>`
+      // read carries a property path but NO type-ref (the ambient `process` is no typed param), so the
+      // type-ref requirement is what keeps env reads off this object-member trait and on `env:property`.
+      const propertyOperands = analysis.functions
+        .flatMap((fn) => fn.branches)
+        .flatMap((branch) => conditionLeavesTransformer({ condition: branch.condition }))
+        .filter((leaf) => leaf.operandPropertyPath !== undefined && leaf.operandTypeRef !== undefined)
+        .map((): SyntaxTrait => 'operand:property');
       // The admission a file owes about itself, and the reason the `sad-path/` specimens can be
       // trusted to still prove the feature tomorrow. Without it, a specimen that quietly became
       // drivable would keep every trait it declares — its access and its branch kind do not move —
@@ -177,9 +222,29 @@ export const syntaxTraits = (): {
       // matter which scope uses it, and a specimen that quietly stopped touching an ambient global
       // loses the trait rather than silently keeping the feature's coverage.
       const globals = graph.globalUses.length > 0 ? (['callee:node-global'] as SyntaxTrait[]) : [];
+      // A `process.env.<X>` read compared directly against a literal — the env-object capture. Named off
+      // the same graph's `envReads`, restricted to reads that carry a compared literal so a bare read
+      // inside `Number(...)` (the drivable path, already `operand:env`) does not also claim it.
+      const envProperties = graph.envReads.some((read) => read.literals.length > 0)
+        ? (['env:property'] as SyntaxTrait[])
+        : [];
 
       return [
-        ...new Set([...access, ...branches, ...unions, ...envOperands, ...callees, ...globals, ...undriven, ...lints, ...darkSpots]),
+        ...new Set([
+          ...access,
+          ...branches,
+          ...unions,
+          ...arrays,
+          ...objects,
+          ...envOperands,
+          ...propertyOperands,
+          ...callees,
+          ...globals,
+          ...envProperties,
+          ...undriven,
+          ...lints,
+          ...darkSpots,
+        ]),
       ].sort();
     },
   };

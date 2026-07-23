@@ -22,6 +22,6 @@ describe('import-local / greeting — the imported definition a sibling calls', 
   it('EMPTY: {no imports} => an empty module graph', () => {
     const graph = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
-    expect(graph).toStrictEqual({ edges: [], references: [], globalUses: [] });
+    expect(graph).toStrictEqual({ edges: [], references: [], globalUses: [], envReads: [] });
   });
 });

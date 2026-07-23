@@ -63,6 +63,48 @@ describe('typeDescriptorTransformer', () => {
     });
   });
 
+  describe('array facts', () => {
+    it('VALID: {array of number} => array descriptor over a number element', () => {
+      const fact = TypeFactStub({ flavor: 'array', element: { flavor: 'number' } });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }),
+      );
+    });
+  });
+
+  describe('object facts', () => {
+    it('VALID: {named object} => object descriptor carrying the name and mapped properties', () => {
+      const fact = TypeFactStub({
+        flavor: 'object',
+        typeName: 'Config',
+        properties: [
+          { name: 'mode', fact: { flavor: 'string' } },
+          { name: 'retries', fact: { flavor: 'number' } },
+        ],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'object',
+          typeName: 'Config',
+          properties: [
+            { name: 'mode', type: { kind: 'string' } },
+            { name: 'retries', type: { kind: 'number' } },
+          ],
+        }),
+      );
+    });
+
+    it('VALID: {anonymous object} => keyless object descriptor', () => {
+      const fact = TypeFactStub({ flavor: 'object', properties: [{ name: 'a', fact: { flavor: 'string' } }] });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'object', properties: [{ name: 'a', type: { kind: 'string' } }] }),
+      );
+    });
+  });
+
   describe('opaque facts', () => {
     it('VALID: {flavor: other} => unknown carrying the type text', () => {
       expect(typeDescriptorTransformer({ fact: TypeFactStub({ flavor: 'other', text: 'void' }) })).toStrictEqual(

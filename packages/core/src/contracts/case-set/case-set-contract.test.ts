@@ -19,6 +19,7 @@ describe('caseSetContract', () => {
                   { kind: 'param', param: 'score', value: 6 },
                   { kind: 'param', param: 'bonus', value: 2 },
                 ],
+                salient: true,
               },
             ],
           },

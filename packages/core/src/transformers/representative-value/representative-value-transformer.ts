@@ -29,6 +29,13 @@ export const representativeValueTransformer = ({ type }: { type: TypeDescriptor 
         ? representativeValueContract.parse(representativeValueStatics.string)
         : representativeValueTransformer({ type: first });
     }
+    // An array or object has no single scalar value in the representable domain (string/number/
+    // boolean/null), so it falls back to the string placeholder — the same honest default `unknown`
+    // takes. Per-property object arrangement is `object-arrange`'s job, at consume time.
+    case 'array':
+      return representativeValueContract.parse(representativeValueStatics.string);
+    case 'object':
+      return representativeValueContract.parse(representativeValueStatics.string);
     case 'unknown':
       return representativeValueContract.parse(representativeValueStatics.string);
     default:

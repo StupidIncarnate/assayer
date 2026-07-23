@@ -54,6 +54,42 @@ describe('readSignatureTypeLayerAdapter', () => {
     });
   });
 
+  describe('array types', () => {
+    it('VALID: {string[] param} => array fact whose element is a string fact', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(items: string[]): void;\n');
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('items').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({ flavor: 'array', element: { flavor: 'string' } }),
+      );
+    });
+  });
+
+  describe('object types', () => {
+    it('VALID: {locally-declared interface param} => object fact carrying the type name and sorted properties', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'interface Config { mode: string; retries: number }\nexport declare function f(cfg: Config): void;\n',
+      );
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('cfg').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Config',
+          properties: [
+            { name: 'mode', fact: { flavor: 'string' } },
+            { name: 'retries', fact: { flavor: 'number' } },
+          ],
+        }),
+      );
+    });
+  });
+
   describe('opaque types', () => {
     it('VALID: {void return} => other fact carrying the type text', () => {
       readSignatureTypeLayerAdapterProxy();

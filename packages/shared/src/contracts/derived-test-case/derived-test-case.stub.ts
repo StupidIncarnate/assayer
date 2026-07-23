@@ -7,5 +7,6 @@ export const DerivedTestCaseStub = ({ ...props }: StubArgument<DerivedTestCase> 
   derivedTestCaseContract.parse({
     reachesExit: 'formatGreeting/return@if-then',
     arrange: [{ kind: 'param', param: 'name', value: '' }],
+    salient: true,
     ...props,
   });

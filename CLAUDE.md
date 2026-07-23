@@ -195,6 +195,9 @@ Authored + committed:
 
 - harnesses
 - named states (`assayer/states/`)
+- stub corrections (`assayer/stubs/`) — human overrides of the derived stub
+  index, combined with it at read time and reconciled against it (a stale one is
+  a P1 build error), never in any cache hash
 - config/policies
 - repo-local plugins
 
@@ -212,11 +215,14 @@ toggle in config. Per-site suppression is an LLM abuse vector; if you don't care
 somewhere, you care nowhere.
 
 Everything in `.assayer/` commits EXCEPT `cache/`. Beyond the assembled test
-files, `cache/` holds two derived import-resolution artifacts, both
-content-keyed and rebuilt on demand:
+files, `cache/` holds these derived artifacts, all content- or layout-keyed and
+rebuilt on demand:
 
 - `cache/resolved/<namespace>.json` — the resolved-import index per namespace,
   each import reconciled to its canonical definition
+- `cache/stubs/<namespace>.json` — the derived stub index per namespace: each
+  object type's per-property value demands spliced onto its full property list,
+  with the files that read it — a layout-keyed twin of the resolved index
 - `cache/external-signatures/<declHash>.json` — one package/builtin callable's
   declared input/output types, keyed on the `.d.ts` byte hash and reused by
   every importer
@@ -313,6 +319,14 @@ The call graph IS followed (same-file). A private reached by a caller that
 passes its own input straight through is DRIVEN. Its branch is covered through
 that caller (`through-caller` access, the callee's exits arranged in the
 caller's params), never admitted.
+
+An object-member branch (`if (config.mode === 'a')`) is UNDRIVEN in the per-file
+blob but DRIVEN at CONSUME time: `stub-realize` arranges the object param from
+the merged stub view — the derived per-property demands plus the committed
+`assayer/stubs/` overlay — so each arm becomes a real case. A human correction is
+a P4-safe INPUT that flows into a runnable case; the case asserts reaching an
+exit structurally, never a returned value. It is the object twin of the compose
+overlay that drives an opaque cross-file call-guard.
 
 So an UNDRIVEN private and the welded module scope owe the same text: a branch
 with one possible outcome, decided in the source, that no feature will drive. A

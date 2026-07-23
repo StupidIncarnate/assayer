@@ -27,7 +27,7 @@ describe('composition / nested-function — a private driven through the caller 
       {
         name: 'outer',
         access: { kind: 'named' },
-        cases: [{ reachesExit: '*module*/outer/return@top', arrange: [{ kind: 'param', param: 'value', value: 7 }] }],
+        cases: [{ reachesExit: '*module*/outer/return@top', arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true }],
       },
       {
         name: 'inner',
@@ -36,10 +36,12 @@ describe('composition / nested-function — a private driven through the caller 
           {
             reachesExit: '*module*/outer/inner/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then',
             arrange: [{ kind: 'param', param: 'value', value: 6 }],
+            salient: true,
           },
           {
             reachesExit: '*module*/outer/inner/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else',
             arrange: [{ kind: 'param', param: 'value', value: 5 }],
+            salient: true,
           },
         ],
       },

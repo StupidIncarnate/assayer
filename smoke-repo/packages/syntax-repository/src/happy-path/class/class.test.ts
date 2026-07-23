@@ -30,6 +30,7 @@ describe('class — a branchless class method with no explicit constructor', () 
           {
             reachesExit: '*module*/Greeter/greet/return@top',
             arrange: [{ kind: 'param', param: 'name', value: 'abc123' }],
+            salient: true,
           },
         ],
       },

@@ -11,6 +11,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -29,6 +30,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -49,6 +51,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -57,6 +60,27 @@ describe('electronPreloadBridgeAdapter', () => {
       await proxy.triggerGetCompiledFile({ relPath: 'src/index.ts' });
 
       expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:compiled-file', 'src/index.ts']);
+    });
+  });
+
+  describe('getStubs()', () => {
+    it('VALID: {stubsChannel: assayer:stubs} => invokes the stubs channel with no argument', async () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        runOutputChannel: 'assayer:run-output',
+      });
+
+      await proxy.triggerGetMergedView();
+
+      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:stubs']);
     });
   });
 
@@ -69,6 +93,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -88,6 +113,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -113,6 +139,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -135,6 +162,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -156,6 +184,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',
@@ -178,6 +207,7 @@ describe('electronPreloadBridgeAdapter', () => {
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
         runOutputChannel: 'assayer:run-output',

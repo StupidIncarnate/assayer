@@ -6,6 +6,11 @@
  *   through. Covers the if-else / switch / boolean rungs and the nested-function driven-through-caller
  *   proof.
  *
+ *   It also proves the display-only salient lens: the INTELLIGENT badge rides every salient row, and
+ *   seeding `runMode: 'intelligent'` in the compiled config grays the non-salient breadth
+ *   (`data-running="false"`) while the FULL case set and count stay put — the config travels to the
+ *   renderer over the status payload, and nothing about what is derived or run changes.
+ *
  * USAGE:
  * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-tests-tab.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
@@ -155,10 +160,44 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     expect([...caseRows].sort()).toStrictEqual([
       // score fails its own test, so bonus never evaluates and is left at its fill value.
       'not run grade(5, 7) → reaches L6',
-      // score passes, so bonus is the operand that decides.
+      // score passes, so bonus is the operand that decides. Same else exit as grade(5, 7), so this is
+      // the grayed breadth twin — non-salient, hence no INTELLIGENT badge below.
       'not run grade(6, 1) → reaches L6',
       'not run grade(6, 2) → reaches L3',
     ]);
+
+    // Default runMode is thorough (the harness seeds no runMode), so every derived case reads live and
+    // the salient subset — grade(6,2)→L3 and the first else grade(5,7)→L6 — is badged. The grayed twin
+    // grade(6,1) is non-salient and unbadged. The badge is a SIBLING of the row, so it never enters the
+    // case text asserted above.
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(3);
+    await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
+  });
+
+  test('VALID: {and.ts under runMode intelligent} => the full breadth still renders but the non-salient twin grays out (data-running=false) while the salient rows stay live and badged', async () => {
+    // The ONLY difference from the thorough walk above is the seeded config runMode — proof it is a
+    // display lens, not a change to what is derived or run. The title keeps the FULL count either way.
+    const exitCode = await app.compile({ runMode: 'intelligent' });
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('grade(score, bonus) · 3 cases');
+    await expect(window.getByTestId('TEST_CASE_ROW')).toHaveCount(3);
+
+    // The one grayed breadth twin — grade(6, 1), the second case reaching the else exit — is the only
+    // row a reviewer reads as NOT running under intelligent mode; the two salient rows stay live.
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="false"]')).toHaveText(
+      'not run grade(6, 1) → reaches L6',
+    );
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(2);
+
+    // The badge marks the salient (must-run) subset regardless of mode — the same two rows that stay live.
+    await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
   });
 
   test('VALID: {happy-path/ternary/return-basic/return-basic.ts selected} => the exit-position ternary splits into a then/else return, one case per arm, and hovering the ternary line highlights both', async () => {
@@ -273,30 +312,39 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
       'not run route(true, 4, false) → reaches L3',
     ]);
 
-    // Composition — a `switch` nested inside an `if`.
+    // Composition — a `switch` nested inside an `if`: the FULL bucket set crosses `if (enabled)` with
+    // the switch arms, so the disabled path converges TWO buckets on the same trailing exit — one grayed.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_IF}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('route(enabled, method) · 3 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('route(enabled, method) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run route(false, "get") → reaches L11',
+      'not run route(false, "post") → reaches L11',
       'not run route(true, "get") → reaches L5',
       'not run route(true, "post") → reaches L7',
     ]);
 
-    // Composition — an `if` nested inside a `switch`.
+    // Composition — an `if` nested inside a `switch`: the FULL bucket set crosses the switch arms with
+    // the inner `if (size > 5)`, so the non-'get' path converges TWO buckets on its exit — one grayed.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_IN_SWITCH}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('describeRoute(method, size) · 3 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('describeRoute(method, size) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run describeRoute("get", 5) → reaches L8',
       'not run describeRoute("get", 6) → reaches L5',
-      'not run describeRoute("post", 7) → reaches L10',
+      'not run describeRoute("post", 5) → reaches L10',
+      'not run describeRoute("post", 6) → reaches L10',
     ]);
 
     // Composition — a fall-through `switch` inside an `if`: read-accounted vs read-terminal keep it at one
-    // convergent exit, so exactly one case (this is the specimen that pins those two predicates apart).
+    // convergent exit, but the FULL input-bucket set is the cross product of both branches' arms — four
+    // buckets, all reaching the one trailing `return 1` (L11). Exactly one is the salient representative;
+    // the other three are the grayed breadth. The title carries the full count.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${FALLTHROUGH_IN_IF}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('tally(value, mode) · 1 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('tally(value, mode) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run tally(7, "abc123") → reaches L11',
+      'not run tally(5, "a") → reaches L11',
+      'not run tally(5, "abc123") → reaches L11',
+      'not run tally(6, "a") → reaches L11',
+      'not run tally(6, "abc123") → reaches L11',
     ]);
 
     // Branchless pure function — one exit, one derived case.
@@ -340,21 +388,25 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     ]);
 
     // Assumed ternary `||` chain — `a || b || 'default'` flattens its left spine to one branch per
-    // controlling operand, one exit per path: a truthy; a empty + b truthy; both empty → the fall-through.
+    // controlling operand. The FULL bucket set is the cross product of both operands' truthiness, so the
+    // a-truthy path converges TWO buckets (b either way) on the same exit — one is the grayed twin.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_OR_CHAIN}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pick(a, b) · 3 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pick(a, b) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run pick("", "") → reaches L2',
       'not run pick("", "abc123") → reaches L2',
+      'not run pick("abc123", "") → reaches L2',
       'not run pick("abc123", "abc123") → reaches L2',
     ]);
 
     // Assumed ternary `&&` chain — the mirror: each operand's FALSY case short-circuits, the all-truthy
-    // path falls through to the last operand.
+    // path falls through to the last operand. The FULL bucket set carries the a-falsy path with b either
+    // way, so two buckets converge on the same short-circuit exit — one is the grayed twin.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_AND_CHAIN}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('all(a, b, c) · 3 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('all(a, b, c) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run all(false, false, false) → reaches L2',
+      'not run all(false, true, false) → reaches L2',
       'not run all(true, false, false) → reaches L2',
       'not run all(true, true, false) → reaches L2',
     ]);

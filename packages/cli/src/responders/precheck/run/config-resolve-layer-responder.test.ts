@@ -12,7 +12,7 @@ describe('ConfigResolveLayerResponder', () => {
       const result = await ConfigResolveLayerResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error' },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', runMode: 'thorough' },
         configDir: '/repo',
         configPath: '/repo/assayer.config.json',
       });
@@ -28,7 +28,7 @@ describe('ConfigResolveLayerResponder', () => {
       const result = await ConfigResolveLayerResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error' },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', runMode: 'thorough' },
         configDir: '/repo',
         configPath: '/repo/assayer.config.json',
       });

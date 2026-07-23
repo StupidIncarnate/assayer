@@ -14,7 +14,7 @@
  */
 import type { Node } from 'ts-morph';
 
-import type { BranchNode, ExitNode, GlobalUse, ModuleEdge, SymbolName } from '@assayer/shared/contracts';
+import type { BranchNode, EnvRead, ExitNode, GlobalUse, ModuleEdge, SymbolName } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../../contracts/call-site/call-site-contract';
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
@@ -44,6 +44,8 @@ export interface HandlerResult {
   moduleEdges: ModuleEdge[];
   /** Ambient-external identifiers this node used (`console`, `process`) — flat file-level facts. */
   globalUses: GlobalUse[];
+  /** `process.env.<X>` property reads this node made — flat file-level facts, never scope-claimed. */
+  envReads: EnvRead[];
   descents: Descent[];
   /**
    * Passed in with empty branches/exits — the walk fills them from the scope body's loose facts.
@@ -62,6 +64,7 @@ export const handlerResultLayerAdapter = ({
   probeSites,
   moduleEdges,
   globalUses,
+  envReads,
   descents,
   opensScope,
 }: {
@@ -74,6 +77,7 @@ export const handlerResultLayerAdapter = ({
   probeSites?: ProbeSite[];
   moduleEdges?: ModuleEdge[];
   globalUses?: GlobalUse[];
+  envReads?: EnvRead[];
   descents?: Descent[];
   opensScope?: ScopeRecord;
 }): HandlerResult => ({
@@ -86,6 +90,7 @@ export const handlerResultLayerAdapter = ({
   probeSites: probeSites ?? [],
   moduleEdges: moduleEdges ?? [],
   globalUses: globalUses ?? [],
+  envReads: envReads ?? [],
   descents: descents ?? [],
   ...(opensScope === undefined ? {} : { opensScope }),
 });

@@ -10,6 +10,10 @@
  *   error). Positions are the only formatting-sensitive field and are display-only: the reference
  *   IDENTITY (specifier + imported name) is invariant under reformatting, exactly like a coverage ID.
  *
+ *   `envReads` are the `process.env.<X>` property reads the file makes, deduped by (property, literals)
+ *   so an identical read written twice is one fact — the raw half the stub stitch folds into
+ *   per-property env stubs.
+ *
  * USAGE:
  * moduleGraphProjectionTransformer({ walked });
  * // Returns a validated FileModuleGraph: { edges: [...], references: [...] }
@@ -21,7 +25,7 @@ import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-
 
 export const moduleGraphProjectionTransformer = ({ walked }: { walked: WalkFileResult }): FileModuleGraph => {
   if (!walked.success) {
-    return fileModuleGraphContract.parse({ edges: [], references: [], globalUses: [] });
+    return fileModuleGraphContract.parse({ edges: [], references: [], globalUses: [], envReads: [] });
   }
 
   const referenced = walked.scopes.flatMap((scope) =>
@@ -63,5 +67,18 @@ export const moduleGraphProjectionTransformer = ({ walked }: { walked: WalkFileR
     [],
   );
 
-  return fileModuleGraphContract.parse({ edges: walked.moduleEdges, references, globalUses });
+  // Env reads ride verbatim from the walk's flat channel, deduped by (property, literals) so an
+  // identical `process.env.<X>` comparison written twice is one fact. Their identity is the property
+  // name plus the literals it is compared against — invariant under reformatting, like a reference's.
+  const envReads = walked.envReads.reduce<typeof walked.envReads>(
+    (unique, read) =>
+      unique.some(
+        (seen) => seen.property === read.property && JSON.stringify(seen.literals) === JSON.stringify(read.literals),
+      )
+        ? unique
+        : [...unique, read],
+    [],
+  );
+
+  return fileModuleGraphContract.parse({ edges: walked.moduleEdges, references, globalUses, envReads });
 };

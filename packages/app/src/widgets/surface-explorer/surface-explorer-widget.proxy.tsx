@@ -4,6 +4,7 @@ import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
 
 import { useCompiledTreeBindingProxy } from '../../bindings/use-compiled-tree/use-compiled-tree-binding.proxy';
 import { useFileRunBindingProxy } from '../../bindings/use-file-run/use-file-run-binding.proxy';
+import { useAssayerStatusBindingProxy } from '../../bindings/use-assayer-status/use-assayer-status-binding.proxy';
 import { compiledFileFetchBrokerProxy } from '../../brokers/compiled-file/fetch/compiled-file-fetch-broker.proxy';
 import { ExplorerHeaderWidgetProxy } from '../explorer-header/explorer-header-widget.proxy';
 import { FileTreeWidgetProxy } from '../file-tree/file-tree-widget.proxy';
@@ -31,6 +32,9 @@ export const SurfaceExplorerWidgetProxy = (): {
   // executing one.
   const runProxy = useFileRunBindingProxy();
   runProxy.neverRun();
+  // The status binding drives the detail panel's display-only runMode. Bare-created so it resolves the
+  // default (thorough) status — every case renders live, exactly as these tree/code/run tests expect.
+  useAssayerStatusBindingProxy();
   ExplorerHeaderWidgetProxy();
   FileTreeWidgetProxy();
   CodeViewerWidgetProxy();

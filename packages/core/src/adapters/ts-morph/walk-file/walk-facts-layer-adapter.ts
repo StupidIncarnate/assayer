@@ -51,6 +51,7 @@ export const walkFactsLayerAdapter = ({ facts }: { facts: WalkFacts[] }): WalkFa
       probeSites: [...merged.probeSites, ...next.probeSites],
       moduleEdges: [...merged.moduleEdges, ...next.moduleEdges],
       globalUses: [...merged.globalUses, ...next.globalUses],
+      envReads: [...merged.envReads, ...next.envReads],
     }),
     {
       scopes: [],
@@ -63,5 +64,6 @@ export const walkFactsLayerAdapter = ({ facts }: { facts: WalkFacts[] }): WalkFa
       probeSites: [],
       moduleEdges: [],
       globalUses: [],
+      envReads: [],
     },
   );

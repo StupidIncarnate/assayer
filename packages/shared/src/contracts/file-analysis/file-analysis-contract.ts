@@ -11,13 +11,19 @@
  *   parsed perfectly and simply out of the runner's reach (a module scope, a private helper). Only
  *   `functions` are entries; both admissions ride beside them precisely BECAUSE nothing drives them.
  *
+ *   `declaredTypes` carries the file's locally-declared object shapes (name → full property list),
+ *   read from the walk's enumerated object descriptors — the source later phases splice per-property
+ *   value demands onto. Required for the same reads-as-complete reason: a file states the shapes it
+ *   owns even when it owns none.
+ *
  * USAGE:
- * fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [] });
+ * fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
  * // Returns a validated FileAnalysis (branded fields)
  */
 import { z } from 'zod';
 
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
+import { declaredTypeContract } from '../declared-type/declared-type-contract';
 import { functionAnalysisContract } from '../function-analysis/function-analysis-contract';
 import { lineEnrichmentContract } from '../line-enrichment/line-enrichment-contract';
 import { lintEntryContract } from '../lint-entry/lint-entry-contract';
@@ -32,6 +38,8 @@ export const fileAnalysisContract = z.object({
   // that Assayer cannot drive. Required for the same reason the others are — a file that can omit its
   // own lints reads as clean when it is not.
   lints: z.array(lintEntryContract),
+  // The file's locally-declared object shapes with their full property lists.
+  declaredTypes: z.array(declaredTypeContract),
 });
 
 export type FileAnalysis = z.infer<typeof fileAnalysisContract>;

@@ -1,0 +1,6 @@
+{
+  "type": "packages/syntax-repository/src/happy-path/object/branch-local/branch-local.ts#Config",
+  "properties": {
+    "mode": { "values": ["a", "dev", "prod", "staging"] }
+  }
+}

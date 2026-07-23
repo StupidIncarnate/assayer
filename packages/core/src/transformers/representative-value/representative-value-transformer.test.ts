@@ -40,5 +40,17 @@ describe('representativeValueTransformer', () => {
     it('VALID: {type: unknown} => returns "abc123"', () => {
       expect(representativeValueTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Date' }) })).toBe('abc123');
     });
+
+    it('VALID: {type: array} => falls back to "abc123"', () => {
+      expect(representativeValueTransformer({ type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }) })).toBe('abc123');
+    });
+
+    it('VALID: {type: object} => falls back to "abc123"', () => {
+      expect(
+        representativeValueTransformer({
+          type: TypeDescriptorStub({ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
+        }),
+      ).toBe('abc123');
+    });
   });
 });

@@ -12,6 +12,7 @@
  */
 import { z } from 'zod';
 
+import { envReadContract } from '../env-read/env-read-contract';
 import { globalUseContract } from '../global-use/global-use-contract';
 import { moduleEdgeContract } from '../module-edge/module-edge-contract';
 import { moduleReferenceContract } from '../module-reference/module-reference-contract';
@@ -23,6 +24,10 @@ export const fileModuleGraphContract = z.object({
   // stitch resolves against `@types/node`'s global scope. Empty when the file uses none; defaulted so a
   // blob written before this channel existed still parses.
   globalUses: z.array(globalUseContract).default([]),
+  // The `process.env.<X>` property reads the file makes — the per-file raw half the stub stitch folds
+  // into per-property env stubs. `process.env` is an object; each property is a slot whose values are
+  // guessed from the branch literals. Empty when the file reads none; defaulted for the same reason.
+  envReads: z.array(envReadContract).default([]),
 });
 
 export type FileModuleGraph = z.infer<typeof fileModuleGraphContract>;

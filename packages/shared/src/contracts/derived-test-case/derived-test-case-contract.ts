@@ -1,8 +1,8 @@
 /**
- * PURPOSE: Contract for a derived test case — the salient, structurally-asserting case Assayer
- *   would generate for one reachable exit: the arrange bindings that set the inputs up, and the
- *   coverage ID of the exit the flow must then reach. Every value is drawn from an input domain,
- *   never from executing the code (P4).
+ * PURPOSE: Contract for a derived test case — one structurally-asserting case Assayer would generate
+ *   for a reachable exit: the arrange bindings that set the inputs up, and the coverage ID of the
+ *   exit the flow must then reach. Every value is drawn from an input domain, never from executing
+ *   the code (P4).
  *
  *   `arrange` is a DISCRIMINATED union because an input is not always a parameter. A function takes
  *   its inputs positionally; a module scope takes none, yet a module that reads `process.env` takes
@@ -13,6 +13,16 @@
  *   representable and push the decision to whichever reader guessed. Discriminating on `kind` makes
  *   the wrong shape fail to parse instead.
  *
+ *   An `object` arrange is a whole PARAMETER too, but its inner shape is arranged per property: when a
+ *   branch turns on `config.mode`, the case sets `config` to an object whose properties carry the stub
+ *   values that steer each arm (`{ mode: 'a' }` vs `{ mode: 'dev' }`). `value` is a FLAT property map,
+ *   each entry a representative scalar drawn from the merged stub view (a human correction or the
+ *   derived demand) — an INPUT, never a code-derived output (P4). v1 arranges scalar-valued properties
+ *   only; nested objects/arrays are a later phase.
+ *
+ *   `salient` marks whether the case belongs to the intelligent (must-run) subset. It defaults to
+ *   true so a cache blob written before the field existed reads back as all-salient.
+ *
  * USAGE:
  * derivedTestCaseContract.parse({
  *   reachesExit: 'formatGreeting/return@if-then',
@@ -22,7 +32,11 @@
  *   reachesExit: 'the module scope exit id',
  *   arrange: [{ kind: 'env', name: 'VALUE', value: '6' }],
  * });
- * // Returns a validated DerivedTestCase (branded fields)
+ * derivedTestCaseContract.parse({
+ *   reachesExit: 'decide/return@else',
+ *   arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }],
+ * });
+ * // Returns a validated DerivedTestCase (branded fields; salient defaults to true)
  */
 import { z } from 'zod';
 
@@ -46,8 +60,14 @@ export const derivedTestCaseContract = z.object({
         name: envVarNameContract,
         value: envValueContract,
       }),
+      z.object({
+        kind: z.literal('object'),
+        param: symbolNameContract,
+        value: z.record(symbolNameContract, representativeValueContract),
+      }),
     ]),
   ),
+  salient: z.boolean().default(true),
 });
 
 export type DerivedTestCase = z.infer<typeof derivedTestCaseContract>;

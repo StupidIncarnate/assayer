@@ -14,6 +14,7 @@ describe('assayerBridgeGetStatusAdapter', () => {
         version: '1.0.0',
         message: 'Assayer core online',
         repoPath: '/tmp/target-repo',
+        runMode: 'thorough',
       });
     });
   });

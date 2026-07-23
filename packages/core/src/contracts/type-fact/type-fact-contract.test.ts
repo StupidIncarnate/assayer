@@ -30,6 +30,41 @@ describe('typeFactContract', () => {
         text: '"a" | "b"',
       });
     });
+
+    it('VALID: {flavor: "array", element} => parses the element fact', () => {
+      const result = typeFactContract.parse({ flavor: 'array', element: { flavor: 'number' } });
+
+      expect(result).toStrictEqual({ flavor: 'array', element: { flavor: 'number' } });
+    });
+
+    it('VALID: {flavor: "object", typeName, properties} => parses the named property list', () => {
+      const result = typeFactContract.parse({
+        flavor: 'object',
+        typeName: 'Config',
+        properties: [
+          { name: 'mode', fact: { flavor: 'string' } },
+          { name: 'retries', fact: { flavor: 'number' } },
+        ],
+      });
+
+      expect(result).toStrictEqual({
+        flavor: 'object',
+        typeName: 'Config',
+        properties: [
+          { name: 'mode', fact: { flavor: 'string' } },
+          { name: 'retries', fact: { flavor: 'number' } },
+        ],
+      });
+    });
+
+    it('VALID: {flavor: "object", no typeName} => parses a keyless anonymous object', () => {
+      const result = typeFactContract.parse({
+        flavor: 'object',
+        properties: [{ name: 'a', fact: { flavor: 'string' } }],
+      });
+
+      expect(result).toStrictEqual({ flavor: 'object', properties: [{ name: 'a', fact: { flavor: 'string' } }] });
+    });
   });
 
   describe('invalid type facts', () => {

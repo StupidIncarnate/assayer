@@ -22,6 +22,9 @@ describe('node-global / uses-process — ambient process.env access plus a proce
         { name: 'process', member: 'env', called: false, args: [], line: 1, column: 21 },
         { name: 'process', member: 'cwd', called: true, args: [], line: 3, column: 20 },
       ],
+      // The bare `process.env.MODE` read is captured as an env read naming the property, with no
+      // literal (it is assigned, not compared) — so `MODE` is a stub reader with a guessed value.
+      envReads: [{ property: 'MODE', literals: [] }],
     });
   });
 
@@ -43,7 +46,7 @@ describe('node-global / uses-process — ambient process.env access plus a proce
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

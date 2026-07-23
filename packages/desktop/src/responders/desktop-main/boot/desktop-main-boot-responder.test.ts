@@ -30,6 +30,7 @@ describe('DesktopMainBootResponder', () => {
         desktopBridgeStatics.channels.status,
         desktopBridgeStatics.channels.compiledTree,
         desktopBridgeStatics.channels.compiledFile,
+        desktopBridgeStatics.channels.stubs,
         desktopBridgeStatics.channels.run,
         desktopBridgeStatics.channels.savedRun,
       ]);

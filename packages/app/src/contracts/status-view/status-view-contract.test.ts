@@ -12,6 +12,7 @@ describe('statusViewContract', () => {
         version: '1.0.0',
         message: 'Assayer core online',
         repoPath: '/home/user/project',
+        runMode: 'thorough',
       });
     });
 
@@ -21,6 +22,14 @@ describe('statusViewContract', () => {
       const result = statusViewContract.parse(view);
 
       expect(result.repoPath).toBe('/tmp/other-repo');
+    });
+
+    it('VALID: {runMode: "intelligent"} => carries the display-only run mode through', () => {
+      const view = StatusViewStub({ runMode: 'intelligent' });
+
+      const result = statusViewContract.parse(view);
+
+      expect(result.runMode).toBe('intelligent');
     });
   });
 

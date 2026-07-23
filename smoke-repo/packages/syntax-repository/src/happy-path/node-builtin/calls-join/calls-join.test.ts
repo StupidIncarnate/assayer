@@ -20,6 +20,7 @@ describe('node-builtin / calls-join — a CALLED value imported from a node buil
       edges: [{ kind: 'import', specifier: 'node:path', bindings: [{ kind: 'named', name: 'join' }], line: 1, column: 1 }],
       references: [{ specifier: 'node:path', importedName: 'join', line: 3, column: 21 }],
       globalUses: [],
+      envReads: [],
     });
   });
 
@@ -41,7 +42,7 @@ describe('node-builtin / calls-join — a CALLED value imported from a node buil
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

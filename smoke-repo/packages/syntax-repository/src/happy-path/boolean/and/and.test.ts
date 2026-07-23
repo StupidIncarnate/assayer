@@ -42,8 +42,10 @@ describe('boolean / and — a conjunction inside an exported function', () => {
   // The payoff, and the bug that motivated decomposition. Read as ONE opaque operand, this condition
   // was `unrecognized`, so BOTH arms derived the identical arrange `{score: 0, bonus: 0}` — meaning
   // the then-case claimed to reach an exit that `grade(0, 0)` provably cannot reach. Each case below
-  // is a distinct REASON, and each one's values actually drive the flow it claims.
-  it('VALID: {&& condition} => one case per CAUSE — one for then, TWO for else', () => {
+  // is a distinct REASON, and each one's values actually drive the flow it claims. The two else-causes
+  // reach the SAME exit and so return the same value: the first is the salient (must-run)
+  // representative, the second is the grayed breadth twin.
+  it('VALID: {&& condition} => one case per CAUSE — one for then, TWO for else, second else grayed', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
@@ -54,6 +56,7 @@ describe('boolean / and — a conjunction inside an exported function', () => {
           { kind: 'param', param: 'score', value: 6 },
           { kind: 'param', param: 'bonus', value: 2 },
         ],
+        salient: true,
       },
       // 5 > 5 fails, so `bonus > 1` NEVER EVALUATES — bonus is unconstrained and falls to fill.
       {
@@ -62,14 +65,17 @@ describe('boolean / and — a conjunction inside an exported function', () => {
           { kind: 'param', param: 'score', value: 5 },
           { kind: 'param', param: 'bonus', value: 7 },
         ],
+        salient: true,
       },
-      // 6 > 5 holds, so evaluation continues and 1 > 1 is the operand that decides.
+      // 6 > 5 holds, so evaluation continues and 1 > 1 is the operand that decides. Same else exit as
+      // above, so it is the grayed breadth twin, not a second salient case.
       {
         reachesExit: ELSE,
         arrange: [
           { kind: 'param', param: 'score', value: 6 },
           { kind: 'param', param: 'bonus', value: 1 },
         ],
+        salient: false,
       },
     ]);
   });

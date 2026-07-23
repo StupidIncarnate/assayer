@@ -60,7 +60,12 @@ export const jestInterpretCaseAdapter = ({
     });
   }
 
-  const args = testCase.arrange.flatMap((binding) => (binding.kind === 'param' ? [binding.value] : []));
+  // A param and an object both apply positionally, so both contribute one argument in arrange order; an
+  // env binding applies by writing a key, so it contributes none. The object binding's `value` is
+  // already the plain property map the entry receives ({ mode: 'dev' }), so it needs no reconstruction.
+  const args = testCase.arrange.flatMap((binding): unknown[] =>
+    binding.kind === 'env' ? [] : [binding.value],
+  );
   const envBindings = testCase.arrange.flatMap((binding) => (binding.kind === 'env' ? [binding] : []));
   // Snapshotted BEFORE the first write, so the restore below puts back what was there rather than
   // what this case put there.

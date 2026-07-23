@@ -35,6 +35,47 @@ describe('handleMemberAccessLayerAdapter', () => {
     });
   });
 
+  describe('the env read it records', () => {
+    it("VALID: {process.env.MODE === 'production'} => one env read naming MODE and its compared literal", () => {
+      handleMemberAccessLayerAdapterProxy();
+
+      const result = handleMemberAccessLayerAdapter({
+        node: accessOf({ source: "if (process.env.MODE === 'production') {\n}\n" }),
+        context: MODULE_CONTEXT,
+      });
+
+      expect({ envReads: result.envReads, globalUses: result.globalUses }).toStrictEqual({
+        envReads: [{ property: 'MODE', literals: ['production'] }],
+        globalUses: [],
+      });
+    });
+
+    it('VALID: {Number(process.env.CODE)} => one env read naming CODE with no literal (not a direct comparison)', () => {
+      handleMemberAccessLayerAdapterProxy();
+
+      const result = handleMemberAccessLayerAdapter({
+        node: accessOf({ source: 'const code = Number(process.env.CODE);\n' }),
+        context: MODULE_CONTEXT,
+      });
+
+      expect({ envReads: result.envReads, globalUses: result.globalUses }).toStrictEqual({
+        envReads: [{ property: 'CODE', literals: [] }],
+        globalUses: [],
+      });
+    });
+
+    it('VALID: {a bare const m = process.env.MODE} => one env read naming MODE with no literal', () => {
+      handleMemberAccessLayerAdapterProxy();
+
+      const result = handleMemberAccessLayerAdapter({
+        node: accessOf({ source: 'export const m = process.env.MODE;\n' }),
+        context: MODULE_CONTEXT,
+      });
+
+      expect(result.envReads).toStrictEqual([{ property: 'MODE', literals: [] }]);
+    });
+  });
+
   describe('accesses that are not ambient externals', () => {
     it('VALID: {a member access off a local binding} => no global use, just descents', () => {
       handleMemberAccessLayerAdapterProxy();

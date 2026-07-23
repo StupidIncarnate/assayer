@@ -40,10 +40,12 @@ describe('composition / same-file-predicate — a caller guarded by a same-file 
           {
             reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#then',
             arrange: [{ kind: 'param', param: 'x', value: 51 }],
+            salient: true,
           },
           {
             reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#else',
             arrange: [{ kind: 'param', param: 'x', value: 50 }],
+            salient: true,
           },
         ],
       },

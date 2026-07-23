@@ -94,8 +94,8 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesExit: THEN, arrange: [{ kind: 'env', name: 'VALUE', value: '6' }] },
-      { reachesExit: ELSE, arrange: [{ kind: 'env', name: 'VALUE', value: '5' }] },
+      { reachesExit: THEN, arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], salient: true },
+      { reachesExit: ELSE, arrange: [{ kind: 'env', name: 'VALUE', value: '5' }], salient: true },
     ]);
   });
 

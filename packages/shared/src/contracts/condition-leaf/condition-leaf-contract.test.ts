@@ -33,6 +33,28 @@ describe('conditionLeafContract', () => {
       });
     });
 
+    it('VALID: {an object-member operand} => carries the property path and root type-reference name', () => {
+      const result = conditionLeafContract.parse({
+        kind: 'leaf',
+        id: 'stub/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+
+      expect(result).toStrictEqual({
+        kind: 'leaf',
+        id: 'stub/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+    });
+
     it('VALID: {a call operand truthy leaf} => carries the operandCallPosition that joins it to its call site', () => {
       const result = conditionLeafContract.parse({
         kind: 'leaf',

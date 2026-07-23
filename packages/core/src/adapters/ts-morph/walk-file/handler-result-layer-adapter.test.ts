@@ -18,6 +18,7 @@ describe('handlerResultLayerAdapter', () => {
         probeSites: [],
         moduleEdges: [],
         globalUses: [],
+        envReads: [],
         descents: [],
       });
     });
@@ -35,6 +36,7 @@ describe('handlerResultLayerAdapter', () => {
         probeSites: [],
         moduleEdges: [],
         globalUses: [],
+        envReads: [],
         descents: [],
       });
     });
@@ -54,6 +56,7 @@ describe('handlerResultLayerAdapter', () => {
         probeSites: [],
         moduleEdges: [],
         globalUses: [],
+        envReads: [],
         descents: [],
         opensScope: ScopeRecordStub(),
       });

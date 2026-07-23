@@ -17,7 +17,7 @@ describe('configStableBranchSaveBroker', () => {
 
       expect(proxy.getWrittenPath()).toBe('/repo/assayer.config.json');
       expect(proxy.getWrittenContent()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error"}'
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","runMode":"thorough"}'
       );
       expect(result).toStrictEqual({
         version: '1',
@@ -26,6 +26,7 @@ describe('configStableBranchSaveBroker', () => {
         stableBranch: 'main',
         darkSpots: 'warn',
         deadSurface: 'error',
+        runMode: 'thorough',
       });
     });
 
@@ -44,7 +45,7 @@ describe('configStableBranchSaveBroker', () => {
       });
 
       expect(proxy.getWrittenContent()).toBe(
-        '{"version":"1","repoRoot":"./smoke-repo","exclude":["dist"],"stableBranch":"master","darkSpots":"warn","deadSurface":"error"}'
+        '{"version":"1","repoRoot":"./smoke-repo","exclude":["dist"],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","runMode":"thorough"}'
       );
       expect(result).toStrictEqual({
         version: '1',
@@ -53,6 +54,7 @@ describe('configStableBranchSaveBroker', () => {
         stableBranch: 'master',
         darkSpots: 'warn',
         deadSurface: 'error',
+        runMode: 'thorough',
       });
     });
   });

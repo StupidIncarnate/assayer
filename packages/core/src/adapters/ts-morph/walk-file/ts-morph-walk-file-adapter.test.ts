@@ -20,6 +20,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 0 }],
         nodes: [],
@@ -51,6 +52,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 68 },
@@ -102,6 +104,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 128 },
@@ -185,6 +188,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
@@ -240,6 +244,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 79 },
@@ -295,6 +300,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 81 },
@@ -324,8 +330,8 @@ describe('tsMorphWalkFileAdapter', () => {
           ScopeRecordStub({
             scopePath: ['*module*', 'run'],
             name: 'run',
-            params: [{ name: 'items', type: { kind: 'unknown', text: 'number[]' } }],
-            returnType: { kind: 'unknown', text: 'number[]' },
+            params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
+            returnType: { kind: 'array', element: { kind: 'number' } },
             exits: [{ coverageId: '*module*/run/return@top', kind: 'return', guardPath: [], line: 2 }],
             // `items.map(...)` is a call to an unresolvable callee (a method), and its argument is the
             // callback expression — opaque, not a param the caller passes straight through.
@@ -390,6 +396,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 145 },
@@ -411,7 +418,7 @@ describe('tsMorphWalkFileAdapter', () => {
           ScopeRecordStub({
             scopePath: ['*module*', 'sumAll'],
             name: 'sumAll',
-            params: [{ name: 'items', type: { kind: 'unknown', text: 'number[]' } }],
+            params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
             returnType: { kind: 'number' },
             startLine: 1,
             endLine: 7,
@@ -459,6 +466,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 75 },
@@ -528,6 +536,7 @@ describe('tsMorphWalkFileAdapter', () => {
       expect(result).toStrictEqual({
         success: true,
         globalUses: [],
+        envReads: [],
         moduleEdges: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
@@ -578,6 +587,7 @@ describe('tsMorphWalkFileAdapter', () => {
         edges: [{ kind: 'import', specifier: './y', bindings: [{ kind: 'named', name: 'foo' }], line: 1, column: 1 }],
         references: [{ specifier: './y', importedName: 'foo', line: 3, column: 3 }],
         globalUses: [],
+        envReads: [],
       });
     });
   });

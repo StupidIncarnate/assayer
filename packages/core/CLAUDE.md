@@ -71,6 +71,14 @@ exactly its own — which is why no node ever has to ask "which function am I in
 Handlers describe descent; the core performs it (R15: *core owns all traversal; plugins never parse*).
 That inversion is why a `switch` handler needs zero knowledge of `if`.
 
+**Types are read structurally too.** `read-type-fact` reads a param/return type into a serializable
+fact — primitive, union, ARRAY element type, or a LOCAL object type's enumerated (sorted) property
+list; `type-descriptor` interprets that fact into the analysis model. Only same-file declarations
+enumerate: an imported object type is `any` in the hermetic walk (§5.10) and gets its shape at the
+stitch. `FileAnalysis.declaredTypes` projects the file's named local object shapes with their full
+property lists (`declared-types-projection` over the walk's object descriptors) — the source later
+phases splice per-property value demands onto.
+
 **Resolution is a separate post-compile stitch — the walk still never crosses a file.** A call to an
 imported name records a raw `import` reference (the module-specifier's literal VALUE + the imported
 name) and keeps going; the walk never opens the imported file, so import cycles are a non-event at walk
@@ -85,11 +93,14 @@ LOOKUP, not by re-parsing (§9). One parse per file still holds.
 | --- | --- |
 | support a new syntax family | a new `handle-<x>-layer-adapter` + **one** route in `dispatch-node` |
 | support a new callable shape | `handle-function-layer-adapter` (owns `FunctionLikeNode`) + its dispatch route |
-| handle a new type shape | `transformers/type-descriptor` (`read-type-fact` only packs raw checker facts) |
+| handle a new type shape | `transformers/type-descriptor` (`read-type-fact` only packs raw checker facts — primitives, unions, ARRAY element types, and a LOCAL object type's enumerated properties; an imported object type is `any` in the hermetic walk and is resolved at the stitch, §5.10) |
 | handle a new comparison | `transformers/predicate` (`read-condition` only extracts the readout) |
 | change coverage IDs | `transformers/coverage-id` + `transformers/exit-coverage-id` |
 | change what identity is | `project-node-layer-adapter` |
 | change operand typing | `read-operand-type-layer-adapter` (read §5.9 first) |
+| capture an object-member operand (`config.mode`) | `read-condition` (+ `read-property-path` for the `.member` chain) — records `operandParamName` (root), `operandPropertyPath`, and `operandTypeRef` (the root param's declared type-reference NAME) for the stub stitch; the branch is UNDRIVEN in the per-file blob (gated in `derive-cases`, §5.12) and DRIVEN at consume time by `stub-realize` (§9) |
+| drive an object-member branch from the stub view | `brokers/stub/realize` (the consume-time overlay) + `transformers/object-arrange` (arranges one object param's properties from the merged stub view; a corrected property is AUTHORITATIVE — only its values, no branch-literal fallback) — NEVER `derive-cases`, which stays scalar-only |
+| flag a committed correction that CONTRADICTS a guard (pre-run) | `transformers/gather-property-guards` (the per-guard seam, guard twin of `gather-type-reads`) + `transformers/stub-contradictions` (intersect corrected values with the guard's satisfying domain, `is-domain-empty`) — folded into `compile-run-broker`'s `errors[]` beside the stale-overlay reconcile (§9) |
 | change reachability | `read-terminal` **or** `read-accounted` — they are different questions, read §5.8 first |
 | decide whether a branch is DRIVABLE (steerable) | `transformers/derive-cases` — the ONE gate, every branch construct alike (§5.12); never a per-construct or per-position gate |
 | change what counts as a dark spot | `statics/significant-syntax-kinds` |
@@ -97,7 +108,9 @@ LOOKUP, not by re-parsing (§9). One parse per file still holds.
 | change what a call TARGETS (local / import / unresolved arms) | `read-callee-layer-adapter` |
 | record an import / re-export edge | `handle-import-layer-adapter` / `handle-export-layer-adapter` + their routes in `dispatch-node`; projected by `transformers/module-graph-projection` |
 | record an ambient global USE (`console`, `process`) | `handle-member-access-layer-adapter` (member forms) / `handle-call` (bare-identifier global calls) + `read-ambient-root-layer-adapter`; projected as `globalUses` by `transformers/module-graph-projection` |
+| record a `process.env.<X>` env read | `handle-member-access-layer-adapter` (the outer `process.env.<X>` access — property name + any equality-comparison literal); projected as `envReads` by `transformers/module-graph-projection`, aggregated into per-property env stubs by the stub stitch (§9) |
 | change import resolution (the stitch) | `brokers/compile/resolve-graph` + `adapters/typescript/{read-config,resolve-module}` |
+| change the stub index (per-property value demands over declared types) | `brokers/compile/stub-graph` (the twin stitch; also returns the per-guard `guards` for the contradiction check) + `transformers/gather-type-reads` (the reader/type seam) + `transformers/collect-property-demands` (the value math); written by `brokers/stub-index/write` |
 | read an external (npm / node) signature | `brokers/external-signature/read` + `adapters/ts-morph/read-external-signature` (the SECOND, node_modules-aware project — §5.10) |
 | read an ambient global / called-builtin signature | `brokers/external-signature/read-global` + `adapters/ts-morph/read-global-signature` (probes the SAME second project's GLOBAL scope — a builtin resolves only in the checker, never a `.d.ts` path) |
 
@@ -120,14 +133,17 @@ VALUES (`getLiteralValue()`, not the quoted spelling). If the AST can't be decom
 yet, build a normalized STRUCTURAL projection of it — `project-node-layer-adapter` already does this
 for ANY node — do NOT add a `getText()` fallback. A formatting-only edit that moves an ID is a bug.
 
-`getText()` currently appears exactly 5 times in the analyzer and **every one is one of these two
-sanctioned uses**. Do not cite them as precedent for a third:
+`getText()` currently appears in the analyzer only in these two sanctioned uses. Do not cite them as
+precedent for a third:
 
-- `node.getText()` on an **Identifier** (`project-node`, `read-condition`, `desugar-switch`) — an
-  identifier's text IS its name; there is no formatting freedom in it. *Open question, not settled:*
-  this is the identifier's spelling, not its resolved symbol, so renaming a local currently moves the
-  ID. That is churn-matrix #5 and is explicitly undecided in `plan/requirements.md` — if you resolve
-  it, resolve it there, in `project-node`, once.
+- `node.getText()` on an **Identifier or type-reference NAME** (`project-node`, `read-condition`,
+  `desugar-switch`) — an identifier's text IS its name; there is no formatting freedom in it. This
+  covers `read-condition` reading an object-member operand's ROOT identifier (`config` in
+  `config.mode`) and the type-reference name the root param declares (`Config`, off
+  `param.getTypeNode()`), both spelling-invariant names. *Open question, not settled:* this is the
+  identifier's spelling, not its resolved symbol, so renaming a local currently moves the ID. That is
+  churn-matrix #5 and is explicitly undecided in `plan/requirements.md` — if you resolve it, resolve it
+  there, in `project-node`, once.
 - `type.getText()` on a **Type** (`read-type-fact`) — that is the CHECKER's canonical rendering of a
   type, not the user's source. It lands in display-only `TypeText` and never reaches an ID.
 
@@ -231,12 +247,37 @@ predicate in `if (a && b)` and two value-paths in `return a && b` because those 
 two readers for one lens.)
 
 Whether a branch can be STEERED is likewise decided in ONE place — the `derive-cases` steerability gate —
-for `if`, ternary, `&&`/`||`/`??` and `?.` alike: every condition leaf a param or env operand ⇒ cases,
-otherwise ⇒ admitted UNDRIVEN. The incident this forbids: a `?.` receiver was gated on `context.params`
+for `if`, ternary, `&&`/`||`/`??` and `?.` alike: every condition leaf a PLAIN SCALAR param or env operand
+⇒ cases, otherwise ⇒ admitted UNDRIVEN. An object-member read (`config.mode`) names its root param but is
+NOT scalar-arrangeable, so PER-FILE a leaf carrying `operandPropertyPath` stays un-steerable and its branch
+is admitted UNDRIVEN, the property fact captured for the stub stitch. That admission is closed at CONSUME
+time: `stub-realize` (§9), the object twin of compose, arranges the object param from the merged stub view
+(derived per-property demands + the committed `assayer/stubs/` overlay) and DRIVES the branch — so an
+object-member branch is undriven in the blob and driven in the run, exactly as an opaque call-guard is. A branchless predicate's return comparison (the `returnPredicate` axis)
+rides the SAME gate, but its failure mode differs: an un-steerable one is simply OMITTED — the entry is
+still callable, it just cannot tell its two return values apart — never admitted undriven. The incident
+this forbids: a `?.` receiver was gated on `context.params`
 INSIDE `read-conditional-exit`, and `read-value-flow-exit` carried its own drivability gate — so one
 `cond ? a : b` came out three ways (split, single-exit, or dark spot) by nothing but whether it sat in a
 `return`, behind a `const`, or after a `?.`. Both gates were deleted. Asking "is this drivable?" anywhere
 but `derive-cases`, or reading one lens two ways by position, re-opens it.
+
+**5.13 — The case set is the full input-bucket BREADTH; `salient` marks the execution subset.**
+`derive-cases` produces one case per input COMBINATION the logic distinguishes — the cartesian product
+of every branch's arms (each arm's short-circuit causes kept distinct) plus a branchless predicate's
+`true`/`false` return — EVEN when several combinations reach the same exit. Every case carries
+`salient`: the salient subset is one representative per PREDICTED OUTPUT (the minimal set worth
+RUNNING), and the full set is the file's testable breadth. So a file's case count is the breadth, and
+`salient` is what a reviewer reads as must-run.
+
+Predicted output is `reachesExit`, because two buckets reaching one exit return the same literal — the
+SOLE exception is a branchless predicate, whose two return values leave by the same exit, so `predWant`
+splits them and each earns a salient case. Everything else that shares an exit collapses: the first is
+salient, the rest are the grayed breadth. A converging branch is therefore NOT dropped — its off-path
+buckets (a bucket may constrain a branch its flow never reaches; that arm is SOUND) stay in the full set
+as grayed twins. Effects are not modeled, so two buckets differing only by a side effect over-collapse in
+the salient subset; the full set still carries both. The cross-system stub repository (the value demands
+objects/arrays/env carry) is a SEPARATE artifact — `plan/requirements.md` D22/D23, `plan/stub-repository.md`.
 
 ---
 
@@ -415,6 +456,74 @@ those into resolved edges. It never re-parses source — it reads already-finish
   or tsconfig changes; written to `.assayer/cache/resolved/<namespace>.json`. A pure file move re-parses
   nothing (blobs are content-addressed) and re-resolves edges against the new layout, so a
   moved-but-not-updated import surfaces as a broken link, never a stale pointer.
+- **The stub index is a TWIN stitch over the same blobs.** `compile-stub-graph-broker` reads the finished
+  blobs back by lookup — never re-parsing, never re-resolving, blobs stay pure — and for every object type
+  a blob declares, splices per-property value demands onto the type's FULL declared property list: a
+  property some branch reads (`config.mode`) carries the values that branch distinguishes (the SAME
+  `type-to-range → domain-values` math the case engine runs — the object-member branch is admitted
+  UNDRIVEN, yet its branched VALUES are real demands), a property no reader touches is an honest `unknown`.
+  It keys on the SAME layout + tsconfig hash the resolved index it is handed already carries, and writes
+  `.assayer/cache/stubs/<namespace>.json` (keyed by `<definitionRelPath>#<TypeName>`) atomically via
+  `stub-index-write-broker`. Which blobs' read facts feed a type — and which files read it — is decided in
+  ONE seam (`gather-type-reads-transformer`), which INVERTS the resolved index: a type declared in one file
+  and branched on across several is keyed on its DEFINITION site, and every reader's per-property demand is
+  UNIONED onto it, `readers[]` listing exactly the files that read it. A reader reaches its definition by
+  reconciling the branch leaf's `operandTypeRef` — a SAME-FILE type resolves to the reader itself, a
+  cross-file type through the reader's `local` import edge (a type-only `import { Config } from './types'`
+  is recorded as a module edge like any other, so the resolved index carries it with no special case). The
+  per-property value math (`collect-property-demands-transformer`) stays put on the far side of the seam.
+- **Env reads are the object twin — `process.env` IS an object.** `gather-env-reads-transformer` folds
+  every file's `process.env.<X>` reads into one env stub per property keyed `process.env#<PROP>`, keyed on
+  the property name (never a type, since `process.env` has no declared shape in the hermetic walk). Two
+  facts feed it, both already on the blob: the module graph's `envReads` (bare `process.env.<X>` reads the
+  walk captured, carrying the property and any equality-comparison literal) and the Number-coerced branch
+  leaves (`operandEnvVarName` names the property, the predicate literal is the switch/if value). `values`
+  are the distinct branch literals GUESSED plus one representative for anything else, marked `guessed:true`
+  (a best-effort guess a human later corrects, never authoritative); `readers[]` lists every file that
+  reads the property. This runs REGARDLESS of drivability — a bare `process.env.MODE === 'x'` compare is
+  admitted UNDRIVEN (§5.10 — it types as `any`), yet its literal is a real stub demand. The env proof
+  stays checker-based; nothing here adds `node_modules` to the walk.
+- **`stub-realize` DRIVES object-member branches at consume time — the object twin of compose.** A
+  branch on `config.mode` is admitted UNDRIVEN in the per-file blob (an object param's property is not
+  scalar-arrangeable, §5.12). `stub-realize-broker` closes that at run/serve time, exactly where compose
+  closes an opaque call-guard: for an entry whose branches all read object members of a stubbable type it
+  builds that type's merged stub view (the derived per-property demands via `collect-property-demands`
+  combined with the committed overlay via `stub-view`), enumerates the same input buckets `derive-cases`
+  does, and hands each object param to `object-arrange-transformer`, which fills every property with a
+  stub value SATISFYING that bucket's requirement — the object-arrange discriminant `{ kind:'object',
+  param, value:{ prop: val, … } }`. A property WITH a committed correction is AUTHORITATIVE: object-arrange
+  seeds its narrowed domain from ONLY the corrected values, so it never falls back to the branch literal —
+  and when no corrected value satisfies the guard the bucket is unreachable and dropped (no bogus case),
+  the contradiction itself raised as a P1 by `stub-contradictions` before running. A property WITHOUT a
+  correction keeps the derived demand (which inherently contains the branch literals, so its guard is
+  always satisfiable). A same-file type reads off `declaredTypes`; a cross-file type resolves
+  through the import the entry declares and its definition is re-walked on disk, the same per-run sibling
+  read compose does. Values are INPUTS (a human correction wins over the derived demand), never outputs
+  (P4) — the case asserts reaching an exit structurally. It is a per-run overlay, NEVER persisted into a
+  blob or the cache, wired into the SAME three seams compose is (`run-unit-broker`, the `syntax-traits`
+  harness, `compiled-file-resolve-broker`). A human correction thus becomes a real case that runs and can
+  fail — the payoff the stub repository exists for.
+- **The committed overlay combines with the derived stub index at READ time, never in a hash.** The
+  DERIVED stub index above is cache-internal; a human corrects a value in the COMMITTED
+  `assayer/stubs/` (`objects/<definitionRelPath>/<TypeName>.json`, `env/<PROPERTY>.json`), OUTSIDE the
+  cache, the file PATH carrying the stub's stable key. `stub-overlay-load-broker` reads it,
+  `stub-view-transformer` combines derived + overlay (a correction REPLACES the demanded values of each
+  property it names, or an env stub's values; unmentioned properties keep the derived demand) — computed
+  fresh per read, NEVER persisted merged. The overlay is in NO hash, so editing it never invalidates the
+  derived index; the cache stays disposable/rebuildable. Two ways a correction is WRONG, both P1 build
+  errors folded into `compile-run-broker`'s `errors[]` (exit 1, the same class as a broken import), each
+  naming the overlay file, the identity, and the fix. A STALE correction — its type-key absent from the
+  index, a named property absent from that type's full list, or an env key absent from the env stubs — is
+  raised by `stub-overlay-reconcile-broker`. A CONTRADICTING correction — its authoritative values cannot
+  satisfy a branch guard that reads the property (`mode === 'a'` where the corrected `mode` omits `'a'`) —
+  is dead code under the human's truth, caught BEFORE running by `stub-contradictions-transformer`: over
+  the per-guard `guards` the stub stitch gathered (`gather-property-guards`, the guard twin of
+  `gather-type-reads`), it intersects the corrected values (a fixed-member domain) with the guard's
+  satisfying domain (`type-to-range → intersect-domains`) and reports the ones `is-domain-empty` proves
+  unreachable — the SAME emptiness machinery as the unreachable-exit lint, naming the reader:line. Only a
+  literal-carrying guard is judged; a truthy/falsy satisfying domain is a sample, never a constraint, so it
+  is skipped. This is the first concrete instance of the committed-override-reconciled-against-a-derived-map
+  pattern (the named-states pattern, still unbuilt).
 - **Resolution failure is a BUILD ERROR, not a dark spot — the distinction is WHO OWES the fix.** A dark
   spot is Assayer admitting it never understood some syntax (its debt, unactionable for the reader). An
   unresolvable import is understood perfectly and simply broken or opaque, so it is the REPO's to fix:

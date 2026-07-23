@@ -4,7 +4,7 @@
  *   which lines the code viewer's coverage gutter counts.
  *
  *   An undriven entry's cases are real derivation output, not a mistake: the analyzer read the scope
- *   and derived one case per reachable exit. They are simply cases nothing will ever execute —
+ *   and derived its full input-bucket case set. They are simply cases nothing will ever execute —
  *   `case-set-projection` drops the entry, so the run reports `0/0` and admits the scope as undriven
  *   instead. Listing those cases as pending tests is the reads-as-complete lie wearing a third face:
  *   the panel would advertise cases while the run beside it reports none.

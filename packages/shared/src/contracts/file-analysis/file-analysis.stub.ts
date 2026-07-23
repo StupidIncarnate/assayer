@@ -45,5 +45,6 @@ export const FileAnalysisStub = ({ ...props }: StubArgument<FileAnalysis> = {}):
     darkSpots: [],
     undriven: [],
     lints: [],
+    declaredTypes: [],
     ...props,
   });
