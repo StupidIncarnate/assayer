@@ -19,6 +19,7 @@ import {
   moduleEdgeContract,
 } from '@assayer/shared/contracts';
 
+import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
 import { walkNodeContract } from '../walk-node/walk-node-contract';
@@ -41,6 +42,9 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     // The start lines of inline functions the file reaches WITHOUT a named call — returned to a caller
     // or immediately invoked — so a follower never mistakes a reached callback for dead surface.
     reachedFns: z.array(lineNumberContract),
+    // The parallel channel only IIFEs populate: each invoked-in-place function (`((n) => …)(x)`) with
+    // the invocation arguments welded onto its params — what a follower welds to drive the arrow.
+    invokedFns: z.array(invokedFnContract),
   }),
   z.object({
     success: z.literal(false),

@@ -23,6 +23,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 0 }],
         nodes: [],
         scopes: [
@@ -56,6 +57,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 68 },
           { id: '*module*/classify/return@top', kind: 'exit', start: 59, end: 64 }],
@@ -109,6 +111,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 128 },
           { id: '*module*/outer/inner/return@top', kind: 'exit', start: 96, end: 97 },
@@ -194,6 +197,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
           { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 73, end: 78 },
@@ -251,6 +255,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 79 },
           { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 66, end: 71 }],
@@ -308,6 +313,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 81 },
           { id: '*module*/run/return@top', kind: 'exit', start: 58, end: 77 },
@@ -413,6 +419,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 145 },
           { id: '*module*/sumAll/return@top', kind: 'exit', start: 136, end: 141 },
@@ -484,6 +491,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 75 },
           { id: '*module*/pick/ternary:id:flag#leaf', kind: 'cond', start: 55, end: 59 },
@@ -555,6 +563,7 @@ describe('tsMorphWalkFileAdapter', () => {
         envReads: [],
         moduleEdges: [],
         reachedFns: [],
+        invokedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
           { id: '*module*/greet/return@top', kind: 'exit', start: 77, end: 82 }],

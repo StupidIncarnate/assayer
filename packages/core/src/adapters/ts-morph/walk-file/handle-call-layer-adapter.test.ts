@@ -9,6 +9,8 @@ const PASSTHROUGH_SOURCE =
   'function inner(n: number): string {\n  return "x";\n}\n' +
   'export function outer(value: number): string {\n  return inner(value);\n}\n';
 
+const IIFE_SOURCE = "export const label = ((n: number): string => { if (n > 5) { return 'big'; } return 'small'; })(7);\n";
+
 const UNGUARDED_CONTEXT = WalkContextStub({
   scopePath: ['outer'],
   guardPath: [],
@@ -81,6 +83,30 @@ describe('handleCallLayerAdapter', () => {
         branches: [],
         exits: [],
         opensScope: undefined,
+      });
+    });
+  });
+
+  describe('the inline function an immediate invocation reaches', () => {
+    it('VALID: {an IIFE ((n) => …)(7)} => reaches the arrow and, on its own channel, carries the welded args', () => {
+      handleCallLayerAdapterProxy();
+
+      const result = handleCallLayerAdapter({ node: callOf({ source: IIFE_SOURCE }), context: UNGUARDED_CONTEXT });
+
+      expect({ reachedFns: result.reachedFns, invokedFns: result.invokedFns }).toStrictEqual({
+        reachedFns: [1],
+        invokedFns: [{ startLine: 1, args: [{ kind: 'literal', value: 7 }] }],
+      });
+    });
+
+    it('VALID: {a named call, not an IIFE} => reaches no inline function and invokes none', () => {
+      handleCallLayerAdapterProxy();
+
+      const result = handleCallLayerAdapter({ node: callOf({ source: PASSTHROUGH_SOURCE }), context: UNGUARDED_CONTEXT });
+
+      expect({ reachedFns: result.reachedFns, invokedFns: result.invokedFns }).toStrictEqual({
+        reachedFns: [],
+        invokedFns: [],
       });
     });
   });

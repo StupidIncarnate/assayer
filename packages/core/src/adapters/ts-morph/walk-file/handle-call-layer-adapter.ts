@@ -19,6 +19,7 @@ import type { CallExpression } from 'ts-morph';
 import { globalUseContract, lineNumberContract, symbolNameContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../../../contracts/call-site/call-site-contract';
+import { invokedFnContract } from '../../../contracts/invoked-fn/invoked-fn-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 import { readAmbientRootLayerAdapter } from './read-ambient-root-layer-adapter';
@@ -55,6 +56,14 @@ export const handleCallLayerAdapter = ({
       ? [lineNumberContract.parse(invokedInline.getStartLineNumber())]
       : [];
 
+  // The parallel channel `reachedFns` cannot carry: the invocation's arguments welded onto the
+  // invoked function's parameters. Only the invoked-in-place case populates it — a returned closure is
+  // applied elsewhere — so a follower can weld the arrow's params to these fixed values and drive it.
+  const invokedFns =
+    Node.isArrowFunction(invokedInline) || Node.isFunctionExpression(invokedInline)
+      ? [invokedFnContract.parse({ startLine: invokedInline.getStartLineNumber(), args })]
+      : [];
+
   // A bare-identifier call into an ambient-external global (`setTimeout(fn, 0)`) records a GLOBAL use
   // — a call whose callee is a `.member` access is instead recorded by the member-access handler on
   // the way down, so this only fires for the leftmost bare identifier and never double-counts.
@@ -75,6 +84,7 @@ export const handleCallLayerAdapter = ({
     ],
     globalUses,
     reachedFns,
+    invokedFns,
     descents: node.forEachChildAsArray().map((child) => ({ node: child, context })),
   });
 };

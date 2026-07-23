@@ -22,6 +22,7 @@ import {
 } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
+import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
 import { valueUseContract } from '../value-use/value-use-contract';
@@ -56,6 +57,10 @@ export const walkFactsContract = z.object({
   // call — returned to a caller (`return (n) => …`) or invoked in place (`((n) => …)(x)`). A follower
   // reads these to know such a function is reached (not dead surface), even though no case can steer it.
   reachedFns: z.array(lineNumberContract),
+  // Flat like `reachedFns`, a parallel channel only the invoked-in-place case populates: each IIFE
+  // (`((n) => …)(x)`) with the invocation arguments welded onto its params, which the bare `reachedFns`
+  // line cannot carry — what a follower needs to weld the arrow's params and drive it.
+  invokedFns: z.array(invokedFnContract),
 });
 
 export type WalkFacts = z.infer<typeof walkFactsContract>;

@@ -37,6 +37,7 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
   const globalUses = [...handled.globalUses, ...child.globalUses];
   const envReads = [...handled.envReads, ...child.envReads];
   const reachedFns = [...handled.reachedFns, ...child.reachedFns];
+  const invokedFns = [...handled.invokedFns, ...child.invokedFns];
   const branches = [...handled.branches, ...child.looseBranches];
   const exits = [...handled.exits, ...child.looseExits];
   const calls = [...handled.calls, ...child.looseCalls];
@@ -58,6 +59,7 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
       globalUses,
       envReads,
       reachedFns,
+      invokedFns,
     };
   }
 
@@ -76,5 +78,6 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
     globalUses,
     envReads,
     reachedFns,
+    invokedFns,
   };
 };

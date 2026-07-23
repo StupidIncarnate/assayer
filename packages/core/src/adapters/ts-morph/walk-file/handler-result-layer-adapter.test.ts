@@ -20,6 +20,7 @@ describe('handlerResultLayerAdapter', () => {
         globalUses: [],
         envReads: [],
         reachedFns: [],
+        invokedFns: [],
         descents: [],
       });
     });
@@ -39,6 +40,7 @@ describe('handlerResultLayerAdapter', () => {
         globalUses: [],
         envReads: [],
         reachedFns: [],
+        invokedFns: [],
         descents: [],
       });
     });
@@ -60,6 +62,7 @@ describe('handlerResultLayerAdapter', () => {
         globalUses: [],
         envReads: [],
         reachedFns: [],
+        invokedFns: [],
         descents: [],
         opensScope: ScopeRecordStub(),
       });

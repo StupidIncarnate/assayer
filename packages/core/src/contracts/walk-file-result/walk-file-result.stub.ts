@@ -13,5 +13,6 @@ export const WalkFileResultStub = ({ ...props }: StubArgument<WalkFileResult> = 
     globalUses: [],
     envReads: [],
     reachedFns: [],
+    invokedFns: [],
     ...props,
   });

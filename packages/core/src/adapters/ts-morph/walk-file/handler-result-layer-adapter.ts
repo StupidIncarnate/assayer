@@ -17,6 +17,7 @@ import type { Node } from 'ts-morph';
 import type { BranchNode, EnvRead, ExitNode, GlobalUse, LineNumber, ModuleEdge, SymbolName } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../../contracts/call-site/call-site-contract';
+import type { InvokedFn } from '../../../contracts/invoked-fn/invoked-fn-contract';
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
 import type { ValueUse } from '../../../contracts/value-use/value-use-contract';
@@ -49,6 +50,10 @@ export interface HandlerResult {
   /** Start lines of inline functions this node reached other than by a named call — a returned
    * function or an immediately-invoked one. Flat file-level facts, never scope-claimed. */
   reachedFns: LineNumber[];
+  /** Each IIFE this node invoked in place (`((n) => …)(x)`) — its start line plus the invocation
+   * arguments a follower welds onto the arrow's params. A parallel channel to `reachedFns` that only
+   * the invoked-in-place case populates; flat file-level facts, never scope-claimed. */
+  invokedFns: InvokedFn[];
   descents: Descent[];
   /**
    * Passed in with empty branches/exits — the walk fills them from the scope body's loose facts.
@@ -69,6 +74,7 @@ export const handlerResultLayerAdapter = ({
   globalUses,
   envReads,
   reachedFns,
+  invokedFns,
   descents,
   opensScope,
 }: {
@@ -83,6 +89,7 @@ export const handlerResultLayerAdapter = ({
   globalUses?: GlobalUse[];
   envReads?: EnvRead[];
   reachedFns?: LineNumber[];
+  invokedFns?: InvokedFn[];
   descents?: Descent[];
   opensScope?: ScopeRecord;
 }): HandlerResult => ({
@@ -97,6 +104,7 @@ export const handlerResultLayerAdapter = ({
   globalUses: globalUses ?? [],
   envReads: envReads ?? [],
   reachedFns: reachedFns ?? [],
+  invokedFns: invokedFns ?? [],
   descents: descents ?? [],
   ...(opensScope === undefined ? {} : { opensScope }),
 });
