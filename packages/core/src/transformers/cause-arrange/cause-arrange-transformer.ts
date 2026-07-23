@@ -8,6 +8,13 @@
  *   requirement whose operand is not a simple binding constrains nothing: it cannot be arranged, so
  *   its param falls back to representative fill rather than pretending to a value it cannot set.
  *
+ *   An unconstrained ARRAY param is its own fan-out axis, the ArrangeValue[] twin of the operand
+ *   cartesian: `array-arrange` builds a real array of each cardinality (empty/one/many) and they are
+ *   cross-producted across array params, so an array's input breadth is spanned the way a union
+ *   operand's members are. The scalar fill would hand the string placeholder to code that operates on
+ *   an array (`items.pop()`), which throws; a real array runs. A branch never constrains an array param
+ *   in v1 (no length guards), so every array param takes this fan-out.
+ *
  *   Intersecting DOMAINS rather than sampled values is what makes an exit behind several guards
  *   arrangeable at all. `size <= 100` and `size > 10` are satisfied together by anything in 11…100,
  *   but a point sampled per predicate lands on 100 and 11, which share no member — so sampling first
@@ -39,11 +46,13 @@
  * // Returns { unreachable: false, arrangements: [[{ kind: 'param', param: 'score', value: 6 }, …], …] }
  */
 import { envValueContract } from '@assayer/shared/contracts';
-import type { DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 import { isDomainEmptyGuard } from '../../guards/is-domain-empty/is-domain-empty-guard';
+import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
+import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transformer';
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
 import { intersectDomainsTransformer } from '../intersect-domains/intersect-domains-transformer';
 import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
@@ -108,28 +117,65 @@ export const causeArrangeTransformer = ({
     [new Map<SymbolName, RepresentativeValue>()],
   );
 
+  // Each unconstrained array param is a fan-out axis over cardinality: `array-arrange` builds a real
+  // array of each size class (empty/one/many), so the derived set spans an array's input breadth the
+  // way a union operand's members do. A branch never constrains an array param (no length guards yet),
+  // so every array param takes this fan-out. `one` leads so the ordinary non-empty array is salient.
+  const arrayChoices = params.flatMap((param) => {
+    const {type} = param;
+
+    return type.kind === 'array'
+      ? [
+          {
+            param: param.name,
+            values: arrayCardinalityStatics.order.map((cardinality) =>
+              arrayArrangeTransformer({ element: type.element, count: arrayCardinalityStatics.counts[cardinality] }),
+            ),
+          },
+        ]
+      : [];
+  });
+
+  // The cartesian across array params, the ArrangeValue[] twin of `bindings`. Seeded with one empty
+  // combo, so a cause with no array param yields exactly one (empty) array combo and the arrangement
+  // count is unchanged.
+  const arrayCombos = arrayChoices.reduce<Map<SymbolName, ArrangeValue[]>[]>(
+    (combos, choice) => combos.flatMap((combo) => choice.values.map((value) => new Map(combo).set(choice.param, value))),
+    [new Map<SymbolName, ArrangeValue[]>()],
+  );
+
   return {
     unreachable: false,
-    arrangements: bindings.map((bound) => [
-      ...params.map((param) => {
-        const existing = bound.get(param.name);
+    arrangements: bindings.flatMap((bound) =>
+      arrayCombos.map((arrayCombo) => [
+        ...params.map((param) => {
+          const arrayValue = arrayCombo.get(param.name);
 
-        return {
-          kind: 'param' as const,
-          param: param.name,
-          value: existing === undefined ? representativeValueTransformer({ type: param.type }) : existing,
-        };
-      }),
-      // Only operands this cause actually CONSTRAINS get an environment binding. An unconstrained one
-      // is a variable the flow never reads on this path, and writing it would claim a setup the case
-      // does not depend on.
-      ...[...envByOperand.entries()].flatMap(([operand, envVarName]) => {
-        const value = bound.get(operand);
+          // An array param is filled from its cardinality combo — a real array of this case's size class,
+          // never the scalar placeholder that would make a real array method (`items.pop()`) throw.
+          if (arrayValue !== undefined) {
+            return { kind: 'array' as const, param: param.name, value: arrayValue };
+          }
 
-        return value === undefined
-          ? []
-          : [{ kind: 'env' as const, name: envVarName, value: envValueContract.parse(String(value)) }];
-      }),
-    ]),
+          const existing = bound.get(param.name);
+
+          return {
+            kind: 'param' as const,
+            param: param.name,
+            value: existing === undefined ? representativeValueTransformer({ type: param.type }) : existing,
+          };
+        }),
+        // Only operands this cause actually CONSTRAINS get an environment binding. An unconstrained one
+        // is a variable the flow never reads on this path, and writing it would claim a setup the case
+        // does not depend on.
+        ...[...envByOperand.entries()].flatMap(([operand, envVarName]) => {
+          const value = bound.get(operand);
+
+          return value === undefined
+            ? []
+            : [{ kind: 'env' as const, name: envVarName, value: envValueContract.parse(String(value)) }];
+        }),
+      ]),
+    ),
   };
 };

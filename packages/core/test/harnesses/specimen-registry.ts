@@ -79,13 +79,38 @@ const DECLARATIONS = {
 
   // Type-reading rungs — branchless functions whose whole point is the PARAM shape the walk reads.
   //   - `element-length` takes `number[]`: the walk reads the ARRAY's element type structurally rather
-  //     than dropping it into an opaque `unknown`. `param:array` gates that check. Branchless and DRIVEN
-  //     with one case; no object shape, so no declaredTypes.
+  //     than dropping it into an opaque `unknown`. `param:array` gates that check. Branchless, but an
+  //     array param FANS OUT over cardinality, so it derives THREE cases (empty/one/many); no object
+  //     shape, so no declaredTypes.
   //   - `local-shape` takes a locally-declared `interface Config`: the walk ENUMERATES the same-file
   //     object type's full property list (§5.10 — only local declarations resolve in the hermetic walk),
   //     and it is projected into the file's `declaredTypes`. `param:object` gates that. Branchless and
   //     DRIVEN with one case.
   [`${CATALOGUE}/happy-path/array/element-length/element-length.ts`]: ['access:named', 'param:array'],
+  // Array-OPERATION rungs — the same `number[]` param read structurally, consumed by every everyday
+  // array operation. Each is branchless, and an array param FANS OUT over cardinality (empty/one/many),
+  // so each derives THREE cases reaching one exit — the salient `[7]` plus the grayed `[]`/`[7,7]` twins;
+  // a two-param op fixes its scalar across the three. A builtin method or index op is not a reportable
+  // callee and no object shape is declared, so each owes only `access:named` + `param:array` and admits
+  // nothing. `pop`/`shift`/`at` annotate `number | undefined`, read as bare `number` by the non-strict
+  // hermetic walk (§5.10). `nested` takes `number[][]`, arranged as real nested arrays (`[[7]]`, and
+  // `many` is `[[7],[7]]` since only the top param fans out). The `const-*` rungs bind an array to a
+  // const: `const-alias` aliases the param (still driven, 3 cases), while `const-literal` reads a LOCAL
+  // literal array with no array PARAM — one case, `access:named` alone. `map`'s `(n) => n*2` callback is
+  // an anonymous scope the walk descends without promoting to an entry, so it stays a clean 3-case rung.
+  // Adding a new array operation is a folder here plus one line; the cardinality matrix is free.
+  [`${CATALOGUE}/happy-path/array/pop/pop.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/shift/shift.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/unshift/unshift.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/at/at.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/index-access/index-access.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/element-assign/element-assign.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/spread/spread.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/slice/slice.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/map/map.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/nested/nested.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/const-alias/const-alias.ts`]: ['access:named', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/const-literal/const-literal.ts`]: ['access:named'],
   [`${CATALOGUE}/happy-path/object/local-shape/local-shape.ts`]: ['access:named', 'param:object'],
 
   // Object-member branches, DRIVEN at consume time by stub-realize: it arranges the object param from the
@@ -223,7 +248,11 @@ const DECLARATIONS = {
   // colocated test pins its verbatim reason.
   //   - `welded-const`: a value welded into a module const;
   //   - `welded-arg`: a private reached only through a caller that welds its argument.
+  //   - `const-array-branch`: the array twin of `welded-const` — a module branch on `items.length` of a
+  //     welded const array. The `.length` of a module const is neither a scalar param nor an env read,
+  //     so it is un-steerable and the branch is admitted UNDRIVEN, exactly as a welded scalar const is.
   [`${CATALOGUE}/sad-path/undriven/welded-const/welded-const.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'undriven'],
+  [`${CATALOGUE}/sad-path/undriven/const-array-branch/const-array-branch.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/welded-arg/welded-arg.ts`]: ['access:named', 'undriven'],
   // UNDRIVEN at the BRANCH, not the whole scope — the deciding value is neither a param nor an env
   // operand, so no case can steer which arm runs. Uniform across branch shapes: the ONLY difference

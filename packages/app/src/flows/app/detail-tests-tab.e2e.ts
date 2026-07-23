@@ -22,6 +22,9 @@ const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/i
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
 const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
 const NESTED_FUNCTION = 'packages/syntax-repository/src/happy-path/composition/nested-function/nested-function.ts';
+// An array-param rung: branchless, but the array fans out over cardinality into three cases, proving the
+// cardinality matrix and its salient lens reach the renderer.
+const ARRAY_ELEMENT_LENGTH = 'packages/syntax-repository/src/happy-path/array/element-length/element-length.ts';
 
 // The remaining branch/pure rungs, each selected by exact relPath and asserted in ONE launch (compile
 // + launch once, walk many). Class rungs (if-else / switch in a method), the three boolean shapes, the
@@ -198,6 +201,37 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
 
     // The badge marks the salient (must-run) subset regardless of mode — the same two rows that stay live.
     await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
+  });
+
+  test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the ordinary [7] salient', async () => {
+    const exitCode = await app.compile();
+    expect(exitCode).toBe(0);
+
+    const window = await app.launch();
+
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${ARRAY_ELEMENT_LENGTH}"]`).click();
+
+    const codePanel = window.getByTestId('EXPLORER_CODE');
+    await expect(codePanel.locator('.cm-editor')).toBeVisible();
+    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+
+    // `count(items: number[])` is branchless, but the array param FANS OUT over cardinality: three cases
+    // reach the one exit (L2), each arranging a REAL array — the salient `[7]` plus the grayed `[]`/`[7,7]`
+    // breadth. The arrange renders as the array literal a reader would pass, positionally.
+    const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
+    await expect(entryTitle).toHaveText('count(items) · 3 cases');
+    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    expect([...caseRows].sort()).toStrictEqual([
+      'not run count([7,7]) → reaches L2',
+      'not run count([7]) → reaches L2',
+      'not run count([]) → reaches L2',
+    ]);
+
+    // Default runMode is thorough, so all three read live; only the ordinary non-empty `[7]` is salient,
+    // so exactly one INTELLIGENT badge rides the set — the empty and many twins are the grayed breadth.
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(3);
+    await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(1);
   });
 
   test('VALID: {happy-path/ternary/return-basic/return-basic.ts selected} => the exit-position ternary splits into a then/else return, one case per arm, and hovering the ternary line highlights both', async () => {

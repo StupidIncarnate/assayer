@@ -88,6 +88,12 @@ export * from './src/contracts/coverage-id/coverage-id.stub';
 export * from './src/contracts/representative-value/representative-value-contract';
 export * from './src/contracts/representative-value/representative-value.stub';
 
+export * from './src/contracts/arrange-value/arrange-value-contract';
+export * from './src/contracts/arrange-value/arrange-value.stub';
+
+export * from './src/contracts/array-cardinality/array-cardinality-contract';
+export * from './src/contracts/array-cardinality/array-cardinality.stub';
+
 export * from './src/contracts/env-var-name/env-var-name-contract';
 export * from './src/contracts/env-var-name/env-var-name.stub';
 

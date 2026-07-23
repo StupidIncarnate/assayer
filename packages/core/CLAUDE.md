@@ -100,6 +100,7 @@ LOOKUP, not by re-parsing (§9). One parse per file still holds.
 | change operand typing | `read-operand-type-layer-adapter` (read §5.9 first) |
 | capture an object-member operand (`config.mode`) | `read-condition` (+ `read-property-path` for the `.member` chain) — records `operandParamName` (root), `operandPropertyPath`, and `operandTypeRef` (the root param's declared type-reference NAME) for the stub stitch; the branch is UNDRIVEN in the per-file blob (gated in `derive-cases`, §5.12) and DRIVEN at consume time by `stub-realize` (§9) |
 | drive an object-member branch from the stub view | `brokers/stub/realize` (the consume-time overlay) + `transformers/object-arrange` (arranges one object param's properties from the merged stub view; a corrected property is AUTHORITATIVE — only its values, no branch-literal fallback) — NEVER `derive-cases`, which stays scalar-only |
+| fan an array param out over cardinality (empty/one/many) | `transformers/array-arrange` (builds a real array of each size class, recursing for nested `number[][]` → `[[7]]`) + the array-cardinality cartesian in `transformers/cause-arrange` (folded into `arrangements` the ArrangeValue[] twin of the operand cartesian); `statics/array-cardinality` fixes the order (`one` first ⇒ salient) and counts. Every array param takes this fan-out — a branch never constrains an array in v1 (no `.length` guards) |
 | flag a committed correction that CONTRADICTS a guard (pre-run) | `transformers/gather-property-guards` (the per-guard seam, guard twin of `gather-type-reads`) + `transformers/stub-contradictions` (intersect corrected values with the guard's satisfying domain, `is-domain-empty`) — folded into `compile-run-broker`'s `errors[]` beside the stale-overlay reconcile (§9) |
 | change reachability | `read-terminal` **or** `read-accounted` — they are different questions, read §5.8 first |
 | decide whether a branch is DRIVABLE (steerable) | `transformers/derive-cases` — the ONE gate, every branch construct alike (§5.12); never a per-construct or per-position gate |
@@ -264,8 +265,9 @@ but `derive-cases`, or reading one lens two ways by position, re-opens it.
 
 **5.13 — The case set is the full input-bucket BREADTH; `salient` marks the execution subset.**
 `derive-cases` produces one case per input COMBINATION the logic distinguishes — the cartesian product
-of every branch's arms (each arm's short-circuit causes kept distinct) plus a branchless predicate's
-`true`/`false` return — EVEN when several combinations reach the same exit. Every case carries
+of every branch's arms (each arm's short-circuit causes kept distinct), a branchless predicate's
+`true`/`false` return, and every array param's cardinality classes (empty/one/many, built by
+`array-arrange` and crossed in `cause-arrange`) — EVEN when several combinations reach the same exit. Every case carries
 `salient`: the salient subset is one representative per PREDICTED OUTPUT (the minimal set worth
 RUNNING), and the full set is the file's testable breadth. So a file's case count is the breadth, and
 `salient` is what a reviewer reads as must-run.

@@ -18,6 +18,18 @@ describe('arrangeTextTransformer', () => {
 
       expect(result).toBe('""');
     });
+
+    it('VALID: {an array param} => the array literal a reader would pass, positionally like any argument', () => {
+      const result = arrangeTextTransformer({ arrange: [{ kind: 'array', param: 'items', value: [7] }] } as never);
+
+      expect(result).toBe('[7]');
+    });
+
+    it('VALID: {a nested array param} => the nested literal renders whole, generic over the nesting', () => {
+      const result = arrangeTextTransformer({ arrange: [{ kind: 'array', param: 'matrix', value: [[7]] }] } as never);
+
+      expect(result).toBe('[[7]]');
+    });
   });
 
   describe('env bindings render as the assignment that reproduces them', () => {

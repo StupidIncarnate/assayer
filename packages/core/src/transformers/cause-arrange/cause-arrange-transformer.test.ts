@@ -309,4 +309,59 @@ describe('causeArrangeTransformer', () => {
       });
     });
   });
+
+  describe('an array param fans out over cardinality', () => {
+    // A scalar fill hands the string placeholder to code that operates on the array (`items.pop()`),
+    // which throws — so an array param falls to `array-arrange` and fans out over its size classes:
+    // one (`[7]`) leads as the salient representative, then empty (`[]`), then many (`[7,7]`). Each is
+    // an `array` binding, set positionally like any argument.
+    it('VALID: {an unconstrained number[] param} => three array bindings, one/empty/many, not a string fill', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [
+          [{ kind: 'array', param: 'items', value: [7] }],
+          [{ kind: 'array', param: 'items', value: [] }],
+          [{ kind: 'array', param: 'items', value: [7, 7] }],
+        ],
+      });
+    });
+
+    // The array fan-out cross-products with the scalar operand cartesian: one constrained scalar (fixed
+    // at its domain value) times the three cardinalities is three arrangements, the scalar constant
+    // across them.
+    it('VALID: {a constrained scalar beside an array param} => the scalar value crossed with each cardinality', () => {
+      const result = causeArrangeTransformer({
+        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        params: [
+          ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [
+          [
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'array', param: 'items', value: [7] },
+          ],
+          [
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'array', param: 'items', value: [] },
+          ],
+          [
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'array', param: 'items', value: [7, 7] },
+          ],
+        ],
+      });
+    });
+  });
 });

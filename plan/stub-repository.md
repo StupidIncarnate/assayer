@@ -38,7 +38,10 @@ across many readers and their sources are often opaque.
 - **Objects (typed):** per property, the values the code branches on, UNIONED across every file that
   reads that object TYPE, spliced onto the type's full property list. A property the code never reads is
   an honest `unknown` — we don't invent a value for it.
-- **Arrays:** cardinality (empty / one / many / max) over per-element demands.
+- **Arrays:** the arrange-side cardinality fan-out (empty / one / many) is BUILT — every array param
+  derives one case per size class automatically (`array-arrange` + the `cause-arrange` cartesian), and a
+  nested `number[][]` arranges as real nested values (`[[7]]`). What remains for the stub repository is
+  the per-element value demands and the `max` class a `.length` guard bounds.
 - **Env / opaque sources:** `process.env` is an object; `CODE` etc. are properties whose values are
   GUESSED from the branch literals (`CODE → {1, 2, other}`) and marked `guessed`.
 

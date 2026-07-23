@@ -30,6 +30,17 @@ describe('derivedTestCaseContract', () => {
 
       expect(result).toStrictEqual({ reachesExit: 'run/exit@implicit', arrange: [], salient: false });
     });
+
+    it('VALID: {an array arrange} => parses the list of element values a case passes for the param', () => {
+      const testCase = DerivedTestCaseStub({
+        reachesExit: 'count/return@top',
+        arrange: [{ kind: 'array', param: 'items', value: [7] }],
+      });
+
+      const result = derivedTestCaseContract.parse(testCase);
+
+      expect(result).toStrictEqual(testCase);
+    });
   });
 
   describe('invalid derived test cases', () => {

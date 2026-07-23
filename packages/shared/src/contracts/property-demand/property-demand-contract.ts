@@ -15,6 +15,7 @@
  */
 import { z } from 'zod';
 
+import { arrayCardinalityContract } from '../array-cardinality/array-cardinality-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
@@ -24,7 +25,7 @@ export const propertyDemandContract = z.object({
     z.object({
       kind: z.literal('demanded'),
       values: z.array(representativeValueContract),
-      cardinality: z.enum(['empty', 'one', 'many', 'max']).brand<'StubCardinality'>().optional(),
+      cardinality: arrayCardinalityContract.optional(),
     }),
     z.object({ kind: z.literal('unknown') }),
   ]),

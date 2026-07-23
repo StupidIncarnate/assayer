@@ -20,6 +20,13 @@
  *   derived demand) — an INPUT, never a code-derived output (P4). v1 arranges scalar-valued properties
  *   only; nested objects/arrays are a later phase.
  *
+ *   An `array` arrange is a whole PARAMETER too, set positionally like a scalar, but its `value` is the
+ *   LIST the entry receives. An array param fans out over its cardinality — a case for `empty` (`[]`),
+ *   `one` (`[7]`), and `many` (`[7,7]`) — so the derived set spans the real input breadth an array has
+ *   instead of a single scalar-placeholder fill (which would hand a string to `items.pop()` and throw).
+ *   `value` is the recursive `ArrangeValue[]`, so a nested `number[][]` arranges as `[[7]]`. Each
+ *   element is an INPUT drawn from the element type (P4).
+ *
  *   `salient` marks whether the case belongs to the intelligent (must-run) subset. It defaults to
  *   true so a cache blob written before the field existed reads back as all-salient.
  *
@@ -36,10 +43,15 @@
  *   reachesExit: 'decide/return@else',
  *   arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }],
  * });
+ * derivedTestCaseContract.parse({
+ *   reachesExit: 'count/return@top',
+ *   arrange: [{ kind: 'array', param: 'items', value: [7] }],
+ * });
  * // Returns a validated DerivedTestCase (branded fields; salient defaults to true)
  */
 import { z } from 'zod';
 
+import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { envValueContract } from '../env-value/env-value-contract';
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
@@ -64,6 +76,11 @@ export const derivedTestCaseContract = z.object({
         kind: z.literal('object'),
         param: symbolNameContract,
         value: z.record(symbolNameContract, representativeValueContract),
+      }),
+      z.object({
+        kind: z.literal('array'),
+        param: symbolNameContract,
+        value: z.array(arrangeValueContract),
       }),
     ]),
   ),
