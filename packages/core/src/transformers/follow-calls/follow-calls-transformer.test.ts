@@ -69,8 +69,8 @@ describe('followCallsTransformer', () => {
     });
   });
 
-  describe('a private reached only through a fixed literal', () => {
-    it('VALID: {report calls inner(3)} => not followed, admitted undriven for the fixed argument', () => {
+  describe('a private reached through a welded literal argument', () => {
+    it('VALID: {report calls inner(3)} => inner is followed as a through-caller entry, its welded-dead arm an unreachable exit, nothing undriven', () => {
       const walked = WalkFileResultStub({
         scopes: [
           namedCaller({
@@ -84,9 +84,14 @@ describe('followCallsTransformer', () => {
       const result = followCallsTransformer({ walked });
 
       expect({
-        followed: result.followedEntries,
-        undriven: result.undriven.map((entry) => ({ name: entry.name, reason: entry.reason })),
-      }).toStrictEqual({ followed: [], undriven: [{ name: 'inner', reason: FIXED_ARG_REASON }] });
+        followed: result.followedEntries.map((fn) => ({ name: fn.entry.name, access: fn.entry.access })),
+        undriven: result.undriven,
+        unreachable: result.unreachable,
+      }).toStrictEqual({
+        followed: [{ name: 'inner', access: { kind: 'through-caller', callerName: 'report' } }],
+        undriven: [],
+        unreachable: [{ name: 'inner', unreachableExits: [{ line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 } }] }],
+      });
     });
   });
 

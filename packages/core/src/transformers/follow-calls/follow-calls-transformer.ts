@@ -3,9 +3,12 @@
  *   decides what becomes of it. The trigger is always a branch: a private with no branches has no logic
  *   to miss. Three ways a private is reached:
  *
- *   - As a NAMED call: a reachable scope calls it and passes its own parameters straight in, so its
- *     branch is DRIVEN through that caller (`through-caller-cases`); reached but welded ⇒ UNDRIVEN;
- *     reached by nothing ⇒ a dead-surface LINT.
+ *   - As a NAMED call: a reachable scope calls it and RESOLVES its arguments — passing its own
+ *     parameters straight in, or welding a literal value into the call — so its branch is DRIVEN through
+ *     that caller (`through-caller-cases`). A welded value is EVALUATED there: the arm it forces is a
+ *     case, the arm it kills an unreachable-exit lint (surfaced from `unreachable`). Reached through an
+ *     argument no case can resolve (an opaque expression, or a call the caller only reaches
+ *     conditionally) ⇒ UNDRIVEN; reached by nothing ⇒ a dead-surface LINT.
  *   - As an inline CALLBACK: it is passed as an argument to a call a reachable scope makes. Passing a
  *     function to `items.map(...)` REACHES it every iteration, so it is never dead surface. When the
  *     call is an array iteration over one of the host's array params, the callback's parameter is the
@@ -22,10 +25,11 @@
  *
  * USAGE:
  * followCallsTransformer({ walked });
- * // Returns { followedEntries: [FunctionAnalysis], undriven: [UndrivenEntry], lints: [LintEntry] }
+ * // Returns { followedEntries: [FunctionAnalysis], undriven: [UndrivenEntry], lints: [LintEntry],
+ * //   unreachable: [{ name, unreachableExits }] }
  */
 import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { FunctionAnalysis, LintEntry, UndrivenEntry } from '@assayer/shared/contracts';
+import type { FunctionAnalysis, LintEntry, SymbolName, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
 import { throughCallbackCasesTransformer } from '../through-callback-cases/through-callback-cases-transformer';
@@ -65,9 +69,14 @@ export const followCallsTransformer = ({
   walked,
 }: {
   walked: WalkFileResult;
-}): { followedEntries: FunctionAnalysis[]; undriven: UndrivenEntry[]; lints: LintEntry[] } => {
+}): {
+  followedEntries: FunctionAnalysis[];
+  undriven: UndrivenEntry[];
+  lints: LintEntry[];
+  unreachable: { name: SymbolName; unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits'] }[];
+} => {
   if (!walked.success) {
-    return { followedEntries: [], undriven: [], lints: [] };
+    return { followedEntries: [], undriven: [], lints: [], unreachable: [] };
   }
 
   const { scopes, reachedFns } = walked;
@@ -101,8 +110,10 @@ export const followCallsTransformer = ({
         callbackArrayParam !== undefined &&
         callbackReach.call.guardPath.length === 0;
 
-      // Reached as a named call whose caller passes its own parameters straight in, at an
-      // unconditionally-reached call — the passthrough rung.
+      // Reached as a named call at an unconditionally-reached call whose every argument RESOLVES — a
+      // passthrough of one of the caller's own parameters, or a literal the caller welds in. A mix is
+      // allowed: a passthrough param steers a branch, a welded literal evaluates one. An argument that is
+      // neither (an opaque expression) leaves the call unable to drive the callee, so it is not a driver.
       const drives = reachable.flatMap((caller) => {
         const callerParams = new Set(caller.params.map((param) => param.name));
         return caller.calls
@@ -114,7 +125,10 @@ export const followCallsTransformer = ({
               call.guardPath.length === 0 &&
               callee.params.every((_param, index) => {
                 const arg = call.args[index];
-                return arg !== undefined && arg.kind === 'param-ref' && callerParams.has(arg.paramName);
+                return (
+                  arg !== undefined &&
+                  ((arg.kind === 'param-ref' && callerParams.has(arg.paramName)) || arg.kind === 'literal')
+                );
               }),
           )
           .map((call) => ({ caller, call }));
@@ -133,18 +147,46 @@ export const followCallsTransformer = ({
       return { callee, callbackReach, callbackArrayParam, callbackDrivable, reachedFn, driver: drives[0], isCalled };
     });
 
+  // The followed entries, each with any exits its driving proved unreachable. A through-caller entry
+  // carries the welded-argument exits derive-cases evaluated; a through-callback entry never welds, so
+  // it carries none. Kept together so the follower's unreachable exits reach the lint channel exactly as
+  // a directly-derived scope's do.
+  const followed = results.flatMap(
+    ({
+      callee,
+      callbackReach,
+      callbackArrayParam,
+      callbackDrivable,
+      driver,
+    }): { analysis: FunctionAnalysis; unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits']; name: SymbolName }[] => {
+      if (callbackReach === undefined) {
+        if (driver === undefined) {
+          return [];
+        }
+        const built = throughCallerCasesTransformer({ callee, caller: driver.caller, call: driver.call });
+        return [{ analysis: built.analysis, unreachableExits: built.unreachableExits, name: callee.name }];
+      }
+      return callbackDrivable && callbackArrayParam !== undefined
+        ? [
+            {
+              analysis: throughCallbackCasesTransformer({ callback: callee, entry: callbackReach.host, arrayParam: callbackArrayParam.name }),
+              unreachableExits: [],
+              name: callee.name,
+            },
+          ]
+        : [];
+    },
+  );
+
   return {
-    followedEntries: results.flatMap(({ callee, callbackReach, callbackArrayParam, callbackDrivable, driver }) =>
-      callbackReach === undefined
-        ? driver === undefined
-          ? []
-          : [throughCallerCasesTransformer({ callee, caller: driver.caller, call: driver.call })]
-        : callbackDrivable && callbackArrayParam !== undefined
-          ? [throughCallbackCasesTransformer({ callback: callee, entry: callbackReach.host, arrayParam: callbackArrayParam.name })]
-          : [],
+    followedEntries: followed.map(({ analysis }) => analysis),
+    // The exits a welded argument killed, keyed to the followed entry that owns them — turned into
+    // unreachable-exit lints by `analyze-file-broker`, the same conversion a directly-derived scope's get.
+    unreachable: followed.flatMap(({ name, unreachableExits }) =>
+      unreachableExits.length === 0 ? [] : [{ name, unreachableExits }],
     ),
-    // Reached but unsteerable: understood, not drivable — Assayer's admission. Both the welded-arg
-    // private and the not-yet-steerable callback ride here, each worded by WHY.
+    // Reached but unsteerable: understood, not drivable — Assayer's admission. Both the not-yet-steerable
+    // callback and a private reached through an unresolvable argument ride here, each worded by WHY.
     undriven: results.flatMap(({ callee, callbackReach, callbackDrivable, reachedFn, driver, isCalled }) => {
       if (callbackReach !== undefined) {
         return callbackDrivable

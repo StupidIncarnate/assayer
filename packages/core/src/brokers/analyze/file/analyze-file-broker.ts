@@ -125,6 +125,14 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     return unreachableLintTransformer({ name: fn.entry.name, displayName, unreachableExits: result.unreachableExits });
   });
 
+  // A FOLLOWED entry's dead exits ride the same channel: a caller welding a literal into a private's
+  // call (`report(){ return decide(3) }`) kills the arm that value cannot satisfy, exactly as a welded
+  // `const` does in the scope's own source. The entry is a private, never a module, so its `name` IS its
+  // display name — no `*module*` label to translate.
+  const followedUnreachableLints = followed.unreachable.flatMap(({ name, unreachableExits }) =>
+    unreachableLintTransformer({ name, displayName: name, unreachableExits }),
+  );
+
   // Enrichment shows each param's type on the entry line and, once per branch LEAF, that operand's
   // type + representative range on the branch line — derived from the COMPOSED functions, so a
   // rebased call-guard enriches its real comparison, not the opaque one.
@@ -139,9 +147,10 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     // separate owners, never merged.
     undriven: [...moduleUndriven, ...followed.undriven, ...branchUndriven],
     // Dead surface — a private nothing consumes — comes from the call graph; an unreachable exit comes
-    // from the guard arithmetic. Both are the repo's debt rather than Assayer's, so both ride the lint
-    // channel rather than any of the three admissions.
-    lints: [...followed.lints, ...unreachableLints],
+    // from the guard arithmetic, whether the guard is welded in the scope's own source or in a caller's
+    // argument. All are the repo's debt rather than Assayer's, so all ride the lint channel rather than
+    // any of the three admissions.
+    lints: [...followed.lints, ...unreachableLints, ...followedUnreachableLints],
     // The file's locally-declared object shapes, read straight from the walk's enumerated object
     // descriptors — the full property list later phases splice per-property value demands onto.
     declaredTypes: declaredTypesProjectionTransformer({ walked }),

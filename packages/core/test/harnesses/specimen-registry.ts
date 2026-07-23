@@ -263,14 +263,13 @@ const DECLARATIONS = {
   // UNDRIVEN — logic Assayer reads perfectly but no case can steer, because the deciding operand is
   // neither a param, an env read, nor a literal constant the analyzer can fold. Distinct from a gap (no
   // harness closes them) and from a dark spot (the syntax is understood). Each file's colocated test
-  // pins its verbatim reason. (A welded LITERAL constant is a different case — the analyzer EVALUATES
-  // it into a live arm plus an unreachable-exit, so those specimens live under `sad-path/unreachable/`.)
-  //   - `welded-arg`: a private reached only through a caller that welds its argument.
+  // pins its verbatim reason. (A welded LITERAL — a same-file `const`, or a literal a caller welds into
+  // a call argument — is a different case: the analyzer EVALUATES it into a live arm plus an
+  // unreachable-exit, so those specimens live under `sad-path/unreachable/`.)
   //   - `opaque-module`: a module scope branching on `Math.random()` — an opaque call result, neither a
   //     param nor an env read nor a foldable constant, so no input picks the arm and no evaluation
   //     resolves it. The permanent-undriven module anchor: non-determinism is the definitive "you
   //     cannot test this branch", which no harness or future feature will ever change.
-  [`${CATALOGUE}/sad-path/undriven/welded-arg/welded-arg.ts`]: ['access:named', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/opaque-module/opaque-module.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'undriven'],
   // UNDRIVEN at the BRANCH, not the whole scope — the deciding value is neither a param nor an env
   // operand, so no case can steer which arm runs. Uniform across branch shapes: the ONLY difference
@@ -324,6 +323,11 @@ const DECLARATIONS = {
   //     the `then` arm is a real case and the `else` arm is an unreachable-exit lint naming `level` and
   //     its welded `7`. A welded literal is decided in the source, not steered, yet it is not undriven:
   //     the analyzer knows exactly which arm runs. It reaches `console.log`, so it owes `callee:node-global`.
+  //   - `welded-arg`: the through-caller twin — `report(){ return decide(3) }` welds `3` into `decide`'s
+  //     `value`, so following the call EVALUATES `decide`'s `if (value > 5)`: the `else` arm is `decide`'s
+  //     one driven `access:through-caller` case and the `then` arm an unreachable-exit lint naming `value`
+  //     welded to `3`. `report` is the file's `access:named` entry; the welded literal lives in the
+  //     caller's argument rather than the callee's own source, but the finding is the same lint.
   //   - `const-array-branch`: the array twin — `const items = [1, 2, 3]; if (items.length > 2)` — the
   //     branch on the welded array's fixed LENGTH (3) evaluates the same way, its lint naming the length.
   //   - `sequential-guards` is the whole contradiction rung in one function: `>= 1` then `<= 1 || === 0`,
@@ -337,6 +341,7 @@ const DECLARATIONS = {
   //     `within-budget`) is a CHILD, `access:named` alone; the root adds the relative imports whose
   //     predicates it composes and the unreachable-exit lint their contradiction yields.
   [`${CATALOGUE}/sad-path/unreachable/welded-const/welded-const.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
+  [`${CATALOGUE}/sad-path/unreachable/welded-arg/welded-arg.ts`]: ['access:named', 'access:through-caller', 'branch:if', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/const-array-branch/const-array-branch.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/sequential-guards/sequential-guards.ts`]: ['access:named', 'branch:if', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/cross-file-guards.ts`]: [
@@ -374,6 +379,6 @@ export const uncataloguedTraits = {
     'entry only when a caller drives it, and then the access is `through-caller`, not `unreachable`. ' +
     'A helper no caller drives is reported on `undriven`, which carries no access kind. So the ' +
     'unreachable access the walk records is real but never reaches the access field of an entry — ' +
-    '`happy-path/function/nested` is the driven case, `sad-path/undriven/welded-arg` the ' +
+    '`happy-path/function/nested` is the driven case, `sad-path/undriven/hof-callback` the ' +
     'admitted one.',
 } as const;

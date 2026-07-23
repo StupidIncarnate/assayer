@@ -48,16 +48,19 @@ describe('throughCallerCasesTransformer', () => {
     });
     const CALL = CallSiteStub({ callee: { target: 'local', name: 'inner', startLine: 2 }, args: [{ kind: 'param-ref', paramName: 'value' }] });
 
-    it('VALID: {inner(value)} => a through-caller entry naming the caller the runner drives', () => {
+    it('VALID: {inner(value)} => a through-caller entry naming the caller the runner drives, no dead exits', () => {
       const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
 
-      expect(result.entry.access).toStrictEqual({ kind: 'through-caller', callerName: 'outer' });
+      expect({ access: result.analysis.entry.access, unreachableExits: result.unreachableExits }).toStrictEqual({
+        access: { kind: 'through-caller', callerName: 'outer' },
+        unreachableExits: [],
+      });
     });
 
     it('VALID: {inner(value)} => the callee`s exits, arranged in the caller`s parameter', () => {
       const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
 
-      expect(result.cases).toStrictEqual([
+      expect(result.analysis.cases).toStrictEqual([
         { reachesExit: 'inner/return@then', arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
         { reachesExit: 'inner/return@else', arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
       ]);
@@ -78,7 +81,7 @@ describe('throughCallerCasesTransformer', () => {
     it('VALID: {inner(value), caller also takes extra} => extra is filled representatively, in caller param order', () => {
       const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
 
-      expect(result.cases).toStrictEqual([
+      expect(result.analysis.cases).toStrictEqual([
         {
           reachesExit: 'inner/return@then',
           arrange: [
@@ -95,6 +98,33 @@ describe('throughCallerCasesTransformer', () => {
           ],
           salient: true,
         },
+      ]);
+    });
+  });
+
+  describe('a callee whose branch a caller welds a literal argument into', () => {
+    // `report` welds `3` into `inner(3)`; `report`'s own `value` is unused, so it is filled
+    // representatively. `inner`'s `n` can only be `3`, so `n > 5` is dead and the fall-through is live.
+    const CALLER = ScopeRecordStub({
+      scopePath: ['*module*', 'report'],
+      name: 'report',
+      params: [{ name: 'value', type: { kind: 'number' } }],
+    });
+    const CALL = CallSiteStub({ callee: { target: 'local', name: 'inner', startLine: 2 }, args: [{ kind: 'literal', value: 3 }] });
+
+    it('VALID: {inner(3)} => one live-arm case, the caller`s params filled representatively', () => {
+      const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
+
+      expect(result.analysis.cases).toStrictEqual([
+        { reachesExit: 'inner/return@else', arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true },
+      ]);
+    });
+
+    it('VALID: {inner(3)} => the welded-dead then-arm is returned as an unreachable exit naming the operand and value', () => {
+      const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
+
+      expect(result.unreachableExits).toStrictEqual([
+        { line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 } },
       ]);
     });
   });
