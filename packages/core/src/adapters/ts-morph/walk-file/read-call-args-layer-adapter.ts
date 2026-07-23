@@ -12,7 +12,7 @@
  */
 import { Node } from 'ts-morph';
 
-import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { lineNumberContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 
 import type { CallArg } from '../../../contracts/call-site/call-site-contract';
 
@@ -24,6 +24,13 @@ export const readCallArgsLayerAdapter = ({ args }: { args: Node[] }): CallArg[] 
       return declaration !== undefined && rest.length === 0 && Node.isParameterDeclaration(declaration)
         ? { kind: 'param-ref', paramName: symbolNameContract.parse(declaration.getName()) }
         : { kind: 'opaque' };
+    }
+
+    // An inline function-like argument is a scope the walk opens elsewhere; record the LINK by its
+    // start line (the key `follow-calls` matches a scope record by), so a callback the code genuinely
+    // reaches is never mistaken for dead surface.
+    if (Node.isArrowFunction(arg) || Node.isFunctionExpression(arg)) {
+      return { kind: 'callback', startLine: lineNumberContract.parse(arg.getStartLineNumber()) };
     }
 
     if (Node.isStringLiteral(arg) || Node.isNumericLiteral(arg)) {

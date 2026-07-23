@@ -4,10 +4,10 @@ import { join } from 'path';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 
-const source = readFileSync(join(__dirname, 'nested-function.ts'), 'utf8');
-const relPath = 'src/happy-path/composition/nested-function/nested-function.ts';
+const source = readFileSync(join(__dirname, 'nested.ts'), 'utf8');
+const relPath = 'src/happy-path/function/nested/nested.ts';
 
-describe('composition / nested-function — a private driven through the caller that consumes it', () => {
+describe('function / nested — a nested function driven through the caller that consumes it', () => {
   // REGRESSION GUARD. `inner`'s `if` belongs to `inner`, not to `outer`: `outer` itself has no
   // branches. The driven `inner` entry below carries that `if`; it must never leak up into `outer`.
   it('VALID: {nested function} => the inner if does NOT leak into the outer entry', () => {
@@ -49,7 +49,7 @@ describe('composition / nested-function — a private driven through the caller 
   });
 
   // The admission is GONE, not merely quieter: following the call graph reaches `inner`, so there is
-  // nothing left to admit. A file that once reported an undriven helper now reports a driven one.
+  // nothing left to admit.
   it('VALID: {a private reached by passthrough} => leaves nothing undriven', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 

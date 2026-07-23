@@ -55,5 +55,6 @@ export const tsMorphWalkFileAdapter = ({
     moduleEdges: walked.moduleEdges,
     globalUses: walked.globalUses,
     envReads: walked.envReads,
+    reachedFns: walked.reachedFns,
   });
 };

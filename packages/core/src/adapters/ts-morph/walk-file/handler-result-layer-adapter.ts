@@ -14,7 +14,7 @@
  */
 import type { Node } from 'ts-morph';
 
-import type { BranchNode, EnvRead, ExitNode, GlobalUse, ModuleEdge, SymbolName } from '@assayer/shared/contracts';
+import type { BranchNode, EnvRead, ExitNode, GlobalUse, LineNumber, ModuleEdge, SymbolName } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../../contracts/call-site/call-site-contract';
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
@@ -46,6 +46,9 @@ export interface HandlerResult {
   globalUses: GlobalUse[];
   /** `process.env.<X>` property reads this node made — flat file-level facts, never scope-claimed. */
   envReads: EnvRead[];
+  /** Start lines of inline functions this node reached other than by a named call — a returned
+   * function or an immediately-invoked one. Flat file-level facts, never scope-claimed. */
+  reachedFns: LineNumber[];
   descents: Descent[];
   /**
    * Passed in with empty branches/exits — the walk fills them from the scope body's loose facts.
@@ -65,6 +68,7 @@ export const handlerResultLayerAdapter = ({
   moduleEdges,
   globalUses,
   envReads,
+  reachedFns,
   descents,
   opensScope,
 }: {
@@ -78,6 +82,7 @@ export const handlerResultLayerAdapter = ({
   moduleEdges?: ModuleEdge[];
   globalUses?: GlobalUse[];
   envReads?: EnvRead[];
+  reachedFns?: LineNumber[];
   descents?: Descent[];
   opensScope?: ScopeRecord;
 }): HandlerResult => ({
@@ -91,6 +96,7 @@ export const handlerResultLayerAdapter = ({
   moduleEdges: moduleEdges ?? [],
   globalUses: globalUses ?? [],
   envReads: envReads ?? [],
+  reachedFns: reachedFns ?? [],
   descents: descents ?? [],
   ...(opensScope === undefined ? {} : { opensScope }),
 });

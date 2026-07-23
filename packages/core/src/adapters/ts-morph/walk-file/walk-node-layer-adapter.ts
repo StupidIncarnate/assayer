@@ -36,6 +36,7 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
   const moduleEdges = [...handled.moduleEdges, ...child.moduleEdges];
   const globalUses = [...handled.globalUses, ...child.globalUses];
   const envReads = [...handled.envReads, ...child.envReads];
+  const reachedFns = [...handled.reachedFns, ...child.reachedFns];
   const branches = [...handled.branches, ...child.looseBranches];
   const exits = [...handled.exits, ...child.looseExits];
   const calls = [...handled.calls, ...child.looseCalls];
@@ -56,6 +57,7 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
       moduleEdges,
       globalUses,
       envReads,
+      reachedFns,
     };
   }
 
@@ -73,5 +75,6 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
     moduleEdges,
     globalUses,
     envReads,
+    reachedFns,
   };
 };

@@ -19,6 +19,7 @@ describe('handlerResultLayerAdapter', () => {
         moduleEdges: [],
         globalUses: [],
         envReads: [],
+        reachedFns: [],
         descents: [],
       });
     });
@@ -37,6 +38,7 @@ describe('handlerResultLayerAdapter', () => {
         moduleEdges: [],
         globalUses: [],
         envReads: [],
+        reachedFns: [],
         descents: [],
       });
     });
@@ -57,6 +59,7 @@ describe('handlerResultLayerAdapter', () => {
         moduleEdges: [],
         globalUses: [],
         envReads: [],
+        reachedFns: [],
         descents: [],
         opensScope: ScopeRecordStub(),
       });

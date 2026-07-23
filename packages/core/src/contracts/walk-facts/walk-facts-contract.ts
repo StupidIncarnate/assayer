@@ -16,6 +16,7 @@ import {
   envReadContract,
   exitNodeContract,
   globalUseContract,
+  lineNumberContract,
   moduleEdgeContract,
   symbolNameContract,
 } from '@assayer/shared/contracts';
@@ -51,6 +52,10 @@ export const walkFactsContract = z.object({
   globalUses: z.array(globalUseContract),
   // Flat like `globalUses`: a `process.env.<X>` property read is a fact about the FILE, not a scope.
   envReads: z.array(envReadContract),
+  // Flat like `globalUses`: the start lines of inline functions the file REACHES other than by a named
+  // call — returned to a caller (`return (n) => …`) or invoked in place (`((n) => …)(x)`). A follower
+  // reads these to know such a function is reached (not dead surface), even though no case can steer it.
+  reachedFns: z.array(lineNumberContract),
 });
 
 export type WalkFacts = z.infer<typeof walkFactsContract>;

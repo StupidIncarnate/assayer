@@ -34,6 +34,12 @@ const calleeLinkContract = z.discriminatedUnion('target', [
 const callArgContract = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('param-ref'), paramName: symbolNameContract }),
   z.object({ kind: z.literal('literal'), value: representativeValueContract }),
+  // An inline function-like argument (`items.map((n) => …)`, `apply(x, (n) => …)`). It is a scope of
+  // its own the walk opens elsewhere; this records only the LINK — the callback scope's start line,
+  // the same key `follow-calls` matches a scope record by — so a reached callback is never mistaken
+  // for dead surface. Non-inline function values (a bare identifier passed as a callback) stay
+  // `param-ref`/`opaque` like any other identifier.
+  z.object({ kind: z.literal('callback'), startLine: lineNumberContract }),
   z.object({ kind: z.literal('opaque') }),
 ]);
 
@@ -44,6 +50,13 @@ export const callSiteContract = z.object({
   // Where the call is written — the position that anchors an import-resolution build error at the
   // call site (P1). Carried structurally from the parse; never re-derived downstream.
   position: z.object({ line: lineNumberContract, column: columnNumberContract }),
+  // A method call on an IDENTIFIER receiver (`items.map(...)`) records that receiver's name and the
+  // method's name. Present only for a `receiver.method(...)` shape whose receiver is a plain
+  // identifier; a bare call, a computed member, or a chained receiver leaves both unset. This is what
+  // lets a follower see that a callback argument iterates one of the entry's ARRAY params — the
+  // element the callback's parameter binds to — so its branches drive through that param.
+  receiver: symbolNameContract.optional(),
+  method: symbolNameContract.optional(),
 });
 
 export type CallSite = z.infer<typeof callSiteContract>;

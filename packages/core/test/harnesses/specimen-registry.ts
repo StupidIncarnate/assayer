@@ -46,12 +46,6 @@ const DECLARATIONS = {
   // composition: both constructs in one file, which is the point of these rungs.
   [`${CATALOGUE}/happy-path/composition/fallthrough-in-if/fallthrough-in-if.ts`]: ['access:named', 'branch:if', 'branch:switch'],
   [`${CATALOGUE}/happy-path/composition/if-in-switch/if-in-switch.ts`]: ['access:named', 'branch:if', 'branch:switch', 'param:union'],
-  // `outer` (named) plus `inner` DRIVEN through it (`access:through-caller`), carrying the `branch:if`
-  // that is `inner`'s own. `inner` is unexported, so nothing calls it directly — but `outer` passes
-  // its own `value` straight in, so the follower drives `inner`'s branch by driving `outer`. The
-  // branch belongs to `inner` and is reported on `inner`'s entry, never leaked into `outer`. No
-  // `undriven`: following the call graph reaches it, which is the whole point of this rung.
-  [`${CATALOGUE}/happy-path/composition/nested-function/nested-function.ts`]: ['access:named', 'access:through-caller', 'branch:if'],
   // `classify` (named) guards on `tooBig(x)`, a same-file boolean predicate whose body is `return
   // n > 50`. The walk reads that guard as a lone opaque `truthy` leaf over the call; compose swaps it
   // for `tooBig`'s own comparison rebased onto `x`, so `classify`'s one `branch:if` derives the sound
@@ -69,12 +63,24 @@ const DECLARATIONS = {
   // reaches ambient globals (`process.env`, `console.log`), so it owes `callee:node-global`.
   [`${CATALOGUE}/happy-path/if-else/pure-statement/pure-statement.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'operand:env'],
 
-  // Branchless callables — a plain function and a branchless class method — each DRIVEN with one case.
-  // A branchless callable reaches its single return, so `derive-cases` emits exactly one case per its
-  // one exit; there is nothing to admit. `add` is a plain named entry; `greet` is reached through an
-  // instance, and its class has no explicit constructor, so the runner can build one and the method is
-  // `constructable` (DRIVEN, not a gap). Neither consumes anything external, so no callee trait.
-  [`${CATALOGUE}/happy-path/function/function.ts`]: ['access:named'],
+  // The function/ category — one rung per function DEFINITION shape, each DRIVEN. A branchless callable
+  // reaches its single return, so `derive-cases` emits one case per exit; a branching one derives the
+  // sound pair from its `if`.
+  //   - `declaration` is a plain named function declaration (`add`, branchless, one case).
+  //   - `expression` and `arrow` are UNNAMED functions bound to an exported const — a function
+  //     expression and a block-bodied arrow. The const supplies the entry name, so each is analysed
+  //     exactly as a declaration and its `if` drives; the arrow syntax changes nothing.
+  //   - `nested` is a nested function DRIVEN through the caller that passes its own param straight in:
+  //     `outer` (named) plus `inner` (`access:through-caller`) carrying `inner`'s own `branch:if`, never
+  //     leaked into `outer`. No `undriven` — following the call graph reaches it. (Reached-but-admitted
+  //     function shapes — a callback, a returned closure, an IIFE, an uncalled nested function — run
+  //     UNCLEAN, so they live under sad-path/ by admission, not here.)
+  [`${CATALOGUE}/happy-path/function/declaration/declaration.ts`]: ['access:named'],
+  [`${CATALOGUE}/happy-path/function/expression/expression.ts`]: ['access:named', 'branch:if'],
+  [`${CATALOGUE}/happy-path/function/arrow/arrow.ts`]: ['access:named', 'branch:if'],
+  [`${CATALOGUE}/happy-path/function/nested/nested.ts`]: ['access:named', 'access:through-caller', 'branch:if'],
+  // A branchless class method — reached through an instance; its class has no explicit constructor, so
+  // the runner builds one and the method is `constructable` (DRIVEN, not a gap).
   [`${CATALOGUE}/happy-path/class/class.ts`]: ['access:method'],
 
   // Type-reading rungs — branchless functions whose whole point is the PARAM shape the walk reads.
@@ -108,6 +114,13 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/array/spread/spread.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/slice/slice.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/map/map.ts`]: ['access:named', 'param:array'],
+  // `map-conditional`'s callback BRANCHES on the element (`items.map((n) => { if (n > 100) … })`). The
+  // callback is reached through `rescale` — calling it runs `.map`, which runs the callback per element
+  // — so its branches DRIVE by steering the array: a one-element array whose element satisfies each arm
+  // (`[101]`, `[-1]`, `[100]`). The callback is a second entry, `access:through-caller` naming rescale,
+  // carrying its own `branch:if`; the array/element twin of function/nested. Clean run — no
+  // admission — hence happy-path.
+  [`${CATALOGUE}/happy-path/array/map-conditional/map-conditional.ts`]: ['access:named', 'access:through-caller', 'branch:if', 'param:array'],
   [`${CATALOGUE}/happy-path/array/nested/nested.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/const-alias/const-alias.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/const-literal/const-literal.ts`]: ['access:named'],
@@ -241,6 +254,11 @@ const DECLARATIONS = {
   // will (an unexported symbol is reachable only from its own file). Rides the LINT channel — "change
   // the code", not "Assayer cannot drive it".
   [`${CATALOGUE}/sad-path/dead-surface/dead-surface.ts`]: ['access:named', 'lint:dead-surface'],
+  // The NESTED twin — `unused` declared inside `outer`, called by nobody and passed nowhere. It keeps
+  // the callback fix honest: a nested function that looks like a callback is STILL dead surface when
+  // nothing reaches it. Being nested does not rescue it; being REACHED (as an argument, or over an
+  // array) is what separates a driven/undriven callback from this dead one.
+  [`${CATALOGUE}/sad-path/dead-surface/uncalled-nested/uncalled-nested.ts`]: ['access:named', 'lint:dead-surface'],
 
   // UNDRIVEN, the two "welded value, one outcome" shapes at different sites — logic Assayer reads
   // perfectly and no case can steer, because the deciding operand is welded into the source. Distinct
@@ -263,6 +281,23 @@ const DECLARATIONS = {
   // no entry of its own — the file's one entry is the named export.
   [`${CATALOGUE}/sad-path/undriven/opaque-if/opaque-if.ts`]: ['access:named', 'branch:if', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/opaque-ternary/opaque-ternary.ts`]: ['access:named', 'branch:ternary', 'undriven'],
+  // A branching callback passed to a same-file higher-order function (`apply(value, (x) => { if … })`).
+  // The code REACHES the callback (it is passed as an argument), so it is NOT dead surface — but the
+  // value `x` binds to is handed to it by `apply`, not an input any case at `run` controls, so its
+  // branch is admitted UNDRIVEN. The array/element twin (map-conditional) IS driven; the passthrough
+  // that would drive THIS (`run`'s `value` reaching `x` through `apply`) is a later rung. `run` is the
+  // sole `access:named` entry; `apply` is a branchless private.
+  [`${CATALOGUE}/sad-path/undriven/hof-callback/hof-callback.ts`]: ['access:named', 'undriven'],
+  // A function that RETURNS a branching closure (`return (n) => { if (n > threshold) … }`). The code
+  // reaches the closure via the export surface, so it is NOT dead surface — but `n` is supplied by
+  // whoever applies the returned function and `threshold` is closed over, neither an input a case
+  // controls, so it is admitted UNDRIVEN. `makeClassifier` is the sole `access:named` entry.
+  [`${CATALOGUE}/sad-path/undriven/returned-closure/returned-closure.ts`]: ['access:named', 'undriven'],
+  // An immediately-invoked function expression (`((n) => { if (n > 5) … })(7)`). The arrow is INVOKED in
+  // place, so it is reached (not dead surface), but applied to the welded argument `7`, so its branch
+  // has one outcome no case can steer ⇒ UNDRIVEN, the immediate-invocation twin of welded-arg. `label`
+  // receives a string, so the module scope is no entry of its own — the file has no `access:*` entry.
+  [`${CATALOGUE}/sad-path/undriven/iife/iife.ts`]: ['undriven'],
 
   // ENV-as-OBJECT: `process.env` is an object, and its properties feed the stub stitch REGARDLESS of
   // drivability. `multi-read` reads two: `CODE` via `Number(process.env.CODE)` in a switch (DRIVEN, one
@@ -331,6 +366,6 @@ export const uncataloguedTraits = {
     'entry only when a caller drives it, and then the access is `through-caller`, not `unreachable`. ' +
     'A helper no caller drives is reported on `undriven`, which carries no access kind. So the ' +
     'unreachable access the walk records is real but never reaches the access field of an entry — ' +
-    '`happy-path/composition/nested-function` is the driven case, `sad-path/undriven/welded-arg` the ' +
+    '`happy-path/function/nested` is the driven case, `sad-path/undriven/welded-arg` the ' +
     'admitted one.',
 } as const;

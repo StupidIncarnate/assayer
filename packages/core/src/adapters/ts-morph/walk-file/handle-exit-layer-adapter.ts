@@ -21,7 +21,7 @@
 import { Node } from 'ts-morph';
 import type { ReturnStatement, ThrowStatement } from 'ts-morph';
 
-import { exitNodeContract } from '@assayer/shared/contracts';
+import { exitNodeContract, lineNumberContract } from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
@@ -50,6 +50,15 @@ export const handleExitLayerAdapter = ({
 
   const coverageId = exitCoverageIdTransformer({ kind, guardPath: context.guardPath, scopePath: context.scopePath });
 
+  // A returned/thrown inline function — `return (n) => …` — REACHES it via the export surface: unwrap
+  // parens and record its start line so a follower treats it as reached (undriven), never dead surface.
+  // The function is still descended below as its own scope; this only marks that the code reaches it.
+  const returnedInline = expression !== undefined && Node.isParenthesizedExpression(expression) ? expression.getExpression() : expression;
+  const reachedFns =
+    returnedInline !== undefined && (Node.isArrowFunction(returnedInline) || Node.isFunctionExpression(returnedInline))
+      ? [lineNumberContract.parse(returnedInline.getStartLineNumber())]
+      : [];
+
   return handlerResultLayerAdapter({
     exits: [
       exitNodeContract.parse({
@@ -59,6 +68,7 @@ export const handleExitLayerAdapter = ({
         line: node.getStartLineNumber(),
       }),
     ],
+    reachedFns,
     // The probe wraps the returned EXPRESSION, so the exit's runtime observation carries the value
     // that flowed out — display-only (P4 forbids asserting it), and the reason a bare `return;` gets
     // no site: there is no expression to wrap.

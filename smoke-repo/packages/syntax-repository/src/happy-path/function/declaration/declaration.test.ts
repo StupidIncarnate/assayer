@@ -4,10 +4,10 @@ import { join } from 'path';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 
-const source = readFileSync(join(__dirname, 'function.ts'), 'utf8');
-const relPath = 'src/happy-path/function/function.ts';
+const source = readFileSync(join(__dirname, 'declaration.ts'), 'utf8');
+const relPath = 'src/happy-path/function/declaration/declaration.ts';
 
-describe('function — a branchless exported function', () => {
+describe('function / declaration — a branchless named function declaration', () => {
   // Branchless does not mean untested: the function reaches its single return, so `derive-cases` emits
   // exactly one case for its one exit — arranged with representative param values, asserting only that
   // it REACHES the exit (never the returned value, P4). One entry, no branches, no admission.

@@ -38,6 +38,9 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     // The `process.env.<X>` property reads the file makes — the raw half the stub stitch folds into
     // per-property env stubs.
     envReads: z.array(envReadContract),
+    // The start lines of inline functions the file reaches WITHOUT a named call — returned to a caller
+    // or immediately invoked — so a follower never mistakes a reached callback for dead surface.
+    reachedFns: z.array(lineNumberContract),
   }),
   z.object({
     success: z.literal(false),

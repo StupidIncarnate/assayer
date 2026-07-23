@@ -12,7 +12,7 @@ const CLASS_SPECIMEN = 'packages/syntax-repository/src/happy-path/if-else/in-cla
 const MODULE_SPECIMEN = 'packages/syntax-repository/src/sad-path/undriven/welded-const/welded-const.ts';
 // A private DRIVEN through its caller, and a private nothing consumes: the two Stage-B/C payoffs that
 // only a real run can prove — one that the interpreter judges correctly, one that rides the artifact.
-const NESTED_SPECIMEN = 'packages/syntax-repository/src/happy-path/composition/nested-function/nested-function.ts';
+const NESTED_SPECIMEN = 'packages/syntax-repository/src/happy-path/function/nested/nested.ts';
 const DEAD_SURFACE_SPECIMEN = 'packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts';
 // A module-scope switch driven by the environment: each case writes CODE and re-imports; the default
 // is reached with CODE unset (NaN matches no case). Only a real run proves the default's empty arrange

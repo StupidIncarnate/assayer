@@ -22,6 +22,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 0 }],
         nodes: [],
         scopes: [
@@ -54,6 +55,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 68 },
           { id: '*module*/classify/return@top', kind: 'exit', start: 59, end: 64 }],
@@ -106,6 +108,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 128 },
           { id: '*module*/outer/inner/return@top', kind: 'exit', start: 96, end: 97 },
@@ -190,6 +193,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
           { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 73, end: 78 },
@@ -246,6 +250,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 79 },
           { id: '*module*/Classifier/classify/return@top', kind: 'exit', start: 66, end: 71 }],
@@ -302,6 +307,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 81 },
           { id: '*module*/run/return@top', kind: 'exit', start: 58, end: 77 },
@@ -333,10 +339,18 @@ describe('tsMorphWalkFileAdapter', () => {
             params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
             returnType: { kind: 'array', element: { kind: 'number' } },
             exits: [{ coverageId: '*module*/run/return@top', kind: 'return', guardPath: [], line: 2 }],
-            // `items.map(...)` is a call to an unresolvable callee (a method), and its argument is the
-            // callback expression — opaque, not a param the caller passes straight through.
+            // `items.map(...)` is a call to an unresolvable callee (a method), but the walk still records
+            // the LINK to its inline callback argument (by the callback scope's start line) and the
+            // member receiver + method — the facts that let a follower see the callback iterates `items`.
             calls: [
-              { callee: { target: 'unresolved' }, args: [{ kind: 'opaque' }], guardPath: [], position: { line: 2, column: 10 } },
+              {
+                callee: { target: 'unresolved' },
+                args: [{ kind: 'callback', startLine: 2 }],
+                guardPath: [],
+                position: { line: 2, column: 10 },
+                receiver: 'items',
+                method: 'map',
+              },
             ],
           }),
           ScopeRecordStub({
@@ -398,6 +412,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 145 },
           { id: '*module*/sumAll/return@top', kind: 'exit', start: 136, end: 141 },
@@ -468,6 +483,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 75 },
           { id: '*module*/pick/ternary:id:flag#leaf', kind: 'cond', start: 55, end: 59 },
@@ -538,6 +554,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        reachedFns: [],
         probeSites: [
           { id: '*module*/exit@top', kind: 'complete', start: 0, end: 86 },
           { id: '*module*/greet/return@top', kind: 'exit', start: 77, end: 82 }],

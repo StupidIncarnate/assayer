@@ -20,7 +20,7 @@ import { test, expect, reloadSmokeRunMode } from '../../../test/harnesses/e2e-fi
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
 const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
-const NESTED_FUNCTION = 'packages/syntax-repository/src/happy-path/composition/nested-function/nested-function.ts';
+const NESTED_FUNCTION = 'packages/syntax-repository/src/happy-path/function/nested/nested.ts';
 // An array-param rung: branchless, but the array fans out over cardinality into three cases, proving the
 // cardinality matrix and its salient lens reach the renderer.
 const ARRAY_ELEMENT_LENGTH = 'packages/syntax-repository/src/happy-path/array/element-length/element-length.ts';
@@ -36,7 +36,7 @@ const BOOLEAN_MIXED = 'packages/syntax-repository/src/happy-path/boolean/mixed/m
 const SWITCH_IN_IF = 'packages/syntax-repository/src/happy-path/composition/switch-in-if/switch-in-if.ts';
 const IF_IN_SWITCH = 'packages/syntax-repository/src/happy-path/composition/if-in-switch/if-in-switch.ts';
 const FALLTHROUGH_IN_IF = 'packages/syntax-repository/src/happy-path/composition/fallthrough-in-if/fallthrough-in-if.ts';
-const PURE_FUNCTION = 'packages/syntax-repository/src/happy-path/function/function.ts';
+const PURE_FUNCTION = 'packages/syntax-repository/src/happy-path/function/declaration/declaration.ts';
 const PURE_CLASS = 'packages/syntax-repository/src/happy-path/class/class.ts';
 
 // The ternary / short-circuit / value-position conditional rungs. Exit-position ternaries (block return
