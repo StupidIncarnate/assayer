@@ -104,6 +104,8 @@ LOOKUP, not by re-parsing (§9). One parse per file still holds.
 | flag a committed correction that CONTRADICTS a guard (pre-run) | `transformers/gather-property-guards` (the per-guard seam, guard twin of `gather-type-reads`) + `transformers/stub-contradictions` (intersect corrected values with the guard's satisfying domain, `is-domain-empty`) — folded into `compile-run-broker`'s `errors[]` beside the stale-overlay reconcile (§9) |
 | change reachability | `read-terminal` **or** `read-accounted` — they are different questions, read §5.8 first |
 | decide whether a branch is DRIVABLE (steerable) | `transformers/derive-cases` — the ONE gate, every branch construct alike (§5.12); never a per-construct or per-position gate |
+| EVALUATE a branch welded to a literal constant | capture the value where it is welded — `read-const-operand-layer-adapter` for a same-file `const` (stamps `operandConstValue`/`operandConstLength` on the leaf at walk time), `transformers/stamp-const-leaves` for a literal call/invocation ARGUMENT (stamped by the follower). Then it flows through the existing math: the `derive-cases` gate treats it as arrangeable, `cause-arrange` seeds a single-value domain, and the arm it violates falls out of `is-domain-empty` as an `unreachableExits` entry — a lint, never a second bogus case. The lint text is `transformers/unreachable-lint` |
+| drive an inline function nothing calls BY NAME | `transformers/follow-calls` routes each shape: an IIFE (its start line in the walk's `invokedFns`, which carries the invocation args) to `transformers/through-invocation-cases` — module-load code, so `envDrivable` and welded invocation literals both drive it, and its entry ACCESS is `module`; an array-iteration callback to `through-callback-cases`; a named-call callee to `through-caller-cases`. A RETURNED closure stays UNDRIVEN — an external caller applies it |
 | change what counts as a dark spot | `statics/significant-syntax-kinds` |
 | change what becomes an entry | `transformers/analysis-projection` (policy lives there, not in the walk) |
 | change what a call TARGETS (local / import / unresolved arms) | `read-callee-layer-adapter` |
@@ -248,8 +250,13 @@ predicate in `if (a && b)` and two value-paths in `return a && b` because those 
 two readers for one lens.)
 
 Whether a branch can be STEERED is likewise decided in ONE place — the `derive-cases` steerability gate —
-for `if`, ternary, `&&`/`||`/`??` and `?.` alike: every condition leaf a PLAIN SCALAR param or env operand
-⇒ cases, otherwise ⇒ admitted UNDRIVEN. An object-member read (`config.mode`) names its root param but is
+for `if`, ternary, `&&`/`||`/`??` and `?.` alike: every condition leaf a PLAIN SCALAR param, an env operand,
+or a WELDED literal constant ⇒ cases, otherwise ⇒ admitted UNDRIVEN. A welded leaf (`operandConstValue` /
+`operandConstLength`, stamped by `read-const-operand` for a same-file `const`, or by `stamp-const-leaves`
+for a literal call/invocation argument) is not STEERED but EVALUATED: `cause-arrange` seeds it as a
+single-value domain, so the arm it satisfies is a case and the arm it violates falls out of the SAME
+emptiness arithmetic as an `unreachableExits` entry — never a second, bogus case. An object-member read
+(`config.mode`) names its root param but is
 NOT scalar-arrangeable, so PER-FILE a leaf carrying `operandPropertyPath` stays un-steerable and its branch
 is admitted UNDRIVEN, the property fact captured for the stub stitch. That admission is closed at CONSUME
 time: `stub-realize` (§9), the object twin of compose, arranges the object param from the merged stub view

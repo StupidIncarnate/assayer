@@ -322,8 +322,10 @@ adding syntax.
   cannot act on.
 - **UNDRIVEN** — also Assayer's, but a different debt. "Understood perfectly,
   and my execution model cannot reach it." A module scope whose branching turns
-  only on values welded into its own source has no input to vary. A private
-  reached only through a fixed argument has a branch decided at authoring time.
+  on an OPAQUE value — a call result, an imported binding, a computed expression
+  — has nothing a case can set and nothing the analyzer can fold. A returned
+  closure is applied by an external caller, so no input this file provides
+  decides its parameter.
 - **LINT** — the REPO's debt: a pattern to change. A private nothing in its file
   consumes is dead surface, reachable from nowhere. The reader deletes it or
   wires it up.
@@ -341,10 +343,15 @@ a P4-safe INPUT that flows into a runnable case; the case asserts reaching an
 exit structurally, never a returned value. It is the object twin of the compose
 overlay that drives an opaque cross-file call-guard.
 
-So an UNDRIVEN private and the welded module scope owe the same text: a branch
-with one possible outcome, decided in the source, that no feature will drive. A
-private nothing calls is the LINT. A private some caller CAN steer is just
-driven.
+A branch WELDED to a literal constant is NOT undriven — it is EVALUATED. The
+analyzer knows the single value, so the arm that value satisfies is a real case
+and the arm it violates is an `unreachable-exit` LINT: dead code, the repo's
+debt. A welded value is a single-value DOMAIN on the operand, which is why one
+mechanism covers every site it can be welded at — a same-file `const level = 7`,
+a literal call argument (`decide(3)`), or an IIFE's invocation (`((n) => …)(7)`).
+An IIFE is module-load code besides, so it is also driven by the environment its
+body reads, exactly as a top-level branch is. A private nothing calls is the
+LINT. A private some caller CAN steer is just driven.
 
 Never write an admission that reads as permanent when a feature would close it,
 and never write one that promises a feature that cannot exist.
