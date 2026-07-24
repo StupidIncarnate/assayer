@@ -31,8 +31,13 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
       return `    ${String(event.kind)}  ${String(event.id)}${outcome}  ${String(event.valueText)}`;
     });
 
+    // `errored` renders as ERROR rather than its own spelling: the marker is product surface shared
+    // with `assayer unit`, and two spellings of one outcome is two vocabularies for the reader to
+    // learn. PASS/FAIL are already their own uppercase.
+    const marker = String(testCase.status) === 'errored' ? 'ERROR' : String(testCase.status).toUpperCase();
+
     return [
-      `  ${String(testCase.status).toUpperCase()} ${String(testCase.entryName)}(${args})`,
+      `  ${marker} ${String(testCase.entryName)}(${args})`,
       `    predicted ${testCase.testCase.reachesPath.map(String).join(' → ')}`,
       ...events,
     ];

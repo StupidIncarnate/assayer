@@ -30,8 +30,16 @@
  *   is what keeps a callback the entry invoked — which fires its own exit probe afterwards — from being counted
  *   as the entry's reach.
  *
- *   A throw is a real outcome, not a crash: the case fails with the message and whatever trace it got
- *   to, because "reached no exit" is exactly what a human needs told.
+ *   A throw is a real outcome, not a crash: the case is recorded with the message and whatever trace it
+ *   got to, because "reached no exit" is exactly what a human needs told.
+ *
+ *   It reports THREE outcomes, and the split is the point. `passed` and `failed` are the two halves of
+ *   one question — did the arrange reach the predicted exit — and only a case that actually reached an
+ *   exit can answer it. The three ways to reach none (the entry is not callable, it threw, it ran to
+ *   completion firing no exit probe) answer a different question, so they are `errored`: no verdict
+ *   about the prediction exists. A reader who sees `failed` looks at the analyzer's derivation; a
+ *   reader who sees `errored` looks at the arrange that was handed in. Reporting a thrown case as
+ *   `failed` sends them to the wrong one.
  *
  * USAGE:
  * jestInterpretCaseAdapter({ entry, entryName, exitIds, testCase, probe });
@@ -61,7 +69,7 @@ export const jestInterpretCaseAdapter = ({
     return caseResultContract.parse({
       entryName,
       testCase,
-      status: 'failed',
+      status: 'errored',
       trace: [],
       message: `entry '${entryName}' is not an exported function — nothing to drive`,
     });
@@ -88,7 +96,7 @@ export const jestInterpretCaseAdapter = ({
     return caseResultContract.parse({
       entryName,
       testCase,
-      status: 'failed',
+      status: 'errored',
       trace: probe.events,
       message: `threw before reaching an exit: ${error instanceof Error ? error.message : String(error)}`,
     });
@@ -110,7 +118,7 @@ export const jestInterpretCaseAdapter = ({
     return caseResultContract.parse({
       entryName,
       testCase,
-      status: 'failed',
+      status: 'errored',
       trace: probe.events,
       message: `reached no exit in '${entryName}'`,
     });

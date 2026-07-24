@@ -195,8 +195,13 @@ describe('jestInterpretCaseAdapter', () => {
     });
   });
 
+  // All three reach NO exit, so none of them can say anything about the predicted one. They are
+  // `errored` rather than `failed` for that reason and no other: `failed` is reserved for a case that
+  // ran, came out an exit, and came out the wrong one. Reported as `failed`, a parameter filled with a
+  // value the code cannot use reads exactly like a mispredicted arm, and the reader is sent to the
+  // analyzer instead of to the arrange.
   describe('flows that never reach an exit', () => {
-    it('ERROR: {the entry throws} => fails with the message and the trace it got to', () => {
+    it('ERROR: {the entry throws} => errored with the message and the trace it got to', () => {
       jestInterpretCaseAdapterProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
@@ -214,14 +219,14 @@ describe('jestInterpretCaseAdapter', () => {
       expect(result).toStrictEqual({
         entryName: 'grade',
         testCase,
-        status: 'failed',
+        status: 'errored',
         observedPath: [],
         trace: [],
         message: 'threw before reaching an exit: boom',
       });
     });
 
-    it('EDGE: {the entry exits nowhere} => fails naming the entry rather than silently passing', () => {
+    it('EDGE: {the entry exits nowhere} => errored naming the entry rather than silently passing', () => {
       jestInterpretCaseAdapterProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
@@ -237,14 +242,14 @@ describe('jestInterpretCaseAdapter', () => {
       expect(result).toStrictEqual({
         entryName: 'grade',
         testCase,
-        status: 'failed',
+        status: 'errored',
         observedPath: [],
         trace: [],
         message: "reached no exit in 'grade'",
       });
     });
 
-    it('EDGE: {the export is missing} => fails naming it, rather than crashing the whole file', () => {
+    it('EDGE: {the export is missing} => errored naming it, rather than crashing the whole file', () => {
       jestInterpretCaseAdapterProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
@@ -260,7 +265,7 @@ describe('jestInterpretCaseAdapter', () => {
       expect(result).toStrictEqual({
         entryName: 'grade',
         testCase,
-        status: 'failed',
+        status: 'errored',
         observedPath: [],
         trace: [],
         message: "entry 'grade' is not an exported function — nothing to drive",

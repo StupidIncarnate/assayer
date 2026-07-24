@@ -46,6 +46,34 @@ describe('caseResultContract', () => {
         ],
       });
     });
+
+    // The OTHER non-pass, and a different fact about the world: no verdict about the prediction was
+    // produced at all. Its observedPath is necessarily empty — it reached no exit — which is why a
+    // reader must not read it as "came out here instead", and why the message carries the finding.
+    it('VALID: {reached no exit at all} => parses as errored, with an empty observed path and a message', () => {
+      expect(
+        CaseResultStub({
+          status: 'errored',
+          observedPath: [],
+          trace: [],
+          message: 'threw before reaching an exit: items.map is not a function',
+        }),
+      ).toStrictEqual({
+        entryName: 'grade',
+        testCase: {
+          reachesPath: ['grade/return@then'],
+          arrange: [
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'param', param: 'bonus', value: 2 },
+          ],
+          salient: true,
+        },
+        status: 'errored',
+        observedPath: [],
+        trace: [],
+        message: 'threw before reaching an exit: items.map is not a function',
+      });
+    });
   });
 
   describe('invalid case results', () => {

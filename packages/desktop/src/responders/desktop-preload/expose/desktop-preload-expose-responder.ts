@@ -20,5 +20,6 @@ export const DesktopPreloadExposeResponder = (): AdapterResult =>
     stubsChannel: desktopBridgeStatics.channels.stubs,
     runChannel: desktopBridgeStatics.channels.run,
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
+    savedConsoleChannel: desktopBridgeStatics.channels.savedConsole,
     runOutputChannel: desktopBridgeStatics.channels.runOutput,
   });

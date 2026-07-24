@@ -1,4 +1,4 @@
-import { RunConsoleStub } from '../../../contracts/run-console/run-console.stub';
+import { RunConsoleStub } from '@assayer/shared/contracts';
 
 import { assayerBridgeOnRunOutputAdapter } from './assayer-bridge-on-run-output-adapter';
 import { assayerBridgeOnRunOutputAdapterProxy } from './assayer-bridge-on-run-output-adapter.proxy';

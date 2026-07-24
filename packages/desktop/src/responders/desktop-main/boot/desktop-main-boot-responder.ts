@@ -3,8 +3,10 @@
  *   bound to the target repo path. Validates each IPC's raw relPath argument through relPathContract
  *   before calling a broker.
  *
- *   `savedRun` never executes anything. Opening a file must not start a Jest run, so asking what a
- *   file's last run said and asking to run it are two channels, not one lazy accessor.
+ *   `savedRun` and `savedConsole` never execute anything. Opening a file must not start a Jest run, so
+ *   asking what a file's last run said and asking to run it are separate channels, not one lazy
+ *   accessor. Both are keyed on the file's CURRENT bytes, so an edited file finds neither — the panel
+ *   empties itself on an edit rather than showing a verdict and a report about code that is gone.
  *
  * USAGE:
  * await DesktopMainBootResponder({ repoPath });
@@ -12,7 +14,7 @@
  */
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 import { relPathContract } from '@assayer/shared/contracts';
-import { runFindBroker } from '@assayer/core/brokers';
+import { runConsoleFindBroker, runFindBroker } from '@assayer/core/brokers';
 
 import { electronDesktopBootAdapter } from '../../../adapters/electron/desktop-boot/electron-desktop-boot-adapter';
 import { statusResolveBroker } from '../../../brokers/status/resolve/status-resolve-broker';
@@ -36,6 +38,7 @@ export const DesktopMainBootResponder = async ({
     stubsChannel: desktopBridgeStatics.channels.stubs,
     runChannel: desktopBridgeStatics.channels.run,
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
+    savedConsoleChannel: desktopBridgeStatics.channels.savedConsole,
     runOutputChannel: desktopBridgeStatics.channels.runOutput,
     resolveStatus: async () => statusResolveBroker({ repoPath }),
     resolveCompiledTree: async () => compiledTreeResolveBroker({ repoPath }),
@@ -51,6 +54,12 @@ export const DesktopMainBootResponder = async ({
       }),
     resolveSavedRun: async ({ relPath }) =>
       runFindBroker({
+        configDir: String(repoPath),
+        root: String(await repoSourceRootBroker({ repoPath })),
+        relPath: String(relPathContract.parse(relPath)),
+      }),
+    resolveSavedConsole: async ({ relPath }) =>
+      runConsoleFindBroker({
         configDir: String(repoPath),
         root: String(await repoSourceRootBroker({ repoPath })),
         relPath: String(relPathContract.parse(relPath)),

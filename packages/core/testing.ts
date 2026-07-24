@@ -34,6 +34,8 @@ export * from './src/brokers/compile/resolve-root/compile-resolve-root-broker.pr
 export * from './src/brokers/run/paths/run-paths-broker.proxy';
 export * from './src/brokers/run/load/run-load-broker.proxy';
 export * from './src/brokers/run/find/run-find-broker.proxy';
+export * from './src/brokers/run/console-save/run-console-save-broker.proxy';
+export * from './src/brokers/run/console-find/run-console-find-broker.proxy';
 
 export * from './src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
 export * from './src/brokers/compose/cross-file-map/compose-cross-file-map-broker.proxy';

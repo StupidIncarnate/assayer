@@ -7,6 +7,12 @@
  *   claim, not two line numbers. Each failing file ends with the one command that shows its whole
  *   trace — a review backstop nobody can reach in one step stops being used.
  *
+ *   FAIL and ERROR are different markers because they send the reader to different places. FAIL means
+ *   the case ran and came out the wrong exit, so the derivation is what to look at. ERROR means no
+ *   verdict was produced — the entry threw, was not callable, or reached no exit — so the ARRANGE is
+ *   what to look at, and an ERROR line therefore leads with its message rather than a predicted-versus-
+ *   observed pair it does not have. Both count against the header's passed tally: neither passed.
+ *
  *   Gaps print even when every case passed. A gap is Assayer saying what it could NOT drive; a run
  *   that reports only its passes reads as complete coverage of the file, which is the exact lie
  *   `darkSpots` exists to prevent.
@@ -34,19 +40,24 @@ import type { RunResult } from '@assayer/shared/contracts';
 
 export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult[] }): CliOutput => {
   const lines = runs.flatMap((run) => {
-    const failures = run.cases.filter((testCase) => String(testCase.status) === 'failed');
-    const header = `${String(run.relPath)}  ${run.cases.length - failures.length}/${run.cases.length} passed`;
+    // Everything that did not pass, in case order — an ERROR and a FAIL are equally unresolved, and
+    // interleaving them by outcome would scramble the order the cases were derived in.
+    const unresolved = run.cases.filter((testCase) => String(testCase.status) !== 'passed');
+    const header = `${String(run.relPath)}  ${run.cases.length - unresolved.length}/${run.cases.length} passed`;
 
-    const failed = failures.map((testCase) => {
+    const failed = unresolved.map((testCase) => {
       const args = arrangeTextTransformer({ arrange: testCase.testCase.arrange });
-      const observed = testCase.observedPath.length === 0 ? 'reached no exit' : `reached ${testCase.observedPath.map(String).join(' → ')}`;
-      const why = testCase.message === undefined ? observed : String(testCase.message);
 
-      return [
-        `  FAIL ${String(testCase.entryName)}(${args})`,
-        `    predicted ${testCase.testCase.reachesPath.map(String).join(' → ')}`,
-        `    ${why}`,
-      ].join('\n');
+      // An errored case never reached an exit, so it has no predicted-versus-observed pair to show;
+      // printing one would invite a comparison against a run that produced no observation at all. Its
+      // message IS the finding, and it names the arrange the reader has to fix.
+      return String(testCase.status) === 'errored'
+        ? [`  ERROR ${String(testCase.entryName)}(${args})`, `    ${String(testCase.message ?? 'no verdict was produced')}`].join('\n')
+        : [
+            `  FAIL ${String(testCase.entryName)}(${args})`,
+            `    predicted ${testCase.testCase.reachesPath.map(String).join(' → ')}`,
+            `    reached ${testCase.observedPath.map(String).join(' → ')}`,
+          ].join('\n');
     });
 
     const gaps = run.gaps.map((gap) => `  GAP  ${String(gap.name)} — ${String(gap.reason)}`);
@@ -62,7 +73,7 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
     // A fourth line, worded to name the REPO as the one who owes the change: a lint is a pattern to
     // remove, not an admission Assayer owes. Unlike the three above, it can fail the build.
     const lints = run.lints.map((lint) => `  LINT ${String(lint.name)} — ${String(lint.message)}`);
-    const link = failures.length === 0 ? [] : [`  assayer detail ${String(run.runId)}`];
+    const link = unresolved.length === 0 ? [] : [`  assayer detail ${String(run.runId)}`];
 
     return [header, ...failed, ...gaps, ...darkSpots, ...undriven, ...lints, ...link];
   });

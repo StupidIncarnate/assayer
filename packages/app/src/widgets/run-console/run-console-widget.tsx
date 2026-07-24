@@ -24,7 +24,7 @@ import { Box, Group, Text, CloseButton, ScrollArea } from '@mantine/core';
 
 import { runConsoleStatics } from '../../statics/run-console/run-console-statics';
 import { runConsoleStatusTransformer } from '../../transformers/run-console-status/run-console-status-transformer';
-import type { RunConsole } from '../../contracts/run-console/run-console-contract';
+import type { RunConsole } from '@assayer/shared/contracts';
 
 const PANEL_WIDTH = 380;
 

@@ -246,3 +246,6 @@ export * from './src/contracts/run-id/run-id.stub';
 
 export * from './src/contracts/run-result/run-result-contract';
 export * from './src/contracts/run-result/run-result.stub';
+
+export * from './src/contracts/run-console/run-console-contract';
+export * from './src/contracts/run-console/run-console.stub';

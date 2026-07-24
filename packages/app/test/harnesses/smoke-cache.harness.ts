@@ -7,9 +7,10 @@
  *
  *   `runMode` is display-only (excluded from the cache + manifest hash) and is re-read from the config
  *   on every `assayer:status` IPC call, so a test that needs the `intelligent` gray-out just rewrites
- *   the config field and reloads — no recompile. Saved runs (written under `.assayer/cache/runs/` when
- *   a test clicks Run) are the sole per-test cache mutation; `resetSmokeCache` purges them so every
- *   file reads "not run" again, without invalidating the compiled surface.
+ *   the config field and reloads — no recompile. Saved runs are the sole per-test cache mutation, and a
+ *   run is a whole DIRECTORY under `.assayer/cache/runs/` — its verdicts and the report the CLI wrote
+ *   beside them. `resetSmokeCache` purges that tree, so every file reads "not run" again AND shows no
+ *   run console, without invalidating the compiled surface.
  *
  *   The dir is a STABLE path wiped-and-rebuilt once per run, never minted per test: a fresh temp dir
  *   per test is exactly what made every compile cold, and — for the wrapped runner — strands a ts-jest
@@ -87,8 +88,9 @@ export const compileSmokeCache = async (): Promise<void> => {
   });
 };
 
-// Reset the shared cache's per-test mutable state: purge saved runs (so every file reads "not run") and
-// set the display-only runMode. Never touches the compiled blobs, so no recompile is needed.
+// Reset the shared cache's per-test mutable state: purge saved runs — verdicts and saved reports alike,
+// since both live in the run's own directory — and set the display-only runMode. Never touches the
+// compiled blobs, so no recompile is needed.
 export const resetSmokeCache = ({ runMode }: { runMode: 'thorough' | 'intelligent' }): void => {
   rmSync(smokeRunsDir, { recursive: true, force: true });
   writeConfig({ runMode });

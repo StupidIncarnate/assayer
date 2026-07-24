@@ -1,5 +1,6 @@
+import { RunConsoleStub } from '@assayer/shared/contracts';
+
 import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
-import { RunConsoleStub } from '../../contracts/run-console/run-console.stub';
 import { RunConsoleWidget } from './run-console-widget';
 import { RunConsoleWidgetProxy } from './run-console-widget.proxy';
 

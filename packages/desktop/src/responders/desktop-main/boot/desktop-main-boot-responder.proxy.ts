@@ -1,4 +1,4 @@
-import { runFindBrokerProxy } from '@assayer/core/testing';
+import { runConsoleFindBrokerProxy, runFindBrokerProxy } from '@assayer/core/testing';
 
 import { electronDesktopBootAdapterProxy } from '../../../adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy';
 import { statusResolveBrokerProxy } from '../../../brokers/status/resolve/status-resolve-broker.proxy';
@@ -23,6 +23,7 @@ export const DesktopMainBootResponderProxy = (): {
   repoSourceRootBrokerProxy();
   runExecuteBrokerProxy();
   runFindBrokerProxy();
+  runConsoleFindBrokerProxy();
 
   return {
     handledChannels: (): unknown[] => bootProxy.handledChannels(),

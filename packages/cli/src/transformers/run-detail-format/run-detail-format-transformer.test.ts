@@ -45,6 +45,33 @@ describe('runDetailFormatTransformer', () => {
     });
   });
 
+  describe('an errored case', () => {
+    // ERROR, not ERRORED. The marker is product surface shared with `assayer unit`, and two spellings
+    // of one outcome is two vocabularies for the reader to learn. The trace it DID get to still
+    // renders — a case that threw halfway through has evidence worth reading.
+    it('VALID: {a case that threw} => the ERROR marker and the partial trace it reached', () => {
+      const run = RunResultStub({
+        cases: [
+          CaseResultStub({
+            status: 'errored',
+            observedPath: [],
+            message: 'threw before reaching an exit: items.map is not a function',
+            trace: [{ id: 'grade/if:x#leaf.0', kind: 'cond', outcome: true, valueText: 'true' }],
+          }),
+        ],
+      });
+
+      const result = runDetailFormatTransformer({ run });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
+          '  ERROR grade(6, 2)\n' +
+          '    predicted grade/return@then\n' +
+          '    cond  grade/if:x#leaf.0 true  true',
+      );
+    });
+  });
+
   describe('gaps', () => {
     it('VALID: {a gap} => reported alongside the trace', () => {
       const run = RunResultStub({ cases: [], gaps: [{ name: 'find', reason: 'needs a harness' }] });

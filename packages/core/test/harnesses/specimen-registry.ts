@@ -409,6 +409,37 @@ const DECLARATIONS = {
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/exceeds-limit.ts`]: ['access:named'],
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/within-budget.ts`]: ['access:named'],
 
+  // ERROR — the run throws. These are ORDINARY files: every one is code a real repo would contain, every
+  // branch is understood, and every case is derived confidently and correctly for the parameter the
+  // branch steers. What breaks is the fill for a parameter the case does NOT steer — Assayer hands it a
+  // scalar string placeholder, the entry uses it as a callable, an object or an array, and the case
+  // throws before reaching any exit. So they run unclean, hence sad-path.
+  //
+  // The whole grouping is a RATCHET, and unusually every member of it is expected to leave: nothing is
+  // wrong with the source, so each moves to happy-path the day its fill is fixed. It exists because a
+  // wrong INPUT is the one failure mode the four admission channels cannot express — Assayer does not
+  // say it was blind, blocked or owed a harness, it says nothing and then throws — and an ERROR verdict
+  // is the only place that shows.
+  //   - `callback-param`: a callback parameter (`report: (message: string) => string`) is filled with a
+  //     string and then CALLED. A function type reads as an object with no properties, so it owes
+  //     `param:object` — the trait names the shape the walk saw, not the fill it deserved.
+  //   - `object-param`: the same defect one shape over — a same-file `interface Sink` parameter, its
+  //     `write` member fully enumerated onto the param, filled with a string and then dereferenced. The
+  //     shape being KNOWN is what makes it a defect rather than a limit.
+  //   - `stub-sibling-array`: a `number[]` sibling of a stub-realized OBJECT param. The object half is
+  //     driven correctly (`operand:property` + `param:object`), and only the array sibling is filled
+  //     wrong — the same fill `happy-path/array/sibling-fill` proves is correct at the funnel's seam,
+  //     missed at this one. The two specimens are the pair that localises it.
+  [`${CATALOGUE}/sad-path/error/callback-param/callback-param.ts`]: ['access:named', 'branch:if', 'param:object'],
+  [`${CATALOGUE}/sad-path/error/object-param/object-param.ts`]: ['access:named', 'branch:if', 'param:object'],
+  [`${CATALOGUE}/sad-path/error/stub-sibling-array/stub-sibling-array.ts`]: [
+    'access:named',
+    'branch:if',
+    'operand:property',
+    'param:array',
+    'param:object',
+  ],
+
   // `contradictory-bounds` nests `.length > 1` inside `.length < 1`, which no string satisfies — the
   // length axis is read over the integers, so this is provably dead where the same bounds on a plain
   // number are not. Second specimen owing `lint:unreachable-exit`, on a different axis from

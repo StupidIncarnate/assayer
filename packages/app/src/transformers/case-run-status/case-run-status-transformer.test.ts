@@ -20,6 +20,17 @@ describe('caseRunStatusTransformer', () => {
       expect(String(result)).toBe('failed');
     });
 
+    // Passed THROUGH, not mapped: the artifact already distinguishes a case that reached the wrong
+    // exit from one that reached none, and collapsing errored into failed here would re-decide a run
+    // this transformer did not watch.
+    it('VALID: {an errored case} => errored rather than failed', () => {
+      const run = RunResultStub({ cases: [CaseResultStub({ status: 'errored', observedPath: [] })] });
+
+      const result = caseRunStatusTransformer({ run, testCase: CaseResultStub().testCase });
+
+      expect(String(result)).toBe('errored');
+    });
+
     // salient is a must-run display opinion, not identity: an all-salient blob still matches a run
     // whose case carries the same exit and arrange, so a query differing ONLY in salient resolves.
     it('VALID: {run case salient, query not-salient, same exit+arrange} => matches, ignoring salient', () => {

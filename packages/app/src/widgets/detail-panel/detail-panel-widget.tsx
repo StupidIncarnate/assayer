@@ -76,6 +76,7 @@ import { Box, Tabs, Text, Stack, Button, Group } from '@mantine/core';
 import type { FileAnalysis, LineNumber, RelPath, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer, moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 
+import { caseRunResultTransformer } from '../../transformers/case-run-result/case-run-result-transformer';
 import { caseRunStatusTransformer } from '../../transformers/case-run-status/case-run-status-transformer';
 import { caseTouchedLinesTransformer } from '../../transformers/case-touched-lines/case-touched-lines-transformer';
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
@@ -316,18 +317,31 @@ export const DetailPanelWidget = ({
                       });
                       const isMatch = active && touched.some((line) => line === hoveredLine);
                       const status = String(caseRunStatusTransformer({ run, testCase }));
+                      const result = caseRunResultTransformer({ run, testCase });
+                      // A case the run did not pass never reached the exit on this row, so the row says
+                      // `predicted` rather than `reaches`. Printing the derived exit as though the run
+                      // landed there is the panel asserting an outcome that did not happen — and it
+                      // makes a case that THREW read identically to one that merely came out elsewhere.
+                      const settled = result !== undefined && status !== 'passed';
+                      const reach = `${settled ? 'predicted' : 'reaches'} L${exit?.line ?? '?'}`;
+                      // Why it did not pass, in this panel's own L-number vocabulary. An errored case
+                      // carries the runner's message (it threw, was not callable, fired no exit probe);
+                      // a failed one has no message and is explained by where it DID come out.
+                      const observed = (result?.observedPath ?? [])
+                        .map((id) => `L${String(fn.exits.find((candidate) => candidate.coverageId === id)?.line ?? '?')}`)
+                        .join(' → ');
+                      const outcome =
+                        result?.message ?? (observed === '' ? 'reached no exit' : `reached ${observed}`);
                       // Display-only: under 'intelligent' the non-salient breadth grays out; 'thorough'
                       // (the default, and any runMode the panel is not told) leaves every row live. This
                       // never changes what the run engine executes — only how a reviewer reads the set.
                       const grayed = runMode === 'intelligent' && !testCase.salient;
 
                       return (
-                        <Group
+                        <Box
                           key={`${testCase.reachesPath.join('>')}#${arrangeTextTransformer({ arrange: testCase.arrange })}`}
-                          gap={6}
-                          wrap="nowrap"
-                          align="baseline"
                         >
+                        <Group gap={6} wrap="nowrap" align="baseline">
                           <Text
                             data-testid="TEST_CASE_ROW"
                             data-match={isMatch ? 'true' : 'false'}
@@ -352,10 +366,10 @@ export const DetailPanelWidget = ({
                               {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
                             </Text>
                             {isModule
-                              ? `${entryLabel} → reaches L${exit?.line ?? '?'}`
+                              ? `${entryLabel} → ${reach}`
                               : `${driver}(${arrangeTextTransformer({
                                   arrange: testCase.arrange,
-                                })}) → reaches L${exit?.line ?? '?'}`}
+                                })}) → ${reach}`}
                           </Text>
                           {/* The salient (must-run) marker — its own inline span like CASE_STATUS, but a
                               SIBLING of the row so it never enters the row's asserted text. It rides every
@@ -372,6 +386,24 @@ export const DetailPanelWidget = ({
                             </Text>
                           ) : null}
                         </Group>
+                        {/* WHY it did not pass, on the row itself. Without this the tab shows that a case
+                            failed and never what went wrong, so the reason lives only in the run console —
+                            a panel that opens on Run, can be dismissed, and is empty for a run someone did
+                            in a terminal. A case that threw is exactly the one a reader must not have to
+                            re-run to understand. */}
+                        {settled ? (
+                          <Text
+                            data-testid="CASE_OUTCOME"
+                            ff="monospace"
+                            fz="xs"
+                            c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
+                            pl={30}
+                            style={{ whiteSpace: 'pre-wrap' }}
+                          >
+                            {outcome}
+                          </Text>
+                        ) : null}
+                        </Box>
                       );
                     })}
                     </Stack>

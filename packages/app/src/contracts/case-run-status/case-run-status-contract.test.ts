@@ -14,6 +14,12 @@ describe('caseRunStatusContract', () => {
     it('VALID: {failed} => parses', () => {
       expect(caseRunStatusContract.parse('failed')).toBe('failed');
     });
+
+    // Its own member, never collapsed into failed: a case that reached the wrong exit and one that
+    // reached none send the reader to different places.
+    it('VALID: {errored} => parses', () => {
+      expect(caseRunStatusContract.parse('errored')).toBe('errored');
+    });
   });
 
   describe('invalid statuses', () => {

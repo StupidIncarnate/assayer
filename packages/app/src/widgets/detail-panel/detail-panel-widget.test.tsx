@@ -318,6 +318,161 @@ describe('DetailPanelWidget', () => {
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('failed');
     });
 
+    // The outcome the whole ERROR split exists for. A case that THREW must not read like one that came
+    // out the wrong exit: the fault is the arrange it was handed, not the analyzer's derivation.
+    it('VALID: {an errored run for the derived case} => the case reads errored, not failed', () => {
+      DetailPanelWidgetProxy();
+      const run = RunResultStub({
+        cases: [
+          CaseResultStub({
+            status: 'errored',
+            observedPath: [],
+            message: 'threw before reaching an exit: items.map is not a function',
+            testCase: { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
+          }),
+        ],
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
+      });
+
+      expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('errored');
+    });
+
+    // WHY it did not pass, on the row itself. Without this the tab shows that a case failed and never
+    // what went wrong, so the reason lives only in the run console — a panel that opens on Run, can be
+    // dismissed, and is empty for a run someone did in a terminal.
+    it('VALID: {an errored case} => the runner message is on the row, not only in the console', () => {
+      DetailPanelWidgetProxy();
+      const run = RunResultStub({
+        cases: [
+          CaseResultStub({
+            status: 'errored',
+            observedPath: [],
+            message: 'threw before reaching an exit: items.map is not a function',
+            testCase: { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
+          }),
+        ],
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
+      });
+
+      expect(getByTestId('CASE_OUTCOME').textContent).toBe(
+        'threw before reaching an exit: items.map is not a function',
+      );
+    });
+
+    // A failed case has no runner message — it is explained by where it DID come out, in the same
+    // L-number vocabulary the row's predicted exit uses. It needs a SECOND exit to have come out of:
+    // "failed" means the flow reached a real exit that was not the predicted one.
+    it('VALID: {a failed case} => the row says where it actually came out', () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({
+        functions: [
+          {
+            entry: {
+              name: 'formatGreeting',
+              scopePath: ['formatGreeting'],
+              params: [{ name: 'name', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 1,
+              access: { kind: 'named' },
+            },
+            branches: [
+              {
+                coverageId: 'formatGreeting/if:name.length===0',
+                kind: 'if',
+                condition: {
+                  kind: 'leaf',
+                  id: 'formatGreeting/if:name.length===0#leaf',
+                  operandParamName: 'name',
+                  operandType: { kind: 'string' },
+                  predicate: { kind: 'length-eq', literal: 0 },
+                },
+                startLine: 2,
+                endLine: 4,
+              },
+            ],
+            exits: [
+              {
+                coverageId: 'formatGreeting/return@if-then',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'then' }],
+                line: 3,
+              },
+              {
+                coverageId: 'formatGreeting/return@if-else',
+                kind: 'return',
+                guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'else' }],
+                line: 6,
+              },
+            ],
+            cases: [
+              { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
+            ],
+          },
+        ],
+      });
+      const run = RunResultStub({
+        cases: [
+          CaseResultStub({
+            status: 'failed',
+            observedPath: ['formatGreeting/return@if-else'],
+            testCase: { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
+          }),
+        ],
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} run={run} /> });
+
+      expect(getByTestId('CASE_OUTCOME').textContent).toBe('reached L6');
+    });
+
+    // The row must not assert an outcome that did not happen. `reaches L4` is the DERIVED exit; a case
+    // that threw reached nothing, so printing it as reached is the panel claiming a run it never saw.
+    it('VALID: {an errored case} => the row says predicted, never reaches', () => {
+      DetailPanelWidgetProxy();
+      const run = RunResultStub({
+        cases: [
+          CaseResultStub({
+            status: 'errored',
+            observedPath: [],
+            message: 'threw before reaching an exit: items.map is not a function',
+            testCase: { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
+          }),
+        ],
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
+      });
+
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('ERROR formatGreeting("") → predicted L3');
+    });
+
+    // A case nobody ran has no outcome to explain, and a passing one needs none: the row's own text
+    // already says where it goes. Only an unresolved case earns the extra line.
+    it('EMPTY: {a passing case} => no outcome line', () => {
+      DetailPanelWidgetProxy();
+      const run = RunResultStub({
+        cases: [
+          CaseResultStub({
+            status: 'passed',
+            testCase: { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
+          }),
+        ],
+      });
+
+      const { queryAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
+      });
+
+      expect(queryAllByTestId('CASE_OUTCOME')).toStrictEqual([]);
+    });
+
     // A gap is Assayer saying what it could NOT drive. Shown even when everything passed, or the
     // panel reads as complete coverage of the file.
     it('VALID: {a run with a gap} => the gap is shown with its reason', () => {

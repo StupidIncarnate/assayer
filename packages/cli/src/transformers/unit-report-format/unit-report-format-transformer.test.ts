@@ -39,12 +39,13 @@ describe('unitReportFormatTransformer', () => {
       );
     });
 
-    // A case that threw reached NO exit, so there is no observed id to print — the throw is the
-    // finding, and it is what the reader needs told.
-    it('VALID: {a case that threw} => its message rather than an exit id', () => {
+    // A case that threw reached NO exit, so it has no predicted-versus-observed pair — printing one
+    // would invite a comparison against a run that produced no observation at all. Its message IS the
+    // finding, and it names the arrange the reader has to fix.
+    it('VALID: {a case that threw} => ERROR, with its message and no predicted/observed pair', () => {
       const runs = [
         RunResultStub({
-          cases: [CaseResultStub({ status: 'failed', message: 'threw before reaching an exit: boom' })],
+          cases: [CaseResultStub({ status: 'errored', observedPath: [], message: 'threw before reaching an exit: boom' })],
         }),
       ];
 
@@ -52,19 +53,49 @@ describe('unitReportFormatTransformer', () => {
 
       expect(String(result)).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/1 passed\n' +
-          '  FAIL grade(6, 2)\n' +
-          '    predicted grade/return@then\n' +
+          '  ERROR grade(6, 2)\n' +
           '    threw before reaching an exit: boom\n' +
           '  assayer detail r-1784093000000',
       );
     });
 
-    // A backstop that takes more than one step to reach stops being used.
-    it('VALID: {a failing case} => ends with the command that shows the whole trace', () => {
+    // The two markers are the whole point of the split: one reader is sent to the derivation, the
+    // other to the arrange. They share a file and a tally, and neither reorders the other — the cases
+    // print in the order they were derived.
+    it('VALID: {an errored case and a failed one} => ERROR and FAIL on their own lines, in case order', () => {
+      const runs = [
+        RunResultStub({
+          cases: [
+            CaseResultStub({ status: 'errored', observedPath: [], message: 'threw before reaching an exit: boom' }),
+            CaseResultStub({
+              status: 'failed',
+              observedPath: ['grade/return@else'],
+              testCase: { reachesPath: ['grade/return@then'], arrange: [{ kind: 'param', param: 'score', value: 6 }] },
+            }),
+          ],
+        }),
+      ];
+
+      const result = unitReportFormatTransformer({ runs });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/2 passed\n' +
+          '  ERROR grade(6, 2)\n' +
+          '    threw before reaching an exit: boom\n' +
+          '  FAIL grade(6)\n' +
+          '    predicted grade/return@then\n' +
+          '    reached grade/return@else\n' +
+          '  assayer detail r-1784093000000',
+      );
+    });
+
+    // A backstop that takes more than one step to reach stops being used. An ERROR earns it just as a
+    // FAIL does — it is equally unresolved.
+    it('VALID: {an errored case} => ends with the command that shows the whole trace', () => {
       const runs = [
         RunResultStub({
           runId: 'abc123',
-          cases: [CaseResultStub({ status: 'failed', message: 'reached no exit in grade' })],
+          cases: [CaseResultStub({ status: 'errored', observedPath: [], message: 'reached no exit in grade' })],
         }),
       ];
 

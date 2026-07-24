@@ -12,7 +12,7 @@ import { CodeViewerWidgetProxy } from '../code-viewer/code-viewer-widget.proxy';
 import { DetailPanelWidgetProxy } from '../detail-panel/detail-panel-widget.proxy';
 import { RawBlobViewerWidgetProxy } from '../raw-blob-viewer/raw-blob-viewer-widget.proxy';
 import { RunConsoleWidgetProxy } from '../run-console/run-console-widget.proxy';
-import type { CompiledTreeStub, CompiledFileViewStub } from '@assayer/shared/contracts';
+import type { CompiledTreeStub, CompiledFileViewStub, RunConsoleStub } from '@assayer/shared/contracts';
 
 export const SurfaceExplorerWidgetProxy = (): {
   setupTree: (params: { tree: ReturnType<typeof CompiledTreeStub> }) => void;
@@ -20,6 +20,7 @@ export const SurfaceExplorerWidgetProxy = (): {
   setupFile: (params: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }) => void;
   failFile: () => void;
   failRun: (params: { message: string }) => void;
+  setupSavedConsole: (params: { console: ReturnType<typeof RunConsoleStub> }) => void;
   clickFile: (params: { label: string }) => Promise<void>;
   clickRun: () => Promise<void>;
   hideRunConsole: () => Promise<void>;
@@ -29,7 +30,8 @@ export const SurfaceExplorerWidgetProxy = (): {
   const treeProxy = useCompiledTreeBindingProxy();
   const fileProxy = compiledFileFetchBrokerProxy();
   // Defaults to "never run", so opening a file in these tests reads a saved run rather than
-  // executing one.
+  // executing one — and finds neither verdicts nor a report, which is the state a file nobody has run
+  // is in. A test that wants a saved report opts in with setupSavedConsole.
   const runProxy = useFileRunBindingProxy();
   runProxy.neverRun();
   // The status binding drives the detail panel's display-only runMode. Bare-created so it resolves the
@@ -63,6 +65,9 @@ export const SurfaceExplorerWidgetProxy = (): {
     },
     failRun: ({ message }: { message: string }): void => {
       runProxy.runFails({ message });
+    },
+    setupSavedConsole: ({ console: consoleText }: { console: ReturnType<typeof RunConsoleStub> }): void => {
+      runProxy.setupSavedConsole({ console: consoleText });
     },
     clickFile: async ({ label }: { label: string }): Promise<void> => {
       await userEvent.click(screen.getByText(label));

@@ -1,24 +1,24 @@
 /**
- * PURPOSE: Finds what a run said about ONE derived case — passed, failed, or not run.
+ * PURPOSE: Finds what a run said about ONE derived case — passed, failed, errored, or not run.
  *
- *   It matches on the case's own identity — the exit it predicts plus the arrange that drives it —
- *   rather than on position, because the two lists come from different places: the derived cases are
- *   read from the analysis blob, the results from a run artifact that may be older. Matching by index
- *   would quietly attribute the wrong verdict the moment either list changed.
- *
- *   `salient` is deliberately OUT of that identity: it is a must-run display opinion, not part of
- *   what a case IS. A stale all-salient blob must still match a fresh run whose cases carry the same
- *   path and arrange, so the identity is exactly { reachesPath, arrange }.
+ *   Finding the result is `case-run-result`'s job, not this one's: the status a row renders and the
+ *   message it explains itself with are two questions about ONE result, so the identity match lives in
+ *   one place and both readers go through it.
  *
  *   `not-run` is a first-class answer, not a null: a case with no result is a case nobody has
  *   executed, and the UI must say that rather than imply it passed.
  *
+ *   The run's own status is passed THROUGH rather than mapped: the artifact already distinguishes a
+ *   case that reached the wrong exit from one that reached none, and re-deciding that here would be a
+ *   second opinion about a run this transformer did not watch.
+ *
  * USAGE:
  * caseRunStatusTransformer({ run, testCase });
- * // Returns 'passed' | 'failed' | 'not-run'
+ * // Returns 'passed' | 'failed' | 'errored' | 'not-run'
  */
 import { caseRunStatusContract } from '../../contracts/case-run-status/case-run-status-contract';
 import type { CaseRunStatus } from '../../contracts/case-run-status/case-run-status-contract';
+import { caseRunResultTransformer } from '../case-run-result/case-run-result-transformer';
 import type { RunResult, DerivedTestCase } from '@assayer/shared/contracts';
 
 export const caseRunStatusTransformer = ({
@@ -28,11 +28,7 @@ export const caseRunStatusTransformer = ({
   run: RunResult | undefined;
   testCase: DerivedTestCase;
 }): CaseRunStatus => {
-  const identity = JSON.stringify({ reachesPath: testCase.reachesPath, arrange: testCase.arrange });
-  const result = run?.cases.find(
-    (candidate) =>
-      JSON.stringify({ reachesPath: candidate.testCase.reachesPath, arrange: candidate.testCase.arrange }) === identity,
-  );
+  const result = caseRunResultTransformer({ run, testCase });
 
   return caseRunStatusContract.parse(result === undefined ? 'not-run' : String(result.status));
 };

@@ -33,6 +33,7 @@ describe('DesktopMainBootResponder', () => {
         desktopBridgeStatics.channels.stubs,
         desktopBridgeStatics.channels.run,
         desktopBridgeStatics.channels.savedRun,
+        desktopBridgeStatics.channels.savedConsole,
       ]);
     });
   });

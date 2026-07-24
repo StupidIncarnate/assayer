@@ -4,6 +4,12 @@
  *   bar and a two-pane body (a scrollable file tree on the left, the code viewer on the right). On
  *   a file click it fetches that file, tracks it as selected, and shows it in the code viewer.
  *
+ *   The run console FOLLOWS the selection rather than the Run button. It is shown whenever the selected
+ *   file has a report — the one its last run saved, whether that run happened here or in a terminal —
+ *   and is absent for a file that has none, so clicking through the tree swaps reports instead of
+ *   stranding one file's failures under another file's name. Its visibility is therefore derived, and
+ *   the only state kept is whether the reader DISMISSED it, which is reset by picking another file.
+ *
  *   Before a tree can be shown there are three ways not to have one, and each gets its own surface.
  *   They arrive here identically — no tree — and ask the reader for opposite things: WAIT, fix the
  *   named fault, or run assayer. One prompt for all three tells the reader with a corrupt cache to run
@@ -53,23 +59,33 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
   const [selectedRelPath, setSelectedRelPath] = useState<RelPath | null>(null);
   const [hoveredLine, setHoveredLine] = useState<LineNumber | null>(null);
-  // The console is opened by the Run action alone — never by mounting, and never by opening a file,
-  // which does not run anything and so has no output to show.
-  const [consoleOpen, setConsoleOpen] = useState(false);
-  // Keyed on the selected path, so opening a file LOADS its last run and never starts one.
+  // Keyed on the selected path, so opening a file LOADS its last run and its report, and never starts
+  // one.
   const fileRun = useFileRunBinding({ relPath: selectedRelPath });
+  // Whether the reader DISMISSED the console, and whether they asked for a run — never "is it open",
+  // which is derived below. Tracking openness alone would mean a file with a saved report stayed blank
+  // until someone re-ran it, which is the whole thing this panel exists to avoid.
+  const [dismissed, setDismissed] = useState(false);
+  // A run REQUESTED here keeps the panel up even when the CLI writes nothing, because that outcome
+  // ("Failed — the CLI wrote nothing") is itself the answer and there is no output to derive it from.
+  const [runRequested, setRunRequested] = useState(false);
+  // Shown when a run was asked for, while one is in flight, or when the selected file has a saved
+  // report. A file with none of those has nothing to show, so the panel is ABSENT rather than empty —
+  // an empty console reads as "this ran and said nothing".
+  const consoleOpen = !dismissed && (runRequested || fileRun.running || String(fileRun.output) !== '');
 
   const handleLineHover = useCallback((line: number | null): void => {
     setHoveredLine(line === null ? null : lineNumberContract.parse(line));
   }, []);
 
   const handleRun = useCallback((): void => {
-    setConsoleOpen(true);
+    setDismissed(false);
+    setRunRequested(true);
     fileRun.execute();
   }, [fileRun]);
 
   const handleConsoleHide = useCallback((): void => {
-    setConsoleOpen(false);
+    setDismissed(true);
   }, []);
 
   return (
@@ -124,6 +140,11 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                   onFileClick={({ relPath }: { relPath: RelPath }): void => {
                     setSelectedRelPath(relPath);
                     setHoveredLine(null);
+                    // Both belong to the file they were made on. Carrying the dismissal across the tree
+                    // would mean closing the console once silences every file after it; carrying the
+                    // run request would hold the panel open over a file that has no report at all.
+                    setDismissed(false);
+                    setRunRequested(false);
                     compiledFileFetchBroker({ relPath })
                       .then(setFileView)
                       .catch((error: unknown) => {

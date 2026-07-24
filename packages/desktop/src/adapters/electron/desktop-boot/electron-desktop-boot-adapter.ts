@@ -12,12 +12,14 @@
  *   stubsChannel: 'assayer:stubs',
  *   runChannel: 'assayer:run',
  *   savedRunChannel: 'assayer:saved-run',
+ *   savedConsoleChannel: 'assayer:saved-console',
  *   resolveStatus,
  *   resolveCompiledTree,
  *   resolveCompiledFile,
  *   resolveStubs,
  *   resolveRun,
  *   resolveSavedRun,
+ *   resolveSavedConsole,
  * });
  * // Returns { success: true } once the window has loaded
  */
@@ -26,7 +28,7 @@ import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
 import type { AdapterResult } from '@dungeonmaster/shared/contracts';
-import type { CompiledTree, CompiledFileView, RunResult, StubView } from '@assayer/shared/contracts';
+import type { CompiledTree, CompiledFileView, RunConsole, RunResult, StubView } from '@assayer/shared/contracts';
 
 import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
@@ -38,6 +40,7 @@ export const electronDesktopBootAdapter = async ({
   stubsChannel,
   runChannel,
   savedRunChannel,
+  savedConsoleChannel,
   runOutputChannel,
   resolveStatus,
   resolveCompiledTree,
@@ -45,6 +48,7 @@ export const electronDesktopBootAdapter = async ({
   resolveStubs,
   resolveRun,
   resolveSavedRun,
+  resolveSavedConsole,
 }: {
   statusChannel: string;
   compiledTreeChannel: string;
@@ -52,6 +56,7 @@ export const electronDesktopBootAdapter = async ({
   stubsChannel: string;
   runChannel: string;
   savedRunChannel: string;
+  savedConsoleChannel: string;
   runOutputChannel: string;
   resolveStatus: () => DesktopStatus | Promise<DesktopStatus>;
   resolveCompiledTree: () => Promise<CompiledTree>;
@@ -62,6 +67,7 @@ export const electronDesktopBootAdapter = async ({
     onOutput: (params: { chunk: string }) => void;
   }) => Promise<RunResult>;
   resolveSavedRun: (params: { relPath: unknown }) => Promise<RunResult | undefined>;
+  resolveSavedConsole: (params: { relPath: unknown }) => Promise<RunConsole | undefined>;
 }): Promise<AdapterResult> => {
   const preloadPath = join(__dirname, '../../../../bin/desktop-preload.js');
   const rendererUrl =
@@ -72,7 +78,7 @@ export const electronDesktopBootAdapter = async ({
   // Every handler ANSWERS with an IpcReply and none of them throws. Electron builds
   // `Error invoking remote method '<channel>': <error>` in the renderer out of a flag it sets only
   // when a handler throws, and no option turns that text off — so a resolver's P1 error reaches the
-  // UI intact only by travelling as data. Routing all five through ipcReplyTransformer is what makes
+  // UI intact only by travelling as data. Routing every one through ipcReplyTransformer is what makes
   // that structural: there is no registration here that can throw into Electron.
   ipcMain.handle(statusChannel, async () =>
     ipcReplyTransformer({ resolve: async () => Promise.resolve(resolveStatus()) }),
@@ -98,6 +104,11 @@ export const electronDesktopBootAdapter = async ({
   );
   ipcMain.handle(savedRunChannel, async (_event: unknown, relPath: unknown) =>
     ipcReplyTransformer({ resolve: async () => resolveSavedRun({ relPath }) }),
+  );
+  // The SAVED half of the run console, and like savedRun it never executes anything: it answers what
+  // a past run wrote, so a reader can see why a file failed without running it again.
+  ipcMain.handle(savedConsoleChannel, async (_event: unknown, relPath: unknown) =>
+    ipcReplyTransformer({ resolve: async () => resolveSavedConsole({ relPath }) }),
   );
   await app.whenReady();
 

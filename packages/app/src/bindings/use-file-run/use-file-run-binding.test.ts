@@ -1,4 +1,4 @@
-import { RunResultStub, RelPathStub } from '@assayer/shared/contracts';
+import { RunResultStub, RunConsoleStub, RelPathStub } from '@assayer/shared/contracts';
 
 import { testingLibraryRenderHookAdapter } from '../../adapters/testing-library/render-hook/testing-library-render-hook-adapter';
 import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
@@ -55,6 +55,55 @@ describe('useFileRunBinding', () => {
       });
 
       expect(result.current.run).toBe(undefined);
+    });
+
+    // The payoff: the report from the LAST run arrives on open, so a reader sees why a file failed
+    // without running it again — including a run someone did in a terminal, since the CLI saves the
+    // same bytes the console shows.
+    it('VALID: {a file whose last run left a report} => the report is loaded into output, without running', async () => {
+      const proxy = useFileRunBindingProxy();
+      proxy.setupSavedRun({ run: RunResultStub() });
+      proxy.setupSavedConsole({
+        console: RunConsoleStub({ value: 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n' }),
+      });
+      proxy.runFails({ message: 'opening a file must never run it' });
+
+      const { result } = testingLibraryRenderHookAdapter({
+        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
+      });
+      const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(String(currentState().output)).toBe('src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n');
+        },
+      });
+
+      expect(currentState().error).toBe(null);
+    });
+
+    // The wipe. A file with no report for its CURRENT bytes gets an empty console — never the previous
+    // file's report, and never its own from before an edit. A missing report is an answer, so it must
+    // not raise into `error`, which is reserved for a run that could not happen.
+    it('EMPTY: {a file with no saved report} => output is empty, with no error', async () => {
+      const proxy = useFileRunBindingProxy();
+      proxy.neverRun();
+
+      const { result } = testingLibraryRenderHookAdapter({
+        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
+      });
+      const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(currentState().loading).toBe(false);
+        },
+      });
+
+      expect({ output: String(currentState().output), error: currentState().error }).toStrictEqual({
+        output: '',
+        error: null,
+      });
     });
   });
 

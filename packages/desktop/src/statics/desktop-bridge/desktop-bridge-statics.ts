@@ -12,6 +12,12 @@
  *   renderer. A request/response channel could only ever deliver the report after the wait it exists
  *   to narrate.
  *
+ *   `savedConsole` is its SAVED twin, and a handler rather than a push for the same reason `savedRun`
+ *   is: it answers what a past run wrote, and opening a file must not start one. It is separate from
+ *   `savedRun` because the two are different halves of a run — the verdicts and the report — and the
+ *   renderer wants them at different moments: the verdicts on every file it renders, the report only
+ *   for the panel that shows it.
+ *
  * USAGE:
  * desktopBridgeStatics.channels.status;
  * // Returns 'assayer:status'
@@ -29,6 +35,7 @@ export const desktopBridgeStatics = {
     stubs: 'assayer:stubs',
     run: 'assayer:run',
     savedRun: 'assayer:saved-run',
+    savedConsole: 'assayer:saved-console',
     runOutput: 'assayer:run-output',
   },
 } as const;

@@ -2,7 +2,7 @@ import { testingLibraryRenderAdapter } from '../../adapters/testing-library/rend
 import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
 import { SurfaceExplorerWidget } from './surface-explorer-widget';
 import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
-import { CompiledTreeStub, CompiledFileViewStub, FileAnalysisStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub, CompiledFileViewStub, FileAnalysisStub, RunConsoleStub } from '@assayer/shared/contracts';
 
 const STUB_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
@@ -225,9 +225,9 @@ describe('SurfaceExplorerWidget', () => {
       expect(queryByTestId('RUN_CONSOLE')).toBe(null);
     });
 
-    // Opening a file LOADS its last run. If merely selecting a file opened the console, clicking
-    // through a tree would look like it was executing the repo.
-    it('EMPTY: {a file opened, Run not clicked} => still no run console', async () => {
+    // A file with NO saved report has nothing to show, so the panel stays absent — an empty console
+    // would read as "this ran and said nothing". Opening a file still runs nothing either way.
+    it('EMPTY: {a file with no saved report opened} => still no run console', async () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({
         tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
@@ -247,6 +247,41 @@ describe('SurfaceExplorerWidget', () => {
       await proxy.clickFile({ label: 'app.tsx' });
 
       expect(queryByTestId('RUN_CONSOLE')).toBe(null);
+    });
+
+    // The payoff, and the whole point of saving the report: opening a file that HAS one shows it
+    // straight away. Nothing is executed — this is the report the last run already wrote, whether that
+    // run happened here or in a terminal — so a reader never has to re-run a file to see why it failed.
+    it('VALID: {a file whose last run left a report} => the console opens showing it, without clicking Run', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
+      });
+      proxy.setupFile({
+        relPath: 'packages/web/app.tsx',
+        fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
+      });
+      proxy.setupSavedConsole({
+        console: RunConsoleStub({ value: 'app.tsx  0/1 passed\n  ERROR mapEach("oops")\n' }),
+      });
+      proxy.failRun({ message: 'opening a file must never run it' });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
+        },
+      });
+      await proxy.clickFile({ label: 'app.tsx' });
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
+        },
+      });
+
+      expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe('app.tsx  0/1 passed\n  ERROR mapEach("oops")\n');
     });
 
     it('VALID: {click Run} => opens the console showing the CLI output as it is written', async () => {

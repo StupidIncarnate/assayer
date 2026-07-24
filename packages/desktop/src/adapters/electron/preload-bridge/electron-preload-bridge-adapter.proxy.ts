@@ -27,6 +27,7 @@ export const electronPreloadBridgeAdapterProxy = (): {
   triggerGetMergedView: () => Promise<void>;
   triggerRunFile: ({ relPath }: { relPath: string }) => Promise<unknown>;
   triggerGetSavedRun: ({ relPath }: { relPath: string }) => Promise<void>;
+  triggerGetSavedConsole: ({ relPath }: { relPath: string }) => Promise<void>;
   triggerOnRunOutput: () => void;
   triggerUnsubscribeRunOutput: () => void;
   emitRunOutput: ({ chunk }: { chunk: unknown }) => void;
@@ -86,6 +87,9 @@ export const electronPreloadBridgeAdapterProxy = (): {
     },
     triggerGetSavedRun: async ({ relPath }: { relPath: string }): Promise<void> => {
       await getApi()?.getSavedRun?.({ relPath });
+    },
+    triggerGetSavedConsole: async ({ relPath }: { relPath: string }): Promise<void> => {
+      await getApi()?.getSavedConsole?.({ relPath });
     },
     triggerOnRunOutput: (): void => {
       state.unsubscribe = getApi()?.onRunOutput?.({

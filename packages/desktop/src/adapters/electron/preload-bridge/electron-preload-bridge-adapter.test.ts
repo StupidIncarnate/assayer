@@ -14,6 +14,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -33,6 +34,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -54,6 +56,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -75,6 +78,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -96,6 +100,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -116,6 +121,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -142,6 +148,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -165,6 +172,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
       proxy.triggerOnRunOutput();
@@ -187,6 +195,7 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
       proxy.triggerOnRunOutput();
@@ -210,12 +219,37 @@ describe('electronPreloadBridgeAdapter', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
+      savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetSavedRun({ relPath: 'src/index.ts' });
 
       expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:saved-run', 'src/index.ts']);
+    });
+  });
+
+  describe('getSavedConsole()', () => {
+    // The report a past run wrote, on its own channel — so showing a file's failures costs nothing and
+    // starts nothing.
+    it('VALID: {relPath} => invokes the saved-console channel, never the run channel', async () => {
+      const proxy = electronPreloadBridgeAdapterProxy();
+
+      electronPreloadBridgeAdapter({
+        bridgeKey: 'assayerBridge',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+      });
+
+      await proxy.triggerGetSavedConsole({ relPath: 'src/index.ts' });
+
+      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:saved-console', 'src/index.ts']);
     });
   });
 });

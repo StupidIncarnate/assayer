@@ -10,8 +10,14 @@
  *   "we are finding out what happened last time", running is "Jest is executing right now".
  *
  *   `output` is the CLI's console text, appended AS the run writes it rather than handed over at the
- *   end — the same report, arriving the way a terminal shows it. It is reset by `execute` and not by
- *   opening a file, so the last run's report survives while its result is read.
+ *   end — the same report, arriving the way a terminal shows it.
+ *
+ *   Opening a file LOADS that file's saved report into `output` and replaces whatever was there. Both
+ *   halves of that matter. Loading it is what lets a reader see WHY a file failed without running it
+ *   again — including a run someone did in a terminal, since the CLI saves the same bytes. Replacing
+ *   is what stops the previous file's report from sitting under the newly-opened one, where it reads
+ *   as this file's. A file with no saved report gets an empty console rather than a stale one, and
+ *   that is also the wipe-on-edit: the report is keyed on content, so edited source finds none.
  *
  * USAGE:
  * const { run, loading, running, error, output, execute } = useFileRunBinding({ relPath });
@@ -21,10 +27,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { assayerBridgeOnRunOutputAdapter } from '../../adapters/assayer-bridge/on-run-output/assayer-bridge-on-run-output-adapter';
 import { runExecuteBroker } from '../../brokers/run/execute/run-execute-broker';
+import { runFetchConsoleBroker } from '../../brokers/run/fetch-console/run-fetch-console-broker';
 import { runFetchSavedBroker } from '../../brokers/run/fetch-saved/run-fetch-saved-broker';
-import { runConsoleContract } from '../../contracts/run-console/run-console-contract';
-import type { RunConsole } from '../../contracts/run-console/run-console-contract';
-import type { RunResult, RelPath } from '@assayer/shared/contracts';
+import { runConsoleContract } from '@assayer/shared/contracts';
+import type { RunConsole, RunResult, RelPath } from '@assayer/shared/contracts';
 
 const EMPTY_CONSOLE = runConsoleContract.parse('');
 
@@ -61,18 +67,31 @@ export const useFileRunBinding = ({
   useEffect(() => {
     if (relPath === null) {
       setRun(undefined);
+      setOutput(EMPTY_CONSOLE);
 
       return;
     }
 
     setLoading(true);
     setError(null);
+    // Cleared BEFORE the fetch, not after it: the two files' reports would otherwise overlap for as
+    // long as the round trip takes, and the reader would be looking at the previous file's failures
+    // under the new file's name.
+    setOutput(EMPTY_CONSOLE);
     runFetchSavedBroker({ relPath })
       .then(setRun)
       .catch(setError)
       .finally(() => {
         setLoading(false);
       });
+    // A missing report is not an error — it is a file nobody has run, or one edited since its last
+    // run — so it resolves to the empty console rather than raising into `error`, which is reserved
+    // for a run that could not happen.
+    runFetchConsoleBroker({ relPath })
+      .then((saved) => {
+        setOutput(saved ?? EMPTY_CONSOLE);
+      })
+      .catch(setError);
   }, [relPath]);
 
   const execute = useCallback(() => {

@@ -55,6 +55,95 @@ describe('UnitRunResponder', () => {
     });
   });
 
+  // Saved so the desktop can show what a run SAID without re-running it — and so it shows the CLI's
+  // real bytes rather than re-formatting the artifact into a second telling that can drift.
+  describe('the report it saves beside each run', () => {
+    it('VALID: {a run} => its report is saved under that run id', async () => {
+      const proxy = UnitRunResponderProxy();
+
+      await UnitRunResponder({
+        configDir: '/repo',
+        root: '/repo/src-root',
+        argv: ['src/a.ts'],
+        darkSpots: 'warn',
+        deadSurface: 'error',
+      });
+
+      expect(proxy.getSavedConsoles().map((saved) => ({ runId: String(saved.runId), console: String(saved.console) }))).toStrictEqual([
+        {
+          runId: 'r-1784093000000',
+          console: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed',
+        },
+      ]);
+    });
+
+    // `assayer unit a.ts b.ts` prints ONE report for two runs, but each run saves only its own slice.
+    // Saving the whole report against both ids would show a reader opening `a.ts` the failures of
+    // `b.ts`, attributed to the file they are looking at.
+    it('VALID: {two runs in one invocation} => each saves only its OWN slice, never the combined report', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({
+        runs: [
+          RunResultStub({ runId: 'r-a', relPath: 'src/a.ts' }),
+          RunResultStub({
+            runId: 'r-b',
+            relPath: 'src/b.ts',
+            cases: [CaseResultStub({ status: 'errored', observedPath: [], message: 'threw before reaching an exit: boom' })],
+          }),
+        ],
+      });
+
+      await expect(
+        UnitRunResponder({
+          configDir: '/repo',
+          root: '/repo/src-root',
+          argv: ['src/a.ts', 'src/b.ts'],
+          darkSpots: 'warn',
+          deadSurface: 'error',
+        }),
+      ).rejects.toThrow(CliExactOutputError);
+
+      expect(proxy.getSavedConsoles().map((saved) => ({ runId: String(saved.runId), console: String(saved.console) }))).toStrictEqual([
+        { runId: 'r-a', console: 'src/a.ts  1/1 passed' },
+        {
+          runId: 'r-b',
+          console:
+            'src/b.ts  0/1 passed\n' +
+            '  ERROR grade(6, 2)\n' +
+            '    threw before reaching an exit: boom\n' +
+            '  assayer detail r-b',
+        },
+      ]);
+    });
+
+    // Saved BEFORE the exit code is decided. A failing run is exactly the one whose report a reader
+    // needs to open later, so throwing first would persist reports only for runs nobody needs.
+    it('VALID: {a failing run} => the report is still saved, not lost to the throw', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({
+        runs: [
+          RunResultStub({
+            runId: 'r-fail',
+            relPath: 'src/a.ts',
+            cases: [CaseResultStub({ status: 'errored', observedPath: [], message: 'threw before reaching an exit: boom' })],
+          }),
+        ],
+      });
+
+      await expect(
+        UnitRunResponder({
+          configDir: '/repo',
+          root: '/repo/src-root',
+          argv: ['src/a.ts'],
+          darkSpots: 'warn',
+          deadSurface: 'error',
+        }),
+      ).rejects.toThrow(CliExactOutputError);
+
+      expect(proxy.getSavedConsoles().map((saved) => String(saved.runId))).toStrictEqual(['r-fail']);
+    });
+  });
+
   describe('a failing run', () => {
     // THROWN, not returned: a derived case that misses the exit derivation predicted is a build
     // error, so it must leave a non-zero exit code behind or CI goes green over it.
@@ -74,9 +163,13 @@ describe('UnitRunResponder', () => {
   // derivation PREDICTED, never a returned value — so a derived case always passes and a green run
   // could be a rubber stamp. These two prove it is not: each drives the REAL interpreter over REAL
   // code with a case HAND-CONSTRUCTED to be unreachable, so EXECUTION (not a mock) produces the
-  // failure, and the REAL formatter renders it as the exact FAIL text `assayer unit` throws to leave a
+  // failure, and the REAL formatter renders it as the exact text `assayer unit` throws to leave a
   // non-zero exit behind. The runPathsBroker mock only stands in for the compile that would derive the
   // sound cases; the failing case fed through it is the interpreter's own output.
+  //
+  // The two cases below are the two outcomes that are NOT a pass, and they must not render alike: the
+  // first threw and reports ERROR (look at the arrange), the second came out the wrong exit and reports
+  // FAIL (look at the derivation). Both leave a non-zero exit code.
   describe('fails loudly — the P4 soundness net', () => {
     it('ERROR: {a string arranged where the entry maps an array} => the real run FAILS with the throw, and assayer unit throws that exact report', async () => {
       const proxy = UnitRunResponderProxy();
@@ -97,10 +190,13 @@ describe('UnitRunResponder', () => {
         probe,
       });
 
+      // ERRORED, not failed: it threw before any exit fired, so no verdict about the predicted exit
+      // exists. That distinction is the whole point here — the fault is the ARRANGE (a string where an
+      // array belongs), and `failed` would send the reader to the derivation instead.
       expect(result).toStrictEqual({
         entryName: 'mapEach',
         testCase,
-        status: 'failed',
+        status: 'errored',
         observedPath: [],
         trace: [],
         message: 'threw before reaching an exit: items.map is not a function',
@@ -109,12 +205,12 @@ describe('UnitRunResponder', () => {
       const runs = [RunResultStub({ runId: 'r-soundness-net', relPath: 'src/wrong-type-arrange.ts', cases: [result] })];
       const report =
         'src/wrong-type-arrange.ts  0/1 passed\n' +
-        '  FAIL mapEach("oops")\n' +
-        '    predicted mapEach/return@top\n' +
+        '  ERROR mapEach("oops")\n' +
         '    threw before reaching an exit: items.map is not a function\n' +
         '  assayer detail r-soundness-net';
 
-      // The real formatter renders the throw verbatim as the FAIL block a reader acts on.
+      // The real formatter renders the throw verbatim as the ERROR block a reader acts on — the arrange
+      // and the message, with no predicted/observed pair the run never produced.
       expect(String(unitReportFormatTransformer({ runs }))).toBe(report);
 
       // assayer unit throws that exact text, so a failing run leaves a non-zero exit code behind.
