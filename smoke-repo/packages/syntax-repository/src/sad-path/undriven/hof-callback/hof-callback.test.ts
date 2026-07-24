@@ -46,7 +46,7 @@ describe('undriven / hof-callback — a branching callback passed to a same-file
         {
           name: 'run',
           access: { kind: 'named' },
-          cases: [{ reachesExit: '*module*/run/return@top', arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true }],
+          cases: [{ reachesPath: ['*module*/run/return@top'], arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true }],
         },
       ],
       lints: [],

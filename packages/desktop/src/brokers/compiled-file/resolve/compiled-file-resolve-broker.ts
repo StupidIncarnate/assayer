@@ -21,7 +21,7 @@
  */
 import { compiledFileViewContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
-import { composeCrossFilePredicatesBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
+import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
 import { tsMorphWalkFileAdapter } from '@assayer/core/adapters';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
@@ -68,7 +68,7 @@ export const compiledFileResolveBroker = async ({
   // The object-arrange overlay on top: an object-member branch (`if (config.mode === 'a')`) is DRIVEN
   // from the merged stub view — the derived per-property demands combined with the committed
   // `assayer/stubs/` overlay under the SAME source root, read fresh per serve and never persisted.
-  const analysis =
+  const realized =
     composed === undefined || root === undefined || walked === undefined
       ? composed
       : stubRealizeBroker({
@@ -78,6 +78,13 @@ export const compiledFileResolveBroker = async ({
           relPath: String(relPath),
           overlays: await stubOverlayLoadBroker({ repoRoot: String(root) }),
         });
+  // The cross-file-map fold last: a surface mapping an IMPORTED function over an array param folds that
+  // sibling callee's branches into the surface's cases, so the Tests tab shows the folded funnel. A
+  // same-reference no-op for a file with no such map.
+  const analysis =
+    realized === undefined || root === undefined || walked === undefined
+      ? realized
+      : composeCrossFileMapBroker({ analysis: realized, walked, root: String(root), relPath: String(relPath) });
 
   return compiledFileViewContract.parse({
     relPath,

@@ -33,8 +33,8 @@ const SALIENT_AND_BREADTH_ANALYSIS = FileAnalysisStub({
       branches: [],
       exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
       cases: [
-        { reachesExit: '*module*/exit@top', arrange: [], salient: true },
-        { reachesExit: '*module*/exit@top', arrange: [{ kind: 'env', name: 'X', value: '1' }], salient: false },
+        { reachesPath: ['*module*/exit@top'], arrange: [], salient: true },
+        { reachesPath: ['*module*/exit@top'], arrange: [{ kind: 'env', name: 'X', value: '1' }], salient: false },
       ],
     }),
   ],
@@ -55,7 +55,7 @@ const MODULE_EXPORT_ANALYSIS = FileAnalysisStub({
       }),
       branches: [],
       exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-      cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+      cases: [{ reachesPath: ['*module*/exit@top'], arrange: [] }],
     }),
   ],
   enrichment: [],
@@ -73,7 +73,55 @@ const MODULE_NO_EXPORT_ANALYSIS = FileAnalysisStub({
       }),
       branches: [],
       exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-      cases: [{ reachesExit: '*module*/exit@top', arrange: [] }],
+      cases: [{ reachesPath: ['*module*/exit@top'], arrange: [] }],
+    }),
+  ],
+  enrichment: [],
+});
+
+// The map-conditional shape: `rescale` maps an anonymous arrow over its `items` param. The arrow's
+// `name` is a structural PROJECTION — a coverage-ID segment, so a cache key — and its arrange belongs
+// to `rescale`, the entry the runner actually calls with a one-element array.
+const ANONYMOUS_CALLBACK_PROJECTION = 'fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,id:n';
+const ANONYMOUS_CALLBACK_ANALYSIS = FileAnalysisStub({
+  functions: [
+    FunctionAnalysisStub({
+      entry: EntrySignatureStub({
+        name: ANONYMOUS_CALLBACK_PROJECTION,
+        label: 'rescale › items.map((n) => …) L2',
+        scopePath: ['*module*', 'rescale', ANONYMOUS_CALLBACK_PROJECTION],
+        params: [{ name: 'n', type: { kind: 'number' } }],
+        access: { kind: 'through-caller', callerName: 'rescale' },
+      }),
+      branches: [],
+      exits: [{ coverageId: 'callback/return@then', kind: 'return', guardPath: [], line: 4 }],
+      cases: [
+        {
+          reachesPath: ['callback/return@then'],
+          arrange: [{ kind: 'array', param: 'items', value: [101] }],
+          salient: true,
+        },
+      ],
+    }),
+  ],
+  enrichment: [],
+});
+
+// The nested-function shape: `inner` is a NAMED private driven through `outer`, which passes its own
+// `value` straight in. It has a real name, so it needs no label — but the arrange is still the
+// CALLER's argument, so its row names `outer` exactly as the anonymous callback's names `rescale`.
+const THROUGH_CALLER_ANALYSIS = FileAnalysisStub({
+  functions: [
+    FunctionAnalysisStub({
+      entry: EntrySignatureStub({
+        name: 'inner',
+        scopePath: ['*module*', 'outer', 'inner'],
+        params: [{ name: 'n', type: { kind: 'number' } }],
+        access: { kind: 'through-caller', callerName: 'outer' },
+      }),
+      branches: [],
+      exits: [{ coverageId: 'inner/return@then', kind: 'return', guardPath: [], line: 4 }],
+      cases: [{ reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true }],
     }),
   ],
   enrichment: [],
@@ -155,6 +203,47 @@ describe('DetailPanelWidget', () => {
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('uses-console.ts · 1 cases');
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run uses-console.ts → reaches L4');
     });
+
+    // An anonymous scope's `name` is its structural projection — cache-internal by ruling. A panel that
+    // printed it would be showing the reader a key, so the title reads the entry's LABEL. The label
+    // already carries the signature, so no parameter list is appended after it.
+    it('VALID: {an anonymous callback entry} => the title reads its callsite label, never the structural projection', () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />,
+      });
+
+      expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe(
+        'rescale › items.map((n) => …) L2 · 1 cases',
+      );
+    });
+
+    // The row names what the runner CALLS. Nothing can call an anonymous arrow: the runner calls
+    // `rescale` with the steered array and the probe observes the arrow's exit. `(n) => …([101])` would
+    // read as a one-parameter arrow being handed an array.
+    it('VALID: {an anonymous callback entry} => the case row names the caller and its argument', () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />,
+      });
+
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run rescale([101]) → reaches L4');
+    });
+
+    // Same rule, named callee: `inner` keeps its own title because it HAS a name, while its row still
+    // names `outer` — the arrange value 6 is outer's argument, not inner's.
+    it('VALID: {a named private driven through its caller} => the title is its own name, the row is the caller', () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={THROUGH_CALLER_ANALYSIS} />,
+      });
+
+      expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('inner(n) · 1 cases');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6) → reaches L4');
+    });
   });
 
   describe('hovered-line highlighting', () => {
@@ -199,7 +288,7 @@ describe('DetailPanelWidget', () => {
         cases: [
           CaseResultStub({
             status: 'passed',
-            testCase: { reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] },
+            testCase: { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
           }),
         ],
       });
@@ -217,7 +306,7 @@ describe('DetailPanelWidget', () => {
         cases: [
           CaseResultStub({
             status: 'failed',
-            testCase: { reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] },
+            testCase: { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] },
           }),
         ],
       });

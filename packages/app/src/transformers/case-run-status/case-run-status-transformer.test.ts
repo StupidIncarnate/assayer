@@ -41,7 +41,7 @@ describe('caseRunStatusTransformer', () => {
       const result = caseRunStatusTransformer({
         run,
         testCase: CaseResultStub({
-          testCase: { reachesExit: 'grade/return@then', arrange: [{ kind: 'param', param: 'score', value: 99 }] },
+          testCase: { reachesPath: ['grade/return@then'], arrange: [{ kind: 'param', param: 'score', value: 99 }] },
         }).testCase,
       });
 

@@ -24,9 +24,12 @@ describe('undriven / returned-closure — a function that RETURNS a branching cl
   it('VALID: {makeClassifier returns (n) => { if (n > threshold) … }} => the returned closure is admitted UNDRIVEN', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
-    expect(analysis.undriven.map((entry) => ({ reason: entry.reason, startLine: entry.startLine, endLine: entry.endLine }))).toStrictEqual([
-      { reason: REACHED_FN_REASON, startLine: 2, endLine: 8 },
-    ]);
+    // The closure is anonymous, so its `name` is a structural projection — a cache key. The admission
+    // therefore carries a display `label` naming the return that hands it out, and that is what both the
+    // CLI's UNDRIVEN line and the desktop panel print.
+    expect(
+      analysis.undriven.map((entry) => ({ label: entry.label, reason: entry.reason, startLine: entry.startLine, endLine: entry.endLine })),
+    ).toStrictEqual([{ label: 'makeClassifier › return (n) => … L2', reason: REACHED_FN_REASON, startLine: 2, endLine: 8 }]);
   });
 
   // `makeClassifier` is the sole driven entry — branchless (its `if` belongs to the returned closure, a
@@ -46,7 +49,7 @@ describe('undriven / returned-closure — a function that RETURNS a branching cl
           access: { kind: 'named' },
           cases: [
             {
-              reachesExit: '*module*/makeClassifier/return@top',
+              reachesPath: ['*module*/makeClassifier/return@top'],
               arrange: [{ kind: 'param', param: 'threshold', value: 7 }],
               salient: true,
             },

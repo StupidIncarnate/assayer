@@ -13,7 +13,7 @@ describe('runResultContract', () => {
           {
             entryName: 'grade',
             testCase: {
-              reachesExit: 'grade/return@then',
+              reachesPath: ['grade/return@then'],
               arrange: [
                 { kind: 'param', param: 'score', value: 6 },
                 { kind: 'param', param: 'bonus', value: 2 },
@@ -21,7 +21,7 @@ describe('runResultContract', () => {
               salient: true,
             },
             status: 'passed',
-            observedExit: 'grade/return@then',
+            observedPath: ['grade/return@then'],
             trace: [
               { id: 'grade/if:x#leaf.0', kind: 'cond', outcome: true, valueText: 'true' },
               { id: 'grade/if:x#leaf.1', kind: 'cond', outcome: true, valueText: 'true' },
@@ -75,14 +75,15 @@ describe('runResultContract', () => {
     });
 
     // A run that reached NO exit is a real outcome, not a malformed record: the entry threw, or could
-    // not be driven. Omitting observedExit says that, where a wrong exit would say something else.
-    it('EDGE: {a failed case that reached no exit} => parses without observedExit', () => {
+    // not be driven. An empty observedPath says that, where a wrong exit would say something else.
+    it('EDGE: {a failed case that reached no exit} => parses with an empty observed path', () => {
       const run = RunResultStub({
         cases: [
           {
             entryName: 'grade',
-            testCase: { reachesExit: 'grade/return@then', arrange: [], salient: true },
+            testCase: { reachesPath: ['grade/return@then'], arrange: [], salient: true },
             status: 'failed',
+            observedPath: [],
             trace: [],
             message: 'reached no exit in grade',
           },
@@ -92,8 +93,9 @@ describe('runResultContract', () => {
       expect(run.cases).toStrictEqual([
         {
           entryName: 'grade',
-          testCase: { reachesExit: 'grade/return@then', arrange: [], salient: true },
+          testCase: { reachesPath: ['grade/return@then'], arrange: [], salient: true },
           status: 'failed',
+          observedPath: [],
           trace: [],
           message: 'reached no exit in grade',
         },

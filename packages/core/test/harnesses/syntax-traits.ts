@@ -28,6 +28,7 @@ import type { FileAnalysis } from '@assayer/shared/contracts';
 import { nodeModuleBuiltinsAdapter } from '../../src/adapters/node-module/builtins/node-module-builtins-adapter';
 import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
+import { composeCrossFileMapBroker } from '../../src/brokers/compose/cross-file-map/compose-cross-file-map-broker';
 import { composeCrossFilePredicatesBroker } from '../../src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
 import { stubRealizeBroker } from '../../src/brokers/stub/realize/stub-realize-broker';
 import { conditionLeavesTransformer } from '../../src/transformers/condition-leaves/condition-leaves-transformer';
@@ -118,7 +119,9 @@ export const syntaxTraits = (): {
       relPath,
     });
 
-    return stubRealizeBroker({ analysis: composed, walked, root: SMOKE_REPO, relPath, overlays: [] });
+    const realized = stubRealizeBroker({ analysis: composed, walked, root: SMOKE_REPO, relPath, overlays: [] });
+
+    return composeCrossFileMapBroker({ analysis: realized, walked, root: SMOKE_REPO, relPath });
   };
 
   return {

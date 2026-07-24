@@ -26,7 +26,7 @@ describe('caseGutterMarkersTransformer', () => {
         cases: [
           DerivedTestCaseStub(),
           DerivedTestCaseStub({
-            reachesExit: 'formatGreeting/return@fallthrough',
+            reachesPath: ['formatGreeting/return@fallthrough'],
             arrange: [{ kind: 'param', param: 'name', value: 'a' }],
           }),
         ],

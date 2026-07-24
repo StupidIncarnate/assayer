@@ -107,14 +107,16 @@ describe('object / branch-local — an `if` on an object-member operand, DRIVEN 
     }).toStrictEqual({
       cases: [
         {
-          reachesExit:
+          reachesPath: [
             '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then',
+          ],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }],
           salient: true,
         },
         {
-          reachesExit:
+          reachesPath: [
             '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else',
+          ],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
           salient: true,
         },

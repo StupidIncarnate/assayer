@@ -22,8 +22,8 @@ describe('unreachable / exceeds-limit — a predicate function, the shape a call
         branches: [],
         exits: [expect.objectContaining({ kind: 'return', guardPath: [], line: 2 })],
         cases: [
-          { reachesExit: '*module*/exceedsLimit/return@top', arrange: [{ kind: 'param', param: 'size', value: 51 }], salient: true },
-          { reachesExit: '*module*/exceedsLimit/return@top', arrange: [{ kind: 'param', param: 'size', value: 50 }], salient: true },
+          { reachesPath: ['*module*/exceedsLimit/return@top'], arrange: [{ kind: 'param', param: 'size', value: 51 }], salient: true },
+          { reachesPath: ['*module*/exceedsLimit/return@top'], arrange: [{ kind: 'param', param: 'size', value: 50 }], salient: true },
         ],
       }),
     ]);

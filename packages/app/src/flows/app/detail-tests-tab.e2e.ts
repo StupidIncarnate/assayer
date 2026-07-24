@@ -3,8 +3,8 @@
  *   case set. Compiles the smoke-repo syntax-repository into a PER-TEST temp cache, launches the REAL
  *   built Electron app, selects a single file by its exact data-relpath, and asserts the entry title,
  *   the per-exit derived case rows, and the hover coupling that highlights the case a code line runs
- *   through. Covers the if-else / switch / boolean rungs and the nested-function driven-through-caller
- *   proof.
+ *   through. Covers the if-else / switch / boolean rungs and the nested-function funnel proof (the
+ *   private inner driven through outer, folded into outer's single entry).
  *
  *   It also proves the display-only salient lens: the INTELLIGENT badge rides every salient row, and
  *   seeding `runMode: 'intelligent'` in the compiled config grays the non-salient breadth
@@ -178,7 +178,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
   });
 
-  test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the ordinary [7] salient', async ({ smokeWindow: window }) => {
+  test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the empty [] salient', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${ARRAY_ELEMENT_LENGTH}"]`).click();
 
@@ -187,7 +187,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // `count(items: number[])` is branchless, but the array param FANS OUT over cardinality: three cases
-    // reach the one exit (L2), each arranging a REAL array — the salient `[7]` plus the grayed `[]`/`[7,7]`
+    // reach the one exit (L2), each arranging a REAL array — the salient `[]` plus the grayed `[7]`/`[7,7]`
     // breadth. The arrange renders as the array literal a reader would pass, positionally.
     const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
     await expect(entryTitle).toHaveText('count(items) · 3 cases');
@@ -198,8 +198,8 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
       'not run count([]) → reaches L2',
     ]);
 
-    // Default runMode is thorough, so all three read live; only the ordinary non-empty `[7]` is salient,
-    // so exactly one INTELLIGENT badge rides the set — the empty and many twins are the grayed breadth.
+    // Default runMode is thorough, so all three read live; only the empty `[]` is salient, so exactly one
+    // INTELLIGENT badge rides the set — the single and many twins are the grayed breadth.
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(3);
     await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(1);
   });
@@ -234,21 +234,27 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(0);
   });
 
-  test('VALID: {happy-path/function/nested/nested.ts selected} => the private inner is DRIVEN through outer, its branch covered by cases arranged in the caller param', async ({ smokeWindow: window }) => {
+  test('VALID: {happy-path/function/nested/nested.ts selected} => the private inner FUNNELS into outer as one entry, its branch covered by cases arranged in outer\'s param', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${NESTED_FUNCTION}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // The whole point of Stage B, proven across the real IPC crossing: `inner` is unexported, so
-    // nothing calls it directly — yet it is a DRIVEN entry here, its `n > 5` branch covered by cases
-    // that set `outer`'s own `value` (inner(6) reaches the then-return L4, inner(5) the else L7), while
-    // `outer` keeps its own trivial case. Nothing is admitted undriven: following the call graph
-    // reached it, and that fact travelled core -> cache -> IPC to this panel.
+    // nothing calls it directly — its `n > 5` branch FUNNELS into `outer`, the surface that returns
+    // `inner(value)`. `outer` is the SOLE entry, and each of its two cases threads through one of inner's
+    // exits before returning by outer's own passthrough — so there is no separate `inner` entry and no
+    // `outer` trivial case: outer's return is subsumed into the funnelled paths. Nothing is admitted
+    // undriven: following the call graph reached it, and that fact travelled core -> cache -> IPC.
+    //
+    // Every row names `outer` because `outer` is what the runner CALLS, and the exit each reaches is the
+    // FIRST (innermost) exit on the funnelled path — inner's own L4 / L7. `inner(6)` would read as a
+    // direct call on a private nothing can call, using a value that is outer's argument, not inner's.
+    const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
+    await expect(entryTitle).toHaveText('outer(value) · 2 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'not run inner(5) → reaches L7',
-      'not run inner(6) → reaches L4',
-      'not run outer(7) → reaches L10',
+      'not run outer(5) → reaches L7',
+      'not run outer(6) → reaches L4',
     ]);
     await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
   });

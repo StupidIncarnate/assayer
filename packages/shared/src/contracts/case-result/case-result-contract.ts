@@ -9,7 +9,7 @@
  *
  * USAGE:
  * caseResultContract.parse({
- *   reachesExit: 'grade/return@then', status: 'passed', observedExit: 'grade/return@then', trace: [...],
+ *   testCase, status: 'passed', observedPath: ['grade/return@then'], trace: [...],
  * });
  * // Returns a validated CaseResult (branded fields)
  */
@@ -23,9 +23,11 @@ export const caseResultContract = z.object({
   entryName: z.string().min(1).brand<'CaseEntryName'>(),
   testCase: derivedTestCaseContract,
   status: z.enum(['passed', 'failed']).brand<'CaseStatus'>(),
-  // Absent when the flow reached NO exit in the entry's scope — a case that threw, or an entry that
-  // could not be driven at all. Distinct from reaching the wrong exit.
-  observedExit: coverageIdContract.optional(),
+  // The ordered exit path the run OBSERVED — the trace's exit events, in firing order, filtered to the
+  // entry's own exits. Compared against the case's predicted `reachesPath`. Empty when the flow reached
+  // NO exit in the entry's scope (a case that threw, or an entry that could not be driven at all),
+  // which is distinct from reaching a wrong path.
+  observedPath: z.array(coverageIdContract).default([]),
   trace: z.array(traceEventContract),
   message: z.string().brand<'CaseMessage'>().optional(),
 });

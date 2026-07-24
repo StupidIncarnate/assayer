@@ -8,6 +8,19 @@
  *   coverage runs through that line are highlighted and the rest are dimmed, so the gutter counts
  *   read as "these cases". Pure prop-driven; shows empty prompts when nothing is derived.
  *
+ *   An entry is named by its LABEL, never by its internal `name`: a name is a coverage-ID segment, so a
+ *   module scope's is `*module*` and an anonymous callback's is its whole structural projection. Both
+ *   are cache keys, and a panel that printed one would be showing the reader a key. A module reads by
+ *   its single export or the file; an anonymous scope by the callsite that reaches it
+ *   (`rescale › items.map((n) => …) L2`), which carries its signature already and so takes no appended
+ *   parameter list.
+ *
+ *   A case row names WHAT THE RUNNER CALLS, which is not always the entry the row sits under. A
+ *   through-caller entry is never called directly — the runner calls the caller with the arrange and the
+ *   probe observes this entry's exits — so the arrange values are the CALLER's arguments and the row
+ *   names the caller. Printing them beside the entry describes a call that never happens, which is the
+ *   same lie `arrangeTextTransformer` refuses when it declines to render a module case as `*module*("6")`.
+ *
  *   `runMode` is a display-only lens over that same full set: `intelligent` grays the non-salient
  *   breadth (each grayed row marked `data-running="false"`) so a reviewer reads only the salient
  *   subset, while `thorough` — the default, and any runMode the panel is not told — shows every row
@@ -261,7 +274,9 @@ export const DetailPanelWidget = ({
               {functions.map((fn) => {
                 // A module entry is reached by IMPORTING it, not calling it, so it shows a bare LABEL
                 // (its single exported binding, else the file basename) with no `()` — never the
-                // internal `*module*`. A function/method entry keeps `name(params)`.
+                // internal `*module*`. An ANONYMOUS entry carries its own label — the callsite that
+                // reaches it, signature included — because its `name` is a structural projection, a
+                // cache key no surface may print. A named function/method keeps `name(params)`.
                 const isModule = fn.entry.access.kind === 'module';
                 const entryLabel =
                   isModule && relPath !== undefined && relPath !== null
@@ -271,23 +286,33 @@ export const DetailPanelWidget = ({
                           relPath: String(relPath),
                         }),
                       )
-                    : String(fn.entry.exportName ?? fn.entry.name);
+                    : String(fn.entry.label ?? fn.entry.exportName ?? fn.entry.name);
+                // Only a name needs its parameter list appended; a label already carries the whole
+                // signature, and a module takes no arguments at all.
+                const showsParams = !isModule && fn.entry.label === undefined;
+                // WHAT THE RUNNER CALLS, which is not always the entry. A through-caller entry — a
+                // private, or a callback its host maps — is never called directly: the runner calls the
+                // CALLER with the arrange and the probe observes this entry's exits. The arrange values
+                // are therefore the caller's arguments, so printing them beside this entry's name
+                // describes a call that never happens (`(n) => …([101])`, a one-param arrow taking an
+                // array). The exit line below already says which entry was reached.
+                const driver = fn.entry.access.kind === 'through-caller' ? String(fn.entry.access.callerName) : entryLabel;
 
                 return (
                   <Box key={fn.entry.name} data-testid="TEST_ENTRY">
                     <Text ff="monospace" fz="xs" fw={600} c="gray.1">
-                      {isModule
-                        ? `${entryLabel} · ${fn.cases.length} cases`
-                        : `${entryLabel}(${fn.entry.params
+                      {showsParams
+                        ? `${entryLabel}(${fn.entry.params
                             .map((param) => param.name)
-                            .join(', ')}) · ${fn.cases.length} cases`}
+                            .join(', ')}) · ${fn.cases.length} cases`
+                        : `${entryLabel} · ${fn.cases.length} cases`}
                     </Text>
                     <Stack gap={2} mt={4}>
                     {fn.cases.map((testCase) => {
-                      const exit = fn.exits.find((candidate) => candidate.coverageId === testCase.reachesExit);
+                      const exit = fn.exits.find((candidate) => candidate.coverageId === testCase.reachesPath[0]);
                       const touched = caseTouchedLinesTransformer({
                         functionAnalysis: fn,
-                        reachesExit: testCase.reachesExit,
+                        reachesPath: testCase.reachesPath,
                       });
                       const isMatch = active && touched.some((line) => line === hoveredLine);
                       const status = String(caseRunStatusTransformer({ run, testCase }));
@@ -298,7 +323,7 @@ export const DetailPanelWidget = ({
 
                       return (
                         <Group
-                          key={`${testCase.reachesExit}#${arrangeTextTransformer({ arrange: testCase.arrange })}`}
+                          key={`${testCase.reachesPath.join('>')}#${arrangeTextTransformer({ arrange: testCase.arrange })}`}
                           gap={6}
                           wrap="nowrap"
                           align="baseline"
@@ -328,7 +353,7 @@ export const DetailPanelWidget = ({
                             </Text>
                             {isModule
                               ? `${entryLabel} → reaches L${exit?.line ?? '?'}`
-                              : `${entryLabel}(${arrangeTextTransformer({
+                              : `${driver}(${arrangeTextTransformer({
                                   arrange: testCase.arrange,
                                 })}) → reaches L${exit?.line ?? '?'}`}
                           </Text>

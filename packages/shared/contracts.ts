@@ -94,6 +94,9 @@ export * from './src/contracts/representative-value/representative-value.stub';
 export * from './src/contracts/arrange-value/arrange-value-contract';
 export * from './src/contracts/arrange-value/arrange-value.stub';
 
+export * from './src/contracts/arrange-binding/arrange-binding-contract';
+export * from './src/contracts/arrange-binding/arrange-binding.stub';
+
 export * from './src/contracts/array-cardinality/array-cardinality-contract';
 export * from './src/contracts/array-cardinality/array-cardinality.stub';
 
@@ -207,6 +210,12 @@ export * from './src/contracts/derived-test-case/derived-test-case.stub';
 
 export * from './src/contracts/arrange-text/arrange-text-contract';
 export * from './src/contracts/arrange-text/arrange-text.stub';
+
+export * from './src/contracts/entry-label/entry-label-contract';
+export * from './src/contracts/entry-label/entry-label.stub';
+
+export * from './src/contracts/anonymous-reach/anonymous-reach-contract';
+export * from './src/contracts/anonymous-reach/anonymous-reach.stub';
 
 export * from './src/contracts/line-enrichment/line-enrichment-contract';
 export * from './src/contracts/line-enrichment/line-enrichment.stub';

@@ -31,9 +31,9 @@ describe('env-object / multi-read — two env reads, one DRIVEN and one UNDRIVEN
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesExit: CASE_1_EXIT, arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
-      { reachesExit: CASE_2_EXIT, arrange: [{ kind: 'env', name: 'CODE', value: '2' }], salient: true },
-      { reachesExit: DEFAULT_EXIT, arrange: [], salient: true },
+      { reachesPath: [CASE_1_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
+      { reachesPath: [CASE_2_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '2' }], salient: true },
+      { reachesPath: [DEFAULT_EXIT], arrange: [], salient: true },
     ]);
   });
 

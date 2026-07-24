@@ -31,7 +31,7 @@ describe('function / declaration — a branchless named function declaration', (
         exits: [{ coverageId: '*module*/add/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/add/return@top',
+            reachesPath: ['*module*/add/return@top'],
             arrange: [
               { kind: 'param', param: 'a', value: 7 },
               { kind: 'param', param: 'b', value: 7 },

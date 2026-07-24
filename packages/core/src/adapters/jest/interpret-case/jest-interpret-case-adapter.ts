@@ -19,16 +19,23 @@
  *   like it belongs to some other file. A variable that was ABSENT is restored to absent rather than
  *   to the empty string: `X=''` and no `X` are different inputs, and the code under test can tell.
  *
- *   The reached exit is the last trace event whose id is one of THIS ENTRY'S exits. Taking the last
- *   exit event outright is wrong: a callback the entry invoked fires its own exit probe afterwards,
- *   so the entry would be judged by code it merely scheduled.
+ *   The observed path is every trace exit event whose id is one of THIS ENTRY'S exits, in firing order;
+ *   a case passes when the predicted `reachesPath` is a CONTIGUOUS SUFFIX of it — the last N observed exit
+ *   events (N = `reachesPath.length`), in order, equal `reachesPath`, over a non-empty observed path. A scope
+ *   evaluates left-to-right, so any noise — a short-circuit chain firing an exit probe per operand, as
+ *   `return a && b && c` fires one for each — PRECEDES the real taken exit; the predicted path is therefore the
+ *   TAIL of what was observed. A funnel case predicts `[innerExit, surfaceExit]` and matches cleanly against
+ *   the whole observed path; a wrong funnel prediction still fails because the suffix is anchored end-to-front —
+ *   change the second-to-last predicted id and the suffix no longer lines up. Filtering to the entry's own exits
+ *   is what keeps a callback the entry invoked — which fires its own exit probe afterwards — from being counted
+ *   as the entry's reach.
  *
  *   A throw is a real outcome, not a crash: the case fails with the message and whatever trace it got
  *   to, because "reached no exit" is exactly what a human needs told.
  *
  * USAGE:
  * jestInterpretCaseAdapter({ entry, entryName, exitIds, testCase, probe });
- * // Returns { entryName, testCase, status: 'passed', observedExit, trace }
+ * // Returns { entryName, testCase, status: 'passed', observedPath, trace }
  */
 import { caseResultContract } from '@assayer/shared/contracts';
 import type { CaseResult, CoverageId, DerivedTestCase } from '@assayer/shared/contracts';
@@ -95,9 +102,11 @@ export const jestInterpretCaseAdapter = ({
     }
   }
 
-  const reached = probe.events.filter((event) => event.kind === 'exit' && exitIds.includes(event.id)).at(-1);
+  const observedPath = probe.events
+    .filter((event) => event.kind === 'exit' && exitIds.includes(event.id))
+    .map((event) => event.id);
 
-  if (reached === undefined) {
+  if (observedPath.length === 0) {
     return caseResultContract.parse({
       entryName,
       testCase,
@@ -107,11 +116,18 @@ export const jestInterpretCaseAdapter = ({
     });
   }
 
+  const reachedPredictedPath =
+    observedPath.length >= testCase.reachesPath.length &&
+    testCase.reachesPath.every(
+      (id, index) =>
+        String(id) === String(observedPath[observedPath.length - testCase.reachesPath.length + index]),
+    );
+
   return caseResultContract.parse({
     entryName,
     testCase,
-    status: reached.id === testCase.reachesExit ? 'passed' : 'failed',
-    observedExit: reached.id,
+    status: reachedPredictedPath ? 'passed' : 'failed',
+    observedPath,
     trace: probe.events,
   });
 };

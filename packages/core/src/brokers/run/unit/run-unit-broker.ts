@@ -22,7 +22,7 @@
  *
  * USAGE:
  * await runUnitBroker({ cacheDir, coreRoot, repoRoot, relPath, absPath, source, runId, analyzerContentHash });
- * // Returns { runId, relPath, cases: [{ status, observedExit, trace }], gaps, darkSpots, undriven }
+ * // Returns { runId, relPath, cases: [{ status, observedPath, trace }], gaps, darkSpots, undriven }
  */
 import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
@@ -38,9 +38,11 @@ import { assembleShimTransformer } from '../../../transformers/assemble-shim/ass
 import { caseSetProjectionTransformer } from '../../../transformers/case-set-projection/case-set-projection-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
+import { composeCrossFileMapBroker } from '../../compose/cross-file-map/compose-cross-file-map-broker';
 import { composeCrossFilePredicatesBroker } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker';
 import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
+import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
 
 export const runUnitBroker = async ({
   cacheDir,
@@ -75,13 +77,18 @@ export const runUnitBroker = async ({
   // Then the object-arrange overlay: an `if (config.mode === 'a')` the per-file walk admitted UNDRIVEN
   // is DRIVEN here from the merged stub view — the derived per-property demands combined with the
   // committed `assayer/stubs/` overlay, read fresh per run and NEVER persisted (the twin of compose).
-  const analysis = stubRealizeBroker({
+  const realized = stubRealizeBroker({
     analysis: composed,
     walked,
     root: repoRoot,
     relPath,
     overlays: await stubOverlayLoadBroker({ repoRoot }),
   });
+  // Then the cross-file-map fold: a surface mapping an IMPORTED function over an array param
+  // (`items.map(bandReading)`) folds that sibling callee's branches into the surface's own case set,
+  // against the sibling on disk — the same per-run sibling read as compose, and the array/element twin
+  // of the inline-callback funnel `analyzeFileBroker` builds for a same-file callback.
+  const analysis = composeCrossFileMapBroker({ analysis: realized, walked, root: repoRoot, relPath });
   const contentHash = cryptoSha256Adapter({ content: source });
 
   const probeDir = `${cacheDir}/probes`;
@@ -120,6 +127,13 @@ export const runUnitBroker = async ({
     path: `${probeDir}/${contentHash}.json`,
     content: JSON.stringify(probePlanProjectionTransformer({ walked, relPath, contentHash })),
   });
+
+  // Every SIBLING a cross-file-map fold reaches gets its plan written too, keyed on ITS content hash:
+  // jest compiles the imported callee when this target requires it, and the transformer only
+  // instruments a file whose plan is already on disk — so this is what makes the folded sibling exits
+  // fire into `__P` and be observable, exactly as an inline callback's are. A no-op for a target with
+  // no such reach.
+  await runCrossFileProbesBroker({ walked, root: repoRoot, relPath, probeDir });
 
   await fsWriteFileAdapter({
     path: `${runDir}/assayer.test.js`,

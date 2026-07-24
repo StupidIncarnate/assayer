@@ -20,8 +20,8 @@ describe('unreachable / within-budget — the second predicate function, whose t
         branches: [],
         exits: [expect.objectContaining({ kind: 'return', guardPath: [], line: 2 })],
         cases: [
-          { reachesExit: '*module*/withinBudget/return@top', arrange: [{ kind: 'param', param: 'size', value: 101 }], salient: true },
-          { reachesExit: '*module*/withinBudget/return@top', arrange: [{ kind: 'param', param: 'size', value: 100 }], salient: true },
+          { reachesPath: ['*module*/withinBudget/return@top'], arrange: [{ kind: 'param', param: 'size', value: 101 }], salient: true },
+          { reachesPath: ['*module*/withinBudget/return@top'], arrange: [{ kind: 'param', param: 'size', value: 100 }], salient: true },
         ],
       }),
     ]);

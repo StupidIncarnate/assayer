@@ -1,8 +1,9 @@
-import { constLengthContract, lineNumberContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { constLengthContract, entryLabelContract, lineNumberContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 
 import { unreachableLintTransformer } from './unreachable-lint-transformer';
 
 const name = symbolNameContract.parse('classify');
+const label = entryLabelContract.parse('classify');
 const line = (value: number): ReturnType<typeof lineNumberContract.parse> => lineNumberContract.parse(value);
 
 describe('unreachableLintTransformer', () => {
@@ -13,7 +14,7 @@ describe('unreachableLintTransformer', () => {
       expect(
         unreachableLintTransformer({
           name,
-          displayName: name,
+          displayName: label,
           unreachableExits: [{ line: line(10), guardLines: [line(2), line(6)] }],
         }),
       ).toStrictEqual([
@@ -29,7 +30,7 @@ describe('unreachableLintTransformer', () => {
     });
 
     it('VALID: {a single guard line} => the message reads "line" not "lines"', () => {
-      const [lint] = unreachableLintTransformer({ name, displayName: name, unreachableExits: [{ line: line(9), guardLines: [line(3)] }] });
+      const [lint] = unreachableLintTransformer({ name, displayName: label, unreachableExits: [{ line: line(9), guardLines: [line(3)] }] });
 
       expect(String(lint?.message)).toBe(
         '`classify` can never reach the exit on line 9: the guards on line 3 cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.',
@@ -44,7 +45,7 @@ describe('unreachableLintTransformer', () => {
     it('VALID: {level welded to 7} => a lint naming the operand, the value, and the branch line', () => {
       const [lint] = unreachableLintTransformer({
         name: symbolNameContract.parse('*module*'),
-        displayName: symbolNameContract.parse('welded-const.ts'),
+        displayName: entryLabelContract.parse('welded-const.ts'),
         unreachableExits: [
           {
             line: line(6),
@@ -70,7 +71,7 @@ describe('unreachableLintTransformer', () => {
     it('VALID: {items welded to a fixed length of 3} => a lint naming the operand and its length', () => {
       const [lint] = unreachableLintTransformer({
         name: symbolNameContract.parse('*module*'),
-        displayName: symbolNameContract.parse('const-array-branch.ts'),
+        displayName: entryLabelContract.parse('const-array-branch.ts'),
         unreachableExits: [
           {
             line: line(6),

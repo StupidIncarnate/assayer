@@ -36,8 +36,8 @@ describe('stubRealizeBroker', () => {
         undriven: result.undriven,
       }).toStrictEqual({
         cases: [
-          { reachesExit: THEN, arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }], salient: true },
-          { reachesExit: ELSE, arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }], salient: true },
+          { reachesPath: [THEN], arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }], salient: true },
+          { reachesPath: [ELSE], arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }], salient: true },
         ],
         undriven: [],
       });
@@ -68,8 +68,8 @@ describe('stubRealizeBroker', () => {
       });
 
       expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-        { reachesExit: THEN, arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }], salient: true },
-        { reachesExit: ELSE, arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }], salient: true },
+        { reachesPath: [THEN], arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }], salient: true },
+        { reachesPath: [ELSE], arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }], salient: true },
       ]);
     });
   });
@@ -99,7 +99,7 @@ describe('stubRealizeBroker', () => {
       });
 
       expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-        { reachesExit: ELSE, arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }], salient: true },
+        { reachesPath: [ELSE], arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }], salient: true },
       ]);
     });
   });
@@ -119,12 +119,12 @@ describe('stubRealizeBroker', () => {
       }).toStrictEqual({
         cases: [
           {
-            reachesExit: '*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then',
+            reachesPath: ['*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then'],
             arrange: [{ kind: 'object', param: 'config', value: { mode: 'a', region: 'abc123' } }],
             salient: true,
           },
           {
-            reachesExit: '*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else',
+            reachesPath: ['*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else'],
             arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123' } }],
             salient: true,
           },

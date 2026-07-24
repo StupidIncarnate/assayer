@@ -14,11 +14,11 @@ describe('array / map — a branchless function returning `items.map((n) => n * 
   // is projected as NO entry of its own: an anonymous callback arrow with no branching is transparent,
   // exactly like a branchless private, so nothing is admitted for it. Branchless, so all cases reach
   // the one exit — but an array param FANS OUT over cardinality: empty / one / many. Three cases
-  // arrange `items` as REAL arrays of the element type — the salient representative `[7]` (one), then
-  // the grayed twins `[]` (empty) and `[7, 7]` (many). Emit order is one/empty/many so the salient case
-  // is the ordinary non-empty array; all three RUN, `intelligent` grays the two twins. Every value is a
-  // real array so `items.map(...)` runs on an actual array. The values are INPUTS (P4); each case
-  // asserts only that the flow REACHES the exit.
+  // arrange `items` as REAL arrays of the element type — the salient representative `[]` (empty), then
+  // the grayed twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient case
+  // is the empty array; all three RUN, `intelligent` grays the two twins. Every value is a real array
+  // so `items.map(...)` runs on an actual array. The values are INPUTS (P4); each case asserts only
+  // that the flow REACHES the exit.
   it('VALID: {export function double(items: number[]): number[] { return items.map((n) => n * 2) }} => array-of-number param and return, transparent callback, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
@@ -36,17 +36,17 @@ describe('array / map — a branchless function returning `items.map((n) => n * 
         exits: [{ coverageId: '*module*/double/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/double/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [7] }],
+            reachesPath: ['*module*/double/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [] }],
             salient: true,
           },
           {
-            reachesExit: '*module*/double/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [] }],
+            reachesPath: ['*module*/double/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [7] }],
             salient: false,
           },
           {
-            reachesExit: '*module*/double/return@top',
+            reachesPath: ['*module*/double/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
             salient: false,
           },

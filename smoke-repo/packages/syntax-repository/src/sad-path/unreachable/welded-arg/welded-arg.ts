@@ -6,6 +6,6 @@ function decide(value: number): string {
   return 'small';
 }
 
-export function report(value: number): string {
+export function report(): string {
   return decide(3);
 }

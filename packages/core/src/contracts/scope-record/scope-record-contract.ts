@@ -39,6 +39,12 @@ import { valueUseContract } from '../value-use/value-use-contract';
 export const scopeRecordContract = z.object({
   scopePath: z.array(symbolNameContract),
   name: symbolNameContract,
+  // Whether `name` is a structural PROJECTION rather than something the source calls this scope
+  // (`items.map((n) => …)` borrows no binding). It travels because the projection is a cache key and no
+  // surface may print one: a labelling consumer needs to know a scope has no name, and reading it back
+  // off the `fn:` prefix would derive a fact from the spelling of an identity string. Defaults to false
+  // so the module scope and every named form say nothing.
+  anonymous: z.boolean().default(false),
   kind: z.enum(['module', 'function']).brand<'ScopeKind'>(),
   exported: z.boolean(),
   access: entryAccessContract,

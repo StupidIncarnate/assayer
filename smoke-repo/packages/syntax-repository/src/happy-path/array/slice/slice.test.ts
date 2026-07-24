@@ -12,11 +12,11 @@ describe('array / slice — a branchless function returning `items.slice(1)`', (
   // return is a fresh `number[]`, so `returnType` reads as `{ kind: 'array', element: { kind: 'number' } }`
   // — no null-stripping happens because slice never annotates `undefined`. Branchless, so all cases reach
   // the one exit — but an array param FANS OUT over cardinality: empty / one / many. Three cases arrange
-  // `items` as REAL arrays of the element type — the salient representative `[7]` (one), then the grayed
-  // twins `[]` (empty) and `[7, 7]` (many). Emit order is one/empty/many so the salient case is the
-  // ordinary non-empty array; all three RUN, `intelligent` grays the two twins. Every value is a real
-  // array so `items.slice(1)` runs on an actual array — a scalar placeholder would throw. The values are
-  // INPUTS (P4); each case asserts only that the flow REACHES the exit.
+  // `items` as REAL arrays of the element type — the salient representative `[]` (empty), then the grayed
+  // twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient case is the empty
+  // array; all three RUN, `intelligent` grays the two twins. Every value is a real array so
+  // `items.slice(1)` runs on an actual array — a scalar placeholder would throw. The values are INPUTS
+  // (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function tail(items: number[]): number[] { return items.slice(1) }} => array-of-number param and return, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
@@ -34,17 +34,17 @@ describe('array / slice — a branchless function returning `items.slice(1)`', (
         exits: [{ coverageId: '*module*/tail/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/tail/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [7] }],
+            reachesPath: ['*module*/tail/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [] }],
             salient: true,
           },
           {
-            reachesExit: '*module*/tail/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [] }],
+            reachesPath: ['*module*/tail/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [7] }],
             salient: false,
           },
           {
-            reachesExit: '*module*/tail/return@top',
+            reachesPath: ['*module*/tail/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
             salient: false,
           },

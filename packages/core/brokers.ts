@@ -37,6 +37,7 @@ export * from './src/brokers/run/id/run-id-broker';
 export * from './src/brokers/run/find/run-find-broker';
 
 export * from './src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
+export * from './src/brokers/compose/cross-file-map/compose-cross-file-map-broker';
 
 export * from './src/brokers/stub/realize/stub-realize-broker';
 export * from './src/brokers/stub-overlay/load/stub-overlay-load-broker';

@@ -36,7 +36,7 @@ describe('unreachable / iife — an immediately-invoked function expression appl
       functions: analysis.functions.map((fn) => ({ access: fn.entry.access, cases: fn.cases })),
       lints: analysis.lints.map((lint) => ({ rule: String(lint.rule), name: String(lint.name), message: String(lint.message), startLine: lint.startLine })),
     }).toStrictEqual({
-      functions: [{ access: { kind: 'module' }, cases: [{ reachesExit: THEN, arrange: [], salient: true }] }],
+      functions: [{ access: { kind: 'module' }, cases: [{ reachesPath: [THEN], arrange: [], salient: true }] }],
       lints: [{ rule: 'unreachable-exit', name: '*module*', message: UNREACHABLE_MESSAGE, startLine: 6 }],
     });
   });

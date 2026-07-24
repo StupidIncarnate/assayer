@@ -28,18 +28,16 @@
  * // unreachable-exit lint appended
  */
 import { branchNodeContract, fileAnalysisContract } from '@assayer/shared/contracts';
-import type { FileAnalysis, SymbolName } from '@assayer/shared/contracts';
+import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
+import { callArgBindingsTransformer } from '../../../transformers/call-arg-bindings/call-arg-bindings-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
 import { rebasePredicateConditionTransformer } from '../../../transformers/rebase-predicate-condition/rebase-predicate-condition-transformer';
 import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
+import { resolveSiblingCalleeBroker } from '../../resolve-sibling/callee/resolve-sibling-callee-broker';
 
 export const composeCrossFilePredicatesBroker = ({
   analysis,
@@ -102,37 +100,17 @@ export const composeCrossFilePredicatesBroker = ({
         return branch;
       }
 
-      // Resolve the imported callee the way `tsc` does. Only a sibling INSIDE this repo (not under
-      // node_modules) can be walked for its predicate — a package/builtin/unresolved callee is not this
-      // rung's to compose, so the leaf stays opaque.
-      const resolved = typescriptResolveModuleAdapter({
-        specifier: String(candidate.callee.specifier),
-        containingFile,
-        options,
-      });
+      // Resolve the imported callee to its sibling on disk the way `tsc` does. Only a sibling INSIDE
+      // this repo (not under node_modules) can be walked for its predicate — a package/builtin/
+      // unresolved callee resolves to `undefined` here, so the leaf stays opaque.
+      const sibling = resolveSiblingCalleeBroker({ specifier: String(candidate.callee.specifier), containingFile, root, options });
 
-      if (!resolved.resolved) {
-        return branch;
-      }
-
-      const fileName = String(resolved.fileName);
-      const siblingRelPath = String(pathRelativeAdapter({ from: root, to: fileName }));
-
-      if (siblingRelPath.startsWith('..') || fileName.includes('/node_modules/')) {
-        return branch;
-      }
-
-      const siblingWalk = tsMorphWalkFileAdapter({
-        source: fsReadFileSyncAdapter({ path: fileName }),
-        relPath: siblingRelPath,
-      });
-
-      if (!siblingWalk.success) {
+      if (!sibling?.walked.success) {
         return branch;
       }
 
       const importedName = String(candidate.callee.importedName);
-      const callee = siblingWalk.scopes.find((scope) => scope.exported && String(scope.name) === importedName);
+      const callee = sibling.walked.scopes.find((scope) => scope.exported && String(scope.name) === importedName);
 
       // A callee that published no predicate signature (its body is not a single comparison return)
       // offers nothing to compose from, so a leaf that could not be composed anyway is left alone.
@@ -140,13 +118,7 @@ export const composeCrossFilePredicatesBroker = ({
         return branch;
       }
 
-      const callArgs = candidate.args;
-      const toCallerParam = new Map<SymbolName, SymbolName>(
-        callee.params.flatMap((param, paramIndex) => {
-          const arg = callArgs[paramIndex];
-          return arg !== undefined && arg.kind === 'param-ref' ? [[param.name, arg.paramName] as const] : [];
-        }),
-      );
+      const { toCallerParam } = callArgBindingsTransformer({ calleeParams: callee.params, args: candidate.args });
 
       const rebased = rebasePredicateConditionTransformer({
         node: callee.predicateSignature,

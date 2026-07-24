@@ -21,8 +21,8 @@ describe('unitReportFormatTransformer', () => {
             CaseResultStub(),
             CaseResultStub({
               status: 'failed',
-              observedExit: 'grade/return@else',
-              testCase: { reachesExit: 'grade/return@then', arrange: [{ kind: 'param', param: 'score', value: 6 }] },
+              observedPath: ['grade/return@else'],
+              testCase: { reachesPath: ['grade/return@then'], arrange: [{ kind: 'param', param: 'score', value: 6 }] },
             }),
           ],
         }),

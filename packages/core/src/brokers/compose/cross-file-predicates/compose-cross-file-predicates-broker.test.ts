@@ -47,12 +47,12 @@ describe('composeCrossFilePredicatesBroker', () => {
         ],
         cases: [
           {
-            reachesExit: '*module*/classify/return@if:CallExpression,id:big,id:n#then',
+            reachesPath: ['*module*/classify/return@if:CallExpression,id:big,id:n#then'],
             arrange: [{ kind: 'param', param: 'n', value: 51 }],
             salient: true,
           },
           {
-            reachesExit: '*module*/classify/return@if:CallExpression,id:big,id:n#else',
+            reachesPath: ['*module*/classify/return@if:CallExpression,id:big,id:n#else'],
             arrange: [{ kind: 'param', param: 'n', value: 50 }],
             salient: true,
           },
@@ -81,17 +81,17 @@ describe('composeCrossFilePredicatesBroker', () => {
         // reached). Same exit, same value, so n=101 is salient and n=100 the grayed breadth twin.
         cases: [
           {
-            reachesExit: '*module*/pick/return@if:CallExpression,id:over,id:n#then',
+            reachesPath: ['*module*/pick/return@if:CallExpression,id:over,id:n#then'],
             arrange: [{ kind: 'param', param: 'n', value: 101 }],
             salient: true,
           },
           {
-            reachesExit: '*module*/pick/return@if:CallExpression,id:over,id:n#then',
+            reachesPath: ['*module*/pick/return@if:CallExpression,id:over,id:n#then'],
             arrange: [{ kind: 'param', param: 'n', value: 100 }],
             salient: false,
           },
           {
-            reachesExit: '*module*/pick/return@if:CallExpression,id:over,id:n#else/if:CallExpression,id:under,id:n#else',
+            reachesPath: ['*module*/pick/return@if:CallExpression,id:over,id:n#else/if:CallExpression,id:under,id:n#else'],
             arrange: [{ kind: 'param', param: 'n', value: 50 }],
             salient: true,
           },

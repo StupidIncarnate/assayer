@@ -13,11 +13,11 @@ describe('array / pop — a branchless function returning `items.pop()`', () => 
   // without `strictNullChecks` (§5.10 — the same in-memory project that keeps `node_modules` out), so
   // the checker strips `undefined` from the union and hands back a bare `number`. Branchless, so all
   // cases reach the one exit — but an array param FANS OUT over cardinality: empty / one / many. Three
-  // cases arrange `items` as REAL arrays of the element type — the salient representative `[7]` (one),
-  // then the grayed twins `[]` (empty) and `[7, 7]` (many). Emit order is one/empty/many so the salient
-  // case is the ordinary non-empty array; all three RUN, `intelligent` grays the two twins. Every value
-  // is a real array so `items.pop()` runs on an actual array — a scalar placeholder would throw. The
-  // values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
+  // cases arrange `items` as REAL arrays of the element type — the salient representative `[]` (empty),
+  // then the grayed twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient
+  // case is the empty array; all three RUN, `intelligent` grays the two twins. Every value is a real
+  // array so `items.pop()` runs on an actual array — a scalar placeholder would throw. The values are
+  // INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function popLast(items: number[]): number | undefined { return items.pop() }} => array-of-number param, return read as number, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
@@ -35,17 +35,17 @@ describe('array / pop — a branchless function returning `items.pop()`', () => 
         exits: [{ coverageId: '*module*/popLast/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/popLast/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [7] }],
+            reachesPath: ['*module*/popLast/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [] }],
             salient: true,
           },
           {
-            reachesExit: '*module*/popLast/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [] }],
+            reachesPath: ['*module*/popLast/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [7] }],
             salient: false,
           },
           {
-            reachesExit: '*module*/popLast/return@top',
+            reachesPath: ['*module*/popLast/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
             salient: false,
           },

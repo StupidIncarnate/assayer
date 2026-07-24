@@ -39,12 +39,12 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
 
     const failed = failures.map((testCase) => {
       const args = arrangeTextTransformer({ arrange: testCase.testCase.arrange });
-      const observed = testCase.observedExit === undefined ? 'reached no exit' : `reached ${String(testCase.observedExit)}`;
+      const observed = testCase.observedPath.length === 0 ? 'reached no exit' : `reached ${testCase.observedPath.map(String).join(' → ')}`;
       const why = testCase.message === undefined ? observed : String(testCase.message);
 
       return [
         `  FAIL ${String(testCase.entryName)}(${args})`,
-        `    predicted ${String(testCase.testCase.reachesExit)}`,
+        `    predicted ${testCase.testCase.reachesPath.map(String).join(' → ')}`,
         `    ${why}`,
       ].join('\n');
     });

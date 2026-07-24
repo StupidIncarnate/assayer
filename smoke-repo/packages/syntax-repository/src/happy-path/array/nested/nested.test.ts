@@ -13,9 +13,9 @@ describe('array / nested — a branchless function returning `matrix.length` ove
   // opaque `unknown`. Branchless, so `derive-cases` emits cases reaching the one exit; but an array param
   // FANS OUT over cardinality, so the single exit is reached three ways — empty / one / many — arranged
   // as REAL 2D arrays. Only the TOP-LEVEL param varies over cardinality; each inner array is fixed at the
-  // `one` count, so `many` is `[[7],[7]]`, never `[[7,7],[7,7]]`. Emit order is `one, empty, many`, so the
-  // salient representative is the ordinary non-empty `[[7]]` and the empty/many twins are grayed. The
-  // values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
+  // `one` count, so `many` is `[[7],[7]]`, never `[[7,7],[7,7]]`. Emit order is `empty, one, many`, so the
+  // salient representative is the empty `[]` and the single/many twins (`[[7]]`, `[[7],[7]]`) are grayed.
+  // The values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function rows(matrix: number[][]): number { return matrix.length }} => nested-array param, three cardinality cases reaching one exit', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
@@ -38,17 +38,17 @@ describe('array / nested — a branchless function returning `matrix.length` ove
         exits: [{ coverageId: '*module*/rows/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/rows/return@top',
-            arrange: [{ kind: 'array', param: 'matrix', value: [[7]] }],
+            reachesPath: ['*module*/rows/return@top'],
+            arrange: [{ kind: 'array', param: 'matrix', value: [] }],
             salient: true,
           },
           {
-            reachesExit: '*module*/rows/return@top',
-            arrange: [{ kind: 'array', param: 'matrix', value: [] }],
+            reachesPath: ['*module*/rows/return@top'],
+            arrange: [{ kind: 'array', param: 'matrix', value: [[7]] }],
             salient: false,
           },
           {
-            reachesExit: '*module*/rows/return@top',
+            reachesPath: ['*module*/rows/return@top'],
             arrange: [{ kind: 'array', param: 'matrix', value: [[7], [7]] }],
             salient: false,
           },

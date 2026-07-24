@@ -42,7 +42,7 @@ describe('import-local / uses-greeting — a call into a function imported from 
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
+        cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

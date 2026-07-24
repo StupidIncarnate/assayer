@@ -21,7 +21,7 @@ export const caseGutterMarkersTransformer = ({
 }): readonly GutterMarker[] => {
   const touchedLines = functions.flatMap((fn) =>
     fn.cases.flatMap((testCase) =>
-      caseTouchedLinesTransformer({ functionAnalysis: fn, reachesExit: testCase.reachesExit }),
+      caseTouchedLinesTransformer({ functionAnalysis: fn, reachesPath: testCase.reachesPath }),
     ),
   );
 

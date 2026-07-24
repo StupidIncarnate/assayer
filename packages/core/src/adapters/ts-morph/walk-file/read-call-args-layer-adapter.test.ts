@@ -55,6 +55,35 @@ describe('readCallArgsLayerAdapter', () => {
     });
   });
 
+  describe('a bare function reference passed by name', () => {
+    it('VALID: {an IMPORTED function passed to .map} => an fn-ref carrying the import callee link', () => {
+      readCallArgsLayerAdapterProxy();
+
+      const result = readCallArgsLayerAdapter({
+        args: argsOf({
+          source:
+            "import { bandReading } from './band-reading';\n" +
+            'export function bandReadings(items: number[]): string[] {\n  return items.map(bandReading);\n}\n',
+        }),
+      });
+
+      expect(result).toStrictEqual([{ kind: 'fn-ref', callee: { target: 'import', specifier: './band-reading', importedName: 'bandReading' } }]);
+    });
+
+    it('VALID: {a same-file function passed to .map} => an fn-ref carrying the local callee link', () => {
+      readCallArgsLayerAdapterProxy();
+
+      const result = readCallArgsLayerAdapter({
+        args: argsOf({
+          source:
+            'function band(n: number): number {\n  return n;\n}\nexport function bands(items: number[]): number[] {\n  return items.map(band);\n}\n',
+        }),
+      });
+
+      expect(result).toStrictEqual([{ kind: 'fn-ref', callee: { target: 'local', name: 'band', startLine: 1 } }]);
+    });
+  });
+
   describe('a call with no arguments', () => {
     it('EMPTY: {a call taking nothing} => no argument projections', () => {
       readCallArgsLayerAdapterProxy();

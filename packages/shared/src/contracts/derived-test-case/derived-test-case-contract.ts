@@ -1,89 +1,42 @@
 /**
- * PURPOSE: Contract for a derived test case — one structurally-asserting case Assayer would generate
- *   for a reachable exit: the arrange bindings that set the inputs up, and the coverage ID of the
- *   exit the flow must then reach. Every value is drawn from an input domain, never from executing
- *   the code (P4).
+ * PURPOSE: Contract for a derived test case — one structurally-asserting case Assayer would generate:
+ *   the arrange bindings that set the inputs up, and the ordered PATH of exits the flow must then
+ *   reach. Every value is drawn from an input domain, never from executing the code (P4).
  *
- *   `arrange` is a DISCRIMINATED union because an input is not always a parameter. A function takes
- *   its inputs positionally; a module scope takes none, yet a module that reads `process.env` takes
- *   an input all the same — the environment IS its parameter list. The two are set by entirely
- *   different acts (apply an argument vs. write a key before importing) and carry different value
- *   domains (a point in the operand's type vs. the string the environment can hold), so a single
- *   shape holding an optional `param` and an optional `name` would make "neither" and "both"
- *   representable and push the decision to whichever reader guessed. Discriminating on `kind` makes
- *   the wrong shape fail to parse instead.
+ *   `arrange` is an array of `ArrangeBinding` — how each input is set up (a positional param, an env
+ *   key, an object's property map, an array's list). The binding union and its per-kind rules live in
+ *   the `arrange-binding` contract.
  *
- *   An `object` arrange is a whole PARAMETER too, but its inner shape is arranged per property: when a
- *   branch turns on `config.mode`, the case sets `config` to an object whose properties carry the stub
- *   values that steer each arm (`{ mode: 'a' }` vs `{ mode: 'dev' }`). `value` is a FLAT property map,
- *   each entry a representative scalar drawn from the merged stub view (a human correction or the
- *   derived demand) — an INPUT, never a code-derived output (P4). v1 arranges scalar-valued properties
- *   only; nested objects/arrays are a later phase.
- *
- *   An `array` arrange is a whole PARAMETER too, set positionally like a scalar, but its `value` is the
- *   LIST the entry receives. An array param fans out over its cardinality — a case for `empty` (`[]`),
- *   `one` (`[7]`), and `many` (`[7,7]`) — so the derived set spans the real input breadth an array has
- *   instead of a single scalar-placeholder fill (which would hand a string to `items.pop()` and throw).
- *   `value` is the recursive `ArrangeValue[]`, so a nested `number[][]` arranges as `[[7]]`. Each
- *   element is an INPUT drawn from the element type (P4).
+ *   `reachesPath` is the ordered list of exit coverage IDs the flow fires, innermost first. A flat case
+ *   reaches exactly one exit, so its path is a single element. A case that FUNNELS through a nested
+ *   scope reaches that scope's exit first and then returns through the surface's own exit, so its path
+ *   is `[innerExit, surfaceExit]`. Asserting the whole ordered path — not just a terminal exit — is what
+ *   lets an empty array (the callback never runs, path is just the surface's exit) be told apart from a
+ *   single-element one (the callback's exit, then the surface's). The first element is the case's
+ *   DISTINGUISHING exit, the one a surface renders it by.
  *
  *   `salient` marks whether the case belongs to the intelligent (must-run) subset. It defaults to
  *   true so a cache blob written before the field existed reads back as all-salient.
  *
  * USAGE:
  * derivedTestCaseContract.parse({
- *   reachesExit: 'formatGreeting/return@if-then',
+ *   reachesPath: ['formatGreeting/return@if-then'],
  *   arrange: [{ kind: 'param', param: 'name', value: '' }],
  * });
  * derivedTestCaseContract.parse({
- *   reachesExit: 'the module scope exit id',
- *   arrange: [{ kind: 'env', name: 'VALUE', value: '6' }],
- * });
- * derivedTestCaseContract.parse({
- *   reachesExit: 'decide/return@else',
- *   arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }],
- * });
- * derivedTestCaseContract.parse({
- *   reachesExit: 'count/return@top',
- *   arrange: [{ kind: 'array', param: 'items', value: [7] }],
+ *   reachesPath: ['rescale/cb/return@then', 'rescale/return@top'],
+ *   arrange: [{ kind: 'array', param: 'items', value: [101] }],
  * });
  * // Returns a validated DerivedTestCase (branded fields; salient defaults to true)
  */
 import { z } from 'zod';
 
-import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
+import { arrangeBindingContract } from '../arrange-binding/arrange-binding-contract';
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
-import { envValueContract } from '../env-value/env-value-contract';
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
-import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 export const derivedTestCaseContract = z.object({
-  reachesExit: coverageIdContract,
-  arrange: z.array(
-    z.discriminatedUnion('kind', [
-      z.object({
-        kind: z.literal('param'),
-        param: symbolNameContract,
-        value: representativeValueContract,
-      }),
-      z.object({
-        kind: z.literal('env'),
-        name: envVarNameContract,
-        value: envValueContract,
-      }),
-      z.object({
-        kind: z.literal('object'),
-        param: symbolNameContract,
-        value: z.record(symbolNameContract, representativeValueContract),
-      }),
-      z.object({
-        kind: z.literal('array'),
-        param: symbolNameContract,
-        value: z.array(arrangeValueContract),
-      }),
-    ]),
-  ),
+  reachesPath: z.array(coverageIdContract).min(1),
+  arrange: z.array(arrangeBindingContract),
   salient: z.boolean().default(true),
 });
 

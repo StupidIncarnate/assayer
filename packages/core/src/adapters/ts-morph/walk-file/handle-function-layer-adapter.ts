@@ -84,7 +84,7 @@ export const handleFunctionLayerAdapter = ({
   node: FunctionLikeNode;
   context: WalkContext;
 }): ReturnType<typeof handlerResultLayerAdapter> => {
-  const name = readFunctionNameLayerAdapter({ node });
+  const { name, anonymous } = readFunctionNameLayerAdapter({ node });
   const exported = readExportFlagLayerAdapter({ node, context });
   // Read from the context the CLASS handed down, before the scope below clears it.
   const access = readEntryAccessLayerAdapter({ node, context });
@@ -235,6 +235,7 @@ export const handleFunctionLayerAdapter = ({
     opensScope: scopeRecordContract.parse({
       scopePath: scoped.scopePath,
       name,
+      anonymous,
       kind: 'function',
       exported,
       access,

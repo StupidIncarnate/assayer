@@ -12,7 +12,7 @@ describe('derivedTestCaseContract', () => {
     });
 
     it('VALID: {arrange: []} => parses an unconstrained case', () => {
-      const testCase = DerivedTestCaseStub({ reachesExit: 'run/exit@implicit', arrange: [] });
+      const testCase = DerivedTestCaseStub({ reachesPath: ['run/exit@implicit'], arrange: [] });
 
       const result = derivedTestCaseContract.parse(testCase);
 
@@ -20,20 +20,20 @@ describe('derivedTestCaseContract', () => {
     });
 
     it('VALID: {no salient field} => defaults salient to true so stale cache blobs read as all-salient', () => {
-      const result = derivedTestCaseContract.parse({ reachesExit: 'run/exit@implicit', arrange: [] });
+      const result = derivedTestCaseContract.parse({ reachesPath: ['run/exit@implicit'], arrange: [] });
 
-      expect(result).toStrictEqual({ reachesExit: 'run/exit@implicit', arrange: [], salient: true });
+      expect(result).toStrictEqual({ reachesPath: ['run/exit@implicit'], arrange: [], salient: true });
     });
 
     it('VALID: {salient: false} => preserved as the not-must-run flag', () => {
-      const result = derivedTestCaseContract.parse({ reachesExit: 'run/exit@implicit', arrange: [], salient: false });
+      const result = derivedTestCaseContract.parse({ reachesPath: ['run/exit@implicit'], arrange: [], salient: false });
 
-      expect(result).toStrictEqual({ reachesExit: 'run/exit@implicit', arrange: [], salient: false });
+      expect(result).toStrictEqual({ reachesPath: ['run/exit@implicit'], arrange: [], salient: false });
     });
 
     it('VALID: {an array arrange} => parses the list of element values a case passes for the param', () => {
       const testCase = DerivedTestCaseStub({
-        reachesExit: 'count/return@top',
+        reachesPath: ['count/return@top'],
         arrange: [{ kind: 'array', param: 'items', value: [7] }],
       });
 
@@ -44,9 +44,9 @@ describe('derivedTestCaseContract', () => {
   });
 
   describe('invalid derived test cases', () => {
-    it('INVALID: {reachesExit: ""} => throws validation error', () => {
+    it('INVALID: {reachesPath: [""]} => throws validation error', () => {
       expect(() => {
-        return derivedTestCaseContract.parse({ reachesExit: '', arrange: [] });
+        return derivedTestCaseContract.parse({ reachesPath: [''], arrange: [] });
       }).toThrow(/at least 1 character/u);
     });
   });

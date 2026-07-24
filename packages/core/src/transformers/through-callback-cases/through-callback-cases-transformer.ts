@@ -12,25 +12,31 @@
  *   The callback is never invoked directly; the runner calls the entry with the steered array and the
  *   entry's own `.map` reaches the callback, exactly as a private is reached through its caller.
  *
+ *   That identity is a structural PROJECTION, since an inline callback has no name to borrow — so the
+ *   caller hands in the display `label` alongside it. Without one a surface has nothing to print but the
+ *   projection, which is a cache key.
+ *
  * USAGE:
- * throughCallbackCasesTransformer({ callback, entry, arrayParam: 'items' });
+ * throughCallbackCasesTransformer({ callback, entry, arrayParam: 'items', label: 'rescale › items.map((n) => …) L2' });
  * // Returns a FunctionAnalysis whose entry.access is { kind: 'through-caller', callerName }
  */
 import { derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
-import type { ArrangeValue, FunctionAnalysis, SymbolName } from '@assayer/shared/contracts';
+import type { ArrangeValue, EntryLabel, FunctionAnalysis, SymbolName } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
-import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
+import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 
 export const throughCallbackCasesTransformer = ({
   callback,
   entry,
   arrayParam,
+  label,
 }: {
   callback: ScopeRecord;
   entry: ScopeRecord;
   arrayParam: SymbolName;
+  label?: EntryLabel;
 }): FunctionAnalysis => {
   // The callback's first parameter is the one bound to the array element; its steered value is the
   // array's single element. The callback's branches are derived over it exactly as a scalar param.
@@ -51,12 +57,14 @@ export const throughCallbackCasesTransformer = ({
     const element: ArrangeValue[] = elementBinding !== undefined && elementBinding.kind === 'param' ? [elementBinding.value] : [];
 
     return derivedTestCaseContract.parse({
-      reachesExit: testCase.reachesExit,
+      reachesPath: testCase.reachesPath,
       salient: testCase.salient,
       arrange: entry.params.map((param) =>
+        // The array param the callback iterates carries the steered one-element list; every OTHER param
+        // is unsteered and filled — a sibling ARRAY param takes a real array, not a scalar that throws.
         String(param.name) === String(arrayParam)
           ? { kind: 'array', param: param.name, value: element }
-          : { kind: 'param', param: param.name, value: representativeValueTransformer({ type: param.type }) },
+          : fillParamTransformer({ param }),
       ),
     });
   });
@@ -64,6 +72,7 @@ export const throughCallbackCasesTransformer = ({
   return functionAnalysisContract.parse({
     entry: {
       name: callback.name,
+      ...(label === undefined ? {} : { label }),
       scopePath: callback.scopePath,
       params: callback.params,
       returnType: callback.returnType,

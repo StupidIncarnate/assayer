@@ -20,12 +20,12 @@ describe('function / arrow — a block-bodied arrow function bound to an exporte
         access: { kind: 'named' },
         cases: [
           {
-            reachesExit: '*module*/grade/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then',
+            reachesPath: ['*module*/grade/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then'],
             arrange: [{ kind: 'param', param: 'n', value: 6 }],
             salient: true,
           },
           {
-            reachesExit: '*module*/grade/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else',
+            reachesPath: ['*module*/grade/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else'],
             arrange: [{ kind: 'param', param: 'n', value: 5 }],
             salient: true,
           },

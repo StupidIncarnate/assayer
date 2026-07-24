@@ -39,7 +39,7 @@ describe('length / contradictory-bounds — a length guard nested inside one tha
   it('VALID: {an exit no length can reach} => no case for it, and the live exits arranged correctly', () => {
     expect({
       caseTargets: tag.cases.map((testCase) =>
-        tag.exits.findIndex((exit) => exit.coverageId === testCase.reachesExit),
+        tag.exits.findIndex((exit) => exit.coverageId === testCase.reachesPath[0]),
       ),
       arranged: tag.cases.map((testCase) => testCase.arrange),
       darkSpots: analysis.darkSpots,

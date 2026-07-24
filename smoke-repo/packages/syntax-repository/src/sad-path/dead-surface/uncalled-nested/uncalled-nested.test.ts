@@ -42,7 +42,7 @@ describe('dead-surface / uncalled-nested — a nested function nothing reaches',
         {
           name: 'outer',
           access: { kind: 'named' },
-          cases: [{ reachesExit: '*module*/outer/return@top', arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true }],
+          cases: [{ reachesPath: ['*module*/outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true }],
         },
       ],
       undriven: [],

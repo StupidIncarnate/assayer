@@ -46,7 +46,7 @@ describe('node-global / uses-process — ambient process.env access plus a proce
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
+        cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

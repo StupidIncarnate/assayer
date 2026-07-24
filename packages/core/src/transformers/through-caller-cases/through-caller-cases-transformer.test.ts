@@ -61,8 +61,8 @@ describe('throughCallerCasesTransformer', () => {
       const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesExit: 'inner/return@then', arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-        { reachesExit: 'inner/return@else', arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+        { reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
+        { reachesPath: ['inner/return@else'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
       ]);
     });
   });
@@ -83,7 +83,7 @@ describe('throughCallerCasesTransformer', () => {
 
       expect(result.analysis.cases).toStrictEqual([
         {
-          reachesExit: 'inner/return@then',
+          reachesPath: ['inner/return@then'],
           arrange: [
             { kind: 'param', param: 'value', value: 6 },
             { kind: 'param', param: 'extra', value: 7 },
@@ -91,7 +91,7 @@ describe('throughCallerCasesTransformer', () => {
           salient: true,
         },
         {
-          reachesExit: 'inner/return@else',
+          reachesPath: ['inner/return@else'],
           arrange: [
             { kind: 'param', param: 'value', value: 5 },
             { kind: 'param', param: 'extra', value: 7 },
@@ -116,7 +116,7 @@ describe('throughCallerCasesTransformer', () => {
       const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesExit: 'inner/return@else', arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true },
+        { reachesPath: ['inner/return@else'], arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true },
       ]);
     });
 

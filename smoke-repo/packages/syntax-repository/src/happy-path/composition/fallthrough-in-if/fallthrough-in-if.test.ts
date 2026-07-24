@@ -30,10 +30,10 @@ describe('composition / fallthrough-in-if — an if arm ending in a switch that 
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesExit: '*module*/tally/return@top', arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'a' }], salient: true },
-      { reachesExit: '*module*/tally/return@top', arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'abc123' }], salient: false },
-      { reachesExit: '*module*/tally/return@top', arrange: [{ kind: 'param', param: 'value', value: 5 }, { kind: 'param', param: 'mode', value: 'a' }], salient: false },
-      { reachesExit: '*module*/tally/return@top', arrange: [{ kind: 'param', param: 'value', value: 5 }, { kind: 'param', param: 'mode', value: 'abc123' }], salient: false },
+      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'a' }], salient: true },
+      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'abc123' }], salient: false },
+      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }, { kind: 'param', param: 'mode', value: 'a' }], salient: false },
+      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }, { kind: 'param', param: 'mode', value: 'abc123' }], salient: false },
     ]);
   });
 });

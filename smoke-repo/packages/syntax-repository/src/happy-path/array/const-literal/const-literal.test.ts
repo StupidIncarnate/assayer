@@ -30,7 +30,7 @@ describe('array / const-literal — a branchless function over a LOCAL const arr
         exits: [{ coverageId: '*module*/three/return@top', kind: 'return', guardPath: [], line: 3 }],
         cases: [
           {
-            reachesExit: '*module*/three/return@top',
+            reachesPath: ['*module*/three/return@top'],
             arrange: [],
             salient: true,
           },

@@ -5,8 +5,10 @@
  *
  *   `exitIds` is why it carries more than the cases. Deciding "which exit did we reach" by taking the
  *   LAST exit probe is wrong: a callback invoked by the entry fires its own exit probe afterwards, so
- *   the entry would be judged by code it merely scheduled. Listing the entry's OWN exits makes the
- *   question exact rather than positional.
+ *   the entry would be judged by code it merely scheduled. Listing the exits its cases actually path
+ *   through — the entry's OWN exits, plus any private or callback exit a FUNNEL case reaches on the way
+ *   through — makes the question exact rather than positional, while still excluding a callback the
+ *   entry merely SCHEDULED (which no case predicts, so it is in no `reachesPath`).
  *
  *   Each entry carries its `access`, because a case is not addressable without it: the runner has to
  *   know whether to read a module property, reach for `default`, or build an instance first.

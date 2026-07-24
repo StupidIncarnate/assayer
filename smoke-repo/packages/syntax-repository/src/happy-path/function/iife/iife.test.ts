@@ -29,8 +29,8 @@ describe('function / iife — an immediately-invoked function expression driven 
       {
         access: { kind: 'module' },
         cases: [
-          { reachesExit: THEN, arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
-          { reachesExit: ELSE, arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
+          { reachesPath: [THEN], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
+          { reachesPath: [ELSE], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
         ],
       },
     ]);

@@ -35,7 +35,7 @@ describe('object / cross-file-shape — types.ts, the DEFINITION file whose decl
       ],
       cases: [
         {
-          reachesExit: '*module*/withDefaults/return@top',
+          reachesPath: ['*module*/withDefaults/return@top'],
           arrange: [{ kind: 'param', param: 'config', value: 'abc123' }],
           salient: true,
         },

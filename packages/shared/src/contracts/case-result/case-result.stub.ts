@@ -7,14 +7,14 @@ export const CaseResultStub = ({ ...props }: StubArgument<CaseResult> = {}): Cas
   caseResultContract.parse({
     entryName: 'grade',
     testCase: {
-      reachesExit: 'grade/return@then',
+      reachesPath: ['grade/return@then'],
       arrange: [
         { kind: 'param', param: 'score', value: 6 },
         { kind: 'param', param: 'bonus', value: 2 },
       ],
     },
     status: 'passed',
-    observedExit: 'grade/return@then',
+    observedPath: ['grade/return@then'],
     trace: [
       { id: 'grade/if:x#leaf.0', kind: 'cond', outcome: true, valueText: 'true' },
       { id: 'grade/if:x#leaf.1', kind: 'cond', outcome: true, valueText: 'true' },

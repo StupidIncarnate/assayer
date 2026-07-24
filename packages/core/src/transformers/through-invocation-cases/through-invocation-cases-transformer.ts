@@ -22,12 +22,13 @@
  * // Returns { analysis: FunctionAnalysis (entry.access { kind: 'module' }), unreachableExits: [...] }
  */
 import { entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
-import type { FunctionAnalysis, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { FunctionAnalysis } from '@assayer/shared/contracts';
 
 import type { CallArg } from '../../contracts/call-site/call-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
+import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
-import { stampConstLeavesTransformer } from '../stamp-const-leaves/stamp-const-leaves-transformer';
+import { stampBranchesTransformer } from '../stamp-branches/stamp-branches-transformer';
 
 export const throughInvocationCasesTransformer = ({
   arrow,
@@ -37,22 +38,15 @@ export const throughInvocationCasesTransformer = ({
   args: CallArg[];
 }): { analysis: FunctionAnalysis; unreachableExits: ReturnType<typeof deriveCasesTransformer>['unreachableExits'] } => {
   // Each arrow parameter the invocation WELDS a literal into — the single value that operand takes at
-  // module load. A non-literal argument (an env-sourced call, an opaque expression) welds nothing.
-  const weldByParam = new Map<SymbolName, RepresentativeValue>(
-    arrow.params.flatMap((param, index) => {
-      const arg = args[index];
-      return arg !== undefined && arg.kind === 'literal' ? [[param.name, arg.value] as const] : [];
-    }),
-  );
+  // module load. The invocation passes no caller params through, so only the weld half is used; a
+  // non-literal argument (an env-sourced call, an opaque expression) welds nothing.
+  const { weldByParam } = callArgBindingsTransformer({ calleeParams: arrow.params, args });
 
   const derived = deriveCasesTransformer({
     // The runner drives a module by importing it, so its parameters are not settable: derive over an
     // empty list, and an env or welded leaf arranges itself without a param binding.
     params: [],
-    branches: arrow.branches.map((branch) => ({
-      ...branch,
-      condition: stampConstLeavesTransformer({ condition: branch.condition, welds: weldByParam }),
-    })),
+    branches: stampBranchesTransformer({ branches: arrow.branches, welds: weldByParam }),
     exits: arrow.exits,
     // The arrow runs at import time, so the environment it reads is an input — exactly why a module
     // scope is env-drivable and a function is not.

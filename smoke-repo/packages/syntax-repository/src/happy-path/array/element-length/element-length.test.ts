@@ -11,10 +11,10 @@ describe('array / element-length — a branchless function over an array param',
   // The param types as an ARRAY of number: the walk reads `number[]` structurally rather than dropping
   // it into an opaque `unknown`. Branchless, so all cases reach the one exit — but the array param FANS
   // OUT over cardinality: `derive-cases` emits THREE cases, one per input-breadth an array has. Emit
-  // order is `one, empty, many`, so the salient representative is the ordinary non-empty `[7]` and the
-  // two grayed twins are the empty `[]` and the many `[7,7]`. Each arranges a REAL array of the element
-  // type — not a scalar placeholder — so `items.length` runs on an actual array. The values are INPUTS
-  // (P4); every case asserts only that the flow REACHES the exit.
+  // order is `empty, one, many`, so the salient representative is the empty `[]` and the two grayed
+  // twins are the single `[7]` and the many `[7,7]`. Each arranges a REAL array of the element type —
+  // not a scalar placeholder — so `items.length` runs on an actual array. The values are INPUTS (P4);
+  // every case asserts only that the flow REACHES the exit.
   it('VALID: {export function count(items: number[]) { return items.length }} => param typed as array-of-number, three cardinality cases (empty/one/many)', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
@@ -32,17 +32,17 @@ describe('array / element-length — a branchless function over an array param',
         exits: [{ coverageId: '*module*/count/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/count/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [7] }],
+            reachesPath: ['*module*/count/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [] }],
             salient: true,
           },
           {
-            reachesExit: '*module*/count/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [] }],
+            reachesPath: ['*module*/count/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [7] }],
             salient: false,
           },
           {
-            reachesExit: '*module*/count/return@top',
+            reachesPath: ['*module*/count/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
             salient: false,
           },

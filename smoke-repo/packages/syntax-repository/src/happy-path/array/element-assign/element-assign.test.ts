@@ -13,7 +13,7 @@ describe('array / element-assign — a branchless function assigning `items[2] =
   // there is no value to type (P4). An index WRITE is a plain statement, not a branch or a returned
   // value, so the function falls off the end of its body: one IMPLICIT end-of-body exit, no branches.
   // Branchless, so `derive-cases` emits cases reaching that one exit — but the array param FANS OUT
-  // over cardinality, so the one exit is reached by THREE cases: value `[7]` (salient), value `[]`,
+  // over cardinality, so the one exit is reached by THREE cases: value `[]` (salient), value `[7]`,
   // value `[7, 7]`, emitted in that order. The scalar `value` is fixed to `7` across all three. The
   // values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function put(items: number[], value: number): void { items[2] = value }} => array-of-number + number params, void read as unknown, three cardinality cases reaching one implicit exit', () => {
@@ -36,23 +36,23 @@ describe('array / element-assign — a branchless function assigning `items[2] =
         exits: [{ coverageId: '*module*/put/exit@top', kind: 'implicit', guardPath: [], line: 3 }],
         cases: [
           {
-            reachesExit: '*module*/put/exit@top',
+            reachesPath: ['*module*/put/exit@top'],
             arrange: [
-              { kind: 'array', param: 'items', value: [7] },
+              { kind: 'array', param: 'items', value: [] },
               { kind: 'param', param: 'value', value: 7 },
             ],
             salient: true,
           },
           {
-            reachesExit: '*module*/put/exit@top',
+            reachesPath: ['*module*/put/exit@top'],
             arrange: [
-              { kind: 'array', param: 'items', value: [] },
+              { kind: 'array', param: 'items', value: [7] },
               { kind: 'param', param: 'value', value: 7 },
             ],
             salient: false,
           },
           {
-            reachesExit: '*module*/put/exit@top',
+            reachesPath: ['*module*/put/exit@top'],
             arrange: [
               { kind: 'array', param: 'items', value: [7, 7] },
               { kind: 'param', param: 'value', value: 7 },

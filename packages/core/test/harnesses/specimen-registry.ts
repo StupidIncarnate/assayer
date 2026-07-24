@@ -70,9 +70,15 @@ const DECLARATIONS = {
   //   - `expression` and `arrow` are UNNAMED functions bound to an exported const — a function
   //     expression and a block-bodied arrow. The const supplies the entry name, so each is analysed
   //     exactly as a declaration and its `if` drives; the arrow syntax changes nothing.
-  //   - `nested` is a nested function DRIVEN through the caller that passes its own param straight in:
-  //     `outer` (named) plus `inner` (`access:through-caller`) carrying `inner`'s own `branch:if`, never
-  //     leaked into `outer`. No `undriven` — following the call graph reaches it.
+  //   - `nested` is a nested function FUNNELLED into the surface that returns it: `outer`'s only exit is
+  //     `return inner(value)`, so `inner` cannot be reached without calling `outer` — its steering values
+  //     fold into `outer`'s own two cases (each pathing through inner's exit then outer's return), and
+  //     `outer` is the SOLE entry. `inner`'s `if` drives the funnel rather than riding a `through-caller`
+  //     entry, so the file surfaces only `access:named`; no `undriven` — the call graph reaches it.
+  //   - `deep-nested` is the TRANSITIVE twin — `outer` returns `middle(value)` and `middle` returns
+  //     `inner(m)` — so BOTH hops funnel into `outer`, its three cases each predicting the full path
+  //     through inner's exit, then middle's, then outer's return. Still only `access:named`, still nothing
+  //     admitted: a function in a function in a function, driven entirely through the surface.
   //   - `iife` is an immediately-invoked function expression driven at MODULE LOAD: it runs when the file
   //     is imported, so its env-BODY read (`const n = Number(process.env.SIZE)`) makes the environment an
   //     input and each arm is a case that sets the variable, exactly like the module-scope env branch one
@@ -83,7 +89,8 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/function/declaration/declaration.ts`]: ['access:named'],
   [`${CATALOGUE}/happy-path/function/expression/expression.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/function/arrow/arrow.ts`]: ['access:named', 'branch:if'],
-  [`${CATALOGUE}/happy-path/function/nested/nested.ts`]: ['access:named', 'access:through-caller', 'branch:if'],
+  [`${CATALOGUE}/happy-path/function/nested/nested.ts`]: ['access:named'],
+  [`${CATALOGUE}/happy-path/function/deep-nested/deep-nested.ts`]: ['access:named'],
   [`${CATALOGUE}/happy-path/function/iife/iife.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'operand:env'],
   // A branchless class method — reached through an instance; its class has no explicit constructor, so
   // the runner builds one and the method is `constructable` (DRIVEN, not a gap).
@@ -121,12 +128,51 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/array/slice/slice.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/map/map.ts`]: ['access:named', 'param:array'],
   // `map-conditional`'s callback BRANCHES on the element (`items.map((n) => { if (n > 100) … })`). The
-  // callback is reached through `rescale` — calling it runs `.map`, which runs the callback per element
-  // — so its branches DRIVE by steering the array: a one-element array whose element satisfies each arm
-  // (`[101]`, `[-1]`, `[100]`). The callback is a second entry, `access:through-caller` naming rescale,
-  // carrying its own `branch:if`; the array/element twin of function/nested. Clean run — no
-  // admission — hence happy-path.
-  [`${CATALOGUE}/happy-path/array/map-conditional/map-conditional.ts`]: ['access:named', 'access:through-caller', 'branch:if', 'param:array'],
+  // callback cannot be reached without calling `rescale` — calling it runs `.map`, which runs the
+  // callback per element — so it is NO separate entry: its branches FUNNEL into rescale's own case set.
+  // rescale (branchless, single-exit) is the sole entry, its cases the array shapes that drive each arm
+  // (`[]`, `[101]`, `[-1]`, `[100]`, and the arm-crossing `[101, -1]`), each predicting the callback's
+  // exit path then rescale's return. So the file surfaces only `access:named` + `param:array`: the
+  // callback's `branch:if` drives the funnel rather than riding a `through-caller` entry, and the exact
+  // five funnel cases are pinned by the colocated test. Clean run — no admission — hence happy-path.
+  [`${CATALOGUE}/happy-path/array/map-conditional/map-conditional.ts`]: ['access:named', 'param:array'],
+  // `string-element` is the STRING twin of map-conditional: `labelTags`'s callback branches on STRING
+  // operands (`tag === 'urgent'`, `tag.length > 8`), so the funnelled single element values are STRINGS,
+  // never a hardcoded number — proof the funnel reads each operand's TYPE. Same shape otherwise: the
+  // callback is no separate entry, its arms funnel into labelTags's own five cases, clean run.
+  [`${CATALOGUE}/happy-path/array/string-element/string-element.ts`]: ['access:named', 'param:array'],
+  // `two-maps` maps TWO branching callbacks over TWO distinct array params (`xs.map((n) => …)` and
+  // `ys.map((m) => …)`). Neither callback can be reached without calling `pipeline`, so BOTH funnel into
+  // its own case set — and because the callbacks fire over INDEPENDENT arrays, the funnel is the
+  // CARTESIAN of each callback's per-element funnel: each array param fans over its four shapes (empty,
+  // the `then`-element, the `else`-element, the arm-crossing pair), and every pairing is a distinct
+  // input, so pipeline is a single entry with 4 × 4 = 16 cases, each arranging BOTH arrays (never a
+  // scalar fill) and threading A's exits, then B's, then pipeline's return. So the file surfaces only
+  // `access:named` + `param:array`: both callbacks' `branch:if` drive the one funnel rather than riding
+  // separate `through-caller` entries, and the exact sixteen cases are pinned by the colocated test.
+  // Clean run — no admission — hence happy-path.
+  [`${CATALOGUE}/happy-path/array/two-maps/two-maps.ts`]: ['access:named', 'param:array'],
+  // `sibling-fill` maps ONE branching callback over `values` while a SECOND array param `extra` is used
+  // PASSIVELY (`scaled.concat(extra)`, never mapped). Only `values` funnels — its four shapes (`[]`,
+  // `[101]`, `[100]`, the arm-crossing `[101, 100]`) drive scaleAndAppend's own cases — while `extra` is
+  // FILLED with a real one-element array `[7]` in every case, never a scalar `'abc123'` string that
+  // `.concat` would throw on. That fill is the point this pins; otherwise a clean funnel, hence
+  // happy-path, so the file surfaces only `access:named` + `param:array`.
+  [`${CATALOGUE}/happy-path/array/sibling-fill/sibling-fill.ts`]: ['access:named', 'param:array'],
+  // `cross-file-map` maps an IMPORTED function over its array param (`items.map(bandReading)`, `bandReading`
+  // from `./band-reading`). The imported callee cannot be reached without calling `bandReadings`, so its
+  // branches FUNNEL into bandReadings' own case set CROSS-FILE — the same fold as map-conditional's inline
+  // callback, except the callback scope comes from the SIBLING file, so its exits keep the sibling's own
+  // coverage ids. bandReadings (branchless, single-exit) is the sole entry, its five cases the array shapes
+  // that drive each of the callee's three bands (`[]`, `[80]`, `[19]`, `[79]`, and the arm-crossing
+  // `[80, 19]`), each pathing through the sibling's band exit then bandReadings' return. A consume-time
+  // overlay resolves the import to its sibling on disk, and the run writes the sibling's probe plan so its
+  // exits fire — a clean run, hence happy-path. It imports a relative specifier (`callee:import-local`) and
+  // reads an array param (`param:array`). A MULTI-FILE rung: its helper child `band-reading.ts` — a plain
+  // 3-arm function with thresholds 80/20 (deliberately unlike map-conditional's 100/0) — sits beside it and
+  // is driven on its own as `access:named` + `branch:if`.
+  [`${CATALOGUE}/happy-path/array/cross-file-map/cross-file-map.ts`]: ['access:named', 'callee:import-local', 'param:array'],
+  [`${CATALOGUE}/happy-path/array/cross-file-map/band-reading.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/array/nested/nested.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/const-alias/const-alias.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/const-literal/const-literal.ts`]: ['access:named'],
@@ -324,11 +370,14 @@ const DECLARATIONS = {
   //     the `then` arm is a real case and the `else` arm is an unreachable-exit lint naming `level` and
   //     its welded `7`. A welded literal is decided in the source, not steered, yet it is not undriven:
   //     the analyzer knows exactly which arm runs. It reaches `console.log`, so it owes `callee:node-global`.
-  //   - `welded-arg`: the through-caller twin — `report(){ return decide(3) }` welds `3` into `decide`'s
-  //     `value`, so following the call EVALUATES `decide`'s `if (value > 5)`: the `else` arm is `decide`'s
-  //     one driven `access:through-caller` case and the `then` arm an unreachable-exit lint naming `value`
-  //     welded to `3`. `report` is the file's `access:named` entry; the welded literal lives in the
-  //     caller's argument rather than the callee's own source, but the finding is the same lint.
+  //   - `welded-arg`: the FUNNEL twin — `report(){ return decide(3) }` welds `3` into `decide`'s `value`,
+  //     and `report`'s only exit returns the call, so `decide` funnels into `report` (the SOLE
+  //     `access:named` entry): following the call EVALUATES `decide`'s `if (value > 5)`, the `else` arm
+  //     the one funnel case `report` reaches and the `then` arm an unreachable-exit lint. The lint keys on
+  //     the surface (`report`) while its message names where the dead code lives (`decide`, line 3). No
+  //     separate `decide` entry and no `branch:if` — the private's `if` drives the funnel; the welded
+  //     literal lives in the caller's argument rather than the callee's own source, but the finding is the
+  //     same lint.
   //   - `const-array-branch`: the array twin — `const items = [1, 2, 3]; if (items.length > 2)` — the
   //     branch on the welded array's fixed LENGTH (3) evaluates the same way, its lint naming the length.
   //   - `iife`: the module-load twin — `((n) => { if (n > 5) … })(7)` welds `7` into the arrow's `n` at
@@ -347,7 +396,7 @@ const DECLARATIONS = {
   //     `within-budget`) is a CHILD, `access:named` alone; the root adds the relative imports whose
   //     predicates it composes and the unreachable-exit lint their contradiction yields.
   [`${CATALOGUE}/sad-path/unreachable/welded-const/welded-const.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
-  [`${CATALOGUE}/sad-path/unreachable/welded-arg/welded-arg.ts`]: ['access:named', 'access:through-caller', 'branch:if', 'lint:unreachable-exit'],
+  [`${CATALOGUE}/sad-path/unreachable/welded-arg/welded-arg.ts`]: ['access:named', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/const-array-branch/const-array-branch.ts`]: ['access:module', 'branch:if', 'callee:node-global', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/iife/iife.ts`]: ['access:module', 'branch:if', 'lint:unreachable-exit'],
   [`${CATALOGUE}/sad-path/unreachable/sequential-guards/sequential-guards.ts`]: ['access:named', 'branch:if', 'lint:unreachable-exit'],
@@ -381,6 +430,14 @@ export const specimenRegistry = new Map<RelPath, readonly SyntaxTrait[]>(
 // behind it.
 export const uncataloguedTraits = {
   'access:default': 'no specimen uses `export default`',
+  'access:through-caller':
+    'no ENTRY carries it. A same-file private a reachable surface calls is either FUNNELLED into that ' +
+    'surface (when the surface returns the call — `happy-path/function/nested`, `deep-nested`, and ' +
+    'the `sad-path/unreachable/welded-arg` funnel), or an inline callback FUNNELLED into its host ' +
+    '(`happy-path/array/map-conditional`) — in both the surface is the entry and the private is no ' +
+    'entry of its own. The `through-caller` entry the follower still emits — a private unconditionally ' +
+    'called whose result the surface does NOT return, so it cannot funnel — has no specimen yet; the ' +
+    'transformer that builds it is covered by its own unit test.',
   'access:unreachable':
     'no ENTRY carries it. An unreachable scope is an unexported helper; the analysis makes it an ' +
     'entry only when a caller drives it, and then the access is `through-caller`, not `unreachable`. ' +

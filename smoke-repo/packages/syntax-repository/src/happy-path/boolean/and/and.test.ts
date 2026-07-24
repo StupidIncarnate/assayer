@@ -51,7 +51,7 @@ describe('boolean / and — a conjunction inside an exported function', () => {
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       // 6 > 5 && 2 > 1 — both hold.
       {
-        reachesExit: THEN,
+        reachesPath: [THEN],
         arrange: [
           { kind: 'param', param: 'score', value: 6 },
           { kind: 'param', param: 'bonus', value: 2 },
@@ -60,7 +60,7 @@ describe('boolean / and — a conjunction inside an exported function', () => {
       },
       // 5 > 5 fails, so `bonus > 1` NEVER EVALUATES — bonus is unconstrained and falls to fill.
       {
-        reachesExit: ELSE,
+        reachesPath: [ELSE],
         arrange: [
           { kind: 'param', param: 'score', value: 5 },
           { kind: 'param', param: 'bonus', value: 7 },
@@ -70,7 +70,7 @@ describe('boolean / and — a conjunction inside an exported function', () => {
       // 6 > 5 holds, so evaluation continues and 1 > 1 is the operand that decides. Same else exit as
       // above, so it is the grayed breadth twin, not a second salient case.
       {
-        reachesExit: ELSE,
+        reachesPath: [ELSE],
         arrange: [
           { kind: 'param', param: 'score', value: 6 },
           { kind: 'param', param: 'bonus', value: 1 },

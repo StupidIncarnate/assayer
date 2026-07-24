@@ -51,7 +51,7 @@ describe('unreachable / sequential-guards — two guards on one value whose else
   // impossible and only the live one is cased.
   it('VALID: {an exit no value can reach} => no case for it, and the live exits arranged correctly', () => {
     expect({
-      caseTargets: classify.cases.map((testCase) => classify.exits.findIndex((exit) => exit.coverageId === testCase.reachesExit)),
+      caseTargets: classify.cases.map((testCase) => classify.exits.findIndex((exit) => exit.coverageId === testCase.reachesPath[0])),
       arranged: classify.cases.map((testCase) => testCase.arrange),
       darkSpots: analysis.darkSpots,
       undriven: analysis.undriven,

@@ -29,9 +29,10 @@ import type { FunctionAnalysis, RepresentativeValue, SymbolName } from '@assayer
 
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
+import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
-import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
-import { stampConstLeavesTransformer } from '../stamp-const-leaves/stamp-const-leaves-transformer';
+import { fillParamTransformer } from '../fill-param/fill-param-transformer';
+import { stampBranchesTransformer } from '../stamp-branches/stamp-branches-transformer';
 
 export const throughCallerCasesTransformer = ({
   callee,
@@ -42,30 +43,16 @@ export const throughCallerCasesTransformer = ({
   caller: ScopeRecord;
   call: CallSite;
 }): { analysis: FunctionAnalysis; unreachableExits: ReturnType<typeof deriveCasesTransformer>['unreachableExits'] } => {
-  // Each callee parameter maps to the caller parameter passed straight into it at this call site.
-  const toCallerParam = new Map<SymbolName, SymbolName>(
-    callee.params.flatMap((param, index) => {
-      const arg = call.args[index];
-      return arg !== undefined && arg.kind === 'param-ref' ? [[param.name, arg.paramName] as const] : [];
-    }),
-  );
-
-  // Each callee parameter the caller WELDS a literal into — the single value that operand can take here.
-  const weldByParam = new Map<SymbolName, RepresentativeValue>(
-    callee.params.flatMap((param, index) => {
-      const arg = call.args[index];
-      return arg !== undefined && arg.kind === 'literal' ? [[param.name, arg.value] as const] : [];
-    }),
-  );
+  // This call's arguments read into the two maps that drive the callee through the caller: each callee
+  // param the caller passes one of its OWN params straight into (`toCallerParam`), and each the caller
+  // WELDS a literal into (`weldByParam`, the single value that operand can take here).
+  const { toCallerParam, weldByParam } = callArgBindingsTransformer({ calleeParams: callee.params, args: call.args });
 
   // Stamp the welded value onto the leaves that read it, so derive-cases evaluates the branch it decides
   // — the live arm a case, the dead arm an unreachable exit — instead of admitting it undriven.
   const derived = deriveCasesTransformer({
     params: callee.params,
-    branches: callee.branches.map((branch) => ({
-      ...branch,
-      condition: stampConstLeavesTransformer({ condition: branch.condition, welds: weldByParam }),
-    })),
+    branches: stampBranchesTransformer({ branches: callee.branches, welds: weldByParam }),
     exits: callee.exits,
     envDrivable: false,
     // A branchless private predicate driven through its caller splits its true/false return the same
@@ -85,12 +72,13 @@ export const throughCallerCasesTransformer = ({
     );
 
     return derivedTestCaseContract.parse({
-      reachesExit: testCase.reachesExit,
-      arrange: caller.params.map((param) => ({
-        kind: 'param',
-        param: param.name,
-        value: byCallerParam.get(param.name) ?? representativeValueTransformer({ type: param.type }),
-      })),
+      reachesPath: testCase.reachesPath,
+      // A caller param the callee steers takes the mapped value as a scalar argument; every OTHER caller
+      // param is unsteered and filled — a sibling ARRAY param takes a real array, not a scalar that throws.
+      arrange: caller.params.map((param) => {
+        const steered = byCallerParam.get(param.name);
+        return steered === undefined ? fillParamTransformer({ param }) : { kind: 'param', param: param.name, value: steered };
+      }),
     });
   });
 

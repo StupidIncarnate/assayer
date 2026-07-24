@@ -20,7 +20,7 @@
  * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...], undriven: [...] }
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
-import { fileAnalysisContract, symbolNameContract } from '@assayer/shared/contracts';
+import { entryLabelContract, fileAnalysisContract, symbolNameContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -67,13 +67,46 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     }),
   }));
 
+  // A branching callback driven through a branchless host surface (`items.map((n) => …)`) is NOT its
+  // own entry: it cannot be reached without calling the host, so its steering values FUNNEL into the
+  // host's own case set. The follower returns those funnel cases keyed by the host's name + declaration
+  // line, and they REPLACE the host's plain derived cases here — the host becomes the only entry.
+  const funnelByHost = new Map(followed.funnels.map((funnel) => [`${String(funnel.host)}@${String(funnel.hostLine)}`, funnel.cases]));
+
+  // Every walk exit keyed by its coverage ID, so a funnel entry can name the NESTED scope exits its
+  // cases thread through — exits that belong to a callback or a returned private, not to the surface
+  // itself. Straight off the walk's scope records, so each is a real ExitNode (coverageId + line +
+  // guards), never a re-derived line.
+  const exitByCoverageId = new Map(
+    (walked.success ? walked.scopes : []).flatMap((scope) => scope.exits.map((exit) => [String(exit.coverageId), exit] as const)),
+  );
+
   const functions = [
-    ...derived.map(({ fn, result }) => ({
-      entry: fn.entry,
-      branches: fn.branches,
-      exits: fn.exits,
-      cases: result.cases,
-    })),
+    ...derived.map(({ fn, result }) => {
+      const funnelCases = funnelByHost.get(`${String(fn.entry.name)}@${String(fn.entry.line)}`);
+      if (funnelCases === undefined) {
+        return { entry: fn.entry, branches: fn.branches, exits: fn.exits, cases: result.cases };
+      }
+
+      // A funnel entry's cases reach a nested scope's exit BEFORE the surface's own return, so their
+      // `reachesPath` names coverage IDs the surface's own `exits` do not. A surface that renders a case
+      // by a path element resolves its line off this list, so a funnel entry's `exits` are its OWN exits
+      // unioned with every walk exit its funnel cases path through (deduped by coverage ID). This is the
+      // analysis twin of the path-exit union `case-set-projection` adds to `exitIds` for the interpreter.
+      const exits = [
+        ...new Map([
+          ...fn.exits.map((exit) => [String(exit.coverageId), exit] as const),
+          ...funnelCases.flatMap((testCase) =>
+            testCase.reachesPath.flatMap((coverageId) => {
+              const exit = exitByCoverageId.get(String(coverageId));
+              return exit === undefined ? [] : [[String(coverageId), exit] as const];
+            }),
+          ),
+        ]).values(),
+      ];
+
+      return { entry: fn.entry, branches: fn.branches, exits, cases: funnelCases };
+    }),
     ...followed.followedEntries,
   ];
 
@@ -120,7 +153,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     const displayName =
       fn.entry.access.kind === 'module' && relPath !== undefined
         ? moduleEntryLabelTransformer({ ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }), relPath })
-        : fn.entry.name;
+        : entryLabelContract.parse(String(fn.entry.name));
 
     return unreachableLintTransformer({ name: fn.entry.name, displayName, unreachableExits: result.unreachableExits });
   });
@@ -130,15 +163,32 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // `const` does in the scope's own source. A `through-caller` private reads by its OWN name; a
   // module-load IIFE (`((n) => …)(7)`) reads by the file's LABEL and keys under `*module*`, never the
   // arrow's structural name — exactly as the scope's own welded const does.
-  const followedUnreachableLints = followed.unreachable.flatMap(({ name, access, unreachableExits }) => {
+  const followedUnreachableLints = followed.unreachable.flatMap(({ name, label, access, unreachableExits }) => {
     const isModule = access.kind === 'module';
 
     return unreachableLintTransformer({
       name: isModule ? symbolNameContract.parse('*module*') : name,
-      displayName: isModule && relPath !== undefined ? moduleEntryLabelTransformer({ relPath }) : name,
+      displayName:
+        isModule && relPath !== undefined
+          ? moduleEntryLabelTransformer({ relPath })
+          : label ?? entryLabelContract.parse(String(name)),
       unreachableExits,
     });
   });
+
+  // A NAMED-CALL funnel's welded-dead arm rides the lint channel too: `report(){ return decide(3) }`
+  // welds `3` into `decide`, killing the arm that value cannot satisfy exactly as the through-caller
+  // path does — but `decide` is no longer a separate entry, so the lint keys on the SURFACE that owns it
+  // (`report`) while the message names where the dead code lives (`decide`, on its own line).
+  const funnelUnreachableLints = followed.funnels.flatMap((funnel) =>
+    funnel.unreachable.flatMap((entry) =>
+      unreachableLintTransformer({
+        name: funnel.host,
+        displayName: entryLabelContract.parse(String(entry.displayName)),
+        unreachableExits: [{ line: entry.line, guardLines: entry.guardLines, ...(entry.welded === undefined ? {} : { welded: entry.welded }) }],
+      }),
+    ),
+  );
 
   // Enrichment shows each param's type on the entry line and, once per branch LEAF, that operand's
   // type + representative range on the branch line — derived from the COMPOSED functions, so a
@@ -157,7 +207,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     // from the guard arithmetic, whether the guard is welded in the scope's own source or in a caller's
     // argument. All are the repo's debt rather than Assayer's, so all ride the lint channel rather than
     // any of the three admissions.
-    lints: [...followed.lints, ...unreachableLints, ...followedUnreachableLints],
+    lints: [...followed.lints, ...unreachableLints, ...followedUnreachableLints, ...funnelUnreachableLints],
     // The file's locally-declared object shapes, read straight from the walk's enumerated object
     // descriptors — the full property list later phases splice per-property value demands onto.
     declaredTypes: declaredTypesProjectionTransformer({ walked }),

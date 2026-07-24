@@ -22,12 +22,12 @@ describe('function / expression — a branching function EXPRESSION assigned to 
         access: { kind: 'named' },
         cases: [
           {
-            reachesExit: '*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then',
+            reachesPath: ['*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then'],
             arrange: [{ kind: 'param', param: 'n', value: 6 }],
             salient: true,
           },
           {
-            reachesExit: '*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else',
+            reachesPath: ['*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else'],
             arrange: [{ kind: 'param', param: 'n', value: 5 }],
             salient: true,
           },

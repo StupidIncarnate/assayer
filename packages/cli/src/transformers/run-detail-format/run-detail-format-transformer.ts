@@ -33,7 +33,7 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
 
     return [
       `  ${String(testCase.status).toUpperCase()} ${String(testCase.entryName)}(${args})`,
-      `    predicted ${String(testCase.testCase.reachesExit)}`,
+      `    predicted ${testCase.testCase.reachesPath.map(String).join(' → ')}`,
       ...events,
     ];
   });

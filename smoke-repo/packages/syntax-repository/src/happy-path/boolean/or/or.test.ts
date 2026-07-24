@@ -49,7 +49,7 @@ describe('boolean / or — a disjunction inside an exported function', () => {
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       // 51 > 50 holds, so `smoke` NEVER EVALUATES and falls to fill.
       {
-        reachesExit: THEN,
+        reachesPath: [THEN],
         arrange: [
           { kind: 'param', param: 'temp', value: 51 },
           { kind: 'param', param: 'smoke', value: false },
@@ -59,7 +59,7 @@ describe('boolean / or — a disjunction inside an exported function', () => {
       // 50 > 50 fails, so evaluation continues and `smoke` is the operand that decides. Same then exit
       // as above, so it is the grayed breadth twin, not a second salient case.
       {
-        reachesExit: THEN,
+        reachesPath: [THEN],
         arrange: [
           { kind: 'param', param: 'temp', value: 50 },
           { kind: 'param', param: 'smoke', value: true },
@@ -68,7 +68,7 @@ describe('boolean / or — a disjunction inside an exported function', () => {
       },
       // Both must fail for the disjunction to fail.
       {
-        reachesExit: ELSE,
+        reachesPath: [ELSE],
         arrange: [
           { kind: 'param', param: 'temp', value: 50 },
           { kind: 'param', param: 'smoke', value: false },

@@ -1,7 +1,8 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { composeCrossFilePredicatesBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
+import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
 import {
   composeCrossFilePredicatesBrokerProxy,
+  composeCrossFileMapBrokerProxy,
   stubRealizeBrokerProxy,
   stubOverlayLoadBrokerProxy,
   tsMorphWalkFileAdapterProxy,
@@ -53,6 +54,12 @@ export const compiledFileResolveBrokerProxy = (): {
   stubRealizeHandle.mockImplementation(({ analysis }) => analysis);
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
   overlayLoadHandle.mockResolvedValue([]);
+  // The cross-file-map fold is mocked at the same seam and for the same reason: folding an imported
+  // callee reaches for the sibling file on disk. Its child proxy satisfies structure; the direct
+  // registerMock is the intercept, a same-reference pass-through by default.
+  composeCrossFileMapBrokerProxy();
+  const composeMapHandle = registerMock({ fn: composeCrossFileMapBroker });
+  composeMapHandle.mockImplementation(({ analysis }) => analysis);
 
   // The { root, relPath } the broker hands the overlay, captured off the real call so a test can
   // prove the SOURCE root (not the config dir) is threaded.

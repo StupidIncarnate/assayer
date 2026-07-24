@@ -50,8 +50,8 @@ describe('throughCallbackCasesTransformer', () => {
       const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'cb/return@then', arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
-        { reachesExit: 'cb/return@else', arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
       ]);
     });
   });
@@ -72,7 +72,7 @@ describe('throughCallbackCasesTransformer', () => {
 
       expect(result.cases).toStrictEqual([
         {
-          reachesExit: 'cb/return@then',
+          reachesPath: ['cb/return@then'],
           arrange: [
             { kind: 'array', param: 'items', value: [6] },
             { kind: 'param', param: 'factor', value: 7 },
@@ -80,7 +80,7 @@ describe('throughCallbackCasesTransformer', () => {
           salient: true,
         },
         {
-          reachesExit: 'cb/return@else',
+          reachesPath: ['cb/return@else'],
           arrange: [
             { kind: 'array', param: 'items', value: [5] },
             { kind: 'param', param: 'factor', value: 7 },

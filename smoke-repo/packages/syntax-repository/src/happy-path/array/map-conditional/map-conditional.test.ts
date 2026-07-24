@@ -10,7 +10,8 @@ const relPath = 'src/happy-path/array/map-conditional/map-conditional.ts';
 // The callback `(n) => { … }` is anonymous, so its scope segment is the spelling-invariant STRUCTURAL
 // projection of the arrow (node kinds + leaf values) — the identity two different anonymous arrows
 // differ by. Coverage IDs are cache-internal, so this string's exact shape is not load-bearing; what it
-// pins is that the callback's exits attach UNDER rescale's scope path, where the logic lives.
+// pins is that the callback's exits attach UNDER rescale's scope path, where the logic lives — so the
+// funnel's paths thread through `*module*/rescale/<CB>/…` before returning by rescale's own exit.
 const CB =
   'fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,Block,IfStatement,BinaryExpression,id:n,' +
   'GreaterThanToken,num:100,Block,ReturnStatement,BinaryExpression,BinaryExpression,id:n,AsteriskToken,' +
@@ -21,44 +22,50 @@ const CB_PATH = `*module*/rescale/${CB}`;
 const GT100 = 'if:BinaryExpression,id:n,GreaterThanToken,num:100';
 const LT0 = 'if:BinaryExpression,id:n,LessThanToken,num:0';
 
-describe('array / map-conditional — `items.map((n) => …)` whose callback BRANCHES on the element, driven through rescale', () => {
-  // THE capability. The callback is not called directly — nothing can call an anonymous arrow. It is
-  // REACHED through `rescale`: calling rescale([...]) runs `.map`, which runs the callback per element.
-  // So its branches DRIVE by steering the array rescale receives — a one-element array whose element
-  // satisfies each arm: [101] takes `n > 100`, [-1] takes `n < 0`, [100] the fall-through. The callback
-  // entry keeps its own identity and exits (coverage attaches where the logic lives); only its ACCESS is
-  // `through-caller`, naming rescale. This is the array/element twin of composition/nested-function,
-  // where a private is driven through the caller that passes its own param straight in. Each value is an
-  // INPUT (P4); the case asserts only that the flow REACHES the callback's exit.
-  it('VALID: {a map callback branching on n} => DRIVEN through rescale by steering array elements', () => {
+// The three callback exits — one per arm of `n > 100` / `n < 0` — and rescale's own single return.
+const CB_THEN = `${CB_PATH}/return@${GT100}#then`;
+const CB_ELSE_THEN = `${CB_PATH}/return@${GT100}#else/${LT0}#then`;
+const CB_ELSE_ELSE = `${CB_PATH}/return@${GT100}#else/${LT0}#else`;
+const RESCALE_EXIT = '*module*/rescale/return@top';
+
+describe('array / map-conditional — `items.map((n) => …)` whose callback BRANCHES on the element, funnelled into rescale', () => {
+  // THE capability. The callback is not called directly — nothing can call an anonymous arrow, and it
+  // cannot be reached without calling `rescale`. So it is no separate entry: its steering values FUNNEL
+  // into rescale's OWN case set. rescale is the only entry, and each case is an array shape that drives
+  // the callback, predicting the ordered PATH the flow reaches — the callback's exit(s), then rescale's
+  // return. `[]` runs the callback zero times (path is rescale's exit alone); `[101]`/`[-1]`/`[100]` each
+  // take one arm (`n > 100`, `n < 0`, fall-through) then return; `[101, -1]` crosses two arms in one
+  // array, firing the callback once per element. Each value is an INPUT (P4); the case asserts only the
+  // reached PATH. This is the array/element twin of composition/nested-function, funnelled one rung up.
+  it('VALID: {a map callback branching on n} => FUNNELLED into rescale as its single entry, array shapes driving each arm', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
-    expect(analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
+    expect(
+      analysis.functions.map((fn) => ({ name: fn.entry.name, label: fn.entry.label, access: fn.entry.access, cases: fn.cases })),
+    ).toStrictEqual([
       {
         name: 'rescale',
+        label: undefined,
         access: { kind: 'named' },
         cases: [
-          { reachesExit: '*module*/rescale/return@top', arrange: [{ kind: 'array', param: 'items', value: [7] }], salient: true },
-          { reachesExit: '*module*/rescale/return@top', arrange: [{ kind: 'array', param: 'items', value: [] }], salient: false },
-          { reachesExit: '*module*/rescale/return@top', arrange: [{ kind: 'array', param: 'items', value: [7, 7] }], salient: false },
-        ],
-      },
-      {
-        name: CB,
-        access: { kind: 'through-caller', callerName: 'rescale' },
-        cases: [
-          { reachesExit: `${CB_PATH}/return@${GT100}#then`, arrange: [{ kind: 'array', param: 'items', value: [101] }], salient: true },
-          { reachesExit: `${CB_PATH}/return@${GT100}#else/${LT0}#then`, arrange: [{ kind: 'array', param: 'items', value: [-1] }], salient: true },
-          { reachesExit: `${CB_PATH}/return@${GT100}#else/${LT0}#else`, arrange: [{ kind: 'array', param: 'items', value: [100] }], salient: true },
+          { reachesPath: [RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
+          { reachesPath: [CB_THEN, RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [101] }], salient: true },
+          { reachesPath: [CB_ELSE_THEN, RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [-1] }], salient: true },
+          { reachesPath: [CB_ELSE_ELSE, RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [100] }], salient: true },
+          {
+            reachesPath: [CB_THEN, CB_ELSE_THEN, RESCALE_EXIT],
+            arrange: [{ kind: 'array', param: 'items', value: [101, -1] }],
+            salient: true,
+          },
         ],
       },
     ]);
   });
 
   // The dead-surface lint is GONE, not merely quieter: the callback is reached, so it is not dead code.
-  // Nothing is admitted — the walk read every arm and each drives. A file that once mis-reported "delete
-  // this callback" now reports a driven entry.
-  it('VALID: {a reached, driven callback} => no dead-surface lint, nothing undriven or dark', () => {
+  // Nothing is admitted — the walk read every arm and each drives through rescale's funnel. A file that
+  // once mis-reported "delete this callback" now reports one driven entry.
+  it('VALID: {a reached, funnelled callback} => no dead-surface lint, nothing undriven or dark', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
     expect({

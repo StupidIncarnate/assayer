@@ -11,7 +11,7 @@ describe('array / index-access — a branchless function returning `items[0]`', 
   // The param types as an ARRAY of number, read structurally like element-length; the element read
   // `items[0]` returns a bare `number`. Branchless, so every case reaches the one exit — but the array
   // param FANS OUT over cardinality: `derive-cases` emits THREE cases exercising the real breadth an
-  // array has — `one` ([7], the salient representative), `empty` ([]), and `many` ([7,7]) — in that
+  // array has — `empty` ([], the salient representative), `one` ([7]), and `many` ([7,7]) — in that
   // order, each an `array` arrange binding whose recursive value list holds the element type. The values
   // are INPUTS (P4); every case asserts only that the flow REACHES the same exit.
   it('VALID: {export function first(items: number[]): number { return items[0] }} => array-of-number param, three cardinality cases reaching the one exit', () => {
@@ -31,17 +31,17 @@ describe('array / index-access — a branchless function returning `items[0]`', 
         exits: [{ coverageId: '*module*/first/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/first/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [7] }],
+            reachesPath: ['*module*/first/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [] }],
             salient: true,
           },
           {
-            reachesExit: '*module*/first/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [] }],
+            reachesPath: ['*module*/first/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [7] }],
             salient: false,
           },
           {
-            reachesExit: '*module*/first/return@top',
+            reachesPath: ['*module*/first/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
             salient: false,
           },

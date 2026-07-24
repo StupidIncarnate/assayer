@@ -37,7 +37,7 @@ describe('throughInvocationCasesTransformer', () => {
       expect({ access: result.analysis.entry.access, params: result.analysis.entry.params, cases: result.analysis.cases }).toStrictEqual({
         access: { kind: 'module' },
         params: [],
-        cases: [{ reachesExit: 'arrow/return@then', arrange: [], salient: true }],
+        cases: [{ reachesPath: ['arrow/return@then'], arrange: [], salient: true }],
       });
     });
 
@@ -83,8 +83,8 @@ describe('throughInvocationCasesTransformer', () => {
 
       expect({ cases: result.analysis.cases, unreachableExits: result.unreachableExits }).toStrictEqual({
         cases: [
-          { reachesExit: 'arrow/return@then', arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
-          { reachesExit: 'arrow/return@else', arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
+          { reachesPath: ['arrow/return@then'], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
+          { reachesPath: ['arrow/return@else'], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
         ],
         unreachableExits: [],
       });

@@ -362,6 +362,10 @@ describe('tsMorphWalkFileAdapter', () => {
           ScopeRecordStub({
             scopePath: ['*module*', 'run', 'fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,id:n'],
             name: 'fn:ArrowFunction,Parameter,id:n,EqualsGreaterThanToken,id:n',
+            // The name above is a PROJECTION, and `anonymous` is what says so. It travels because a
+            // projection is a cache key: a surface needs to know this scope owes a label built some
+            // other way, and matching the `fn:` prefix would read that fact off a key's spelling.
+            anonymous: true,
             exported: false,
             // A callback is an argument, not a module property.
             access: { kind: 'unreachable' },

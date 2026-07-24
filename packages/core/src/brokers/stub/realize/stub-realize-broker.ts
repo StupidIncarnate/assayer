@@ -42,11 +42,7 @@ import { caseSignatureContract } from '../../../contracts/case-signature/case-si
 import type { CaseSignature } from '../../../contracts/case-signature/case-signature-contract';
 import type { PredictedOutput } from '../../../contracts/predicted-output/predicted-output-contract';
 import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
-import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
 import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
 import { inputBucketsTransformer } from '../../../transformers/input-buckets/input-buckets-transformer';
@@ -56,6 +52,7 @@ import { representativeValueTransformer } from '../../../transformers/representa
 import { stubViewTransformer } from '../../../transformers/stub-view/stub-view-transformer';
 import { isObjectMemberLeafGuard } from '../../../guards/is-object-member-leaf/is-object-member-leaf-guard';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
+import { resolveSiblingCalleeBroker } from '../../resolve-sibling/callee/resolve-sibling-callee-broker';
 
 export const stubRealizeBroker = ({
   analysis,
@@ -130,25 +127,16 @@ export const stubRealizeBroker = ({
         return [];
       }
 
-      const resolved = typescriptResolveModuleAdapter({
-        specifier: String(edge.specifier),
-        containingFile: `${root}/${relPath}`,
-        options,
-      });
+      // Resolve the type's declaring import to its sibling on disk — the same per-run sibling read as
+      // compose. A specifier that does not land on an in-repo sibling resolves to `undefined`.
+      const sibling = resolveSiblingCalleeBroker({ specifier: String(edge.specifier), containingFile: `${root}/${relPath}`, root, options });
 
-      if (!resolved.resolved) {
+      if (sibling === undefined) {
         return [];
       }
 
-      const fileName = String(resolved.fileName);
-      const definitionRelPath = String(pathRelativeAdapter({ from: root, to: fileName }));
-
-      if (definitionRelPath.startsWith('..') || fileName.includes('/node_modules/')) {
-        return [];
-      }
-
-      const definitionWalk = tsMorphWalkFileAdapter({ source: fsReadFileSyncAdapter({ path: fileName }), relPath: definitionRelPath });
-      const declaredType: DeclaredType | undefined = analyzeFileBroker({ walked: definitionWalk, relPath: definitionRelPath }).declaredTypes.find(
+      const definitionRelPath = String(sibling.relPath);
+      const declaredType: DeclaredType | undefined = analyzeFileBroker({ walked: sibling.walked, relPath: definitionRelPath }).declaredTypes.find(
         (declared) => String(declared.name) === typeRef,
       );
 
@@ -270,7 +258,7 @@ export const stubRealizeBroker = ({
       }
       seen.add(signature);
 
-      return [{ reachesExit: entry.exit.coverageId, arrange: entry.arrange, predictedOutput: predictedOutputTransformer({ reachesExit: entry.exit.coverageId }) }];
+      return [{ reachesPath: [entry.exit.coverageId], arrange: entry.arrange, predictedOutput: predictedOutputTransformer({ reachesPath: [entry.exit.coverageId] }) }];
     });
 
     const salientSeen = new Set<PredictedOutput>();
@@ -278,7 +266,7 @@ export const stubRealizeBroker = ({
       const salient = !salientSeen.has(entry.predictedOutput);
       salientSeen.add(entry.predictedOutput);
 
-      return derivedTestCaseContract.parse({ reachesExit: entry.reachesExit, arrange: entry.arrange, salient });
+      return derivedTestCaseContract.parse({ reachesPath: entry.reachesPath, arrange: entry.arrange, salient });
     });
 
     return { entry: fn.entry, branches: fn.branches, exits: fn.exits, cases };

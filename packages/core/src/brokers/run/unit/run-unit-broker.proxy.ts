@@ -8,10 +8,12 @@ import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-writ
 import { jestRunCliAdapterProxy } from '../../../adapters/jest/run-cli/jest-run-cli-adapter.proxy';
 import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
+import { composeCrossFileMapBrokerProxy } from '../../compose/cross-file-map/compose-cross-file-map-broker.proxy';
 import { composeCrossFilePredicatesBrokerProxy } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
 import { stubRealizeBrokerProxy } from '../../stub/realize/stub-realize-broker.proxy';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
+import { runCrossFileProbesBrokerProxy } from '../cross-file-probes/run-cross-file-probes-broker.proxy';
 
 export const runUnitBrokerProxy = (): {
   setupSavedRun: ({ run }: { run: unknown }) => void;
@@ -26,6 +28,10 @@ export const runUnitBrokerProxy = (): {
   analyzeFileBrokerProxy();
   composeCrossFilePredicatesBrokerProxy();
   stubRealizeBrokerProxy();
+  // The cross-file-map fold and its sibling-instrumentation run REAL; their sibling resolve is staged to
+  // "no sibling", so both are same-reference no-ops for a target with no cross-file map reach.
+  composeCrossFileMapBrokerProxy();
+  runCrossFileProbesBrokerProxy();
   // The overlay load is mocked wholesale to an EMPTY overlay: reading committed corrections off disk is
   // I/O a unit test does not stage, so stub-realize sees no correction and its object-arrange overlay is
   // a same-reference no-op. The child proxy satisfies structure; the direct registerMock is the intercept.

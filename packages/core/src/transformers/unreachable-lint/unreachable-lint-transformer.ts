@@ -12,15 +12,16 @@
  *     when there is a single always-true guard.
  *
  *   `name` keys the lint to its entry (a module scope stays `*module*`); `displayName` is what the
- *   message shows — the module's label or the function's name — so the reader never meets the internal
- *   `*module*` token.
+ *   message shows — a module's label, an anonymous scope's callsite, or a named function's own name —
+ *   so the reader never meets a cache key, neither the internal `*module*` token nor an anonymous
+ *   scope's structural projection.
  *
  * USAGE:
  * unreachableLintTransformer({ name: 'classify', displayName: 'classify', unreachableExits: [{ line: 10, guardLines: [2, 6] }] });
  * // Returns [{ rule: 'unreachable-exit', name: 'classify', message: '…', startLine: 10, endLine: 10 }]
  */
 import { lintEntryContract } from '@assayer/shared/contracts';
-import type { ConstLength, LineNumber, LintEntry, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { ConstLength, EntryLabel, LineNumber, LintEntry, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
 
 export const unreachableLintTransformer = ({
   name,
@@ -28,7 +29,7 @@ export const unreachableLintTransformer = ({
   unreachableExits,
 }: {
   name: SymbolName;
-  displayName: SymbolName;
+  displayName: EntryLabel;
   unreachableExits: {
     line: LineNumber;
     guardLines: LineNumber[];

@@ -40,7 +40,7 @@ describe('object / local-shape — a branchless function over a locally-declared
         exits: [{ coverageId: '*module*/pick/return@top', kind: 'return', guardPath: [], line: 7 }],
         cases: [
           {
-            reachesExit: '*module*/pick/return@top',
+            reachesPath: ['*module*/pick/return@top'],
             arrange: [{ kind: 'param', param: 'cfg', value: 'abc123' }],
             salient: true,
           },

@@ -93,17 +93,17 @@ describe('unreachable / cross-file-guards — two imported predicates guarding o
     }).toStrictEqual({
       arranged: [
         {
-          reachesExit: '*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#then',
+          reachesPath: ['*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#then'],
           arrange: [{ kind: 'param', param: 'size', value: 101 }],
           salient: true,
         },
         {
-          reachesExit: '*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#then',
+          reachesPath: ['*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#then'],
           arrange: [{ kind: 'param', param: 'size', value: 100 }],
           salient: false,
         },
         {
-          reachesExit: '*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#else/if:CallExpression,id:withinBudget,id:size#else',
+          reachesPath: ['*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#else/if:CallExpression,id:withinBudget,id:size#else'],
           arrange: [{ kind: 'param', param: 'size', value: 50 }],
           salient: true,
         },

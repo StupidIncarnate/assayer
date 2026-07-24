@@ -12,9 +12,9 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
   // annotation collapsed to `{ kind: 'number' }` by the non-strict hermetic project (§5.10). Branchless,
   // but the single array param FANS OUT over cardinality: three cases reach the one exit, arranged with
   // REAL arrays of the element type so `items.shift()` runs on an actual array. Emit order fixes salience
-  // — the ordinary one-element `[7]` is the salient representative; the empty `[]` and many `[7,7]` twins
-  // are the grayed breadth (all run under `thorough`; only `intelligent` grays the two). Values are
-  // INPUTS (P4); each case asserts only that the flow REACHES the exit.
+  // — the empty `[]` is the salient representative; the one-element `[7]` and many `[7,7]` twins are the
+  // grayed breadth (all run under `thorough`; only `intelligent` grays the two). Values are INPUTS (P4);
+  // each case asserts only that the flow REACHES the exit.
   it('VALID: {export function takeFirst(items: number[]): number | undefined { return items.shift() }} => array-of-number param, return read as number, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
@@ -32,17 +32,17 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
         exits: [{ coverageId: '*module*/takeFirst/return@top', kind: 'return', guardPath: [], line: 2 }],
         cases: [
           {
-            reachesExit: '*module*/takeFirst/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [7] }],
+            reachesPath: ['*module*/takeFirst/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [] }],
             salient: true,
           },
           {
-            reachesExit: '*module*/takeFirst/return@top',
-            arrange: [{ kind: 'array', param: 'items', value: [] }],
+            reachesPath: ['*module*/takeFirst/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [7] }],
             salient: false,
           },
           {
-            reachesExit: '*module*/takeFirst/return@top',
+            reachesPath: ['*module*/takeFirst/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
             salient: false,
           },

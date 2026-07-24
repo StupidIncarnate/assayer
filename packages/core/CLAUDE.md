@@ -279,9 +279,9 @@ of every branch's arms (each arm's short-circuit causes kept distinct), a branch
 RUNNING), and the full set is the file's testable breadth. So a file's case count is the breadth, and
 `salient` is what a reviewer reads as must-run.
 
-Predicted output is `reachesExit`, because two buckets reaching one exit return the same literal — the
-SOLE exception is a branchless predicate, whose two return values leave by the same exit, so `predWant`
-splits them and each earns a salient case. Everything else that shares an exit collapses: the first is
+Predicted output is `reachesPath`, because two buckets reaching one exit path return the same literal —
+the SOLE exception is a branchless predicate, whose two return values leave by the same exit, so
+`predWant` splits them and each earns a salient case. Everything else that shares an exit collapses: the first is
 salient, the rest are the grayed breadth. A converging branch is therefore NOT dropped — its off-path
 buckets (a bucket may constrain a branch its flow never reaches; that arm is SOUND) stay in the full set
 as grayed twins. Effects are not modeled, so two buckets differing only by a side effect over-collapse in

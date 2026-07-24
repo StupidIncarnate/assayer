@@ -41,7 +41,7 @@ describe('node-global / uses-console — an ambient console.log call the file ne
         },
         branches: [],
         exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-        cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
+        cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], salient: true }],
       },
     ]);
     expect(analysis.undriven).toStrictEqual([]);

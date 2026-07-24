@@ -22,7 +22,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       // admin holds, 4 > 3 holds — `owner` never evaluates.
       {
-        reachesExit: THEN,
+        reachesPath: [THEN],
         arrange: [
           { kind: 'param', param: 'admin', value: true },
           { kind: 'param', param: 'level', value: 4 },
@@ -33,7 +33,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
       // admin holds, 3 > 3 fails, so `owner` decides. Same then exit as the first case, so it is the
       // grayed breadth twin.
       {
-        reachesExit: THEN,
+        reachesPath: [THEN],
         arrange: [
           { kind: 'param', param: 'admin', value: true },
           { kind: 'param', param: 'level', value: 3 },
@@ -44,7 +44,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
       // admin fails — the ENTIRE parenthesized disjunction never evaluates, so neither operand is
       // constrained.
       {
-        reachesExit: ELSE,
+        reachesPath: [ELSE],
         arrange: [
           { kind: 'param', param: 'admin', value: false },
           { kind: 'param', param: 'level', value: 7 },
@@ -55,7 +55,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
       // admin holds, and both disjuncts fail. Same else exit as the third case, so it is the grayed
       // breadth twin.
       {
-        reachesExit: ELSE,
+        reachesPath: [ELSE],
         arrange: [
           { kind: 'param', param: 'admin', value: true },
           { kind: 'param', param: 'level', value: 3 },

@@ -176,6 +176,53 @@ describe('followCallsTransformer', () => {
     });
   });
 
+  describe('a branching callback mapped over a branchless host`s array param', () => {
+    it('VALID: {items.map((n) => { if … })} => FUNNELLED into the host, no separate followed entry, nothing undriven', () => {
+      const host = ScopeRecordStub({
+        scopePath: ['*module*', 'rescale'],
+        name: 'rescale',
+        access: { kind: 'named' },
+        params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
+        returnType: { kind: 'array', element: { kind: 'number' } },
+        startLine: 1,
+        endLine: 8,
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'rescale/return@top', guardPath: [], line: 1 })],
+        calls: [CallSiteStub({ callee: { target: 'unresolved' }, args: [{ kind: 'callback', startLine: 2 }], receiver: 'items', method: 'map' })],
+      });
+      const walked = WalkFileResultStub({ scopes: [host, branchingPrivate({ name: 'cb' })] });
+
+      const result = followCallsTransformer({ walked });
+
+      expect({
+        followed: result.followedEntries,
+        undriven: result.undriven,
+        funnels: result.funnels,
+      }).toStrictEqual({
+        followed: [],
+        undriven: [],
+        funnels: [
+          {
+            host: 'rescale',
+            hostLine: 1,
+            cases: [
+              { reachesPath: ['rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
+              { reachesPath: ['inner/return@then', 'rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
+              { reachesPath: ['inner/return@else', 'rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
+              {
+                reachesPath: ['inner/return@then', 'inner/return@else', 'rescale/return@top'],
+                arrange: [{ kind: 'array', param: 'items', value: [6, 5] }],
+                salient: true,
+              },
+            ],
+            // A callback funnel welds nothing, so it carries no unreachable-exit for a lint.
+            unreachable: [],
+          },
+        ],
+      });
+    });
+  });
+
   describe('a private with no branches', () => {
     it('VALID: {a branchless helper} => nothing to drive and nothing to admit', () => {
       const walked = WalkFileResultStub({

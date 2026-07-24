@@ -11,8 +11,8 @@ const CLASS_SPECIMEN = 'packages/syntax-repository/src/happy-path/if-else/in-cla
 // is the definitive "you cannot test this branch" — no input picks the arm and no evaluation resolves
 // it — so this check cannot lose its subject to someone making a syntax rung drivable.
 const MODULE_SPECIMEN = 'packages/syntax-repository/src/sad-path/undriven/opaque-module/opaque-module.ts';
-// A private DRIVEN through its caller, and a private nothing consumes: the two Stage-B/C payoffs that
-// only a real run can prove — one that the interpreter judges correctly, one that rides the artifact.
+// A private FUNNELLED into its caller, and a private nothing consumes: the two payoffs that only a real
+// run can prove — one that the interpreter judges correctly, one that rides the artifact.
 const NESTED_SPECIMEN = 'packages/syntax-repository/src/happy-path/function/nested/nested.ts';
 const DEAD_SURFACE_SPECIMEN = 'packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts';
 // A module-scope switch driven by the environment: each case writes CODE and re-imports; the default
@@ -76,14 +76,15 @@ describe('runUnitBroker (integration)', () => {
       }).toStrictEqual({ cases: [], gaps: [], darkSpots: [], undriven: ['*module*'] });
     });
 
-    // The Stage-B payoff, RUN and not merely derived: `inner` is unexported and driven through `outer`
-    // by cases that set `outer`'s own input. Every case passing proves the interpreter judges the
-    // folded cases correctly — the probe fires at inner's OWN exit, scoped to inner's exit ids — with
-    // no change to the interpreter. `outer`'s trivial case plus inner's two arms make three.
-    it('VALID: {a private driven through its caller} => every case passes, the inner branch covered through outer', async () => {
+    // The funnel payoff, RUN and not merely derived: `inner` is unexported and `outer`'s only exit is
+    // `return inner(value)`, so `inner` FUNNELS into `outer` — the sole entry. Its two cases each path
+    // through inner's OWN exit then outer's return, and every case passing proves the interpreter judges
+    // the folded multi-exit path correctly, with no change to the interpreter. The trivial `outer` case
+    // is subsumed — `inner` is always reached — so `outer`'s two arms are all the file offers.
+    it('VALID: {a private funnelled into its caller} => every case passes, inner reached through outer', async () => {
       const result = await engine.run({ relPath: NESTED_SPECIMEN, runId: 'r-nested' });
 
-      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed', 'passed']);
+      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed']);
     });
 
     // The Stage-C payoff: `greet` is driven and passes, while `unused` — a private nothing consumes —

@@ -313,9 +313,9 @@ describe('causeArrangeTransformer', () => {
   describe('an array param fans out over cardinality', () => {
     // A scalar fill hands the string placeholder to code that operates on the array (`items.pop()`),
     // which throws — so an array param falls to `array-arrange` and fans out over its size classes:
-    // one (`[7]`) leads as the salient representative, then empty (`[]`), then many (`[7,7]`). Each is
+    // empty (`[]`) leads as the salient representative, then one (`[7]`), then many (`[7,7]`). Each is
     // an `array` binding, set positionally like any argument.
-    it('VALID: {an unconstrained number[] param} => three array bindings, one/empty/many, not a string fill', () => {
+    it('VALID: {an unconstrained number[] param} => three array bindings, empty/one/many, not a string fill', () => {
       const result = causeArrangeTransformer({
         requirements: [],
         params: [ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } })],
@@ -325,8 +325,8 @@ describe('causeArrangeTransformer', () => {
       expect(result).toStrictEqual({
         unreachable: false,
         arrangements: [
-          [{ kind: 'array', param: 'items', value: [7] }],
           [{ kind: 'array', param: 'items', value: [] }],
+          [{ kind: 'array', param: 'items', value: [7] }],
           [{ kind: 'array', param: 'items', value: [7, 7] }],
         ],
       });
@@ -350,11 +350,11 @@ describe('causeArrangeTransformer', () => {
         arrangements: [
           [
             { kind: 'param', param: 'score', value: 6 },
-            { kind: 'array', param: 'items', value: [7] },
+            { kind: 'array', param: 'items', value: [] },
           ],
           [
             { kind: 'param', param: 'score', value: 6 },
-            { kind: 'array', param: 'items', value: [] },
+            { kind: 'array', param: 'items', value: [7] },
           ],
           [
             { kind: 'param', param: 'score', value: 6 },

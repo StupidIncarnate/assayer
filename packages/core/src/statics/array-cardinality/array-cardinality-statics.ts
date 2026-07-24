@@ -1,15 +1,16 @@
 /**
  * PURPOSE: The array cardinalities the arrange fan-out enumerates and the element COUNT each fills, so
  *   every array parameter derives one case per size class. The ORDER is load-bearing: `derive-cases`
- *   marks the FIRST case per predicted output salient, so `one` leads and the ordinary non-empty `[7]`
- *   is the must-run representative while `empty` and `many` follow as the grayed breadth. `max` is
- *   reserved for a future `.length`-guard rung and is deliberately absent from the fan-out order.
+ *   marks the FIRST case per predicted output salient, so `empty` leads and the empty `[]` is the
+ *   salient representative for a branchless array (all cardinalities reach the same exit) while `one`
+ *   and `many` follow as the grayed breadth. `max` is reserved for a future `.length`-guard rung and
+ *   is deliberately absent from the fan-out order.
  *
  * USAGE:
- * arrayCardinalityStatics.order;       // ['one', 'empty', 'many']
+ * arrayCardinalityStatics.order;       // ['empty', 'one', 'many']
  * arrayCardinalityStatics.counts.many; // 2
  */
 export const arrayCardinalityStatics = {
-  order: ['one', 'empty', 'many'],
+  order: ['empty', 'one', 'many'],
   counts: { empty: 0, one: 1, many: 2 },
 } as const;

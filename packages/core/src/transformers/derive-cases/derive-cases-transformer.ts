@@ -7,8 +7,9 @@
  *   value can reach.
  *
  *   Buckets that CONVERGE onto one exit are still distinct cases — `if (a>5) {…} switch(mode){…}
- *   return 1` distinguishes four input buckets that all reach the one `return 1`. reachesExit is the
- *   exit CONTROL FLOW actually reaches: the exit whose guard path the bucket's arms satisfy and whose
+ *   return 1` distinguishes four input buckets that all reach the one `return 1`. A flat scope reaches
+ *   exactly one exit, so each case's single-element `reachesPath` holds the exit CONTROL FLOW actually
+ *   reaches: the exit whose guard path the bucket's arms satisfy and whose
  *   path is MAXIMAL (so a bare trailing return is chosen only when no guarded exit matches). A bucket
  *   may constrain a branch its flow never reaches — an off-path arm is SOUND, and it is where a caller
  *   returning early past a later guard gains its extra bucket.
@@ -38,7 +39,7 @@
  *
  * USAGE:
  * deriveCasesTransformer({ params, branches, exits, envDrivable: false, returnPredicate });
- * // Returns { cases: [{ reachesExit, arrange, salient }, …], unreachableExits: [{ line, guardLines }, …],
+ * // Returns { cases: [{ reachesPath, arrange, salient }, …], unreachableExits: [{ line, guardLines }, …],
  * //   undrivenBranches: [{ line, operand? }, …] }
  */
 import { derivedTestCaseContract, symbolNameContract } from '@assayer/shared/contracts';
@@ -215,10 +216,10 @@ export const deriveCasesTransformer = ({
 
       return [
         {
-          reachesExit: exit.coverageId,
+          reachesPath: [exit.coverageId],
           arrange: arrangement,
           predictedOutput: predictedOutputTransformer({
-            reachesExit: exit.coverageId,
+            reachesPath: [exit.coverageId],
             ...(predWant === undefined ? {} : { predWant }),
           }),
         },
@@ -233,7 +234,7 @@ export const deriveCasesTransformer = ({
     const salient = !salientSeen.has(entry.predictedOutput);
     salientSeen.add(entry.predictedOutput);
 
-    return derivedTestCaseContract.parse({ reachesExit: entry.reachesExit, arrange: entry.arrange, salient });
+    return derivedTestCaseContract.parse({ reachesPath: entry.reachesPath, arrange: entry.arrange, salient });
   });
 
   // An exit is unreachable iff at least one bucket maps to it and EVERY bucket that maps to it is

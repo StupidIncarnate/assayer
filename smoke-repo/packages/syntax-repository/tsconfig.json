@@ -31,6 +31,12 @@
       "@assayer/core/compose-cross-file": [
         "../../../packages/core/src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker"
       ],
+      // The cross-file MAP fold is the other consume-time overlay: a surface mapping an imported
+      // function over an array param folds that sibling callee's branches into the host, so a specimen
+      // asserting the folded funnel imports it beside the analyze-file broker.
+      "@assayer/core/compose-cross-file-map": [
+        "../../../packages/core/src/brokers/compose/cross-file-map/compose-cross-file-map-broker"
+      ],
       // Object-arrange (stub-realize) is the OTHER consume-time overlay: an object-member branch is
       // DRIVEN from the merged stub view, so an object specimen asserting driven cases imports it too.
       "@assayer/core/stub-realize": [

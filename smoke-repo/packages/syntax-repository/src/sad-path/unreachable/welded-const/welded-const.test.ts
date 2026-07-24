@@ -32,7 +32,7 @@ describe('unreachable / welded-const — a module scope whose branch turns on a 
       functions: analysis.functions.map((fn) => ({ name: String(fn.entry.name), access: fn.entry.access, cases: fn.cases })),
       lints: analysis.lints.map((lint) => ({ rule: String(lint.rule), name: String(lint.name), message: String(lint.message), startLine: lint.startLine })),
     }).toStrictEqual({
-      functions: [{ name: '*module*', access: { kind: 'module' }, cases: [{ reachesExit: THEN, arrange: [], salient: true }] }],
+      functions: [{ name: '*module*', access: { kind: 'module' }, cases: [{ reachesPath: [THEN], arrange: [], salient: true }] }],
       lints: [{ rule: 'unreachable-exit', name: '*module*', message: UNREACHABLE_MESSAGE, startLine: 6 }],
     });
   });

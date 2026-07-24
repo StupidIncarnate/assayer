@@ -31,6 +31,7 @@
  */
 import { z } from 'zod';
 
+import { entryLabelContract } from '../entry-label/entry-label-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
@@ -39,12 +40,13 @@ export const undrivenEntryContract = z.object({
   reason: z.string().min(1).brand<'UndrivenReason'>(),
   startLine: lineNumberContract,
   endLine: lineNumberContract,
-  // The human label a surface shows instead of the internal `name`, present only for a MODULE undriven
-  // entry: the single exported binding's name, else the file basename (`welded-const.ts`).
-  // `name` stays `*module*` because it keys the driven/undriven match; `label` is DISPLAY only, so the
-  // report and the window never read the internal scope root. A private undriven entry (a real function
-  // name) carries none and shows its `name`.
-  label: symbolNameContract.optional(),
+  // The human label a surface shows instead of the internal `name`, present whenever `name` is a key
+  // rather than something a reader recognises: a MODULE entry's single exported binding, else the file
+  // basename (`welded-const.ts`), and an ANONYMOUS scope's callsite (`makeClassifier › return (n) => …
+  // L2`). `name` stays `*module*` / the structural projection because it keys the driven/undriven
+  // match; `label` is DISPLAY only, so the report and the window never read a cache key. A named
+  // private carries none and shows its `name`.
+  label: entryLabelContract.optional(),
 });
 
 export type UndrivenEntry = z.infer<typeof undrivenEntryContract>;

@@ -37,9 +37,15 @@ const callArgContract = z.discriminatedUnion('kind', [
   // An inline function-like argument (`items.map((n) => …)`, `apply(x, (n) => …)`). It is a scope of
   // its own the walk opens elsewhere; this records only the LINK — the callback scope's start line,
   // the same key `follow-calls` matches a scope record by — so a reached callback is never mistaken
-  // for dead surface. Non-inline function values (a bare identifier passed as a callback) stay
-  // `param-ref`/`opaque` like any other identifier.
+  // for dead surface.
   z.object({ kind: z.literal('callback'), startLine: lineNumberContract }),
+  // A BARE function REFERENCE passed as an argument (`items.map(bandReading)`) whose declaration the
+  // walk can name — an IMPORT (its sibling definition resolved at consume time) or a same-file `local`
+  // function. It carries the SAME callee LINK a call site records, so the cross-file-map overlay can
+  // resolve the imported callee to its sibling scope and FUNNEL that scope's branches into the host —
+  // the reference twin of the inline `callback`. A non-nameable identifier (a param, a const, an
+  // arbitrary expression) stays `param-ref`/`opaque`.
+  z.object({ kind: z.literal('fn-ref'), callee: calleeLinkContract }),
   z.object({ kind: z.literal('opaque') }),
 ]);
 

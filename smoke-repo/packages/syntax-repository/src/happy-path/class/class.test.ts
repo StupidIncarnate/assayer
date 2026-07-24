@@ -28,7 +28,7 @@ describe('class — a branchless class method with no explicit constructor', () 
         exits: [{ coverageId: '*module*/Greeter/greet/return@top', kind: 'return', guardPath: [], line: 3 }],
         cases: [
           {
-            reachesExit: '*module*/Greeter/greet/return@top',
+            reachesPath: ['*module*/Greeter/greet/return@top'],
             arrange: [{ kind: 'param', param: 'name', value: 'abc123' }],
             salient: true,
           },

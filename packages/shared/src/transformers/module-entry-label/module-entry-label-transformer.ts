@@ -11,13 +11,17 @@
  *   module entry and an undriven one.
  *
  *   DISPLAY only: it never touches identity. Coverage IDs and the scope path stay `*module*`-rooted —
- *   the label is what a reader sees, not what the cache keys on.
+ *   the label is what a reader sees, not what the cache keys on. It returns an `EntryLabel` rather
+ *   than a `SymbolName` for that reason: one shape for every entry label, and none of them is an
+ *   identifier the reader could type — the twin that labels an anonymous scope is
+ *   `anonymousEntryLabelTransformer`.
  *
  * USAGE:
  * moduleEntryLabelTransformer({ exportName, relPath: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts' });
  * // Returns 'message' when exportName is set, else 'uses-greeting.ts'
  */
-import { symbolNameContract } from '../../contracts/symbol-name/symbol-name-contract';
+import { entryLabelContract } from '../../contracts/entry-label/entry-label-contract';
+import type { EntryLabel } from '../../contracts/entry-label/entry-label-contract';
 import type { SymbolName } from '../../contracts/symbol-name/symbol-name-contract';
 
 export const moduleEntryLabelTransformer = ({
@@ -26,12 +30,12 @@ export const moduleEntryLabelTransformer = ({
 }: {
   exportName?: SymbolName;
   relPath: string;
-}): SymbolName => {
+}): EntryLabel => {
   if (exportName !== undefined) {
-    return exportName;
+    return entryLabelContract.parse(String(exportName));
   }
 
   const basename = relPath.split('/').filter((segment) => segment.length > 0).at(-1);
 
-  return symbolNameContract.parse(basename === undefined || basename.length === 0 ? relPath : basename);
+  return entryLabelContract.parse(basename === undefined || basename.length === 0 ? relPath : basename);
 };

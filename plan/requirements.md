@@ -1387,6 +1387,64 @@ the LLM's corrective instruction surface:
   with real cases during implementation; this entry is the directional target,
   not a spec.
 
+- **D29 — The case set FUNNELS from the reachable surface (same-file realization
+  of C3; SHIPPED).** A file's testable unit is the reachable SURFACE — an
+  exported/externally-reachable callable, or a qualifying module scope — and its
+  case set is the FUNNEL: the product of every branch decision across every scope
+  that surface reaches, each case seeding only the surface's inputs and predicting
+  the ordered PATH of exits it drives. This is C3's "reachable output-state space
+  per entry" made concrete for the call/closure/import graph.
+  - **A nested or imported scope is a PATH SEGMENT, not its own entry.** A private
+    helper, a `.map` callback (inline or an imported function reference), an IIFE —
+    anything a surface reaches but nothing outside can call — keeps its own coverage
+    IDs (coverage attaches where the logic lives) but owns NO independent case list.
+    Obligations key off CONSUMPTION, and such a scope is consumed only THROUGH its
+    surface, so the surface is the single site a test attaches to; its cases must
+    therefore cover every reached branch beneath it. So `rescale(items){ return
+    items.map((n) => { if (n>100)…; if (n<0)… }) }` is ONE `rescale` entry, not a
+    surface plus a separate callback entry.
+  - **Prediction is an ordered PATH.** A case carries `reachesPath: CoverageId[]`,
+    the exits it fires innermost-first: `rescale([101])` predicts `[callback
+    then-exit, rescale return-exit]`. A flat case is a one-element path. Asserting
+    the whole ordered path — not a terminal exit — is what tells an empty array
+    (the callback never runs, path is just the surface's exit) apart from a
+    single-element one. The runtime already records this sequence, and the
+    interpreter passes a case iff its `reachesPath` is a CONTIGUOUS SUFFIX of the
+    observed exit trace — which tolerates the operand-evaluation noise a
+    value-position `&&`/`||`/`??` chain emits (the taken exit is last) while still
+    anchoring the full funnel tail end-to-front.
+  - **Array cardinality: EMPTY and MULTIPLE are structural, SINGLE carries the
+    logic.** An array param is three classes and EMPTY (`[]`, path = surface exit
+    only) and MULTIPLE ride regardless of logic. The SINGLE class expands to one
+    case per element value the reached branches distinguish; MULTIPLE prefers an
+    arm-crossing pair of two distinguished values. With no discernible logic the
+    fan-out is the plain defaults `[], [7], [7,7]` (in that order). The distinguished
+    values are typed — a callback branching on strings pulls `["urgent"]`, never a
+    numeric placeholder.
+  - **Following is TRANSITIVE and siblings CROSS.** `outer → middle → inner` folds
+    all three into `outer`'s funnel; a surface mapping two callbacks over two array
+    params yields the CARTESIAN of their per-element funnels, because steering one
+    array into one arm while steering the other into another is a distinct input
+    (the §5.13 breadth).
+  - **Cross-file driving WORKS, and does NOT wait on Blocker #3.** When the mapped
+    function is imported from a sibling, a consume-time OVERLAY resolves it
+    (`resolve-sibling-callee`, the one shared sibling-resolve that also backs the
+    predicate composer and stub-realize), walks it, and folds its branch funnel into
+    the parent's array cardinality — the child's exits keeping their own coverage IDs
+    (`*module*/<child>/…`, distinct from the parent's). The runtime observes the
+    child because the instrumenter wraps probe sites PER FILE by content hash, so an
+    imported file compiled into a run is instrumented too; the overlay writes the
+    referenced sibling's probe plan before the run. Blocker #3's namespacing gap only
+    bites when two files share a scope name — the overlay instruments ONLY
+    fold-referenced siblings so an unrelated import's `*module*/exit@top` cannot leak.
+  - **Reconciliation.** A path is an ordered LIST of the coverage IDs the scheme
+    already mints — no new grammar, no line/position info (lines stay
+    presentation-only). The map/compendium is untouched — it stays per-member
+    complete (D22); only the EXECUTION case set funnels (D23). `salient` still marks
+    one representative per predicted output, which is now the PATH, so cases that
+    once collapsed as duplicate exits (a filler `[7]` reaching the same exit as
+    `[100]`) are correctly told apart or merged by their real path.
+
 ## Tracked Questions / Constraints / Blockers (from catalog walk)
 
 - **Q1 — Our logic vs platform behavior (dates/Intl):** where is the line between
@@ -1451,6 +1509,10 @@ the LLM's corrective instruction surface:
     runnable cases). It does NOT govern the map/compendium, which enumerates
     every bounded member per-member so a new member always produces a review
     delta. The two artifacts carry opposite, decoupled shrink policies.
+  - **Same-file/cross-file realization (D29, SHIPPED):** for a surface and the
+    scopes it reaches, C3's reachable output-state space IS the funnel — the
+    product of every reached branch's arms, one case per distinct PATH. D29 is the
+    concrete build.
 - **Q7 — RESOLVED BY REMOVAL (Blocker #4):** R12 accumulates many product
   surfaces (projections, ledger, semantic-diff queue, render decks, state
   explorer + flow stepping, endpoint explorer, full-stack live tracing) plus
@@ -1545,9 +1607,13 @@ the LLM's corrective instruction surface:
   the enclosing scope path (e.g. `processOrder/if:order.total>limit`) — survives
   reordering, breaks exactly when the logic changes, which is the desired "is the
   requirement still true?" prompt. Backend branch code is the hard case; React
-  is easier. Also gates cross-file case DRIVING (C1's module-boundary EDGE
-  resolution is already built — the import resolver — but arranging a callee's
-  branches through a caller across a file boundary awaits this scheme).
+  is easier. A case's prediction is an ordered LIST of these IDs — a node PATH, not
+  a single node (D29) — adding no grammar and no line info. Cross-file case DRIVING
+  is BUILT (D29): a funnel folds an imported callee's branches into the caller and
+  the run observes the sibling because instrumentation is per-file by content hash;
+  the sibling's IDs stay distinct (`*module*/<child>/…`), so the namespacing gap
+  below only bites when two files share a scope NAME, which the overlay sidesteps by
+  instrumenting only fold-referenced siblings.
   **Architecture ruling (user, sanity-checked): two-stage invalidation; IDs are
   map-node identities.** Pipeline: file/config content hash (cheap gate, D13) →
   rebuild maps (C2) → map DIFF (semantic gate) → test regen only on map delta.

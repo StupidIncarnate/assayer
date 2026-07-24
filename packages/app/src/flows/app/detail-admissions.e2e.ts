@@ -40,12 +40,13 @@ const DEAD_SURFACE_LINT_LINE =
 
 // The welded-ARGUMENT unreachable-exit LINT — `LINT <name> — <message>`, the message authored in core's
 // unreachableLintTransformer. Following `report(){ return decide(3) }` welds `3` into `decide`'s `value`,
-// so `decide`'s `> 5` arm is dead: `decide` is a DRIVEN through-caller entry and its dead arm rides the
-// LINT channel, the through-caller twin of the welded-CONST unreachable-exit (welded in a caller's
-// argument rather than the scope's own source). Asserted whole for the same reason — the sentence IS the
-// finding, and it must cross core -> cache -> IPC intact.
+// so `decide`'s `> 5` arm is dead. `decide` FUNNELS into `report`, so the lint keys on `report` — the
+// SOLE entry that owns the dead code — while its message names where the dead arm lives (`decide`, on its
+// own line). It is the funnel twin of the welded-CONST unreachable-exit (welded in a caller's argument
+// rather than the scope's own source). Asserted whole for the same reason — the sentence IS the finding,
+// and it must cross core -> cache -> IPC intact.
 const UNREACHABLE_WELDED_ARG_LINE =
-  'LINT decide — `decide` can never reach the exit on line 3: `value` is welded to `3`, so the branch ' +
+  'LINT report — `decide` can never reach the exit on line 3: `value` is welded to `3`, so the branch ' +
   'on line 2 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm ' +
   'should be deleted.';
 
@@ -125,24 +126,25 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
   });
 
-  test('VALID: {sad-path/unreachable/welded-arg/welded-arg.ts selected} => the panel states the welded-ARGUMENT unreachable-exit LINT verbatim, beside two driven entries, with no other channel co-rendering', async ({ smokeWindow: window }) => {
+  test('VALID: {sad-path/unreachable/welded-arg/welded-arg.ts selected} => the panel states the welded-ARGUMENT unreachable-exit LINT verbatim, beside the single driven report entry, with no other channel co-rendering', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNREACHABLE_WELDED_ARG}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
-    // Following the welded call EVALUATES `decide`: its dead `> 5` arm rides the LINT channel (the repo's
-    // debt), worded exactly as `assayer unit` prints it, and it must arrive verbatim across core -> cache
-    // -> IPC. This is the through-caller twin of the welded-const unreachable-exit.
+    // Following the welded call FUNNELS `decide` into `report` and EVALUATES it: `decide`'s dead `> 5` arm
+    // rides the LINT channel (the repo's debt), keyed on `report` — the surface that owns it — worded
+    // exactly as `assayer unit` prints it, and it must arrive verbatim across core -> cache -> IPC. This
+    // is the funnel twin of the welded-const unreachable-exit.
     const lint = window.getByTestId('LINT');
     await expect(lint).toBeVisible();
     await expect(lint).toHaveText(UNREACHABLE_WELDED_ARG_LINE);
 
     // An unreachable-exit is a LINT, never an undriven admission, a dark spot, or a run gap: welded-arg is
-    // no longer undriven, so those channels stay empty. Both `report` (named) and `decide` (the driven
-    // through-caller entry whose dead arm the lint names) list their cases beside it — two driven entries.
+    // no longer undriven, so those channels stay empty. `decide` FUNNELS into `report`, so `report` is the
+    // SOLE driven entry — no separate `decide` entry — listing its one live-arm funnel case beside the lint.
     await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
     await expect(window.getByTestId('DARK_SPOT')).toHaveCount(0);
     await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
-    await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(2);
+    await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
   });
 });

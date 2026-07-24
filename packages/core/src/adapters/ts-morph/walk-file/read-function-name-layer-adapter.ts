@@ -9,9 +9,14 @@
  *   so a positional fallback would move the ID when the callback moved, and an index would move it
  *   when a sibling was reordered. A projection moves only when the callback's own logic changes.
  *
+ *   That fallback travels as `anonymous`, because a projection is a key and no surface may print one.
+ *   Whoever needs a readable label for such a scope must know it has none, and this is the only place
+ *   that knows — reading it back off the returned name would mean matching the `fn:` prefix, which is
+ *   deriving a fact from the SPELLING of an identity string.
+ *
  * USAGE:
  * readFunctionNameLayerAdapter({ node: arrowFunction });
- * // Returns 'classify' (branded SymbolName), or a structural projection when anonymous
+ * // Returns { name: 'classify', anonymous: false }, or a structural projection with anonymous: true
  */
 import { Node } from 'ts-morph';
 
@@ -20,9 +25,9 @@ import type { SymbolName } from '@assayer/shared/contracts';
 
 import { projectNodeLayerAdapter } from './project-node-layer-adapter';
 
-export const readFunctionNameLayerAdapter = ({ node }: { node: Node }): SymbolName => {
+export const readFunctionNameLayerAdapter = ({ node }: { node: Node }): { name: SymbolName; anonymous: boolean } => {
   if (Node.isConstructorDeclaration(node)) {
-    return symbolNameContract.parse('constructor');
+    return { name: symbolNameContract.parse('constructor'), anonymous: false };
   }
 
   if (
@@ -34,19 +39,19 @@ export const readFunctionNameLayerAdapter = ({ node }: { node: Node }): SymbolNa
   ) {
     const own = node.getName();
     if (own !== undefined && own.length > 0) {
-      return symbolNameContract.parse(own);
+      return { name: symbolNameContract.parse(own), anonymous: false };
     }
   }
 
   const parent = node.getParent();
 
   if (Node.isVariableDeclaration(parent) || Node.isPropertyDeclaration(parent) || Node.isPropertyAssignment(parent)) {
-    return symbolNameContract.parse(parent.getName());
+    return { name: symbolNameContract.parse(parent.getName()), anonymous: false };
   }
 
   if (Node.isExportAssignment(parent)) {
-    return symbolNameContract.parse('default');
+    return { name: symbolNameContract.parse('default'), anonymous: false };
   }
 
-  return symbolNameContract.parse(`fn:${projectNodeLayerAdapter({ node })}`);
+  return { name: symbolNameContract.parse(`fn:${projectNodeLayerAdapter({ node })}`), anonymous: true };
 };

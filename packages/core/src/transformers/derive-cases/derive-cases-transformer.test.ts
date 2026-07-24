@@ -74,7 +74,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
+        { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
       ]);
     });
 
@@ -93,7 +93,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'formatGreeting/return@if-else', arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
+        { reachesPath: ['formatGreeting/return@if-else'], arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
       ]);
     });
   });
@@ -114,7 +114,7 @@ describe('deriveCasesTransformer', () => {
 
       expect(result.cases).toStrictEqual([
         {
-          reachesExit: 'grade/return@then',
+          reachesPath: ['grade/return@then'],
           arrange: [
             { kind: 'param', param: 'score', value: 6 },
             { kind: 'param', param: 'bonus', value: 2 },
@@ -143,7 +143,7 @@ describe('deriveCasesTransformer', () => {
 
       expect(result.cases).toStrictEqual([
         {
-          reachesExit: 'grade/return@else',
+          reachesPath: ['grade/return@else'],
           // score fails, so bonus NEVER EVALUATES — it is unconstrained and falls to representative
           // fill rather than being pinned to a value the flow never reads.
           arrange: [
@@ -153,7 +153,7 @@ describe('deriveCasesTransformer', () => {
           salient: true,
         },
         {
-          reachesExit: 'grade/return@else',
+          reachesPath: ['grade/return@else'],
           arrange: [
             { kind: 'param', param: 'score', value: 6 },
             { kind: 'param', param: 'bonus', value: 1 },
@@ -181,7 +181,7 @@ describe('deriveCasesTransformer', () => {
 
       expect(result.cases).toStrictEqual([
         {
-          reachesExit: 'alarm/return@then',
+          reachesPath: ['alarm/return@then'],
           arrange: [
             { kind: 'param', param: 'temp', value: 51 },
             { kind: 'param', param: 'smoke', value: false },
@@ -189,7 +189,7 @@ describe('deriveCasesTransformer', () => {
           salient: true,
         },
         {
-          reachesExit: 'alarm/return@then',
+          reachesPath: ['alarm/return@then'],
           arrange: [
             { kind: 'param', param: 'temp', value: 50 },
             { kind: 'param', param: 'smoke', value: true },
@@ -217,7 +217,7 @@ describe('deriveCasesTransformer', () => {
 
       expect(result.cases).toStrictEqual([
         {
-          reachesExit: 'alarm/return@else',
+          reachesPath: ['alarm/return@else'],
           arrange: [
             { kind: 'param', param: 'temp', value: 50 },
             { kind: 'param', param: 'smoke', value: false },
@@ -247,8 +247,8 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'gate/return@then', arrange: [{ kind: 'param', param: 'ready', value: false }], salient: true },
-        { reachesExit: 'gate/return@else', arrange: [{ kind: 'param', param: 'ready', value: true }], salient: true },
+        { reachesPath: ['gate/return@then'], arrange: [{ kind: 'param', param: 'ready', value: false }], salient: true },
+        { reachesPath: ['gate/return@else'], arrange: [{ kind: 'param', param: 'ready', value: true }], salient: true },
       ]);
     });
   });
@@ -291,9 +291,9 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'classify/return@if-then', arrange: [{ kind: 'param', param: 'status', value: 'a' }], salient: true },
-        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'b' }], salient: true },
-        { reachesExit: 'classify/return@if-else', arrange: [{ kind: 'param', param: 'status', value: 'c' }], salient: false },
+        { reachesPath: ['classify/return@if-then'], arrange: [{ kind: 'param', param: 'status', value: 'a' }], salient: true },
+        { reachesPath: ['classify/return@if-else'], arrange: [{ kind: 'param', param: 'status', value: 'b' }], salient: true },
+        { reachesPath: ['classify/return@if-else'], arrange: [{ kind: 'param', param: 'status', value: 'c' }], salient: false },
       ]);
     });
   });
@@ -358,9 +358,9 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: "routeLabel/return@switch:'get'", arrange: [{ kind: 'param', param: 'method', value: 'get' }], salient: true },
-        { reachesExit: "routeLabel/return@switch:'post'", arrange: [{ kind: 'param', param: 'method', value: 'post' }], salient: true },
-        { reachesExit: 'routeLabel/return@switch:default', arrange: [{ kind: 'param', param: 'method', value: 'delete' }], salient: true },
+        { reachesPath: ["routeLabel/return@switch:'get'"], arrange: [{ kind: 'param', param: 'method', value: 'get' }], salient: true },
+        { reachesPath: ["routeLabel/return@switch:'post'"], arrange: [{ kind: 'param', param: 'method', value: 'post' }], salient: true },
+        { reachesPath: ['routeLabel/return@switch:default'], arrange: [{ kind: 'param', param: 'method', value: 'delete' }], salient: true },
       ]);
     });
   });
@@ -374,7 +374,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result.cases).toStrictEqual([{ reachesExit: 'run/exit@implicit', arrange: [], salient: true }]);
+      expect(result.cases).toStrictEqual([{ reachesPath: ['run/exit@implicit'], arrange: [], salient: true }]);
     });
   });
 
@@ -564,8 +564,8 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesExit: 'mod/exit@then', arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], salient: true },
-          { reachesExit: 'mod/exit@else', arrange: [{ kind: 'env', name: 'VALUE', value: '5' }], salient: true },
+          { reachesPath: ['mod/exit@then'], arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], salient: true },
+          { reachesPath: ['mod/exit@else'], arrange: [{ kind: 'env', name: 'VALUE', value: '5' }], salient: true },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -598,8 +598,8 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'pred/return@top', arrange: [{ kind: 'param', param: 'size', value: 51 }], salient: true },
-        { reachesExit: 'pred/return@top', arrange: [{ kind: 'param', param: 'size', value: 50 }], salient: true },
+        { reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 51 }], salient: true },
+        { reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 50 }], salient: true },
       ]);
     });
 
@@ -616,7 +616,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesExit: 'pred/return@top', arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        cases: [{ reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
         unreachableExits: [],
         undrivenBranches: [],
       });
@@ -649,10 +649,10 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 6 }], salient: true },
-        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
-        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 6 }], salient: false },
-        { reachesExit: 'tally/return@top', arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
+        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 6 }], salient: true },
+        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
+        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 6 }], salient: false },
+        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
       ]);
     });
   });

@@ -68,7 +68,13 @@ export const caseSetProjectionTransformer = ({
       .map((fn) => ({
         name: fn.entry.name,
         access: fn.entry.access,
-        exitIds: fn.exits.map((exit) => exit.coverageId),
+        // The exits the interpreter observes for this entry: its OWN exits, plus every exit its cases
+        // path through. A FUNNEL entry's cases reach a private's (or callback's) exit before the
+        // surface's own return, so those exits must be observable here — otherwise the interpreter
+        // filters them out and the multi-exit path can never match. A non-funnel case's `reachesPath` is
+        // a subset of the entry's exits, so this adds nothing; a callback the entry merely SCHEDULES
+        // (not funnelled, so in no case's path) is still excluded, which is the filter's whole point.
+        exitIds: [...new Set([...fn.exits.map((exit) => exit.coverageId), ...fn.cases.flatMap((testCase) => testCase.reachesPath)])],
         cases: fn.cases,
       })),
     gaps: blocked.map((fn) => ({

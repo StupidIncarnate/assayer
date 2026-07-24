@@ -14,7 +14,7 @@ export const CaseSetStub = ({ ...props }: StubArgument<CaseSet> = {}): CaseSet =
         exitIds: ['grade/return@then', 'grade/return@else'],
         cases: [
           {
-            reachesExit: 'grade/return@then',
+            reachesPath: ['grade/return@then'],
             arrange: [
               { kind: 'param', param: 'score', value: 6 },
               { kind: 'param', param: 'bonus', value: 2 },

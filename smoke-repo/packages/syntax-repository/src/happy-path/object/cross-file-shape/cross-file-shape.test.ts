@@ -88,12 +88,12 @@ describe('object / cross-file-shape — decideA reads config.mode off an IMPORTE
     }).toStrictEqual({
       cases: [
         {
-          reachesExit: '*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then',
+          reachesPath: ['*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then'],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'a', region: 'abc123', retries: 7 } }],
           salient: true,
         },
         {
-          reachesExit: '*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else',
+          reachesPath: ['*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else'],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123', retries: 7 } }],
           salient: true,
         },

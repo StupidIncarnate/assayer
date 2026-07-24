@@ -18,10 +18,10 @@
  * // Returns the same ExtractedFunction[], with composable call-guard branches rebased in place
  */
 import { branchNodeContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
 
 import type { ExtractedFunction } from '../../contracts/extracted-function/extracted-function-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
+import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
 import { rebasePredicateConditionTransformer } from '../rebase-predicate-condition/rebase-predicate-condition-transformer';
 
 export const composePredicatesTransformer = ({
@@ -71,12 +71,7 @@ export const composePredicatesTransformer = ({
         return branch;
       }
 
-      const toCallerParam = new Map<SymbolName, SymbolName>(
-        callee.params.flatMap((param, index) => {
-          const arg = call.args[index];
-          return arg !== undefined && arg.kind === 'param-ref' ? [[param.name, arg.paramName] as const] : [];
-        }),
-      );
+      const { toCallerParam } = callArgBindingsTransformer({ calleeParams: callee.params, args: call.args });
 
       const rebased = rebasePredicateConditionTransformer({
         node: callee.predicateSignature,

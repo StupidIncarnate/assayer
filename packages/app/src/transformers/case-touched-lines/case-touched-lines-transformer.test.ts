@@ -9,7 +9,7 @@ describe('caseTouchedLinesTransformer', () => {
 
       const result = caseTouchedLinesTransformer({
         functionAnalysis,
-        reachesExit: CoverageIdStub({ value: 'formatGreeting/return@if-then' }),
+        reachesPath: [CoverageIdStub({ value: 'formatGreeting/return@if-then' })],
       });
 
       expect(result).toStrictEqual([3, 2]);
@@ -17,12 +17,12 @@ describe('caseTouchedLinesTransformer', () => {
   });
 
   describe('an unknown exit', () => {
-    it('EMPTY: {reachesExit not found} => no touched lines', () => {
+    it('EMPTY: {reachesPath id not found} => no touched lines', () => {
       const functionAnalysis = FunctionAnalysisStub();
 
       const result = caseTouchedLinesTransformer({
         functionAnalysis,
-        reachesExit: CoverageIdStub({ value: 'nope/exit@x' }),
+        reachesPath: [CoverageIdStub({ value: 'nope/exit@x' })],
       });
 
       expect(result).toStrictEqual([]);

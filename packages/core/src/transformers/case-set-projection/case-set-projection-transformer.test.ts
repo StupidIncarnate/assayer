@@ -19,7 +19,7 @@ describe('caseSetProjectionTransformer', () => {
             name: 'formatGreeting',
             access: { kind: 'named' },
             exitIds: ['formatGreeting/return@if-then'],
-            cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
           },
         ],
         gaps: [],
@@ -58,7 +58,7 @@ describe('caseSetProjectionTransformer', () => {
           name: 'classify',
           access: { kind: 'method', className: 'Classifier', constructable: true },
           exitIds: ['formatGreeting/return@if-then'],
-          cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+          cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
         },
       ]);
     });
@@ -80,7 +80,7 @@ describe('caseSetProjectionTransformer', () => {
             },
             branches: [],
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-            cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
+            cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], salient: true }],
           }),
         ],
       });
@@ -96,7 +96,7 @@ describe('caseSetProjectionTransformer', () => {
           name: '*module*',
           access: { kind: 'module' },
           exitIds: ['*module*/exit@top'],
-          cases: [{ reachesExit: '*module*/exit@top', arrange: [], salient: true }],
+          cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], salient: true }],
         },
       ]);
     });
@@ -119,7 +119,7 @@ describe('caseSetProjectionTransformer', () => {
             },
             branches: [],
             exits: [{ coverageId: '*module*/exit@if-then', kind: 'implicit', guardPath: [], line: 3 }],
-            cases: [{ reachesExit: '*module*/exit@if-then', arrange: [], salient: true }],
+            cases: [{ reachesPath: ['*module*/exit@if-then'], arrange: [], salient: true }],
           }),
         ],
       });
@@ -135,7 +135,7 @@ describe('caseSetProjectionTransformer', () => {
           name: '*module*',
           access: { kind: 'module' },
           exitIds: ['*module*/exit@if-then'],
-          cases: [{ reachesExit: '*module*/exit@if-then', arrange: [], salient: true }],
+          cases: [{ reachesPath: ['*module*/exit@if-then'], arrange: [], salient: true }],
         },
       ]);
     });

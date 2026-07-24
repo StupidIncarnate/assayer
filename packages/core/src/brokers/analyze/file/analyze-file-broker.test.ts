@@ -22,8 +22,8 @@ describe('analyzeFileBroker', () => {
       const result = analyzeFileBroker({ walked });
 
       expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-        { reachesExit: `${GREETING_BRANCH.replace('/if:', '/return@if:')}#then`, arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
-        { reachesExit: `${GREETING_BRANCH.replace('/if:', '/return@if:')}#else`, arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
+        { reachesPath: [`${GREETING_BRANCH.replace('/if:', '/return@if:')}#then`], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
+        { reachesPath: [`${GREETING_BRANCH.replace('/if:', '/return@if:')}#else`], arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
       ]);
     });
 
@@ -113,7 +113,7 @@ describe('analyzeFileBroker', () => {
             ],
             // The live `then` arm: importing the module runs it with `value` welded to 7, reaching that
             // exit. It arranges nothing — the welded value is fixed in the source, not a settable input.
-            cases: [{ reachesExit: `${MODULE_BRANCH.replace('/if:', '/exit@if:')}#then`, arrange: [], salient: true }],
+            cases: [{ reachesPath: [`${MODULE_BRANCH.replace('/if:', '/exit@if:')}#then`], arrange: [], salient: true }],
           },
         ],
         enrichment: [{ line: 3, symbol: 'value', typeText: 'number', range: [6, 5] }],
@@ -175,10 +175,11 @@ describe('analyzeFileBroker', () => {
       expect(result.functions.map((fn) => fn.entry.name)).toStrictEqual(['outer']);
     });
 
-    // `inner`'s `if` is real logic, and `outer` passes its own `value` straight into `inner` — so the
-    // call graph reaches it and `inner` becomes a DRIVEN entry, its branch covered through `outer`,
-    // not admitted undriven. Its access names the caller the runner drives.
-    it('VALID: {a nested helper with a branch reached by passthrough} => driven through its caller, not undriven', () => {
+    // `inner`'s `if` is real logic, and `outer`'s only exit is `return inner(value)` — so `inner` cannot
+    // be reached without calling `outer`, and its steering values FUNNEL into `outer`'s own case set.
+    // `outer` is the SOLE entry: its two cases path through inner's exit then outer's return, arranged in
+    // outer's own param. `inner` is no separate entry and admits nothing.
+    it('VALID: {a nested helper with a branch returned by the surface} => funnelled into it, not a separate entry', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function outer(value: number): string {\n  function inner(n: number): string {\n    if (n > 5) {\n      return 'inner big';\n    }\n\n    return 'inner small';\n  }\n\n  return inner(value);\n}\n";
@@ -186,13 +187,21 @@ describe('analyzeFileBroker', () => {
 
       const result = analyzeFileBroker({ walked });
 
+      const innerBranch = '*module*/outer/inner/return@if:BinaryExpression,id:n,GreaterThanToken,num:5';
+
       expect({
-        entries: result.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access })),
+        entries: result.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases })),
         undriven: result.undriven,
       }).toStrictEqual({
         entries: [
-          { name: 'outer', access: { kind: 'named' } },
-          { name: 'inner', access: { kind: 'through-caller', callerName: 'outer' } },
+          {
+            name: 'outer',
+            access: { kind: 'named' },
+            cases: [
+              { reachesPath: [`${innerBranch}#then`, '*module*/outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
+              { reachesPath: [`${innerBranch}#else`, '*module*/outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+            ],
+          },
         ],
         undriven: [],
       });
@@ -246,12 +255,12 @@ describe('analyzeFileBroker', () => {
           ],
           cases: [
             {
-              reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#then',
+              reachesPath: ['*module*/classify/return@if:CallExpression,id:tooBig,id:x#then'],
               arrange: [{ kind: 'param', param: 'x', value: 51 }],
               salient: true,
             },
             {
-              reachesExit: '*module*/classify/return@if:CallExpression,id:tooBig,id:x#else',
+              reachesPath: ['*module*/classify/return@if:CallExpression,id:tooBig,id:x#else'],
               arrange: [{ kind: 'param', param: 'x', value: 50 }],
               salient: true,
             },

@@ -36,6 +36,6 @@ export const FunctionAnalysisStub = ({ ...props }: StubArgument<FunctionAnalysis
         line: 3,
       },
     ],
-    cases: [{ reachesExit: 'formatGreeting/return@if-then', arrange: [{ kind: 'param', param: 'name', value: '' }] }],
+    cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }] }],
     ...props,
   });
