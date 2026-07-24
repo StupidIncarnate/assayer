@@ -400,6 +400,13 @@ Two properties must hold and are cheap to check with a probe:
   list — off disk via `syntaxSurfaceHarness` (the same `.ts`-excluding-`.test.ts` inclusion rule the
   compiler uses), so it self-maintains. The one edit a new specimen still requires is its line in
   `specimen-registry.ts`, without which the catalogue check fails.
+- **MOVING a specimen is the opposite: literal paths elsewhere break, and only at run time.** The
+  registry keys on the path, and so do consumers that name a specimen to prove a RUN behaviour —
+  `run-unit-broker.integration.test.ts` (`MODULE_SPECIMEN` and its siblings) and the app e2es, which
+  select by `data-relpath` (`detail-admissions.e2e.ts`, `detail-tests-tab.e2e.ts`). Miss one and the
+  integration ENOENTs or the e2e clicks nothing. Native grep is blocked here, so sweep with the
+  `discover` tool before and after the move. A move that changes a specimen's VERDICT (a rung flipping
+  from an admission to a driven case) also moves its bucket, which is what those consumers assert.
 - **The runner's Jest config must be IDENTICAL for every file.** ts-jest keeps one TypeScript
   compiler per distinct config and never releases it, so anything per-file in the config strands a
   whole compiler — ~370MB each, which is `assayer unit` OOM-ing partway through a real repo, not a
