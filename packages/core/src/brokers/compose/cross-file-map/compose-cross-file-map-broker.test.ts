@@ -108,4 +108,132 @@ describe('composeCrossFileMapBroker', () => {
       expect(result).toBe(analysis);
     });
   });
+
+  describe('a file that fails to parse', () => {
+    it('EMPTY: {invalid syntax} => the analysis passes through unchanged, no sibling read', () => {
+      composeCrossFileMapBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: 'const x = ;;;{{{', relPath: 'src/broken.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/broken.ts' });
+
+      const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/broken.ts' });
+
+      expect(result).toBe(analysis);
+    });
+  });
+
+  describe('a specifier that resolves to a sibling that fails to parse', () => {
+    it('EDGE: {items.map(bandReading), the sibling has invalid syntax} => the analysis passes through unchanged', () => {
+      const proxy = composeCrossFileMapBrokerProxy();
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: 'const x = ;;;{{{' });
+      const walked = tsMorphWalkFileAdapter({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' });
+
+      const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
+
+      expect(result).toBe(analysis);
+    });
+  });
+
+  describe('a specifier that resolves to a sibling exporting no function by the imported name', () => {
+    it('EDGE: {items.map(bandReading), the sibling exports a differently-named function} => the analysis passes through unchanged', () => {
+      const proxy = composeCrossFileMapBrokerProxy();
+      proxy.setupSibling({
+        fileName: '/repo/src/band-reading.ts',
+        source: 'export function notBandReading(n: number): string {\n  return String(n);\n}\n',
+      });
+      const walked = tsMorphWalkFileAdapter({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' });
+
+      const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
+
+      expect(result).toBe(analysis);
+    });
+  });
+
+  describe('a file with a second function unrelated to any cross-file map', () => {
+    it('VALID: {bandReadings maps bandReading, grade is a separate plain function} => grade`s function record is untouched by the fold', () => {
+      const proxy = composeCrossFileMapBrokerProxy();
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE });
+      const source = PARENT_SOURCE + PLAIN_SOURCE;
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/cross-file-map.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' });
+
+      const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
+
+      const gradeIndex = analysis.functions.findIndex((fn) => String(fn.entry.name) === 'grade');
+
+      expect(result.functions[gradeIndex]).toStrictEqual(analysis.functions[gradeIndex]);
+    });
+  });
+
+  describe('a surface mapping two imported functions over two distinct array params', () => {
+    const TWO_CALLBACK_PARENT_SOURCE =
+      "import { bandReading } from './band-reading';\n" +
+      "import { otherReading } from './other-reading';\n" +
+      'export function bandReadings(items: number[], others: number[]): string[] {\n' +
+      '  const bandResults = items.map(bandReading);\n' +
+      '  const otherResults = others.map(otherReading);\n' +
+      '  return [...bandResults, ...otherResults];\n' +
+      '}\n';
+    const SIMPLE_CHILD_A = 'export function bandReading(n: number): string {\n  return String(n);\n}\n';
+    const SIMPLE_CHILD_B = 'export function otherReading(n: number): string {\n  return String(n * 2);\n}\n';
+    const BAND_EXIT = '*module*/bandReading/return@top';
+    const OTHER_EXIT = '*module*/otherReading/return@top';
+
+    it('VALID: {items.map(bandReading), others.map(otherReading), same host} => the cartesian of both callbacks funnels into ONE case set', () => {
+      const proxy = composeCrossFileMapBrokerProxy();
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SIMPLE_CHILD_A });
+      proxy.setupSibling({ fileName: '/repo/src/other-reading.ts', source: SIMPLE_CHILD_B });
+      const walked = tsMorphWalkFileAdapter({ source: TWO_CALLBACK_PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+
+      const result = composeCrossFileMapBroker({
+        analysis: analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' }),
+        walked,
+        root: '/repo',
+        relPath: 'src/cross-file-map.ts',
+      });
+
+      expect(result.functions.map((fn) => ({ name: fn.entry.name, cases: fn.cases }))).toStrictEqual([
+        {
+          name: 'bandReadings',
+          cases: [
+            {
+              reachesPath: [READINGS_EXIT],
+              arrange: [
+                { kind: 'array', param: 'items', value: [] },
+                { kind: 'array', param: 'others', value: [] },
+              ],
+              salient: true,
+            },
+            {
+              reachesPath: [OTHER_EXIT, READINGS_EXIT],
+              arrange: [
+                { kind: 'array', param: 'items', value: [] },
+                { kind: 'array', param: 'others', value: [7] },
+              ],
+              salient: true,
+            },
+            {
+              reachesPath: [BAND_EXIT, READINGS_EXIT],
+              arrange: [
+                { kind: 'array', param: 'items', value: [7] },
+                { kind: 'array', param: 'others', value: [] },
+              ],
+              salient: true,
+            },
+            {
+              reachesPath: [BAND_EXIT, OTHER_EXIT, READINGS_EXIT],
+              arrange: [
+                { kind: 'array', param: 'items', value: [7] },
+                { kind: 'array', param: 'others', value: [7] },
+              ],
+              salient: true,
+            },
+          ],
+        },
+      ]);
+
+      expect(result.functions[0]?.exits.map((exit) => String(exit.coverageId))).toStrictEqual([READINGS_EXIT, BAND_EXIT, OTHER_EXIT]);
+    });
+  });
 });

@@ -38,6 +38,96 @@ describe('handleClassLayerAdapter', () => {
         }),
       ]);
     });
+
+    // An anonymous default-export class has no identifier `node.getName()` could return, so the handler
+    // falls back to the literal name 'default' — the only name a class expression's own descent could
+    // ever attach a coverage path to.
+    it('VALID: {anonymous default-export class} => names it "default", never undefined', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export default class {\n  m(): void {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect({ scopePath: result.nodes[0]?.scopePath, name: result.nodes[0]?.name }).toStrictEqual({
+        scopePath: ['*module*', 'default'],
+        name: 'default',
+      });
+    });
+  });
+
+  // A class DECLARES a shape too — its instance type, on the same flat channel an `interface`/`type`
+  // declaration uses (packages/core/CLAUDE.md §3) — so a sibling taking a `Point` gets the same answer
+  // whether `Point` is an interface or a class.
+  describe('the instance shape it declares', () => {
+    it('VALID: {a named class} => the instance shape, keyed by the class name, on the SAME channel an interface uses', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'class Point {\n  x: number = 0;\n  y: number = 0;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.declaredShapes).toStrictEqual([
+        {
+          name: 'Point',
+          type: {
+            kind: 'object',
+            typeName: 'Point',
+            properties: [
+              { name: 'x', type: { kind: 'number' } },
+              { name: 'y', type: { kind: 'number' } },
+            ],
+          },
+        },
+      ]);
+    });
+
+    it('VALID: {a generic class} => the shape carries its type PARAMETERS beside the descriptor', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'class Box<T> {\n  value: T | undefined;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.declaredShapes).toStrictEqual([
+        {
+          name: 'Box',
+          type: {
+            kind: 'object',
+            typeName: 'Box',
+            properties: [{ name: 'value', type: { kind: 'unknown', text: 'T | undefined' } }],
+          },
+          typeParams: ['T'],
+        },
+      ]);
+    });
+
+    // Only a NAMED class declares a shape a reference could resolve by — a class expression, even one
+    // bound to a `const`, has no such identifier of its own.
+    it('EMPTY: {an anonymous class} => declares NO shape at all, since no reference could name it', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export default class {\n  m(): void {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.declaredShapes).toStrictEqual([]);
+    });
+
+    it('EMPTY: {a class expression} => declares NO shape either, for the same reason', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const C = class {\n  m(): void {}\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassExpression);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.declaredShapes).toStrictEqual([]);
+    });
   });
 
   describe('export reach handed to members', () => {
@@ -77,6 +167,20 @@ describe('handleClassLayerAdapter', () => {
           enclosingClass: { name: 'C', constructable: true },
         }),
       ]);
+    });
+
+    // A class EXPRESSION declares no exported binding of its own — `isExported()` only exists on a
+    // declaration — so its members inherit the export reach the enclosing context already carries.
+    it('VALID: {class expression, exported context} => hands members exported: true FROM THE CONTEXT', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export const C = class {\n  m(): void {}\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassExpression);
+      const exportedContext = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true });
+
+      const result = handleClassLayerAdapter({ node, context: exportedContext });
+
+      expect(result.descents.map((descent) => descent.context.exported)).toStrictEqual([true]);
     });
   });
 
@@ -119,6 +223,23 @@ describe('handleClassLayerAdapter', () => {
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export class C {\n  constructor(a?: string, b: number = 1) {}\n  m(): void {}\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.context.enclosingClass)).toStrictEqual([
+        { name: 'C', constructable: true },
+        { name: 'C', constructable: true },
+      ]);
+    });
+
+    it('VALID: {constructor whose only parameter is a rest parameter} => constructable', () => {
+      handleClassLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export class C {\n  constructor(...args: string[]) {}\n  m(): void {}\n}\n',
       );
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 

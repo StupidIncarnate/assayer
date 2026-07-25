@@ -29,6 +29,32 @@ describe('caseSetProjectionTransformer', () => {
       });
     });
 
+    // A FUNNEL entry's case reaches a PRIVATE's exit before the surface's own return, so that id is not
+    // among the entry's own `exits` at all — the union must ADD it, not just echo the entry's own exits.
+    it('VALID: {a case reaching an exit not among the entry\'s own} => the union of both sources', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            exits: [{ coverageId: 'audit/return@top', kind: 'return', guardPath: [], line: 5 }],
+            cases: [
+              {
+                reachesPath: ['audit/return@top', 'helper/return@if-then'],
+                arrange: [{ kind: 'param', param: 'name', value: '' }],
+              },
+            ],
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/audit.ts',
+        modulePath: '/abs/src/audit.ts',
+      });
+
+      expect(result.entries.map((entry) => entry.exitIds)).toStrictEqual([['audit/return@top', 'helper/return@if-then']]);
+    });
+
     // A method is reachable — through an instance — so it is RUNNABLE, not a gap. Driving it as
     // though it were a named export is what reported correct code as failing.
     it('VALID: {a method of a zero-arg class} => runnable, carrying the access that reaches it', () => {

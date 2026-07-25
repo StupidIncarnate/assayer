@@ -33,6 +33,25 @@ describe('compileStubGraphBroker (integration)', () => {
 
       expect(JSON.stringify(second.index)).toBe(JSON.stringify(first.index));
     });
+
+    // The pre-run contradiction check reads this SECOND return channel independently of `index` — a
+    // committed overlay correcting `mode` is judged against exactly this guard. Asserted separately from
+    // the object-stub shape above because it is a distinct producer (`gatherPropertyGuardsTransformer`)
+    // wired through the same broker call.
+    it("VALID: {decide(config) branches on config.mode === 'a'} => one property guard naming Config#mode, this file as reader, line 6, eq 'a', string operand type", async () => {
+      const result = await stitch.stubBranchLocal();
+
+      expect(result.guards).toStrictEqual([
+        {
+          key: `${BRANCH_LOCAL_REL}#Config`,
+          property: 'mode',
+          reader: BRANCH_LOCAL_REL,
+          line: 6,
+          predicate: { kind: 'eq', literal: 'a' },
+          operandType: { kind: 'string' },
+        },
+      ]);
+    });
   });
 
   describe('the cross-file-shape specimen: one Config, two importing readers, unioned into one stub', () => {
@@ -78,6 +97,34 @@ describe('compileStubGraphBroker (integration)', () => {
 
       expect(JSON.stringify(second.index)).toBe(JSON.stringify(first.index));
     });
+
+    // Two readers of the SAME imported Config produce two guards keyed on the ONE definition (types.ts),
+    // sorted by reader relPath — never the object-stub's readers[] list, which only names files, not
+    // branches. Each reader's operand types `unknown`/`any`: the hermetic per-file walk cannot resolve an
+    // IMPORTED param's shape (§5.10), so a guard's operandType differs from the same-file branch-local
+    // guard above even though both compare against a string property.
+    it("VALID: {mode read in cross-file-shape.ts, region read in reader-b.ts, both on the imported Config} => two guards keyed on types.ts#Config, sorted by reader, each operand type unknown/any", async () => {
+      const result = await stitch.stubCrossFileShape();
+
+      expect(result.guards).toStrictEqual([
+        {
+          key: `${CROSS_FILE_SHAPE_TYPES_REL}#Config`,
+          property: 'mode',
+          reader: CROSS_FILE_SHAPE_READERS[0],
+          line: 4,
+          predicate: { kind: 'eq', literal: 'a' },
+          operandType: { kind: 'unknown', text: 'any' },
+        },
+        {
+          key: `${CROSS_FILE_SHAPE_TYPES_REL}#Config`,
+          property: 'region',
+          reader: CROSS_FILE_SHAPE_READERS[1],
+          line: 4,
+          predicate: { kind: 'eq', literal: 'us' },
+          operandType: { kind: 'unknown', text: 'any' },
+        },
+      ]);
+    });
   });
 
   describe('the env-object multi-read specimen stitched into its stub index', () => {
@@ -119,6 +166,15 @@ describe('compileStubGraphBroker (integration)', () => {
       const second = await stitch.stubMultiRead();
 
       expect(JSON.stringify(second.index)).toBe(JSON.stringify(first.index));
+    });
+
+    // Both branches compare `process.env` reads, never an object-member operand, so neither leaf carries
+    // an `operandPropertyPath` and the guard gatherer contributes nothing — the env twin never leaks a
+    // spurious object guard.
+    it('VALID: {CODE and MODE are both env reads, not object-member reads} => no property guards', async () => {
+      const result = await stitch.stubMultiRead();
+
+      expect(result.guards).toStrictEqual([]);
     });
   });
 });

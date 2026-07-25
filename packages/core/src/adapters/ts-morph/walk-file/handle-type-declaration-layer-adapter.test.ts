@@ -1,5 +1,5 @@
 import { Project, SyntaxKind } from 'ts-morph';
-import type { InterfaceDeclaration, TypeAliasDeclaration } from 'ts-morph';
+import type { EnumDeclaration, InterfaceDeclaration, TypeAliasDeclaration } from 'ts-morph';
 
 import { WalkContextStub } from '../../../contracts/walk-context/walk-context.stub';
 import { handleTypeDeclarationLayerAdapter } from './handle-type-declaration-layer-adapter';
@@ -16,6 +16,11 @@ const aliasOf = ({ source }: { source: string }): TypeAliasDeclaration =>
   new Project({ useInMemoryFileSystem: true })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.TypeAliasDeclaration);
+
+const enumOf = ({ source }: { source: string }): EnumDeclaration =>
+  new Project({ useInMemoryFileSystem: true })
+    .createSourceFile('src/x.ts', source)
+    .getFirstDescendantByKindOrThrow(SyntaxKind.EnumDeclaration);
 
 describe('handleTypeDeclarationLayerAdapter', () => {
   describe('the shape it records', () => {
@@ -102,6 +107,75 @@ describe('handleTypeDeclarationLayerAdapter', () => {
 
       expect(result.declaredShapes).toStrictEqual([
         { name: 'Empty', type: { kind: 'object', typeName: 'Empty', properties: [] } },
+      ]);
+    });
+
+    // An enum belongs on the SAME channel an alias to a literal union does: a reader typed `Level`
+    // demands exactly what the enum's members enumerate, and the same reader answers both.
+    it('VALID: {an enum} => the union of its member values, under the declared name', () => {
+      handleTypeDeclarationLayerAdapterProxy();
+
+      const result = handleTypeDeclarationLayerAdapter({
+        node: enumOf({ source: 'enum Level {\n  Low,\n  High,\n}\n' }),
+        context: MODULE_CONTEXT,
+      });
+
+      expect(result.declaredShapes).toStrictEqual([
+        {
+          name: 'Level',
+          type: {
+            kind: 'union',
+            members: [
+              { kind: 'literal', value: 0 },
+              { kind: 'literal', value: 1 },
+            ],
+          },
+        },
+      ]);
+    });
+
+    // The declaration's type PARAMETERS ride beside the descriptor, in order — the slots a reference's
+    // type ARGUMENTS fill (packages/core/CLAUDE.md §4) — for both an interface and an alias to an
+    // object literal.
+    it('VALID: {a generic interface} => the shape carries its type PARAMETERS beside the descriptor', () => {
+      handleTypeDeclarationLayerAdapterProxy();
+
+      const result = handleTypeDeclarationLayerAdapter({
+        node: interfaceOf({ source: 'export interface Box<T> {\n  value: T;\n}\n' }),
+        context: MODULE_CONTEXT,
+      });
+
+      expect(result.declaredShapes).toStrictEqual([
+        {
+          name: 'Box',
+          type: {
+            kind: 'object',
+            typeName: 'Box',
+            properties: [{ name: 'value', type: { kind: 'unknown', text: 'T', typeRef: 'T' } }],
+          },
+          typeParams: ['T'],
+        },
+      ]);
+    });
+
+    it('VALID: {a generic type alias} => the SAME shape a generic interface gives', () => {
+      handleTypeDeclarationLayerAdapterProxy();
+
+      const result = handleTypeDeclarationLayerAdapter({
+        node: aliasOf({ source: 'export type Box<T> = {\n  value: T;\n};\n' }),
+        context: MODULE_CONTEXT,
+      });
+
+      expect(result.declaredShapes).toStrictEqual([
+        {
+          name: 'Box',
+          type: {
+            kind: 'object',
+            typeName: 'Box',
+            properties: [{ name: 'value', type: { kind: 'unknown', text: 'T', typeRef: 'T' } }],
+          },
+          typeParams: ['T'],
+        },
       ]);
     });
   });

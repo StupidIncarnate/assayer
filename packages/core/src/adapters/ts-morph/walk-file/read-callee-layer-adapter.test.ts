@@ -164,5 +164,34 @@ describe('readCalleeLayerAdapter', () => {
 
       expect(result).toStrictEqual({ target: 'unresolved' });
     });
+
+    // Overload signatures share one SYMBOL across several declaration nodes, so `getDeclarations()`
+    // returns more than one and there is no single declaration to resolve a link from.
+    it('EDGE: {a call to an overloaded function} => unresolved, since its symbol carries MULTIPLE declarations', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({
+          source:
+            'function f(a: number): void;\nfunction f(a: string): void;\nfunction f(a: unknown): void {}\nf(1);\n',
+        }),
+      });
+
+      expect(result).toStrictEqual({ target: 'unresolved' });
+    });
+
+    // The hermetic walk's project resolves the standard LIBRARY (§5.10), so a bare call to an ambient
+    // global function (`parseInt`) is a real single-file-walk input whose declaration sits in
+    // `lib.es5.d.ts` — a DIFFERENT source file from the one being walked. That is a genuine call
+    // target the single-file parse cannot own, never a fabricated one: the walk parses no other
+    // project file, so a declaration outside the file being walked is unresolved on principle, the
+    // same as a namespace member or a method call above.
+    it('VALID: {a call to an ambient global function} => unresolved, since its declaration lives OUTSIDE this file', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({ callee: calleeOf({ source: "parseInt('1');\n" }) });
+
+      expect(result).toStrictEqual({ target: 'unresolved' });
+    });
   });
 });

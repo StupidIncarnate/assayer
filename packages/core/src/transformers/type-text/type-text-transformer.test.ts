@@ -8,6 +8,14 @@ describe('typeTextTransformer', () => {
       expect(typeTextTransformer({ type: { kind: 'string' } })).toBe('string');
     });
 
+    it('VALID: {type: number} => returns "number"', () => {
+      expect(typeTextTransformer({ type: { kind: 'number' } })).toBe('number');
+    });
+
+    it('VALID: {type: boolean} => returns "boolean"', () => {
+      expect(typeTextTransformer({ type: { kind: 'boolean' } })).toBe('boolean');
+    });
+
     it('VALID: {type: unknown void} => returns the carried text', () => {
       expect(typeTextTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'void' }) })).toBe('void');
     });
@@ -59,6 +67,10 @@ describe('typeTextTransformer', () => {
           }),
         }),
       ).toBe('{ a: string; b: number }');
+    });
+
+    it('EMPTY: {type: anonymous object with no properties} => renders the empty braces', () => {
+      expect(typeTextTransformer({ type: TypeDescriptorStub({ kind: 'object', properties: [] }) })).toBe('{  }');
     });
   });
 });

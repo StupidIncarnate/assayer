@@ -217,6 +217,125 @@ describe('causeArrangeTransformer', () => {
     });
   });
 
+  // A WELDED operand seeds a single-value domain the guard's arm values then intersect onto — the
+  // analyzer EVALUATES it rather than treating it as a case-set input.
+  describe('an operand welded to a same-file constant', () => {
+    const CONST_LEAF = ConditionLeafStub({
+      id: 'x#leaf',
+      operandParamName: 'level',
+      operandConstValue: 7,
+      operandType: { kind: 'number' },
+      predicate: { kind: 'gt', literal: 5 },
+    });
+
+    it('VALID: {const 7, guard > 5, want true} => the live arm arranges the constant itself', () => {
+      const result = causeArrangeTransformer({
+        requirements: [{ leaf: CONST_LEAF, want: true }],
+        params: [ParamDescriptorStub({ name: 'level', type: { kind: 'number' } })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'param', param: 'level', value: 7 }]],
+      });
+    });
+
+    it('EDGE: {const 7, guard > 5, want false} => unreachable, since 7 cannot violate its own guard', () => {
+      const result = causeArrangeTransformer({
+        requirements: [{ leaf: CONST_LEAF, want: false }],
+        params: [ParamDescriptorStub({ name: 'level', type: { kind: 'number' } })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({ unreachable: true, unfillable: [], arrangements: [] });
+    });
+
+    // The array twin: a const array's LENGTH seeds the domain the length guard intersects onto.
+    it('EDGE: {const array of length 2, guard length===5} => unreachable, the length can never satisfy it', () => {
+      const result = causeArrangeTransformer({
+        requirements: [
+          {
+            leaf: ConditionLeafStub({
+              id: 'y#leaf',
+              operandParamName: 'xs',
+              operandConstLength: 2,
+              operandType: { kind: 'array', element: { kind: 'number' } },
+              predicate: { kind: 'length-eq', literal: 5 },
+            }),
+            want: true,
+          },
+        ],
+        params: [ParamDescriptorStub({ name: 'xs', type: { kind: 'array', element: { kind: 'number' } } })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({ unreachable: true, unfillable: [], arrangements: [] });
+    });
+  });
+
+  // Distinct operands multiply, not zip: two operands each fanning out to two remaining union members
+  // must cross into all four combinations.
+  describe('two distinct multi-valued operands', () => {
+    it('VALID: {two 3-member unions, both eq-else} => the full four-way cartesian product', () => {
+      const statusType = TypeDescriptorStub({
+        kind: 'union',
+        members: [
+          TypeDescriptorStub({ kind: 'literal', value: 'a' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'b' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'c' }),
+        ],
+      });
+      const methodType = TypeDescriptorStub({
+        kind: 'union',
+        members: [
+          TypeDescriptorStub({ kind: 'literal', value: 'get' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'post' }),
+          TypeDescriptorStub({ kind: 'literal', value: 'delete' }),
+        ],
+      });
+
+      const result = causeArrangeTransformer({
+        requirements: [
+          {
+            leaf: ConditionLeafStub({ id: 's#leaf', operandParamName: 'status', operandType: statusType, predicate: { kind: 'eq', literal: 'a' } }),
+            want: false,
+          },
+          {
+            leaf: ConditionLeafStub({ id: 'm#leaf', operandParamName: 'method', operandType: methodType, predicate: { kind: 'eq', literal: 'get' } }),
+            want: false,
+          },
+        ],
+        params: [ParamDescriptorStub({ name: 'status', type: statusType }), ParamDescriptorStub({ name: 'method', type: methodType })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [
+          [
+            { kind: 'param', param: 'status', value: 'b' },
+            { kind: 'param', param: 'method', value: 'post' },
+          ],
+          [
+            { kind: 'param', param: 'status', value: 'b' },
+            { kind: 'param', param: 'method', value: 'delete' },
+          ],
+          [
+            { kind: 'param', param: 'status', value: 'c' },
+            { kind: 'param', param: 'method', value: 'post' },
+          ],
+          [
+            { kind: 'param', param: 'status', value: 'c' },
+            { kind: 'param', param: 'method', value: 'delete' },
+          ],
+        ],
+      });
+    });
+  });
+
   describe('an operand read from the environment', () => {
     // The whole feature in one assertion: a module scope has no params, so this arrangement would be
     // EMPTY without the env binding — and two empty arrangements claiming different exits is the
@@ -262,6 +381,23 @@ describe('causeArrangeTransformer', () => {
       });
 
       expect(result).toStrictEqual({ unreachable: false, unfillable: [], arrangements: [[]] });
+    });
+
+    // envDrivable alone is not enough — a leaf with no `operandEnvVarName` names no environment
+    // variable, so a plain param stays a param binding even when the entry it belongs to is a module
+    // scope the environment could otherwise drive.
+    it('VALID: {envDrivable, but the leaf names no env var} => a plain param binding, no env binding added', () => {
+      const result = causeArrangeTransformer({
+        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        params: [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'param', param: 'score', value: 6 }]],
+      });
     });
   });
 

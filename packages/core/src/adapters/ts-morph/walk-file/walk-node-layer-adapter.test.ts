@@ -56,5 +56,40 @@ describe('walkNodeLayerAdapter', () => {
         { kind: 'ForOfStatement', handled: false },
       ]);
     });
+
+    it('VALID: {calls, a value use and an exported binding at module scope} => each channel is CLAIMED onto its own scope, not dropped', () => {
+      walkNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const node = project.createSourceFile(
+        'src/f.ts',
+        "const helper = (): string => 'x';\nexport const ref = helper;\nhelper();\n",
+      );
+
+      const result = walkNodeLayerAdapter({ node, context: SEED });
+
+      expect(
+        result.scopes.map((scope) => ({
+          scopePath: scope.scopePath,
+          valueUses: scope.valueUses,
+          exportedBindings: scope.exportedBindings,
+          calls: scope.calls,
+        })),
+      ).toStrictEqual([
+        {
+          scopePath: ['*module*'],
+          valueUses: [{ target: 'local', name: 'helper', startLine: 1 }],
+          exportedBindings: ['ref'],
+          calls: [
+            {
+              callee: { target: 'local', name: 'helper', startLine: 1 },
+              args: [],
+              guardPath: [],
+              position: { line: 3, column: 1 },
+            },
+          ],
+        },
+        { scopePath: ['*module*', 'helper'], valueUses: [], exportedBindings: [], calls: [] },
+      ]);
+    });
   });
 });

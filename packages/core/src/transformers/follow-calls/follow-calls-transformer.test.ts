@@ -17,6 +17,20 @@ const DEAD_SURFACE_MESSAGE =
   'its own file, and nothing here reaches it. Delete it, or consume it from a caller that passes an ' +
   'input straight through — which the follower would then drive.';
 
+const CALLBACK_UNDRIVEN_REASON =
+  'it is an inline callback this file reaches by passing it to a call, so it is not dead surface — but ' +
+  'Assayer cannot yet steer the value its parameter binds to: that value is supplied by the function ' +
+  'it is passed to, not by an input any case controls. No harness closes this. An array-iteration ' +
+  'callback (`items.map((n) => …)`) IS driven instead, because its parameter is the array element, ' +
+  'which a case steers by choosing the array the entry receives.';
+
+const REACHED_FN_REASON =
+  'it is an inline function this file reaches without calling it by name — returned to a caller ' +
+  '(`return (n) => …`), or invoked in place with an argument no case can resolve — so it is not dead ' +
+  'surface. But no input any case controls decides the value its parameter binds to: a returned function ' +
+  'is applied by whoever receives it, and an env-sourced or opaque invocation argument is not one this ' +
+  'file provides. No harness closes this yet.';
+
 // `inner(n)` branching on `n > 5`, with a then-exit and an else-exit keyed on it — enough for the
 // follower to derive cases when it drives the callee.
 const N_BRANCH = BranchNodeStub({
@@ -128,9 +142,12 @@ describe('followCallsTransformer', () => {
 
       const result = followCallsTransformer({ walked });
 
-      expect({ followed: result.followedEntries, undriven: result.undriven.map((entry) => entry.name) }).toStrictEqual({
+      expect({
+        followed: result.followedEntries,
+        undriven: result.undriven.map((entry) => ({ name: entry.name, reason: entry.reason })),
+      }).toStrictEqual({
         followed: [],
-        undriven: ['closure'],
+        undriven: [{ name: 'closure', reason: REACHED_FN_REASON }],
       });
     });
   });
@@ -238,6 +255,128 @@ describe('followCallsTransformer', () => {
       const result = followCallsTransformer({ walked });
 
       expect({ followed: result.followedEntries, undriven: result.undriven }).toStrictEqual({ followed: [], undriven: [] });
+    });
+  });
+
+  describe('a branchless surface directly returning a same-file private (a named funnel)', () => {
+    it('VALID: {outer(value) { return inner(value); }} => inner funnels into outer, no separate followed entry, nothing undriven or linted', () => {
+      const outer = ScopeRecordStub({
+        scopePath: ['*module*', 'outer'],
+        name: 'outer',
+        access: { kind: 'named' },
+        params: [{ name: 'value', type: { kind: 'number' } }],
+        startLine: 1,
+        endLine: 9,
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'outer/return@top', kind: 'return', guardPath: [], line: 9 })],
+        calls: [
+          CallSiteStub({
+            callee: { target: 'local', name: 'inner', startLine: 2 },
+            args: [{ kind: 'param-ref', paramName: 'value' }],
+            guardPath: [],
+            position: { line: 9, column: 10 },
+          }),
+        ],
+      });
+      const walked = WalkFileResultStub({ scopes: [outer, branchingPrivate({ name: 'inner' })] });
+
+      const result = followCallsTransformer({ walked });
+
+      expect({
+        followed: result.followedEntries,
+        undriven: result.undriven,
+        lints: result.lints,
+        funnels: result.funnels,
+        refusals: result.refusals,
+      }).toStrictEqual({
+        followed: [],
+        undriven: [],
+        lints: [],
+        funnels: [
+          {
+            host: 'outer',
+            hostLine: 1,
+            cases: [
+              { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
+              { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+            ],
+            unreachable: [],
+          },
+        ],
+        refusals: [],
+      });
+    });
+  });
+
+  describe('a reached callback nothing can yet steer', () => {
+    // The call is not an array-iteration method (no `receiver`/`method` at all), so the callback is
+    // REACHED — it is not dead surface — but its parameter binds to whatever the function it is passed
+    // to supplies, which no case controls.
+    it('VALID: {schedule(cb)} => cb is undriven, worded by the callback reason, not dead surface', () => {
+      const host = ScopeRecordStub({
+        scopePath: ['*module*', 'runner'],
+        name: 'runner',
+        access: { kind: 'named' },
+        params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
+        returnType: { kind: 'number' },
+        startLine: 1,
+        endLine: 8,
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'runner/return@top', guardPath: [], line: 1 })],
+        calls: [CallSiteStub({ callee: { target: 'unresolved' }, args: [{ kind: 'callback', startLine: 2 }] })],
+      });
+      const walked = WalkFileResultStub({ scopes: [host, branchingPrivate({ name: 'cb' })] });
+
+      const result = followCallsTransformer({ walked });
+
+      expect({ followed: result.followedEntries, undriven: result.undriven, lints: result.lints }).toStrictEqual({
+        followed: [],
+        undriven: [{ name: 'cb', startLine: 2, endLine: 7, reason: CALLBACK_UNDRIVEN_REASON }],
+        lints: [],
+      });
+    });
+  });
+
+  describe('a drivable callback mapped over a BRANCHING host`s array param', () => {
+    // A branching host does not qualify for the funnel (that needs branches.length === 0), so the
+    // callback still gets its OWN through-caller entry — the code path funnelling reserves for a
+    // branchless host does not apply here.
+    it('VALID: {items.map((n) => { if … }) inside a host with its own branch} => cb followed as its own through-caller entry', () => {
+      const branchingHostBranch = BranchNodeStub({
+        coverageId: 'runner/if:flag',
+        condition: { kind: 'leaf', id: 'runner/if:flag#leaf', operandParamName: 'flag', operandType: { kind: 'boolean' }, predicate: { kind: 'truthy' } },
+      });
+      const host = ScopeRecordStub({
+        scopePath: ['*module*', 'runner'],
+        name: 'runner',
+        access: { kind: 'named' },
+        params: [
+          { name: 'flag', type: { kind: 'boolean' } },
+          { name: 'items', type: { kind: 'array', element: { kind: 'number' } } },
+        ],
+        returnType: { kind: 'array', element: { kind: 'number' } },
+        startLine: 1,
+        endLine: 10,
+        branches: [branchingHostBranch],
+        exits: [
+          ExitNodeStub({ coverageId: 'runner/return@then', guardPath: [{ branchCoverageId: 'runner/if:flag', arm: 'then' }], line: 3 }),
+          ExitNodeStub({ coverageId: 'runner/return@else', guardPath: [{ branchCoverageId: 'runner/if:flag', arm: 'else' }], line: 6 }),
+        ],
+        calls: [CallSiteStub({ callee: { target: 'unresolved' }, args: [{ kind: 'callback', startLine: 2 }], receiver: 'items', method: 'map' })],
+      });
+      const walked = WalkFileResultStub({ scopes: [host, branchingPrivate({ name: 'cb' })] });
+
+      const result = followCallsTransformer({ walked });
+
+      expect({
+        followed: result.followedEntries.map((fn) => ({ name: fn.entry.name, access: fn.entry.access })),
+        undriven: result.undriven,
+        funnels: result.funnels,
+      }).toStrictEqual({
+        followed: [{ name: 'cb', access: { kind: 'through-caller', callerName: 'runner' } }],
+        undriven: [],
+        funnels: [],
+      });
     });
   });
 

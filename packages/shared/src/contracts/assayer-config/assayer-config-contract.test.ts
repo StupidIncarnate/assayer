@@ -46,6 +46,18 @@ describe('assayerConfigContract', () => {
 
       expect(result.stableBranch).toBe('main');
     });
+
+    it('VALID: {darkSpots: "error"} => preserved, so a repo can escalate a dark spot to a build failure', () => {
+      const result = assayerConfigContract.parse({ darkSpots: 'error' });
+
+      expect(result.darkSpots).toBe('error');
+    });
+
+    it('VALID: {deadSurface: "off"} => preserved, unlike darkSpots this channel can be silenced entirely', () => {
+      const result = assayerConfigContract.parse({ deadSurface: 'off' });
+
+      expect(result.deadSurface).toBe('off');
+    });
   });
 
   describe('invalid configs', () => {
@@ -59,6 +71,48 @@ describe('assayerConfigContract', () => {
       expect(() => {
         return assayerConfigContract.parse({ repoRoot: 123 });
       }).toThrow(/Expected string/u);
+    });
+
+    it('INVALID: {repoRoot: ""} => throws, since an empty path names no root', () => {
+      expect(() => {
+        return assayerConfigContract.parse({ repoRoot: '' });
+      }).toThrow(/String must contain at least 1 character\(s\)/u);
+    });
+
+    it('INVALID: {stableBranch: ""} => throws, since an empty branch name names nothing to diff against', () => {
+      expect(() => {
+        return assayerConfigContract.parse({ stableBranch: '' });
+      }).toThrow(/String must contain at least 1 character\(s\)/u);
+    });
+
+    it('INVALID: {exclude: [""]} => throws, since an empty glob pattern excludes nothing', () => {
+      expect(() => {
+        return assayerConfigContract.parse({ exclude: [''] });
+      }).toThrow(/String must contain at least 1 character\(s\)/u);
+    });
+
+    it('INVALID: {darkSpots: "off"} => throws, since darkSpots (unlike deadSurface/inputGaps) admits no off value', () => {
+      expect(() => {
+        return assayerConfigContract.parse({ darkSpots: 'off' });
+      }).toThrow(/Invalid enum value\. Expected 'warn' \| 'error', received 'off'/u);
+    });
+
+    it('INVALID: {deadSurface: "bogus"} => throws validation error', () => {
+      expect(() => {
+        return assayerConfigContract.parse({ deadSurface: 'bogus' });
+      }).toThrow(/Invalid enum value\. Expected 'off' \| 'warn' \| 'error', received 'bogus'/u);
+    });
+
+    it('INVALID: {inputGaps: "bogus"} => throws validation error', () => {
+      expect(() => {
+        return assayerConfigContract.parse({ inputGaps: 'bogus' });
+      }).toThrow(/Invalid enum value\. Expected 'off' \| 'warn' \| 'error', received 'bogus'/u);
+    });
+
+    it('INVALID: {runMode: "bogus"} => throws validation error', () => {
+      expect(() => {
+        return assayerConfigContract.parse({ runMode: 'bogus' });
+      }).toThrow(/Invalid enum value\. Expected 'thorough' \| 'intelligent', received 'bogus'/u);
     });
   });
 });

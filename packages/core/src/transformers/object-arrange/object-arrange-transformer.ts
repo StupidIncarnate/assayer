@@ -102,8 +102,10 @@ export const objectArrangeTransformer = ({
       if (propertyRequirements.length === 0) {
         // Unconstrained: a usable demanded/corrected stub value if any, else the seam's fill. `unknown`
         // owns no value, and neither does a demand of the wrong shape, so both degrade to the same fill
-        // an un-narrowed param gets — and refuse the same way.
-        const value = usableValues[0] ?? fillValueTransformer({ type: property.type });
+        // an un-narrowed param gets — and refuse the same way. An explicit `undefined` check, never `??`:
+        // a demanded value can legitimately BE `null` (a `string | null` property), and `??` would
+        // discard that null for a freshly-built fill.
+        const value = usableValues[0] === undefined ? fillValueTransformer({ type: property.type }) : usableValues[0];
         return { name: property.name, value, unreachable: false };
       }
 
@@ -150,10 +152,15 @@ export const objectArrangeTransformer = ({
           valueDomainContract.parse({ members: demandedValues }),
         );
         const unreachable = isDomainEmptyGuard({ domain });
+        // Explicit `undefined` checks, never `??`: the domain match or the first usable value can
+        // legitimately BE `null`, and `??` would discard it for a freshly-built fill.
+        const inDomain = usableValues.find((candidate) => isValueInDomainGuard({ value: candidate, domain }));
         const value =
-          usableValues.find((candidate) => isValueInDomainGuard({ value: candidate, domain })) ??
-          usableValues[0] ??
-          fillValueTransformer({ type: property.type });
+          inDomain === undefined
+            ? usableValues[0] === undefined
+              ? fillValueTransformer({ type: property.type })
+              : usableValues[0]
+            : inDomain;
 
         return { name: property.name, value, unreachable };
       }
@@ -166,9 +173,17 @@ export const objectArrangeTransformer = ({
       const unreachable = domain !== undefined && isDomainEmptyGuard({ domain });
       // Prefer the FIRST demanded value the domain admits, then the domain's own realized value, then the
       // type's representative fill — a derived demand always contains the branch literal, so this holds.
+      // Explicit `undefined` checks, never `??`: a `??`-guarded property realizes its violating domain as
+      // exactly `{ members: [null] }` (`type-to-range`'s `non-nullish` arm), and `??` would discard that
+      // legitimate `null` for a freshly-built non-null fill.
       const preferred = domain === undefined ? undefined : usableValues.find((value) => isValueInDomainGuard({ value, domain }));
       const realized = domain === undefined ? [] : domainValuesTransformer({ domain });
-      const value = preferred ?? realized[0] ?? fillValueTransformer({ type: property.type });
+      const value =
+        preferred === undefined
+          ? realized[0] === undefined
+            ? fillValueTransformer({ type: property.type })
+            : realized[0]
+          : preferred;
 
       return { name: property.name, value, unreachable };
     });

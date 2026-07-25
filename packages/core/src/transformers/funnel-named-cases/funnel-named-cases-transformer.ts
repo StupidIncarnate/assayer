@@ -114,8 +114,13 @@ export const funnelNamedCasesTransformer = ({
 
     const cases = sub.cases.flatMap((subCase) => {
       // A steered surface param takes the private's arranged value under its own name; every other
-      // surface param goes through the shared fill seam so the surface stays callable — and a param the
-      // seam REFUSES drops the case, since the surface cannot be called at all.
+      // surface param keeps the value THIS scope's OWN derivation already arranged for it (`baseCase`) —
+      // a private scope funnelled here can carry its OWN branch (that is exactly what makes it eligible:
+      // `find-returned-private` requires one), and that branch may read a param the deeper hop never
+      // touches. A blind representative re-fill would arrange a value that does not satisfy the very
+      // guard this case's `exit` depends on — reachesPath would claim an exit the arrange cannot reach.
+      // Only a param BASE-CASE itself has no entry for falls to the shared fill seam, and a param the
+      // seam REFUSES there drops the case, since the surface cannot be called at all.
       const arrange = scopeParams.flatMap((param): ArrangeBinding[] => {
         const [calleeParam] =
           [...calleeToScope.entries()].find(([, callerParam]) => String(callerParam) === String(param.name)) ?? [];
@@ -126,6 +131,12 @@ export const funnelNamedCasesTransformer = ({
 
         if (binding !== undefined && binding.kind !== 'env') {
           return [{ ...binding, param: param.name }];
+        }
+
+        const own = baseCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(param.name));
+
+        if (own !== undefined) {
+          return [own];
         }
 
         const fill = fillParamTransformer({ param });

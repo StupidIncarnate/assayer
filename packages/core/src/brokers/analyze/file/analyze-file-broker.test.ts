@@ -466,6 +466,53 @@ describe('analyzeFileBroker', () => {
     });
   });
 
+  describe('an entry whose THROUGH-CALLER private has its own unfillable param', () => {
+    // `surface` branches on `flag` (so it is not branchless and `helper` is never funnelled) and reaches
+    // `helper` UNGUARDED, passing both of its own params straight through — `size` steers `helper`'s
+    // branch, but `report` is unconstructable independently on EACH side: `surface` needs it as its own
+    // param to pass it through at all, and `helper`'s own derivation refuses it too. `helper` is a real
+    // through-caller entry (not a funnel), so its refusal has nowhere to be filed except under its OWN
+    // name — a gap distinct from `surface`'s own.
+    const THROUGH_CALLER_SOURCE =
+      'function helper(size: number, report: (message: string) => string): string {\n' +
+      "  if (size > 5) {\n    return report('big');\n  }\n\n  return report('small');\n}\n" +
+      'export function surface(flag: boolean, size: number, report: (message: string) => string): string {\n' +
+      "  if (flag) {\n    console.log('flagged');\n  }\n\n  return helper(size, report);\n}\n";
+
+    it('VALID: {a through-caller private reached unguarded} => a gap for the private, distinct from the surface\'s own gap', () => {
+      analyzeFileBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: THROUGH_CALLER_SOURCE, relPath: 'src/surface.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
+
+      expect(result.gaps.map((gap) => String(gap.name))).toStrictEqual(['surface', 'helper']);
+    });
+  });
+
+  describe('a module scope wholly undriven by an opaque top-level branch', () => {
+    // Top-level branching on an imported binding: not a parameter, not env-sourced, not a welded
+    // constant — genuinely opaque. The module has no other branches and no unreachable exits, so it is
+    // the ONE case `whollyUndrivenModuleNames` exists for: the admission names the file, not a branch,
+    // and per-branch admissions must NOT also fire for the same scope (the suppression this composition
+    // is responsible for) — a broken suppression would double this into two admissions for one branch.
+    const OPAQUE_MODULE_SOURCE =
+      "import { flag } from './flag';\n\nif (flag) {\n  console.log('on');\n} else {\n  console.log('off');\n}\n";
+
+    it('VALID: {a top-level branch on an opaque import} => the module reads wholly undriven, on exactly one admission', () => {
+      analyzeFileBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: OPAQUE_MODULE_SOURCE, relPath: 'src/opaque-module.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/opaque-module.ts' });
+
+      expect({
+        undriven: result.undriven.map((entry) => String(entry.name)),
+        gaps: result.gaps,
+        lints: result.lints,
+        cases: result.functions.flatMap((fn) => fn.cases),
+      }).toStrictEqual({ undriven: ['*module*'], gaps: [], lints: [], cases: [] });
+    });
+  });
+
   describe('parse error', () => {
     it('ERROR: {invalid source} => empty analysis', () => {
       analyzeFileBrokerProxy();

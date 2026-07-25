@@ -253,6 +253,93 @@ describe('jestInterpretCaseAdapter', () => {
     });
   });
 
+  describe('an env binding is written before the call and restored after', () => {
+    // Snapshotted BEFORE the first write, so an absent variable comes back absent rather than ''.
+    it('VALID: {an env binding, no prior value} => visible to the entry, then restored to absent', () => {
+      jestInterpretCaseAdapterProxy();
+      const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_ABSENT';
+      Reflect.deleteProperty(process.env, NAME);
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
+
+      const result = jestInterpretCaseAdapter({
+        entry: () => probe.x(THEN, process.env[NAME]),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '6' }],
+      });
+      expect(process.env[NAME]).toBe(undefined);
+    });
+
+    it('VALID: {an env binding, a prior value} => visible to the entry, then restored to the prior value', () => {
+      jestInterpretCaseAdapterProxy();
+      const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_PRIOR';
+      process.env[NAME] = 'prior-value';
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
+
+      const result = jestInterpretCaseAdapter({
+        entry: () => probe.x(THEN, process.env[NAME]),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+      const restoredValue = process.env[NAME];
+      Reflect.deleteProperty(process.env, NAME);
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '6' }],
+      });
+      expect(restoredValue).toBe('prior-value');
+    });
+
+    // The case the PURPOSE doc calls out by name: an unrestored variable would poison every case that
+    // runs after this one, and a throw must not skip the restore in `finally`.
+    it('ERROR: {the entry throws with an env binding set} => still restored to the prior value', () => {
+      jestInterpretCaseAdapterProxy();
+      const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_THROW';
+      process.env[NAME] = 'prior-value';
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
+
+      const result = jestInterpretCaseAdapter({
+        entry: () => {
+          throw new Error('boom');
+        },
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+      const restoredValue = process.env[NAME];
+      Reflect.deleteProperty(process.env, NAME);
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'errored',
+        observedPath: [],
+        trace: [],
+        message: 'threw before reaching an exit: boom',
+      });
+      expect(restoredValue).toBe('prior-value');
+    });
+  });
+
   describe("exits that are not the entry's own", () => {
     // The bug this guards: a callback the entry invoked fires its own exit probe AFTER the entry's,
     // so "the last exit event" would judge the entry by code it merely scheduled.

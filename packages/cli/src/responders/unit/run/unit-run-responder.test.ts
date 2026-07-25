@@ -1,5 +1,5 @@
 import { jestInterpretCaseAdapter, jestProbeRuntimeAdapter } from '@assayer/core/adapters';
-import { RunResultStub, CaseResultStub, EntryGapStub, LintEntryStub, RelPathStub, DerivedTestCaseStub, CoverageIdStub } from '@assayer/shared/contracts';
+import { RunResultStub, CaseResultStub, DarkSpotStub, EntryGapStub, LintEntryStub, RelPathStub, DerivedTestCaseStub, CoverageIdStub } from '@assayer/shared/contracts';
 
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
@@ -268,6 +268,70 @@ describe('UnitRunResponder', () => {
       await expect(
         UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/wrong-predicted-path.ts'], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
       ).rejects.toThrow(new CliExactOutputError({ message: report }));
+    });
+  });
+
+  describe('a run with a dark spot', () => {
+    // A dark spot fails the build only when the repo asked (`darkSpots: 'error'`), because it is
+    // ASSAYER's debt — syntax it has no handler for — so failing by default would break every build
+    // over work the caller cannot do.
+    it('ERROR: {a dark spot, darkSpots: error} => throws the report, so the exit code is non-zero', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({ runs: [RunResultStub({ darkSpots: [DarkSpotStub()] })] });
+
+      await expect(
+        UnitRunResponder({
+          configDir: '/repo',
+          root: '/repo/src-root',
+          argv: ['src/a.ts'],
+          darkSpots: 'error',
+          deadSurface: 'error',
+          inputGaps: 'error',
+        }),
+      ).rejects.toThrow(/DARK ForStatement/u);
+    });
+
+    // The same dark spot under `warn` is REPORTED but does not fail the run — the report names it
+    // either way; the severity decides only whether the exit code follows.
+    it('VALID: {a dark spot, darkSpots: warn} => reports it without failing the run', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({ runs: [RunResultStub({ darkSpots: [DarkSpotStub()] })] });
+
+      const result = await UnitRunResponder({
+        configDir: '/repo',
+        root: '/repo/src-root',
+        argv: ['src/a.ts'],
+        darkSpots: 'warn',
+        deadSurface: 'error',
+        inputGaps: 'error',
+      });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
+          '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
+      );
+    });
+
+    // The third arm, and the sibling that makes the gap/lint ruling above a rule rather than a
+    // one-off: `off` suppresses the EXIT CODE and nothing else, so the report is byte-identical to
+    // `warn`.
+    it('VALID: {a dark spot, darkSpots: off} => still reported, and still does not fail the run', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({ runs: [RunResultStub({ darkSpots: [DarkSpotStub()] })] });
+
+      const result = await UnitRunResponder({
+        configDir: '/repo',
+        root: '/repo/src-root',
+        argv: ['src/a.ts'],
+        darkSpots: 'off',
+        deadSurface: 'error',
+        inputGaps: 'error',
+      });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
+          '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
+      );
     });
   });
 

@@ -14,6 +14,18 @@ describe('arrangeBindingContract', () => {
 
       expect(result).toStrictEqual({ kind: 'env', name: 'LEVEL', value: '6' });
     });
+
+    it('EMPTY: {kind: "env", value: ""} => parses, since the process environment can hold an empty string', () => {
+      const result = arrangeBindingContract.parse({ kind: 'env', name: 'LEVEL', value: '' });
+
+      expect(result).toStrictEqual({ kind: 'env', name: 'LEVEL', value: '' });
+    });
+
+    it('INVALID: {kind: "env", name: ""} => throws, since an empty name addresses no environment slot', () => {
+      expect(() => {
+        return arrangeBindingContract.parse({ kind: 'env', name: '', value: '6' });
+      }).toThrow(/String must contain at least 1 character\(s\)/u);
+    });
   });
 
   describe('an array binding', () => {

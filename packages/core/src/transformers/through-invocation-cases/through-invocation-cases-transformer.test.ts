@@ -1,4 +1,4 @@
-import { BranchNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
+import { BranchNodeStub, ConditionNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
@@ -101,6 +101,53 @@ describe('throughInvocationCasesTransformer', () => {
       const result = throughInvocationCasesTransformer({ arrow: N_ARROW, args: ARGS });
 
       expect({ cases: result.analysis.cases, unreachableExits: result.unreachableExits }).toStrictEqual({ cases: [], unreachableExits: [] });
+    });
+  });
+
+  describe('a branchless arrow whose return predicate reads the environment', () => {
+    // `(() => { return Number(process.env.SIZE) > 5; })()` has no `if` — the split rides the RETURN
+    // comparison, not a branch — so this is the one axis neither of the two describe blocks above
+    // touches: they both give arrows that never set `predicateSignature`. `params: []` is what
+    // `derive-cases` is handed either way (§ the arrow's own PURPOSE comment), so only the ENV route
+    // can steer a returnPredicate here — a plain-param one would find no matching param.
+    const PRED_EXIT = ExitNodeStub({ coverageId: 'arrow/return@top', guardPath: [], line: 2 });
+    const PREDICATE = ConditionNodeStub({
+      id: 'arrow/return#leaf',
+      operandParamName: 'size',
+      operandEnvVarName: 'SIZE',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'gt', literal: 5 },
+    });
+    const PREDICATE_ARROW = ScopeRecordStub({
+      scopePath: ['*module*', 'arrow'],
+      name: 'arrow',
+      exported: false,
+      access: { kind: 'unreachable' },
+      params: [],
+      returnType: { kind: 'boolean' },
+      startLine: 1,
+      endLine: 2,
+      branches: [],
+      exits: [PRED_EXIT],
+      predicateSignature: PREDICATE,
+    });
+
+    it('VALID: {return Number(process.env.SIZE) > 5} => the predicate signature rides onto the entry the analysis carries', () => {
+      const result = throughInvocationCasesTransformer({ arrow: PREDICATE_ARROW, args: [] });
+
+      expect(result.analysis.predicateSignature).toStrictEqual(PREDICATE);
+    });
+
+    it('VALID: {return Number(process.env.SIZE) > 5} => one env case per true/false split, no dead exits', () => {
+      const result = throughInvocationCasesTransformer({ arrow: PREDICATE_ARROW, args: [] });
+
+      expect({ cases: result.analysis.cases, unreachableExits: result.unreachableExits }).toStrictEqual({
+        cases: [
+          { reachesPath: ['arrow/return@top'], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
+          { reachesPath: ['arrow/return@top'], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
+        ],
+        unreachableExits: [],
+      });
     });
   });
 });

@@ -43,6 +43,25 @@ describe('collectNamedObjectTypesTransformer', () => {
 
       expect(result).toStrictEqual([{ name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }]);
     });
+
+    // Every member is walked, not just the first that carries a name — a flatMap over the whole
+    // members list, not a find of one.
+    it('VALID: {union of two named objects} => both shapes, in member order', () => {
+      const result = collectNamedObjectTypesTransformer({
+        descriptor: TypeDescriptorStub({
+          kind: 'union',
+          members: [
+            { kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] },
+            { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+          ],
+        }),
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] },
+        { name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+      ]);
+    });
   });
 
   describe('descriptors with no named object', () => {

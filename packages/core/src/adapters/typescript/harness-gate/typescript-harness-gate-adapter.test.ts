@@ -46,6 +46,14 @@ const SHADOWED = [
   'assayerHarness();',
 ].join('\n');
 
+const WRONG_NAME_SAME_PACKAGE = ["import { otherExport } from '@assayer/core';", '', 'otherExport();'].join('\n');
+
+const ASSIGNED_NOT_A_BARE_STATEMENT = [
+  "import { assayerHarness } from '@assayer/core';",
+  '',
+  'const result = assayerHarness({ inputs: {} });',
+].join('\n');
+
 describe('typescriptHarnessGateAdapter', () => {
   describe('a file that registers with Assayer', () => {
     it('VALID: {imports assayerHarness from @assayer/core and calls it} => returns true', () => {
@@ -96,6 +104,18 @@ describe('typescriptHarnessGateAdapter', () => {
       typescriptHarnessGateAdapterProxy();
 
       expect(typescriptHarnessGateAdapter({ source: SHADOWED })).toBe(false);
+    });
+
+    it('VALID: {a different symbol imported from @assayer/core and called} => returns false', () => {
+      typescriptHarnessGateAdapterProxy();
+
+      expect(typescriptHarnessGateAdapter({ source: WRONG_NAME_SAME_PACKAGE })).toBe(false);
+    });
+
+    it('VALID: {assayerHarness imported and called, but its result is assigned rather than a bare statement} => returns false', () => {
+      typescriptHarnessGateAdapterProxy();
+
+      expect(typescriptHarnessGateAdapter({ source: ASSIGNED_NOT_A_BARE_STATEMENT })).toBe(false);
     });
 
     it('EMPTY: {an empty file} => returns false', () => {

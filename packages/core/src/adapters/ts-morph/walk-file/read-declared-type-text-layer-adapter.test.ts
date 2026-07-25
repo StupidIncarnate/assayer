@@ -74,6 +74,21 @@ describe('readDeclaredTypeTextLayerAdapter', () => {
 
       expect(String(readDeclaredTypeTextLayerAdapter({ node: param.getTypeNodeOrThrow() }))).toBe('"a" | "b"');
     });
+
+    // A type REFERENCE renders as its OWN name plus its arguments, never the checker's module-qualified
+    // rendering of what it resolves to — the reader can find `Box<Db>` in their own file, never
+    // `import("/abs/path/box").Box<number>`.
+    it('VALID: {a generic type reference} => the name plus its arguments, recursed', () => {
+      readDeclaredTypeTextLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        `${IMPORT}export function f(box: Box<Db>): void {}\ninterface Box<T> { value: T }\n`,
+      );
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('box');
+
+      expect(String(readDeclaredTypeTextLayerAdapter({ node: param.getTypeNodeOrThrow() }))).toBe('Box<Db>');
+    });
   });
 
   describe('grouping', () => {
@@ -120,6 +135,23 @@ describe('readDeclaredTypeTextLayerAdapter', () => {
 
       expect(String(readDeclaredTypeTextLayerAdapter({ node: param.getTypeNodeOrThrow() }))).toBe(
         '(Db | string) & { a: number; }',
+      );
+    });
+
+    // The mirror of the case above: an INTERSECTION nested inside a union is the OTHER operand of the
+    // same `isFunctionTypeNode || isConstructorTypeNode || isUnionTypeNode || isIntersectionTypeNode`
+    // grouping check — a case union-inside-intersection alone leaves entirely untested.
+    it('VALID: {an intersection inside a union} => kept parenthesized', () => {
+      readDeclaredTypeTextLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        `${IMPORT}export function f(db: (Db & string) | number): void {}\n`,
+      );
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
+
+      expect(String(readDeclaredTypeTextLayerAdapter({ node: param.getTypeNodeOrThrow() }))).toBe(
+        '(Db & string) | number',
       );
     });
 

@@ -46,6 +46,12 @@ const READS_PROCESS = [
   'assayerHarness({ inputs: { audit: { report: typeof process } } });',
 ].join('\n');
 
+const IMPORTS_SUBPATH = [
+  "import { assayerHarness } from '@assayer/core/index';",
+  '',
+  'assayerHarness({ inputs: { audit: { report: (message: string): string => message } } });',
+].join('\n');
+
 describe('typescriptLoadHarnessAdapter', () => {
   describe('reading a harness by running it', () => {
     it('VALID: {one assayerHarness call} => returns the declaration it registered', () => {
@@ -84,6 +90,14 @@ describe('typescriptLoadHarnessAdapter', () => {
       const result = typescriptLoadHarnessAdapter({ source: NEVER_CALLED, fileName: 'src/audit.harness.ts' });
 
       expect(result).toStrictEqual({ ok: true, declarations: [] });
+    });
+
+    it('VALID: {an import of a subpath under @assayer/core} => still resolves to the registrar', () => {
+      typescriptLoadHarnessAdapterProxy();
+
+      const result = typescriptLoadHarnessAdapter({ source: IMPORTS_SUBPATH, fileName: 'src/audit.harness.ts' });
+
+      expect(result).toStrictEqual({ ok: true, declarations: [{ inputs: { audit: { report: expect.any(Function) } } }] });
     });
   });
 

@@ -43,6 +43,139 @@ describe('dispatchNodeLayerAdapter', () => {
         kind: 'ClassDeclaration',
       });
     });
+
+    it('VALID: {class expression} => routed to the SAME class handler as a declaration', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const C = class {\n  m(): void {}\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassExpression);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.nodes[0]?.kind).toBe('ClassExpression');
+    });
+
+    it('VALID: {if statement} => routed to the if handler, which records an if branch', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'declare const flag: boolean;\nif (flag) {\n  flag;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.branches.map((branch) => branch.kind)).toStrictEqual(['if']);
+    });
+
+    it('VALID: {switch statement} => routed to the switch handler, which records one branch per case', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const method: string;\nswitch (method) {\n  case 'get':\n    break;\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.branches.map((branch) => branch.kind)).toStrictEqual(['switch']);
+    });
+
+    it('VALID: {return statement} => routed to the exit handler, which records a return exit', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(): string {\n  return "x";\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.exits.map((exit) => exit.kind)).toStrictEqual(['return']);
+    });
+
+    it('VALID: {throw statement} => routed to the SAME exit handler, which records a throw exit', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(): void {\n  throw new Error("x");\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ThrowStatement);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.exits.map((exit) => exit.kind)).toStrictEqual(['throw']);
+    });
+
+    it('VALID: {a bare block} => routed to the block handler, which descends its statements', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', '{\n  const a = 1;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.Block);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['VariableStatement']);
+    });
+
+    it('VALID: {a plain call expression} => routed to the call handler, which records a call edge', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function inner(): void {}\ninner();\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.calls.map((call) => call.callee)).toStrictEqual([{ target: 'local', name: 'inner', startLine: 1 }]);
+    });
+
+    it('VALID: {interface declaration} => routed to the type-declaration handler, which records a declared shape', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'interface Config {\n  mode: string;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.InterfaceDeclaration);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.declaredShapes.map((shape) => shape.name)).toStrictEqual(['Config']);
+    });
+
+    it('VALID: {type alias declaration} => routed to the SAME type-declaration handler as an interface', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', "type Method = 'get' | 'post';\n");
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.TypeAliasDeclaration);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.declaredShapes.map((shape) => shape.name)).toStrictEqual(['Method']);
+    });
+
+    it('VALID: {enum declaration} => routed to the SAME type-declaration handler as an interface', () => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'enum Level {\n  Low,\n  High,\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.EnumDeclaration);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.declaredShapes.map((shape) => shape.name)).toStrictEqual(['Level']);
+    });
+
+    // Every callable shape reuses the SAME function handler untouched (packages/core/CLAUDE.md §2) — a
+    // method, a constructor, an accessor, and a bare declaration all open a `kind: 'function'` scope.
+    it.each([
+      ['an arrow function', 'const f = (): void => {};\n', SyntaxKind.ArrowFunction],
+      ['a function expression', 'const f = function (): void {};\n', SyntaxKind.FunctionExpression],
+      ['a method', 'class C {\n  m(): void {}\n}\n', SyntaxKind.MethodDeclaration],
+      ['a constructor', 'class C {\n  constructor() {}\n}\n', SyntaxKind.Constructor],
+      ['a get accessor', 'class C {\n  get x(): number {\n    return 1;\n  }\n}\n', SyntaxKind.GetAccessor],
+      ['a set accessor', 'class C {\n  set x(v: number) {}\n}\n', SyntaxKind.SetAccessor],
+    ])('VALID: {%s} => routed to the function handler', (_label, source, kind) => {
+      dispatchNodeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', source);
+      const node = sourceFile.getFirstDescendantByKindOrThrow(kind);
+
+      const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.kind).toBe('function');
+    });
   });
 
   describe('module edges', () => {

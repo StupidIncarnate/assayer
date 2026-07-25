@@ -108,6 +108,36 @@ describe('declaredTypesProjectionTransformer', () => {
     });
   });
 
+  describe('a walk aggregating multiple declaredShapes and scopes', () => {
+    // Both the return type and each scope's params feed the same channel, and declaredShapes is itself
+    // a collection — every prior test passes exactly one of each. Two declaredShapes plus a scope whose
+    // NAMED object arrives only through its return type (never its params) proves all three sources
+    // combine into one sorted list.
+    it('VALID: {two declaredShapes, and a scope naming Alpha only in its return type} => all names, sorted', () => {
+      const walked = WalkFileResultStub({
+        declaredShapes: [
+          { name: 'Zeta', type: { kind: 'object', typeName: 'Zeta', properties: [{ name: 'z', type: { kind: 'string' } }] } },
+          { name: 'Omega', type: { kind: 'object', typeName: 'Omega', properties: [{ name: 'o', type: { kind: 'string' } }] } },
+        ],
+        scopes: [
+          ScopeRecordStub({
+            params: [
+              { name: 'b', type: { kind: 'object', typeName: 'Beta', properties: [{ name: 'b', type: { kind: 'string' } }] } },
+            ],
+            returnType: { kind: 'object', typeName: 'Alpha', properties: [{ name: 'a', type: { kind: 'string' } }] },
+          }),
+        ],
+      });
+
+      expect(declaredTypesProjectionTransformer({ walked })).toStrictEqual([
+        { name: 'Alpha', properties: [{ name: 'a', type: { kind: 'string' } }] },
+        { name: 'Beta', properties: [{ name: 'b', type: { kind: 'string' } }] },
+        { name: 'Omega', properties: [{ name: 'o', type: { kind: 'string' } }] },
+        { name: 'Zeta', properties: [{ name: 'z', type: { kind: 'string' } }] },
+      ]);
+    });
+  });
+
   describe('a walk with no local object types', () => {
     it('EMPTY: {only primitive params} => no declared types', () => {
       const walked = WalkFileResultStub({

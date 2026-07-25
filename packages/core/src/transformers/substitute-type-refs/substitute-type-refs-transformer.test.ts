@@ -61,6 +61,54 @@ describe('substituteTypeRefsTransformer', () => {
       });
     });
 
+    // The array's own cardinality is carried through unrelated to what its element resolves to — the
+    // two travel on independent branches of the recursion, so a rewritten element must not drop it.
+    it('VALID: {Config[] with a known cardinality} => the cardinality survives the element rewrite', () => {
+      const type = TypeDescriptorStub({
+        kind: 'array',
+        element: { kind: 'unknown', text: 'Config', typeRef: 'Config' },
+        cardinality: 3,
+      });
+      const config = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
+      });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'array',
+        element: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+        cardinality: 3,
+      });
+    });
+
+    // A property's own `optional` mark is the DECLARATION's, not the resolved shape's — it has to
+    // survive the rewrite exactly as the truncation mark does below.
+    it('VALID: {an optional property carrying an opaque type} => the rewrite keeps the optional mark', () => {
+      const type = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Outer',
+        properties: [{ name: 'inner', type: { kind: 'unknown', text: 'Config', typeRef: 'Config' }, optional: true }],
+      });
+      const config = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
+      });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'object',
+        typeName: 'Outer',
+        properties: [
+          {
+            name: 'inner',
+            type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+            optional: true,
+          },
+        ],
+      });
+    });
+
     it('VALID: {a union with an opaque member} => the member replaced, the others kept', () => {
       const type = TypeDescriptorStub({
         kind: 'union',

@@ -200,4 +200,75 @@ describe('composeCrossFilePredicatesBroker', () => {
       });
     });
   });
+
+  describe('a file that fails to parse', () => {
+    it('EMPTY: {invalid syntax} => the analysis passes through unchanged, no disk read', () => {
+      composeCrossFilePredicatesBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: 'const x = ;;;{{{', relPath: 'src/broken.ts' });
+      const analysis = analyzeFileBroker({ walked });
+
+      const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/broken.ts' });
+
+      expect(result).toBe(analysis);
+    });
+  });
+
+  describe('an imported callee whose sibling exports no function by that name', () => {
+    it('VALID: {big is imported, but the sibling exports notBig instead} => the leaf stays opaque and no lint is raised', () => {
+      const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.setupSibling({ fileName: '/repo/src/big.ts', source: 'export function notBig(n: number): boolean {\n  return n > 50;\n}\n' });
+      const walked = tsMorphWalkFileAdapter({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
+      const analysis = analyzeFileBroker({ walked });
+
+      const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/classify.ts' });
+
+      expect({
+        conditions: result.functions.flatMap((fn) => fn.branches).map((branch) => branch.condition),
+        lints: result.lints,
+      }).toStrictEqual({
+        conditions: [
+          {
+            kind: 'leaf',
+            id: '*module*/classify/if:CallExpression,id:big,id:n#leaf',
+            operandCallPosition: { line: 4, column: 7 },
+            operandType: { kind: 'unknown', text: 'any' },
+            predicate: { kind: 'truthy' },
+          },
+        ],
+        lints: [],
+      });
+    });
+  });
+
+  describe('a caller that passes a literal argument instead of one of its own params', () => {
+    // `big`'s own comparison reads its param `n`, but `classify` calls `big(5)` with a literal — no
+    // caller param maps onto it, so rebasing the leaf onto the caller's names has nothing to rebase
+    // it TO. The whole condition refuses rather than mint an id keyed to an operand no caller input
+    // reaches, and the leaf stays exactly the opaque `truthy` call-leaf the walk read.
+    it('VALID: {classify() calls big(5) with a literal, big compares its own param} => the leaf stays opaque and no lint is raised', () => {
+      const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.setupSibling({ fileName: '/repo/src/big.ts', source: BIG_PREDICATE });
+      const source = "import { big } from './big';\n\nexport function classify(): string {\n  if (big(5)) {\n    return 'B';\n  }\n\n  return 'S';\n}\n";
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/classify.ts' });
+      const analysis = analyzeFileBroker({ walked });
+
+      const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/classify.ts' });
+
+      expect({
+        conditions: result.functions.flatMap((fn) => fn.branches).map((branch) => branch.condition),
+        lints: result.lints,
+      }).toStrictEqual({
+        conditions: [
+          {
+            kind: 'leaf',
+            id: '*module*/classify/if:CallExpression,id:big,num:5#leaf',
+            operandCallPosition: { line: 4, column: 7 },
+            operandType: { kind: 'unknown', text: 'any' },
+            predicate: { kind: 'truthy' },
+          },
+        ],
+        lints: [],
+      });
+    });
+  });
 });

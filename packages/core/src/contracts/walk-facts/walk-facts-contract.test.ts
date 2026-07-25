@@ -23,10 +23,16 @@ describe('walkFactsContract', () => {
   });
 
   describe('invalid walk facts', () => {
-    it('INVALID: {missing looseExits} => throws validation error', () => {
-      expect(() => {
-        return walkFactsContract.parse({ scopes: [], looseBranches: [], nodes: [] });
-      }).toThrow(/Required/u);
+    // Every channel is required, never optional (D22's "an analysis that can omit its own blind
+    // spots reads as complete" applies to every one of them, not just the admission channels) — so
+    // the rule is the SAME for all fourteen. Derived from the contract's own shape rather than a
+    // hand-typed list, so a field added later is covered with no edit here.
+    const REQUIRED_FIELDS = Object.keys(walkFactsContract.shape);
+
+    it.each(REQUIRED_FIELDS)('INVALID: {missing %s} => throws validation error', (field) => {
+      const entries = Object.entries(WalkFactsStub()).filter(([key]) => key !== field);
+
+      expect(() => walkFactsContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
     });
   });
 });

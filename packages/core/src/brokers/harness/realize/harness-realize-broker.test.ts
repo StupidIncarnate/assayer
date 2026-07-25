@@ -41,8 +41,32 @@ const OTHER_TOOL_HARNESS =
 const THROWING_HARNESS =
   "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { audit: { report: (m: string): string => m } } });\nthrow new Error('the harness blew up');\n";
 
+// Two GAPPED entries in one file, with the harness declaring keys for only one of them — the
+// entry-level twin of the PARTIAL harness above, which supplies only some of one entry's params.
+const TWO_ENTRIES_SOURCE =
+  'export const audit = (score: number, report: (message: string) => string): string => {\n  if (score > 5) {\n    return report(\'high\');\n  }\n\n  return report(\'low\');\n};\n\nexport const summarize = (score: number, emit: (count: number) => void): string => {\n  emit(score);\n  return \'done\';\n};\n';
+
+// One entry gapped and declared, one entry with NOTHING refused — the harness names a param for it
+// anyway, which is not this broker's to reject (harness-validate does that on a different channel).
+const UNGAPPED_ENTRY_SOURCE =
+  'export const audit = (score: number, report: (message: string) => string): string => {\n  if (score > 5) {\n    return report(\'high\');\n  }\n\n  return report(\'low\');\n};\n\nexport const grade = (score: number): string => {\n  if (score > 5) {\n    return \'high\';\n  }\n\n  return \'low\';\n};\n';
+
+const AUDIT_ONLY_HARNESS =
+  "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { audit: { report: (message: string): string => message } } });\n";
+
+const AUDIT_AND_UNGAPPED_HARNESS =
+  "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { audit: { report: (message: string): string => message }, grade: { score: 6 } } });\n";
+
+// A dead-surface LINT beside the gapped entry: `unused` is a private nothing in the file calls. Proves
+// `lints` (and every other pass-through channel it stands in for) survives the full reconstruction this
+// broker does once ANY entry is paid, rather than being silently reset to empty alongside it.
+const DEAD_SURFACE_SOURCE =
+  "function unused(value: number): string {\n  if (value > 5) {\n    return 'big';\n  }\n\n  return 'small';\n}\n\nexport const audit = (score: number, report: (message: string) => string): string => {\n  if (score > 5) {\n    return report('high');\n  }\n\n  return report('low');\n};\n";
+
 const THEN = '*module*/audit/return@if:BinaryExpression,id:score,GreaterThanToken,num:5#then';
 const ELSE = '*module*/audit/return@if:BinaryExpression,id:score,GreaterThanToken,num:5#else';
+const GRADE_THEN = '*module*/grade/return@if:BinaryExpression,id:score,GreaterThanToken,num:5#then';
+const GRADE_ELSE = '*module*/grade/return@if:BinaryExpression,id:score,GreaterThanToken,num:5#else';
 
 describe('harnessRealizeBroker', () => {
   describe('a harness that supplies every refused input', () => {
@@ -187,6 +211,129 @@ describe('harnessRealizeBroker', () => {
       }).toStrictEqual({
         cases: [],
         gaps: [{ name: 'audit', namesEmit: true, namesReport: false }],
+      });
+    });
+  });
+
+  describe('two gapped entries, the harness declaring keys for only one', () => {
+    it('VALID: {audit declared, summarize not mentioned} => audit is paid, summarize keeps its own original gap', () => {
+      const proxy = harnessRealizeBrokerProxy();
+      proxy.setupHarness({ source: AUDIT_ONLY_HARNESS });
+      const walked = tsMorphWalkFileAdapter({ source: TWO_ENTRIES_SOURCE, relPath: 'src/audit.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
+
+      expect({
+        casesAudit: result.functions.find((fn) => String(fn.entry.name) === 'audit')?.cases,
+        casesSummarize: result.functions.find((fn) => String(fn.entry.name) === 'summarize')?.cases,
+        gapsBefore: analysis.gaps.map((gap) => String(gap.name)),
+        gapsAfter: result.gaps,
+      }).toStrictEqual({
+        casesAudit: [
+          {
+            reachesPath: [THEN],
+            arrange: [
+              { kind: 'param', param: 'score', value: 6 },
+              { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+            ],
+            salient: true,
+          },
+          {
+            reachesPath: [ELSE],
+            arrange: [
+              { kind: 'param', param: 'score', value: 5 },
+              { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+            ],
+            salient: true,
+          },
+        ],
+        casesSummarize: [],
+        gapsBefore: ['audit', 'summarize'],
+        gapsAfter: [analysis.gaps[1]],
+      });
+    });
+  });
+
+  describe('one gapped entry beside one that owes nothing', () => {
+    // `grade` refuses nothing, so it carries no gap even though the harness names `score` for it too.
+    // The harness cannot pay a debt `grade` never owed, so its cases stay exactly what the per-file walk
+    // already derived.
+    it('VALID: {audit declared and gapped, grade declared but never gapped} => grade is untouched', () => {
+      const proxy = harnessRealizeBrokerProxy();
+      proxy.setupHarness({ source: AUDIT_AND_UNGAPPED_HARNESS });
+      const walked = tsMorphWalkFileAdapter({ source: UNGAPPED_ENTRY_SOURCE, relPath: 'src/audit.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
+
+      expect({
+        casesAudit: result.functions.find((fn) => String(fn.entry.name) === 'audit')?.cases,
+        casesGrade: result.functions.find((fn) => String(fn.entry.name) === 'grade')?.cases,
+        gapsAfter: result.gaps,
+      }).toStrictEqual({
+        casesAudit: [
+          {
+            reachesPath: [THEN],
+            arrange: [
+              { kind: 'param', param: 'score', value: 6 },
+              { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+            ],
+            salient: true,
+          },
+          {
+            reachesPath: [ELSE],
+            arrange: [
+              { kind: 'param', param: 'score', value: 5 },
+              { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+            ],
+            salient: true,
+          },
+        ],
+        casesGrade: [
+          { reachesPath: [GRADE_THEN], arrange: [{ kind: 'param', param: 'score', value: 6 }], salient: true },
+          { reachesPath: [GRADE_ELSE], arrange: [{ kind: 'param', param: 'score', value: 5 }], salient: true },
+        ],
+        gapsAfter: [],
+      });
+    });
+  });
+
+  describe('a dead-surface lint beside the entry a harness pays', () => {
+    it('VALID: {an unused private helper beside a paid gap} => the lint survives the reconstruction', () => {
+      const proxy = harnessRealizeBrokerProxy();
+      proxy.setupHarness({ source: HARNESS });
+      const walked = tsMorphWalkFileAdapter({ source: DEAD_SURFACE_SOURCE, relPath: 'src/audit.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
+
+      expect({ gapsAfter: result.gaps, lintsBefore: analysis.lints, lintsAfter: result.lints }).toStrictEqual({
+        gapsAfter: [],
+        lintsBefore: [
+          {
+            rule: 'dead-surface',
+            name: 'unused',
+            message:
+              'nothing in this file calls it, so it is dead surface: an unexported helper is reachable only ' +
+              'from its own file, and nothing here reaches it. Delete it, or consume it from a caller that ' +
+              'passes an input straight through — which the follower would then drive.',
+            startLine: 1,
+            endLine: 7,
+          },
+        ],
+        lintsAfter: [
+          {
+            rule: 'dead-surface',
+            name: 'unused',
+            message:
+              'nothing in this file calls it, so it is dead surface: an unexported helper is reachable only ' +
+              'from its own file, and nothing here reaches it. Delete it, or consume it from a caller that ' +
+              'passes an input straight through — which the follower would then drive.',
+            startLine: 1,
+            endLine: 7,
+          },
+        ],
       });
     });
   });

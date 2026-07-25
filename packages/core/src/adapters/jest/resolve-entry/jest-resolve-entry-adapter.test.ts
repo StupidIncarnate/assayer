@@ -131,6 +131,36 @@ describe('jestResolveEntryAdapter', () => {
     });
   });
 
+  describe('module scopes', () => {
+    // A module scope's body runs exactly once per load, so the only way to run it again with
+    // different inputs is to load it again — `requireFresh` IS the entry, whatever the subject holds.
+    it('VALID: {a module scope} => resolves to the re-import thunk, not anything on the subject', () => {
+      jestResolveEntryAdapterProxy();
+      const requireFresh = (): unknown => 'reloaded';
+
+      const result = jestResolveEntryAdapter({
+        subject: { classify: (value: number): boolean => value > 5 },
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'module' }),
+        requireFresh,
+      });
+
+      expect(result).toBe(requireFresh);
+    });
+
+    it('EMPTY: {a module scope with no re-import thunk supplied} => undefined', () => {
+      jestResolveEntryAdapterProxy();
+
+      const result = jestResolveEntryAdapter({
+        subject: {},
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'module' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+  });
+
   describe('constructors', () => {
     // Resolving it would yield the class, which throws when applied without `new`.
     it('EMPTY: {a constructor} => undefined, since it is reached through `new`', () => {

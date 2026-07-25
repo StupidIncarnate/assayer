@@ -138,6 +138,72 @@ describe('handleSwitchLayerAdapter', () => {
       ]);
     });
 
+    // A discriminant welded to a same-file `const` is EVALUATED, not steered — exactly as an `if`
+    // operand is — so the leaf carries the single value the analyzer already knows.
+    it('VALID: {a switch on a same-file const} => the leaf carries the discriminant`s welded value', () => {
+      handleSwitchLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'const level = 7;\nswitch (level) {\n  case 7:\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerAdapter({
+        node,
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false, tail: true }),
+      });
+
+      expect(result.branches).toStrictEqual([
+        {
+          coverageId: '*module*/switch:id:level,EqualsEqualsEqualsToken,num:7',
+          kind: 'switch',
+          condition: {
+            kind: 'leaf',
+            id: '*module*/switch:id:level,EqualsEqualsEqualsToken,num:7#leaf',
+            operandParamName: 'level',
+            operandConstValue: 7,
+            operandType: { kind: 'number' },
+            predicate: { kind: 'eq', literal: 7 },
+          },
+          startLine: 3,
+          endLine: 5,
+        },
+      ]);
+    });
+
+    // A discriminant the parse cannot pin to a single identifier (a member access) names no operand
+    // param — the leaf omits `operandParamName` entirely rather than guessing one.
+    it('VALID: {a switch on a member-access discriminant} => the leaf carries no operandParamName', () => {
+      handleSwitchLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const obj: { method: string };\nswitch (obj.method) {\n  case 'get':\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerAdapter({
+        node,
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false, tail: true }),
+      });
+
+      expect(result.branches).toStrictEqual([
+        {
+          coverageId: '*module*/switch:PropertyAccessExpression,id:obj,id:method,EqualsEqualsEqualsToken,str:get',
+          kind: 'switch',
+          condition: {
+            kind: 'leaf',
+            id: '*module*/switch:PropertyAccessExpression,id:obj,id:method,EqualsEqualsEqualsToken,str:get#leaf',
+            operandType: { kind: 'string' },
+            predicate: { kind: 'eq', literal: 'get' },
+          },
+          startLine: 3,
+          endLine: 5,
+        },
+      ]);
+    });
+
     it('VALID: {switch} => records itself as a handled node under its scope', () => {
       handleSwitchLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
@@ -286,6 +352,61 @@ describe('handleSwitchLayerAdapter', () => {
       const result = handleSwitchLayerAdapter({ node, context: NON_TAIL_CONTEXT });
 
       expect(result.exits).toStrictEqual([]);
+    });
+
+    // No `default` clause means `defaultGuards` names no clause to append — the completion set holds
+    // only the case's OWN implicit exit, never a synthetic else-arm entry for a clause that is not there.
+    it('VALID: {a switch with NO default clause} => only the case`s own completion, no else-arm entry', () => {
+      handleSwitchLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "function routeLabel(method: string) {\n  switch (method) {\n    case 'get':\n      noop();\n  }\n}\ndeclare function noop(): void;\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerAdapter({ node, context: TAIL_CONTEXT });
+
+      expect(result.exits).toStrictEqual([
+        {
+          coverageId: 'routeLabel/exit@switch:id:method,EqualsEqualsEqualsToken,str:get#then',
+          kind: 'implicit',
+          guardPath: [{ branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'then' }],
+          line: 4,
+        },
+      ]);
+    });
+
+    // A clause holding only a bare `break` has no statement left once break statements are filtered
+    // out, so its fall-out completion exit is still emitted but CANNOT be probed.
+    it('VALID: {a clause with only a bare break} => the completion exit is emitted with NO probe site', () => {
+      handleSwitchLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "function routeLabel(method: string) {\n  switch (method) {\n    case 'get':\n      break;\n    default:\n      noop();\n  }\n}\ndeclare function noop(): void;\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerAdapter({ node, context: TAIL_CONTEXT });
+
+      expect({
+        exitCoverageIds: result.exits.map((exit) => String(exit.coverageId)),
+        probeSites: result.probeSites,
+      }).toStrictEqual({
+        exitCoverageIds: [
+          'routeLabel/exit@switch:id:method,EqualsEqualsEqualsToken,str:get#then',
+          'routeLabel/exit@switch:id:method,EqualsEqualsEqualsToken,str:get#else',
+        ],
+        probeSites: [
+          {
+            id: 'routeLabel/exit@switch:id:method,EqualsEqualsEqualsToken,str:get#else',
+            kind: 'complete',
+            start: 106,
+            end: 113,
+          },
+        ],
+      });
     });
   });
 });

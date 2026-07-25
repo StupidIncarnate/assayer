@@ -80,6 +80,19 @@ describe('isTypeFillableGuard', () => {
         }),
       ).toBe(true);
     });
+
+    // An object element that is NOT the truncated re-entry mark still recurses through the element's
+    // own fillability — `kind === 'object'` alone is not the short-circuit, `truncated === true` is.
+    it('INVALID: {an array of a non-truncated object with an unfillable property} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({
+            kind: 'array',
+            element: { kind: 'object', typeName: 'Sink', properties: [{ name: 'write', type: CALLABLE }] },
+          }),
+        }),
+      ).toBe(false);
+    });
   });
 
   describe('an object', () => {
@@ -135,6 +148,20 @@ describe('isTypeFillableGuard', () => {
       expect(
         isTypeFillableGuard({ type: TypeDescriptorStub({ kind: 'object', typeName: 'Tree', truncated: true, properties: [] }) }),
       ).toBe(false);
+    });
+
+    // Nobody OWES an optional property a value: the declaration's own `?` short-circuits the every()
+    // check before the property's (unfillable) type is ever asked.
+    it('VALID: {an object whose only unfillable property is OPTIONAL} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({
+            kind: 'object',
+            typeName: 'Sink',
+            properties: [{ name: 'write', type: CALLABLE, optional: true }],
+          }),
+        }),
+      ).toBe(true);
     });
   });
 

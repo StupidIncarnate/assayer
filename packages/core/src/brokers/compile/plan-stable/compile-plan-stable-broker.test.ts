@@ -73,4 +73,53 @@ describe('compilePlanStableBroker', () => {
       });
     });
   });
+
+  describe('previousCommit is defined but the ref cannot be resolved to a commit', () => {
+    it('VALID: {ref: an unresolvable ref, previousCommit: a prior sha} => returns mode "incremental", since an unresolvable ref can never satisfy the skip check', async () => {
+      const proxy = compilePlanStableBrokerProxy();
+      proxy.resolvesChangedCommitUnresolvable({
+        lsTreeStdout:
+          '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tpackages/shared/index.ts\n',
+        fileContents: ['export const x = 1;\n'],
+      });
+
+      const result = await compilePlanStableBroker({
+        repoRoot: '/repo',
+        ref: 'does-not-exist',
+        previousCommit: '2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c',
+      });
+
+      expect(result).toStrictEqual({
+        mode: 'incremental',
+        targets: [{ relPath: 'packages/shared/index.ts', content: 'export const x = 1;\n' }],
+        harnesses: [],
+      });
+    });
+  });
+
+  describe('a caller-supplied exclude pattern', () => {
+    it("EDGE: {exclude: ['generated/**']} => excludes the matching file from the ref's targets", async () => {
+      const proxy = compilePlanStableBrokerProxy();
+      const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
+      proxy.resolvesChanged({
+        sha,
+        lsTreeStdout:
+          '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tgenerated/foo.ts\n' +
+          '100644 blob a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\tsrc/index.ts\n',
+        fileContents: ['export const x = 1;\n'],
+      });
+
+      const result = await compilePlanStableBroker({
+        repoRoot: '/repo',
+        ref: 'master',
+        exclude: ['generated/**'],
+      });
+
+      expect(result).toStrictEqual({
+        mode: 'net-new',
+        targets: [{ relPath: 'src/index.ts', content: 'export const x = 1;\n' }],
+        harnesses: [],
+      });
+    });
+  });
 });

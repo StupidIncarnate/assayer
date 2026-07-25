@@ -118,6 +118,40 @@ describe('fillValueTransformer', () => {
       ).toStrictEqual({ children: [], label: 'abc123' });
     });
 
+    // Only REQUIRED properties are owed a value — the object twin of an optional parameter nobody has
+    // to pass. An optional property is simply omitted, never attempted.
+    it('VALID: {an object with an optional string property} => the optional property is omitted entirely', () => {
+      expect(
+        fillValueTransformer({
+          type: TypeDescriptorStub({
+            kind: 'object',
+            typeName: 'Report',
+            properties: [
+              { name: 'label', type: { kind: 'string' } },
+              { name: 'nickname', type: { kind: 'string' }, optional: true },
+            ],
+          }),
+        }),
+      ).toStrictEqual({ label: 'abc123' });
+    });
+
+    // An UNFILLABLE optional property does not refuse the whole object — it is excluded from `owed`
+    // before a fill is even attempted, so its own refusal never propagates outward.
+    it('VALID: {an object whose only unfillable property is optional} => the required properties fill, the optional one is skipped', () => {
+      expect(
+        fillValueTransformer({
+          type: TypeDescriptorStub({
+            kind: 'object',
+            typeName: 'Report',
+            properties: [
+              { name: 'label', type: { kind: 'string' } },
+              { name: 'onSave', type: CALLABLE, optional: true },
+            ],
+          }),
+        }),
+      ).toStrictEqual({ label: 'abc123' });
+    });
+
     it('INVALID: {an object with a callable member} => undefined, never a partial object', () => {
       expect(
         fillValueTransformer({

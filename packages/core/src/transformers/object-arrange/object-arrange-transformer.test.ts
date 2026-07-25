@@ -12,6 +12,15 @@ const modeLeaf = ConditionLeafStub({
 });
 
 const modeOnly = DeclaredTypeStub({ name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] });
+const modeNullable = DeclaredTypeStub({
+  name: 'Config',
+  properties: [
+    {
+      name: 'mode',
+      type: { kind: 'union', members: [{ kind: 'string' }, { kind: 'literal', value: null }] },
+    },
+  ],
+});
 const modeAndRetries = DeclaredTypeStub({
   name: 'Config',
   properties: [
@@ -79,6 +88,51 @@ const tagsTruthyLeaf = ConditionLeafStub({
   predicate: { kind: 'truthy' },
 });
 
+const modeNonNullishLeaf = ConditionLeafStub({
+  id: '*module*/decide/if:PropertyAccessExpression,id:config,id:mode,QuestionQuestionToken#leaf',
+  operandParamName: 'config',
+  operandPropertyPath: ['mode'],
+  operandTypeRef: 'Config',
+  operandType: { kind: 'string' },
+  predicate: { kind: 'non-nullish' },
+});
+
+const retriesGtLeaf = ConditionLeafStub({
+  id: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,id:config,id:retries,GreaterThanToken,num:2#leaf',
+  operandParamName: 'config',
+  operandPropertyPath: ['retries'],
+  operandTypeRef: 'Config',
+  operandType: { kind: 'number' },
+  predicate: { kind: 'gt', literal: 2 },
+});
+
+const retriesLtLeaf = ConditionLeafStub({
+  id: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,id:config,id:retries,LessThanToken,num:10#leaf',
+  operandParamName: 'config',
+  operandPropertyPath: ['retries'],
+  operandTypeRef: 'Config',
+  operandType: { kind: 'number' },
+  predicate: { kind: 'lt', literal: 10 },
+});
+
+const otherModeLeaf = ConditionLeafStub({
+  id: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,id:other,id:mode,EqualsEqualsEqualsToken,str:z#leaf',
+  operandParamName: 'other',
+  operandPropertyPath: ['mode'],
+  operandTypeRef: 'Other',
+  operandType: { kind: 'string' },
+  predicate: { kind: 'eq', literal: 'z' },
+});
+
+const nestedModeLeaf = ConditionLeafStub({
+  id: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:mode,id:sub,EqualsEqualsEqualsToken,str:a#leaf',
+  operandParamName: 'config',
+  operandPropertyPath: ['mode', 'sub'],
+  operandTypeRef: 'Config',
+  operandType: { kind: 'string' },
+  predicate: { kind: 'eq', literal: 'a' },
+});
+
 const CONFIG = symbolNameContract.parse('config');
 
 describe('objectArrangeTransformer', () => {
@@ -105,6 +159,25 @@ describe('objectArrangeTransformer', () => {
       });
 
       expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: 'a' }] });
+    });
+
+    // Two guards on ONE property intersect to the domain BOTH agree on — the doc's "domain every
+    // requirement on it agrees on" claim, otherwise unexercised: with a single requirement the reduce
+    // never calls intersectDomainsTransformer at all (its initial accumulator is `undefined`, so the
+    // first — and here only — iteration short-circuits to the lone domain untouched).
+    it('VALID: {retries > 2 AND retries < 10, both satisfying} => the intersected range, not either bound alone', () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: DeclaredTypeStub({ name: 'Config', properties: [{ name: 'retries', type: { kind: 'number' } }] }),
+        demands: [],
+        requirements: [
+          { leaf: retriesGtLeaf, want: true },
+          { leaf: retriesLtLeaf, want: true },
+        ],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'retries', value: 9 }] });
     });
   });
 
@@ -169,6 +242,49 @@ describe('objectArrangeTransformer', () => {
           { name: 'retries', value: 7 },
         ],
       });
+    });
+
+    // A demanded `null` is a legitimate value of a `string | null` property, not an absence — it must
+    // survive as-is rather than lose to a freshly-built non-null fill.
+    it("VALID: {mode: string | null, demand [null], unconstrained} => arranges the demanded null, never the string fill", () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeNullable,
+        demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: [null] } })],
+        requirements: [],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: null }] });
+    });
+
+    // A requirement on a SAME-NAMED property of a DIFFERENT object param must not cross-contaminate —
+    // `other.mode === 'z'` says nothing about `config.mode`, which stays unconstrained.
+    it("VALID: {a requirement on another param's same-named property} => this property stays unconstrained", () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeOnly,
+        demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['dev'] } })],
+        requirements: [{ leaf: otherModeLeaf, want: true }],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: 'dev' }] });
+    });
+
+    // A NESTED property path (`config.mode.sub`) constrains a sub-object, a later rung — the filter
+    // only matches a single-level `config.<name>` read, so this property stays unconstrained even
+    // though the requirement's path starts with its own name.
+    it('VALID: {a nested property path (config.mode.sub)} => does not constrain the one-level mode property', () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeOnly,
+        demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['dev'] } })],
+        requirements: [{ leaf: nestedModeLeaf, want: true }],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: 'dev' }] });
     });
 
     // The fill seam builds the property's own shape, so a nested object property is a real nested
@@ -350,6 +466,40 @@ describe('objectArrangeTransformer', () => {
         unfillable: false,
         properties: [{ name: 'mode', value: '' }],
       });
+    });
+  });
+
+  // The violating arm of a `??` read realizes to EXACTLY `null` (`type-to-range`'s `non-nullish` case),
+  // and `null` is a legitimate ArrangeValue — not an absence. A `??`/`||` chain preferring a fallback
+  // over an explicit `undefined` check would treat that null as "nothing chosen" and silently replace it
+  // with a fresh non-null fill, so the arranged case would never actually reach the `??` fall-through it
+  // was built to drive.
+  describe('the violating arm of a non-nullish (`??`) read', () => {
+    it('VALID: {config.mode ?? fallback, the violating arm, no demand} => arranges the real null, never a non-null fill', () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeOnly,
+        demands: [],
+        requirements: [{ leaf: modeNonNullishLeaf, want: false }],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: null }] });
+    });
+
+    // The AUTHORITATIVE branch runs its own separate domain-vs-usable-values preference chain, so it
+    // owes the same proof: a corrected `null` the domain admits must survive, never lose to a corrected
+    // non-null sibling the guard does not actually satisfy.
+    it("VALID: {mode: string | null, corrected ['x', null], the violating arm} => the corrected null, never the corrected 'x'", () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeNullable,
+        demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['x', null] } })],
+        requirements: [{ leaf: modeNonNullishLeaf, want: false }],
+        corrected: [symbolNameContract.parse('mode')],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: null }] });
     });
   });
 

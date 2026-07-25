@@ -452,6 +452,112 @@ describe('deriveCasesTransformer', () => {
     });
   });
 
+  describe('a branch welded to a literal constant is EVALUATED, not undriven', () => {
+    // `const level = 7; if (level > 10)`: the analyzer knows the single value, so the dead `then` arm is
+    // reported as an unreachable-exit LINT naming what it was welded to — never a second, bogus case.
+    it('VALID: {level welded to 7, guard level > 10} => the live else case, and the dead then exit names the welded value', () => {
+      const weldedBranch = BranchNodeStub({
+        coverageId: 'gauge/if:level',
+        startLine: 3,
+        condition: {
+          kind: 'leaf',
+          id: 'gauge/if:level#leaf',
+          operandParamName: 'level',
+          operandConstValue: 7,
+          operandType: { kind: 'number' },
+          predicate: { kind: 'gt', literal: 10 },
+        },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [weldedBranch],
+        exits: [
+          ExitNodeStub({ coverageId: 'gauge/return@then', guardPath: [{ branchCoverageId: 'gauge/if:level', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'gauge/return@else', guardPath: [{ branchCoverageId: 'gauge/if:level', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [{ reachesPath: ['gauge/return@else'], arrange: [], salient: true }],
+        unreachableExits: [{ line: 4, guardLines: [3], welded: { line: 3, operand: 'level', value: 7 } }],
+        undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+
+    // `const s = 'abcde'; if (s.length > 10)`: the SAME lint over the LENGTH axis instead of the value
+    // axis — a distinct field on the welded fact (`length`, not `value`).
+    it('VALID: {s welded to length 5, guard s.length > 10} => the live else case, and the dead then exit names the welded length', () => {
+      const weldedLengthBranch = BranchNodeStub({
+        coverageId: 'label/if:s',
+        startLine: 3,
+        condition: {
+          kind: 'leaf',
+          id: 'label/if:s#leaf',
+          operandParamName: 's',
+          operandConstLength: 5,
+          operandType: { kind: 'string' },
+          predicate: { kind: 'length-gt', literal: 10 },
+        },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [weldedLengthBranch],
+        exits: [
+          ExitNodeStub({ coverageId: 'label/return@then', guardPath: [{ branchCoverageId: 'label/if:s', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'label/return@else', guardPath: [{ branchCoverageId: 'label/if:s', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [{ reachesPath: ['label/return@else'], arrange: [], salient: true }],
+        unreachableExits: [{ line: 4, guardLines: [3], welded: { line: 3, operand: 's', length: 5 } }],
+        undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+  });
+
+  describe('an exit no bucket ever picks as maximal', () => {
+    // A bare trailing exit (`guardPath: []`) is trivially CONSISTENT with every bucket — an empty guard
+    // path is satisfied vacuously — but never MAXIMAL once both arms have their own longer, guarded
+    // exit. It is dominated on every bucket, so `mapping.length` for it is zero: not a contradiction (no
+    // case was ever infeasible), just an exit nothing selects. It must be neither cased nor reported as
+    // an unreachable-exit lint against code that is perfectly fine.
+    it('VALID: {both arms return, plus an unguarded trailing exit} => the trailing exit gets no case and no lint', () => {
+      const branch = BranchNodeStub({
+        coverageId: 'route/if:ok',
+        startLine: 2,
+        condition: { kind: 'leaf', id: 'route/if:ok#leaf', operandParamName: 'ok', operandType: { kind: 'boolean' }, predicate: { kind: 'truthy' } },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'ok', type: { kind: 'boolean' } })],
+        branches: [branch],
+        exits: [
+          ExitNodeStub({ coverageId: 'route/return@then', guardPath: [{ branchCoverageId: 'route/if:ok', arm: 'then' }], line: 3 }),
+          ExitNodeStub({ coverageId: 'route/return@else', guardPath: [{ branchCoverageId: 'route/if:ok', arm: 'else' }], line: 5 }),
+          ExitNodeStub({ coverageId: 'route/exit@complete', kind: 'implicit', guardPath: [], line: 7 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['route/return@then'], arrange: [{ kind: 'param', param: 'ok', value: true }], salient: true },
+          { reachesPath: ['route/return@else'], arrange: [{ kind: 'param', param: 'ok', value: false }], salient: true },
+        ],
+        unreachableExits: [],
+        undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+  });
+
   describe('un-steerable branches — nothing can arrange which arm runs', () => {
     // `if (g())`: the leaf is a lone `truthy` over a call, with no param and no env operand. Both arms
     // would arrange the SAME (empty) inputs, so neither exit can be told from the other — the bug this

@@ -73,7 +73,7 @@ export const typeToRangeTransformer = ({
       : excludedPoint === undefined
         ? {}
         : { excluded: [excludedPoint] };
-  const literalPoint = literal ?? rep;
+  const literalPoint = literal === undefined ? rep : literal;
   const isLiteral = literalPoint === undefined ? {} : { members: [literalPoint] };
   // Every arm that would be realized from the operand's OWN representative, for a type that has none.
   // Constraining nothing is the same safety property the unrecognized predicate relies on.

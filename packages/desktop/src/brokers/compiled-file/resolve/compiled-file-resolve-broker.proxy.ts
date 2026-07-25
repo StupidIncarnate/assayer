@@ -26,6 +26,14 @@ export const compiledFileResolveBrokerProxy = (): {
   sourceMissing: () => void;
   composesTo: (params: { analysis: ReturnType<typeof FileAnalysisStub> }) => void;
   composeReceived: () => unknown;
+  resolvesParamTypesTo: (params: { analysis: ReturnType<typeof FileAnalysisStub> }) => void;
+  paramTypeReceived: () => unknown;
+  arrangesTo: (params: { analysis: ReturnType<typeof FileAnalysisStub> }) => void;
+  arrangeReceived: () => unknown;
+  mapsTo: (params: { analysis: ReturnType<typeof FileAnalysisStub> }) => void;
+  mapReceived: () => unknown;
+  harnessesTo: (params: { analysis: ReturnType<typeof FileAnalysisStub> }) => void;
+  harnessReceived: () => unknown;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
   const blobProxy = cacheLoadBlobBrokerProxy();
@@ -78,6 +86,16 @@ export const compiledFileResolveBrokerProxy = (): {
   // The { root, relPath } the broker hands the overlay, captured off the real call so a test can
   // prove the SOURCE root (not the config dir) is threaded.
   const composeCalls: unknown[] = [];
+  // The remaining three overlays (param-type, stub-arrange, cross-file-map) plus the harness overlay
+  // all default to the SAME same-reference identity as compose, which means no test proves any one of
+  // them is actually IN the chain rather than skipped: an identity mock can never disagree with "this
+  // overlay was never called". Each capture below also records the `analysis` the overlay itself
+  // received, so a test can prove it is the true output of the PRIOR link, not merely that a value
+  // reaches the final result.
+  const paramTypeCalls: unknown[] = [];
+  const arrangeCalls: unknown[] = [];
+  const mapCalls: unknown[] = [];
+  const harnessCalls: unknown[] = [];
 
   return {
     setupManifest: ({ manifest }): void => {
@@ -106,5 +124,37 @@ export const compiledFileResolveBrokerProxy = (): {
       });
     },
     composeReceived: (): unknown => composeCalls.at(-1),
+    resolvesParamTypesTo: ({ analysis }): void => {
+      paramTypeHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
+        paramTypeCalls.push({ root, relPath, analysis: received });
+
+        return analysis;
+      });
+    },
+    paramTypeReceived: (): unknown => paramTypeCalls.at(-1),
+    arrangesTo: ({ analysis }): void => {
+      stubRealizeHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
+        arrangeCalls.push({ root, relPath, analysis: received });
+
+        return analysis;
+      });
+    },
+    arrangeReceived: (): unknown => arrangeCalls.at(-1),
+    mapsTo: ({ analysis }): void => {
+      composeMapHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
+        mapCalls.push({ root, relPath, analysis: received });
+
+        return analysis;
+      });
+    },
+    mapReceived: (): unknown => mapCalls.at(-1),
+    harnessesTo: ({ analysis }): void => {
+      harnessRealizeHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
+        harnessCalls.push({ root, relPath, analysis: received });
+
+        return analysis;
+      });
+    },
+    harnessReceived: (): unknown => harnessCalls.at(-1),
   };
 };

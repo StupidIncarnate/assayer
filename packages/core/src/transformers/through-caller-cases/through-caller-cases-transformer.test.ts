@@ -1,4 +1,4 @@
-import { BranchNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
+import { BranchNodeStub, ConditionNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
@@ -173,6 +173,53 @@ describe('throughCallerCasesTransformer', () => {
 
       expect(result.unreachableExits).toStrictEqual([
         { line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 } },
+      ]);
+    });
+  });
+
+  describe('a branchless callee whose return predicate is driven through its caller', () => {
+    // `inner(n) { return n > 5; }` has no `if` — the true/false split rides the RETURN comparison, not a
+    // branch — so this is the one axis neither of the two describe blocks above touches: they both give
+    // PREDICATE_CALLEE-shaped scopes with `branches: [N_BRANCH]` and never set `predicateSignature`.
+    const PRED_EXIT = ExitNodeStub({ coverageId: 'inner/return@top', guardPath: [], line: 3 });
+    const PREDICATE = ConditionNodeStub({
+      id: 'inner/return#leaf',
+      operandParamName: 'n',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'gt', literal: 5 },
+    });
+    const PREDICATE_CALLEE = ScopeRecordStub({
+      scopePath: ['*module*', 'outer', 'inner'],
+      name: 'inner',
+      exported: false,
+      access: { kind: 'unreachable' },
+      params: [{ name: 'n', type: { kind: 'number' } }],
+      returnType: { kind: 'boolean' },
+      startLine: 2,
+      endLine: 4,
+      branches: [],
+      exits: [PRED_EXIT],
+      predicateSignature: PREDICATE,
+    });
+    const CALLER = ScopeRecordStub({
+      scopePath: ['*module*', 'outer'],
+      name: 'outer',
+      params: [{ name: 'value', type: { kind: 'number' } }],
+    });
+    const CALL = CallSiteStub({ callee: { target: 'local', name: 'inner', startLine: 2 }, args: [{ kind: 'param-ref', paramName: 'value' }] });
+
+    it('VALID: {inner(value) returns n > 5} => the predicate signature rides onto the entry the analysis carries', () => {
+      const result = throughCallerCasesTransformer({ callee: PREDICATE_CALLEE, caller: CALLER, call: CALL });
+
+      expect(result.analysis.predicateSignature).toStrictEqual(PREDICATE);
+    });
+
+    it('VALID: {inner(value) returns n > 5} => splits into a true/false case, each arranging the caller`s value', () => {
+      const result = throughCallerCasesTransformer({ callee: PREDICATE_CALLEE, caller: CALLER, call: CALL });
+
+      expect(result.analysis.cases).toStrictEqual([
+        { reachesPath: ['inner/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
+        { reachesPath: ['inner/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
       ]);
     });
   });

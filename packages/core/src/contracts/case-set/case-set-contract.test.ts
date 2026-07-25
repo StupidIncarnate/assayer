@@ -66,12 +66,37 @@ describe('caseSetContract', () => {
       });
     });
 
-    // Required, not optional, for the reason darkSpots is: a set that can omit what it could not
-    // drive reads as complete coverage of the file.
-    it('INVALID: {no gaps} => throws, since an omitted gap reads as full coverage', () => {
-      expect(() => {
-        return caseSetContract.parse({ relPath: 'src/f.ts', modulePath: '/abs/f.ts', entries: [] });
-      }).toThrow(/Required/u);
+    // `harnessPath` is present exactly when some case names a harness binding — the shim's
+    // instruction to REQUIRE that colocated file so it can resolve the harness's keys live.
+    it('VALID: {harnessPath} => carries the absolute path the shim requires the harness through', () => {
+      const set = CaseSetStub({ harnessPath: '/abs/src/happy-path/boolean/and/and.harness.ts' });
+
+      expect(caseSetContract.parse(set)).toStrictEqual({
+        relPath: 'src/happy-path/boolean/and/and.ts',
+        modulePath: '/abs/src/happy-path/boolean/and/and.ts',
+        harnessPath: '/abs/src/happy-path/boolean/and/and.harness.ts',
+        entries: [
+          {
+            name: 'grade',
+            access: { kind: 'named' },
+            exitIds: ['grade/return@then', 'grade/return@else'],
+            cases: [
+              {
+                reachesPath: ['grade/return@then'],
+                arrange: [
+                  { kind: 'param', param: 'score', value: 6 },
+                  { kind: 'param', param: 'bonus', value: 2 },
+                ],
+                salient: true,
+              },
+            ],
+          },
+        ],
+        gaps: [],
+        darkSpots: [],
+        undriven: [],
+        lints: [],
+      });
     });
   });
 
@@ -79,6 +104,32 @@ describe('caseSetContract', () => {
     it('INVALID: {no modulePath} => throws, since an entry that cannot be required cannot be driven', () => {
       expect(() => {
         return caseSetContract.parse({ relPath: 'src/f.ts', entries: [], gaps: [] });
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {no relPath} => throws, since a case set with no source it applies to cannot be filed', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          modulePath: '/abs/f.ts',
+          entries: [],
+          gaps: [],
+          darkSpots: [],
+          undriven: [],
+          lints: [],
+        });
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {entries key missing} => throws, since an omitted entries list is not the same as an empty one', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          relPath: 'src/f.ts',
+          modulePath: '/abs/f.ts',
+          gaps: [],
+          darkSpots: [],
+          undriven: [],
+          lints: [],
+        });
       }).toThrow(/Required/u);
     });
 
@@ -91,6 +142,70 @@ describe('caseSetContract', () => {
           gaps: [],
         });
       }).toThrow(/Required/u);
+    });
+
+    // Required, not optional, for the reason darkSpots is: a set that can omit what it could not
+    // drive reads as complete coverage of the file.
+    it('INVALID: {no gaps} => throws, since an omitted gap reads as full coverage', () => {
+      expect(() => {
+        return caseSetContract.parse({ relPath: 'src/f.ts', modulePath: '/abs/f.ts', entries: [] });
+      }).toThrow(/Required/u);
+    });
+
+    // Required for the same reason gaps is: a dark spot Assayer never understood is a different
+    // debt than a gap the caller owes, and an omittable channel would let it read as understood.
+    it('INVALID: {no darkSpots} => throws, since an omitted dark spot reads as full understanding', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          relPath: 'src/f.ts',
+          modulePath: '/abs/f.ts',
+          entries: [],
+          gaps: [],
+          undriven: [],
+          lints: [],
+        });
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {no undriven} => throws, since an empty entries list needs this channel to mean anything', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          relPath: 'src/f.ts',
+          modulePath: '/abs/f.ts',
+          entries: [],
+          gaps: [],
+          darkSpots: [],
+          lints: [],
+        });
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {no lints} => throws, since an omitted lint reads as a repo with nothing to fix', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          relPath: 'src/f.ts',
+          modulePath: '/abs/f.ts',
+          entries: [],
+          gaps: [],
+          darkSpots: [],
+          undriven: [],
+        });
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {harnessPath: ""} => throws too_small', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          relPath: 'src/f.ts',
+          modulePath: '/abs/f.ts',
+          harnessPath: '',
+          entries: [],
+          gaps: [],
+          darkSpots: [],
+          undriven: [],
+          lints: [],
+        });
+      }).toThrow(/too_small/u);
     });
   });
 });

@@ -34,10 +34,24 @@ describe('declaredShapeContract', () => {
       });
     });
 
-    it('EMPTY: {stub default} => a Config object shape named Config', () => {
+    it('VALID: {stub default} => a Config object shape named Config', () => {
       expect(DeclaredShapeStub()).toStrictEqual({
         name: 'Config',
         type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+      });
+    });
+
+    it('VALID: {a generic declaration} => carries typeParams as the slots its type arguments fill', () => {
+      expect(
+        declaredShapeContract.parse({
+          name: 'Box',
+          type: { kind: 'object', typeName: 'Box', properties: [{ name: 'value', type: { kind: 'unknown', text: 'T' } }] },
+          typeParams: ['T'],
+        }),
+      ).toStrictEqual({
+        name: 'Box',
+        type: { kind: 'object', typeName: 'Box', properties: [{ name: 'value', type: { kind: 'unknown', text: 'T' } }] },
+        typeParams: ['T'],
       });
     });
   });
@@ -45,6 +59,10 @@ describe('declaredShapeContract', () => {
   describe('invalid declarations', () => {
     it('INVALID: {an empty name} => throws too_small', () => {
       expect(() => declaredShapeContract.parse({ name: '', type: { kind: 'string' } })).toThrow(/too_small/u);
+    });
+
+    it('INVALID: {no name} => throws Required', () => {
+      expect(() => declaredShapeContract.parse({ type: { kind: 'string' } })).toThrow(/Required/u);
     });
 
     it('INVALID: {no type} => throws invalid_type', () => {

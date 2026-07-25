@@ -1,6 +1,7 @@
 import { AssayerFlow } from './assayer-flow';
 import { docsOverviewStatics } from '../../statics/docs-overview/docs-overview-statics';
 import { cliUsageStatics } from '../../statics/cli-usage/cli-usage-statics';
+import { assayerCliHarness } from '../../../test/harnesses/assayer-cli.harness';
 
 describe('AssayerFlow', () => {
   describe('help command (exempt — routed before the precheck)', () => {
@@ -41,4 +42,27 @@ describe('AssayerFlow', () => {
     });
   });
 
+  describe('detail command (non-exempt — runs the precheck before dispatching)', () => {
+    const cli = assayerCliHarness();
+
+    // Proves the WIRING rather than the responder in isolation: real argv routed by AssayerFlow
+    // through the real precheck's resolved configDir into DetailShowResponder, over the actual built
+    // binary rather than a responder called with hand-fed params. The precheck runs first even though
+    // this command's own error has nothing to do with the compile — an unrecognized run id is still a
+    // precheck-then-dispatch command, never a shortcut.
+    it("ERROR: {argv: [\"detail\", \"fake-run-id\"], valid config, no saved run} => the precheck runs, then the exact unknown-run error", async () => {
+      cli.writeConfig({ json: '{"repoRoot":".","exclude":[]}' });
+      cli.writeSource({ relPath: 'src/sample.ts', source: 'export const sample = (): number => 1;\n' });
+
+      const { exitCode, stdout, stderr } = await cli.run({ argv: ['detail', 'fake-run-id'] });
+
+      expect(exitCode).toBe(1);
+      expect(stdout).toMatch(/^Assayer is updating caches\n[\s\S]*\n$/u);
+      expect(stderr).toBe(
+        "assayer detail: no saved run with id 'fake-run-id'.\n\n" +
+          'Runs live in .assayer/cache/runs and are disposable — clearing the cache removes them.\n' +
+          'Produce one with: assayer unit <path...>\n',
+      );
+    });
+  });
 });

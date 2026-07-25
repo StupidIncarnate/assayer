@@ -32,6 +32,13 @@ const isAnalysed = (entry: { name: string; parentPath: string }): boolean =>
   !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
   !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name), 'utf8') });
 
+// The combined `.ts`/`.tsx` inclusion rule the header's own `ts N tsx M` counts apply separately — a
+// harness is never `.tsx` (CLAUDE.md: colocated harnesses are always `.ts`, even beside a `.tsx`
+// source), so the symbol gate only ever applies to the `.ts` half.
+const isAnalysedSourceFile = (entry: { name: string; parentPath: string }): boolean =>
+  (entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry)) ||
+  (entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'));
+
 export const syntaxSurfaceHarness = (): {
   surfaceHeaderPattern: () => RegExp;
   fileLeaves: () => ReturnType<typeof RelPathStub>[];
@@ -53,10 +60,11 @@ export const syntaxSurfaceHarness = (): {
   },
 
   // The FILE_TREE_FILE leaves are the specimen basenames — duplicates included (in-function.ts ×3,
-  // in-class.ts ×2, pure-statement.ts ×2), sorted, matching the tree the manifest relPaths build.
+  // in-class.ts ×2, pure-statement.ts ×2), sorted, matching the tree the manifest relPaths build. Both
+  // `.ts` and `.tsx` specimens are leaves, exactly as both feed the header's `ts N tsx M` counts.
   fileLeaves: (): ReturnType<typeof RelPathStub>[] =>
     readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry))
+      .filter((entry) => entry.isFile() && isAnalysedSourceFile(entry))
       .map((entry) => entry.name)
       .sort()
       .map((value) => RelPathStub({ value })),
@@ -70,7 +78,7 @@ export const syntaxSurfaceHarness = (): {
   dirNames: (): ReturnType<typeof FolderNameStub>[] => {
     const dirPaths = new Set(
       readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-        .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry))
+        .filter((entry) => entry.isFile() && isAnalysedSourceFile(entry))
         .flatMap((entry) => {
           const segments = relative(SMOKE_REPO, entry.parentPath).split(sep);
           return [...segments.keys()].map((index) => segments.slice(0, index + 1).join(sep));

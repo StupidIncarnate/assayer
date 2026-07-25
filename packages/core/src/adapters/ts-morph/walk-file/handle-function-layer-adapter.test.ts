@@ -39,6 +39,64 @@ describe('handleFunctionLayerAdapter', () => {
         exits: [],
       });
     });
+
+    // A function-like reused untouched by every callable shape (packages/core/CLAUDE.md §2) — an
+    // anonymous callback opens the same `kind: 'function'` scope a named declaration does, carrying
+    // `anonymous: true` so a follower can tell the two apart without re-deriving it from the name.
+    it('VALID: {an anonymous function expression} => opens a scope carrying anonymous: true', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export const arr = [1, 2].map(function (n) {\n  return n;\n});\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionExpression);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.anonymous).toBe(true);
+    });
+  });
+
+  describe('the end of a block-bodied function', () => {
+    it('EMPTY: {an empty body} => falls off the end, so it gets an implicit exit at the top of the block', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(): void {}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.exits.map((exit) => exit.kind)).toStrictEqual(['implicit']);
+    });
+
+    it('VALID: {a body whose last statement is not a return} => falls off the end, an implicit exit probed over the whole block', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'function f(): void {\n  doStuff();\n}\ndeclare function doStuff(): void;\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect({
+        exitKinds: result.exits.map((exit) => exit.kind),
+        probeKinds: result.probeSites.map((site) => site.kind),
+      }).toStrictEqual({ exitKinds: ['implicit'], probeKinds: ['complete'] });
+    });
+
+    it('VALID: {a body whose last statement already returns} => accounted for, no implicit exit stacked on top', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(): string {\n  return "x";\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.exits).toStrictEqual([]);
+    });
   });
 
   describe('the context it hands its body', () => {
@@ -100,6 +158,22 @@ describe('handleFunctionLayerAdapter', () => {
       expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['StringLiteral']);
     });
 
+    // A concise arrow's body IS its single exit — there is no statement to `return` from, so the
+    // body's own expression is what the exit AND the probe site wrap.
+    it('VALID: {concise arrow, non-ternary body} => the body IS the single return exit', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export const f = (n: number): number => n + 1;\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect({
+        exitKinds: result.exits.map((exit) => exit.kind),
+        probeKinds: result.probeSites.map((site) => site.kind),
+      }).toStrictEqual({ exitKinds: ['return'], probeKinds: ['exit'] });
+    });
+
     it('EMPTY: {overload signature with no body} => asks for no descents', () => {
       handleFunctionLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
@@ -109,6 +183,17 @@ describe('handleFunctionLayerAdapter', () => {
       const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
 
       expect(result.descents).toStrictEqual([]);
+    });
+
+    it('EMPTY: {overload signature with no body} => no exits or probe sites either, since there is no body to exit', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'declare function classify(value: number): string;\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect({ exits: result.exits, probeSites: result.probeSites }).toStrictEqual({ exits: [], probeSites: [] });
     });
   });
 
@@ -157,6 +242,26 @@ describe('handleFunctionLayerAdapter', () => {
           operandType: { kind: 'number' },
           predicate: { kind: 'lt', literal: 2 },
         },
+      });
+    });
+
+    // A concise arrow whose body IS the comparison publishes the SAME signature a block-bodied
+    // `return` does — the predicate reader takes the arrow's expression body directly when there is no
+    // block to pull a `return` statement out of.
+    it('VALID: {a concise arrow `(n) => n > 50`} => publishes its comparison as predicateSignature too', () => {
+      handleFunctionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const tooBig = (n: number): boolean => n > 50;\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      const result = handleFunctionLayerAdapter({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toStrictEqual({
+        kind: 'leaf',
+        id: '*module*/tooBig/predicate#leaf',
+        operandParamName: 'n',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'gt', literal: 50 },
       });
     });
 

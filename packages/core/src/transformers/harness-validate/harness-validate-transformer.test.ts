@@ -26,6 +26,15 @@ const MODULE_ENTRY = EntrySignatureStub({
   access: { kind: 'module' },
 });
 
+const EMIT_ENTRY = EntrySignatureStub({
+  name: 'emit',
+  scopePath: ['*module*', 'emit'],
+  params: [],
+  returnType: { kind: 'unknown', text: 'void' },
+  line: 8,
+  access: { kind: 'named' },
+});
+
 describe('harnessValidateTransformer', () => {
   describe('a declaration that still names a refused parameter', () => {
     it('VALID: {audit.report, a callable Assayer refuses} => reports nothing', () => {
@@ -103,6 +112,27 @@ describe('harnessValidateTransformer', () => {
             '`src/audit.harness.ts` declares an input `repot` on `audit`, which is not a parameter of `audit` in ' +
             '`src/audit.ts` — its parameters are `report`, `size`; did you mean `report`. Rename the key to the ' +
             'parameter the input gap names, or delete it.',
+        },
+      ]);
+    });
+
+    it('INVALID: {an unknown parameter on an entry with no parameters} => a P1 saying the entry takes no parameters', () => {
+      const result = harnessValidateTransformer({
+        relPath: HARNESS,
+        targetRelPath: TARGET,
+        keys: [HarnessInputKeyStub({ entry: 'emit', param: 'anything' })],
+        entries: [EMIT_ENTRY],
+      });
+
+      expect(result).toStrictEqual([
+        {
+          relPath: 'src/audit.harness.ts',
+          line: 1,
+          column: 1,
+          message:
+            '`src/audit.harness.ts` declares an input `anything` on `emit`, which is not a parameter of `emit` in ' +
+            '`src/audit.ts` — it takes no parameters. Rename the key to the parameter the input gap names, or ' +
+            'delete it.',
         },
       ]);
     });

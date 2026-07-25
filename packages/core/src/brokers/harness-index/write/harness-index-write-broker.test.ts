@@ -94,6 +94,24 @@ describe('harnessIndexWriteBroker', () => {
       });
     });
 
+    it('EMPTY: {index.harnesses: []} => writes the canonical index with an empty harnesses array', async () => {
+      const proxy = harnessIndexWriteBrokerProxy();
+      proxy.succeeds();
+
+      await harnessIndexWriteBroker({
+        configDir: '/repo',
+        namespace: 'feature-x',
+        index: HarnessIndexStub({ harnesses: [] }),
+      });
+
+      expect(proxy.getWrittenIndex()).toStrictEqual({
+        layoutHash: EMPTY_HASH,
+        tsconfigHash: EMPTY_HASH,
+        harnessHash: EMPTY_HASH,
+        harnesses: [],
+      });
+    });
+
     it('VALID: {namespace "feature-x"} => writes to the tmp path under .assayer/cache/harness before renaming', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
       proxy.succeeds();

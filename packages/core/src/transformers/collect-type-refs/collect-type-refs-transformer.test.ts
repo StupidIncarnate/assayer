@@ -125,5 +125,17 @@ describe('collectTypeRefsTransformer', () => {
 
       expect(collectTypeRefsTransformer({ type })).toStrictEqual([]);
     });
+
+    it('EMPTY: {an object with no properties} => no names', () => {
+      const type = TypeDescriptorStub({ kind: 'object', properties: [] });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([]);
+    });
+
+    it('EMPTY: {a union with no members} => no names', () => {
+      const type = TypeDescriptorStub({ kind: 'union', members: [] });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([]);
+    });
   });
 });

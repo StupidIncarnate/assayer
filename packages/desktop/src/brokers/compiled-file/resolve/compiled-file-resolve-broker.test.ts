@@ -137,6 +137,133 @@ describe('compiledFileResolveBroker', () => {
     });
   });
 
+  // The remaining links in the overlay chain (param-type, stub-arrange, cross-file-map, harness) all
+  // default to a same-reference identity, exactly like the compose overlay above. Each gets its own
+  // test proving TWO things a suite of identity-only mocks cannot: the link actually sits in the
+  // chain (its distinguishing output reaches the final view) and it receives the true output of the
+  // link before it (not the raw persisted analysis skipping past an earlier link).
+  describe('param-type overlay', () => {
+    it('VALID: {caller with an imported-type parameter} => serves the resolved-type analysis', async () => {
+      const persisted = FileAnalysisStub();
+      const typed = FileAnalysisStub({ gaps: [{ name: 'paramTypeMarker', reason: 'param-type overlay applied' }] });
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/pick.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
+      proxy.resolvesParamTypesTo({ analysis: typed });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/config' }),
+        relPath: RelPathStub({ value: 'src/pick.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(typed);
+      expect(proxy.paramTypeReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts', analysis: persisted });
+    });
+  });
+
+  describe('stub-arrange overlay', () => {
+    it('VALID: {caller with an object-member branch} => serves the arranged analysis', async () => {
+      const persisted = FileAnalysisStub();
+      const realized = FileAnalysisStub({ gaps: [{ name: 'arrangeMarker', reason: 'stub-arrange overlay applied' }] });
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/pick.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
+      proxy.arrangesTo({ analysis: realized });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/config' }),
+        relPath: RelPathStub({ value: 'src/pick.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(realized);
+      expect(proxy.arrangeReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts', analysis: persisted });
+    });
+  });
+
+  describe('cross-file-map overlay', () => {
+    it('VALID: {caller mapping an imported function over an array param} => serves the folded analysis', async () => {
+      const persisted = FileAnalysisStub();
+      const mapped = FileAnalysisStub({ gaps: [{ name: 'mapMarker', reason: 'cross-file-map overlay applied' }] });
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/pick.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
+      proxy.mapsTo({ analysis: mapped });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/config' }),
+        relPath: RelPathStub({ value: 'src/pick.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(mapped);
+      expect(proxy.mapReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts', analysis: persisted });
+    });
+  });
+
+  describe('harness overlay', () => {
+    it('VALID: {entry whose input gap a colocated harness pays} => serves the harness-driven analysis', async () => {
+      const persisted = FileAnalysisStub();
+      const harnessed = FileAnalysisStub({ gaps: [{ name: 'harnessMarker', reason: 'harness overlay applied' }] });
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/pick.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
+      proxy.harnessesTo({ analysis: harnessed });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/config' }),
+        relPath: RelPathStub({ value: 'src/pick.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(harnessed);
+      expect(proxy.harnessReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts', analysis: persisted });
+    });
+
+    // The harness overlay reads the COLOCATED harness file itself, never the caller's own walked AST
+    // (its call carries no `walked`, unlike the other four overlays) — so unlike them it still applies
+    // when the caller's OWN source cannot be read. A guard that skipped it alongside the others would
+    // silently stop paying a harness-closed gap the moment a caller file went briefly unreadable.
+    it('VALID: {caller source cannot be read} => the harness overlay still applies, since it never reads the caller AST', async () => {
+      const persisted = FileAnalysisStub();
+      const harnessed = FileAnalysisStub({ gaps: [{ name: 'harnessMarker', reason: 'harness overlay applied' }] });
+      const manifest = AssayerCacheManifestStub({
+        namespaces: { main: { files: [{ relPath: 'src/pick.ts', contentHash: 'a'.repeat(64) }] } },
+      });
+
+      const proxy = compiledFileResolveBrokerProxy();
+      proxy.setupManifest({ manifest });
+      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.sourceMissing();
+      proxy.harnessesTo({ analysis: harnessed });
+
+      const result = await compiledFileResolveBroker({
+        repoPath: RepoPathStub({ value: '/repo' }),
+        relPath: RelPathStub({ value: 'src/pick.ts' }),
+      });
+
+      expect(result.analysis).toStrictEqual(harnessed);
+      expect(proxy.harnessReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts', analysis: persisted });
+    });
+  });
+
   describe('error cases', () => {
     it('ERROR: {relPath not present in current namespace} => throws naming the requested relPath', async () => {
       const manifest = AssayerCacheManifestStub({

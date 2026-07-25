@@ -31,10 +31,19 @@ describe('harnessTargetTransformer', () => {
       expect(result).toBe('src/panel.ts');
     });
 
-    it('EMPTY: {no source of either spelling} => resolves nothing', () => {
+    it('EDGE: {neither spelling among the sources} => resolves nothing', () => {
       const result = harnessTargetTransformer({
         relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
         sources: [RelPathStub({ value: 'src/other.ts' })],
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('EMPTY: {no sources at all} => resolves nothing', () => {
+      const result = harnessTargetTransformer({
+        relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+        sources: [],
       });
 
       expect(result).toBe(undefined);

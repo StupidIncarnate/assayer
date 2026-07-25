@@ -81,6 +81,34 @@ const THROWING_SOURCE = [
 const HARNESS_HASH_FOR_SOURCE = '154d4ddeacb957191a21f3a4dd45e97c0380ecfea8cccde178e8c3d52926181a';
 const HARNESS_HASH_FOR_EDIT = '6ba213833769c774182c3e2bfe834a25d6974a2b3e7c64f1e2f6cb0829499617';
 
+const BAND_BLOB = CompiledFileBlobStub({
+  relPath: 'src/band.ts',
+  analysis: FileAnalysisStub({
+    functions: [
+      {
+        entry: {
+          name: 'band',
+          scopePath: ['*module*', 'band'],
+          params: [{ name: 'cb', type: { kind: 'callable', text: '(x: number) => number' } }],
+          returnType: { kind: 'number' },
+          line: 1,
+          access: { kind: 'named' },
+        },
+        branches: [],
+        exits: [],
+        cases: [],
+      },
+    ],
+    declaredTypes: [],
+  }),
+});
+
+const BAND_HARNESS_SOURCE = [
+  "import { assayerHarness } from '@assayer/core';",
+  '',
+  'assayerHarness({ inputs: { band: { cb: (x: number): number => x } } });',
+].join('\n');
+
 describe('compileHarnessGraphBroker', () => {
   describe('a harness that closes an invoiced gap', () => {
     it('VALID: {src/audit.harness.ts declaring audit.report} => records the (entry, param) key against its target', async () => {
@@ -168,6 +196,58 @@ describe('compileHarnessGraphBroker', () => {
             keys: [{ entry: 'audit', param: 'report' }],
           },
         ],
+      });
+    });
+
+    it('VALID: {two harness files supplied out of alphabetical order} => the written index sorts by relPath and the harness hash is order-independent', async () => {
+      const reversedProxy = compileHarnessGraphBrokerProxy();
+      reversedProxy.queueBlob({ blob: AUDIT_BLOB });
+      reversedProxy.queueBlob({ blob: BAND_BLOB });
+      const reversedResult = await compileHarnessGraphBroker({
+        configDir: '/repo',
+        namespace: 'feature-x',
+        blobsDir: '/blobs',
+        resolvedIndex: ResolvedIndexStub(),
+        files: [
+          { relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() },
+          { relPath: RelPathStub({ value: 'src/band.ts' }), contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
+        ],
+        harnesses: [
+          { relPath: RelPathStub({ value: 'src/band.harness.ts' }), content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
+          { relPath: RelPathStub({ value: 'src/audit.harness.ts' }), content: FileContentsStub({ value: HARNESS_SOURCE }) },
+        ],
+      });
+
+      const forwardProxy = compileHarnessGraphBrokerProxy();
+      forwardProxy.queueBlob({ blob: AUDIT_BLOB });
+      forwardProxy.queueBlob({ blob: BAND_BLOB });
+      const forwardResult = await compileHarnessGraphBroker({
+        configDir: '/repo',
+        namespace: 'feature-x',
+        blobsDir: '/blobs',
+        resolvedIndex: ResolvedIndexStub(),
+        files: [
+          { relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() },
+          { relPath: RelPathStub({ value: 'src/band.ts' }), contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
+        ],
+        harnesses: [
+          { relPath: RelPathStub({ value: 'src/audit.harness.ts' }), content: FileContentsStub({ value: HARNESS_SOURCE }) },
+          { relPath: RelPathStub({ value: 'src/band.harness.ts' }), content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
+        ],
+      });
+
+      expect(reversedResult).toStrictEqual(forwardResult);
+      expect(reversedResult).toStrictEqual({
+        index: {
+          layoutHash: EMPTY_HASH,
+          tsconfigHash: EMPTY_HASH,
+          harnessHash: forwardResult.index.harnessHash,
+          harnesses: [
+            { relPath: 'src/audit.harness.ts', targetRelPath: 'src/audit.ts', keys: [{ entry: 'audit', param: 'report' }] },
+            { relPath: 'src/band.harness.ts', targetRelPath: 'src/band.ts', keys: [{ entry: 'band', param: 'cb' }] },
+          ],
+        },
+        errors: [],
       });
     });
 

@@ -69,6 +69,20 @@ describe('readSignatureTypeLayerAdapter', () => {
     });
   });
 
+  describe('enum-literal types', () => {
+    it('VALID: {an enum-member param} => literal fact carrying the member\'s underlying value', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "enum Mode { Fast = 'fast', Slow = 'slow' }\nexport declare function f(m: Mode.Fast): void;\n",
+      );
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('m').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(TypeFactStub({ flavor: 'literal', value: 'fast' }));
+    });
+  });
+
   describe('callable types', () => {
     it('VALID: {function-typed param} => callable fact carrying the rendered signature, never a property-less object', () => {
       readSignatureTypeLayerAdapterProxy();
@@ -112,6 +126,17 @@ describe('readSignatureTypeLayerAdapter', () => {
           properties: [{ name: 'run', fact: { flavor: 'callable', text: '(n: number) => void' } }],
         }),
       );
+    });
+  });
+
+  describe('numeric-literal types', () => {
+    it('VALID: {a numeric-literal param} => literal fact carrying the number', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(n: 7): void;\n');
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(TypeFactStub({ flavor: 'literal', value: 7 }));
     });
   });
 
@@ -162,6 +187,28 @@ describe('readSignatureTypeLayerAdapter', () => {
         TypeFactStub({
           flavor: 'object',
           typeName: 'Config',
+          properties: [
+            { name: 'mode', fact: { flavor: 'string' } },
+            { name: 'retries', fact: { flavor: 'number' } },
+          ],
+        }),
+      );
+    });
+
+    // No name lands on the fact at all — `typeName` is omitted, never an empty string — so an
+    // anonymous shape and a named-but-empty interface stay distinguishable downstream.
+    it('VALID: {inline anonymous-object param} => a keyless object fact enumerating its properties', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export declare function f(o: { mode: string; retries: number }): void;\n',
+      );
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('o').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
           properties: [
             { name: 'mode', fact: { flavor: 'string' } },
             { name: 'retries', fact: { flavor: 'number' } },

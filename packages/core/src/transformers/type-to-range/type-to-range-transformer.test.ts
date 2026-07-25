@@ -99,6 +99,40 @@ describe('typeToRangeTransformer', () => {
         violating: ValueDomainStub({ excluded: [5] }),
       });
     });
+
+    // `x === null`: the literal is exactly `null`, which is a value, not an absence. `null ?? rep` would
+    // treat it as nullish and fall through to the type's representative value, wrongly claiming `x ===
+    // null` is satisfied by 'abc123'. The satisfying member must be `null` itself.
+    it('VALID: {string, eq null} => the satisfying member is null, never the representative value', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'eq', literal: null });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: [null] }),
+        violating: ValueDomainStub({ excluded: [null] }),
+      });
+    });
+
+    // The neq twin of the case above: null moves to the violating arm, and satisfying excludes it.
+    it('VALID: {string, neq null} => the violating member is null, the satisfying arm excludes it', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'neq', literal: null });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ excluded: [null] }),
+        violating: ValueDomainStub({ members: [null] }),
+      });
+    });
+
+    // The ABSENT literal (no comparison value supplied at all) must stay distinguishable from an
+    // explicit `null` literal — the two never conflate, so this falls back to the representative value
+    // exactly as it did before `null` was a possibility, never to `null` itself.
+    it('EMPTY: {string, eq with no literal} => falls back to the representative value, not to null', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'eq' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['abc123'] }),
+        violating: ValueDomainStub({ excluded: ['abc123'] }),
+      });
+    });
   });
 
   describe('numeric predicates', () => {

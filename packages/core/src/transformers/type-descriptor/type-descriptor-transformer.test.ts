@@ -233,5 +233,52 @@ describe('typeDescriptorTransformer', () => {
         TypeDescriptorStub({ kind: 'unknown', text: 'void' }),
       );
     });
+
+    // `typeRef` is the foreign key a consume-time overlay resolves an opaque reference by — carried
+    // across, never re-derived from `text`, so a plain type reference (`config: Config`) stays
+    // resolvable downstream.
+    it('VALID: {flavor: other, typeRef: Config} => unknown carrying the reference name', () => {
+      const fact = TypeFactStub({ flavor: 'other', text: 'Config', typeRef: 'Config' });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),
+      );
+    });
+
+    // A GENERIC reference (`Box<string>`) carries its type ARGUMENTS, each read through this SAME
+    // transformer — `Box<string>` and `Box<number>` are one name and two demands, and it is the
+    // argument that tells them apart downstream (`type-ref-key`).
+    it('VALID: {flavor: other, typeRef: Box, typeArgs: [string]} => unknown carrying the resolved type argument', () => {
+      const fact = TypeFactStub({
+        flavor: 'other',
+        text: 'Box<string>',
+        typeRef: 'Box',
+        typeArgs: [{ flavor: 'string' }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'unknown', text: 'Box<string>', typeRef: 'Box', typeArgs: [{ kind: 'string' }] }),
+      );
+    });
+  });
+
+  describe('property optionality', () => {
+    // Carried through, never re-derived: the checker widens optionality away before any later stage
+    // could ask, so a `mode?: string` property has to keep its own `optional` mark here.
+    it('VALID: {an optional property} => the property descriptor carries optional: true', () => {
+      const fact = TypeFactStub({
+        flavor: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', fact: { flavor: 'string' }, optional: true }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'object',
+          typeName: 'Config',
+          properties: [{ name: 'mode', type: { kind: 'string' }, optional: true }],
+        }),
+      );
+    });
   });
 });

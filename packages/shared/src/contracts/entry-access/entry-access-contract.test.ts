@@ -41,6 +41,12 @@ describe('entryAccessContract', () => {
       expect(result).toStrictEqual({ kind: 'unreachable' });
     });
 
+    it('VALID: {kind: "module"} => parses a module scope, reached by import rather than laid hands on', () => {
+      const result = entryAccessContract.parse({ kind: 'module' });
+
+      expect(result).toStrictEqual({ kind: 'module' });
+    });
+
     it('VALID: {a private driven through its caller} => parses, carrying the caller to drive', () => {
       const result = entryAccessContract.parse({ kind: 'through-caller', callerName: 'outer' });
 
@@ -53,6 +59,18 @@ describe('entryAccessContract', () => {
       expect(() => {
         return entryAccessContract.parse({ kind: 'method', constructable: true });
       }).toThrow(/className/u);
+    });
+
+    it('INVALID: {a constructor with no className} => throws, since a constructor is reached through the class it builds', () => {
+      expect(() => {
+        return entryAccessContract.parse({ kind: 'constructor' });
+      }).toThrow(/className/u);
+    });
+
+    it('INVALID: {a through-caller access with no callerName} => throws, since the runner has nothing to drive', () => {
+      expect(() => {
+        return entryAccessContract.parse({ kind: 'through-caller' });
+      }).toThrow(/callerName/u);
     });
 
     it('INVALID: {kind: "exported"} => throws, since it is not an access shape', () => {

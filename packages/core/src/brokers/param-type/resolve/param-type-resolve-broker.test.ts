@@ -183,6 +183,52 @@ describe('paramTypeResolveBroker', () => {
     });
   });
 
+  // The predicateSignature axis is the ONLY branching a branchless boolean predicate has, and it rides
+  // the same retype the `if`/`else` branch leaves do. Left unresolved, `level` types as `unknown` and the
+  // comparison is unread, so the entry derives no case at all (a GAP, not an admission) — retyping it
+  // lets both the true and false return values split out, exactly as a same-file literal union would.
+  describe('an imported alias to a LITERAL UNION a BRANCHLESS predicate compares against', () => {
+    it("VALID: {isHigh = (level: Level): boolean => level === 'high'} => both return values derive, the gap is gone", () => {
+      const proxy = paramTypeResolveBrokerProxy();
+      proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
+      const walked = tsMorphWalkFileAdapter({
+        source: "import type { Level } from './types';\n\nexport const isHigh = (level: Level): boolean => level === 'high';\n",
+        relPath: 'src/is-high.ts',
+      });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/is-high.ts' });
+
+      const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/is-high.ts' });
+
+      expect({
+        params: result.functions.flatMap((fn) => fn.entry.params),
+        cases: result.functions.flatMap((fn) => fn.cases),
+        gapsBefore: analysis.gaps.map((gap) => String(gap.name)),
+        gapsAfter: result.gaps,
+      }).toStrictEqual({
+        params: [
+          {
+            name: 'level',
+            type: { kind: 'union', members: [{ kind: 'literal', value: 'low' }, { kind: 'literal', value: 'high' }] },
+          },
+        ],
+        cases: [
+          {
+            reachesPath: ['*module*/isHigh/return@top'],
+            arrange: [{ kind: 'param', param: 'level', value: 'high' }],
+            salient: true,
+          },
+          {
+            reachesPath: ['*module*/isHigh/return@top'],
+            arrange: [{ kind: 'param', param: 'level', value: 'low' }],
+            salient: true,
+          },
+        ],
+        gapsBefore: ['isHigh'],
+        gapsAfter: [],
+      });
+    });
+  });
+
   describe('a type no in-repo file declares', () => {
     it('VALID: {an import that resolves outside the repo} => the refusal stands and the analysis is unchanged', () => {
       const proxy = paramTypeResolveBrokerProxy();

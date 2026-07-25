@@ -124,6 +124,45 @@ describe('readTypeFactLayerAdapter', () => {
       );
     });
 
+    // `Config` is a plain type REFERENCE (never a union), so the checker has nothing to say about it in
+    // the hermetic walk — the declaration is the only handle on what the signature meant, and it is the
+    // foreign key a consume-time overlay resolves against.
+    it('VALID: {imported type declared as a plain reference} => the other fact carries typeRef, the reference NAME', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "import type { Db } from './db';\nexport function f(db: Db): void {}\n",
+      );
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({ flavor: 'other', text: 'Db', typeRef: 'Db' }),
+      );
+    });
+
+    // `Box`'s own shape is opaque (imported), but its type ARGUMENT `Config` is declared same-file, so
+    // the argument recurses through this SAME reader and comes back a full object fact — what the
+    // declaration's type parameter stands for.
+    it('VALID: {imported generic reference with a same-file type argument} => typeArgs carries the argument\'s own fact', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "import type { Box } from './box';\ninterface Config { mode: string }\nexport function f(b: Box<Config>): void {}\n",
+      );
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('b');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'other',
+          text: 'Box<Config>',
+          typeRef: 'Box',
+          typeArgs: [{ flavor: 'object', typeName: 'Config', properties: [{ name: 'mode', fact: { flavor: 'string' } }] }],
+        }),
+      );
+    });
+
     it('VALID: {an object property declared Db | string} => the property carries the declared text', () => {
       readTypeFactLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
@@ -161,6 +200,41 @@ describe('readTypeFactLayerAdapter', () => {
             { flavor: 'literal', value: 'closed' },
           ],
           text: '"open" | "closed"',
+        }),
+      );
+    });
+  });
+
+  describe('enum-literal types', () => {
+    it('VALID: {a single enum member as the declared type} => literal fact carrying its value', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "enum Mode { Fast = 'fast', Slow = 'slow' }\nexport function f(m: Mode.Fast): void {}\n",
+      );
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('m').getType();
+
+      expect(readTypeFactLayerAdapter({ type })).toStrictEqual(TypeFactStub({ flavor: 'literal', value: 'fast' }));
+    });
+
+    it('VALID: {the whole enum as the declared type} => union whose members are each an enum-literal fact', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "enum Mode { Fast = 'fast', Slow = 'slow' }\nexport function f(m: Mode): void {}\n",
+      );
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('m').getType();
+
+      expect(readTypeFactLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'union',
+          members: [
+            { flavor: 'literal', value: 'fast' },
+            { flavor: 'literal', value: 'slow' },
+          ],
+          text: 'Mode',
         }),
       );
     });
@@ -335,6 +409,24 @@ describe('readTypeFactLayerAdapter', () => {
             { name: 'next', fact: { flavor: 'object', typeName: 'Tree', truncated: true, properties: [] } },
             { name: 'value', fact: { flavor: 'number' } },
           ],
+        }),
+      );
+    });
+
+    // The checker WIDENS `mode?: string` to the same `string` a required property declares, so only the
+    // DECLARATION can answer whether the shape marks it optional — the same reason a parameter's own
+    // optionality is read off the parameter rather than its type.
+    it('VALID: {interface with an optional property} => the property fact carries optional: true', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'interface Config { mode?: string }\nexport function f(cfg: Config): void {}\n');
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('cfg').getType();
+
+      expect(readTypeFactLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Config',
+          properties: [{ name: 'mode', fact: { flavor: 'string' }, optional: true }],
         }),
       );
     });

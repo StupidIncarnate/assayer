@@ -39,5 +39,29 @@ describe('functionAnalysisContract', () => {
         return functionAnalysisContract.parse({ branches: [], exits: [], cases: [] });
       }).toThrow(/Required/u);
     });
+
+    it('INVALID: {no branches} => throws validation error', () => {
+      const { branches: _omitted, ...rest } = FunctionAnalysisStub();
+
+      expect(() => {
+        return functionAnalysisContract.parse(rest);
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {no exits} => throws validation error', () => {
+      const { exits: _omitted, ...rest } = FunctionAnalysisStub();
+
+      expect(() => {
+        return functionAnalysisContract.parse(rest);
+      }).toThrow(/Required/u);
+    });
+
+    it('INVALID: {no cases} => throws validation error', () => {
+      const { cases: _omitted, ...rest } = FunctionAnalysisStub();
+
+      expect(() => {
+        return functionAnalysisContract.parse(rest);
+      }).toThrow(/Required/u);
+    });
   });
 });

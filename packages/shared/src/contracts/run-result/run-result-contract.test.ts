@@ -1,3 +1,5 @@
+import { DarkSpotStub } from '../dark-spot/dark-spot.stub';
+import { LintEntryStub } from '../lint-entry/lint-entry.stub';
 import { runResultContract } from './run-result-contract';
 import { RunResultStub } from './run-result.stub';
 
@@ -42,6 +44,32 @@ describe('runResultContract', () => {
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
       expect(run.gaps).toStrictEqual([{ name: 'find', reason: 'needs a harness' }]);
+    });
+
+    // The dark spot channel is a DIFFERENT admission from a gap — Assayer's debt, not the caller's —
+    // and reports on its own line rather than folding into gaps.
+    it('VALID: {a run with a dark spot} => the dark spot parses with its reason', () => {
+      const run = RunResultStub({ darkSpots: [DarkSpotStub()] });
+
+      expect(run.darkSpots).toStrictEqual([
+        { kind: 'ForStatement', scopePath: ['sumAll'], reason: 'unhandled-syntax', startLine: 3, endLine: 5 },
+      ]);
+    });
+
+    // The fourth channel, beside gaps/darkSpots/undriven — a lint says "this should not be here",
+    // never "Assayer cannot drive this".
+    it('VALID: {a run with a lint} => the lint parses with its rule and message', () => {
+      const run = RunResultStub({ lints: [LintEntryStub()] });
+
+      expect(run.lints).toStrictEqual([
+        {
+          rule: 'dead-surface',
+          name: 'decide',
+          message: 'nothing in this file calls it, so it is dead surface',
+          startLine: 1,
+          endLine: 7,
+        },
+      ]);
     });
 
     // A run with NO cases and no gaps is the shape this channel exists for: without it, a file whose
@@ -104,26 +132,16 @@ describe('runResultContract', () => {
   });
 
   describe('invalid runs', () => {
-    it('INVALID: {no runId} => throws validation error', () => {
-      expect(() => {
-        return runResultContract.parse({ relPath: 'src/f.ts', cases: [], gaps: [] });
-      }).toThrow(/Required/u);
-    });
+    // Every channel is required, never optional — a run that can omit a gap, a dark spot, an
+    // undriven admission, or a lint reads as complete coverage of the file, which is exactly the lie
+    // those channels exist to prevent. Derived from the contract's own shape rather than a
+    // hand-typed list, so a field added later is covered with no edit here.
+    const REQUIRED_FIELDS = Object.keys(runResultContract.shape);
 
-    // Required for the reason darkSpots is: a run that can omit what it could not drive reads as
-    // complete coverage.
-    it('INVALID: {no gaps} => throws, since an omitted gap reads as full coverage', () => {
-      expect(() => {
-        return runResultContract.parse({ runId: 'r1', relPath: 'src/f.ts', cases: [] });
-      }).toThrow(/Required/u);
-    });
+    it.each(REQUIRED_FIELDS)('INVALID: {missing %s} => throws validation error', (field) => {
+      const entries = Object.entries(RunResultStub()).filter(([key]) => key !== field);
 
-    // Optional would let the one run that most needs this channel — a file with nothing to drive —
-    // be the run that omits it.
-    it('INVALID: {no undriven} => throws, since an omitted admission reads as full coverage', () => {
-      expect(() => {
-        return runResultContract.parse({ runId: 'r1', relPath: 'src/f.ts', cases: [], gaps: [], darkSpots: [] });
-      }).toThrow(/Required/u);
+      expect(() => runResultContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
     });
   });
 });

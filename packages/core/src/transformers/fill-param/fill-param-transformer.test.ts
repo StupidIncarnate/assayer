@@ -133,5 +133,20 @@ describe('fillParamTransformer', () => {
 
       expect(result).toStrictEqual({ kind: 'unfillable', param: 'hooks', type: '() => void[]' });
     });
+
+    // A tuple enumerates as an anonymous object carrying every ReadonlyArray member — rendering the
+    // descriptor buries the one actionable fact. `declaredText` is what the SOURCE spelled, and it wins
+    // over the descriptor's own rendering whenever the two differ.
+    it('INVALID: {a param whose declaredText differs from the descriptor rendering} => unfillable, named by declaredText', () => {
+      const result = fillParamTransformer({
+        param: ParamDescriptorStub({
+          name: 'pair',
+          type: { kind: 'unknown', text: 'ReadonlyArray<string | number>' },
+          declaredText: 'readonly [string, number]',
+        }),
+      });
+
+      expect(result).toStrictEqual({ kind: 'unfillable', param: 'pair', type: 'readonly [string, number]' });
+    });
   });
 });

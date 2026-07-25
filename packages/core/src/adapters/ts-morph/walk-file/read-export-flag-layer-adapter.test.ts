@@ -113,5 +113,23 @@ describe('readExportFlagLayerAdapter', () => {
 
       expect(readExportFlagLayerAdapter({ node, context: WalkContextStub({ exported: false }) })).toBe(false);
     });
+
+    it('VALID: {get accessor of an exported class} => true, inheriting the class reach from context', () => {
+      readExportFlagLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  get m(): string {\n    return "x";\n  }\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.GetAccessor);
+
+      expect(readExportFlagLayerAdapter({ node, context: WalkContextStub({ exported: true }) })).toBe(true);
+    });
+
+    it('VALID: {set accessor of a plain class} => false', () => {
+      readExportFlagLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  set m(v: string) {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SetAccessor);
+
+      expect(readExportFlagLayerAdapter({ node, context: WalkContextStub({ exported: false }) })).toBe(false);
+    });
   });
 });

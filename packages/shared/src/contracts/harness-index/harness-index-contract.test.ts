@@ -45,10 +45,27 @@ describe('harnessIndexContract', () => {
   });
 
   describe('invalid harness indexes', () => {
-    it('INVALID: {no harnessHash} => throws validation error', () => {
+    // Every field is required — an omitted hash reads as an unmoved cache key, and an omitted
+    // harnesses array reads as an empty inventory rather than an unparsed one. Derived from the
+    // contract's own shape rather than a hand-typed list, so a field added later is covered with no
+    // edit here.
+    const REQUIRED_FIELDS = Object.keys(harnessIndexContract.shape);
+
+    it.each(REQUIRED_FIELDS)('INVALID: {missing %s} => throws validation error', (field) => {
+      const entries = Object.entries(HarnessIndexStub()).filter(([key]) => key !== field);
+
+      expect(() => harnessIndexContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
+    });
+
+    it('INVALID: {layoutHash: "not-a-hash"} => throws validation error', () => {
       expect(() => {
-        return harnessIndexContract.parse({ layoutHash: EMPTY_HASH, tsconfigHash: EMPTY_HASH, harnesses: [] });
-      }).toThrow(/Required/u);
+        return harnessIndexContract.parse({
+          layoutHash: 'not-a-hash',
+          tsconfigHash: EMPTY_HASH,
+          harnessHash: EMPTY_HASH,
+          harnesses: [],
+        });
+      }).toThrow(/Invalid/u);
     });
   });
 });

@@ -26,6 +26,17 @@ describe('readGlobalTypeLayerAdapter', () => {
     });
   });
 
+  describe('a numeric-literal type', () => {
+    it('VALID: {7} => a literal fact carrying the number', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: 7 = 7;\n' }) })).toStrictEqual({
+        flavor: 'literal',
+        value: 7,
+      });
+    });
+  });
+
   describe('a union of string literals', () => {
     it('VALID: {"a" | "b"} => a union of literal facts', () => {
       readGlobalTypeLayerAdapterProxy();
@@ -76,6 +87,18 @@ describe('readGlobalTypeLayerAdapter', () => {
       expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: boolean = true;\n' }) })).toStrictEqual({
         flavor: 'boolean',
       });
+    });
+  });
+
+  describe('an enum-literal type', () => {
+    it('VALID: {Mode.Fast} => a literal fact carrying the member\'s underlying value', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(
+        readGlobalTypeLayerAdapter({
+          type: typeOf({ source: "enum Mode { Fast = 'fast', Slow = 'slow' }\nconst a: Mode.Fast = Mode.Fast;\n" }),
+        }),
+      ).toStrictEqual({ flavor: 'literal', value: 'fast' });
     });
   });
 

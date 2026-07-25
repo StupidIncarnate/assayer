@@ -71,6 +71,87 @@ describe('typeFactContract', () => {
 
       expect(result).toStrictEqual({ flavor: 'object', properties: [{ name: 'a', fact: { flavor: 'string' } }] });
     });
+
+    it('VALID: {flavor: "boolean"} => parses the boolean fact', () => {
+      const result = typeFactContract.parse({ flavor: 'boolean' });
+
+      expect(result).toStrictEqual({ flavor: 'boolean' });
+    });
+
+    it('VALID: {flavor: "number"} => parses the number fact', () => {
+      const result = typeFactContract.parse({ flavor: 'number' });
+
+      expect(result).toStrictEqual({ flavor: 'number' });
+    });
+
+    it('VALID: {flavor: "literal", value: "a"} => parses a string literal', () => {
+      const result = typeFactContract.parse({ flavor: 'literal', value: 'a' });
+
+      expect(result).toStrictEqual({ flavor: 'literal', value: 'a' });
+    });
+
+    it('VALID: {flavor: "literal", value: 7} => parses a number literal', () => {
+      const result = typeFactContract.parse({ flavor: 'literal', value: 7 });
+
+      expect(result).toStrictEqual({ flavor: 'literal', value: 7 });
+    });
+
+    it('VALID: {flavor: "literal", value: true} => parses a boolean literal', () => {
+      const result = typeFactContract.parse({ flavor: 'literal', value: true });
+
+      expect(result).toStrictEqual({ flavor: 'literal', value: true });
+    });
+
+    it('VALID: {flavor: "literal", value: null} => parses a null literal', () => {
+      const result = typeFactContract.parse({ flavor: 'literal', value: null });
+
+      expect(result).toStrictEqual({ flavor: 'literal', value: null });
+    });
+
+    // `typeRef`/`typeArgs` are the foreign key a consume-time overlay resolves the real declaration by
+    // — present only when the opaque type was written as a plain reference (`config: Box<string>`).
+    it('VALID: {flavor: "other", typeRef, typeArgs} => parses the opaque type carrying its resolvable reference', () => {
+      const result = typeFactContract.parse({
+        flavor: 'other',
+        text: 'Box<string>',
+        typeRef: 'Box',
+        typeArgs: [{ flavor: 'string' }],
+      });
+
+      expect(result).toStrictEqual({
+        flavor: 'other',
+        text: 'Box<string>',
+        typeRef: 'Box',
+        typeArgs: [{ flavor: 'string' }],
+      });
+    });
+
+    it('VALID: {flavor: "other", no typeRef} => parses an opaque type the declaration spelled as no plain reference', () => {
+      const result = typeFactContract.parse({ flavor: 'other', text: 'Db | string' });
+
+      expect(result).toStrictEqual({ flavor: 'other', text: 'Db | string' });
+    });
+
+    // `truncated` marks where the reader stopped re-entering a type already on its own path
+    // (`interface Tree { next: Tree }`) — the empty property list is where the read ended, not the
+    // type's declaration.
+    it('VALID: {flavor: "object", truncated: true} => parses a self-referential type stopped mid-read', () => {
+      const result = typeFactContract.parse({ flavor: 'object', typeName: 'Tree', truncated: true, properties: [] });
+
+      expect(result).toStrictEqual({ flavor: 'object', typeName: 'Tree', truncated: true, properties: [] });
+    });
+
+    it('VALID: {flavor: "object", a property marked optional} => carries the property optional flag', () => {
+      const result = typeFactContract.parse({
+        flavor: 'object',
+        properties: [{ name: 'a', fact: { flavor: 'string' }, optional: true }],
+      });
+
+      expect(result).toStrictEqual({
+        flavor: 'object',
+        properties: [{ name: 'a', fact: { flavor: 'string' }, optional: true }],
+      });
+    });
   });
 
   describe('invalid type facts', () => {
@@ -78,6 +159,12 @@ describe('typeFactContract', () => {
       expect(() => {
         return typeFactContract.parse({ flavor: 'tuple' });
       }).toThrow(/Invalid discriminator/u);
+    });
+
+    it('INVALID: {flavor: "other", no text} => throws validation error', () => {
+      expect(() => {
+        return typeFactContract.parse({ flavor: 'other', typeRef: 'Config' });
+      }).toThrow(/Required/u);
     });
   });
 });

@@ -74,6 +74,16 @@ a null check reads as success. The undriven text enumerates three comparand kind
 applied to four shapes that are none of them (bare truthiness, `null`, `undefined`, a
 same-file const).
 
+Root cause: `read-condition-layer-adapter.ts`'s `rightLiteral` reader handles
+`StringLiteral`, `NumericLiteral`, `TrueKeyword` and `FalseKeyword` — not `NullKeyword`. So
+the leaf carries `rightLiteral: undefined`, `predicateTransformer` buckets it
+`{kind:'unrecognized'}` alongside a genuinely unreadable `m === TARGET`, and
+`isPredicateConstrainingGuard` calls it non-constraining.
+
+`typeToRangeTransformer` already computes the correct `null` domain, so extending the reader
+activates a path nothing currently reaches. The change moves analyzer output for every
+`=== null` in the catalogue: verify with `npm run test:syntax`, not ward alone.
+
 ### A5. A fillable REST parameter is applied as one array argument instead of spread
 
 ```ts
@@ -185,12 +195,30 @@ dropping refusals on the floor — cannot be seen to regress. Pairs with C1.
 ### D4. No `.tsx` specimen, and the walkers cannot hold one
 
 The runner transform now selects `.tsx` and a probe proves a `.tsx` entry derives and runs
-cases, but a smoke-repo `.tsx` specimen is **invisible to `specimen-catalogue`** (it filters
+cases, but a smoke-repo `.tsx` specimen is **invisible to `specimen-catalogue`** — it filters
 `.ts`, derives roots with `basename(x, '.ts')`, and finds the colocated test with
-`.replace(/\.ts$/)`) while `syntax-surface.harness`'s `fileLeaves`/`dirNames` filter `.ts`
-too — so the app surface e2e would count a file the catalogue could not see, which is
-exactly the silent skip this repo forbids. Teach both walkers `.tsx` first, then add the
-specimen. JSX inside a `.tsx` needs `jsx` in the consumer tsconfig for ts-jest to compile it.
+`.replace(/\.ts$/)`. That is the silent skip this repo forbids: the file would exist and no
+suite would look at it. Teach that walker `.tsx` first, then add the specimen. JSX inside a
+`.tsx` needs `jsx` in the consumer tsconfig for ts-jest to compile it.
+
+`syntax-surface.harness` no longer contributes to this: `fileLeaves`/`dirNames` and
+`surfaceHeaderPattern` now share one `isAnalysedSourceFile` predicate, so the tree sets and
+the header count enumerate the same files. The harness symbol gate applies only to `.ts`,
+since a harness is always `.ts`.
+
+### D5. No specimen carries a GAP and an UNDRIVEN branch on one entry
+
+`analyze-file-broker` drops an entry's undriven admissions when that entry also carries an
+input gap — precedence, never a merge, and one of the few places two admissions meet. No
+specimen declares both on one entry (probed: no `'undriven'` and `'gap:input'` co-occurrence
+in `specimen-registry.ts`), so the rule is pinned only by a hand-built core unit case and
+cannot be seen to regress through real parsing.
+
+### D6. Two `SyntaxTrait` members have no specimen
+
+`access:through-caller` and `access:unreachable`. `uncataloguedTraits` names both honestly,
+so nothing lies — but a trait with no specimen is a trait whose derivation can be lost
+silently.
 
 ## E. Gate and test coverage
 
@@ -222,6 +250,98 @@ integration tests GREEN. Needs an integration-shaped test over a real cache dir.
 Only the emitted config is pinned. A behavioural pin needs a fixture repo **inside the
 workspace** — Jest resolves `ts-jest` relative to `rootDir`, so a `/tmp` fixture dies with
 "Module ts-jest in the transform option was not found". Blocked on D4.
+
+### E4. Three branches need a proxy capability that does not exist
+
+`compile-run-broker`, `config-load-broker` and `stable-namespace-layer-broker` each have a
+branch no test reaches, because the colocated `.proxy.ts` cannot stage what the branch needs:
+a rejection from an unwrapped `fsReadFileAdapter` call, and an assertion that a given
+argument reached a mocked callee.
+
+### E5. `assayer unit <path>` is unreachable from a CLI temp dir
+
+`ts-jest` resolves from a `node_modules` tree relative to the target repo root, which
+`mkdtemp` cannot supply — the run dies with "Module ts-jest in the transform option was not
+found" before reaching anything under test. Real coverage lives in `run-console.e2e.ts`
+against the smoke-repo, which is a real npm workspace. Same root cause as E3.
+
+The generic non-`CliExactOutputError` catch-all in `packages/cli/bin/assayer.ts` is
+unreached for a different reason: it needs a manufactured runtime exception thrown through
+the real compiled pipeline.
+
+## F. Dead surface
+
+Each is probe-backed — no constructible input reaches it. Under this repo's own vocabulary
+that makes them LINT: the repo's debt, to delete rather than to test.
+
+### F1. `isEnumLiteral()` can never independently decide its guard
+
+In `isStringLiteral() || isNumberLiteral() || isEnumLiteral()`, across
+`read-signature-type-layer-adapter.ts`, `read-global-type-layer-adapter.ts` and
+`read-type-fact-layer-adapter.ts`. TypeScript sets the `EnumLiteral` flag only in combination
+with `StringLiteral`/`NumberLiteral`, or folds it into a union an earlier branch handles.
+Probed across seven enum shapes: string member, numeric member, `const enum`, heterogeneous,
+single- and multi-member whole-enum, ambient `declare enum`.
+
+The enum-syntax cases in those three test files are still worth keeping — they pin real
+behaviour — but they reach the branch through `isStringLiteral()`.
+
+### F2. The `declaration === undefined` fallback is unreachable
+
+`{ flavor: 'other', text: 'unknown' }`, in the same three readers. Reaching the properties
+loop requires `getSymbol()` to be defined, and every such symbol carries at least one
+declaration node. `Record<'a'|'b', string>` resolves through its synthetic `__type` symbol to
+the `MappedType` node in `lib.es5.d.ts`; an intersection of object literals has no symbol,
+but then fails `isObject()` and never enters the loop.
+
+### F3. `definition.name === ''` at `read-callee-layer-adapter.ts:80`
+
+Only two paths populate the field. `FunctionDeclaration.getName()` returns `undefined` for an
+anonymous declaration, never `''` — and an anonymous declaration has no identifier for a call
+site to resolve through. `VariableDeclaration.getName()` never sees a destructured binding,
+which produces `BindingElement` nodes that `isVariableDeclaration` excludes. A valid
+identifier is never empty.
+
+The sibling `definition?.name === undefined` disjunct IS reachable, via `const f = 5; f();`.
+
+### F4. Two computed-but-unread branches
+
+- `branch.operand === undefined` at `undriven-branch-transformer.ts:47`, for the
+  `unread-comparison` cause. Every path producing that cause requires all leaves to be
+  arrangeable, and every arrangeable route requires a nameable `operandParamName`.
+- The `distinct` local in `type-to-range-transformer.ts`: its
+  `typeof literal === 'number' ? literal + 1 : …` branches are computed but never read for any
+  `literal !== undefined` input, because the only read site uses `literal` directly.
+
+## G. Invariants held by convention rather than by a rule
+
+### G1. `??` silently discards a legitimate `null` from a derived value
+
+`null` is a first-class member of the domain — `representative-value-contract.ts` states it:
+"`null` is a value in the domain because a nullish operand HAS one." The `non-nullish` case
+of `typeToRangeTransformer` produces its violating arm as exactly `{ members: [null] }`,
+which is what drives every `config.mode ?? fallback` object-member guard.
+
+So `a ?? b` over a derived value substitutes `b` for a correct `null`, and the generated case
+stops exercising the branch it names — while passing. `objectArrangeTransformer` and
+`typeToRangeTransformer` use explicit `=== undefined` checks for this reason, but nothing
+stops the next `??` from reintroducing it. Wants a lint rule over a `RepresentativeValue` /
+`ArrangeValue` operand, per the checklist ratchet.
+
+### G2. `LaunchRunResponder` spawns Electron with no `error` handler
+
+The bare-launch path calls `child_process.spawn` for a detached Electron process and attaches
+no `error` handler to the child, so a spawn failure has nowhere to go. It is also why that
+path is untested — driving it for real risks an unhandled exception that depends on display
+and Electron-binary availability.
+
+## Belongs to `@dungeonmaster/testing`, not here
+
+`registerMock`'s stack-based dispatch routes a write to the wrong handle when a broker's own
+write never fires (an early return) AND a sibling untracked write to the same underlying
+`fs/promises.writeFile` happens elsewhere in the same call graph. Probed:
+`manifestWriteBrokerProxy().getWrittenManifest()` returns a compiled blob rather than a
+manifest. This is the exact collision stack dispatch exists to prevent.
 
 ## Not a defect, but know it
 

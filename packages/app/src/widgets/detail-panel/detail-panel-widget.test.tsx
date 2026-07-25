@@ -1,3 +1,5 @@
+import userEvent from '@testing-library/user-event';
+
 import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
 import { DetailPanelWidget } from './detail-panel-widget';
 import { DetailPanelWidgetProxy } from './detail-panel-widget.proxy';
@@ -243,6 +245,62 @@ describe('DetailPanelWidget', () => {
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('inner(n) · 1 cases');
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6) → reaches L4');
+    });
+  });
+
+  describe('the Enrichment tab', () => {
+    // A row with no range renders just the symbol and its type — the range suffix is appended only
+    // when the branch operands it comes from actually produced one.
+    it('VALID: {an enrichment row with no range} => renders the symbol and type with no range suffix', async () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
+      await userEvent.click(getByTestId('TAB_ENRICHMENT'));
+
+      expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L1  name: string');
+    });
+
+    // The representative value range for a branch operand appends as a braced, comma-joined list.
+    it('VALID: {an enrichment row with a range} => appends the value range', async () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'x', typeText: 'number', range: [0, 1] }] });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      await userEvent.click(getByTestId('TAB_ENRICHMENT'));
+
+      expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L2  x: number  → { 0, 1 }');
+    });
+
+    it('VALID: {hoveredLine equal to the row line} => marks the row matched', async () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 1 })} />,
+      });
+      await userEvent.click(getByTestId('TAB_ENRICHMENT'));
+
+      expect(getByTestId('ENRICHMENT_ROW').getAttribute('data-match')).toBe('true');
+    });
+
+    it('VALID: {hoveredLine not equal to the row line} => marks the row unmatched', async () => {
+      DetailPanelWidgetProxy();
+
+      const { getByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 9 })} />,
+      });
+      await userEvent.click(getByTestId('TAB_ENRICHMENT'));
+
+      expect(getByTestId('ENRICHMENT_ROW').getAttribute('data-match')).toBe('false');
+    });
+
+    it('EMPTY: {no enrichment rows} => renders the empty prompt', async () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({ enrichment: [] });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      await userEvent.click(getByTestId('TAB_ENRICHMENT'));
+
+      expect(getByTestId('ENRICHMENT_EMPTY').textContent).toBe('No enrichment for this file');
     });
   });
 

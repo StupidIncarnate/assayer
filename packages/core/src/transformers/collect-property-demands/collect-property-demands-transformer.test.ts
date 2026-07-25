@@ -103,9 +103,74 @@ describe('collectPropertyDemandsTransformer', () => {
 
       expect(result).toStrictEqual([{ name: 'kind', demand: { kind: 'demanded', values: ['a', 'b', 'c'] } }]);
     });
+
+    it("VALID: {Config{mode}, two leaves reading mode with different literals ('a' then 'b')} => mode demanded the deduped union of both leaves' values", () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub(),
+        leaves: [
+          ConditionLeafStub({
+            operandParamName: 'config',
+            operandPropertyPath: ['mode'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'string' },
+            predicate: { kind: 'eq', literal: 'a' },
+          }),
+          ConditionLeafStub({
+            operandParamName: 'config',
+            operandPropertyPath: ['mode'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'string' },
+            predicate: { kind: 'eq', literal: 'b' },
+          }),
+        ],
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'mode', demand: { kind: 'demanded', values: ['a', 'abc123', 'b'] } },
+        { name: 'retries', demand: { kind: 'unknown' } },
+      ]);
+    });
+  });
+
+  describe('a property whose read fact matches but realizes no value', () => {
+    // Every reader of `handler` compares it with a predicate that carries no literal (`truthy`), and
+    // `handler` is a callable — no scalar of that type exists to fall back on (representativeValueTransformer
+    // refuses callables). Both arms realize to nothing, so the match must not produce a `demanded` demand
+    // with an empty values array — that would read as a real demand with nothing in it.
+    it('EDGE: {Config{handler: callable}, handler is truthy} => handler stays unknown, not a demanded with empty values', () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub({
+          name: 'Config',
+          properties: [{ name: 'handler', type: { kind: 'callable', text: '() => void' } }],
+        }),
+        leaves: [
+          ConditionLeafStub({
+            operandParamName: 'config',
+            operandPropertyPath: ['handler'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'unknown', text: 'any' },
+            predicate: { kind: 'truthy' },
+          }),
+        ],
+      });
+
+      expect(result).toStrictEqual([{ name: 'handler', demand: { kind: 'unknown' } }]);
+    });
   });
 
   describe('a property no read fact reaches', () => {
+    it('EDGE: {a leaf with no object-member read (a plain scalar-param leaf)} => every property stays unknown', () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub(),
+        leaves: [ConditionLeafStub()],
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'mode', demand: { kind: 'unknown' } },
+        { name: 'retries', demand: { kind: 'unknown' } },
+      ]);
+    });
+
     it('EMPTY: {no leaves} => every property is an unknown demand', () => {
       const result = collectPropertyDemandsTransformer({ declaredType: DeclaredTypeStub(), leaves: [] });
 
@@ -147,6 +212,26 @@ describe('collectPropertyDemandsTransformer', () => {
             predicate: { kind: 'eq', literal: 'a' },
           }),
         ],
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'mode', demand: { kind: 'unknown' } },
+        { name: 'retries', demand: { kind: 'unknown' } },
+      ]);
+    });
+  });
+
+  describe('property ordering', () => {
+    it("VALID: {Config{retries,mode} declared out of alphabetical order} => properties returned sorted 'mode' before 'retries'", () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub({
+          name: 'Config',
+          properties: [
+            { name: 'retries', type: { kind: 'number' } },
+            { name: 'mode', type: { kind: 'string' } },
+          ],
+        }),
+        leaves: [],
       });
 
       expect(result).toStrictEqual([

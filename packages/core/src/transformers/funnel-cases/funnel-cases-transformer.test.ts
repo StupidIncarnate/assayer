@@ -186,6 +186,31 @@ describe('funnelCasesTransformer', () => {
     });
   });
 
+  describe('a surface with a sibling param the fill seam refuses', () => {
+    // `sink` is a callback param no fill can build. It is not steered by any callback array, so every
+    // combination's own fill attempt for it fails and every case is dropped — silently, since the
+    // SURFACE's own refusal is not this function's to report (its own derivation invoices it).
+    const SURFACE = ScopeRecordStub({
+      scopePath: ['*module*', 'run'],
+      name: 'run',
+      params: [
+        { name: 'items', type: { kind: 'array', element: { kind: 'number' } } },
+        { name: 'sink', type: { kind: 'callable', text: '(m: string) => void' } },
+      ],
+      returnType: { kind: 'array', element: { kind: 'string' } },
+      startLine: 1,
+      endLine: 3,
+      branches: [],
+      exits: [SURFACE_EXIT],
+    });
+
+    it('VALID: {surface also takes an unfillable sink} => every combination drops, no case and no refusal reported here', () => {
+      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
+
+      expect(result).toStrictEqual({ cases: [], unfillable: [] });
+    });
+  });
+
   describe('a surface with no exit to funnel through', () => {
     const SURFACE = ScopeRecordStub({
       scopePath: ['*module*', 'run'],

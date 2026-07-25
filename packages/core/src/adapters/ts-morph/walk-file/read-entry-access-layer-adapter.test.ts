@@ -160,6 +160,43 @@ describe('readEntryAccessLayerAdapter', () => {
       ).toStrictEqual({ kind: 'constructor', className: 'C' });
     });
 
+    it('EDGE: {a constructor with no class in context} => unreachable rather than a guessed class name', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  constructor() {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.Constructor);
+
+      expect(readEntryAccessLayerAdapter({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'unreachable' });
+    });
+
+    it('VALID: {get accessor of a class} => method, the same access shape a plain method gets', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  get m(): string {\n    return "x";\n  }\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.GetAccessor);
+
+      expect(
+        readEntryAccessLayerAdapter({
+          node,
+          context: WalkContextStub({ enclosingClass: { name: 'C', constructable: true } }),
+        }),
+      ).toStrictEqual({ kind: 'method', className: 'C', constructable: true });
+    });
+
+    it('VALID: {set accessor of a class} => method, the same access shape a plain method gets', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  set m(v: string) {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SetAccessor);
+
+      expect(
+        readEntryAccessLayerAdapter({
+          node,
+          context: WalkContextStub({ enclosingClass: { name: 'C', constructable: true } }),
+        }),
+      ).toStrictEqual({ kind: 'method', className: 'C', constructable: true });
+    });
+
     it('EDGE: {method with no class in context} => unreachable rather than a guessed class name', () => {
       readEntryAccessLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });

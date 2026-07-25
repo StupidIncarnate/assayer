@@ -129,6 +129,31 @@ describe('unitReportFormatTransformer', () => {
     });
   });
 
+  describe('multiple runs in one invocation', () => {
+    // `assayer unit a.ts b.ts` derives ONE run per file; each keeps its own header, failures, and
+    // link, joined into a single report rather than merged into one combined count.
+    it('VALID: {two runs, one passing and one erroring} => each keeps its own header and link, joined by the run boundary', () => {
+      const runs = [
+        RunResultStub({ relPath: 'src/a.ts', runId: 'r-a' }),
+        RunResultStub({
+          relPath: 'src/b.ts',
+          runId: 'r-b',
+          cases: [CaseResultStub({ status: 'errored', observedPath: [], message: 'threw before reaching an exit: boom' })],
+        }),
+      ];
+
+      const result = unitReportFormatTransformer({ runs });
+
+      expect(String(result)).toBe(
+        'src/a.ts  1/1 passed\n' +
+          'src/b.ts  0/1 passed\n' +
+          '  ERROR grade(6, 2)\n' +
+          '    threw before reaching an exit: boom\n' +
+          '  assayer detail r-b',
+      );
+    });
+  });
+
   describe('undriven logic', () => {
     // Without this line the report above is the WHOLE report for a file of pure module-scope
     // branching — `0/0 passed`, which is exactly what an empty file prints.

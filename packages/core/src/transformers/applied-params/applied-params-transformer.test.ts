@@ -31,11 +31,11 @@ describe('appliedParamsTransformer', () => {
       expect(appliedParamsTransformer({ params })).toStrictEqual([{ name: 'size', type: { kind: 'number' } }]);
     });
 
-    it('VALID: {a rest array of callbacks} => dropped, so the entry is driven as collect(11)', () => {
-      const params = [
-        SIZE,
-        ParamDescriptorStub({ name: 'sinks', type: { kind: 'array', element: REPORT_TYPE }, optional: true, rest: true }),
-      ];
+    // A rest parameter is never ALSO optional in a real walk (`param.isOptional()` and
+    // `param.isRestParameter()` are independent ts-morph checks) — `rest` alone must trip the same
+    // debt-free path `optional` does, on its own.
+    it('VALID: {a rest array of callbacks, rest alone} => dropped, so the entry is driven as collect(11)', () => {
+      const params = [SIZE, ParamDescriptorStub({ name: 'sinks', type: { kind: 'array', element: REPORT_TYPE }, rest: true })];
 
       expect(appliedParamsTransformer({ params })).toStrictEqual([{ name: 'size', type: { kind: 'number' } }]);
     });
