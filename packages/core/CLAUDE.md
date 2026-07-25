@@ -339,6 +339,10 @@ should do.
    MOVES from `sad-path/` to `happy-path/`. If it's currently a dark spot, assert THAT first (a
    ratchet), then flip it. The surface e2e derives its expected surface off disk, so it needs no edit
    for a new file — see §8.
+   The bucket judges the RUN, never the source, which is why one source can legitimately sit in both:
+   `sad-path/input-gap/callback-param` and `happy-path/harness/callback-param` are byte-identical files
+   whose verdicts differ by one committed `<basename>.harness.ts`. A specimen moves when its OWN verdict
+   changes, not when a feature that could change it lands.
 1b. **Declare it** in `packages/core/test/harnesses/specimen-registry.ts` — one line naming what the
    file IS (`['access:named', 'branch:if']`), never what to test. The matrix walks the catalogue off
    disk, so an undeclared specimen fails the catalogue check rather than being skipped, and the

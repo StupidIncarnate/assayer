@@ -5,8 +5,7 @@
 > where it is known, and what closing it involves. Delete an entry when it closes — never
 > annotate it as resolved.
 >
-> **Scope:** everything except the values a derived case hands its parameters, which live
-> in `plan/arrange-inputs.md`.
+> **Scope:** every open defect, with no companion register. Anything not here is not known.
 >
 > **Verify any fix with BOTH** `npm run ward` and `npm run test:syntax` — the specimen
 > catalogue is not in ward's jest graph. `npm run typecheck:syntax` is a third gate and is
@@ -97,6 +96,27 @@ non-env binding positionally — so the entry is called `tally(11, [7])` and `ns
 the fix has the fact it needs: spread a rest binding in the interpreter, or give the arrange
 a rest-shaped binding kind.
 
+### A6. A truthy guard on a PARAMETER is arranged truthy on both arms
+
+`object-arrange` refuses the falsy arm of a truthiness read on a PROPERTY with no scalar
+point (`is-falsy-arm-guard` is the rule), so `if (config.db)` derives ONE case. The same
+read of the PARAMETER itself does not: `cause-arrange` fills the param from the seam on
+both arms, and every value the seam builds — `{}`, `[]`, `{ host: 'abc123' }` — is truthy.
+
+Probed:
+
+- `if (config)` on a `Config` param → **2 cases**, both arranging `{ mode: 'abc123' }`. The
+  one predicting the else exit cannot reach it, and fails against correct code.
+- `if (tags)` on a `string[]` param → **6 cases** (3 cardinalities × 2 arms). All three else
+  cases arrange a truthy array, `[]` included.
+
+The rule and its guard already exist and are tested; what is missing is the refusal path in
+`cause-arrange`, whose `unfillable` channel is already carried out for the `fill-param`
+case. No specimen exercises either form.
+
+Of everything in section A this is the cheapest real fix — the decision is made, the guard
+is written, and only the call site is absent.
+
 ## B. Types that are refused although a value exists
 
 Each derives 0 cases and a GAP (exit 1). The invoice is accurate and ~1000 characters,
@@ -138,6 +158,24 @@ The derived CASES are correct — `stub-realize` arranges those branches from th
 per-property demands — but the enrichment panel shows `any` on the branch line, and any
 future consumer of the leaf's operand type reads a collapsed one. Indexing the resolved
 object descriptor by `operandPropertyPath` would close it.
+
+### B4. A branch on a DEEP property path derives nothing, and says the wrong reason
+
+`fill-value-transformer` builds a nested object value for any declared shape, so an
+unsteered `{ db: { retry: { backoff: string } } }` param is a real nested object. What is
+still flat is the CONSTRAINED side: `object-arrange` and `collect-property-demands` match
+only a single-segment property path.
+
+Probed against a three-layer `Config → db → retry`:
+
+- The walk reads all three layers perfectly and the leaf captures
+  `operandPropertyPath: ["db","retry","backoff"]` with `operandTypeRef: "Config"`. Nothing
+  is lost on the way in.
+- A branch on that path derives **0 cases and admits UNDRIVEN**, and the message misleads —
+  it says "make the deciding value a parameter" when the real reason is DEPTH.
+
+Closing it means following a multi-segment path through both transformers, which also
+retires the misleading admission.
 
 ## C. Harness remainders
 
@@ -328,7 +366,29 @@ stops exercising the branch it names — while passing. `objectArrangeTransforme
 stops the next `??` from reintroducing it. Wants a lint rule over a `RepresentativeValue` /
 `ArrangeValue` operand, per the checklist ratchet.
 
-### G2. `LaunchRunResponder` spawns Electron with no `error` handler
+### G2. Nothing checks a derived arrange against the type it was derived from
+
+There is no TypeScript to typecheck, by ruling: the shim is `assayer.test.js` and the cases
+are `cases.json` DATA (`assemble-shim-transformer` — emitted `.test.ts` files would be a
+second source of truth that drifts and invites hand-editing).
+
+The check does not need `tsc`. Both halves are already in memory at derivation:
+`entry.params[].type` (a `TypeDescriptor`) and the `ArrangeBinding` just built. "Does this
+value satisfy this descriptor" is a pure structural comparison, and it is P4-clean — a
+derived INPUT against a DECLARED type, nothing executed.
+
+Routing every fill through one seam removed the class of bug this would have caught, so what
+remains is the ratchet: a NEW producer that builds a binding by hand can still disagree with
+the type, and nothing validates the join, because a binding names its parameter by string
+while the type lives one object over on `entry.params`. Every wrong-shape value found during
+this work — a string in a `string[]` property, `{}` for a truncated recursive type — reached
+a running case past exactly this missing seam.
+
+A violation is a **P1 build error**, never one of the four admissions: Assayer contradicting
+a type it read itself is its own invariant broken, not the reader's debt. It wants ONE seam,
+where the case set is finalized, so it covers every producer.
+
+### G3. `LaunchRunResponder` spawns Electron with no `error` handler
 
 The bare-launch path calls `child_process.spawn` for a detached Electron process and attaches
 no `error` handler to the child, so a spawn failure has nowhere to go. It is also why that
