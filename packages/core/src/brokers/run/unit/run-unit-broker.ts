@@ -24,7 +24,7 @@
  * await runUnitBroker({ cacheDir, coreRoot, repoRoot, relPath, absPath, source, runId, analyzerContentHash });
  * // Returns { runId, relPath, cases: [{ status, observedPath, trace }], gaps, darkSpots, undriven }
  */
-import { runResultContract } from '@assayer/shared/contracts';
+import { relPathContract, runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
@@ -36,10 +36,13 @@ import { jestRunCliAdapter } from '../../../adapters/jest/run-cli/jest-run-cli-a
 import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { assembleShimTransformer } from '../../../transformers/assemble-shim/assemble-shim-transformer';
 import { caseSetProjectionTransformer } from '../../../transformers/case-set-projection/case-set-projection-transformer';
+import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { composeCrossFileMapBroker } from '../../compose/cross-file-map/compose-cross-file-map-broker';
 import { composeCrossFilePredicatesBroker } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker';
+import { harnessRealizeBroker } from '../../harness/realize/harness-realize-broker';
+import { paramTypeResolveBroker } from '../../param-type/resolve/param-type-resolve-broker';
 import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
@@ -64,12 +67,22 @@ export const runUnitBroker = async ({
   analyzerContentHash: string;
 }): Promise<RunResult> => {
   const walked = tsMorphWalkFileAdapter({ source, relPath });
+  // First, the types: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
+  // fill seam refuses it and the entry is invoiced for an input Assayer can build perfectly well. This
+  // resolves the declaration against the sibling on disk and re-projects the file from it, so every
+  // overlay below reads real parameter types.
+  const typed = paramTypeResolveBroker({
+    analysis: analyzeFileBroker({ walked, relPath }),
+    walked,
+    root: repoRoot,
+    relPath,
+  });
   // A caller's opaque `if (helper(x))` guard over an IMPORTED predicate is composed here, at consume
   // time, against the sibling on disk — the same-file compose inside `analyzeFileBroker` refuses
   // imports because the per-file blob never reads another file. Applied before the case set is
   // projected, so the runnable cases and any unreachable-exit lint reflect the composed guard.
   const composed = composeCrossFilePredicatesBroker({
-    analysis: analyzeFileBroker({ walked, relPath }),
+    analysis: typed,
     walked,
     root: repoRoot,
     relPath,
@@ -88,14 +101,26 @@ export const runUnitBroker = async ({
   // (`items.map(bandReading)`) folds that sibling callee's branches into the surface's own case set,
   // against the sibling on disk — the same per-run sibling read as compose, and the array/element twin
   // of the inline-callback funnel `analyzeFileBroker` builds for a same-file callback.
-  const analysis = composeCrossFileMapBroker({ analysis: realized, walked, root: repoRoot, relPath });
+  const mapped = composeCrossFileMapBroker({ analysis: realized, walked, root: repoRoot, relPath });
+  // Last, the harness overlay: an entry whose input Assayer refused is DRIVEN here from the colocated
+  // `<basename>.harness.ts`, read fresh per run and never persisted. It runs after the overlays above
+  // because each of those can turn a refusal into something Assayer builds itself, and a harness may only
+  // pay a debt that is still owed once everything derivable has been derived.
+  const analysis = harnessRealizeBroker({ analysis: mapped, root: repoRoot, relPath });
   const contentHash = cryptoSha256Adapter({ content: source });
 
   const probeDir = `${cacheDir}/probes`;
   const runDir = `${cacheDir}/runs/${runId}`;
   const caseSetPath = `${runDir}/cases.json`;
   const resultPath = `${runDir}/run.json`;
-  const caseSet = caseSetProjectionTransformer({ analysis, relPath, modulePath: absPath });
+  const caseSet = caseSetProjectionTransformer({
+    analysis,
+    relPath,
+    modulePath: absPath,
+    // Where a colocated harness WOULD be, always: the projection names it only when some case actually
+    // reaches for a supplied input, so the two facts cannot drift apart.
+    harnessPath: `${repoRoot}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`,
+  });
 
   await fsMkdirAdapter({ path: probeDir });
   await fsMkdirAdapter({ path: runDir });
@@ -140,6 +165,7 @@ export const runUnitBroker = async ({
     content: assembleShimTransformer({
       caseSetPath,
       adaptersPath: `${coreRoot}/dist/adapters`,
+      registrarPath: `${coreRoot}/harness-registrar.js`,
       resultPath,
       runId,
     }),

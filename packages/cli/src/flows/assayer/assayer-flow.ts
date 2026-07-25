@@ -69,6 +69,7 @@ export const AssayerFlow = async ({
       // Repo-wide, from the config the precheck already resolved — never a per-file decision.
       darkSpots: String(precheck.config.darkSpots),
       deadSurface: String(precheck.config.deadSurface),
+      inputGaps: String(precheck.config.inputGaps),
     });
   }
 

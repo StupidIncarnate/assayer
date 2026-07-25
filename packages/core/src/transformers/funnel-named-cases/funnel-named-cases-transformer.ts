@@ -18,14 +18,22 @@
  *   scope in. `consumed` names every private the funnel drove, so the follower drops them from its
  *   per-scope classification instead of double-reporting them as through-caller entries.
  *
+ *   `unfillable` rides up the same way, tagged at each hop with the scope that DECLARES the refused
+ *   parameter. A funnelled private is no entry of its own, so a parameter its signature declares and the
+ *   fill seam refuses would otherwise stop the surface deriving anything with nothing said — the exact
+ *   reads-as-complete silence the gap channel exists to break. The surface's own refusals are tagged with
+ *   the surface, and the gap channel de-duplicates them against its own derivation's.
+ *
  * USAGE:
  * funnelNamedCasesTransformer({ scope: outer, scopes, welds: new Map() });
- * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }], consumed: [{ name, startLine }] }
+ * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }], consumed: [{ name, startLine }],
+ * //   unfillable: [{ param, type, owner }] }
  */
-import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ConstLength, DerivedTestCase, LineNumber, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import { derivedTestCaseContract, entryLabelContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumber, RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
+import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
@@ -49,6 +57,7 @@ export const funnelNamedCasesTransformer = ({
     displayName: SymbolName;
   }[];
   consumed: { name: SymbolName; startLine: LineNumber }[];
+  unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[];
 } => {
   // This scope's own cases, over its own branches with any inherited weld stamped — the same derivation
   // a directly-analyzed scope gets, so a welded arm evaluates rather than being admitted.
@@ -59,6 +68,10 @@ export const funnelNamedCasesTransformer = ({
     envDrivable: false,
     ...(scope.predicateSignature === undefined ? {} : { returnPredicate: scope.predicateSignature }),
   });
+
+  // The scope parameters a call supplies, in declaration order because the interpreter applies them
+  // positionally — a trailing one no caller owes and the seam cannot build is not part of the call.
+  const scopeParams = appliedParamsTransformer({ params: scope.params });
 
   const perBase = derived.cases.map((baseCase) => {
     const [exitId] = baseCase.reachesPath;
@@ -71,6 +84,7 @@ export const funnelNamedCasesTransformer = ({
         cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
         unreachable: [],
         consumed: [] as { name: SymbolName; startLine: LineNumber }[],
+        unfillable: [] as { param: SymbolName; type: TypeText; owner: EntryLabel }[],
       };
     }
 
@@ -98,30 +112,45 @@ export const funnelNamedCasesTransformer = ({
 
     const sub = funnelNamedCasesTransformer({ scope: privateScope, scopes, welds: privateWelds });
 
-    const cases = sub.cases.map((subCase) =>
-      derivedTestCaseContract.parse({
-        // The private's path reaches its own exit(s) first, then this scope returns through the exit
-        // that called it.
-        reachesPath: [...subCase.reachesPath, exit.coverageId],
-        arrange: scope.params.map((param) => {
-          const [calleeParam] =
-            [...calleeToScope.entries()].find(([, callerParam]) => String(callerParam) === String(param.name)) ?? [];
-          const binding =
-            calleeParam === undefined
-              ? undefined
-              : subCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(calleeParam));
-          // A steered surface param takes the private's arranged value under its own name; every other
-          // surface param is unsteered and filled representative so the surface stays callable.
-          return binding === undefined ? fillParamTransformer({ param }) : { ...binding, param: param.name };
-        }),
-        salient: true,
-      }),
-    );
+    const cases = sub.cases.flatMap((subCase) => {
+      // A steered surface param takes the private's arranged value under its own name; every other
+      // surface param goes through the shared fill seam so the surface stays callable — and a param the
+      // seam REFUSES drops the case, since the surface cannot be called at all.
+      const arrange = scopeParams.flatMap((param): ArrangeBinding[] => {
+        const [calleeParam] =
+          [...calleeToScope.entries()].find(([, callerParam]) => String(callerParam) === String(param.name)) ?? [];
+        const binding =
+          calleeParam === undefined
+            ? undefined
+            : subCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(calleeParam));
+
+        if (binding !== undefined && binding.kind !== 'env') {
+          return [{ ...binding, param: param.name }];
+        }
+
+        const fill = fillParamTransformer({ param });
+
+        return fill.kind === 'filled' ? [fill.binding] : [];
+      });
+
+      return arrange.length === scopeParams.length
+        ? [
+            derivedTestCaseContract.parse({
+              // The private's path reaches its own exit(s) first, then this scope returns through the
+              // exit that called it.
+              reachesPath: [...subCase.reachesPath, exit.coverageId],
+              arrange,
+              salient: true,
+            }),
+          ]
+        : [];
+    });
 
     return {
       cases,
       unreachable: sub.unreachable,
       consumed: [{ name: privateScope.name, startLine: privateScope.startLine }, ...sub.consumed],
+      unfillable: sub.unfillable,
     };
   });
 
@@ -133,5 +162,12 @@ export const funnelNamedCasesTransformer = ({
       ...perBase.flatMap((entry) => entry.unreachable),
     ],
     consumed: perBase.flatMap((entry) => entry.consumed),
+    // Same shape as `unreachable`: this scope's own refusals tagged with ITS name, the deeper ones
+    // already tagged with theirs. The top hop is the surface, whose own derivation invoices the same
+    // refusals — the gap channel de-duplicates on (scope, parameter), so it is stated once.
+    unfillable: [
+      ...derived.unfillable.map((refusal) => ({ ...refusal, owner: entryLabelContract.parse(String(scope.name)) })),
+      ...perBase.flatMap((entry) => entry.unfillable),
+    ],
   };
 };

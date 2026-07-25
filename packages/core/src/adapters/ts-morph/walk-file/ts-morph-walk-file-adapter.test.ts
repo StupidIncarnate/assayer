@@ -22,6 +22,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        declaredShapes: [],
         reachedFns: [],
         invokedFns: [],
         probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 0 }],
@@ -56,6 +57,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        declaredShapes: [],
         reachedFns: [],
         invokedFns: [],
         probeSites: [
@@ -110,6 +112,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        declaredShapes: [],
         reachedFns: [],
         invokedFns: [],
         probeSites: [
@@ -196,6 +199,18 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        // A class DECLARES its instance shape, on the same channel an interface does — a sibling that
+        // takes a `Classifier` needs the same answer either way.
+        declaredShapes: [
+          {
+            name: 'Classifier',
+            type: {
+              kind: 'object',
+              typeName: 'Classifier',
+              properties: [{ name: 'classify', type: { kind: 'callable', text: '(value: number) => string' } }],
+            },
+          },
+        ],
         reachedFns: [],
         invokedFns: [],
         probeSites: [
@@ -254,6 +269,18 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        // Declaring a shape is not exporting one: an unexported class still describes the instance
+        // type its own file's readers name.
+        declaredShapes: [
+          {
+            name: 'Classifier',
+            type: {
+              kind: 'object',
+              typeName: 'Classifier',
+              properties: [{ name: 'classify', type: { kind: 'callable', text: '(value: number) => string' } }],
+            },
+          },
+        ],
         reachedFns: [],
         invokedFns: [],
         probeSites: [
@@ -312,6 +339,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        declaredShapes: [],
         reachedFns: [],
         invokedFns: [],
         probeSites: [
@@ -422,6 +450,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        declaredShapes: [],
         reachedFns: [],
         invokedFns: [],
         probeSites: [
@@ -494,6 +523,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        declaredShapes: [],
         reachedFns: [],
         invokedFns: [],
         probeSites: [
@@ -566,6 +596,7 @@ describe('tsMorphWalkFileAdapter', () => {
         globalUses: [],
         envReads: [],
         moduleEdges: [],
+        declaredShapes: [],
         reachedFns: [],
         invokedFns: [],
         probeSites: [

@@ -22,10 +22,17 @@
  *   that resolves to no declared shape, is a same-reference pass-through that touches no disk.
  *
  * USAGE:
+ *   An entry it drives also stops owing its input GAP: the object param the per-file fill seam refused
+ *   (a cross-file type is opaque in the hermetic walk) is the very one arranged here, so the invoice is
+ *   paid rather than reprinted — the same reconciliation the undriven admission gets, on the channel
+ *   that names the other debt.
+ *
+ * USAGE:
  * stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays });
  * // Returns the FileAnalysis with object-member branches driven and their undriven admissions cleared
  */
 import {
+  arrangeBindingContract,
   derivedTestCaseContract,
   fileAnalysisContract,
   stubIndexContract,
@@ -43,12 +50,13 @@ import type { CaseSignature } from '../../../contracts/case-signature/case-signa
 import type { PredictedOutput } from '../../../contracts/predicted-output/predicted-output-contract';
 import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
 import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { appliedParamsTransformer } from '../../../transformers/applied-params/applied-params-transformer';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
 import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
+import { fillParamTransformer } from '../../../transformers/fill-param/fill-param-transformer';
 import { inputBucketsTransformer } from '../../../transformers/input-buckets/input-buckets-transformer';
 import { objectArrangeTransformer } from '../../../transformers/object-arrange/object-arrange-transformer';
 import { predictedOutputTransformer } from '../../../transformers/predicted-output/predicted-output-transformer';
-import { representativeValueTransformer } from '../../../transformers/representative-value/representative-value-transformer';
 import { stubViewTransformer } from '../../../transformers/stub-view/stub-view-transformer';
 import { isObjectMemberLeafGuard } from '../../../guards/is-object-member-leaf/is-object-member-leaf-guard';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
@@ -196,6 +204,10 @@ export const stubRealizeBroker = ({
         .map((leaf) => [String(leaf.operandParamName), String(leaf.operandTypeRef)] as const),
     );
 
+    // The parameters a call supplies — the same narrowing derive-cases arranges over, so an entry with
+    // a trailing optional callback beside its object param is driven without it rather than dropped.
+    const applied = appliedParamsTransformer({ params: fn.entry.params });
+
     // Each input bucket arranged and mapped to the exit control flow reaches: the MAXIMAL-length guard
     // path the bucket's arms satisfy, exactly as derive-cases picks it. A bucket whose object arrange is
     // unreachable (a property no value satisfies) or that reaches no single exit is dropped.
@@ -207,13 +219,18 @@ export const stubRealizeBroker = ({
       const maxLength = consistent.reduce((longest, exit) => Math.max(longest, exit.guardPath.length), -1);
       const maximal = consistent.filter((exit) => exit.guardPath.length === maxLength);
 
-      const arranged = fn.entry.params.map((param) => {
+      const arranged = applied.map((param) => {
         const typeRef = typeRefByParam.get(String(param.name));
         const resolved = typeRef === undefined ? undefined : resolvedTypes.get(typeRef);
         const stub = resolved === undefined ? undefined : stubByKey.get(`${resolved.definitionRelPath}#${String(typeRef)}`);
 
+        // A param no stub covers — a scalar or ARRAY sibling of the object one — goes through the SAME
+        // fill seam every other derivation uses, so a `number[]` sibling gets a real array and a param
+        // the seam refuses returns no binding at all.
         if (resolved === undefined || stub === undefined) {
-          return { unreachable: false, binding: { kind: 'param' as const, param: param.name, value: representativeValueTransformer({ type: param.type }) } };
+          const fill = fillParamTransformer({ param });
+
+          return { unreachable: false, binding: fill.kind === 'filled' ? fill.binding : undefined };
         }
 
         const objectArrange = objectArrangeTransformer({
@@ -228,18 +245,25 @@ export const stubRealizeBroker = ({
 
         return {
           unreachable: objectArrange.unreachable,
-          binding: {
-            kind: 'object' as const,
-            param: param.name,
-            value: Object.fromEntries(objectArrange.properties.map((property) => [String(property.name), property.value])),
-          },
+          binding: objectArrange.unfillable
+            ? undefined
+            : arrangeBindingContract.parse({
+                kind: 'object',
+                param: param.name,
+                value: Object.fromEntries(objectArrange.properties.map((property) => [String(property.name), property.value])),
+              }),
         };
       });
+
+      const arrange = arranged.flatMap((entry) => (entry.binding === undefined ? [] : [entry.binding]));
 
       return {
         exit: maximal.length === 1 ? maximal[0] : undefined,
         unreachable: arranged.some((entry) => entry.unreachable),
-        arrange: arranged.map((entry) => entry.binding),
+        // A bucket missing any binding cannot be run — the entry has a param no value of the right shape
+        // exists for — so it derives nothing, exactly as an unreachable one does.
+        unfillable: arrange.length !== applied.length,
+        arrange,
       };
     });
 
@@ -247,7 +271,7 @@ export const stubRealizeBroker = ({
     // first per predicted output is the execution representative — exactly as derive-cases does.
     const seen = new Set<CaseSignature>();
     const feasible = evaluated.flatMap((entry) => {
-      if (entry.exit === undefined || entry.unreachable) {
+      if (entry.exit === undefined || entry.unreachable || entry.unfillable) {
         return [];
       }
 
@@ -269,7 +293,13 @@ export const stubRealizeBroker = ({
       return derivedTestCaseContract.parse({ reachesPath: entry.reachesPath, arrange: entry.arrange, salient });
     });
 
-    return { entry: fn.entry, branches: fn.branches, exits: fn.exits, cases };
+    return {
+      entry: fn.entry,
+      branches: fn.branches,
+      exits: fn.exits,
+      cases,
+      ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
+    };
   });
 
   // The stale branch admissions the per-file walk put on the now-driven entries, keyed by name + branch
@@ -279,9 +309,17 @@ export const stubRealizeBroker = ({
     drivable.flatMap((fn) => fn.branches.map((branch) => `${String(fn.entry.name)}#${String(branch.startLine)}`)),
   );
 
+  // The GAP twin of that reconciliation. An entry whose object param the per-file fill seam refused —
+  // a cross-file `Config` is opaque in the hermetic walk — is exactly the entry this overlay arranges
+  // from the merged stub view, so the input the invoice asked for has been supplied and the gap is
+  // paid. Keyed on the entries that gained cases here, which only a realized entry can have: a gap
+  // means zero cases, since a refused param drops every arrangement of the entry.
+  const realizedNames = new Set(functions.filter((fn) => fn.cases.length > 0).map((fn) => String(fn.entry.name)));
+
   return fileAnalysisContract.parse({
     functions,
     enrichment: analysis.enrichment,
+    gaps: analysis.gaps.filter((gap) => !realizedNames.has(String(gap.name))),
     darkSpots: analysis.darkSpots,
     undriven: analysis.undriven.filter(
       (entry) => !staleUndrivenKeys.has(`${String(entry.name)}#${String(entry.startLine)}`),

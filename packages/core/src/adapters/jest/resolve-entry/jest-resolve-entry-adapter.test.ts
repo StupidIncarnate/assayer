@@ -36,6 +36,20 @@ describe('jestResolveEntryAdapter', () => {
 
       expect(result).toBe(undefined);
     });
+
+    // `export { classify as decide }` puts it on the module under `decide`; reaching for the local
+    // name finds nothing there and reports a perfectly callable entry as uncallable.
+    it('VALID: {a renamed export} => resolves the EXPORTED property, not the local name', () => {
+      jestResolveEntryAdapterProxy();
+
+      const result = jestResolveEntryAdapter({
+        subject: { decide: (value: number): boolean => value > 5 },
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'named', exportedName: 'decide' }),
+      });
+
+      expect((result as (value: number) => boolean)(6)).toBe(true);
+    });
   });
 
   describe('default exports', () => {

@@ -56,11 +56,19 @@ describe('jestRunCliAdapter', () => {
           testEnvironment: 'node',
           setupFiles: ['/core/probe-runtime.js'],
           testMatch: ['/cache/runs/**/*.test.js'],
+          // One mapped path is one module instance. Resolving `@assayer/core` from the harness and from
+          // the shim can land on two installs in a workspace, and two instances mean a registration
+          // nobody collected and every supplied input reported missing.
+          moduleNameMapper: { '^@assayer/core$': '/core/harness-registrar.js' },
           // Empty by design: the runner's own pass/fail summary reaching a human leaks exactly the
           // surface this boundary exists to hide. The verdict is read back from the artifact.
           reporters: [],
           transform: {
-            '^.+\\.ts$': [
+            // ONE entry, and it selects `.tsx` as well as `.ts`. Both are analysed surface, so both
+            // reach the runner as subjects; a `.tsx` no pattern claims arrives untransformed and dies
+            // on its first type annotation. A second entry would be a second config key — and a second
+            // ts-jest compiler — for a file the same compiler already handles.
+            '^.+\\.tsx?$': [
               'ts-jest',
               {
                 diagnostics: false,

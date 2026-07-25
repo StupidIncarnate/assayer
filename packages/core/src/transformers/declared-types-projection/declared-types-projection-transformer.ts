@@ -1,12 +1,16 @@
 /**
  * PURPOSE: Projects a walked file's locally-declared object shapes into its `declaredTypes` — the
  *   name → full property list every later phase splices per-property value demands onto. It reads the
- *   WALK result (never re-parses): the walk already enumerated each same-file object type into its
- *   object descriptors on every scope's params and return type (§5.10 — an imported type is `any` in
- *   the hermetic walk and never enumerated), so gathering the NAMED objects out of those descriptors
- *   is the whole projection. Anonymous shapes carry no name and are omitted; a name seen more than
- *   once keeps the fullest property list, and the set is sorted by name so the blob stays
- *   byte-identical.
+ *   WALK result (never re-parses) from two channels, and needs both: the walk records each
+ *   `interface`/`type` DECLARATION as a declared shape, and it enumerates each same-file object type
+ *   into the object descriptors on every scope's params and return type (§5.10 — an imported type is
+ *   `any` in the hermetic walk and never enumerated). The declarations alone would miss a shape only a
+ *   signature spells inline; the signatures alone would miss every shape this file declares and only a
+ *   SIBLING'S reader ever names — which is the whole surface of a types-only module.
+ *
+ *   Gathering the NAMED objects out of those descriptors is the rest of the projection. Anonymous
+ *   shapes carry no name and are omitted; a name seen more than once keeps the fullest property list,
+ *   and the set is sorted by name so the blob stays byte-identical.
  *
  * USAGE:
  * declaredTypesProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
@@ -22,11 +26,10 @@ export const declaredTypesProjectionTransformer = ({ walked }: { walked: WalkFil
     return [];
   }
 
-  const found = walked.scopes.flatMap((scope) =>
-    [...scope.params.map((param) => param.type), scope.returnType].flatMap((descriptor) =>
-      collectNamedObjectTypesTransformer({ descriptor }),
-    ),
-  );
+  const found = [
+    ...walked.declaredShapes.map((declared) => declared.type),
+    ...walked.scopes.flatMap((scope) => [...scope.params.map((param) => param.type), scope.returnType]),
+  ].flatMap((descriptor) => collectNamedObjectTypesTransformer({ descriptor }));
 
   // One entry per distinct type name, keeping the fullest property list — a recursive type appears
   // both fully (from the param) and truncated (from its own back-reference), and the full one wins.

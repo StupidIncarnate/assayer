@@ -5,20 +5,28 @@
  *   code that operates on the array (`items.pop()`) runs on `[]`, `[7]`, and `[7,7]` rather than a
  *   scalar placeholder that would throw.
  *
- *   RECURSIVE: a nested array element (`number[][]`) is filled by arranging its OWN element at the
- *   `one` cardinality (`[[7]]`), a genuine nested array rather than a scalar placeholder. Scalar
- *   elements come from `representative-value`. Every element is an INPUT drawn from the element type,
- *   never a code-derived output (P4).
+ *   Each element is built by `fill-value`, so an element of ANY shape nests properly — a nested array
+ *   (`number[][]` → `[[7]]`) and an object element (`Config[]` → `[{ mode: 'abc123' }]`) alike. Every
+ *   element is an INPUT drawn from the element type, never a code-derived output (P4).
+ *
+ *   `undefined` means the ELEMENT type is unfillable, so no array of it can be built — a callback list
+ *   is refused at every count, including the empty one, because the caller is asking for this parameter
+ *   and the answer about the parameter is the same either way.
+ *
+ *   A TRUNCATED element is the one exception, and the empty array is its answer at EVERY count: the
+ *   reader stopped at a self-reference, so `TreeNode[]` has no element to build but `[]` is a complete
+ *   value of it. `is-type-fillable` and `fill-value` read the mark the same way, so the rule and the
+ *   builder agree about `TreeNode[]` in a param position and in a property position alike.
  *
  * USAGE:
  * arrayArrangeTransformer({ element: { kind: 'number' }, count: 2 });        // [7, 7]
  * arrayArrangeTransformer({ element: { kind: 'array', element: { kind: 'number' } }, count: 1 }); // [[7]]
- * // Returns an ArrangeValue[] of the requested length
+ * // Returns an ArrangeValue[] of the requested length, or undefined when the element cannot be built
  */
 import type { ArrangeValue, TypeDescriptor } from '@assayer/shared/contracts';
 
-import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
-import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
+import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
+import { fillValueTransformer } from '../fill-value/fill-value-transformer';
 
 export const arrayArrangeTransformer = ({
   element,
@@ -26,9 +34,11 @@ export const arrayArrangeTransformer = ({
 }: {
   element: TypeDescriptor;
   count: number;
-}): ArrangeValue[] =>
-  Array.from({ length: count }, (): ArrangeValue =>
-    element.kind === 'array'
-      ? arrayArrangeTransformer({ element: element.element, count: arrayCardinalityStatics.counts.one })
-      : representativeValueTransformer({ type: element }),
-  );
+}): ArrangeValue[] | undefined =>
+  element.kind === 'object' && element.truncated === true
+    ? []
+    : isTypeFillableGuard({ type: element })
+      ? Array.from({ length: count }, () => fillValueTransformer({ type: element })).flatMap((value) =>
+          value === undefined ? [] : [value],
+        )
+      : undefined;

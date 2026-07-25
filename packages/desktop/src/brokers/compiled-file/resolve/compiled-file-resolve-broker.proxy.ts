@@ -1,8 +1,10 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
+import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, harnessRealizeBroker, paramTypeResolveBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
 import {
   composeCrossFilePredicatesBrokerProxy,
   composeCrossFileMapBrokerProxy,
+  harnessRealizeBrokerProxy,
+  paramTypeResolveBrokerProxy,
   stubRealizeBrokerProxy,
   stubOverlayLoadBrokerProxy,
   tsMorphWalkFileAdapterProxy,
@@ -39,6 +41,12 @@ export const compiledFileResolveBrokerProxy = (): {
   // repoSourceRootBroker's proxy mocking configLoadBroker — the child proxy satisfies structure, the
   // direct registerMock is the intercept. The walk runs real (empty proxy); its result feeds the
   // mocked compose and is otherwise inert.
+  // Imported-type resolution is mocked at the same seam and for the same reason: giving a parameter its
+  // declared shape reaches for the sibling definition + tsconfig on disk. Its child proxy satisfies
+  // structure; the direct registerMock is the intercept, a same-reference pass-through by default.
+  paramTypeResolveBrokerProxy();
+  const paramTypeHandle = registerMock({ fn: paramTypeResolveBroker });
+  paramTypeHandle.mockImplementation(({ analysis }) => analysis);
   composeCrossFilePredicatesBrokerProxy();
   tsMorphWalkFileAdapterProxy();
   const composeHandle = registerMock({ fn: composeCrossFilePredicatesBroker });
@@ -60,6 +68,12 @@ export const compiledFileResolveBrokerProxy = (): {
   composeCrossFileMapBrokerProxy();
   const composeMapHandle = registerMock({ fn: composeCrossFileMapBroker });
   composeMapHandle.mockImplementation(({ analysis }) => analysis);
+  // The harness overlay is mocked at the same seam and for the same reason: paying an input gap reaches
+  // for the colocated harness on disk and RUNS it. Its child proxy satisfies structure; the direct
+  // registerMock is the intercept, a same-reference pass-through by default.
+  harnessRealizeBrokerProxy();
+  const harnessRealizeHandle = registerMock({ fn: harnessRealizeBroker });
+  harnessRealizeHandle.mockImplementation(({ analysis }) => analysis);
 
   // The { root, relPath } the broker hands the overlay, captured off the real call so a test can
   // prove the SOURCE root (not the config dir) is threaded.

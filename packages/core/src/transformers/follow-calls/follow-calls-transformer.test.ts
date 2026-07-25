@@ -217,6 +217,9 @@ describe('followCallsTransformer', () => {
             ],
             // A callback funnel welds nothing, so it carries no unreachable-exit for a lint.
             unreachable: [],
+            // Every element the callback branches on is a number the fill seam builds, so nothing was
+            // refused — the channel is present and empty rather than absent.
+            unfillable: [],
           },
         ],
       });

@@ -10,6 +10,8 @@ import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-fil
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import { composeCrossFileMapBrokerProxy } from '../../compose/cross-file-map/compose-cross-file-map-broker.proxy';
 import { composeCrossFilePredicatesBrokerProxy } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
+import { harnessRealizeBrokerProxy } from '../../harness/realize/harness-realize-broker.proxy';
+import { paramTypeResolveBrokerProxy } from '../../param-type/resolve/param-type-resolve-broker.proxy';
 import { stubRealizeBrokerProxy } from '../../stub/realize/stub-realize-broker.proxy';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
@@ -26,11 +28,17 @@ export const runUnitBrokerProxy = (): {
   fsMkdirAdapterProxy();
   tsMorphWalkFileAdapterProxy();
   analyzeFileBrokerProxy();
+  // The imported-type resolution runs REAL with its sibling resolve staged to "no sibling", so it is a
+  // same-reference no-op for a target whose parameters name no resolvable reference.
+  paramTypeResolveBrokerProxy();
   composeCrossFilePredicatesBrokerProxy();
   stubRealizeBrokerProxy();
   // The cross-file-map fold and its sibling-instrumentation run REAL; their sibling resolve is staged to
   // "no sibling", so both are same-reference no-ops for a target with no cross-file map reach.
   composeCrossFileMapBrokerProxy();
+  // The harness overlay runs REAL. Its colocated-file read defaults to "nothing on disk", so it is a
+  // same-reference no-op for every target here.
+  harnessRealizeBrokerProxy();
   runCrossFileProbesBrokerProxy();
   // The overlay load is mocked wholesale to an EMPTY overlay: reading committed corrections off disk is
   // I/O a unit test does not stage, so stub-realize sees no correction and its object-arrange overlay is

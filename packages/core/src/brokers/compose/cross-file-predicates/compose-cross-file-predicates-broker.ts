@@ -152,10 +152,20 @@ export const composeCrossFilePredicatesBroker = ({
       branches,
       exits: fn.exits,
       envDrivable: false,
+      // The entry's own return comparison is an axis of its case set beside its branches, not one of
+      // them — `(a, b) => a > 1 && b > 2` carries both — so rebasing a guard must not drop it. Re-derive
+      // without it and the entry silently loses the cases that told its two return values apart.
+      ...(fn.predicateSignature === undefined ? {} : { returnPredicate: fn.predicateSignature }),
     });
 
     return {
-      fn: { entry: fn.entry, branches, exits: fn.exits, cases: derived.cases },
+      fn: {
+        entry: fn.entry,
+        branches,
+        exits: fn.exits,
+        cases: derived.cases,
+        ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
+      },
       lints: derived.unreachableExits.map((unreachable) => ({
         rule: 'unreachable-exit',
         name: fn.entry.name,
@@ -187,6 +197,9 @@ export const composeCrossFilePredicatesBroker = ({
     enrichment: fileEnrichmentTransformer({
       functions: composed.map((entry) => entry.fn).filter((fn) => fn.entry.access.kind !== 'through-caller'),
     }),
+    // Rebasing a guard changes which BRANCHES are steerable, never which PARAMETERS can be built — the
+    // signature is the same one the per-file derivation refused — so the gaps ride through untouched.
+    gaps: analysis.gaps,
     darkSpots: analysis.darkSpots,
     undriven: [
       ...analysis.undriven.filter(

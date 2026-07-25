@@ -11,6 +11,12 @@
  *   key, so a change to the analyzer invalidates instrumented output BY CONTENT — never by the manual
  *   `version` bump ts-jest's own transformers use, which is the mechanism this project ruled against.
  *
+ *   `@assayer/core` is MAPPED to the run-side harness registrar, which is what makes a colocated
+ *   harness's registration reach the shim that loaded it. Resolving the package from the harness and
+ *   from the shim can land on two installs in a workspace, and two module instances mean a declaration
+ *   nobody collected and every supplied input reported missing; one mapped path is one instance. The
+ *   mapping is exact — a subpath (`@assayer/core/contracts`) is Assayer's own plumbing and is left alone.
+ *
  *   The config is IDENTICAL for every file, and the run's own directory is named as a test-path
  *   PATTERN instead. That is load-bearing, not tidiness. ts-jest keeps one TypeScript compiler per
  *   distinct config and never releases it, so pointing `roots`/`testMatch` at each run's own
@@ -50,12 +56,16 @@ export const jestRunCliAdapter = async ({
     testEnvironment: 'node',
     setupFiles: [join(coreRoot, 'probe-runtime.js')],
     testMatch: [`${runsRoot}/**/*.test.js`],
+    moduleNameMapper: { '^@assayer/core$': join(coreRoot, 'harness-registrar.js') },
     // No reporters at all: the runner is an implementation detail, and its pass/fail summary reaching
     // a human is a leak of exactly the surface this boundary exists to hide. The verdict is read back
     // from the artifact, so nothing here needs to print.
     reporters: [],
     transform: {
-      '^.+\\.ts$': [
+      // ONE entry covering both TypeScript extensions. A `.tsx` entry is analysed surface like any
+      // other, so the pattern that selects the subject has to reach it — and the widening is what keeps
+      // that true without a second entry, which would be a second config key and a second compiler.
+      '^.+\\.tsx?$': [
         'ts-jest',
         {
           diagnostics: false,

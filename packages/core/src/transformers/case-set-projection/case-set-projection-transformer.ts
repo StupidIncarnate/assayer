@@ -25,6 +25,18 @@
  *   the runner produces a FAILING case against correct code, which reads as the analyzer being
  *   wrong; a named gap reads as the truth — nobody has said how to build this yet.
  *
+ *   The ACCESS gaps computed here are only half the channel. The analysis carries the other half — an
+ *   entry whose declared INPUT no value can be built for — and the two CONCATENATE: one channel, two
+ *   producers, one shape, because the reader owes the same act for both. Recomputing the input half
+ *   here would ask this transformer to re-run the fill seam, and a run whose gaps disagreed with the
+ *   file's own analysis would be two answers to one question.
+ *
+ *   `harnessPath` is named only when some case actually carries a HARNESS binding. The caller offers the
+ *   path a colocated harness WOULD have — it is a pure function of the source path — and this decides
+ *   whether the run has any reason to load it. Naming it unconditionally would tell every shim in the
+ *   repo to require a file that is not there; deciding it from the bindings makes "the case set names a
+ *   harness" and "some case needs one" the same fact rather than two that can drift.
+ *
  *   Dark spots and undriven entries are carried straight through, unfiltered, and neither is ever
  *   folded into `gaps` or into each other. Three admissions, three debts: a gap is the caller's
  *   (understood, not constructable — write a harness), a dark spot is ASSAYER's (syntax it never
@@ -44,10 +56,12 @@ export const caseSetProjectionTransformer = ({
   analysis,
   relPath,
   modulePath,
+  harnessPath,
 }: {
   analysis: FileAnalysis;
   relPath: string;
   modulePath: string;
+  harnessPath?: string | undefined;
 }): CaseSet => {
   // An entry is runnable iff it produced cases — that ONE fact decides it, because `derive-cases` has
   // already resolved drivability (§5.12). A module scope is no exception: it earns cases when the
@@ -60,9 +74,16 @@ export const caseSetProjectionTransformer = ({
     (fn) => fn.entry.access.kind === 'constructor' || (fn.entry.access.kind === 'method' && !fn.entry.access.constructable),
   );
 
+  // The run loads a harness only when a case actually reaches for one — a supplied input is the only
+  // reason the file has to be read at all.
+  const suppliesInputs = owed.some((fn) =>
+    fn.cases.some((testCase) => testCase.arrange.some((binding) => binding.kind === 'harness')),
+  );
+
   return caseSetContract.parse({
     relPath,
     modulePath,
+    ...(harnessPath === undefined || !suppliesInputs ? {} : { harnessPath }),
     entries: owed
       .filter((fn) => !blocked.includes(fn))
       .map((fn) => ({
@@ -77,13 +98,21 @@ export const caseSetProjectionTransformer = ({
         exitIds: [...new Set([...fn.exits.map((exit) => exit.coverageId), ...fn.cases.flatMap((testCase) => testCase.reachesPath)])],
         cases: fn.cases,
       })),
-    gaps: blocked.map((fn) => ({
-      name: fn.entry.name,
-      reason:
-        fn.entry.access.kind === 'constructor'
-          ? 'a constructor is reached through `new`, which the runner does not drive — needs a harness'
-          : 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
-    })),
+    // ONE channel, TWO producers. The analysis already invoiced every entry whose declared INPUT no
+    // value can be built for — a fact about the file, true before anything ran — and this adds the ones
+    // whose ACCESS the runner cannot reach through. Both are the caller's debt, closed by the same act,
+    // so they concatenate rather than living in two lists a reader would have to merge. The analysis
+    // gaps come first because they were true first.
+    gaps: [
+      ...analysis.gaps,
+      ...blocked.map((fn) => ({
+        name: fn.entry.name,
+        reason:
+          fn.entry.access.kind === 'constructor'
+            ? 'a constructor is reached through `new`, which the runner does not drive — needs a harness'
+            : 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
+      })),
+    ],
     darkSpots: analysis.darkSpots,
     undriven: analysis.undriven,
     lints: analysis.lints,

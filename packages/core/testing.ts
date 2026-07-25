@@ -37,8 +37,10 @@ export * from './src/brokers/run/find/run-find-broker.proxy';
 export * from './src/brokers/run/console-save/run-console-save-broker.proxy';
 export * from './src/brokers/run/console-find/run-console-find-broker.proxy';
 
+export * from './src/brokers/param-type/resolve/param-type-resolve-broker.proxy';
 export * from './src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
 export * from './src/brokers/compose/cross-file-map/compose-cross-file-map-broker.proxy';
 export * from './src/brokers/stub/realize/stub-realize-broker.proxy';
 export * from './src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy';
+export * from './src/brokers/harness/realize/harness-realize-broker.proxy';
 export * from './src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';

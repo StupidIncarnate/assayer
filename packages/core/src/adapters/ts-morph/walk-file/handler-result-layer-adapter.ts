@@ -14,9 +14,18 @@
  */
 import type { Node } from 'ts-morph';
 
-import type { BranchNode, EnvRead, ExitNode, GlobalUse, LineNumber, ModuleEdge, SymbolName } from '@assayer/shared/contracts';
+import type {
+  BranchNode,
+  EnvRead,
+  ExitNode,
+  GlobalUse,
+  LineNumber,
+  ModuleEdge,
+  SymbolName,
+} from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../../contracts/call-site/call-site-contract';
+import type { DeclaredShape } from '../../../contracts/declared-shape/declared-shape-contract';
 import type { InvokedFn } from '../../../contracts/invoked-fn/invoked-fn-contract';
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
@@ -43,6 +52,10 @@ export interface HandlerResult {
   probeSites: ProbeSite[];
   /** Import/re-export edges this node declared — flat file-level facts, never scope-claimed. */
   moduleEdges: ModuleEdge[];
+  /** The type shapes this node DECLARED (`interface Config`, `type Config = { … }`) — each the declared
+   * NAME beside the descriptor it denotes. Flat file-level facts, never scope-claimed, because a
+   * declaration belongs to the file whether or not any signature mentions it. */
+  declaredShapes: DeclaredShape[];
   /** Ambient-external identifiers this node used (`console`, `process`) — flat file-level facts. */
   globalUses: GlobalUse[];
   /** `process.env.<X>` property reads this node made — flat file-level facts, never scope-claimed. */
@@ -71,6 +84,7 @@ export const handlerResultLayerAdapter = ({
   nodes,
   probeSites,
   moduleEdges,
+  declaredShapes,
   globalUses,
   envReads,
   reachedFns,
@@ -86,6 +100,7 @@ export const handlerResultLayerAdapter = ({
   nodes?: WalkNode[];
   probeSites?: ProbeSite[];
   moduleEdges?: ModuleEdge[];
+  declaredShapes?: DeclaredShape[];
   globalUses?: GlobalUse[];
   envReads?: EnvRead[];
   reachedFns?: LineNumber[];
@@ -101,6 +116,7 @@ export const handlerResultLayerAdapter = ({
   nodes: nodes ?? [],
   probeSites: probeSites ?? [],
   moduleEdges: moduleEdges ?? [],
+  declaredShapes: declaredShapes ?? [],
   globalUses: globalUses ?? [],
   envReads: envReads ?? [],
   reachedFns: reachedFns ?? [],

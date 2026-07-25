@@ -1,4 +1,4 @@
-import { BranchNodeStub, ExitNodeStub, symbolNameContract } from '@assayer/shared/contracts';
+import { BranchNodeStub, entryLabelContract, ExitNodeStub, symbolNameContract } from '@assayer/shared/contracts';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { throughCallbackCasesTransformer } from './through-callback-cases-transformer';
@@ -43,16 +43,53 @@ describe('throughCallbackCasesTransformer', () => {
     it('VALID: {a callback branch on n} => a through-caller entry naming the entry the runner drives', () => {
       const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
 
-      expect(result.entry.access).toStrictEqual({ kind: 'through-caller', callerName: 'run' });
+      expect(result.analysis.entry.access).toStrictEqual({ kind: 'through-caller', callerName: 'run' });
     });
 
     it('VALID: {a callback branch on n} => each arm steers the single element of the array the entry receives', () => {
       const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
 
-      expect(result.cases).toStrictEqual([
+      expect(result.analysis.cases).toStrictEqual([
         { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
         { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
       ]);
+    });
+  });
+
+  describe('a callback whose own parameter the fill seam refuses', () => {
+    // The callback's `name` is a structural projection, so its refusal cannot be filed under it — the
+    // gap goes to the HOST a reader drives, and `owner` carries the label that names the callback.
+    const SINK_CALLBACK = ScopeRecordStub({
+      scopePath: ['*module*', 'run', 'cb'],
+      name: 'cb',
+      exported: false,
+      access: { kind: 'unreachable' },
+      params: [{ name: 'sink', type: { kind: 'callable', text: '(m: string) => void' } }],
+      returnType: { kind: 'string' },
+      startLine: 2,
+      endLine: 5,
+      branches: [],
+      exits: [ExitNodeStub({ coverageId: 'cb/return@top', guardPath: [], line: 3 })],
+    });
+    const ENTRY = ScopeRecordStub({
+      scopePath: ['*module*', 'run'],
+      name: 'run',
+      params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
+      returnType: { kind: 'array', element: { kind: 'string' } },
+    });
+
+    it('VALID: {a callback param the seam refuses} => no case, and the refusal rides back tagged with the label', () => {
+      const result = throughCallbackCasesTransformer({
+        callback: SINK_CALLBACK,
+        entry: ENTRY,
+        arrayParam: symbolNameContract.parse('items'),
+        label: entryLabelContract.parse('run › items.map((sink) => …) L2'),
+      });
+
+      expect({ cases: result.analysis.cases, unfillable: result.unfillable }).toStrictEqual({
+        cases: [],
+        unfillable: [{ param: 'sink', type: '(m: string) => void', owner: 'run › items.map((sink) => …) L2' }],
+      });
     });
   });
 
@@ -70,7 +107,7 @@ describe('throughCallbackCasesTransformer', () => {
     it('VALID: {entry also takes factor} => factor is filled representatively, in entry param order', () => {
       const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
 
-      expect(result.cases).toStrictEqual([
+      expect(result.analysis.cases).toStrictEqual([
         {
           reachesPath: ['cb/return@then'],
           arrange: [

@@ -8,6 +8,9 @@
  *   yields `undefined`, which then reads as "the analyzer found a function that isn't there" rather
  *   than "nobody said how to reach it".
  *
+ *   A named export carries the module property when a rename made it differ from the entry's own
+ *   name (`export { runIt as go }`), for the same reason: `runIt` is not on the module.
+ *
  *   A method is constructed PER CASE, not once: a case must not observe state a previous case left
  *   behind. Construction only happens for a class the projection already judged constructable, so
  *   the zero-argument call is a checked assumption rather than a hope.
@@ -44,8 +47,9 @@ export const jestResolveEntryAdapter = ({
   access: EntryAccess;
   requireFresh?: () => unknown;
 }): unknown => {
+  // The module PROPERTY, which is the exported name when a rename put it under a different one.
   if (access.kind === 'named') {
-    return subject[name];
+    return subject[access.exportedName === undefined ? name : String(access.exportedName)];
   }
 
   if (access.kind === 'default') {

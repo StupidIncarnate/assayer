@@ -57,6 +57,12 @@ describe('typeFactContract', () => {
       });
     });
 
+    it('VALID: {flavor: "callable", text} => parses the callable fact carrying its signature text', () => {
+      const result = typeFactContract.parse({ flavor: 'callable', text: '(message: string) => string' });
+
+      expect(result).toStrictEqual({ flavor: 'callable', text: '(message: string) => string' });
+    });
+
     it('VALID: {flavor: "object", no typeName} => parses a keyless anonymous object', () => {
       const result = typeFactContract.parse({
         flavor: 'object',

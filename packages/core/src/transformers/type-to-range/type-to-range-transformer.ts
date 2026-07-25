@@ -21,6 +21,16 @@
  *   an exclusion. Collapsing that second case to a single sample is what makes a later comparison on
  *   the same operand intersect to nothing.
  *
+ *   A type with no SCALAR point at all — an object, an array, a callable, an opaque `Map<string,
+ *   number>` — narrows only where the predicate itself carries the literal (`config.mode === 'a'` still
+ *   yields `{'a'}` vs everything else). Where an arm would otherwise be realized from the operand's own
+ *   representative, it constrains NOTHING instead of substituting a string for a shape that is not one,
+ *   and the fill seam then builds the real shape. That leaves one thing this engine cannot state: the
+ *   arm demanding a FALSY value of such a type has no member to name, and "no value of this type is
+ *   falsy" is a fillability fact rather than a domain, so it is answered on the fill side
+ *   (`is-falsy-arm`, which `object-arrange` refuses on) and never by narrowing to empty here — an empty
+ *   domain would mean the guards CONTRADICT, and nothing about that arm is dead.
+ *
  * USAGE:
  * typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'length-gte', literal: 2 });
  * // Returns { satisfying: {lengthMin: 2}, violating: {lengthMax: 2, lengthMaxExclusive: true} }
@@ -54,10 +64,20 @@ export const typeToRangeTransformer = ({
     type.kind === 'union'
       ? type.members.flatMap((member) => (member.kind === 'literal' && member.value !== literal ? [member.value] : []))
       : [];
-  // An enumerated type knows the other members by name; an open one only knows the point to avoid.
+  const excludedPoint = literal === undefined ? distinct : literal;
+  // An enumerated type knows the other members by name; an open one only knows the point to avoid, and
+  // a type with no scalar point knows neither — so it excludes nothing rather than excluding a fiction.
   const otherThanLiteral =
-    unionOthers.length > 0 ? { members: unionOthers } : { excluded: [literal === undefined ? distinct : literal] };
-  const isLiteral = { members: [literal ?? rep] };
+    unionOthers.length > 0
+      ? { members: unionOthers }
+      : excludedPoint === undefined
+        ? {}
+        : { excluded: [excludedPoint] };
+  const literalPoint = literal ?? rep;
+  const isLiteral = literalPoint === undefined ? {} : { members: [literalPoint] };
+  // Every arm that would be realized from the operand's OWN representative, for a type that has none.
+  // Constraining nothing is the same safety property the unrecognized predicate relies on.
+  const unrealizable = armValuesContract.parse({ satisfying: {}, violating: {} });
 
   switch (predicateKind) {
     // The length axis, mirroring the value axis one line for one line. A length comparison becomes a
@@ -119,30 +139,32 @@ export const typeToRangeTransformer = ({
         violating: { min: num, minExclusive: true },
       });
     case 'truthy':
-      return armValuesContract.parse(
-        type.kind === 'number'
-          ? { satisfying: { excluded: [0] }, violating: { members: [0] } }
-          : type.kind === 'boolean'
-            ? { satisfying: { members: [true] }, violating: { members: [false] } }
-            : { satisfying: { members: [rep] }, violating: { members: [''] } },
-      );
+      return type.kind === 'number'
+        ? armValuesContract.parse({ satisfying: { excluded: [0] }, violating: { members: [0] } })
+        : type.kind === 'boolean'
+          ? armValuesContract.parse({ satisfying: { members: [true] }, violating: { members: [false] } })
+          : rep === undefined
+            ? unrealizable
+            : armValuesContract.parse({ satisfying: { members: [rep] }, violating: { members: [''] } });
     case 'falsy':
-      return armValuesContract.parse(
-        type.kind === 'number'
-          ? { satisfying: { members: [0] }, violating: { excluded: [0] } }
-          : type.kind === 'boolean'
-            ? { satisfying: { members: [false] }, violating: { members: [true] } }
-            : { satisfying: { members: [''] }, violating: { members: [rep] } },
-      );
+      return type.kind === 'number'
+        ? armValuesContract.parse({ satisfying: { members: [0] }, violating: { excluded: [0] } })
+        : type.kind === 'boolean'
+          ? armValuesContract.parse({ satisfying: { members: [false] }, violating: { members: [true] } })
+          : rep === undefined
+            ? unrealizable
+            : armValuesContract.parse({ satisfying: { members: [''] }, violating: { members: [rep] } });
     // The `??` operand: satisfying is a NON-null value drawn from the type (`rep`, which the
     // representative transformer never returns null for), violating is `null`. `null` is nullish, so
     // it reaches the fall-through arm at runtime whatever the operand's non-null half is. The value is
     // derived from the declared type, never from executing the code (P4).
     case 'non-nullish':
-      return armValuesContract.parse({
-        satisfying: { members: [rep] },
-        violating: { members: [null] },
-      });
+      return rep === undefined
+        ? unrealizable
+        : armValuesContract.parse({
+            satisfying: { members: [rep] },
+            violating: { members: [null] },
+          });
     default:
       // Unrecognized: constrain NOTHING on either arm. A predicate the analyzer could not read must
       // not narrow anything, or an unread guard would be able to prove a reachable exit impossible.

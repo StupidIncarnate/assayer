@@ -33,8 +33,7 @@ describe('undriven / returned-closure — a function that RETURNS a branching cl
   });
 
   // `makeClassifier` is the sole driven entry — branchless (its `if` belongs to the returned closure, a
-  // separate scope), one representative case. Nothing is a lint or a dark spot. (Its return type reads as
-  // an empty object because function types are not modeled yet — a separate display gap, not this rung.)
+  // separate scope), one representative case. Nothing is a lint or a dark spot.
   it('VALID: {a returned closure} => makeClassifier is the sole driven entry; no lint, no dark spot', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 

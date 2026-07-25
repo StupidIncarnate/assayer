@@ -65,6 +65,54 @@ describe('throughCallerCasesTransformer', () => {
         { reachesPath: ['inner/return@else'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
       ]);
     });
+
+    it('VALID: {every callee param constructable} => nothing refused, so the entry invoices nothing', () => {
+      const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
+
+      expect(result.unfillable).toStrictEqual([]);
+    });
+  });
+
+  describe('a callee declaring a parameter the fill seam refuses', () => {
+    // The callee IS the entry this builds, so its refusal files under its OWN name and needs no owner.
+    // Dropped instead, the private would derive no case and admit nothing — reading exactly like a
+    // helper with no logic in it.
+    const SINK_CALLEE = ScopeRecordStub({
+      scopePath: ['*module*', 'outer', 'inner'],
+      name: 'inner',
+      exported: false,
+      access: { kind: 'unreachable' },
+      params: [
+        { name: 'n', type: { kind: 'number' } },
+        { name: 'cb', type: { kind: 'callable', text: '() => void' } },
+      ],
+      returnType: { kind: 'string' },
+      startLine: 2,
+      endLine: 7,
+      branches: [N_BRANCH],
+      exits: [THEN_EXIT, ELSE_EXIT],
+    });
+    const CALLER = ScopeRecordStub({
+      scopePath: ['*module*', 'outer'],
+      name: 'outer',
+      params: [
+        { name: 'value', type: { kind: 'number' } },
+        { name: 'cb', type: { kind: 'callable', text: '() => void' } },
+      ],
+    });
+    const CALL = CallSiteStub({
+      callee: { target: 'local', name: 'inner', startLine: 2 },
+      args: [{ kind: 'param-ref', paramName: 'value' }, { kind: 'param-ref', paramName: 'cb' }],
+    });
+
+    it('VALID: {inner also takes a callback} => no case, and the refusal rides back untagged', () => {
+      const result = throughCallerCasesTransformer({ callee: SINK_CALLEE, caller: CALLER, call: CALL });
+
+      expect({ cases: result.analysis.cases, unfillable: result.unfillable }).toStrictEqual({
+        cases: [],
+        unfillable: [{ param: 'cb', type: '() => void' }],
+      });
+    });
   });
 
   describe('a caller with a parameter the callee does not consume', () => {

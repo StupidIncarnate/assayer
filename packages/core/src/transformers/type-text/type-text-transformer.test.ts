@@ -41,6 +41,12 @@ describe('typeTextTransformer', () => {
       ).toBe('Config');
     });
 
+    it('VALID: {type: callable} => renders the carried signature text', () => {
+      expect(
+        typeTextTransformer({ type: TypeDescriptorStub({ kind: 'callable', text: '(message: string) => string' }) }),
+      ).toBe('(message: string) => string');
+    });
+
     it('VALID: {type: anonymous object} => renders the braced property list', () => {
       expect(
         typeTextTransformer({

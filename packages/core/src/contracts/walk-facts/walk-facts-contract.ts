@@ -22,6 +22,7 @@ import {
 } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
+import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
 import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
@@ -48,6 +49,11 @@ export const walkFactsContract = z.object({
   // Flat like `nodes`/`probeSites`: an import/re-export edge is a fact about the FILE, not a scope,
   // so no scope ever claims it.
   moduleEdges: z.array(moduleEdgeContract),
+  // Flat like `moduleEdges`: a type shape the file DECLARES (`interface Config`, `type Config = { … }`)
+  // is a fact about the FILE, carrying the declared NAME beside the descriptor. It is recorded from the
+  // declaration itself rather than from the signatures that mention it, so a shape no function takes or
+  // returns is still a shape the file declares.
+  declaredShapes: z.array(declaredShapeContract),
   // Flat like `moduleEdges`: an ambient-external identifier the file uses (`console`, `process`) is a
   // fact about the FILE, not a scope.
   globalUses: z.array(globalUseContract),

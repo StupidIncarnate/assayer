@@ -6,6 +6,36 @@ const GREETING_BRANCH =
   '*module*/formatGreeting/if:BinaryExpression,PropertyAccessExpression,id:name,id:length,EqualsEqualsEqualsToken,num:0';
 const MODULE_BRANCH = '*module*/if:BinaryExpression,id:value,GreaterThanToken,num:5';
 
+// The invoice VERBATIM — product surface, asserted exactly as an LLM would read it.
+const CALLBACK_GAP_MESSAGE =
+  '`audit` derives no case, because Assayer cannot construct an input it needs. It builds inputs ' +
+  'out of declared DATA — a scalar, a union, an array, or an object shape whose every property is ' +
+  'itself one — and refuses anything that bottoms out in a function or in a type carrying nothing but ' +
+  'its name: `report: (message: string) => string`. Substituting a stand-in would be worse than ' +
+  'deriving nothing: code that CALLS the value throws on it, and code that merely measures it passes ' +
+  'on something nobody supplied. Assayer read the signature perfectly — this is not syntax it missed ' +
+  "— so the value is the caller's to supply. Colocate a harness with this file, the same basename " +
+  "with a `.harness.ts` extension, and declare the input: `import { assayerHarness } from '@assayer/core'; " +
+  'assayerHarness({ inputs: { audit: { report: <a (message: string) => string> } } });`. Assayer then ' +
+  'builds them from that declaration instead of refusing them; anything else still standing between ' +
+  '`audit` and a case is reported on its own line.';
+
+// The FUNNEL invoice: `surface` is the only entry the file offers, and the parameter that stops it is
+// declared on the private it returns — so the refusal says where it lives and the harness snippet keys
+// the input under that private, never under the surface that has no such parameter.
+const FUNNELLED_GAP_MESSAGE =
+  '`surface` derives no case, because Assayer cannot construct an input it needs. It builds inputs ' +
+  'out of declared DATA — a scalar, a union, an array, or an object shape whose every property is ' +
+  'itself one — and refuses anything that bottoms out in a function or in a type carrying nothing but ' +
+  'its name: `cb: (n: number) => void` on `helper`. Substituting a stand-in would be worse than ' +
+  'deriving nothing: code that CALLS the value throws on it, and code that merely measures it passes ' +
+  'on something nobody supplied. Assayer read the signature perfectly — this is not syntax it missed ' +
+  "— so the value is the caller's to supply. Colocate a harness with this file, the same basename " +
+  "with a `.harness.ts` extension, and declare the input: `import { assayerHarness } from '@assayer/core'; " +
+  'assayerHarness({ inputs: { helper: { cb: <a (n: number) => void> } } });`. Assayer then ' +
+  'builds them from that declaration instead of refusing them; anything else still standing between ' +
+  '`surface` and a case is reported on its own line.';
+
 const MODULE_UNREACHABLE_MESSAGE =
   '`welded-operand.ts` can never reach the exit on line 6: `value` is welded to `7`, so the branch on ' +
   'line 3 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm ' +
@@ -117,6 +147,7 @@ describe('analyzeFileBroker', () => {
           },
         ],
         enrichment: [{ line: 3, symbol: 'value', typeText: 'number', range: [6, 5] }],
+        gaps: [],
         darkSpots: [],
         undriven: [],
         lints: [
@@ -302,6 +333,139 @@ describe('analyzeFileBroker', () => {
     });
   });
 
+  describe('an entry whose declared input cannot be constructed', () => {
+    // The FOURTH channel, and the only one the derivation produces: the fill seam refused `report`, so
+    // the entry derives nothing. Riding the ANALYSIS is the point — a file that admits nothing while
+    // deriving nothing is byte-identical to a file with nothing to test.
+    it('VALID: {a callback param} => a GAP on the analysis, invoicing the entry, the param and its type', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "export function audit(size: number, report: (message: string) => string): string {\n  if (size > 10) {\n    return report('over');\n  }\n\n  return report('under');\n}\n";
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      expect(result.gaps).toStrictEqual([{ name: 'audit', reason: CALLBACK_GAP_MESSAGE }]);
+    });
+
+    // Beside the gap and never folded into it: the branch on `size` is perfectly steerable, so there is
+    // nothing undriven, no dark spot and no lint. A refused input is the CALLER's debt alone.
+    it('VALID: {a callback param} => nothing undriven, dark or linted, since only the input is missing', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "export function audit(size: number, report: (message: string) => string): string {\n  if (size > 10) {\n    return report('over');\n  }\n\n  return report('under');\n}\n";
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      expect({ undriven: result.undriven, darkSpots: result.darkSpots, lints: result.lints }).toStrictEqual({
+        undriven: [],
+        darkSpots: [],
+        lints: [],
+      });
+    });
+
+    it('VALID: {every param constructable} => no gap, so a drivable entry invoices nothing', () => {
+      analyzeFileBrokerProxy();
+      const source = 'export function audit(size: number): number {\n  return size + 1;\n}\n';
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      expect(result.gaps).toStrictEqual([]);
+    });
+  });
+
+  describe('an entry whose FUNNELLED private declares the input nothing can construct', () => {
+    // `surface` is branchless and returns `helper(size, …)`, so `helper` funnels into it and is no entry
+    // of its own. Its `cb` is what stops the whole file deriving, and the funnel is the only place that
+    // refusal can be seen — dropped there, the file comes back with zero cases, zero gaps and zero of
+    // every other channel: total silence over real branching logic.
+    const FUNNEL_SOURCE =
+      'function helper(size: number, cb: (n: number) => void): string {\n' +
+      "  if (size > 5) {\n    return 'big';\n  }\n\n  return 'small';\n}\n" +
+      'export function surface(size: number): string {\n  return helper(size, () => undefined);\n}\n';
+
+    it('VALID: {the private takes a callback} => a GAP on the surface, naming the private that declares it', () => {
+      analyzeFileBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: FUNNEL_SOURCE, relPath: 'src/surface.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
+
+      expect(result.gaps).toStrictEqual([{ name: 'surface', reason: FUNNELLED_GAP_MESSAGE }]);
+    });
+
+    it('VALID: {the private takes a callback} => the surface derives nothing, and says so on exactly one channel', () => {
+      analyzeFileBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: FUNNEL_SOURCE, relPath: 'src/surface.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
+
+      expect({
+        cases: result.functions.flatMap((fn) => fn.cases),
+        undriven: result.undriven,
+        darkSpots: result.darkSpots,
+        lints: result.lints,
+      }).toStrictEqual({ cases: [], undriven: [], darkSpots: [], lints: [] });
+    });
+
+    it('VALID: {the same private without the callback} => two cases and no gap, so the invoice tracks the input alone', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        'function helper(size: number): string {\n' +
+        "  if (size > 5) {\n    return 'big';\n  }\n\n  return 'small';\n}\n" +
+        'export function surface(size: number): string {\n  return helper(size);\n}\n';
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/surface.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
+
+      expect({ cases: result.functions.flatMap((fn) => fn.cases).length, gaps: result.gaps }).toStrictEqual({
+        cases: 2,
+        gaps: [],
+      });
+    });
+  });
+
+  describe('an entry carrying BOTH an input gap and an undriven branch', () => {
+    // `audit` cannot be called at all (its `report` is unconstructable) AND its branch turns on an
+    // imported binding no case can steer. Printing both would hand the reader two contradictory next
+    // actions — "write a harness" and "make the deciding value a parameter" — for one entry.
+    const BOTH_SOURCE =
+      "import { flag } from './flag';\n" +
+      'export function audit(size: number, report: (message: string) => string): string {\n' +
+      "  if (flag) {\n    return report('on');\n  }\n\n  return report('off');\n}\n";
+
+    it('VALID: {an unconstructable input and an opaque branch} => the gap alone, the undriven admission suppressed', () => {
+      analyzeFileBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: BOTH_SOURCE, relPath: 'src/audit.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      expect({ gaps: result.gaps.map((gap) => String(gap.name)), undriven: result.undriven }).toStrictEqual({
+        gaps: ['audit'],
+        undriven: [],
+      });
+    });
+
+    // The control that keeps the rule a PRECEDENCE and not a deletion: with every input constructable,
+    // the very same opaque branch is admitted undriven exactly as before.
+    it('VALID: {the same opaque branch with every input constructable} => the undriven admission stands, and no gap', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "import { flag } from './flag';\n" +
+        'export function audit(size: number): string {\n' +
+        "  if (flag) {\n    return 'on';\n  }\n\n  return 'off';\n}\n";
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      expect({ gaps: result.gaps, undriven: result.undriven.map((entry) => String(entry.name)) }).toStrictEqual({
+        gaps: [],
+        undriven: ['audit'],
+      });
+    });
+  });
+
   describe('parse error', () => {
     it('ERROR: {invalid source} => empty analysis', () => {
       analyzeFileBrokerProxy();
@@ -309,7 +473,15 @@ describe('analyzeFileBroker', () => {
 
       const result = analyzeFileBroker({ walked });
 
-      expect(result).toStrictEqual({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
+      expect(result).toStrictEqual({
+        functions: [],
+        enrichment: [],
+        gaps: [],
+        darkSpots: [],
+        undriven: [],
+        lints: [],
+        declaredTypes: [],
+      });
     });
   });
 });

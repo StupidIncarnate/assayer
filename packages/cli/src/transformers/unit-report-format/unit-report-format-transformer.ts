@@ -22,6 +22,10 @@
  *   handler for, so telling the reader to fix their own for-loop would be advice they cannot act on,
  *   and unactionable text is the one thing this report may never be.
  *
+ *   Every admission row is spelled `<MARKER> <subject> — <text>` with ONE space after the marker, and
+ *   the desktop panel spells each the same way. Two surfaces over one artifact that word it differently
+ *   are two artifacts to the reader, so the shape is uniform rather than aligned per marker.
+ *
  *   UNDRIVEN prints on a third line for the same reason, and never as one of the other two. It is
  *   logic Assayer read perfectly and cannot yet call — a module scope, a private helper — so filing
  *   it as a gap would order a harness nobody can write, and filing it as a dark spot would blame a
@@ -60,7 +64,7 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
           ].join('\n');
     });
 
-    const gaps = run.gaps.map((gap) => `  GAP  ${String(gap.name)} — ${String(gap.reason)}`);
+    const gaps = run.gaps.map((gap) => `  GAP ${String(gap.name)} — ${String(gap.reason)}`);
     const darkSpots = run.darkSpots.map(
       (darkSpot) =>
         `  DARK ${String(darkSpot.kind)} at L${String(darkSpot.startLine)}-L${String(darkSpot.endLine)} in ` +

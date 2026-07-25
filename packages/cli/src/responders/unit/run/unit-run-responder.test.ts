@@ -1,5 +1,5 @@
 import { jestInterpretCaseAdapter, jestProbeRuntimeAdapter } from '@assayer/core/adapters';
-import { RunResultStub, CaseResultStub, LintEntryStub, RelPathStub, DerivedTestCaseStub, CoverageIdStub } from '@assayer/shared/contracts';
+import { RunResultStub, CaseResultStub, EntryGapStub, LintEntryStub, RelPathStub, DerivedTestCaseStub, CoverageIdStub } from '@assayer/shared/contracts';
 
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
@@ -21,6 +21,7 @@ describe('UnitRunResponder', () => {
         argv: ['src/a.ts'],
         darkSpots: 'warn',
         deadSurface: 'error',
+        inputGaps: 'error',
       });
 
       expect(String(result)).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed');
@@ -35,6 +36,7 @@ describe('UnitRunResponder', () => {
         argv: ['src/a.ts', 'src/b.ts'],
         darkSpots: 'warn',
         deadSurface: 'error',
+        inputGaps: 'error',
       });
 
       expect(proxy.getRelPaths()).toStrictEqual([RelPathStub({ value: 'src/a.ts' }), RelPathStub({ value: 'src/b.ts' })]);
@@ -49,6 +51,7 @@ describe('UnitRunResponder', () => {
         argv: ['src/a.ts'],
         darkSpots: 'warn',
         deadSurface: 'error',
+        inputGaps: 'error',
       });
 
       expect(proxy.getConfigDir()).toBe(RelPathStub({ value: '/repo' }));
@@ -67,6 +70,7 @@ describe('UnitRunResponder', () => {
         argv: ['src/a.ts'],
         darkSpots: 'warn',
         deadSurface: 'error',
+        inputGaps: 'error',
       });
 
       expect(proxy.getSavedConsoles().map((saved) => ({ runId: String(saved.runId), console: String(saved.console) }))).toStrictEqual([
@@ -100,6 +104,7 @@ describe('UnitRunResponder', () => {
           argv: ['src/a.ts', 'src/b.ts'],
           darkSpots: 'warn',
           deadSurface: 'error',
+          inputGaps: 'error',
         }),
       ).rejects.toThrow(CliExactOutputError);
 
@@ -137,6 +142,7 @@ describe('UnitRunResponder', () => {
           argv: ['src/a.ts'],
           darkSpots: 'warn',
           deadSurface: 'error',
+          inputGaps: 'error',
         }),
       ).rejects.toThrow(CliExactOutputError);
 
@@ -154,7 +160,7 @@ describe('UnitRunResponder', () => {
       });
 
       await expect(
-        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'], darkSpots: 'warn', deadSurface: 'error' }),
+        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
       ).rejects.toThrow(/FAIL grade/u);
     });
   });
@@ -217,7 +223,7 @@ describe('UnitRunResponder', () => {
       proxy.runsReturn({ runs });
 
       await expect(
-        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/wrong-type-arrange.ts'], darkSpots: 'warn', deadSurface: 'error' }),
+        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/wrong-type-arrange.ts'], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
       ).rejects.toThrow(new CliExactOutputError({ message: report }));
     });
 
@@ -260,7 +266,7 @@ describe('UnitRunResponder', () => {
       proxy.runsReturn({ runs });
 
       await expect(
-        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/wrong-predicted-path.ts'], darkSpots: 'warn', deadSurface: 'error' }),
+        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/wrong-predicted-path.ts'], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
       ).rejects.toThrow(new CliExactOutputError({ message: report }));
     });
   });
@@ -273,7 +279,7 @@ describe('UnitRunResponder', () => {
       proxy.runsReturn({ runs: [RunResultStub({ lints: [LintEntryStub()] })] });
 
       await expect(
-        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'], darkSpots: 'warn', deadSurface: 'error' }),
+        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: ['src/a.ts'], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
       ).rejects.toThrow(/LINT decide/u);
     });
 
@@ -289,11 +295,100 @@ describe('UnitRunResponder', () => {
         argv: ['src/a.ts'],
         darkSpots: 'warn',
         deadSurface: 'warn',
+        inputGaps: 'error',
       });
 
       expect(String(result)).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  LINT decide — nothing in this file calls it, so it is dead surface',
+      );
+    });
+
+    // The third arm, and the sibling that makes the gap ruling below a rule rather than a one-off:
+    // `off` suppresses the EXIT CODE and nothing else, so the report is byte-identical to `warn`.
+    it('VALID: {a dead-surface lint, deadSurface: off} => still reported, and still does not fail the run', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({ runs: [RunResultStub({ lints: [LintEntryStub()] })] });
+
+      const result = await UnitRunResponder({
+        configDir: '/repo',
+        root: '/repo/src-root',
+        argv: ['src/a.ts'],
+        darkSpots: 'warn',
+        deadSurface: 'off',
+        inputGaps: 'error',
+      });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
+          '  LINT decide — nothing in this file calls it, so it is dead surface',
+      );
+    });
+  });
+
+  describe('a run with a gap', () => {
+    // A gap fails the build when the repo asked (`inputGaps: 'error'`, the default), because a gap is
+    // the CALLER's debt — an input Assayer cannot construct, or an entry it cannot reach through — and
+    // a harness the caller writes closes either. Same exit-code path as the lint, pointed at the other
+    // party.
+    it('ERROR: {a gap, inputGaps: error} => throws the report, so the exit code is non-zero', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({ runs: [RunResultStub({ gaps: [EntryGapStub()] })] });
+
+      await expect(
+        UnitRunResponder({
+          configDir: '/repo',
+          root: '/repo/src-root',
+          argv: ['src/a.ts'],
+          darkSpots: 'warn',
+          deadSurface: 'error',
+          inputGaps: 'error',
+        }),
+      ).rejects.toThrow(/GAP find/u);
+    });
+
+    // The same gap under `warn` is REPORTED but does not fail the run — the report names it either way;
+    // the severity decides only whether the exit code follows.
+    it('VALID: {a gap, inputGaps: warn} => reports it without failing the run', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({ runs: [RunResultStub({ gaps: [EntryGapStub()] })] });
+
+      const result = await UnitRunResponder({
+        configDir: '/repo',
+        root: '/repo/src-root',
+        argv: ['src/a.ts'],
+        darkSpots: 'warn',
+        deadSurface: 'error',
+        inputGaps: 'warn',
+      });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
+          '  GAP find — its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
+      );
+    });
+
+    // `off` is the third arm and it means "do not fail the build", never "do not say it": the config
+    // contract rules that no severity changes what the report SAYS, so this must be byte-identical to
+    // the `warn` run above. A run that silently dropped the admission would print `1/1 passed` for a
+    // file with an unconstructable input — the reads-as-complete lie every admission channel exists to
+    // prevent, and the reason there is no per-site waiver either.
+    it('VALID: {a gap, inputGaps: off} => still reported, and still does not fail the run', async () => {
+      const proxy = UnitRunResponderProxy();
+      proxy.runsReturn({ runs: [RunResultStub({ gaps: [EntryGapStub()] })] });
+
+      const result = await UnitRunResponder({
+        configDir: '/repo',
+        root: '/repo/src-root',
+        argv: ['src/a.ts'],
+        darkSpots: 'warn',
+        deadSurface: 'error',
+        inputGaps: 'off',
+      });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
+          '  GAP find — its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
       );
     });
   });
@@ -305,7 +400,7 @@ describe('UnitRunResponder', () => {
       UnitRunResponderProxy();
 
       await expect(
-        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: [], darkSpots: 'warn', deadSurface: 'error' }),
+        UnitRunResponder({ configDir: '/repo', root: '/repo/src-root', argv: [], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
       ).rejects.toThrow(/no paths given/u);
     });
   });

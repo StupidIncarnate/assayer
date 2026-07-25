@@ -44,7 +44,7 @@ describe('compileProcessFileBroker', () => {
         contentHash,
         nodes: [{ kind: 'function', name: 'foo', startLine: 1, endLine: 1 }],
         displayLines: [{ n: 1, text: content, hash: contentHash }],
-        analysis: { functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] },
+        analysis: { functions: [], enrichment: [], gaps: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] },
         moduleGraph: { edges: [], references: [], globalUses: [], envReads: [] },
       });
     });
@@ -97,7 +97,7 @@ describe('compileProcessFileBroker', () => {
           { n: 3, text: '}', hash: cryptoSha256Adapter({ content: '}' }) },
           { n: 4, text: '', hash: cryptoSha256Adapter({ content: '' }) },
         ],
-        analysis: { functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] },
+        analysis: { functions: [], enrichment: [], gaps: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] },
         moduleGraph: { edges: [], references: [], globalUses: [], envReads: [] },
       });
     });

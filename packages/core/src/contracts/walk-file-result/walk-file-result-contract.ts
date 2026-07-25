@@ -19,6 +19,7 @@ import {
   moduleEdgeContract,
 } from '@assayer/shared/contracts';
 
+import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
 import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
@@ -33,6 +34,12 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     // The file's import/re-export declarations, flat and unclaimed by any scope — the raw half of
     // the cross-file graph a later stitch pass resolves.
     moduleEdges: z.array(moduleEdgeContract),
+    // The type shapes the file DECLARES — one per `interface`/`type` declaration, the declared NAME
+    // beside the descriptor, read off the declaration itself. A shape no signature mentions is still one
+    // the file declares, so this is what makes `declaredTypes` the file's whole declared surface rather
+    // than the subset its functions use — and the NAME is what a name-keyed resolution can look up,
+    // which an alias to a scalar or a union has nowhere else to carry.
+    declaredShapes: z.array(declaredShapeContract),
     // The ambient-external identifiers the file uses (`console`, `process`) — the other raw half a
     // later stitch resolves against `@types/node`'s global scope.
     globalUses: z.array(globalUseContract),

@@ -44,13 +44,21 @@
  *     either, but a named feature would, so its wording must never read as permanent.
  *   - a LINT is the REPO's debt — a pattern to change (a private nothing consumes), which is why,
  *     alone among the four, it can fail the build.
- *   All four are worded exactly as `assayer unit` prints them; two surfaces over one artifact that
- *   describe it differently are two artifacts to the reader.
+ *   All four are worded exactly as `assayer unit` prints them — `<MARKER> <subject> — <text>`, one
+ *   space after the marker, the report's own line minus its two-space indent. Two surfaces over one
+ *   artifact that describe it differently are two artifacts to the reader, so the claim is CHECKED
+ *   rather than stated: `run-console.e2e.ts` reads the GAP rows off this panel and off the real CLI
+ *   report in the run console and asserts they are the same bytes.
  *
  *   Dark spots and undriven entries read from the ANALYSIS rather than a run, and sit outside the
  *   has-entries branch. Both are facts about the FILE that running neither establishes nor changes, so
  *   opening it is enough to see them — and each is exactly what a file with NO entries can be made of,
  *   so a gated block would answer "No entries in this file" and nothing else.
+ *
+ *   Gaps read from the analysis too until a run exists, then from the run — the one channel where the
+ *   run says MORE than the file. An input Assayer cannot construct is a fact about the file and shows
+ *   on open; an entry the runner cannot reach through its access is added by the case-set projection,
+ *   so it arrives with the first run. Reading both at once would print the file's half twice.
  *
  *   An undriven entry's derived cases are not listed. They exist in the analysis and nothing will ever
  *   execute them, so listing them would advertise pending tests while the run beside them reports 0/0.
@@ -112,7 +120,12 @@ export const DetailPanelWidget = ({
 }: DetailPanelWidgetProps): ReactElement => {
   const enrichment = analysis === undefined ? [] : analysis.enrichment;
   const active = hoveredLine !== undefined && hoveredLine !== null;
-  const gaps = run === undefined ? [] : run.gaps;
+  // The gap channel has two producers and the run carries BOTH — the file's own input gaps plus the
+  // access-shaped ones `case-set-projection` adds — so a run supersedes the analysis rather than
+  // duplicating it. With no run, the analysis half still shows: an input Assayer cannot construct is
+  // true the moment the file is opened, and making the reader click Run to learn it is the
+  // reads-as-complete lie with an extra step.
+  const gaps = run === undefined ? (analysis === undefined ? [] : analysis.gaps) : run.gaps;
   // Both from the analysis, not the run: `case-set-projection` copies them into the run verbatim, so
   // the run's copy says nothing the file's own analysis does not already say — and says it only after
   // a click.

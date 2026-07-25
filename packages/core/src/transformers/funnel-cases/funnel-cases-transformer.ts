@@ -25,20 +25,24 @@
  *   the surface's own exit.
  *
  *   It composes existing pieces: `through-callback-cases` for the element values + callback exits,
- *   `array-arrange`/`fill-param` for the array and sibling-param shapes, and simple path concatenation
- *   with the surface's own exit. The surface is assumed BRANCHLESS with a single exit — the caller gates
- *   on that (a branching surface is a later increment) — so `surface.exits[0]` is the funnel's tail.
+ *   `fill-param` for every surface param no callback steers, and simple path concatenation with the
+ *   surface's own exit. The surface is assumed BRANCHLESS with a single exit — the caller gates on that
+ *   (a branching surface is a later increment) — so `surface.exits[0]` is the funnel's tail.
+ *
+ *   Each folded callback's own refusals ride back on `unfillable`, tagged with that callback as their
+ *   owner: the surface is the ONLY entry once a callback funnels into it, so a callback element Assayer
+ *   cannot construct must be invoiced against the surface or it is invoiced nowhere. The SURFACE's own
+ *   refusals are not repeated — it is an entry in its own right and its own derivation invoices them.
  *
  * USAGE:
  * funnelCasesTransformer({ surface: pipeline, callbacks: [{ callback: cbA, arrayParam: 'xs' }, { callback: cbB, arrayParam: 'ys' }] });
- * // Returns the surface's funnel DerivedTestCase[]: the cartesian of each callback's empty/single/pair shapes.
+ * // Returns { cases, unfillable } — the cartesian of each callback's empty/single/pair shapes, plus what they refused.
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ArrangeValue, CoverageId, DerivedTestCase, SymbolName } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, CoverageId, DerivedTestCase, EntryLabel, SymbolName, TypeText } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
-import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
-import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transformer';
+import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { throughCallbackCasesTransformer } from '../through-callback-cases/through-callback-cases-transformer';
 
@@ -47,13 +51,13 @@ export const funnelCasesTransformer = ({
   callbacks,
 }: {
   surface: ScopeRecord;
-  callbacks: { callback: ScopeRecord; arrayParam: SymbolName }[];
-}): DerivedTestCase[] => {
+  callbacks: { callback: ScopeRecord; arrayParam: SymbolName; label?: EntryLabel | undefined }[];
+}): { cases: DerivedTestCase[]; unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[] } => {
   // The surface is branchless with a single exit (the caller gates on that); its one exit is the tail
   // every funnel path returns through.
   const surfaceExit = surface.exits[0]?.coverageId;
   if (surfaceExit === undefined || callbacks.length === 0) {
-    return [];
+    return { cases: [], unfillable: [] };
   }
 
   // The callbacks fire in source order — each `const scaled = xs.map(…)` evaluates top-to-bottom, so the
@@ -61,15 +65,23 @@ export const funnelCasesTransformer = ({
   // order the funnel paths thread in and the cartesian's significance order (earliest outermost).
   const ordered = [...callbacks].sort((left, right) => Number(left.callback.startLine) - Number(right.callback.startLine));
 
+  // The surface parameters a call supplies, in declaration order because the interpreter applies them
+  // positionally — a trailing one no caller owes and the seam cannot build is not part of the call.
+  const surfaceParams = appliedParamsTransformer({ params: surface.params });
+
   // Per callback, the array-shape CONTRIBUTIONS its funnel offers: the empty array (callback runs zero
   // times, no exit), one single-element array per distinguished element (the callback's own exit path),
   // and the arm-crossing pair of the first two (both exits, once each). Each contribution pairs the array
   // VALUE laid into that callback's param with the callback EXIT sub-path it reaches.
+  const built = ordered.map(({ callback, arrayParam, label }) =>
+    throughCallbackCasesTransformer({ callback, entry: surface, arrayParam, ...(label === undefined ? {} : { label }) }),
+  );
+
   const contributionLists: { arrayParam: SymbolName; value: ArrangeValue[]; subPath: CoverageId[] }[][] = ordered.map(
-    ({ callback, arrayParam }) => {
+    ({ arrayParam }, callbackIndex) => {
       // The callback's own per-element cases — each lays ONE steered element into the array param and
       // predicts the single callback exit that element reaches.
-      const perElement = throughCallbackCasesTransformer({ callback, entry: surface, arrayParam }).cases;
+      const perElement = built[callbackIndex]?.analysis.cases ?? [];
 
       // The steered element list each per-element case laid into the array param — a one-element list.
       const steered = perElement.map((testCase): ArrangeValue[] => {
@@ -77,12 +89,9 @@ export const funnelCasesTransformer = ({
         return binding !== undefined && binding.kind === 'array' ? binding.value : [];
       });
 
-      // The empty array shape for the array param, drawn from its element type (P4).
-      const arrayParamType = surface.params.find((param) => String(param.name) === String(arrayParam))?.type;
-      const emptyValue: ArrangeValue[] =
-        arrayParamType !== undefined && arrayParamType.kind === 'array'
-          ? arrayArrangeTransformer({ element: arrayParamType.element, count: arrayCardinalityStatics.counts.empty })
-          : [];
+      // The empty array shape for the array param. It holds no element, so no element type is read and
+      // it is a correct value for an array of ANY element type — including one the fill seam refuses.
+      const emptyValue: ArrangeValue[] = [];
 
       // The arm-crossing pair — the first two distinguished elements in one array, firing the callback
       // once per element. Absent when the callback distinguishes fewer than two.
@@ -116,22 +125,38 @@ export const funnelCasesTransformer = ({
     seed,
   );
 
-  return combinations.map((combo) => {
-    // Each combination steers one array param per callback; a surface param no callback steers is filled
-    // representative so the surface stays callable — a sibling ARRAY param takes a real array, not a
-    // scalar that throws.
+  const cases = combinations.flatMap((combo) => {
+    // Each combination steers one array param per callback; a surface param no callback steers goes
+    // through the shared fill seam so the surface stays callable — a sibling ARRAY param takes a real
+    // array, not a scalar that throws — and a param the seam REFUSES drops the case, since a surface
+    // that cannot be called derives nothing rather than something built on a placeholder.
     const valueByParam = new Map(combo.map((contribution) => [String(contribution.arrayParam), contribution.value] as const));
 
-    return derivedTestCaseContract.parse({
-      // The callback sub-paths in fire order, tailed by the surface's own exit: each callback fires, then
-      // the surface returns. An all-empty combination adds no callback exits, so the path is the surface's
-      // exit alone.
-      reachesPath: [...combo.flatMap((contribution) => contribution.subPath), surfaceExit],
-      salient: true,
-      arrange: surface.params.map((param) => {
-        const value = valueByParam.get(String(param.name));
-        return value === undefined ? fillParamTransformer({ param }) : { kind: 'array', param: param.name, value };
-      }),
+    const arrange = surfaceParams.flatMap((param): ArrangeBinding[] => {
+      const value = valueByParam.get(String(param.name));
+
+      if (value !== undefined) {
+        return [{ kind: 'array', param: param.name, value }];
+      }
+
+      const fill = fillParamTransformer({ param });
+
+      return fill.kind === 'filled' ? [fill.binding] : [];
     });
+
+    return arrange.length === surfaceParams.length
+      ? [
+          derivedTestCaseContract.parse({
+            // The callback sub-paths in fire order, tailed by the surface's own exit: each callback fires,
+            // then the surface returns. An all-empty combination adds no callback exits, so the path is
+            // the surface's exit alone.
+            reachesPath: [...combo.flatMap((contribution) => contribution.subPath), surfaceExit],
+            salient: true,
+            arrange,
+          }),
+        ]
+      : [];
   });
+
+  return { cases, unfillable: built.flatMap((entry) => entry.unfillable) };
 };

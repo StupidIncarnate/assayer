@@ -49,7 +49,7 @@ export const runEachLayerBroker = async ({
     source,
     // Derived through the shared broker, never computed here: every reader has to find this same
     // directory from nothing but the file, and a second derivation would drift.
-    runId: String(runIdBroker({ relPath, source })),
+    runId: String(await runIdBroker({ root, relPath, source })),
     analyzerContentHash,
   });
 

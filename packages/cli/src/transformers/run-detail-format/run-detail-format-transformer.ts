@@ -43,7 +43,9 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
     ];
   });
 
-  const gaps = run.gaps.map((gap) => `  GAP  ${String(gap.name)} — ${String(gap.reason)}`);
+  // One space after the marker, exactly as DARK / UNDRIVEN / LINT and the desktop panel spell it: every
+  // admission row is `<MARKER> <subject> — <text>`, so the two surfaces over one artifact read alike.
+  const gaps = run.gaps.map((gap) => `  GAP ${String(gap.name)} — ${String(gap.reason)}`);
 
   return cliOutputContract.parse([header, ...cases, ...gaps].join('\n'));
 };

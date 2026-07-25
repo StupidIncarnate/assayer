@@ -240,6 +240,55 @@ describe('caseSetProjectionTransformer', () => {
     });
   });
 
+  describe('the two producers of the one gap channel', () => {
+    // The analysis already invoiced the entry whose declared INPUT cannot be built. Recomputing it here
+    // would be a second answer to one question, so it is carried — and the access-shaped gap is ADDED
+    // beside it, never merged into it and never replacing it.
+    it('VALID: {an analysis gap and an access gap} => both ride the one channel, analysis first', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: {
+              name: 'constructor',
+              scopePath: ['Gauge', 'constructor'],
+              params: [],
+              returnType: { kind: 'unknown', text: 'void' },
+              line: 2,
+              access: { kind: 'constructor', className: 'Gauge' },
+            },
+          }),
+        ],
+        gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/gauge.ts',
+        modulePath: '/abs/src/gauge.ts',
+      });
+
+      expect(result.gaps).toStrictEqual([
+        { name: 'audit', reason: 'the fill seam refuses `report`' },
+        {
+          name: 'constructor',
+          reason: 'a constructor is reached through `new`, which the runner does not drive — needs a harness',
+        },
+      ]);
+    });
+
+    it('VALID: {an analysis gap and nothing blocked} => the run still carries what the file admitted', () => {
+      const analysis = FileAnalysisStub({ gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }] });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/audit.ts',
+        modulePath: '/abs/src/audit.ts',
+      });
+
+      expect(result.gaps).toStrictEqual([{ name: 'audit', reason: 'the fill seam refuses `report`' }]);
+    });
+  });
+
   describe('entries nothing can call', () => {
     // The module scope is analyzable but not RUNNABLE: its branches fire at require time and there is
     // no function to invoke. It is not a gap — no harness reaches it — so it is dropped from the
@@ -308,6 +357,46 @@ describe('caseSetProjectionTransformer', () => {
       });
 
       expect(result.entries).toStrictEqual([]);
+    });
+  });
+
+  describe('naming the harness a run must load', () => {
+    // The path is offered for every file — it is a pure function of the source path — and named only
+    // when a case actually reaches for a supplied input, so a run never requires a file that is not there.
+    it('VALID: {a case carrying a harness binding} => the harness path rides on the case set', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            cases: [
+              {
+                reachesPath: ['formatGreeting/return@if-then'],
+                arrange: [{ kind: 'harness', param: 'report', key: 'inputs.formatGreeting.report' }],
+                salient: true,
+              },
+            ],
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/format-greeting.ts',
+        modulePath: '/abs/src/format-greeting.ts',
+        harnessPath: '/abs/src/format-greeting.harness.ts',
+      });
+
+      expect(result.harnessPath).toBe('/abs/src/format-greeting.harness.ts');
+    });
+
+    it('EMPTY: {no case reaches for a supplied input} => no harness path, so the shim requires nothing', () => {
+      const result = caseSetProjectionTransformer({
+        analysis: FileAnalysisStub(),
+        relPath: 'src/format-greeting.ts',
+        modulePath: '/abs/src/format-greeting.ts',
+        harnessPath: '/abs/src/format-greeting.harness.ts',
+      });
+
+      expect(result.harnessPath).toBe(undefined);
     });
   });
 });

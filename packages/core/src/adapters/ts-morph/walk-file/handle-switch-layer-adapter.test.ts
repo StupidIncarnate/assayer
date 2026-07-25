@@ -101,7 +101,7 @@ describe('handleSwitchLayerAdapter', () => {
       ]);
     });
 
-    it('EDGE: {enum-member cases only} => no branches, since they are not desugared yet', () => {
+    it('EDGE: {enum-member cases only} => a branch carrying an unrecognized predicate, never a dropped clause', () => {
       handleSwitchLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile(
@@ -115,7 +115,27 @@ describe('handleSwitchLayerAdapter', () => {
         context: WalkContextStub({ scopePath: ['f'], guardPath: [], params: [], exported: true, tail: true }),
       });
 
-      expect(result.branches).toStrictEqual([]);
+      expect(result.branches).toStrictEqual([
+        {
+          coverageId: 'f/switch:id:e,EqualsEqualsEqualsToken,PropertyAccessExpression,id:E,id:A',
+          kind: 'switch',
+          condition: {
+            kind: 'leaf',
+            id: 'f/switch:id:e,EqualsEqualsEqualsToken,PropertyAccessExpression,id:E,id:A#leaf',
+            operandParamName: 'e',
+            operandType: {
+              kind: 'union',
+              members: [
+                { kind: 'literal', value: 0 },
+                { kind: 'literal', value: 1 },
+              ],
+            },
+            predicate: { kind: 'unrecognized' },
+          },
+          startLine: 4,
+          endLine: 5,
+        },
+      ]);
     });
 
     it('VALID: {switch} => records itself as a handled node under its scope', () => {

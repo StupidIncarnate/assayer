@@ -7,7 +7,7 @@ describe('assayerConfigContract', () => {
       const result = assayerConfigContract.parse({});
 
       expect(JSON.stringify(result)).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
       );
     });
 
@@ -22,8 +22,15 @@ describe('assayerConfigContract', () => {
         exclude: ['dist'],
         darkSpots: 'warn',
         deadSurface: 'error',
+        inputGaps: 'error',
         runMode: 'thorough',
       });
+    });
+
+    it('VALID: {inputGaps: "warn"} => preserved, so a repo mid-adoption reports gaps without failing', () => {
+      const result = assayerConfigContract.parse({ inputGaps: 'warn' });
+
+      expect(result.inputGaps).toBe('warn');
     });
 
     it('VALID: {runMode: "intelligent"} => preserved as the display-only execution-subset toggle', () => {

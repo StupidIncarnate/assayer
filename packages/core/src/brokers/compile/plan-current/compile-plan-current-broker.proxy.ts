@@ -1,4 +1,5 @@
 import { compileWalkWorkingTreeBrokerProxy } from '../../compile/walk-working-tree/compile-walk-working-tree-broker.proxy';
+import { harnessClassifyBrokerProxy } from '../../harness/classify/harness-classify-broker.proxy';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
 
@@ -9,6 +10,7 @@ export const compilePlanCurrentBrokerProxy = (): {
   const walkProxy = compileWalkWorkingTreeBrokerProxy();
   const readFileProxy = fsReadFileAdapterProxy();
   pathRelativeAdapterProxy();
+  harnessClassifyBrokerProxy();
 
   return {
     queueDir: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }): void => {

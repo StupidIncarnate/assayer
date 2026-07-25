@@ -79,7 +79,7 @@ describe('runDetailFormatTransformer', () => {
       const result = runDetailFormatTransformer({ run });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n  GAP  find — needs a harness',
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n  GAP find — needs a harness',
       );
     });
   });

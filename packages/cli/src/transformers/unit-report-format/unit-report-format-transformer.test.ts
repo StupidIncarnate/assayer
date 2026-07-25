@@ -114,7 +114,7 @@ describe('unitReportFormatTransformer', () => {
       const result = unitReportFormatTransformer({ runs });
 
       expect(String(result)).toBe(
-        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n  GAP  find — needs a harness',
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n  GAP find — needs a harness',
       );
     });
   });
@@ -172,7 +172,7 @@ describe('unitReportFormatTransformer', () => {
 
       expect(String(result)).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
-          '  GAP  find — needs a harness\n' +
+          '  GAP find — needs a harness\n' +
           '  UNDRIVEN inner — it is not exported',
       );
     });

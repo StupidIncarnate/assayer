@@ -15,12 +15,22 @@
  * expect([...fileNames].sort()).toStrictEqual(surface.fileLeaves());
  * expect([...dirNames].sort()).toStrictEqual(surface.dirNames());
  */
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { RelPathStub, FolderNameStub } from '@assayer/shared/contracts';
 
+import { typescriptHarnessGateAdapter } from '../../../core/src/adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { harnessModuleStatics } from '../../../core/src/statics/harness-module/harness-module-statics';
+
 const SMOKE_REPO = join(__dirname, '..', '..', '..', '..', 'smoke-repo');
 const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
+
+// The compiled surface is what a compile ANALYSED, and a colocated Assayer harness is classified out of
+// it — so the same suffix-plus-symbol-gate rule the compiler applies is applied here, off the same
+// bytes. A `*.harness.ts` that never registers stays a specimen, exactly as it stays an analysed target.
+const isAnalysed = (entry: { name: string; parentPath: string }): boolean =>
+  !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
+  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name), 'utf8') });
 
 export const syntaxSurfaceHarness = (): {
   surfaceHeaderPattern: () => RegExp;
@@ -34,7 +44,7 @@ export const syntaxSurfaceHarness = (): {
   surfaceHeaderPattern: (): RegExp => {
     const entries = readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true });
     const tsCount = entries.filter(
-      (entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts'),
+      (entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry),
     ).length;
     const tsxCount = entries.filter(
       (entry) => entry.isFile() && entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'),
@@ -46,7 +56,7 @@ export const syntaxSurfaceHarness = (): {
   // in-class.ts ×2, pure-statement.ts ×2), sorted, matching the tree the manifest relPaths build.
   fileLeaves: (): ReturnType<typeof RelPathStub>[] =>
     readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts'))
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry))
       .map((entry) => entry.name)
       .sort()
       .map((value) => RelPathStub({ value })),
@@ -60,7 +70,7 @@ export const syntaxSurfaceHarness = (): {
   dirNames: (): ReturnType<typeof FolderNameStub>[] => {
     const dirPaths = new Set(
       readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-        .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts'))
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry))
         .flatMap((entry) => {
           const segments = relative(SMOKE_REPO, entry.parentPath).split(sep);
           return [...segments.keys()].map((index) => segments.slice(0, index + 1).join(sep));

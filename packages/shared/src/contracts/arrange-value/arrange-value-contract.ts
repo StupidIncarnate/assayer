@@ -1,26 +1,43 @@
 /**
- * PURPOSE: Contract for one element of an array arrange — a value a case passes inside an array
- *   parameter's list. RECURSIVE: an element is a scalar representative value OR a nested array of the
- *   same, so a `number[][]` param arranges as `[[7]]` and deeper nestings compose. Every value is an
- *   INPUT drawn from the element type, never a code-derived output (P4).
+ * PURPOSE: Contract for one value a case passes inside a COMPOSITE parameter — an element of an array
+ *   parameter's list or a property of an object parameter's shape. RECURSIVE in both directions: a
+ *   value is a scalar representative value, a nested ARRAY of the same, or a nested OBJECT of the same.
+ *   So a `number[][]` param arranges as `[[7]]` and a `{ db: { host: string } }` param arranges as
+ *   `{ db: { host: 'localhost' } }` — an object value nests exactly as an array value does, which is
+ *   what makes a deep property shape representable at all. Every value is an INPUT drawn from the
+ *   declared type, never a code-derived output (P4).
  *
- *   The scalar leaf reuses `RepresentativeValue` (a branded point in a scalar operand's domain), so the
- *   array-arrange fill flows straight through; only the recursive ARRAY shape is added here. The run
- *   side passes the value positionally and the render side JSON-stringifies it, both generic over the
- *   nesting. The `unknown` input arm follows the recursive-contract pattern (`type-descriptor`).
+ *   The scalar leaf reuses `RepresentativeValue` (a branded point in a scalar operand's domain), so an
+ *   arrange fill flows straight through; only the recursive ARRAY and OBJECT shapes are added here. The
+ *   run side passes the value positionally and the render side JSON-stringifies it, both generic over
+ *   the nesting. The `unknown` input arm follows the recursive-contract pattern (`type-descriptor`).
  *
  * USAGE:
- * arrangeValueContract.parse(7);       // a scalar element
- * arrangeValueContract.parse([[7]]);   // a nested array element
+ * arrangeValueContract.parse(7);                       // a scalar leaf
+ * arrangeValueContract.parse([[7]]);                   // a nested array value
+ * arrangeValueContract.parse({ db: { host: 'x' } });   // a nested object value
  * // Returns a validated ArrangeValue
  */
 import { z } from 'zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
+import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
-export type ArrangeValue = RepresentativeValue | ArrangeValue[];
+// One definition of "a property name": the symbol-name contract with its BRAND unwrapped, so the same
+// non-empty check runs on every key while the record's OUTPUT stays a full index signature. Keeping the
+// brand makes zod infer a `Partial`, which describes no keys at all and so cannot carry the nesting.
+const propertyNameContract = symbolNameContract.unwrap();
+
+export type ArrangeValue =
+  | RepresentativeValue
+  | ArrangeValue[]
+  | { [key: z.infer<typeof propertyNameContract>]: ArrangeValue };
 
 export const arrangeValueContract: z.ZodType<ArrangeValue, z.ZodTypeDef, unknown> = z.lazy(() =>
-  z.union([representativeValueContract, z.array(arrangeValueContract)]),
+  z.union([
+    representativeValueContract,
+    z.array(arrangeValueContract),
+    z.record(propertyNameContract, arrangeValueContract),
+  ]),
 );

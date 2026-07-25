@@ -14,7 +14,7 @@ describe('compilePlanStableBroker', () => {
         previousCommit: sha,
       });
 
-      expect(result).toStrictEqual({ mode: 'skipped', targets: [] });
+      expect(result).toStrictEqual({ mode: 'skipped', targets: [], harnesses: [] });
     });
   });
 
@@ -39,6 +39,7 @@ describe('compilePlanStableBroker', () => {
           { relPath: 'packages/shared/index.ts', content: 'export const x = 1;\n' },
           { relPath: 'packages/web/app.tsx', content: 'export const App = () => null;\n' },
         ],
+        harnesses: [],
       });
     });
   });
@@ -68,6 +69,7 @@ describe('compilePlanStableBroker', () => {
           { relPath: 'packages/shared/index.ts', content: 'export const x = 2;\n' },
           { relPath: 'packages/web/app.tsx', content: 'export const App = () => "v2";\n' },
         ],
+        harnesses: [],
       });
     });
   });

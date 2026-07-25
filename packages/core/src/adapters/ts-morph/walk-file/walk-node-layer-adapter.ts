@@ -30,10 +30,11 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
   });
 
   const nodes = [...handled.nodes, ...child.nodes];
-  // Probe sites, module edges, global uses and env reads are positions/facts in the FILE, so they
-  // never belong to a scope and are never claimed.
+  // Probe sites, module edges, declared shapes, global uses and env reads are positions/facts in the
+  // FILE, so they never belong to a scope and are never claimed.
   const probeSites = [...handled.probeSites, ...child.probeSites];
   const moduleEdges = [...handled.moduleEdges, ...child.moduleEdges];
+  const declaredShapes = [...handled.declaredShapes, ...child.declaredShapes];
   const globalUses = [...handled.globalUses, ...child.globalUses];
   const envReads = [...handled.envReads, ...child.envReads];
   const reachedFns = [...handled.reachedFns, ...child.reachedFns];
@@ -56,6 +57,7 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
       nodes,
       probeSites,
       moduleEdges,
+      declaredShapes,
       globalUses,
       envReads,
       reachedFns,
@@ -75,6 +77,7 @@ export const walkNodeLayerAdapter = ({ node, context }: { node: Node; context: W
     nodes,
     probeSites,
     moduleEdges,
+    declaredShapes,
     globalUses,
     envReads,
     reachedFns,

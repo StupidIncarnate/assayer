@@ -10,6 +10,7 @@ import { handleImportLayerAdapterProxy } from './handle-import-layer-adapter.pro
 import { handleMemberAccessLayerAdapterProxy } from './handle-member-access-layer-adapter.proxy';
 import { handleSourceFileLayerAdapterProxy } from './handle-source-file-layer-adapter.proxy';
 import { handleSwitchLayerAdapterProxy } from './handle-switch-layer-adapter.proxy';
+import { handleTypeDeclarationLayerAdapterProxy } from './handle-type-declaration-layer-adapter.proxy';
 import { handleVariableLayerAdapterProxy } from './handle-variable-layer-adapter.proxy';
 import { handlerResultLayerAdapterProxy } from './handler-result-layer-adapter.proxy';
 
@@ -26,6 +27,7 @@ export const dispatchNodeLayerAdapterProxy = (): Record<PropertyKey, never> => {
   handleMemberAccessLayerAdapterProxy();
   handleSourceFileLayerAdapterProxy();
   handleSwitchLayerAdapterProxy();
+  handleTypeDeclarationLayerAdapterProxy();
   handleVariableLayerAdapterProxy();
   handlerResultLayerAdapterProxy();
 

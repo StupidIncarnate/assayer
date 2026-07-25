@@ -8,7 +8,9 @@
  *   mean every specimen.
  *
  *   `*.test.ts` is excluded for the same reason the analyzer excludes it: a specimen's colocated test
- *   is not part of the analyzed surface.
+ *   is not part of the analyzed surface. So is a colocated Assayer HARNESS, and by the same rule the
+ *   compiler applies — the `.harness.ts` suffix plus the symbol gate, never the filename alone — so the
+ *   catalogue and the compiled surface can never disagree about which files are specimens.
  *
  *   Not a `.harness.ts`: it owns no beforeEach/afterEach and no temp state, so it is a plain lookup
  *   the module scope can call while Jest is still collecting `it.each` cases.
@@ -30,6 +32,9 @@ import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath } from '@assayer/shared/contracts';
 
+import { typescriptHarnessGateAdapter } from '../../src/adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { harnessModuleStatics } from '../../src/statics/harness-module/harness-module-statics';
+
 const CORE_ROOT = resolve(__dirname, '..', '..');
 const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
 const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
@@ -44,6 +49,11 @@ export const specimenCatalogue = (): {
   relPaths: (): RelPath[] =>
     readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
       .filter((entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts'))
+      .filter(
+        (entry) =>
+          !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
+          !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name), 'utf8') }),
+      )
       // Posix-joined rather than platform-joined: the relPath is a cache and manifest key, so it must
       // not change shape with the OS that produced it.
       .map((entry) => relative(SMOKE_REPO, join(entry.parentPath, entry.name)).split(sep).join('/'))

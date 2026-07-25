@@ -67,6 +67,9 @@ export const throughInvocationCasesTransformer = ({
       branches: arrow.branches,
       exits: arrow.exits,
       cases: derived.cases,
+      // The arrow's own return comparison, carried onto the entry it becomes, so a reader re-deriving
+      // from the analysis sees the axis its cases were derived with.
+      ...(arrow.predicateSignature === undefined ? {} : { predicateSignature: arrow.predicateSignature }),
     }),
     unreachableExits: derived.unreachableExits,
   };

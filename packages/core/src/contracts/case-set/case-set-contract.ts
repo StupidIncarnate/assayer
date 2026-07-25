@@ -13,11 +13,19 @@
  *   Each entry carries its `access`, because a case is not addressable without it: the runner has to
  *   know whether to read a module property, reach for `default`, or build an instance first.
  *
+ *   `harnessPath` is present exactly when some case names a HARNESS binding, and it is absolute for the
+ *   same reason `modulePath` is: the shim requires it, and a shim resolves nothing relative to a cache
+ *   directory nobody chose. Its presence is the run's instruction to load that file — the values a
+ *   harness declares are callbacks, so nothing about them can ride in this data and the file itself is
+ *   what the run reads.
+ *
  *   `gaps` is the other half of that, and it is REQUIRED rather than optional for the same reason
  *   `darkSpots` is: a case set that can omit what it could not drive reads as complete coverage of
  *   the file, which is worse than admitting the hole. An entry nothing can construct belongs here —
  *   named, with a reason — never dropped silently and never driven anyway and reported as a failure
- *   of the analyzer.
+ *   of the analyzer. Two producers fill it and both are the caller's debt: the ANALYSIS already
+ *   carried the entries whose declared inputs cannot be built, and the projection adds the ones whose
+ *   ACCESS the runner cannot reach through. One channel, one shape, two sources.
  *
  *   `darkSpots` and `undriven` are carried rather than recomputed: the shim writes the run artifact,
  *   and the analysis is not in scope by then. All three are DIFFERENT admissions and never merge — a
@@ -41,6 +49,7 @@ import {
   darkSpotContract,
   derivedTestCaseContract,
   entryAccessContract,
+  entryGapContract,
   lintEntryContract,
   relPathContract,
   symbolNameContract,
@@ -50,6 +59,7 @@ import {
 export const caseSetContract = z.object({
   relPath: relPathContract,
   modulePath: z.string().min(1).brand<'ModulePath'>(),
+  harnessPath: z.string().min(1).brand<'HarnessPath'>().optional(),
   entries: z.array(
     z.object({
       name: symbolNameContract,
@@ -58,12 +68,7 @@ export const caseSetContract = z.object({
       cases: z.array(derivedTestCaseContract),
     }),
   ),
-  gaps: z.array(
-    z.object({
-      name: symbolNameContract,
-      reason: z.string().min(1).brand<'CaseSetGapReason'>(),
-    }),
-  ),
+  gaps: z.array(entryGapContract),
   darkSpots: z.array(darkSpotContract),
   undriven: z.array(undrivenEntryContract),
   // Carried through to the run artifact so `assayer unit` can fail on a lint when the repo asked,

@@ -30,6 +30,31 @@ describe('arrangeTextTransformer', () => {
 
       expect(result).toBe('[[7]]');
     });
+
+    it('VALID: {an object param} => the object literal a reader would pass, positionally like any argument', () => {
+      const result = arrangeTextTransformer({ arrange: [{ kind: 'object', param: 'config', value: { mode: 'dev' } }] } as never);
+
+      expect(result).toBe('{"mode":"dev"}');
+    });
+
+    it('VALID: {a nested object param} => the nested literal renders whole, exactly as a nested array does', () => {
+      const result = arrangeTextTransformer({
+        arrange: [{ kind: 'object', param: 'config', value: { db: { retry: { backoff: 'linear' } } } }],
+      } as never);
+
+      expect(result).toBe('{"db":{"retry":{"backoff":"linear"}}}');
+    });
+
+    it('VALID: {an object param beside a scalar} => both, comma-separated, in arrange order', () => {
+      const result = arrangeTextTransformer({
+        arrange: [
+          { kind: 'object', param: 'config', value: { db: { host: 'localhost' }, mode: 'dev' } },
+          { kind: 'param', param: 'retries', value: 7 },
+        ],
+      } as never);
+
+      expect(result).toBe('{"db":{"host":"localhost"},"mode":"dev"}, 7');
+    });
   });
 
   describe('env bindings render as the assignment that reproduces them', () => {
@@ -51,6 +76,27 @@ describe('arrangeTextTransformer', () => {
       } as never);
 
       expect(result).toBe('PORT="1", RETRIES="2"');
+    });
+  });
+
+  describe('harness bindings render as the key that supplied them', () => {
+    it('VALID: {a harness binding} => <harness key>, so a supplied input is not read as a derived one', () => {
+      const result = arrangeTextTransformer({
+        arrange: [{ kind: 'harness', param: 'report', key: 'inputs.audit.report' }],
+      } as never);
+
+      expect(result).toBe('<harness inputs.audit.report>');
+    });
+
+    it('VALID: {a harness binding beside a derived param} => both, comma-separated, in arrange order', () => {
+      const result = arrangeTextTransformer({
+        arrange: [
+          { kind: 'param', param: 'score', value: 6 },
+          { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+        ],
+      } as never);
+
+      expect(result).toBe('6, <harness inputs.audit.report>');
     });
   });
 

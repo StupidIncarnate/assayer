@@ -10,6 +10,11 @@
  *   with required arguments makes its methods a named gap rather than something the runner may
  *   guess at.
  *
+ *   A class DECLARES a shape too — its instance type — recorded on the same flat channel an
+ *   `interface`/`type` declaration uses and read through the same type reader, because a sibling that
+ *   takes a `Point` needs the same answer whether `Point` is an interface or a class. Without it the
+ *   reader is invoiced for a shape the file next door describes in full.
+ *
  * USAGE:
  * handleClassLayerAdapter({ node: classDeclaration, context });
  * // Returns a HandlerResult descending the class's members under its name
@@ -19,10 +24,13 @@ import type { ClassDeclaration, ClassExpression } from 'ts-morph';
 
 import { symbolNameContract } from '@assayer/shared/contracts';
 
+import { declaredShapeContract } from '../../../contracts/declared-shape/declared-shape-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../../contracts/walk-node/walk-node-contract';
+import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { walkContextTransformer } from '../../../transformers/walk-context/walk-context-transformer';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
+import { readTypeFactLayerAdapter } from './read-type-fact-layer-adapter';
 
 export const handleClassLayerAdapter = ({
   node,
@@ -50,7 +58,23 @@ export const handleClassLayerAdapter = ({
     enclosingClass: { name, constructable },
   });
 
+  // The INSTANCE shape the class declares — what a parameter typed `Point` demands. Only a NAMED class
+  // declares one: an anonymous class expression has no name a reference could resolve by.
+  const declaredShapes =
+    Node.isClassDeclaration(node) && node.getName() !== undefined
+      ? [
+          declaredShapeContract.parse({
+            name,
+            type: typeDescriptorTransformer({ fact: readTypeFactLayerAdapter({ type: node.getType() }) }),
+            ...(node.getTypeParameters().length === 0
+              ? {}
+              : { typeParams: node.getTypeParameters().map((param) => param.getName()) }),
+          }),
+        ]
+      : [];
+
   return handlerResultLayerAdapter({
+    declaredShapes,
     nodes: [
       walkNodeContract.parse({
         kind: node.getKindName(),

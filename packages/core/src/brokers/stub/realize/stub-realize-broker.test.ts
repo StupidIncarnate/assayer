@@ -19,6 +19,15 @@ const TYPES_SOURCE =
 
 const PLAIN_SOURCE = "export function grade(n: number): string {\n  if (n > 5) {\n    return 'p';\n  }\n\n  return 'f';\n}\n";
 
+const TRUTHY_OBJECT_SOURCE =
+  "interface Db {\n  host: string;\n}\n\ninterface Config {\n  db: Db;\n}\n\nexport function decide(config: Config): string {\n  if (config.db) {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
+
+const TRUTHY_ARRAY_SOURCE =
+  "interface Config {\n  tags: string[];\n}\n\nexport function decide(config: Config): string {\n  if (config.tags) {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
+
+const TRUTHY_SCALAR_SOURCE =
+  "interface Config {\n  mode: string;\n}\n\nexport function decide(config: Config): string {\n  if (config.mode) {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
+
 const THEN = '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then';
 const ELSE = '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else';
 
@@ -126,6 +135,93 @@ describe('stubRealizeBroker', () => {
           {
             reachesPath: ['*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else'],
             arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123' } }],
+            salient: true,
+          },
+        ],
+        undriven: [],
+      });
+    });
+
+    // The GAP twin of clearing the undriven admission. A cross-file `Config` is opaque in the hermetic
+    // walk, so the per-file fill seam refuses `config` and the analysis invoices it — and this overlay
+    // arranges that very param from the merged stub view, so the invoice is PAID rather than reprinted
+    // beside two cases that plainly drive the entry.
+    it("VALID: {config: Config from './types'} => the input gap the per-file analysis invoiced is cleared", () => {
+      const proxy = stubRealizeBrokerProxy();
+      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
+      const walked = tsMorphWalkFileAdapter({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
+
+      const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/caller.ts', overlays: [] });
+
+      expect({ before: analysis.gaps.map((gap) => String(gap.name)), after: result.gaps }).toStrictEqual({
+        before: ['decideA'],
+        after: [],
+      });
+    });
+  });
+
+  // Only the arm a constructible value can reach becomes a case. `{ host: 'abc123' }` is truthy, and so
+  // is every other object the fill seam can build, so the else arm is REFUSED rather than arranged with
+  // an input that would take the then exit and fail against correct code. It is not reported dead: the
+  // walk drops `undefined`, so `db?: Db` reads exactly as `db: Db` does and the falsy path may be live.
+  describe('a truthiness read of an object-typed property', () => {
+    it('VALID: {if (config.db) where db is an object} => ONE case, the satisfying arm', () => {
+      stubRealizeBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: TRUTHY_OBJECT_SOURCE, relPath: 'src/decide.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
+
+      const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
+
+      expect({ cases: result.functions.flatMap((fn) => fn.cases), undriven: result.undriven }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['*module*/decide/return@if:PropertyAccessExpression,id:config,id:db#then'],
+            arrange: [{ kind: 'object', param: 'config', value: { db: { host: 'abc123' } } }],
+            salient: true,
+          },
+        ],
+        undriven: [],
+      });
+    });
+
+    it('VALID: {if (config.tags) where tags is an array} => ONE case, since every array built is truthy', () => {
+      stubRealizeBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: TRUTHY_ARRAY_SOURCE, relPath: 'src/decide.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
+
+      const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
+
+      expect({ cases: result.functions.flatMap((fn) => fn.cases), undriven: result.undriven }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['*module*/decide/return@if:PropertyAccessExpression,id:config,id:tags#then'],
+            arrange: [{ kind: 'object', param: 'config', value: { tags: ['abc123'] } }],
+            salient: true,
+          },
+        ],
+        undriven: [],
+      });
+    });
+
+    // A string has a falsy point, so nothing is refused and both arms stay real cases.
+    it('VALID: {if (config.mode) where mode is a string} => BOTH arms, the else arranging the empty string', () => {
+      stubRealizeBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: TRUTHY_SCALAR_SOURCE, relPath: 'src/decide.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
+
+      const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
+
+      expect({ cases: result.functions.flatMap((fn) => fn.cases), undriven: result.undriven }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['*module*/decide/return@if:PropertyAccessExpression,id:config,id:mode#then'],
+            arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
+            salient: true,
+          },
+          {
+            reachesPath: ['*module*/decide/return@if:PropertyAccessExpression,id:config,id:mode#else'],
+            arrange: [{ kind: 'object', param: 'config', value: { mode: '' } }],
             salient: true,
           },
         ],

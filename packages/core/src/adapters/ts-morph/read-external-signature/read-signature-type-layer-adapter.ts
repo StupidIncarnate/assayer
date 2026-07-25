@@ -1,13 +1,23 @@
 /**
  * PURPOSE: Reads a TypeScript type from the node_modules-aware external project into a serializable
  *   TypeFact — the raw type-checker readout (primitive flavor, a resolved literal value, a union of
- *   member facts, an ARRAY of its element type, or an OBJECT enumerating its named properties),
- *   recursing through union members, array elements and object properties so enumerated shapes are
- *   read by this one function. It is the external reader's OWN boundary read: it MIRRORS
- *   `read-type-fact-layer-adapter` in the walk-file action, but adapters cannot import an adapter in a
- *   sibling action, so the external reader owns this thin ts-morph read while sharing the semantic
- *   half — `typeDescriptorTransformer`, the sole place the TypeFact -> TypeDescriptor union-fanout
- *   rule lives. `seen` truncates a self-referential type the same way the walk reader does.
+ *   member facts, an ARRAY of its element type, a CALLABLE, or an OBJECT enumerating its named
+ *   properties), recursing through union members, array elements and object properties so enumerated
+ *   shapes are read by this one function. It is the external reader's OWN boundary read: it MIRRORS
+ *   `read-type-fact-layer-adapter` in the walk-file action flavor for flavor, but adapters cannot
+ *   import an adapter in a sibling action, so the external reader owns this thin ts-morph read while
+ *   sharing the semantic half — `typeDescriptorTransformer`, the sole place the TypeFact ->
+ *   TypeDescriptor union-fanout rule lives. A declared external type has no literal BINDING to collapse,
+ *   so the walk's `widen` entry point has no counterpart here; everything else reads identically.
+ *
+ *   A type carrying CALL SIGNATURES is a callable, read before the object branch so a callback keeps
+ *   its own identity instead of reading as a property-less object and a method keeps its own instead of
+ *   naming a type after itself; its `text` is whatever the CHECKER renders the type as, which is the
+ *   type's NAME when it has one (`Hybrid` for a named interface carrying a call signature) and the
+ *   rendered signature when it is anonymous. A boolean LITERAL is a literal fact, so `string | boolean`
+ *   — three members to the checker — survives as a union instead of degrading to `unknown`. `seen`
+ *   truncates a self-referential type the same way the walk reader does, marking it `truncated` so an
+ *   empty property list that is the reader stopping stays distinguishable from an empty declaration.
  *
  * USAGE:
  * readSignatureTypeLayerAdapter({ type: signature.getReturnType() });
@@ -35,6 +45,12 @@ export const readSignatureTypeLayerAdapter = ({ type, seen }: { type: Type; seen
   if (type.isStringLiteral() || type.isNumberLiteral() || type.isEnumLiteral()) {
     return { flavor: 'literal', value: representativeValueContract.parse(type.getLiteralValueOrThrow()) };
   }
+  // A boolean literal carries no `getLiteralValue()` — the checker models `true` and `false` as two
+  // intrinsic types, and only their canonical rendering says which one this is. That rendering is the
+  // checker's, never the source's, so it is the same two strings whatever the type was spelled as.
+  if (type.isBooleanLiteral()) {
+    return { flavor: 'literal', value: representativeValueContract.parse(type.getText() === 'true') };
+  }
   if (type.isUnion()) {
     return {
       flavor: 'union',
@@ -46,12 +62,21 @@ export const readSignatureTypeLayerAdapter = ({ type, seen }: { type: Type; seen
   if (type.isArray()) {
     return { flavor: 'array', element: readSignatureTypeLayerAdapter({ type: type.getArrayElementTypeOrThrow(), seen: onPath }) };
   }
+  // A function type is an object to the checker too, so this MUST precede the object branch — the same
+  // ordering reason the array check does. Enumerated as an object a callback comes back with an empty
+  // property list, indistinguishable from an empty interface, and a METHOD comes back as an object
+  // named after itself, which then keys a stub on a type that does not exist.
+  if (type.getCallSignatures().length > 0) {
+    return { flavor: 'callable', text: typeTextContract.parse(type.getText()) };
+  }
   if (type.isObject()) {
     const rawName = type.getSymbol()?.getName();
     const typeName = rawName === undefined || rawName === '__type' ? undefined : symbolNameContract.parse(rawName);
 
+    // MARKED, because only the reader knows the empty property list is where it stopped rather than
+    // what the type declares.
     if (typeName !== undefined && onPath.has(typeName)) {
-      return { flavor: 'object', typeName, properties: [] };
+      return { flavor: 'object', typeName, truncated: true, properties: [] };
     }
 
     const nextSeen = typeName === undefined ? onPath : new Set([...onPath, typeName]);

@@ -85,6 +85,16 @@ describe('typeDescriptorTextTransformer', () => {
     });
   });
 
+  describe('callable types', () => {
+    it('VALID: {kind: callable} => renders the carried signature text', () => {
+      const result = typeDescriptorTextTransformer({
+        type: TypeDescriptorStub({ kind: 'callable', text: '(message: string) => string' }),
+      });
+
+      expect(String(result)).toBe('(message: string) => string');
+    });
+  });
+
   describe('opaque types', () => {
     it('VALID: {kind: unknown, text: "Date"} => renders the carried type text', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Date' }) });

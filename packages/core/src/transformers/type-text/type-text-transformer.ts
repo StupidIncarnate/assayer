@@ -2,7 +2,8 @@
  * PURPOSE: Renders a serializable type descriptor as its display text for the enrichment panel —
  *   'string'/'number'/'boolean' for primitives, the JSON form of a literal, a `|`-joined list for
  *   a union, `element[]` for an array, an object's NAME (or a braced property list when anonymous),
- *   and the carried text for an opaque unknown type.
+ *   a callable's own carried rendering (its type NAME when it has one, its rendered signature when
+ *   anonymous), and the carried text for an opaque unknown type.
  *
  * USAGE:
  * typeTextTransformer({ type: { kind: 'string' } });
@@ -31,6 +32,8 @@ export const typeTextTransformer = ({ type }: { type: TypeDescriptor }): TypeTex
           ? `{ ${type.properties.map((property) => `${String(property.name)}: ${String(typeTextTransformer({ type: property.type }))}`).join('; ')} }`
           : String(type.typeName),
       );
+    case 'callable':
+      return typeTextContract.parse(type.text);
     case 'unknown':
       return typeTextContract.parse(type.text);
     default:

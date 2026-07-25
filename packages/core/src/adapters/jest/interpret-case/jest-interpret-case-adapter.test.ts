@@ -68,6 +68,191 @@ describe('jestInterpretCaseAdapter', () => {
     });
   });
 
+  describe('composite bindings become one argument each', () => {
+    // A nested object arrives whole, exactly as a nested array does — the binding's value IS the
+    // structure the entry receives, so the entry can read straight through `config.db.host`.
+    it('VALID: {a nested object binding} => passed positionally with its nesting intact', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [{ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } }],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (config: unknown) => probe.x(THEN, JSON.stringify(config)),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '{"db":{"host":"localhost"}}' }],
+      });
+    });
+
+    it('VALID: {an object binding beside a scalar} => both arguments in arrange order', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [
+          { kind: 'object', param: 'config', value: { db: { ports: [7] } } },
+          { kind: 'param', param: 'retries', value: 2 },
+        ],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (config: unknown, retries: unknown) => probe.x(THEN, JSON.stringify([config, retries])),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '[{"db":{"ports":[7]}},2]' }],
+      });
+    });
+  });
+
+  describe('a harness binding resolves against the loaded declaration', () => {
+    it('VALID: {inputs.grade.report declared} => the registered callback is applied positionally', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [
+          { kind: 'param', param: 'score', value: 6 },
+          { kind: 'harness', param: 'report', key: 'inputs.grade.report' },
+        ],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (score: unknown, report: unknown) => probe.x(THEN, `${String(score)}:${String(report)}`),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+        harness: [{ inputs: { grade: { report: 'the-declared-value' } } }],
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '6:the-declared-value' }],
+      });
+    });
+
+    // The one outcome that must never be silent. A hole in the argument list would let the entry run on
+    // a value nobody supplied, and whatever it then did would be reported as a verdict about the code.
+    it('ERROR: {the key is not declared} => errored, NAMING the key, without calling the entry', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [{ kind: 'harness', param: 'report', key: 'inputs.grade.report' }],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (report: unknown) => probe.x(THEN, String(report)),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+        harness: [{ inputs: { grade: { emit: 'the-other-value' } } }],
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'errored',
+        observedPath: [],
+        trace: [],
+        message:
+          'harness input `inputs.grade.report` was not registered when the colocated harness loaded, so ' +
+          "'grade' has no argument for `report`. The case was derived from a declaration that named that " +
+          'key, so the harness has changed since — restore the declaration, or recompile so the case set ' +
+          'matches what it declares now.',
+      });
+    });
+
+    it('EMPTY: {no harness loaded at all} => errored, naming the key rather than passing undefined', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [{ kind: 'harness', param: 'report', key: 'inputs.grade.report' }],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (report: unknown) => probe.x(THEN, String(report)),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'errored',
+        observedPath: [],
+        trace: [],
+        message:
+          'harness input `inputs.grade.report` was not registered when the colocated harness loaded, so ' +
+          "'grade' has no argument for `report`. The case was derived from a declaration that named that " +
+          'key, so the harness has changed since — restore the declaration, or recompile so the case set ' +
+          'matches what it declares now.',
+      });
+    });
+
+    it('ERROR: {two keys missing} => errored, naming BOTH, so one recompile closes them together', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [
+          { kind: 'harness', param: 'report', key: 'inputs.grade.report' },
+          { kind: 'harness', param: 'emit', key: 'inputs.grade.emit' },
+        ],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (report: unknown) => probe.x(THEN, String(report)),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+        harness: [{ inputs: {} }],
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'errored',
+        observedPath: [],
+        trace: [],
+        message:
+          'harness inputs `inputs.grade.report`, `inputs.grade.emit` were not registered when the ' +
+          "colocated harness loaded, so 'grade' has no argument for `report`, `emit`. The case was " +
+          'derived from a declaration that named those keys, so the harness has changed since — restore ' +
+          'the declaration, or recompile so the case set matches what it declares now.',
+      });
+    });
+  });
+
   describe("exits that are not the entry's own", () => {
     // The bug this guards: a callback the entry invoked fires its own exit probe AFTER the entry's,
     // so "the last exit event" would judge the entry by code it merely scheduled.

@@ -24,7 +24,7 @@ describe('object / cross-file-shape — decideA reads config.mode off an IMPORTE
         entry: {
           name: 'decideA',
           scopePath: ['*module*', 'decideA'],
-          params: [{ name: 'config', type: { kind: 'unknown', text: 'Config' } }],
+          params: [{ name: 'config', type: { kind: 'unknown', text: 'Config', typeRef: 'Config' } }],
           returnType: { kind: 'string' },
           line: 3,
           access: { kind: 'named' },

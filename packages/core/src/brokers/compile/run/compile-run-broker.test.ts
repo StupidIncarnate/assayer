@@ -196,6 +196,42 @@ describe('compileRunBroker', () => {
     });
   });
 
+  describe('a committed harness whose declaration the harness stitch rejects', () => {
+    it("ERROR: {clean run, harness names a parameter Assayer builds itself} => status errors with the harness P1 under the current namespace, cache still written", async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'feature-x' });
+      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n'] });
+      proxy.manifestWriteSucceeds();
+      proxy.harnessInvalid({
+        relPath: 'src/audit.harness.ts',
+        message: '`src/audit.harness.ts` declares no inputs, so it closes nothing.',
+      });
+      const config = AssayerConfigStub();
+
+      const result = await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(result).toStrictEqual({
+        status: 'errors',
+        results: [{ namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 1 }],
+        errors: [
+          {
+            namespace: 'feature-x',
+            relPath: 'src/audit.harness.ts',
+            line: 1,
+            column: 1,
+            message: '`src/audit.harness.ts` declares no inputs, so it closes nothing.',
+          },
+        ],
+      });
+      expect(proxy.wasManifestWritten()).toBe(true);
+    });
+  });
+
   describe('a current file that fails to parse (incremental run)', () => {
     it('ERROR: {incremental run, one current file with invalid syntax} => returns status errors and never writes the manifest', async () => {
       const proxy = compileRunBrokerProxy();

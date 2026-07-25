@@ -20,6 +20,16 @@
  *   outside the module can ever reach — so failing the build punishes the party that can fix it. `off`
  *   and `warn` exist for repos mid-cleanup; `error` is the honest default.
  *
+ *   `inputGaps` defaults to `error` on the same reasoning as `deadSurface`, applied to the other party:
+ *   a gap is the CALLER's debt — an input Assayer cannot construct, or an entry the runner cannot reach
+ *   through its access — and both are closed by a harness the caller writes, so failing the build asks
+ *   the one party who can act. It governs the whole gap channel because both producers invoice the same
+ *   act; splitting them would offer a repo a way to care about one harness and not the other. `off` and
+ *   `warn` exist for repos mid-adoption, where every unconstructable input is a build error on day one.
+ *
+ *   None of the three changes what the report SAYS: every admission is printed whatever the severity.
+ *   The toggle decides only whether the exit code follows.
+ *
  *   Repo-wide, and deliberately with no per-file or per-line escape. A suppression that can be
  *   applied at the site of the problem is how "we do not care here" quietly becomes "we do not care
  *   anywhere", one file at a time, with nobody able to see the total. If unfollowed syntax or dead
@@ -38,6 +48,7 @@ export const assayerConfigContract = z.object({
   stableBranch: z.string().min(1).brand<'StableBranchName'>().optional(),
   darkSpots: z.enum(['warn', 'error']).default('warn').brand<'DarkSpotSeverity'>(),
   deadSurface: z.enum(['off', 'warn', 'error']).default('error').brand<'DeadSurfaceSeverity'>(),
+  inputGaps: z.enum(['off', 'warn', 'error']).default('error').brand<'InputGapSeverity'>(),
   runMode: z.enum(['thorough', 'intelligent']).default('thorough').brand<'RunMode'>(),
 });
 

@@ -71,13 +71,21 @@ exactly its own — which is why no node ever has to ask "which function am I in
 Handlers describe descent; the core performs it (R15: *core owns all traversal; plugins never parse*).
 That inversion is why a `switch` handler needs zero knowledge of `if`.
 
-**Types are read structurally too.** `read-type-fact` reads a param/return type into a serializable
-fact — primitive, union, ARRAY element type, or a LOCAL object type's enumerated (sorted) property
-list; `type-descriptor` interprets that fact into the analysis model. Only same-file declarations
-enumerate: an imported object type is `any` in the hermetic walk (§5.10) and gets its shape at the
-stitch. `FileAnalysis.declaredTypes` projects the file's named local object shapes with their full
-property lists (`declared-types-projection` over the walk's object descriptors) — the source later
-phases splice per-property value demands onto.
+**Types are read structurally too.** `read-type-fact` reads a type into a serializable fact —
+primitive, union, ARRAY element type, or a LOCAL object type's enumerated (sorted) property list;
+`type-descriptor` interprets that fact into the analysis model. An object's name is its symbol's, or
+its ALIAS symbol's when the object symbol is the anonymous `__type` a `type X = { … }` produces, so
+the interface and alias spellings of one shape are indistinguishable downstream. Only same-file
+declarations enumerate: an imported object type is `any` in the hermetic walk (§5.10) and gets its
+shape at the stitch.
+
+`FileAnalysis.declaredTypes` projects the file's named local object shapes with their full property
+lists — the source later phases splice per-property value demands onto. `declared-types-projection`
+gathers it from TWO walk channels and needs both: `handle-type-declaration` records every
+`interface`/`type` DECLARATION as a `declaredShape`, and every scope's params and return type carry
+object descriptors. A types-only module mentions its own shapes in no signature, so the signature
+channel alone leaves its declared surface empty and every reader of it is invoiced for a shape
+Assayer can build itself; a shape a signature spells inline is in no declaration.
 
 **Resolution is a separate post-compile stitch — the walk still never crosses a file.** A call to an
 imported name records a raw `import` reference (the module-specifier's literal VALUE + the imported
@@ -93,29 +101,44 @@ LOOKUP, not by re-parsing (§9). One parse per file still holds.
 | --- | --- |
 | support a new syntax family | a new `handle-<x>-layer-adapter` + **one** route in `dispatch-node` |
 | support a new callable shape | `handle-function-layer-adapter` (owns `FunctionLikeNode`) + its dispatch route |
-| handle a new type shape | `transformers/type-descriptor` (`read-type-fact` only packs raw checker facts — primitives, unions, ARRAY element types, and a LOCAL object type's enumerated properties; an imported object type is `any` in the hermetic walk and is resolved at the stitch, §5.10) |
+| handle a new type shape | `transformers/type-descriptor` (`read-type-fact` only packs raw checker facts — primitives, unions, ARRAY element types, and a LOCAL object type's enumerated properties; an imported object type is `any` in the hermetic walk and is resolved at the stitch or by the consume-time `param-type-resolve` overlay, §5.10). A UNION keeps its members whenever ANY of them is representable and degrades to `unknown` only when NONE is — a value of one member IS a value of the union, which is the rule `is-type-fillable` states |
 | handle a new comparison | `transformers/predicate` (`read-condition` only extracts the readout) |
 | change coverage IDs | `transformers/coverage-id` + `transformers/exit-coverage-id` |
 | change what identity is | `project-node-layer-adapter` |
 | change operand typing | `read-operand-type-layer-adapter` (read §5.9 first) |
 | capture an object-member operand (`config.mode`) | `read-condition` (+ `read-property-path` for the `.member` chain) — records `operandParamName` (root), `operandPropertyPath`, and `operandTypeRef` (the root param's declared type-reference NAME) for the stub stitch; the branch is UNDRIVEN in the per-file blob (gated in `derive-cases`, §5.12) and DRIVEN at consume time by `stub-realize` (§9) |
 | drive an object-member branch from the stub view | `brokers/stub/realize` (the consume-time overlay) + `transformers/object-arrange` (arranges one object param's properties from the merged stub view; a corrected property is AUTHORITATIVE — only its values, no branch-literal fallback) — NEVER `derive-cases`, which stays scalar-only |
-| fan an array param out over cardinality (empty/one/many) | `transformers/array-arrange` (builds a real array of each size class, recursing for nested `number[][]` → `[[7]]`) + the array-cardinality cartesian in `transformers/cause-arrange` (folded into `arrangements` the ArrangeValue[] twin of the operand cartesian); `statics/array-cardinality` fixes the order (`one` first ⇒ salient) and counts. Every array param takes this fan-out — a branch never constrains an array in v1 (no `.length` guards) |
+| give a parameter declared as an IMPORTED type the shape its declaration says | `brokers/param-type/resolve` (the consume-time overlay that runs FIRST) + its `resolve-type-ref-layer-broker` (one reference to one declaration, following named imports, re-export barrels and NAMESPACE imports — `import * as T` then `T.Leaf` forwards `Leaf` — seen-set for cycles, and instantiating a GENERIC declaration from the reference's type ARGUMENTS, resolved in the reader's own file and substituted for the declaration's `typeParams` by position) + `transformers/collect-type-refs` / `substitute-type-refs` / `substitute-condition-types` (the pure read/write halves) keyed by `transformers/type-ref-key`, the reference's declared RENDERING — `Box<string>` and `Box<number>` are one NAME and two demands, so a name-keyed map answers one with the other's shape. The walk records the reference NAME and its arguments on the opaque descriptor (`typeRef`/`typeArgs`, off `param.getTypeNode()` — §5.1-sanctioned, never `text`); the overlay resolves it and re-projects the file through `analyze-file-broker`, so there is ONE derivation path and nothing to reconcile. It does NOT move the file's own `declaredTypes` — a sibling's shape is not one this file declares, and letting one in would key its stub on the reader |
+| give a parameter no case steers a value, or REFUSE one | `transformers/fill-param` — the ONE fill authority, which every fill site routes through (`cause-arrange`, `stub-realize`, the funnel and `through-*` builders). `guards/is-type-fillable` is the RULE (scalar/literal ⇒ yes; union ⇒ some member; array ⇒ its element; object ⇒ every property, so the property-less shape is `{}`; callable/unknown ⇒ no) and `transformers/fill-value` the recursive builder. There is NO placeholder fill: a parameter the seam refuses derives no case at all, never `'abc123'` handed to something that calls, dereferences or measures it |
+| decide which parameters a CALL supplies | `transformers/applied-params`, asked once per layout site (`derive-cases` — which also gates steerability on it — plus `stub-realize`, `funnel-*` and `through-*`). A parameter the caller owes NOTHING (`optional`/`rest` on the descriptor, read off the ts-morph parameter in `handle-function` because the checker widens `report?: T` to `T`) and the seam refuses is not owed: `maybe(11)` is a real call, so invoicing it bills a debt nobody has. It TRUNCATES rather than filters — the interpreter applies an arrange positionally, so a hole would slide every later argument one slot left. A REQUIRED refusal stays and is invoiced |
+| word the INVOICE for a refused parameter | `transformers/input-gap` — the one home of the P1 text. It names the type the SOURCE spells (`param.declaredText`, read off the type node by `read-declared-type-text` and carried only where the descriptor cannot reproduce it), never the descriptor's rendering: a `readonly [string, number]` enumerates as an anonymous shape carrying every member of `ReadonlyArray`, so rendering it buries the one actionable fact under a three-thousand-character dump — in the message AND in the harness snippet meant to be pasted. `derive-cases` reports the refusals as `unfillable` (deduped across buckets), and so does EVERY driving route (`through-caller-cases`, `through-callback-cases`, `funnel-cases`, `funnel-named-cases`, plus `compose-cross-file-map`), because every one of them routes through `fill-param` and a refusal it drops is a scope that silently derives nothing. A route's refusal carries `owner` — the scope that DECLARES the parameter — whenever the gap is filed against a different entry: a funnelled private or callback is no entry of its own, so its refusal is filed against the HOST a reader can drive and reads `on \`helper\``. `analyze-file-broker` merges both sources per entry onto `FileAnalysis.gaps`, `case-set-projection` CONCATENATES them with the access-shaped gaps it computes (one channel, two producers, the shared `entry-gap-contract` shape), and `stub-realize` CLEARS the gap for an entry it drives from the merged stub view. Severity is the global `inputGaps` toggle, which governs the EXIT CODE alone — `off` and `warn` print the same bytes; never a per-site waiver |
+| decide which admission an entry PRINTS when it has two | `analyze-file-broker` — an entry carrying an input GAP has its UNDRIVEN admissions dropped. The channels stay separate and keep their own meanings; this is precedence, not a merge. An entry Assayer cannot construct an input for cannot be CALLED, so it has nothing to say about which branch it would steer, and "make the deciding value a parameter" beside "supply this input" is two contradictory next actions. The gap's own closing sentence promises only that the refusal ends — anything still in the way (an ACCESS gap, the undriven branch) states itself on its own line once the input lands |
+| render a type the CHECKER collapses (`Db \| string` ⇒ `any`) | `read-declared-type-text-layer-adapter`, threaded into `read-type-fact` as `typeNode` (from `handle-function`, and down into array elements and object properties). It walks the type NODE by kind and asks the checker to render each part, so an opaque member reads as its own declared name. Display TEXT only — the classification is untouched, so what was refused stays refused |
+| fan an array param out over cardinality (empty/one/many) | `transformers/array-arrange` (builds a real array of each size class, recursing for nested `number[][]` → `[[7]]`) + the array-cardinality cartesian in `transformers/cause-arrange` (folded into `arrangements` the ArrangeValue[] twin of the operand cartesian); `statics/array-cardinality` fixes the order (`empty` first ⇒ salient) and counts. Every array param takes this fan-out; a `.length` guard on an array DOES record a length predicate, and where that constrains an object PROPERTY the property is refused rather than filled, since no array of the demanded length is built yet |
 | flag a committed correction that CONTRADICTS a guard (pre-run) | `transformers/gather-property-guards` (the per-guard seam, guard twin of `gather-type-reads`) + `transformers/stub-contradictions` (intersect corrected values with the guard's satisfying domain, `is-domain-empty`) — folded into `compile-run-broker`'s `errors[]` beside the stale-overlay reconcile (§9) |
 | change reachability | `read-terminal` **or** `read-accounted` — they are different questions, read §5.8 first |
-| decide whether a branch is DRIVABLE (steerable) | `transformers/derive-cases` — the ONE gate, every branch construct alike (§5.12); never a per-construct or per-position gate |
+| decide whether a branch is DRIVABLE (steerable) | `transformers/derive-cases` — the ONE gate, every branch construct alike (§5.12); never a per-construct or per-position gate. It asks TWO questions per leaf — is the OPERAND arrangeable, and does the PREDICATE constrain (`guards/is-predicate-constraining`) — and reports which one failed as the `undriven-cause`, because the two have opposite remedies |
 | EVALUATE a branch welded to a literal constant | capture the value where it is welded — `read-const-operand-layer-adapter` for a same-file `const` (stamps `operandConstValue`/`operandConstLength` on the leaf at walk time), `transformers/stamp-const-leaves` for a literal call/invocation ARGUMENT (stamped by the follower). Then it flows through the existing math: the `derive-cases` gate treats it as arrangeable, `cause-arrange` seeds a single-value domain, and the arm it violates falls out of `is-domain-empty` as an `unreachableExits` entry — a lint, never a second bogus case. The lint text is `transformers/unreachable-lint` |
 | drive an inline function nothing calls BY NAME | `transformers/follow-calls` routes each shape: an IIFE (its start line in the walk's `invokedFns`, which carries the invocation args) to `transformers/through-invocation-cases` — module-load code, so `envDrivable` and welded invocation literals both drive it, and its entry ACCESS is `module`; an array-iteration callback to `through-callback-cases`; a named-call callee to `through-caller-cases`. A RETURNED closure stays UNDRIVEN — an external caller applies it |
 | change what counts as a dark spot | `statics/significant-syntax-kinds` |
 | change what becomes an entry | `transformers/analysis-projection` (policy lives there, not in the walk) |
-| change what a call TARGETS (local / import / unresolved arms) | `read-callee-layer-adapter` |
+| change what a call TARGETS (local / import / unresolved arms) | `read-callee-layer-adapter` — a same-file callee is a `local` link whether it is a `FunctionDeclaration` or a `const`/`let` bound to a function-like initializer (read off the declaration's KIND, and keyed on the INITIALIZER's line, which is where the walk opened that scope) |
 | record an import / re-export edge | `handle-import-layer-adapter` / `handle-export-layer-adapter` + their routes in `dispatch-node`; projected by `transformers/module-graph-projection` |
+| record a type DECLARATION (`interface Config`, `type Config = { … }`, `enum Level`) | `handle-type-declaration-layer-adapter` + its route in `dispatch-node` — reads the declaration through the SAME `read-type-fact` → `type-descriptor` pipeline every signature goes through, and emits the declared NAME (plus `typeParams` for a generic one) beside the descriptor on the flat `declaredShapes` channel (the name is the only fact the descriptor cannot hold for itself: `type Id = string` denotes a descriptor with no name slot, so a name-keyed lookup would miss every alias to a scalar or a union). An ALIAS also hands its right-hand type NODE to the reader, or `type BeeT = AyT` records no reference and an alias CHAIN stops one file short of the shape it names. A CLASS declares its instance shape on the same channel, from `handle-class` — a sibling taking a `Point` needs the same answer whether `Point` is an interface or a class; projected by `transformers/declared-types-projection` alongside the signature descriptors (§3) |
 | record an ambient global USE (`console`, `process`) | `handle-member-access-layer-adapter` (member forms) / `handle-call` (bare-identifier global calls) + `read-ambient-root-layer-adapter`; projected as `globalUses` by `transformers/module-graph-projection` |
 | record a `process.env.<X>` env read | `handle-member-access-layer-adapter` (the outer `process.env.<X>` access — property name + any equality-comparison literal); projected as `envReads` by `transformers/module-graph-projection`, aggregated into per-property env stubs by the stub stitch (§9) |
 | change import resolution (the stitch) | `brokers/compile/resolve-graph` + `adapters/typescript/{read-config,resolve-module}` |
 | change the stub index (per-property value demands over declared types) | `brokers/compile/stub-graph` (the twin stitch; also returns the per-guard `guards` for the contradiction check) + `transformers/gather-type-reads` (the reader/type seam) + `transformers/collect-property-demands` (the value math); written by `brokers/stub-index/write` |
 | read an external (npm / node) signature | `brokers/external-signature/read` + `adapters/ts-morph/read-external-signature` (the SECOND, node_modules-aware project — §5.10) |
 | read an ambient global / called-builtin signature | `brokers/external-signature/read-global` + `adapters/ts-morph/read-global-signature` (probes the SAME second project's GLOBAL scope — a builtin resolves only in the checker, never a `.d.ts` path) |
+| decide whether a `*.harness.ts` is ASSAYER'S | `adapters/typescript/harness-gate` (the symbol gate: does the module import `assayerHarness` from `@assayer/core` and CALL it) + `brokers/harness/classify`, the ONE place a planned file is split into an analysed target or a harness — called by BOTH plan brokers, so the working tree and a committed ref never disagree. Never the source-inclusion guard: a blanket `.harness.` rule would drop a consumer's real source |
+| change what a harness can DECLARE | `contracts/harness-declaration` (the PUBLISHED type, two open catchall shapes rather than `z.record` — a branded-key record infers `Partial<Record<…>>`, which an author's `{ audit: { report } }` literal cannot satisfy) + `transformers/assayer-harness`, the registration seam itself, republished as `assayerHarness` from the package's MAIN barrel (`packages/core/index.ts`), which is the specifier the input-gap invoice tells a reader to import |
+| change how a harness is READ | `adapters/typescript/load-harness` — `transpileModule` (no require hook, nothing added to the module cache) then `runInContext` in a bare sandbox holding a CommonJS shell and ONE reachable import: `@assayer/core`, bound to that call's collector. A thrown error is read with `util.types.isNativeError`, never `instanceof Error`, because an error raised inside the sandbox belongs to that context's own constructor |
+| change the harness index (the key inventory) | `brokers/compile/harness-graph` (the THIRD stitch — §9) + `transformers/harness-target` (which source a harness addresses) / `transformers/harness-keys` (the sorted, deduped (entry, param) pairs); written by `brokers/harness-index/write` |
+| word a P1 about a WRONG harness key | `transformers/harness-validate` — the harness twin of `stub-overlay-reconcile`, reconciling declared keys against the target's ANALYSIS: an entry the file does not offer, a parameter the entry does not take (both with `transformers/did-you-mean` beside the full candidate list), a parameter `is-type-fillable` says Assayer builds itself, and a file that declares nothing at all |
+| PAY an input gap with the harness that answers it | `brokers/harness/realize` (the consume-time overlay, §9) — it re-derives each invoiced entry through the SAME `derive-cases`, handing it `harness: { entry, params }`, so `cause-arrange` emits a `harness` binding where the fill seam would have refused. Wired at the SAME three seams the other overlays are, LAST, because everything ahead of it can still turn a refusal into something Assayer builds itself. NEVER a second derivation path — a supplied entry's cases differ from a derived one's in exactly one binding |
+| resolve a harness-supplied value AT RUN TIME | the generated shim (`transformers/assemble-shim`) REQUIRES the harness through ts-jest, and Jest maps `@assayer/core` to the root `harness-registrar.js` (`adapters/jest/run-cli`) so the registration lands where the shim can read it — resolving the package from the harness and from the shim can otherwise land on two installs in a workspace, and two module instances mean a declaration nobody collected. `adapters/jest/interpret-case` then walks the key path with `transformers/harness-value`; a key the declaration does not carry is an `errored` case NAMING it, never a silent `undefined` argument |
+| name a harness by its (entry, parameter) pair | `transformers/harness-key-path` writes `inputs.<entry>.<param>`, `transformers/harness-value` splits it back apart, and both read `statics/harness-module` — two spellings of one route is how a case comes to name a key nothing can resolve. `transformers/harness-path` is the source→harness direction (`harness-target` is the inverse) |
 
 **`dispatch-node` is the only place that ROUTES** — i.e. the only place that decides *which handler
 owns a node*. That is the invariant; it is not "no other file may say `Node.isX`". Plenty of files
@@ -140,10 +163,12 @@ for ANY node — do NOT add a `getText()` fallback. A formatting-only edit that 
 precedent for a third:
 
 - `node.getText()` on an **Identifier or type-reference NAME** (`project-node`, `read-condition`,
-  `desugar-switch`) — an identifier's text IS its name; there is no formatting freedom in it. This
-  covers `read-condition` reading an object-member operand's ROOT identifier (`config` in
+  `read-type-fact`, `desugar-switch`) — an identifier's text IS its name; there is no formatting freedom
+  in it. This covers `read-condition` reading an object-member operand's ROOT identifier (`config` in
   `config.mode`) and the type-reference name the root param declares (`Config`, off
-  `param.getTypeNode()`), both spelling-invariant names. *Open question, not settled:* this is the
+  `param.getTypeNode()`), `read-type-fact` reading the same reference name onto an opaque type's
+  `typeRef`, and `handle-type-declaration` reading a declaration's own name — all spelling-invariant
+  names, and all foreign KEYS a later phase resolves by, never display. *Open question, not settled:* this is the
   identifier's spelling, not its resolved symbol, so renaming a local currently moves the ID. That is
   churn-matrix #5 and is explicitly undecided in `plan/requirements.md` — if you resolve it, resolve it
   there, in `project-node`, once.
@@ -250,12 +275,21 @@ predicate in `if (a && b)` and two value-paths in `return a && b` because those 
 two readers for one lens.)
 
 Whether a branch can be STEERED is likewise decided in ONE place — the `derive-cases` steerability gate —
-for `if`, ternary, `&&`/`||`/`??` and `?.` alike: every condition leaf a PLAIN SCALAR param, an env operand,
-or a WELDED literal constant ⇒ cases, otherwise ⇒ admitted UNDRIVEN. A welded leaf (`operandConstValue` /
-`operandConstLength`, stamped by `read-const-operand` for a same-file `const`, or by `stamp-const-leaves`
-for a literal call/invocation argument) is not STEERED but EVALUATED: `cause-arrange` seeds it as a
-single-value domain, so the arm it satisfies is a case and the arm it violates falls out of the SAME
-emptiness arithmetic as an `unreachableExits` entry — never a second, bogus case. An object-member read
+for `if`, `switch`, ternary, `&&`/`||`/`??` and `?.` alike, and it asks TWO questions of every condition
+leaf. Is there an input a case can set: a PLAIN SCALAR param, an env operand, or a WELDED literal constant.
+And does the PREDICATE name a value to set it to (`is-predicate-constraining`, which asks the same
+`type-to-range` engine the arrangement runs). Either one missing ⇒ admitted UNDRIVEN, and the admission says
+WHICH, because the two send the reader to different places: `unarrangeable-operand` means make the deciding
+value a parameter, `unread-comparison` means compare against a literal. Telling a reader to make `m` a
+parameter when `m` already is one is advice they cannot act on. The incident the second question closes:
+`m === TARGET`, `case Sev.Low` and every enum/as-const/imported comparand read as an `unrecognized`
+predicate that constrains NEITHER arm, so both arms arranged the same value, and whichever case predicted
+`#then` failed the build against correct code. A welded leaf (`operandConstValue` / `operandConstLength`,
+stamped by `read-const-operand` for a same-file `const`, or by `stamp-const-leaves` for a literal
+call/invocation argument) is not STEERED but EVALUATED: `cause-arrange` seeds it as a single-value domain,
+so the arm it satisfies is a case and the arm it violates falls out of the SAME emptiness arithmetic as an
+`unreachableExits` entry — never a second, bogus case. Weldedness answers only the first question: with an
+unreadable comparison the single value reaches both arms, so it stays undriven. An object-member read
 (`config.mode`) names its root param but is
 NOT scalar-arrangeable, so PER-FILE a leaf carrying `operandPropertyPath` stays un-steerable and its branch
 is admitted UNDRIVEN, the property fact captured for the stub stitch. That admission is closed at CONSUME
@@ -499,6 +533,22 @@ those into resolved edges. It never re-parses source — it reads already-finish
   reads the property. This runs REGARDLESS of drivability — a bare `process.env.MODE === 'x'` compare is
   admitted UNDRIVEN (§5.10 — it types as `any`), yet its literal is a real stub demand. The env proof
   stays checker-based; nothing here adds `node_modules` to the walk.
+- **`param-type-resolve` gives an IMPORTED parameter type its declared shape — the overlay every other
+  one runs behind.** The hermetic walk types an imported type as `any` (§5.10) and records only the
+  reference the signature spelled, so `fill-param` refuses the parameter and the entry is invoiced for an
+  input the file next door constructs happily. `param-type-resolve-broker` reads that declaration off the
+  sibling on disk — the same per-run sibling read compose and stub-realize do — and it turns on the
+  DECLARATION alone, never on how the entry happens to BRANCH: a reader that merely uses the value gets
+  its shape exactly as one that reads a member does. What comes back is whatever the declaration denotes
+  (a scalar alias, a literal union, an array, an object), so the existing derivation does the rest with
+  nothing added. Two INPUT facts move together — the parameter's declared type and each branch leaf's
+  OPERAND type — because an opaque operand knows only the point to avoid, so `level === 'low'` would fill
+  both arms with `'low'` and predict one exit while reaching the other. The walk's parameters are
+  rewritten and `analyze-file-broker` re-projects the file from them, which is why there is one
+  derivation path and no reconciliation to drift. The file's own `declaredTypes` are carried through
+  untouched: a sibling's shape is not a shape this file declares, and admitting one would key its stub on
+  the reader rather than on the definition. Wired at the SAME three seams as the overlays below, ahead of
+  them, and a same-reference pass-through for a file whose parameters name no resolvable reference.
 - **`stub-realize` DRIVES object-member branches at consume time — the object twin of compose.** A
   branch on `config.mode` is admitted UNDRIVEN in the per-file blob (an object param's property is not
   scalar-arrangeable, §5.12). `stub-realize-broker` closes that at run/serve time, exactly where compose
@@ -540,6 +590,49 @@ those into resolved edges. It never re-parses source — it reads already-finish
   literal-carrying guard is judged; a truthy/falsy satisfying domain is a sample, never a constraint, so it
   is skipped. This is the first concrete instance of the committed-override-reconciled-against-a-derived-map
   pattern (the named-states pattern, still unbuilt).
+- **The harness index is a THIRD stitch, over the files classified OUT of the analysed surface.**
+  `compile-harness-graph-broker` runs beside the stub stitch on the same collision rule and reads the same
+  finished blobs by lookup, but what it stitches is the committed `<basename>.harness.ts` files the plan
+  brokers split off. LOADING IS THE READ: a harness declares callbacks, so there is no way to know what it
+  says except to run it — transpiled and evaluated in a sandbox whose only reachable import is the
+  published `assayerHarness` bound to that call's collector, which is why the compile-time key inventory
+  and the run-time values are validated by ONE function. Only KEYS are written
+  (`.assayer/cache/harness/<namespace>.json`), because a callback does not serialize and its absence is
+  what keeps the index deterministic. It carries a THIRD hash the other two indexes cannot: `layoutHash`
+  and `tsconfigHash` come from the resolved index, and a harness is in NEITHER, so `harnessHash` — over the
+  harness files' own paths and bytes — is what makes a harness-only edit rebuild it. A harness whose target
+  is not in the analysed surface, or whose module body throws, is a P1 and is left OUT of the index; one
+  that loaded is recorded even when its keys are wrong, because the index is the inventory of what was
+  declared and the errors are what says the declaration is wrong.
+- **`harness-realize` PAYS the input gap at consume time — the caller-debt twin of stub-realize.** A
+  parameter the fill seam refuses is invoiced as a GAP in the per-file blob (§5.12's fill authority has no
+  vocabulary for a callback). `harness-realize-broker` closes that at run/serve time: it finds the
+  colocated `<basename>.harness.ts` by the same CONJUNCTION the stitch uses (basename plus the symbol
+  gate), loads it through the same `typescript/load-harness`, and re-derives each invoiced entry through
+  the SAME `derive-cases` with `harness: { entry, params }` — so `cause-arrange` emits
+  `{ kind:'harness', param, key }` where it would have refused, and the entry's cases differ from a
+  derived entry's in exactly that one binding. A key naming a parameter the entry does not declare reaches
+  no derivation (the stitch reports it as a P1); a harness whose body throws leaves the analysis untouched,
+  since a second voice would say the stitch's P1 twice. A PARTIAL harness keeps the gap, re-invoiced from
+  the refusals that REMAIN — reprinting the original would bill the reader for what they just supplied.
+  Paying a gap REVIVES the undriven admissions it was suppressing (the precedence rule in
+  `analyze-file-broker`), which is exactly what the invoice's closing sentence promised. It is a per-run
+  overlay, NEVER persisted, wired at the SAME three seams the others are (`run-unit-broker`, the
+  `syntax-traits` harness, `compiled-file-resolve-broker`) and LAST, because every overlay ahead of it can
+  still turn a refusal into something Assayer builds itself.
+- **The VALUES resolve at run time, from the same file and the same registrar.** Only KEYS are cached, so
+  the shim loads the harness itself: `case-set-projection` carries `harnessPath` (absolute, like
+  `modulePath`) exactly when some case names a harness binding, the shim REQUIRES it through the same
+  ts-jest transform the subject goes through, and `jest-run-cli-adapter` maps `@assayer/core` to the root
+  `harness-registrar.js` so the registration lands where the shim reads it. The mapping is what makes the
+  read deterministic: resolving the package from the harness and from the shim can land on two installs in
+  a workspace, and two module instances mean a declaration nobody collected and every key reported missing.
+  `jest-interpret-case-adapter` then walks the key path (`transformers/harness-value`) and applies the
+  value positionally; a key the declaration does not carry is an `errored` case NAMING the key — never a
+  throw, and never a silent `undefined` argument, which would let the entry run on a value nobody supplied
+  and report whatever it then did as a verdict. The harness is NOT instrumented: no probe plan is written
+  for it, so the probe transformer's content-hash lookup misses and it passes through, which is already the
+  correct "not analysed surface" behaviour.
 - **Resolution failure is a BUILD ERROR, not a dark spot — the distinction is WHO OWES the fix.** A dark
   spot is Assayer admitting it never understood some syntax (its debt, unactionable for the reader). An
   unresolvable import is understood perfectly and simply broken or opaque, so it is the REPO's to fix:

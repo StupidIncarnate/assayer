@@ -19,8 +19,10 @@ describe('short-circuit / nullish — a `??` in a block return', () => {
           entry: {
             name: 'orElse',
             scopePath: ['*module*', 'orElse'],
+            // The checker collapses `string | null` to `string` in the hermetic walk, so the
+            // SIGNATURE's own rendering rides beside the descriptor for a P1 message to name.
             params: [
-              { name: 'a', type: { kind: 'string' } },
+              { name: 'a', type: { kind: 'string' }, declaredText: 'string | null' },
               { name: 'b', type: { kind: 'string' } },
             ],
             returnType: { kind: 'string' },

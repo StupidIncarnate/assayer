@@ -27,6 +27,7 @@ import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-com
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
 import type { CompileProgressEvent } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
+import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 
 export const stableNamespaceLayerBroker = async ({
@@ -48,6 +49,7 @@ export const stableNamespaceLayerBroker = async ({
 }): Promise<{
   resultEntry: { namespace: NamespaceName; branch: BranchName; mode: CompileMode; fileCount: FileCount };
   manifestNamespace: { branch: BranchName; commit?: ErrorMessage; files: { relPath: RelPath; contentHash: ContentHash }[] };
+  harnesses: { relPath: RelPath; content: FileContents }[];
   errors: { namespace: NamespaceName; relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: ErrorMessage }[];
 }> => {
   const previousStableCommit = previousManifest?.namespaces[branch]?.commit;
@@ -98,6 +100,9 @@ export const stableNamespaceLayerBroker = async ({
       ...(commit === undefined ? {} : { commit }),
       files,
     },
+    // A SKIPPED ref planned nothing, so it has no harness bytes to stitch; its harness index already
+    // sits on disk from the compile that made it, exactly as its resolved and stub indexes do.
+    harnesses: plan.harnesses,
     errors: processed.errors.map((error) => ({ namespace: namespaceNameContract.parse(branch), ...error })),
   };
 };

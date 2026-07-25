@@ -41,6 +41,64 @@ describe('readGlobalTypeLayerAdapter', () => {
     });
   });
 
+  describe('boolean-literal types', () => {
+    it('VALID: {true} => a literal fact carrying true', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: true = true;\n' }) })).toStrictEqual({
+        flavor: 'literal',
+        value: true,
+      });
+    });
+
+    it('VALID: {false} => a literal fact carrying false', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: false = false;\n' }) })).toStrictEqual({
+        flavor: 'literal',
+        value: false,
+      });
+    });
+
+    it('VALID: {string | boolean} => a union whose boolean halves are literal facts', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: "const a: string | boolean = 'x';\n" }) })).toStrictEqual({
+        flavor: 'union',
+        members: [{ flavor: 'string' }, { flavor: 'literal', value: false }, { flavor: 'literal', value: true }],
+        text: 'string | boolean',
+      });
+    });
+
+    it('VALID: {boolean} => a boolean fact, never a true|false union', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: boolean = true;\n' }) })).toStrictEqual({
+        flavor: 'boolean',
+      });
+    });
+  });
+
+  describe('callable types', () => {
+    it('VALID: {a function-typed binding} => a callable fact carrying the rendered signature', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(
+        readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: (m: string) => string = (m) => m;\n' }) }),
+      ).toStrictEqual({ flavor: 'callable', text: '(m: string) => string' });
+    });
+
+    it('VALID: {a named interface carrying a call signature} => a callable fact carrying the type NAME', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(
+        readGlobalTypeLayerAdapter({
+          type: typeOf({ source: 'interface Hybrid { (n: number): string; tag: string }\nconst a: Hybrid = null as never;\n' }),
+        }),
+      ).toStrictEqual({ flavor: 'callable', text: 'Hybrid' });
+    });
+  });
+
   describe('a non-primitive object type', () => {
     it('VALID: {an interface reference} => an other fact carrying the checker text', () => {
       readGlobalTypeLayerAdapterProxy();

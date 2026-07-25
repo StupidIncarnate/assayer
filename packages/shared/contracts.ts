@@ -172,6 +172,18 @@ export * from './src/contracts/stub-overlay/stub-overlay.stub';
 export * from './src/contracts/stub-view/stub-view-contract';
 export * from './src/contracts/stub-view/stub-view.stub';
 
+export * from './src/contracts/harness-input-key/harness-input-key-contract';
+export * from './src/contracts/harness-input-key/harness-input-key.stub';
+
+export * from './src/contracts/harness-file/harness-file-contract';
+export * from './src/contracts/harness-file/harness-file.stub';
+
+export * from './src/contracts/harness-index/harness-index-contract';
+export * from './src/contracts/harness-index/harness-index.stub';
+
+export * from './src/contracts/harness-key-path/harness-key-path-contract';
+export * from './src/contracts/harness-key-path/harness-key-path.stub';
+
 export * from './src/contracts/external-signature/external-signature-contract';
 export * from './src/contracts/external-signature/external-signature.stub';
 
@@ -186,6 +198,9 @@ export * from './src/contracts/undriven-entry/undriven-entry.stub';
 
 export * from './src/contracts/lint-entry/lint-entry-contract';
 export * from './src/contracts/lint-entry/lint-entry.stub';
+
+export * from './src/contracts/entry-gap/entry-gap-contract';
+export * from './src/contracts/entry-gap/entry-gap.stub';
 
 export * from './src/contracts/guard-step/guard-step-contract';
 export * from './src/contracts/guard-step/guard-step.stub';

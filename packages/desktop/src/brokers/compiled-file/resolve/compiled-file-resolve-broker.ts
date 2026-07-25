@@ -5,12 +5,12 @@
  *   detail panel can render each import's canonical target (a sibling file, an npm package, or a node
  *   builtin) and any declared external signature.
  *
- *   The served analysis is the persisted blob's analysis with the cross-file predicate overlay
- *   applied at serve time: a caller's opaque `if (helper(x))` guard over an IMPORTED predicate is
- *   composed against the sibling on disk, so the Tests tab shows the composed cases and any
- *   unreachable-exit lint instead of the opaque per-file blob. The overlay is a same-reference no-op
- *   for a file with no such guard, and a file whose source cannot be read falls back to the opaque
- *   analysis rather than failing the panel.
+ *   The served analysis is the persisted blob's analysis with the consume-time overlays applied at
+ *   serve time, against the sibling files on disk: a parameter declared as an IMPORTED type is given the
+ *   shape its declaration says, and a caller's opaque `if (helper(x))` guard over an IMPORTED predicate
+ *   is composed — so the Tests tab shows the real cases and any unreachable-exit lint instead of the
+ *   opaque per-file blob. Each overlay is a same-reference no-op for a file it does not touch, and a
+ *   file whose source cannot be read falls back to the opaque analysis rather than failing the panel.
  *
  * USAGE:
  * const view = await compiledFileResolveBroker({
@@ -21,7 +21,7 @@
  */
 import { compiledFileViewContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
-import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
+import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, harnessRealizeBroker, paramTypeResolveBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
 import { tsMorphWalkFileAdapter } from '@assayer/core/adapters';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
@@ -61,10 +61,17 @@ export const compiledFileResolveBroker = async ({
     root === undefined ? undefined : await nodeFsReadSourceAdapter({ absPath: `${String(root)}/${String(relPath)}` });
   const walked =
     source === undefined ? undefined : tsMorphWalkFileAdapter({ source: String(source), relPath: String(relPath) });
-  const composed =
+  // The types first: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
+  // per-file blob refuses it and invoices an input Assayer can build. Resolving the declaration against
+  // the sibling on disk is what lets every overlay below read real parameter types.
+  const typed =
     blob.analysis === undefined || root === undefined || walked === undefined
       ? blob.analysis
-      : composeCrossFilePredicatesBroker({ analysis: blob.analysis, walked, root: String(root), relPath: String(relPath) });
+      : paramTypeResolveBroker({ analysis: blob.analysis, walked, root: String(root), relPath: String(relPath) });
+  const composed =
+    typed === undefined || root === undefined || walked === undefined
+      ? typed
+      : composeCrossFilePredicatesBroker({ analysis: typed, walked, root: String(root), relPath: String(relPath) });
   // The object-arrange overlay on top: an object-member branch (`if (config.mode === 'a')`) is DRIVEN
   // from the merged stub view — the derived per-property demands combined with the committed
   // `assayer/stubs/` overlay under the SAME source root, read fresh per serve and never persisted.
@@ -78,13 +85,20 @@ export const compiledFileResolveBroker = async ({
           relPath: String(relPath),
           overlays: await stubOverlayLoadBroker({ repoRoot: String(root) }),
         });
-  // The cross-file-map fold last: a surface mapping an IMPORTED function over an array param folds that
+  // The cross-file-map fold next: a surface mapping an IMPORTED function over an array param folds that
   // sibling callee's branches into the surface's cases, so the Tests tab shows the folded funnel. A
   // same-reference no-op for a file with no such map.
-  const analysis =
+  const mapped =
     realized === undefined || root === undefined || walked === undefined
       ? realized
       : composeCrossFileMapBroker({ analysis: realized, walked, root: String(root), relPath: String(relPath) });
+  // The harness overlay last: an entry whose input Assayer refused is DRIVEN from the colocated
+  // `<basename>.harness.ts` under the SAME source root, so the Tests tab shows the supplied cases and the
+  // Admissions tab stops naming a debt the reader has already paid. Read fresh per serve, never persisted.
+  const analysis =
+    mapped === undefined || root === undefined
+      ? mapped
+      : harnessRealizeBroker({ analysis: mapped, root: String(root), relPath: String(relPath) });
 
   return compiledFileViewContract.parse({
     relPath,

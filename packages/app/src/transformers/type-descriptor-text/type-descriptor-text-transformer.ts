@@ -1,10 +1,11 @@
 /**
  * PURPOSE: Renders a serializable TypeDescriptor as compact display text for the detail panel — the
  *   type as a reader sees it in a resolved import's external signature (`string`, `number`, a literal
- *   value, a `a | b` union, `element[]` for an array, an object's NAME or braced property list, or an
- *   opaque type's own text). Recurses over union members, array elements and object properties so a
- *   nested or enumerated shape renders through the same one unit. DISPLAY only — nothing here feeds
- *   analysis.
+ *   value, a `a | b` union, `element[]` for an array, an object's NAME or braced property list, a
+ *   callable's carried rendering (its type NAME when it has one, its rendered signature when
+ *   anonymous), or an opaque type's own text). Recurses over union members, array
+ *   elements and object properties so a nested or enumerated shape renders through the same one unit.
+ *   DISPLAY only — nothing here feeds analysis.
  *
  * USAGE:
  * typeDescriptorTextTransformer({ type: { kind: 'string' } });
@@ -35,6 +36,8 @@ export const typeDescriptorTextTransformer = ({ type }: { type: TypeDescriptor }
           ? `{ ${type.properties.map((property) => `${String(property.name)}: ${String(typeDescriptorTextTransformer({ type: property.type }))}`).join('; ')} }`
           : String(type.typeName),
       );
+    case 'callable':
+      return typeTextContract.parse(String(type.text));
     case 'unknown':
       return typeTextContract.parse(String(type.text));
     default:

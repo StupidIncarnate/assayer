@@ -220,6 +220,32 @@ harness file exists only where derivation provably fails — canvas interactions
 selector overrides, state wiring, correlations, and declarations as
 config-shaped custom cases. Closed vocabulary, never raw asserts.
 
+A harness is COLOCATED with its source under the same basename, always `.ts`
+even beside a `.tsx` (`src/audit.ts` → `src/audit.harness.ts`). It exports
+nothing; its module body imports `assayerHarness` from `@assayer/core` and CALLS
+it, registering by being run the way a `describe` does. The whole vocabulary is
+`inputs`, keyed by entry name then parameter name.
+
+Discovery is the glob PLUS a symbol gate, never the filename: a `*.harness.ts`
+that does not import and call `assayerHarness` is silently ordinary source, not
+an error — this repo's own Playwright and Jest harnesses wear that name, and
+loading one would boot Electron. A gated harness is classified out of the
+analysed surface, and reading it means RUNNING it: it is transpiled and
+evaluated in a bare `vm` sandbox whose only reachable import is the collector.
+A key naming an entry or a parameter the target does not have, or one Assayer
+can build itself, is a P1 build error — the same channel and exit code as a
+broken import.
+
+The harness PAYS the gap that asked for it. At consume time the invoiced entry
+is re-derived through the same case engine with the supplied parameters bound to
+their key paths (`inputs.<entry>.<param>`), so a supplied case differs from a
+derived one in exactly that one binding — and the entry's invoice comes off the
+channel. Supply only some of what was refused and the gap stays, re-invoiced to
+name only what is still missing. The VALUES never ride in a case: the generated
+shim loads the same harness file the compile read and resolves each key live, so
+one registration answers both. A key the declaration no longer carries is an
+ERRORED case naming it, never a silent `undefined` argument.
+
 No blessed/baseline images. Visual diffs RUN both refs and capture side-by-side
 at diff time.
 
@@ -239,6 +265,13 @@ rebuilt on demand:
 - `cache/external-signatures/<declHash>.json` — one package/builtin callable's
   declared input/output types, keyed on the `.d.ts` byte hash and reused by
   every importer
+- `cache/harness/<namespace>.json` — the harness key inventory per namespace:
+  every colocated `<basename>.harness.ts` that registers with Assayer, the
+  source file it applies to, and the sorted (entry, parameter) pairs it declares
+  values for. Keyed on repo layout + tsconfig + a THIRD hash over the harness
+  files' own bytes, because a harness is classified OUT of the analysed surface
+  and neither of the first two moves when one is edited. Only KEYS are cached;
+  the values are callbacks the run resolves by loading the same file again
 
 **Map-node IDs NEVER key committed artifacts.** They are cache-internal.
 Committed things key on user-chosen names + file paths.

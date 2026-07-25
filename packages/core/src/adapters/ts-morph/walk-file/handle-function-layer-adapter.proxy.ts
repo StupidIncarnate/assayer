@@ -3,6 +3,7 @@ import { handlerResultLayerAdapterProxy } from './handler-result-layer-adapter.p
 import { readAccountedLayerAdapterProxy } from './read-accounted-layer-adapter.proxy';
 import { readConditionalExitLayerAdapterProxy } from './read-conditional-exit-layer-adapter.proxy';
 import { readConditionTreeLayerAdapterProxy } from './read-condition-tree-layer-adapter.proxy';
+import { readDeclaredTypeTextLayerAdapterProxy } from './read-declared-type-text-layer-adapter.proxy';
 import { readEntryAccessLayerAdapterProxy } from './read-entry-access-layer-adapter.proxy';
 import { readExportFlagLayerAdapterProxy } from './read-export-flag-layer-adapter.proxy';
 import { readFunctionNameLayerAdapterProxy } from './read-function-name-layer-adapter.proxy';
@@ -14,6 +15,7 @@ export const handleFunctionLayerAdapterProxy = (): Record<PropertyKey, never> =>
   readAccountedLayerAdapterProxy();
   readConditionalExitLayerAdapterProxy();
   readConditionTreeLayerAdapterProxy();
+  readDeclaredTypeTextLayerAdapterProxy();
   readEntryAccessLayerAdapterProxy();
   readExportFlagLayerAdapterProxy();
   readFunctionNameLayerAdapterProxy();

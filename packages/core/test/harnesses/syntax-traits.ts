@@ -30,6 +30,8 @@ import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
 import { composeCrossFileMapBroker } from '../../src/brokers/compose/cross-file-map/compose-cross-file-map-broker';
 import { composeCrossFilePredicatesBroker } from '../../src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
+import { harnessRealizeBroker } from '../../src/brokers/harness/realize/harness-realize-broker';
+import { paramTypeResolveBroker } from '../../src/brokers/param-type/resolve/param-type-resolve-broker';
 import { stubRealizeBroker } from '../../src/brokers/stub/realize/stub-realize-broker';
 import { conditionLeavesTransformer } from '../../src/transformers/condition-leaves/condition-leaves-transformer';
 import { moduleGraphProjectionTransformer } from '../../src/transformers/module-graph-projection/module-graph-projection-transformer';
@@ -58,12 +60,17 @@ export type SyntaxTrait =
   | 'param:union'
   | 'param:array'
   | 'param:object'
+  // A parameter whose type carries CALL SIGNATURES (`report: (message: string) => string`). Its own
+  // trait because a callable is its own descriptor kind: read as an object it would be a property-less
+  // shape, so the callback specimen would be indistinguishable from one taking an empty interface and
+  // the catalogue could lose the callable reader's coverage in silence.
+  | 'param:callable'
   | 'operand:env'
   // A branch whose operand is an OBJECT-MEMBER read (`if (config.mode === 'a')`) — the walk records the
-  // property path and the root's type-reference on the leaf, but arranging an object param's property is
-  // a later phase, so the branch is admitted UNDRIVEN. A ratchet: it flips to a driven case the day
-  // object arrange (stub-realize) lands. Gated so a specimen that quietly stopped capturing the
-  // property fact loses the trait rather than keeping the feature's coverage in silence.
+  // property path and the root's type-reference on the leaf, so the branch is admitted UNDRIVEN in the
+  // per-file blob and DRIVEN here, where `analyze` applies the same `stub-realize` overlay a run does.
+  // Gated so a specimen that quietly stopped capturing the property fact loses the trait rather than
+  // keeping the feature's coverage in silence.
   | 'operand:property'
   // A branch that reads a `process.env.<X>` property directly as its operand and compares it against a
   // literal (`process.env.MODE === 'production'`) — the env-object capture the stub stitch guesses from.
@@ -86,6 +93,18 @@ export type SyntaxTrait =
   // graph's `globalUses`, so a specimen that reaches an ambient global cannot go undeclared.
   | 'callee:node-global'
   | 'undriven'
+  // The CALLER's debt, and the only admission a harness can pay: a parameter the fill seam refused, so
+  // the entry derives no case and is invoiced. It earns a trait for the same reason `undriven` does —
+  // an entry whose refusal quietly became fillable keeps every other trait it declares, so without this
+  // the matrix could not see a gap appear or vanish. Read off `FileAnalysis.gaps`, which carries the
+  // INPUT-shaped gaps alone; the access-shaped ones (a class no instance can be built for) are the run
+  // artifact's own producer and never reach the analysis.
+  | 'gap:input'
+  // The other side of the same channel: a case whose parameter is bound to a harness key path rather
+  // than a derived value. Observed off the ARRANGE bindings, so a specimen that quietly lost its
+  // colocated harness loses the trait rather than keeping the feature's coverage in silence — its cases
+  // would go with it, and a file with no cases and no trait looks nothing like one a harness drives.
+  | 'harness:supplied'
   | 'lint:dead-surface'
   // The repo's OTHER debt: an exit whose guards cannot all hold, so no value reaches it. Named off the
   // same lint channel as dead surface, and gating a check for the same reason — a specimen whose dead
@@ -103,17 +122,28 @@ export const syntaxTraits = (): {
   observed: (params: { relPath: string }) => SyntaxTrait[];
   declaredByContracts: () => SyntaxTrait[];
 } => {
-  // Cross-file predicate composition AND object-arrange (stub-realize) are CONSUME-TIME overlays, not
-  // part of the per-file blob — so the harness applies both exactly as a run does, giving `observed()`
-  // the composed guards, the driven object-member branches, and any admission the run reports. Both are
-  // same-reference no-ops for a specimen they do not touch. Overlays are EMPTY here: the catalogue drives
-  // from the DERIVED demands, so an object-member branch flips its `undriven` trait without any committed
-  // correction — a human correction only changes the arrange VALUES, proven separately by a real run.
+  // Imported-type resolution, cross-file predicate composition, object-arrange (stub-realize) AND the
+  // colocated harness are CONSUME-TIME overlays, not part of the per-file blob — so the harness applies
+  // all of them exactly as a run does, giving `observed()` the real parameter types, the composed guards,
+  // the driven object-member branches, the inputs a harness supplies, and any admission the run reports.
+  // Each is a
+  // same-reference no-op for a specimen it does not touch. Stub overlays are EMPTY here: the catalogue
+  // drives from the DERIVED demands, so an object-member branch flips its `undriven` trait without any
+  // committed correction — a human correction only changes the arrange VALUES, proven separately by a real
+  // run. The harness overlay is not stubbed at all: a specimen's harness is a committed file beside it, so
+  // it is read off disk exactly as a run reads it.
   const analyze = ({ relPath }: { relPath: string }): FileAnalysis => {
     const walked = tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath });
 
+    const typed = paramTypeResolveBroker({
+      analysis: analyzeFileBroker({ walked, relPath }),
+      walked,
+      root: SMOKE_REPO,
+      relPath,
+    });
+
     const composed = composeCrossFilePredicatesBroker({
-      analysis: analyzeFileBroker({ walked }),
+      analysis: typed,
       walked,
       root: SMOKE_REPO,
       relPath,
@@ -121,7 +151,9 @@ export const syntaxTraits = (): {
 
     const realized = stubRealizeBroker({ analysis: composed, walked, root: SMOKE_REPO, relPath, overlays: [] });
 
-    return composeCrossFileMapBroker({ analysis: realized, walked, root: SMOKE_REPO, relPath });
+    const mapped = composeCrossFileMapBroker({ analysis: realized, walked, root: SMOKE_REPO, relPath });
+
+    return harnessRealizeBroker({ analysis: mapped, root: SMOKE_REPO, relPath });
   };
 
   return {
@@ -160,6 +192,12 @@ export const syntaxTraits = (): {
         .flatMap((fn) => fn.entry.params)
         .filter((param) => param.type.kind === 'object')
         .map((): SyntaxTrait => 'param:object');
+      // Same yes/no shape, gating its own check: a CALLABLE param proves the walk reads call signatures
+      // ahead of the object branch, which is the only thing separating a callback from an empty shape.
+      const callables = analysis.functions
+        .flatMap((fn) => fn.entry.params)
+        .filter((param) => param.type.kind === 'callable')
+        .map((): SyntaxTrait => 'param:callable');
       // Same yes/no shape, and it earns a trait for the same reason `param:union` does: a check is
       // gated on it. It is what separates the two identically-shaped module-scope specimens — one
       // reads its operand from the environment and is driven, one does not and is admitted undriven
@@ -193,6 +231,19 @@ export const syntaxTraits = (): {
       // honestly anyway — an UndrivenEntry carries no access kind, so splitting it here would mean
       // re-deriving from the reason text a second opinion this model already holds.
       const undriven = analysis.undriven.map((): SyntaxTrait => 'undriven');
+      // The caller's debt, on its own channel, for the same reason `undriven` earns one: a refusal that
+      // quietly became fillable moves no access kind and no branch kind, so nothing else here would
+      // notice. WHICH parameter is refused, and the invoice's exact wording, are pinned by each
+      // specimen's colocated test — this trait only says the entry owes one.
+      const gaps = analysis.gaps.map((): SyntaxTrait => 'gap:input');
+      // Its counterpart, read off the ARRANGE bindings the overlay produced rather than off a file on
+      // disk. A harness proves itself by the case it buys: the binding names the key path the run
+      // resolves, so a specimen whose harness stopped being read has no binding to show for it.
+      const harnessed = analysis.functions
+        .flatMap((fn) => fn.cases)
+        .flatMap((testCase) => testCase.arrange)
+        .filter((binding) => binding.kind === 'harness')
+        .map((): SyntaxTrait => 'harness:supplied');
       // The repo's debt, on its own channel: a dead-surface lint names a private nothing consumes.
       // Like `undriven`, it gates a check and separates a specimen that quietly became consumed from
       // one that stayed dead — so the catalogue cannot lose the feature's coverage in silence.
@@ -239,12 +290,15 @@ export const syntaxTraits = (): {
           ...unions,
           ...arrays,
           ...objects,
+          ...callables,
           ...envOperands,
           ...propertyOperands,
           ...callees,
           ...globals,
           ...envProperties,
           ...undriven,
+          ...gaps,
+          ...harnessed,
           ...lints,
           ...darkSpots,
         ]),

@@ -34,4 +34,49 @@ describe('arrayArrangeTransformer', () => {
       arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }), count: 2 }),
     ).toStrictEqual([[7], [7]]);
   });
+
+  // An OBJECT element is built out too, so `Config[]` is a real array of real objects rather than an
+  // array of placeholders.
+  it('VALID: {element: object, count: 1} => a real array of real objects', () => {
+    expect(
+      arrayArrangeTransformer({
+        element: TypeDescriptorStub({ kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] }),
+        count: 1,
+      }),
+    ).toStrictEqual([{ host: 'abc123' }]);
+  });
+
+  // The element type is what decides, so a callback list is refused at every count — including the
+  // empty one, because the caller is asking about the parameter and the answer does not vary by size.
+  it('INVALID: {element: callable, count: 1} => undefined', () => {
+    expect(
+      arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'callable', text: '() => void' }), count: 1 }),
+    ).toBe(undefined);
+  });
+
+  it('INVALID: {element: callable, count: 0} => undefined, not the empty array', () => {
+    expect(
+      arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'callable', text: '() => void' }), count: 0 }),
+    ).toBe(undefined);
+  });
+
+  // A TRUNCATED element is the reader stopping on a self-reference, and the empty array is the only
+  // complete value of it — at every count, since there is no element to repeat.
+  it('VALID: {element: the truncated re-entry, count: 1} => the empty array', () => {
+    expect(
+      arrayArrangeTransformer({
+        element: TypeDescriptorStub({ kind: 'object', typeName: 'TreeNode', truncated: true, properties: [] }),
+        count: 1,
+      }),
+    ).toStrictEqual([]);
+  });
+
+  it('VALID: {element: the truncated re-entry, count: 2} => the empty array too', () => {
+    expect(
+      arrayArrangeTransformer({
+        element: TypeDescriptorStub({ kind: 'object', typeName: 'TreeNode', truncated: true, properties: [] }),
+        count: 2,
+      }),
+    ).toStrictEqual([]);
+  });
 });

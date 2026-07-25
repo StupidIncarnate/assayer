@@ -28,6 +28,7 @@ import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-fi
 import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
 import { crossFileMapReachesTransformer } from '../../../transformers/cross-file-map-reaches/cross-file-map-reaches-transformer';
 import { funnelCasesTransformer } from '../../../transformers/funnel-cases/funnel-cases-transformer';
+import { inputGapTransformer } from '../../../transformers/input-gap/input-gap-transformer';
 import { resolveSiblingCalleeBroker } from '../../resolve-sibling/callee/resolve-sibling-callee-broker';
 
 export const composeCrossFileMapBroker = ({
@@ -90,20 +91,20 @@ export const composeCrossFileMapBroker = ({
     existing.callbacks.push({ callback: entry.callee, arrayParam: entry.arrayParam });
   });
 
-  const functions = analysis.functions.map((fn) => {
+  const folded = analysis.functions.map((fn) => {
     const group = groups.find(
       (candidate) =>
         String(candidate.host.name) === String(fn.entry.name) && String(candidate.host.startLine) === String(fn.entry.line),
     );
 
     if (group === undefined) {
-      return fn;
+      return { fn, refusals: [] };
     }
 
-    const cases = funnelCasesTransformer({ surface: group.host, callbacks: group.callbacks });
+    const funnel = funnelCasesTransformer({ surface: group.host, callbacks: group.callbacks });
 
-    if (cases.length === 0) {
-      return fn;
+    if (funnel.cases.length === 0) {
+      return { fn, refusals: funnel.unfillable };
     }
 
     // The host entry's own exit unioned with the sibling callees' exits its folded cases path through,
@@ -116,14 +117,38 @@ export const composeCrossFileMapBroker = ({
       ]).values(),
     ];
 
-    return { entry: fn.entry, branches: fn.branches, exits, cases };
+    return {
+      fn: {
+        entry: fn.entry,
+        branches: fn.branches,
+        exits,
+        cases: funnel.cases,
+        ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
+      },
+      refusals: funnel.unfillable,
+    };
   });
 
+  // A parameter the SIBLING callee declares and the fill seam refuses is the host's invoice to carry: the
+  // host is the only entry the fold leaves, so a refusal filed nowhere is a surface that quietly derives
+  // less than the file says. It is skipped for a host the analysis ALREADY invoiced — one entry owes one
+  // gap, and its own refusals are stated there.
+  const gappedNames = new Set(analysis.gaps.map((gap) => String(gap.name)));
+  const foldedGaps = folded.flatMap(({ fn, refusals }) =>
+    gappedNames.has(String(fn.entry.name))
+      ? []
+      : inputGapTransformer({ entryName: fn.entry.name, unfillable: refusals }),
+  );
+  const foldedGapNames = new Set(foldedGaps.map((gap) => String(gap.name)));
+
   return fileAnalysisContract.parse({
-    functions,
+    functions: folded.map(({ fn }) => fn),
     enrichment: analysis.enrichment,
+    gaps: [...analysis.gaps, ...foldedGaps],
     darkSpots: analysis.darkSpots,
-    undriven: analysis.undriven,
+    // The same precedence `analyze-file-broker` applies: an entry that has just gained an input gap owes
+    // one next action, so its undriven admission — advice about a call that cannot be made yet — goes.
+    undriven: analysis.undriven.filter((entry) => !foldedGapNames.has(String(entry.name))),
     lints: analysis.lints,
     declaredTypes: analysis.declaredTypes,
   });

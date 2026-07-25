@@ -4,12 +4,18 @@
  *   walk could not follow, and the logic it read but cannot drive. Threads from the cache blob
  *   through the desktop bridge into the detail-view enrichment and tests panels.
  *
- *   `darkSpots` and `undriven` are both REQUIRED, not optional: a file analysis must always state
- *   what it failed to understand and what it understood but never drove, because an analysis that
- *   can omit its own blind spots reads as complete when it isn't. They are separate channels because
- *   they name different debts — a dark spot is syntax ASSAYER never parsed; an undriven entry is
- *   parsed perfectly and simply out of the runner's reach (a module scope, a private helper). Only
- *   `functions` are entries; both admissions ride beside them precisely BECAUSE nothing drives them.
+ *   `gaps`, `darkSpots` and `undriven` are all REQUIRED, not optional: a file analysis must always
+ *   state what it could not construct, what it failed to understand, and what it understood but never
+ *   drove, because an analysis that can omit its own blind spots reads as complete when it isn't. They
+ *   are separate channels because they name different debts — a gap is the CALLER's (understood, not
+ *   constructable, so a harness closes it); a dark spot is syntax ASSAYER never parsed; an undriven
+ *   entry is parsed perfectly and simply out of the runner's reach (a module scope, a private helper).
+ *   Only `functions` are entries; the admissions ride beside them precisely BECAUSE nothing drives them.
+ *
+ *   `gaps` rides the ANALYSIS and not merely the run artifact, because the reads-as-complete lie lives
+ *   in the analysis: a file admits an input it cannot construct the moment it is opened, before
+ *   anything runs. The run's own `gaps` is this channel plus the access-shaped gaps the case-set
+ *   projection adds — one channel, two producers, the same `{name, reason}` shape.
  *
  *   `declaredTypes` carries the file's locally-declared object shapes (name → full property list),
  *   read from the walk's enumerated object descriptors — the source later phases splice per-property
@@ -17,13 +23,14 @@
  *   owns even when it owns none.
  *
  * USAGE:
- * fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
+ * fileAnalysisContract.parse({ functions: [], enrichment: [], gaps: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
  * // Returns a validated FileAnalysis (branded fields)
  */
 import { z } from 'zod';
 
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
 import { declaredTypeContract } from '../declared-type/declared-type-contract';
+import { entryGapContract } from '../entry-gap/entry-gap-contract';
 import { functionAnalysisContract } from '../function-analysis/function-analysis-contract';
 import { lineEnrichmentContract } from '../line-enrichment/line-enrichment-contract';
 import { lintEntryContract } from '../lint-entry/lint-entry-contract';
@@ -32,6 +39,7 @@ import { undrivenEntryContract } from '../undriven-entry/undriven-entry-contract
 export const fileAnalysisContract = z.object({
   functions: z.array(functionAnalysisContract),
   enrichment: z.array(lineEnrichmentContract),
+  gaps: z.array(entryGapContract),
   darkSpots: z.array(darkSpotContract),
   undriven: z.array(undrivenEntryContract),
   // A FOURTH channel: patterns the repo should CHANGE (a private nothing consumes), not admissions

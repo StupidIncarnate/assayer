@@ -1,4 +1,4 @@
-import { ConditionLeafStub, ParamDescriptorStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ConditionLeafStub, ParamDescriptorStub, TypeDescriptorStub, symbolNameContract } from '@assayer/shared/contracts';
 
 import { causeArrangeTransformer } from './cause-arrange-transformer';
 
@@ -44,6 +44,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [
           [
             { kind: 'param', param: 'score', value: 6 },
@@ -62,6 +63,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [
           [
             { kind: 'param', param: 'score', value: 5 },
@@ -102,6 +104,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [
           [{ kind: 'param', param: 'status', value: 'b' }],
           [{ kind: 'param', param: 'status', value: 'c' }],
@@ -148,6 +151,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [[{ kind: 'param', param: 'method', value: 'delete' }]],
       });
     });
@@ -183,6 +187,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [[{ kind: 'param', param: 'size', value: 100 }]],
       });
     });
@@ -208,7 +213,7 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual({ unreachable: true, arrangements: [] });
+      expect(result).toStrictEqual({ unreachable: true, unfillable: [], arrangements: [] });
     });
   });
 
@@ -227,6 +232,7 @@ describe('causeArrangeTransformer', () => {
       // `Number('6')` is 6 again — which is why the rung stops at the one coercion with an inverse.
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [[{ kind: 'env', name: 'VALUE', value: '6' }]],
       });
     });
@@ -240,6 +246,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [[{ kind: 'env', name: 'VALUE', value: '5' }]],
       });
     });
@@ -254,7 +261,7 @@ describe('causeArrangeTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual({ unreachable: false, arrangements: [[]] });
+      expect(result).toStrictEqual({ unreachable: false, unfillable: [], arrangements: [[]] });
     });
   });
 
@@ -273,6 +280,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [[{ kind: 'param', param: 'score', value: 7 }]],
       });
     });
@@ -298,6 +306,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [[{ kind: 'param', param: 'score', value: 7 }]],
       });
     });
@@ -305,7 +314,85 @@ describe('causeArrangeTransformer', () => {
     it('EMPTY: {no requirements, no params} => a single empty arrangement', () => {
       expect(causeArrangeTransformer({ requirements: [], params: [], envDrivable: false })).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [[]],
+      });
+    });
+  });
+
+  // The refusal, and it is deliberately NOT `unreachable`: nothing here is dead code, the input is
+  // simply one Assayer cannot construct. Merging them would report correct code as a dead-exit lint.
+  describe('a param the fill seam refuses', () => {
+    it('INVALID: {a callback param beside a steered scalar} => no arrangement, and the param named', () => {
+      const result = causeArrangeTransformer({
+        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        params: [
+          ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [{ param: 'report', type: '(m: string) => string' }],
+        arrangements: [],
+      });
+    });
+
+    // Contradiction is decided FIRST, so a cause whose guards cannot hold still reports the dead exit
+    // rather than being masked by a param it also could not fill.
+    it('EDGE: {contradictory guards AND an unfillable param} => unreachable wins, so the lint survives', () => {
+      const result = causeArrangeTransformer({
+        requirements: [
+          { leaf: SCORE_LEAF, want: true },
+          {
+            leaf: ConditionLeafStub({
+              id: 'x#leaf.9',
+              operandParamName: 'score',
+              operandType: { kind: 'number' },
+              predicate: { kind: 'lt', literal: 3 },
+            }),
+            want: true,
+          },
+        ],
+        params: [
+          ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'payload', type: { kind: 'unknown', text: 'Map<string, number>' } }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({ unreachable: true, unfillable: [], arrangements: [] });
+    });
+  });
+
+  describe('an object param is BUILT', () => {
+    // The shape the reader enumerated is filled out rather than discarded — a nested property gets a
+    // nested value, which is what makes `config.db.host` a real input instead of a string placeholder.
+    it('VALID: {an unconstrained nested object param} => one arrangement carrying the built object', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [
+          ParamDescriptorStub({
+            name: 'config',
+            type: {
+              kind: 'object',
+              typeName: 'Config',
+              properties: [
+                { name: 'db', type: { kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] } },
+                { name: 'mode', type: { kind: 'string' } },
+              ],
+            },
+          }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'object', param: 'config', value: { db: { host: 'abc123' }, mode: 'abc123' } }]],
       });
     });
   });
@@ -324,6 +411,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [
           [{ kind: 'array', param: 'items', value: [] }],
           [{ kind: 'array', param: 'items', value: [7] }],
@@ -347,6 +435,7 @@ describe('causeArrangeTransformer', () => {
 
       expect(result).toStrictEqual({
         unreachable: false,
+        unfillable: [],
         arrangements: [
           [
             { kind: 'param', param: 'score', value: 6 },
@@ -361,6 +450,70 @@ describe('causeArrangeTransformer', () => {
             { kind: 'array', param: 'items', value: [7, 7] },
           ],
         ],
+      });
+    });
+  });
+
+  describe('a harness supplies what the seam refuses', () => {
+    // The refusal being CLOSED: the callback the fill seam has no vocabulary for is named by key path
+    // instead, so the cause arranges rather than reporting itself unfillable.
+    it('VALID: {a callback param the harness declares} => a harness binding, and nothing refused', () => {
+      const result = causeArrangeTransformer({
+        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        params: [
+          ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
+        ],
+        envDrivable: false,
+        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('report')] },
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [
+          [
+            { kind: 'param', param: 'score', value: 6 },
+            { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+          ],
+        ],
+      });
+    });
+
+    // A harness that supplies only one of two refusals leaves the other refused, so the cause still
+    // arranges nothing and the caller re-invoices exactly what remains.
+    it('VALID: {one of two callbacks declared} => no arrangement, and only the OTHER is refused', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [
+          ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
+          ParamDescriptorStub({ name: 'emit', type: { kind: 'callable', text: '(n: number) => void' } }),
+        ],
+        envDrivable: false,
+        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('report')] },
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        arrangements: [],
+        unfillable: [{ param: 'emit', type: '(n: number) => void' }],
+      });
+    });
+
+    // A supplied parameter is ONE argument the human handed over, so it takes no cardinality fan-out
+    // even when its declared type is an array: there is no breadth in a value nobody derived.
+    it('EDGE: {an array param the harness declares} => one harness binding, not three cardinalities', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } })],
+        envDrivable: false,
+        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('items')] },
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'harness', param: 'items', key: 'inputs.audit.items' }]],
       });
     });
   });

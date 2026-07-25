@@ -7,9 +7,18 @@
  *   single shape holding optional fields would make "neither" and "both" representable; discriminating
  *   on `kind` makes the wrong shape fail to parse instead.
  *
- *   Every value is drawn from an input domain, never from executing the code (P4). An `object` value is
- *   a FLAT property map of scalars; an `array` value is the recursive `ArrangeValue[]` list, so a nested
- *   `number[][]` arranges as `[[7]]`.
+ *   Every value is drawn from an input domain, never from executing the code (P4). Both composite arms
+ *   carry the recursive `ArrangeValue`, so they nest the same way: an `array` value is an
+ *   `ArrangeValue[]` list and a nested `number[][]` arranges as `[[7]]`, while an `object` value is an
+ *   `ArrangeValue` map keyed by property name and a nested `{ db: { host: string } }` arranges as
+ *   `{ db: { host: 'localhost' } }`.
+ *
+ *   The `harness` arm carries NO value, and that is the whole reason it is its own arm. What a harness
+ *   supplies is exactly what the fill seam has no vocabulary for — a callback, an instance, a thing with
+ *   identity — so there is nothing to serialize into a case. It carries the parameter and the KEY PATH
+ *   into the declaration instead, and the run resolves the live value by loading the same harness file
+ *   the compile read. A value slot here would have to hold a rendering of a function, which is a second
+ *   encoding of something only the run has.
  *
  *   It is its OWN contract so every transformer that BUILDS an arrange — `derive-cases`, `cause-arrange`,
  *   the funnel's param fill — names one binding directly instead of indexing into the case's array type.
@@ -17,6 +26,7 @@
  * USAGE:
  * arrangeBindingContract.parse({ kind: 'param', param: 'name', value: '' });
  * arrangeBindingContract.parse({ kind: 'array', param: 'items', value: [7] });
+ * arrangeBindingContract.parse({ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } });
  * // Returns a validated ArrangeBinding (discriminated on `kind`)
  */
 import { z } from 'zod';
@@ -24,6 +34,7 @@ import { z } from 'zod';
 import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
 import { envValueContract } from '../env-value/env-value-contract';
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
+import { harnessKeyPathContract } from '../harness-key-path/harness-key-path-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
@@ -41,12 +52,17 @@ export const arrangeBindingContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('object'),
     param: symbolNameContract,
-    value: z.record(symbolNameContract, representativeValueContract),
+    value: z.record(symbolNameContract, arrangeValueContract),
   }),
   z.object({
     kind: z.literal('array'),
     param: symbolNameContract,
     value: z.array(arrangeValueContract),
+  }),
+  z.object({
+    kind: z.literal('harness'),
+    param: symbolNameContract,
+    key: harnessKeyPathContract,
   }),
 ]);
 

@@ -40,14 +40,22 @@
  *   nothing reaches at all is a dead-surface LINT — the repo's debt, because an unexported helper is
  *   reachable only from its own file and this one reaches it from nowhere.
  *
+ *   Every driving route runs through the SAME fill seam, so every one of them can be refused — and a
+ *   refusal that goes nowhere is a scope that silently derives nothing. `refusals` is that channel: each
+ *   entry names the ENTRY a reader can drive, the parameter no value can be built for, and (when the
+ *   parameter belongs to a scope folded INTO that entry rather than to the entry itself) the scope that
+ *   declares it. `analyze-file-broker` turns them into the same input gaps a directly-derived scope's
+ *   refusals become.
+ *
  * USAGE:
  * followCallsTransformer({ walked });
  * // Returns { followedEntries: [FunctionAnalysis], undriven: [UndrivenEntry], lints: [LintEntry],
- * //   unreachable: [{ name, unreachableExits }], funnels: [{ host, hostLine, cases }] }
+ * //   unreachable: [{ name, unreachableExits }], funnels: [{ host, hostLine, cases }],
+ * //   refusals: [{ entryName, param, type, owner? }] }
  */
 import { anonymousEntryLabelTransformer } from '@assayer/shared/transformers';
 import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LineNumber, LintEntry, RepresentativeValue, SymbolName, UndrivenEntry } from '@assayer/shared/contracts';
+import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LineNumber, LintEntry, RepresentativeValue, SymbolName, TypeText, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -118,9 +126,13 @@ export const followCallsTransformer = ({
       displayName: SymbolName;
     }[];
   }[];
+  // Every parameter a driving route asked the fill seam for and was REFUSED, keyed to the entry a
+  // reader can drive. `owner` names the scope that DECLARES it when that is not the entry — a private
+  // or callback the entry folds in, which is no entry of its own and so has nowhere else to be said.
+  refusals: { entryName: SymbolName; param: SymbolName; type: TypeText; owner?: EntryLabel }[];
 } => {
   if (!walked.success) {
-    return { followedEntries: [], undriven: [], lints: [], unreachable: [], funnels: [] };
+    return { followedEntries: [], undriven: [], lints: [], unreachable: [], funnels: [], refusals: [] };
   }
 
   const { scopes, reachedFns, invokedFns } = walked;
@@ -272,9 +284,16 @@ export const followCallsTransformer = ({
     });
 
   // Every funnelable callback, paired with the host scope it maps into.
-  const funnelable = results.flatMap(({ callee, callbackReach, callbackArrayParam, callbackFunnelable }) =>
+  const funnelable = results.flatMap(({ callee, label, callbackReach, callbackArrayParam, callbackFunnelable }) =>
     callbackFunnelable && callbackReach !== undefined && callbackArrayParam !== undefined
-      ? [{ host: callbackReach.host, callback: callee, arrayParam: callbackArrayParam.name }]
+      ? [
+          {
+            host: callbackReach.host,
+            callback: callee,
+            arrayParam: callbackArrayParam.name,
+            ...(label === undefined ? {} : { label }),
+          },
+        ]
       : [],
   );
 
@@ -283,22 +302,29 @@ export const followCallsTransformer = ({
   // set — the cartesian of each callback's per-element funnel — so a two-map surface is a single entry
   // crossing both callbacks' arms, never two funnels colliding on the same host. Every funnelable entry
   // for one host references the SAME scope record off the walk, so the grouping keys on that identity.
-  const funnelGroups: { host: ScopeRecord; callbacks: { callback: ScopeRecord; arrayParam: SymbolName }[] }[] = [];
+  const funnelGroups: {
+    host: ScopeRecord;
+    callbacks: { callback: ScopeRecord; arrayParam: SymbolName; label?: EntryLabel }[];
+  }[] = [];
   funnelable.forEach((entry) => {
+    const member = {
+      callback: entry.callback,
+      arrayParam: entry.arrayParam,
+      ...(entry.label === undefined ? {} : { label: entry.label }),
+    };
     const existing = funnelGroups.find((group) => group.host === entry.host);
     if (existing === undefined) {
-      funnelGroups.push({ host: entry.host, callbacks: [{ callback: entry.callback, arrayParam: entry.arrayParam }] });
+      funnelGroups.push({ host: entry.host, callbacks: [member] });
       return;
     }
-    existing.callbacks.push({ callback: entry.callback, arrayParam: entry.arrayParam });
+    existing.callbacks.push(member);
   });
 
-  const callbackFunnels = funnelGroups.map(({ host, callbacks }) => ({
-    host: host.name,
-    hostLine: host.startLine,
-    cases: funnelCasesTransformer({ surface: host, callbacks }),
-    unreachable: [],
-  }));
+  const callbackFunnels = funnelGroups.map(({ host, callbacks }) => {
+    const funnel = funnelCasesTransformer({ surface: host, callbacks });
+
+    return { host: host.name, hostLine: host.startLine, cases: funnel.cases, unreachable: [], unfillable: funnel.unfillable };
+  });
 
   // The followed entries, each with any exits its driving proved unreachable. A through-caller entry
   // carries the welded-argument exits derive-cases evaluated; a through-callback entry never welds, so
@@ -320,37 +346,55 @@ export const followCallsTransformer = ({
       unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits'];
       name: SymbolName;
       label?: EntryLabel;
+      // The refusals this route hit, already keyed to the entry that owes the invoice. A through-caller
+      // private files under its OWN name (it is a named entry a reader sees); a callback over a branching
+      // host files under the HOST, since its own `name` is a structural projection no surface may print.
+      refusals: { entryName: SymbolName; param: SymbolName; type: TypeText; owner?: EntryLabel }[];
     }[] => {
       if (callbackReach === undefined) {
         // An IIFE that drives: its arrow becomes a module-access entry driven by importing the file. Its
         // access is `module`, so every surface labels it by the FILE and it needs no label of its own.
         if (invocationDrives && invocation !== undefined) {
-          return [{ analysis: invocation.analysis, unreachableExits: invocation.unreachableExits, name: callee.name }];
+          return [
+            { analysis: invocation.analysis, unreachableExits: invocation.unreachableExits, name: callee.name, refusals: [] },
+          ];
         }
         if (driver === undefined) {
           return [];
         }
         const built = throughCallerCasesTransformer({ callee, caller: driver.caller, call: driver.call });
-        return [{ analysis: built.analysis, unreachableExits: built.unreachableExits, name: callee.name }];
+        return [
+          {
+            analysis: built.analysis,
+            unreachableExits: built.unreachableExits,
+            name: callee.name,
+            refusals: built.unfillable.map((refusal) => ({ entryName: callee.name, ...refusal })),
+          },
+        ];
       }
       // A FUNNELLED callback is not its own entry — its cases fold into the host on the `funnels`
       // channel below. A drivable callback over a BRANCHING host still gets its own `through-caller`
       // entry (the later increment).
-      return callbackDrivable && callbackArrayParam !== undefined && !callbackFunnelable
-        ? [
-            {
-              analysis: throughCallbackCasesTransformer({
-                callback: callee,
-                entry: callbackReach.host,
-                arrayParam: callbackArrayParam.name,
-                ...(label === undefined ? {} : { label }),
-              }),
-              unreachableExits: [],
-              name: callee.name,
-              ...(label === undefined ? {} : { label }),
-            },
-          ]
-        : [];
+      if (!callbackDrivable || callbackArrayParam === undefined || callbackFunnelable) {
+        return [];
+      }
+
+      const built = throughCallbackCasesTransformer({
+        callback: callee,
+        entry: callbackReach.host,
+        arrayParam: callbackArrayParam.name,
+        ...(label === undefined ? {} : { label }),
+      });
+
+      return [
+        {
+          analysis: built.analysis,
+          unreachableExits: [],
+          name: callee.name,
+          ...(label === undefined ? {} : { label }),
+          refusals: built.unfillable.map((refusal) => ({ entryName: callbackReach.host.name, ...refusal })),
+        },
+      ];
     },
   );
 
@@ -369,6 +413,17 @@ export const followCallsTransformer = ({
         cases: funnel.cases,
         unreachable: funnel.unreachable,
       })),
+    ],
+    // Every refused parameter, keyed to the entry that owes the invoice: a funnel's under its HOST (the
+    // only entry the file offers once a private or callback folds in), a through-caller private's under
+    // its own name. `analyze-file-broker` merges them with each entry's own derivation's refusals and
+    // de-duplicates, so one parameter is invoiced once however many routes reached it.
+    refusals: [
+      ...callbackFunnels.flatMap((funnel) => funnel.unfillable.map((refusal) => ({ entryName: funnel.host, ...refusal }))),
+      ...namedFunnels.flatMap(({ surface, funnel }) =>
+        funnel.unfillable.map((refusal) => ({ entryName: surface.name, ...refusal })),
+      ),
+      ...followed.flatMap(({ refusals }) => refusals),
     ],
     // The exits a welded value killed, keyed to the followed entry that owns them — turned into
     // unreachable-exit lints by `analyze-file-broker`, the same conversion a directly-derived scope's

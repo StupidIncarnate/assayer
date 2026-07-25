@@ -36,6 +36,37 @@ describe('arrangeBindingContract', () => {
 
       expect(result).toStrictEqual({ kind: 'object', param: 'config', value: { mode: 'dev' } });
     });
+
+    it('VALID: {a nested property value} => parses the recursive map, so { db: { host } } is representable', () => {
+      const result = arrangeBindingContract.parse({ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } });
+
+      expect(result).toStrictEqual({ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } });
+    });
+
+    it('VALID: {a property holding an array} => parses, since a property takes the same value an element does', () => {
+      const result = arrangeBindingContract.parse({ kind: 'object', param: 'config', value: { ports: [7], db: { host: 'x' } } });
+
+      expect(result).toStrictEqual({ kind: 'object', param: 'config', value: { ports: [7], db: { host: 'x' } } });
+    });
+  });
+
+  describe('a harness binding', () => {
+    it('VALID: {kind: "harness"} => parses the parameter and its key path, carrying no value', () => {
+      const result = arrangeBindingContract.parse({ kind: 'harness', param: 'report', key: 'inputs.audit.report' });
+
+      expect(result).toStrictEqual({ kind: 'harness', param: 'report', key: 'inputs.audit.report' });
+    });
+
+    it('INVALID: {kind: "harness" with a value} => strips it, since the value lives only in the loaded harness', () => {
+      const result = arrangeBindingContract.parse({
+        kind: 'harness',
+        param: 'report',
+        key: 'inputs.audit.report',
+        value: 'abc123',
+      } as never);
+
+      expect(result).toStrictEqual({ kind: 'harness', param: 'report', key: 'inputs.audit.report' });
+    });
   });
 
   describe('a malformed binding', () => {

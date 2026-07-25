@@ -15,11 +15,20 @@
  *   that it was the environment. Error text is product surface (P1), and that line was a lie in it.
  *
  *   An `object` param is an argument too, so it renders positionally like a scalar param — as the
- *   object literal a reader would pass, its properties in the same sorted order the arrange carries.
+ *   object literal a reader would pass, its properties in the same sorted order the arrange carries. It
+ *   NESTS exactly as an array param does: a property holding an object or an array renders whole, to
+ *   whatever depth the value carries, because the literal a reader would type is the whole literal.
+ *
+ *   A `harness` binding renders as its KEY PATH in angle brackets, never as a value, because there is no
+ *   value here to render: the argument is whatever the colocated harness registered under that key, and
+ *   only the run holds it. `<harness inputs.audit.report>` tells the reader both that this argument was
+ *   supplied rather than derived and exactly which line of which file supplied it — so a case a human
+ *   closed is never mistaken for one Assayer built out of a declared type.
  *
  * USAGE:
  * arrangeTextTransformer({ arrange: testCase.arrange });
- * // Returns '6, 2' for params, 'LEVEL="6"' for an environment read, or '{"mode":"dev"}' for an object
+ * // Returns '6, 2' for params, 'LEVEL="6"' for an environment read, '{"db":{"host":"x"}}' for an
+ * // object, or '<harness inputs.audit.report>' for a harness-supplied input
  */
 import { arrangeTextContract } from '../../contracts/arrange-text/arrange-text-contract';
 import type { ArrangeText } from '../../contracts/arrange-text/arrange-text-contract';
@@ -31,9 +40,12 @@ export const arrangeTextTransformer = ({ arrange }: { arrange: DerivedTestCase['
       .map((binding) =>
         binding.kind === 'env'
           ? `${String(binding.name)}=${JSON.stringify(binding.value)}`
-          : JSON.stringify(binding.value),
+          : binding.kind === 'harness'
+            ? `<harness ${String(binding.key)}>`
+            : JSON.stringify(binding.value),
       )
-      // `binding.value` is a scalar for a param, the property map for an object — `JSON.stringify`
-      // renders both as the literal a reader would pass, so a single arm covers them.
+      // `binding.value` is a scalar for a param and a recursive value for an array or object —
+      // `JSON.stringify` renders each as the literal a reader would pass, generic over the nesting, so
+      // a single arm covers them all.
       .join(', '),
   );

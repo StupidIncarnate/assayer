@@ -66,6 +66,35 @@ describe('readExportFlagLayerAdapter', () => {
     });
   });
 
+  describe('an export stated in a later statement', () => {
+    it('VALID: {const arrow, export default f} => true', () => {
+      readExportFlagLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const f = (): void => {};\n\nexport default f;\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readExportFlagLayerAdapter({ node, context: WalkContextStub({ exported: false }) })).toBe(true);
+    });
+
+    it('VALID: {const arrow, export { f as default }} => true', () => {
+      readExportFlagLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const f = (): void => {};\n\nexport { f as default };\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readExportFlagLayerAdapter({ node, context: WalkContextStub({ exported: false }) })).toBe(true);
+    });
+
+    it('VALID: {function declaration, export { f }} => true', () => {
+      readExportFlagLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(): void {}\n\nexport { f };\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      expect(readExportFlagLayerAdapter({ node, context: WalkContextStub({ exported: false }) })).toBe(true);
+    });
+  });
+
   describe('class members', () => {
     it('VALID: {method of an exported class} => true, inheriting the class reach from context', () => {
       readExportFlagLayerAdapterProxy();

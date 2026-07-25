@@ -55,6 +55,57 @@ describe('funnelNamedCasesTransformer', () => {
         ],
         unreachable: [],
         consumed: [{ name: 'inner', startLine: 2 }],
+        unfillable: [],
+      });
+    });
+  });
+
+  describe('a funnelled private whose own parameter the fill seam refuses', () => {
+    // The private is no entry of its own once it funnels, so a parameter IT declares and nothing can
+    // build has nowhere else to be said: dropped here, the surface derives nothing and admits nothing,
+    // which is byte-identical to a surface with nothing to test.
+    const SINK_INNER = ScopeRecordStub({
+      scopePath: ['*module*', 'outer', 'inner'],
+      name: 'inner',
+      exported: false,
+      access: { kind: 'unreachable' },
+      params: [
+        { name: 'n', type: { kind: 'number' } },
+        { name: 'cb', type: { kind: 'callable', text: '(m: number) => void' } },
+      ],
+      startLine: 2,
+      endLine: 7,
+      branches: [N_BRANCH],
+      exits: [INNER_THEN, INNER_ELSE],
+    });
+
+    it('VALID: {inner also takes a callback} => no case, and the refusal rides up tagged with the private', () => {
+      const outer = ScopeRecordStub({
+        scopePath: ['*module*', 'outer'],
+        name: 'outer',
+        access: { kind: 'named' },
+        params: [{ name: 'value', type: { kind: 'number' } }],
+        startLine: 1,
+        endLine: 9,
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'outer/return@top', kind: 'return', guardPath: [], line: 9 })],
+        calls: [
+          CallSiteStub({
+            callee: { target: 'local', name: 'inner', startLine: 2 },
+            args: [{ kind: 'param-ref', paramName: 'value' }, { kind: 'callback', startLine: 9 }],
+            guardPath: [],
+            position: { line: 9, column: 10 },
+          }),
+        ],
+      });
+
+      const result = funnelNamedCasesTransformer({ scope: outer, scopes: [outer, SINK_INNER], welds: new Map() });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachable: [],
+        consumed: [{ name: 'inner', startLine: 2 }],
+        unfillable: [{ param: 'cb', type: '(m: number) => void', owner: 'inner' }],
       });
     });
   });
@@ -86,6 +137,7 @@ describe('funnelNamedCasesTransformer', () => {
         cases: [{ reachesPath: ['inner/return@else', 'report/return@top'], arrange: [], salient: true }],
         unreachable: [{ line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 }, displayName: 'inner' }],
         consumed: [{ name: 'inner', startLine: 2 }],
+        unfillable: [],
       });
     });
   });
@@ -180,6 +232,7 @@ describe('funnelNamedCasesTransformer', () => {
           { name: 'middle', startLine: 5 },
           { name: 'inner', startLine: 6 },
         ],
+        unfillable: [],
       });
     });
   });
@@ -204,6 +257,7 @@ describe('funnelNamedCasesTransformer', () => {
         cases: [{ reachesPath: ['plain/return@top'], arrange: [], salient: true }],
         unreachable: [],
         consumed: [],
+        unfillable: [],
       });
     });
   });

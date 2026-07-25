@@ -4,8 +4,10 @@
  *
  *   It derives the id through `runIdBroker`, the same broker the runner names its directory with, so
  *   the reader and the writer cannot disagree about where a run lives. It reads the file to do that,
- *   which is the point: the id is keyed on CONTENT, so a run saved against edited source is
- *   correctly not found — "stale" is unrepresentable rather than merely unlikely.
+ *   which is the point: the id is keyed on every INPUT to the run's result — the source and the
+ *   colocated harness alike — so a run saved against edited source, or against a harness that has
+ *   since changed what it supplies, is correctly not found. "Stale" is unrepresentable rather than
+ *   merely unlikely.
  *
  *   Undefined means "not run" — an answer, not an error.
  *
@@ -37,5 +39,5 @@ export const runFindBroker = async ({
 
   const source = String(await fsReadFileAdapter({ path: absPath }));
 
-  return runLoadBroker({ configDir, runId: String(runIdBroker({ relPath, source })) });
+  return runLoadBroker({ configDir, runId: String(await runIdBroker({ root, relPath, source })) });
 };

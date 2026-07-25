@@ -50,7 +50,56 @@ describe('typeDescriptorTransformer', () => {
       );
     });
 
-    it('VALID: {union with a non-literal member} => unknown carrying the union text', () => {
+    it('VALID: {union of primitives} => union descriptor keeping both members', () => {
+      const fact = TypeFactStub({
+        flavor: 'union',
+        members: [{ flavor: 'string' }, { flavor: 'number' }],
+        text: 'string | number',
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }),
+      );
+    });
+
+    it('VALID: {union mixing a literal and a primitive} => union descriptor keeping both members', () => {
+      const fact = TypeFactStub({
+        flavor: 'union',
+        members: [{ flavor: 'literal', value: 'open' }, { flavor: 'boolean' }],
+        text: '"open" | boolean',
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'union',
+          members: [TypeDescriptorStub({ kind: 'literal', value: 'open' }), { kind: 'boolean' }],
+        }),
+      );
+    });
+
+    it('VALID: {union of a string and the two boolean literals} => union descriptor keeping all three members', () => {
+      const fact = TypeFactStub({
+        flavor: 'union',
+        members: [{ flavor: 'string' }, { flavor: 'literal', value: false }, { flavor: 'literal', value: true }],
+        text: 'string | boolean',
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'union',
+          members: [
+            { kind: 'string' },
+            TypeDescriptorStub({ kind: 'literal', value: false }),
+            TypeDescriptorStub({ kind: 'literal', value: true }),
+          ],
+        }),
+      );
+    });
+
+    // SOME member representable is enough: a value of one member IS a value of the union, so the half
+    // that can be built survives and the fill seam picks it. Degrading here refused the whole type for
+    // the half nothing can build, which contradicts `is-type-fillable`'s union rule.
+    it('VALID: {union with an opaque member} => union descriptor keeping the opaque member beside the literal', () => {
       const fact = TypeFactStub({
         flavor: 'union',
         members: [{ flavor: 'literal', value: 'open' }, { flavor: 'other', text: 'undefined' }],
@@ -58,7 +107,37 @@ describe('typeDescriptorTransformer', () => {
       });
 
       expect(typeDescriptorTransformer({ fact })).toStrictEqual(
-        TypeDescriptorStub({ kind: 'unknown', text: '"open" | undefined' }),
+        TypeDescriptorStub({
+          kind: 'union',
+          members: [TypeDescriptorStub({ kind: 'literal', value: 'open' }), { kind: 'unknown', text: 'undefined' }],
+        }),
+      );
+    });
+
+    it('VALID: {union with an object member} => union descriptor keeping the object beside the string', () => {
+      const fact = TypeFactStub({
+        flavor: 'union',
+        members: [{ flavor: 'string' }, { flavor: 'object', typeName: 'Config', properties: [] }],
+        text: 'string | Config',
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'union',
+          members: [{ kind: 'string' }, TypeDescriptorStub({ kind: 'object', typeName: 'Config', properties: [] })],
+        }),
+      );
+    });
+
+    it('VALID: {union where NO member is representable} => unknown carrying the union text', () => {
+      const fact = TypeFactStub({
+        flavor: 'union',
+        members: [{ flavor: 'other', text: 'null' }, { flavor: 'other', text: 'undefined' }],
+        text: 'null | undefined',
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'unknown', text: 'null | undefined' }),
       );
     });
   });
@@ -101,6 +180,49 @@ describe('typeDescriptorTransformer', () => {
 
       expect(typeDescriptorTransformer({ fact })).toStrictEqual(
         TypeDescriptorStub({ kind: 'object', properties: [{ name: 'a', type: { kind: 'string' } }] }),
+      );
+    });
+
+    // The reader's truncation mark rides across, because nothing downstream can re-derive it.
+    it('VALID: {a truncated object fact} => object descriptor carrying the truncation mark', () => {
+      const fact = TypeFactStub({ flavor: 'object', typeName: 'Tree', truncated: true, properties: [] });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'object', typeName: 'Tree', truncated: true, properties: [] }),
+      );
+    });
+
+    it('EMPTY: {an untruncated property-less object fact} => object descriptor with no truncation mark', () => {
+      const fact = TypeFactStub({ flavor: 'object', typeName: 'Empty', properties: [] });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'object', typeName: 'Empty', properties: [] }),
+      );
+    });
+  });
+
+  describe('callable facts', () => {
+    it('VALID: {flavor: callable} => callable descriptor carrying the signature text', () => {
+      const fact = TypeFactStub({ flavor: 'callable', text: '(message: string) => string' });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'callable', text: '(message: string) => string' }),
+      );
+    });
+
+    it('VALID: {object whose property is callable} => the property maps to a callable descriptor', () => {
+      const fact = TypeFactStub({
+        flavor: 'object',
+        typeName: 'Sink',
+        properties: [{ name: 'write', fact: { flavor: 'callable', text: '(line: string) => string' } }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'object',
+          typeName: 'Sink',
+          properties: [{ name: 'write', type: { kind: 'callable', text: '(line: string) => string' } }],
+        }),
       );
     });
   });

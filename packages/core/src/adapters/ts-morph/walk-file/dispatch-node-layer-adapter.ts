@@ -30,6 +30,7 @@ import { handleImportLayerAdapter } from './handle-import-layer-adapter';
 import { handleMemberAccessLayerAdapter } from './handle-member-access-layer-adapter';
 import { handleSourceFileLayerAdapter } from './handle-source-file-layer-adapter';
 import { handleSwitchLayerAdapter } from './handle-switch-layer-adapter';
+import { handleTypeDeclarationLayerAdapter } from './handle-type-declaration-layer-adapter';
 import { handleVariableLayerAdapter } from './handle-variable-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
 
@@ -106,6 +107,15 @@ export const dispatchNodeLayerAdapter = ({
   // as the default branch would.
   if (Node.isPropertyAccessExpression(node)) {
     return handleMemberAccessLayerAdapter({ node, context });
+  }
+
+  // An `interface`/`type`/`enum` declaration records the SHAPE it declares as a flat file-level fact.
+  // It is read off the declaration rather than off the signatures that mention it, so a shape only a
+  // sibling's reader ever names is still part of this file's declared surface. An enum belongs here
+  // because a reader typed `Level` demands exactly what the enum's members enumerate — the same
+  // question an alias to a literal union asks, and the same reader answers it.
+  if (Node.isInterfaceDeclaration(node) || Node.isTypeAliasDeclaration(node) || Node.isEnumDeclaration(node)) {
+    return handleTypeDeclarationLayerAdapter({ node, context });
   }
 
   // A variable statement records a VALUE USE when an initializer references an existing binding

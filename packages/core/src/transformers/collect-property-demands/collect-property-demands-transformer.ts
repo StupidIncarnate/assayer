@@ -3,11 +3,15 @@
  *   list — the value math the stub stitch runs per type. For each property the type declares, it finds
  *   the object-member read facts that branch on THAT property (a single-level `config.mode` read whose
  *   root type-reference is this type) and reuses the SAME scalar value math the case engine uses:
- *   `type-to-range` turns the leaf's operand type + predicate into its satisfying/violating domains,
- *   `domain-values` realizes each into representative values, and an unconstrained arm falls back to
- *   the operand's representative value (the same fill an un-narrowed case gets). Values are deduped and
- *   sorted for byte-identical output. A property no reader branches on is an honest `unknown` — no
- *   value is invented for it.
+ *   `type-to-range` turns the property's DECLARED type + the leaf's predicate into its
+ *   satisfying/violating domains, `domain-values` realizes each into representative values, and an
+ *   unconstrained arm falls back to that type's representative value (the same fill an un-narrowed case
+ *   gets). The DECLARED type is what carries the domain — a cross-file object types as `any` at the
+ *   leaf, so reading the leaf's own operand type would narrow a cross-file demand below the same
+ *   branch's same-file twin. Values are deduped and sorted for byte-identical output. A property no
+ *   reader branches on is an honest `unknown` — no value is invented for it — and so is one every
+ *   reader branches on whose declared type names no point at all (an opaque shape under a predicate
+ *   carrying no literal): a demand of no values would read as a demand.
  *
  *   Values are sourced from the operand's type and predicate, never from executing the code (P4). A
  *   NESTED read (`obj.user.role`) names a sub-object property whose scalar demand needs the sub-type
@@ -50,18 +54,27 @@ export const collectPropertyDemandsTransformer = ({
       }
 
       // Each read fact's arms (satisfying + violating) are realized with the case engine's own value
-      // math; an unconstrained arm (an open `=== 'a'` violating side) falls back to the operand's
-      // representative value, exactly as an un-narrowed param does.
+      // math, off the property's DECLARED type — the leaf's own operand type is `any` for a cross-file
+      // object, so the property's type is what carries the real domain. An unconstrained arm (an open
+      // `=== 'a'` violating side) falls back to that type's representative value, exactly as an
+      // un-narrowed param does.
       const values = matching.flatMap((leaf) => {
         const armValues = typeToRangeTransformer({
-          type: leaf.operandType,
+          type: property.type,
           predicateKind: String(leaf.predicate.kind),
           ...(leaf.predicate.literal === undefined ? {} : { literal: leaf.predicate.literal }),
         });
 
         return [armValues.satisfying, armValues.violating].flatMap((domain) => {
           const realized = domainValuesTransformer({ domain });
-          return realized.length === 0 ? [representativeValueTransformer({ type: leaf.operandType })] : realized;
+
+          if (realized.length > 0) {
+            return realized;
+          }
+
+          const fallback = representativeValueTransformer({ type: property.type });
+
+          return fallback === undefined ? [] : [fallback];
         });
       });
 
@@ -69,5 +82,9 @@ export const collectPropertyDemandsTransformer = ({
         JSON.stringify(a) < JSON.stringify(b) ? -1 : 1,
       );
 
-      return propertyDemandContract.parse({ name: property.name, demand: { kind: 'demanded', values: unique } });
+      return propertyDemandContract.parse(
+        unique.length === 0
+          ? { name: property.name, demand: { kind: 'unknown' } }
+          : { name: property.name, demand: { kind: 'demanded', values: unique } },
+      );
     });

@@ -32,6 +32,7 @@ describe('stableNamespaceLayerBroker', () => {
             },
           ],
         },
+        harnesses: [],
         errors: [],
       });
       expect(proxy.processedCount()).toBe(0);
@@ -64,6 +65,7 @@ describe('stableNamespaceLayerBroker', () => {
           commit: sha,
           files: [{ relPath: 'src/stable.ts', contentHash: hash }],
         },
+        harnesses: [],
         errors: [],
       });
     });
@@ -97,6 +99,7 @@ describe('stableNamespaceLayerBroker', () => {
           commit: sha,
           files: [{ relPath: 'src/stable.ts', contentHash: hash }],
         },
+        harnesses: [],
         errors: [],
       });
     });
@@ -122,6 +125,7 @@ describe('stableNamespaceLayerBroker', () => {
       expect(result).toStrictEqual({
         resultEntry: { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
         manifestNamespace: { branch: 'master', files: [{ relPath: 'src/stable.ts', contentHash: hash }] },
+        harnesses: [],
         errors: [],
       });
     });
@@ -147,6 +151,7 @@ describe('stableNamespaceLayerBroker', () => {
       expect(result).toStrictEqual({
         resultEntry: { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
         manifestNamespace: { branch: 'master', commit: sha, files: [] },
+        harnesses: [],
         errors: [{ namespace: 'master', relPath: 'src/broken.ts', line: 1, column: 11, message: 'Expression expected.' }],
       });
     });

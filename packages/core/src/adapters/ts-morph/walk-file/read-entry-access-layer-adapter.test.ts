@@ -63,6 +63,56 @@ describe('readEntryAccessLayerAdapter', () => {
     });
   });
 
+  describe('exports stated in a later statement', () => {
+    it('VALID: {const arrow, export default f} => default, the same as `export default function`', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const f = (): void => {};\n\nexport default f;\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readEntryAccessLayerAdapter({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'default' });
+    });
+
+    it('VALID: {const arrow, export { f as default }} => default', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const f = (): void => {};\n\nexport { f as default };\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readEntryAccessLayerAdapter({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'default' });
+    });
+
+    it('VALID: {const arrow, export { f }} => named, with no separate module property', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const f = (): void => {};\n\nexport { f };\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readEntryAccessLayerAdapter({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'named' });
+    });
+
+    it('VALID: {const arrow, export { f as go }} => named carrying `go`, the property the module holds it under', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const f = (): void => {};\n\nexport { f as go };\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readEntryAccessLayerAdapter({ node, context: WalkContextStub() })).toStrictEqual({
+        kind: 'named',
+        exportedName: 'go',
+      });
+    });
+
+    it('VALID: {function declaration, export { f as default }} => default', () => {
+      readEntryAccessLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f(): void {}\n\nexport { f as default };\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      expect(readEntryAccessLayerAdapter({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'default' });
+    });
+  });
+
   describe('class members', () => {
     it('VALID: {method of a zero-arg class} => method carrying the class name, constructable', () => {
       readEntryAccessLayerAdapterProxy();

@@ -1,4 +1,4 @@
-import { ParamDescriptorStub, BranchNodeStub, ConditionNodeStub, ExitNodeStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub, BranchNodeStub, ConditionNodeStub, ExitNodeStub, TypeDescriptorStub, symbolNameContract } from '@assayer/shared/contracts';
 
 import { deriveCasesTransformer } from './derive-cases-transformer';
 
@@ -426,6 +426,7 @@ describe('deriveCasesTransformer', () => {
         cases: [],
         unreachableExits: [{ line: 10, guardLines: [2, 6] }],
         undrivenBranches: [],
+        unfillable: [],
       });
     });
 
@@ -477,7 +478,12 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3 }] });
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
+        unfillable: [],
+      });
     });
 
     // `const u = s; if (u > 5)`: the operand IS a named binding, but `u` is not a param of the entry —
@@ -505,7 +511,12 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'u' }] });
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand', operand: 'u' }],
+        unfillable: [],
+      });
     });
 
     // `if (config.mode === 'a')`: the leaf names its ROOT param `config`, but the deciding read is the
@@ -537,7 +548,83 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'config.mode' }] });
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand', operand: 'config.mode' }],
+        unfillable: [],
+      });
+    });
+
+    // `const TARGET = 'a'; if (m === TARGET)`: the operand `m` IS a param and IS arrangeable, but the
+    // right-hand side is an identifier the parse cannot read as a value, so the predicate is
+    // `unrecognized` and narrows NEITHER arm. Both arms would arrange `m` from its bare type, so one of
+    // the two cases must predict an arm it cannot reach — a build failing over correct code. The branch
+    // is admitted undriven instead, and the cause says which of the two blockers it hit.
+    const UNREAD_COMPARISON_BRANCH = BranchNodeStub({
+      coverageId: 'pick/if:target',
+      startLine: 4,
+      condition: {
+        kind: 'leaf',
+        id: 'pick/if:target#leaf',
+        operandParamName: 'm',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'unrecognized' },
+      },
+    });
+
+    it('VALID: {a param compared against a non-literal} => un-steerable, no case, and the cause is the comparison', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'm', type: { kind: 'string' } })],
+        branches: [UNREAD_COMPARISON_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'pick/return@then', guardPath: [{ branchCoverageId: 'pick/if:target', arm: 'then' }], line: 5 }),
+          ExitNodeStub({ coverageId: 'pick/return@else', guardPath: [{ branchCoverageId: 'pick/if:target', arm: 'else' }], line: 7 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 4, cause: 'unread-comparison', operand: 'm' }],
+        unfillable: [],
+      });
+    });
+
+    // A WELDED constant is arrangeable without an input, but weldedness only says what the operand IS —
+    // it says nothing about what the comparison DEMANDS. With an unreadable right-hand side there is
+    // still no arm to prefer, so the single-value domain reaches both and the branch stays undriven.
+    it('VALID: {a welded const compared against a non-literal} => un-steerable, never two cases over one value', () => {
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [
+          BranchNodeStub({
+            coverageId: 'weld/if:target',
+            startLine: 3,
+            condition: {
+              kind: 'leaf',
+              id: 'weld/if:target#leaf',
+              operandParamName: 'level',
+              operandConstValue: 7,
+              operandType: { kind: 'number' },
+              predicate: { kind: 'unrecognized' },
+            },
+          }),
+        ],
+        exits: [
+          ExitNodeStub({ coverageId: 'weld/return@then', guardPath: [{ branchCoverageId: 'weld/if:target', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'weld/return@else', guardPath: [{ branchCoverageId: 'weld/if:target', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unread-comparison', operand: 'level' }],
+        unfillable: [],
+      });
     });
 
     // The env operand is the pivot `envDrivable` turns on: a module scope reading `VALUE` from the
@@ -569,6 +656,7 @@ describe('deriveCasesTransformer', () => {
         ],
         unreachableExits: [],
         undrivenBranches: [],
+        unfillable: [],
       });
     });
 
@@ -577,7 +665,12 @@ describe('deriveCasesTransformer', () => {
     it('VALID: {an env operand, NOT envDrivable} => un-steerable, so no case and the branch admitted undriven', () => {
       const result = deriveCasesTransformer({ params: [], branches: [ENV_BRANCH], exits: ENV_EXITS, envDrivable: false });
 
-      expect(result).toStrictEqual({ cases: [], unreachableExits: [], undrivenBranches: [{ line: 3, operand: 'value' }] });
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand', operand: 'value' }],
+        unfillable: [],
+      });
     });
   });
 
@@ -619,6 +712,142 @@ describe('deriveCasesTransformer', () => {
         cases: [{ reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
         unreachableExits: [],
         undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+  });
+
+  describe('a parameter the fill seam refuses', () => {
+    const REFUSED_EXIT = ExitNodeStub({ coverageId: 'audit/return@top', kind: 'return', guardPath: [], line: 2 });
+
+    // The refusal is REPORTED rather than swallowed. Without this the entry derives nothing and says
+    // nothing, which reads exactly like a file with nothing to test — the reads-as-complete lie the
+    // admission channels exist to prevent.
+    it('VALID: {a callable param} => no case, and the refused param named with the type the checker renders', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'size', type: { kind: 'number' } }),
+          ParamDescriptorStub({
+            name: 'report',
+            type: TypeDescriptorStub({ kind: 'callable', text: '(message: string) => string' }),
+          }),
+        ],
+        branches: [],
+        exits: [REFUSED_EXIT],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [],
+        unfillable: [{ param: 'report', type: '(message: string) => string' }],
+      });
+    });
+
+    // NOT an unreachable exit: nothing here is dead code. The guards are fine and the exit is perfectly
+    // reachable — only the input cannot be built — so reporting it as a lint would tell the reader to
+    // delete correct code.
+    it('VALID: {a callable param behind a steerable guard} => still no lint, only the refusal', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'report', type: TypeDescriptorStub({ kind: 'callable', text: '() => void' }) }),
+        ],
+        branches: [
+          BranchNodeStub({
+            coverageId: 'audit/if',
+            condition: ConditionNodeStub({ id: 'audit/if#leaf', operandParamName: 'score', predicate: { kind: 'gt', literal: 5 } }),
+          }),
+        ],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'audit/return@then',
+            kind: 'return',
+            guardPath: [{ branchCoverageId: 'audit/if', arm: 'then' }],
+            line: 3,
+          }),
+          ExitNodeStub({
+            coverageId: 'audit/return@else',
+            kind: 'return',
+            guardPath: [{ branchCoverageId: 'audit/if', arm: 'else' }],
+            line: 5,
+          }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [],
+        unfillable: [{ param: 'report', type: '() => void' }],
+      });
+    });
+  });
+
+  // The other half of the refusal: `maybe(11)` is a legal call, so invoicing the caller for `report`
+  // bills a debt nobody has — the entry is driven WITHOUT it and derives its real cases.
+  describe('a parameter the caller owes nothing', () => {
+    const OPTIONAL_BRANCH = BranchNodeStub({
+      coverageId: 'maybe/if',
+      condition: ConditionNodeStub({ id: 'maybe/if#leaf', operandParamName: 'size', predicate: { kind: 'gt', literal: 10 } }),
+    });
+    const OPTIONAL_EXITS = [
+      ExitNodeStub({ coverageId: 'maybe/return@then', kind: 'return', guardPath: [{ branchCoverageId: 'maybe/if', arm: 'then' }], line: 3 }),
+      ExitNodeStub({ coverageId: 'maybe/return@else', kind: 'return', guardPath: [{ branchCoverageId: 'maybe/if', arm: 'else' }], line: 5 }),
+    ];
+
+    it('VALID: {an OPTIONAL callable param} => both arms are cases and nothing is invoiced', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'size', type: { kind: 'number' } }),
+          ParamDescriptorStub({
+            name: 'report',
+            type: TypeDescriptorStub({ kind: 'callable', text: '(m: string) => void' }),
+            optional: true,
+          }),
+        ],
+        branches: [OPTIONAL_BRANCH],
+        exits: OPTIONAL_EXITS,
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['maybe/return@then'], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
+          { reachesPath: ['maybe/return@else'], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+        ],
+        unreachableExits: [],
+        undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+
+    it('VALID: {a REST array of callables} => both arms are cases and nothing is invoiced', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'size', type: { kind: 'number' } }),
+          ParamDescriptorStub({
+            name: 'sinks',
+            type: TypeDescriptorStub({ kind: 'array', element: { kind: 'callable', text: '(m: string) => void' } }),
+            optional: true,
+            rest: true,
+          }),
+        ],
+        branches: [OPTIONAL_BRANCH],
+        exits: OPTIONAL_EXITS,
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['maybe/return@then'], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
+          { reachesPath: ['maybe/return@else'], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+        ],
+        unreachableExits: [],
+        undrivenBranches: [],
+        unfillable: [],
       });
     });
   });
@@ -654,6 +883,56 @@ describe('deriveCasesTransformer', () => {
         { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 6 }], salient: false },
         { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
       ]);
+    });
+  });
+
+  describe('a harness closes the refusal the gap invoiced', () => {
+    // The same derivation that reported the gap produces the cases once the value exists: the branch is
+    // steered exactly as before, and the supplied parameter is the only binding that differs.
+    it('VALID: {a callback param the harness declares} => the branch drives, nothing refused', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'name', type: { kind: 'string' } }),
+          ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
+        ],
+        branches: [BranchNodeStub()],
+        exits: [ExitNodeStub()],
+        envDrivable: false,
+        harness: { entry: symbolNameContract.parse('formatGreeting'), params: [symbolNameContract.parse('report')] },
+      });
+
+      expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['formatGreeting/return@if-then'],
+            arrange: [
+              { kind: 'param', param: 'name', value: '' },
+              { kind: 'harness', param: 'report', key: 'inputs.formatGreeting.report' },
+            ],
+            salient: true,
+          },
+        ],
+        unfillable: [],
+      });
+    });
+
+    // Without the harness the SAME entry derives nothing and reports the refusal — which is what makes
+    // the pair above a closure of this debt rather than a second derivation path.
+    it('VALID: {the same entry with no harness} => no case, and the callback is refused', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'name', type: { kind: 'string' } }),
+          ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
+        ],
+        branches: [BranchNodeStub()],
+        exits: [ExitNodeStub()],
+        envDrivable: false,
+      });
+
+      expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
+        cases: [],
+        unfillable: [{ param: 'report', type: '(m: string) => string' }],
+      });
     });
   });
 });

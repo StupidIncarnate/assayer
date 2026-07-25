@@ -38,6 +38,76 @@ describe('declaredTypesProjectionTransformer', () => {
     });
   });
 
+  // The defect this channel closes: a types-only module declares `Config` and no signature in it
+  // mentions the shape, so gathering only off params and return types leaves the file's whole declared
+  // surface empty and every reader across the repo is invoiced for a shape Assayer can build itself.
+  describe('a walk with a declaration no signature mentions', () => {
+    it('VALID: {a declared shape and no scopes} => the declared shape with its full property list', () => {
+      const walked = WalkFileResultStub({
+        declaredShapes: [
+          {
+            name: 'Config',
+            type: {
+              kind: 'object',
+              typeName: 'Config',
+              properties: [
+                { name: 'mode', type: { kind: 'string' } },
+                { name: 'region', type: { kind: 'string' } },
+              ],
+            },
+          },
+        ],
+      });
+
+      expect(declaredTypesProjectionTransformer({ walked })).toStrictEqual([
+        {
+          name: 'Config',
+          properties: [
+            { name: 'mode', type: { kind: 'string' } },
+            { name: 'region', type: { kind: 'string' } },
+          ],
+        },
+      ]);
+    });
+
+    it('VALID: {a declared alias to a union} => no declared type, since it names no object shape', () => {
+      const walked = WalkFileResultStub({
+        declaredShapes: [
+          {
+            name: 'Method',
+            type: { kind: 'union', members: [{ kind: 'literal', value: 'get' }, { kind: 'literal', value: 'post' }] },
+          },
+        ],
+      });
+
+      expect(declaredTypesProjectionTransformer({ walked })).toStrictEqual([]);
+    });
+
+    // Both channels feed one list, so the same shape arriving twice is still one entry.
+    it('VALID: {a shape declared AND taken by a signature} => one entry, not two', () => {
+      const walked = WalkFileResultStub({
+        declaredShapes: [
+          {
+            name: 'Config',
+            type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+          },
+        ],
+        scopes: [
+          ScopeRecordStub({
+            params: [
+              { name: 'cfg', type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] } },
+            ],
+            returnType: { kind: 'string' },
+          }),
+        ],
+      });
+
+      expect(declaredTypesProjectionTransformer({ walked })).toStrictEqual([
+        { name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+      ]);
+    });
+  });
+
   describe('a walk with no local object types', () => {
     it('EMPTY: {only primitive params} => no declared types', () => {
       const walked = WalkFileResultStub({

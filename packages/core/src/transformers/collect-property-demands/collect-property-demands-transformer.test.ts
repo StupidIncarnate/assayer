@@ -24,6 +24,30 @@ describe('collectPropertyDemandsTransformer', () => {
       ]);
     });
 
+    // The cross-file shape: an imported object types as `any` at the leaf, so the leaf's own operand
+    // type names nothing and only the DECLARED property type carries the domain. Reading the leaf here
+    // would silently narrow the demand to the branch literal alone — the same branch, a different
+    // answer, decided by which file declares the type.
+    it("VALID: {Config{mode}, config.mode === 'a' whose leaf operand is an opaque cross-file any} => mode demanded ['a','abc123'], identical to the same-file read", () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub(),
+        leaves: [
+          ConditionLeafStub({
+            operandParamName: 'config',
+            operandPropertyPath: ['mode'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'unknown', text: 'any' },
+            predicate: { kind: 'eq', literal: 'a' },
+          }),
+        ],
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'mode', demand: { kind: 'demanded', values: ['a', 'abc123'] } },
+        { name: 'retries', demand: { kind: 'unknown' } },
+      ]);
+    });
+
     it('VALID: {Limits{count:number}, l.count > 5} => count demanded [5, 6] (the two boundary reps)', () => {
       const result = collectPropertyDemandsTransformer({
         declaredType: DeclaredTypeStub({ name: 'Limits', properties: [{ name: 'count', type: { kind: 'number' } }] }),

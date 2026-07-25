@@ -4,11 +4,12 @@
  *
  *   It is the report twin of `run-find-broker` and derives its id the same way, through `runIdBroker`,
  *   so the reader and the writer cannot disagree about where a run's text lives. Reading the file to
- *   do that is the point: the id is keyed on CONTENT, so a report saved against edited source is
- *   correctly not found — the panel wipes on an edit by the same mechanism the verdicts do, rather
- *   than by a second invalidation rule that could drift from the first.
+ *   do that is the point: the id is keyed on every INPUT to the run, so a report saved against edited
+ *   source — or against a harness that has since changed — is correctly not found. The panel wipes by
+ *   the same mechanism the verdicts do, rather than by a second invalidation rule that could drift
+ *   from the first.
  *
- *   Undefined means "no report" — a file nobody has run, or one whose bytes have moved on. That is an
+ *   Undefined means "no report" — a file nobody has run, or one whose inputs have moved on. That is an
  *   answer, not an error, and it is what tells the desktop to show no console rather than a stale one.
  *
  * USAGE:
@@ -38,7 +39,8 @@ export const runConsoleFindBroker = async ({
   }
 
   const source = String(await fsReadFileAdapter({ path: absPath }));
-  const path = `${configDir}/.assayer/cache/runs/${String(runIdBroker({ relPath, source }))}/console.txt`;
+  const runId = String(await runIdBroker({ root, relPath, source }));
+  const path = `${configDir}/.assayer/cache/runs/${runId}/console.txt`;
 
   if (!(await fsExistsAdapter({ path }))) {
     return undefined;

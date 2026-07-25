@@ -53,6 +53,15 @@ const DECLARATIONS = {
   // `access:named` entry and admits nothing.
   [`${CATALOGUE}/happy-path/composition/same-file-predicate/same-file-predicate.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/composition/switch-in-if/switch-in-if.ts`]: ['access:named', 'branch:if', 'branch:switch', 'param:union'],
+  // The `function/nested` funnel in the dominant function style of modern TypeScript: `classify` is a
+  // private declared as a CONST-BOUND ARROW and `report` calls it by NAME. Resolving that callee off the
+  // declaration's KIND is what makes it a local link at all — read as unresolvable it is reached by
+  // nothing, so a private the exported entry calls four lines below is invoiced as dead surface and its
+  // driving route never runs. Driven instead: `report`'s only exit returns the call, so `classify`'s arms
+  // FUNNEL into it and `report` is the SOLE entry. Like every funnel, the private's `if` drives the
+  // funnel rather than surfacing on the entry, so the file owes only `access:named` and admits nothing;
+  // the two funnel cases are pinned by the colocated test.
+  [`${CATALOGUE}/happy-path/composition/const-arrow-callee/const-arrow-callee.ts`]: ['access:named'],
 
   // if-else. A class method is reached through an INSTANCE, not as a module property.
   [`${CATALOGUE}/happy-path/if-else/in-class/in-class.ts`]: ['access:method', 'branch:if'],
@@ -95,6 +104,14 @@ const DECLARATIONS = {
   // A branchless class method — reached through an instance; its class has no explicit constructor, so
   // the runner builds one and the method is `constructable` (DRIVEN, not a gap).
   [`${CATALOGUE}/happy-path/class/class.ts`]: ['access:method'],
+
+  // export-default: the export forms whose keyword is NOT on the declaration. `const decide = …;
+  // export default decide;` exports exactly what `export default function decide` does, and only the
+  // module's resolved export table says so — the statement is three lines further down. Read off the
+  // keyword instead, the const is private, its entry vanishes, and the file's only surface is reported
+  // as dead code the repo should delete. So the trait to watch is `access:default` on a CONST, and the
+  // absence of `lint:dead-surface` beside it.
+  [`${CATALOGUE}/happy-path/export-default/const-default/const-default.ts`]: ['access:default', 'branch:if'],
 
   // Type-reading rungs — branchless functions whose whole point is the PARAM shape the walk reads.
   //   - `element-length` takes `number[]`: the walk reads the ARRAY's element type structurally rather
@@ -159,6 +176,18 @@ const DECLARATIONS = {
   // `.concat` would throw on. That fill is the point this pins; otherwise a clean funnel, hence
   // happy-path, so the file surfaces only `access:named` + `param:array`.
   [`${CATALOGUE}/happy-path/array/sibling-fill/sibling-fill.ts`]: ['access:named', 'param:array'],
+  // `stub-sibling-array` is sibling-fill's OTHER half: the array param `extra` sits beside an OBJECT param
+  // whose `config.mode` branch is driven at consume time by stub-realize, not by a funnel. Both sites route
+  // through `fill-param`, so `extra` gets the same real `[7]` either way — which is what one fill authority
+  // buys. Two cases, both passing, nothing admitted, hence happy-path. It declares `Config` locally and
+  // reads a member of it, so it owes `param:object` + `operand:property` on top of `param:array`.
+  [`${CATALOGUE}/happy-path/array/stub-sibling-array/stub-sibling-array.ts`]: [
+    'access:named',
+    'branch:if',
+    'operand:property',
+    'param:array',
+    'param:object',
+  ],
   // `cross-file-map` maps an IMPORTED function over its array param (`items.map(bandReading)`, `bandReading`
   // from `./band-reading`). The imported callee cannot be reached without calling `bandReadings`, so its
   // branches FUNNEL into bandReadings' own case set CROSS-FILE — the same fold as map-conditional's inline
@@ -185,14 +214,67 @@ const DECLARATIONS = {
   //   - `branch-local` declares `Config` and reads `config.mode` in one file (`param:object`), and a
   //     committed correction (`assayer/stubs/.../Config.json`) proves a human value flows into a real case.
   //   - `cross-file-shape` (ROOT) + `reader-b` each import `Config` (`callee:import-local`) and guard on a
-  //     member of it; stub-realize resolves the import and reads the shape off `types.ts` to arrange the
-  //     unknown-in-the-hermetic-walk param. No `param:object` — the imported param types as `unknown`.
+  //     member of it. Their param IS an object (`param:object`) — the hermetic walk cannot see that, so
+  //     `param-type-resolve` reads the declaration off `types.ts` at consume time, and stub-realize then
+  //     arranges each arm from the merged stub view.
   //   - `types.ts` (CHILD) declares the interface and a branchless `withDefaults(config: Config)` that
   //     enumerates its full shape (`param:object`) — the definition stub-realize reads, not a reader.
   [`${CATALOGUE}/happy-path/object/branch-local/branch-local.ts`]: ['access:named', 'branch:if', 'operand:property', 'param:object'],
-  [`${CATALOGUE}/happy-path/object/cross-file-shape/cross-file-shape.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property'],
-  [`${CATALOGUE}/happy-path/object/cross-file-shape/reader-b.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property'],
+  [`${CATALOGUE}/happy-path/object/cross-file-shape/cross-file-shape.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property', 'param:object'],
+  [`${CATALOGUE}/happy-path/object/cross-file-shape/reader-b.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property', 'param:object'],
   [`${CATALOGUE}/happy-path/object/cross-file-shape/types.ts`]: ['access:named', 'param:object'],
+
+  // The imported shape a reader merely USES — no branch reads a member of it, so nothing about the
+  // entry's own control flow could rescue the type. `param-type-resolve` reads the declaration off the
+  // sibling at consume time and the parameter fills, which is why an ordinary reader stops being invoiced
+  // for an input the file next door constructs happily.
+  //   - `cross-file-reader` (ROOT) imports `Settings` (`callee:import-local`) and returns a member of it.
+  //     `param:object` is what the resolution gives it; the hermetic walk alone sees an opaque type.
+  //   - `settings.ts` (CHILD) declares the interface and a branchless `withDefaults(settings: Settings)`
+  //     that enumerates its full shape — the definition the reader's resolution reads.
+  [`${CATALOGUE}/happy-path/object/cross-file-reader/cross-file-reader.ts`]: ['access:named', 'callee:import-local', 'param:object'],
+  [`${CATALOGUE}/happy-path/object/cross-file-reader/settings.ts`]: ['access:named', 'param:object'],
+
+  // The GENERIC twin of the reader above. `type Box<T> = { value: T }` denotes nothing constructible on
+  // its own — only `Box<string>` says what `T` is — so the reference's type ARGUMENTS have to travel to
+  // the declaration and fill its type parameters by position. Without them the resolution answers with
+  // a shape whose property is still the placeholder `T`, and an ordinary reader of an ordinary alias is
+  // invoiced for an input the file next door describes in full.
+  //   - `generic-alias` (ROOT) imports `Box` (`callee:import-local`) and takes `Box<string>`.
+  //   - `box.ts` (CHILD) declares the alias and a branchless `rewrap(box: Box<number>)`, the SAME-FILE
+  //     half where the checker instantiates the generic itself.
+  [`${CATALOGUE}/happy-path/object/generic-alias/generic-alias.ts`]: ['access:named', 'callee:import-local', 'param:object'],
+  [`${CATALOGUE}/happy-path/object/generic-alias/box.ts`]: ['access:named', 'param:object'],
+
+  // The harness rungs — the PAID half of the input-gap channel, and the only place `harness:supplied`
+  // is observed. Each is byte-for-byte the source of its `sad-path/input-gap/` twin, plus one committed
+  // `<basename>.harness.ts` beside it; the harness is the only difference between the two specimens, so
+  // the pair is a controlled experiment rather than two files that happen to disagree. The overlay
+  // re-derives the invoiced entry through the same case engine with the supplied parameter bound to
+  // `inputs.<entry>.<param>`, so each case differs from an ordinary derived one in exactly that binding
+  // — and the run RESOLVES it, loading the same harness file the compile read. Both come out clean, so
+  // both live in happy-path; each carries the trait of the parameter kind the harness answers.
+  //   - `callback-param` supplies a CALLABLE (`report`).
+  //   - `object-param` supplies a whole SHAPE (`sink: Sink`): a refused object is refused entire, so one
+  //     key names the parameter rather than the `write` member inside it.
+  [`${CATALOGUE}/happy-path/harness/callback-param/callback-param.ts`]: [
+    'access:named',
+    'branch:if',
+    'harness:supplied',
+    'param:callable',
+  ],
+  [`${CATALOGUE}/happy-path/harness/object-param/object-param.ts`]: [
+    'access:named',
+    'branch:if',
+    'harness:supplied',
+    'param:object',
+  ],
+
+  // union: a union whose members are NOT all scalars. A value of ONE member is a value of the union, so
+  // the descriptor keeps `Marker | string` whole and the fill seam builds the half it can; degrading on
+  // the first non-scalar member refused the type for the half nothing can build. The scalar branch beside
+  // it is what proves the union parameter had to be fillable for any case to derive at all.
+  [`${CATALOGUE}/happy-path/union/mixed-union/mixed-union.ts`]: ['access:named', 'branch:if', 'param:union'],
 
   // The cross-file example rungs — one per classification the resolver must make, so the catalogue
   // proves each import shape has a specimen. Analyzed single-file here (the stitch that resolves them
@@ -302,6 +384,13 @@ const DECLARATIONS = {
   // why it drops off the uncatalogued list below.
   [`${CATALOGUE}/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts`]: ['access:constructor', 'access:method', 'access:named', 'branch:if'],
 
+  // An INPUT gap whose declared type the descriptor cannot name. A readonly tuple enumerates as an
+  // anonymous shape carrying every member of `ReadonlyArray` — `concat`, `every`, `filter`, `reduce`
+  // and their overloads — so the refusal is correct (nothing here builds a tuple yet) and the MESSAGE
+  // is what its colocated test pins: the wording AND the length, since error text is product surface
+  // and an unreadable one is a bug whatever it says.
+  [`${CATALOGUE}/sad-path/run-gap/tuple-param/tuple-param.ts`]: ['access:named', 'gap:input', 'param:object'],
+
   // The REPO's debt: a private with real branching that nothing in the file calls, so nothing ever
   // will (an unexported symbol is reachable only from its own file). Rides the LINT channel — "change
   // the code", not "Assayer cannot drive it".
@@ -332,6 +421,16 @@ const DECLARATIONS = {
   // no entry of its own — the file's one entry is the named export.
   [`${CATALOGUE}/sad-path/undriven/opaque-if/opaque-if.ts`]: ['access:named', 'branch:if', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/opaque-ternary/opaque-ternary.ts`]: ['access:named', 'branch:ternary', 'undriven'],
+  // The OTHER blocker the one steerability gate asks about: here the operand is a parameter and
+  // perfectly arrangeable, and the COMPARISON names no value. `mode === TARGET` and `case Severity.Low`
+  // are the same fact one construct apart — the parse cannot read the right-hand side as a literal, so
+  // neither arm is constrained and there is nothing to vary. Undriven, not a case: asked only whether
+  // the OPERAND was arrangeable, the gate derived both arms with the same arranged input and one of them
+  // failed against correct code. The switch is the sharper of the two, because the clause used to be
+  // dropped outright — its `return` never emitted, the `default` losing the else that guards it, and the
+  // single derived case reporting "reached no exit" on code that reaches one perfectly.
+  [`${CATALOGUE}/sad-path/undriven/const-comparand/const-comparand.ts`]: ['access:named', 'branch:if', 'undriven'],
+  [`${CATALOGUE}/sad-path/undriven/enum-case/enum-case.ts`]: ['access:named', 'branch:switch', 'param:union', 'undriven'],
   // A branching callback passed to a same-file higher-order function (`apply(value, (x) => { if … })`).
   // The code REACHES the callback (it is passed as an argument), so it is NOT dead surface — but the
   // value `x` binds to is handed to it by `apply`, not an input any case at `run` controls, so its
@@ -409,35 +508,44 @@ const DECLARATIONS = {
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/exceeds-limit.ts`]: ['access:named'],
   [`${CATALOGUE}/sad-path/unreachable/cross-file-guards/within-budget.ts`]: ['access:named'],
 
-  // ERROR — the run throws. These are ORDINARY files: every one is code a real repo would contain, every
-  // branch is understood, and every case is derived confidently and correctly for the parameter the
-  // branch steers. What breaks is the fill for a parameter the case does NOT steer — Assayer hands it a
-  // scalar string placeholder, the entry uses it as a callable, an object or an array, and the case
-  // throws before reaching any exit. So they run unclean, hence sad-path.
+  // INPUT GAPS — the shapes the fill seam REFUSES, invoiced to the CALLER. These are ORDINARY files:
+  // every one is code a real repo would contain, every branch is understood, and every case is derived
+  // confidently for the parameter the branch steers. What stops them is a parameter the case does NOT
+  // steer and no value of the right shape exists for, so the entry derives NO case rather than one built
+  // on a placeholder. Zero cases is unclean, hence sad-path — and the gap channel is what keeps the
+  // refusal from reading as a file with nothing to test.
   //
-  // The whole grouping is a RATCHET, and unusually every member of it is expected to leave: nothing is
-  // wrong with the source, so each moves to happy-path the day its fill is fixed. It exists because a
-  // wrong INPUT is the one failure mode the four admission channels cannot express — Assayer does not
-  // say it was blind, blocked or owed a harness, it says nothing and then throws — and an ERROR verdict
-  // is the only place that shows.
-  //   - `callback-param`: a callback parameter (`report: (message: string) => string`) is filled with a
-  //     string and then CALLED. A function type reads as an object with no properties, so it owes
-  //     `param:object` — the trait names the shape the walk saw, not the fill it deserved.
-  //   - `object-param`: the same defect one shape over — a same-file `interface Sink` parameter, its
-  //     `write` member fully enumerated onto the param, filled with a string and then dereferenced. The
-  //     shape being KNOWN is what makes it a defect rather than a limit.
-  //   - `stub-sibling-array`: a `number[]` sibling of a stub-realized OBJECT param. The object half is
-  //     driven correctly (`operand:property` + `param:object`), and only the array sibling is filled
-  //     wrong — the same fill `happy-path/array/sibling-fill` proves is correct at the funnel's seam,
-  //     missed at this one. The two specimens are the pair that localises it.
-  [`${CATALOGUE}/sad-path/error/callback-param/callback-param.ts`]: ['access:named', 'branch:if', 'param:object'],
-  [`${CATALOGUE}/sad-path/error/object-param/object-param.ts`]: ['access:named', 'branch:if', 'param:object'],
-  [`${CATALOGUE}/sad-path/error/stub-sibling-array/stub-sibling-array.ts`]: [
+  // The bucket is the VERDICT, not a judgement about the source: each of these is one committed
+  // `<basename>.harness.ts` away from running clean, which is what the `happy-path/harness/` twins of
+  // the first two show. They stay here because THIS file has no harness beside it.
+  //   - `callback-param`: a callback parameter (`report: (message: string) => string`). The walk reads
+  //     its call signature, so it owes `param:callable` — and no value in the arrange vocabulary is a
+  //     function, which is exactly why the seam refuses it.
+  //   - `object-param`: the same refusal one shape over — a same-file `interface Sink` parameter whose
+  //     `write` member is enumerated onto it as a callable. An object is fillable only when EVERY
+  //     property is, so one callable member refuses the whole shape rather than half-building it.
+  //   - `map-param`: a built-in generic (`Map<string, number>`). Nothing about it is a function, and it
+  //     is still opaque: `Map` is declared by the standard library, so the hermetic walk carries the
+  //     reference and its arguments and no structure. It owes no `param:*` trait for that reason, and it
+  //     is the sharpest no-placeholder case in the catalogue — a stand-in string has a `.size` to read,
+  //     so the entry would run, reach an exit, and report a verdict about an input nobody supplied.
+  //   - `partial-harness`: two refused callables with a harness beside it declaring only ONE. The entry
+  //     still cannot be called, so the gap stands — but re-worded from the refusals that REMAIN, naming
+  //     `sink` alone. Its harness is read (it registers), yet it buys no case, so `harness:supplied` is
+  //     correctly absent: the trait rides the ARRANGE binding, and a partial payment produces none.
+  [`${CATALOGUE}/sad-path/input-gap/callback-param/callback-param.ts`]: [
     'access:named',
     'branch:if',
-    'operand:property',
-    'param:array',
-    'param:object',
+    'gap:input',
+    'param:callable',
+  ],
+  [`${CATALOGUE}/sad-path/input-gap/object-param/object-param.ts`]: ['access:named', 'branch:if', 'gap:input', 'param:object'],
+  [`${CATALOGUE}/sad-path/input-gap/map-param/map-param.ts`]: ['access:named', 'branch:if', 'gap:input'],
+  [`${CATALOGUE}/sad-path/input-gap/partial-harness/partial-harness.ts`]: [
+    'access:named',
+    'branch:if',
+    'gap:input',
+    'param:callable',
   ],
 
   // `contradictory-bounds` nests `.length > 1` inside `.length < 1`, which no string satisfies — the
@@ -460,7 +568,6 @@ export const specimenRegistry = new Map<RelPath, readonly SyntaxTrait[]>(
 // nobody catalogued. Otherwise "the catalogue covers every syntax we model" is a claim with nothing
 // behind it.
 export const uncataloguedTraits = {
-  'access:default': 'no specimen uses `export default`',
   'access:through-caller':
     'no ENTRY carries it. A same-file private a reachable surface calls is either FUNNELLED into that ' +
     'surface (when the surface returns the call — `happy-path/function/nested`, `deep-nested`, and ' +

@@ -7,6 +7,11 @@
  *   this the runner can only guess the named-export shape, and every other shape fails as though the
  *   ANALYZER were wrong.
  *
+ *   `exportedName` appears on a named export whose module PROPERTY differs from the entry's local
+ *   name — `const runIt = …; export { runIt as go };` puts the function under `go`. Without it the
+ *   runner reads `runIt` off the module, finds nothing, and reports an entry that is there perfectly
+ *   as uncallable. It is absent whenever the two agree, which is nearly always.
+ *
  *   `constructable` is the escalation point: a class whose constructor needs arguments cannot be
  *   driven without them, so it becomes a NAMED gap ("needs a harness") rather than a silent skip or
  *   a false failure.
@@ -38,7 +43,7 @@ import { z } from 'zod';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const entryAccessContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('named') }),
+  z.object({ kind: z.literal('named'), exportedName: symbolNameContract.optional() }),
   z.object({ kind: z.literal('default') }),
   z.object({ kind: z.literal('method'), className: symbolNameContract, constructable: z.boolean() }),
   z.object({ kind: z.literal('constructor'), className: symbolNameContract }),

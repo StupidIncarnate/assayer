@@ -42,12 +42,28 @@
       "@assayer/core/stub-realize": [
         "../../../packages/core/src/brokers/stub/realize/stub-realize-broker"
       ],
+      // Imported-type resolution is the consume-time overlay that runs FIRST: a parameter declared as an
+      // imported type is `any` in the hermetic walk, so a specimen reading a sibling's shape imports it
+      // to show the parameter typed as its declaration says.
+      "@assayer/core/param-type-resolve": [
+        "../../../packages/core/src/brokers/param-type/resolve/param-type-resolve-broker"
+      ],
       // The cross-file example rungs assert their MODULE GRAPH — the raw imports/re-exports and the
       // references into imported names the walk records for a later stitch to resolve — which is a
       // projection of the walk, so it too rides alongside the walk adapter.
       "@assayer/core/module-graph": [
         "../../../packages/core/src/transformers/module-graph-projection/module-graph-projection-transformer"
       ],
+      // The harness overlay is the LAST consume-time one: an entry whose input the fill seam refused is
+      // re-derived with the colocated harness's value bound to its key path, so a specimen proving its
+      // gap is paid imports it beside the analyze-file broker.
+      "@assayer/core/harness-realize": [
+        "../../../packages/core/src/brokers/harness/realize/harness-realize-broker"
+      ],
+      // The BARE specifier, and the only one a consumer's own committed code uses: a colocated
+      // `<basename>.harness.ts` imports `assayerHarness` from it, exactly as the input-gap invoice
+      // instructs. It resolves to core's MAIN barrel, which publishes that seam and nothing else.
+      "@assayer/core": ["../../../packages/core/index.ts"],
       "@assayer/shared/contracts": ["../../../packages/shared/contracts"]
     }
   },

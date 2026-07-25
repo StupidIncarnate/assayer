@@ -52,18 +52,18 @@ describe('desugarSwitchLayerAdapter', () => {
       expect(
         result.caseInfos.map((caseInfo) => ({
           literalValue: caseInfo.literalValue,
-          literalToken: caseInfo.literalToken,
+          caseToken: caseInfo.caseToken,
           branchCoverageId: caseInfo.branchCoverageId,
         })),
       ).toStrictEqual([
         {
           literalValue: 'get',
-          literalToken: 'str:get',
+          caseToken: 'str:get',
           branchCoverageId: 'classify/switch:id:method,EqualsEqualsEqualsToken,str:get',
         },
         {
           literalValue: 'post',
-          literalToken: 'str:post',
+          caseToken: 'str:post',
           branchCoverageId: 'classify/switch:id:method,EqualsEqualsEqualsToken,str:post',
         },
       ]);
@@ -83,13 +83,13 @@ describe('desugarSwitchLayerAdapter', () => {
       expect(
         result.caseInfos.map((caseInfo) => ({
           literalValue: caseInfo.literalValue,
-          literalToken: caseInfo.literalToken,
+          caseToken: caseInfo.caseToken,
           branchCoverageId: caseInfo.branchCoverageId,
         })),
       ).toStrictEqual([
         {
           literalValue: 1,
-          literalToken: 'num:1',
+          caseToken: 'num:1',
           branchCoverageId: 'classify/switch:id:n,EqualsEqualsEqualsToken,num:1',
         },
       ]);
@@ -122,7 +122,7 @@ describe('desugarSwitchLayerAdapter', () => {
       ]);
     });
 
-    it('EDGE: {enum-member case} => SKIPPED rather than guessed at', () => {
+    it('EDGE: {enum-member case} => a case info with NO literal value, keyed on the structural projection', () => {
       desugarSwitchLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile(
@@ -133,7 +133,20 @@ describe('desugarSwitchLayerAdapter', () => {
 
       const result = desugarSwitchLayerAdapter({ switchStatement, scopePath: CLASSIFY_SCOPE });
 
-      expect(result.caseInfos).toStrictEqual([]);
+      expect(
+        result.caseInfos.map((caseInfo) => ({
+          literalValue: caseInfo.literalValue,
+          caseToken: caseInfo.caseToken,
+          branchCoverageId: caseInfo.branchCoverageId,
+        })),
+      ).toStrictEqual([
+        {
+          literalValue: undefined,
+          caseToken: 'PropertyAccessExpression,id:E,id:A',
+          branchCoverageId:
+            'classify/switch:id:e,EqualsEqualsEqualsToken,PropertyAccessExpression,id:E,id:A',
+        },
+      ]);
     });
   });
 

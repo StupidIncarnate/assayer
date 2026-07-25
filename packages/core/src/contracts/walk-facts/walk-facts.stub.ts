@@ -14,6 +14,7 @@ export const WalkFactsStub = ({ ...props }: StubArgument<WalkFacts> = {}): WalkF
     nodes: [],
     probeSites: [],
     moduleEdges: [],
+    declaredShapes: [],
     globalUses: [],
     envReads: [],
     reachedFns: [],

@@ -29,6 +29,20 @@
  *   which runs when imported and reads the environment as it goes. It is passed down rather than
  *   inferred because it is a fact about the entry, and the leaves only know a fact about the code.
  *
+ *   A REQUIRED param the fill seam REFUSES is reported rather than swallowed: `unfillable` names each
+ *   parameter no value of the declared type can be built for, deduped across buckets in enumeration
+ *   order. The entry derives no case — a refused input makes every arrangement of it a lie — so without
+ *   this the refusal is silent and the file reads as complete. It is NOT `unreachableExits`: nothing
+ *   here is dead code, the input is simply one Assayer cannot construct, and the caller closes it with a
+ *   harness. A parameter the caller owes NOTHING (optional, defaulted, or rest) is not refused at all:
+ *   `applied-params` drops it and the entry is driven without it, because `maybe(11)` is a real call.
+ *
+ *   `harness` is that refusal being CLOSED. It names the parameters a colocated harness supplies for this
+ *   entry, and each one is arranged as a key path into the declaration rather than refused — so the same
+ *   derivation that reported the gap produces the cases once the value exists. Passing it in, instead of
+ *   deriving a second way, is what keeps a supplied entry's cases identical to a derived one's in every
+ *   respect but the one binding.
+ *
  *   Drivability is decided in ONE place, here: a branch is STEERABLE only when EVERY leaf of its
  *   condition has an arrangeable operand — a PLAIN SCALAR param of this entry (an object-member read
  *   like `config.mode` is NOT scalar-arrangeable here — the object param is arranged by `stub-realize`
@@ -40,7 +54,7 @@
  * USAGE:
  * deriveCasesTransformer({ params, branches, exits, envDrivable: false, returnPredicate });
  * // Returns { cases: [{ reachesPath, arrange, salient }, …], unreachableExits: [{ line, guardLines }, …],
- * //   undrivenBranches: [{ line, operand? }, …] }
+ * //   undrivenBranches: [{ line, operand? }, …], unfillable: [{ param, type }, …] }
  */
 import { derivedTestCaseContract, symbolNameContract } from '@assayer/shared/contracts';
 import type {
@@ -53,11 +67,16 @@ import type {
   ParamDescriptor,
   RepresentativeValue,
   SymbolName,
+  TypeText,
 } from '@assayer/shared/contracts';
 
 import { caseSignatureContract } from '../../contracts/case-signature/case-signature-contract';
 import type { CaseSignature } from '../../contracts/case-signature/case-signature-contract';
 import type { PredictedOutput } from '../../contracts/predicted-output/predicted-output-contract';
+import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
+import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
+import { isPredicateConstrainingGuard } from '../../guards/is-predicate-constraining/is-predicate-constraining-guard';
+import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { causeArrangeTransformer } from '../cause-arrange/cause-arrange-transformer';
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
 import { inputBucketsTransformer } from '../input-buckets/input-buckets-transformer';
@@ -69,12 +88,14 @@ export const deriveCasesTransformer = ({
   exits,
   envDrivable,
   returnPredicate,
+  harness,
 }: {
   params: ParamDescriptor[];
   branches: BranchNode[];
   exits: ExitNode[];
   envDrivable: boolean;
   returnPredicate?: ConditionNode;
+  harness?: { entry: SymbolName; params: readonly SymbolName[] } | undefined;
 }): {
   cases: DerivedTestCase[];
   unreachableExits: {
@@ -82,10 +103,15 @@ export const deriveCasesTransformer = ({
     guardLines: LineNumber[];
     welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
   }[];
-  undrivenBranches: { line: LineNumber; operand?: SymbolName }[];
+  undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: SymbolName }[];
+  unfillable: { param: SymbolName; type: TypeText }[];
 } => {
   const lineByBranch = new Map(branches.map((branch) => [branch.coverageId, branch.startLine]));
-  const paramNames = new Set(params.map((param) => String(param.name)));
+  // The parameters a CALL supplies — the declared list minus the trailing tail no caller owes and no
+  // value can be built for (`applied-params`). Every question below is asked of these and not of the
+  // declared list: a parameter the entry is driven WITHOUT can neither steer a branch nor be invoiced.
+  const applied = appliedParamsTransformer({ params });
+  const paramNames = new Set(applied.map((param) => String(param.name)));
 
   // A branch decided by a WELDED constant: its dead arm is unreachable not because guards contradict
   // but because the single value forces the other arm. Recorded per branch so the lint can say WHY
@@ -112,14 +138,22 @@ export const deriveCasesTransformer = ({
     }),
   );
 
-  // A branch whose every leaf has an arrangeable operand — a PLAIN SCALAR param, or an env var when the
-  // entry is env-driven — is STEERABLE and enumerates its arms as normal. Any other branch cannot have
-  // its arms told apart, so its guarded exits derive nothing and it is admitted undriven instead. An
-  // object-member read (`config.mode`) names its root param but is NOT scalar-arrangeable here: the
+  // A branch is STEERABLE only when EVERY leaf answers BOTH questions: is there an input a case can set
+  // (a PLAIN SCALAR param, or an env var when the entry is env-driven, or a welded constant the analyzer
+  // evaluates), and does the predicate NAME a value to set it to. Either one missing leaves the arms
+  // indistinguishable, so the guarded exits derive nothing and the branch is admitted undriven instead.
+  //
+  // The two blockers are reported separately because they send the reader to different places, and the
+  // second is the one a shared gate used to miss: `m === TARGET` has a perfectly arrangeable operand and
+  // an `unrecognized` predicate, so both arms intersected to the same unconstrained domain, arranged the
+  // same input, and one case predicted an arm it could not reach — a build failing over correct code.
+  //
+  // An object-member read (`config.mode`) names its root param but is NOT scalar-arrangeable here: the
   // object param is arranged by `stub-realize` at consume time, so a leaf carrying `operandPropertyPath`
   // stays un-steerable in this per-file gate.
   const unsteerable = branches.flatMap((branch) => {
-    const unarrangeable = conditionLeavesTransformer({ condition: branch.condition }).filter(
+    const leaves = conditionLeavesTransformer({ condition: branch.condition });
+    const unarrangeable = leaves.filter(
       (leaf) =>
         !(
           (leaf.operandParamName !== undefined &&
@@ -133,14 +167,19 @@ export const deriveCasesTransformer = ({
           leaf.operandConstLength !== undefined
         ),
     );
+    const unconstrained = leaves.filter((leaf) => !isPredicateConstrainingGuard({ leaf }));
 
-    if (unarrangeable.length === 0) {
+    if (unarrangeable.length === 0 && unconstrained.length === 0) {
       return [];
     }
 
     // Name the deciding read for the P1 admission: a scalar operand is its param name, an object-member
     // read is the full `config.mode` path — never the bare root, which IS a param and would misread.
-    const operand = unarrangeable
+    // The operand blocker is named first when both are present: an operand no case can set is the
+    // outer problem, and a predicate over a value nothing supplies is not the reader's next move.
+    const blocking = unarrangeable.length > 0 ? unarrangeable : unconstrained;
+    const cause = undrivenCauseContract.parse(unarrangeable.length > 0 ? 'unarrangeable-operand' : 'unread-comparison');
+    const operand = blocking
       .map((leaf) =>
         leaf.operandParamName === undefined
           ? undefined
@@ -152,7 +191,14 @@ export const deriveCasesTransformer = ({
       )
       .find((name) => name !== undefined);
 
-    return [{ branchCoverageId: branch.coverageId, line: branch.startLine, ...(operand === undefined ? {} : { operand }) }];
+    return [
+      {
+        branchCoverageId: branch.coverageId,
+        line: branch.startLine,
+        cause,
+        ...(operand === undefined ? {} : { operand }),
+      },
+    ];
   });
 
   const unsteerableIds = new Set(unsteerable.map((entry) => entry.branchCoverageId));
@@ -168,10 +214,11 @@ export const deriveCasesTransformer = ({
     returnPredicate !== undefined &&
     conditionLeavesTransformer({ condition: returnPredicate }).every(
       (leaf) =>
-        (leaf.operandParamName !== undefined &&
+        ((leaf.operandParamName !== undefined &&
           leaf.operandPropertyPath === undefined &&
           paramNames.has(String(leaf.operandParamName))) ||
-        (leaf.operandEnvVarName !== undefined && envDrivable),
+          (leaf.operandEnvVarName !== undefined && envDrivable)) &&
+        isPredicateConstrainingGuard({ leaf }),
     );
   const effectiveReturnPredicate = predicateSteerable ? returnPredicate : undefined;
 
@@ -193,7 +240,12 @@ export const deriveCasesTransformer = ({
 
     return {
       predWant: bucket.predWant,
-      arrange: causeArrangeTransformer({ requirements: bucket.requirements, params, envDrivable }),
+      arrange: causeArrangeTransformer({
+        requirements: bucket.requirements,
+        params: applied,
+        envDrivable,
+        ...(harness === undefined ? {} : { harness }),
+      }),
       exit: maximal.length === 1 ? maximal[0] : undefined,
     };
   });
@@ -268,12 +320,24 @@ export const deriveCasesTransformer = ({
     ];
   });
 
+  // Every parameter the fill seam refused, deduped by name across the buckets that asked. Buckets are
+  // enumerated deterministically and a Map keeps first-seen order, so the list is byte-stable. An
+  // UNREACHABLE bucket never reaches the seam, so a cause whose guards contradict contributes nothing
+  // here — which is what keeps a dead exit reported as a lint rather than as a missing input.
+  const unfillable = [
+    ...new Map(
+      evaluated.flatMap((entry) => entry.arrange.unfillable.map((refusal) => [String(refusal.param), refusal] as const)),
+    ).values(),
+  ];
+
   return {
     cases,
     unreachableExits,
     undrivenBranches: unsteerable.map((entry) => ({
       line: entry.line,
+      cause: entry.cause,
       ...(entry.operand === undefined ? {} : { operand: entry.operand }),
     })),
+    unfillable,
   };
 };

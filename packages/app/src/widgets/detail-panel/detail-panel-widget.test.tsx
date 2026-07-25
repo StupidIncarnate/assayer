@@ -485,6 +485,40 @@ describe('DetailPanelWidget', () => {
 
       expect(getByTestId('RUN_GAP').textContent).toBe('GAP find — needs a harness');
     });
+
+    // An input Assayer cannot construct is a fact about the FILE, true the moment it is opened. Making
+    // the reader click Run to learn it is the reads-as-complete lie with an extra step: until then the
+    // panel shows an entry with zero cases and no reason for it.
+    it('VALID: {an analysis gap, no run} => the invoice is shown before anything runs', () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({ gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }] });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+
+      expect(getByTestId('RUN_GAP').textContent).toBe('GAP audit — the fill seam refuses `report`');
+    });
+
+    // A run's gaps are the file's own plus the access-shaped ones the case-set projection adds, so the
+    // run SUPERSEDES the analysis. Reading both would print the file's half twice under one key.
+    it('VALID: {a run whose gaps already contain the analysis half} => each gap appears exactly once', () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({ gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }] });
+      const run = RunResultStub({
+        gaps: [
+          { name: 'audit', reason: 'the fill seam refuses `report`' },
+          { name: 'find', reason: 'needs a harness' },
+        ],
+      });
+
+      const { getAllByTestId } = testingLibraryRenderAdapter({
+        ui: <DetailPanelWidget analysis={analysis} run={run} />,
+      });
+
+      expect(getAllByTestId('RUN_GAP').map((element) => element.textContent)).toStrictEqual([
+        'GAP audit — the fill seam refuses `report`',
+        'GAP find — needs a harness',
+      ]);
+    });
   });
 
   describe('dark spots', () => {

@@ -42,8 +42,9 @@ test.describe('Stub Repository view', () => {
       CROSS_FILE_READER_A,
       CROSS_FILE_READER_B,
     ]);
-    // per-property values: region is branched on 'us' (plus a representative), retries is read by no
-    // one, so it is an honest `unknown`.
+    // per-property values: region is branched on 'us', so the demand is that literal plus the
+    // representative the open `!== 'us'` arm draws from the property's declared `string`. retries is
+    // read by no one, so it is an honest `unknown`.
     expect(
       await crossFileCard.locator('[data-testid="STUB_PROPERTY"][data-propname="region"]').getByTestId('STUB_PROPERTY_VALUE').allTextContents(),
     ).toEqual(['abc123', 'us']);

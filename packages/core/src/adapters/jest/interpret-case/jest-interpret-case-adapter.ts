@@ -13,6 +13,12 @@
  *   what makes an uncallable scope drivable, and it needs no special case here: both kinds are set
  *   up, then one function is applied.
  *
+ *   A HARNESS binding is an argument too, but its value is not in the case: the case names a key path and
+ *   the value is whatever the colocated harness registered under it, loaded by the shim. A key the
+ *   declaration does not carry is `errored` and NAMES the key — never a throw, and never a silent
+ *   `undefined` slid into the argument list. The silent version is the worst outcome available here: the
+ *   entry would run on a value nobody supplied and whatever it then did would be reported as a verdict.
+ *
  *   The environment is GLOBAL and shared by every case in the process, so it is snapshotted before
  *   the first write and restored in `finally` — including when the entry throws, which is exactly
  *   when an unrestored variable would go on to poison every case after it and make the failure look
@@ -42,13 +48,15 @@
  *   `failed` sends them to the wrong one.
  *
  * USAGE:
- * jestInterpretCaseAdapter({ entry, entryName, exitIds, testCase, probe });
+ * jestInterpretCaseAdapter({ entry, entryName, exitIds, testCase, probe, harness });
  * // Returns { entryName, testCase, status: 'passed', observedPath, trace }
  */
 import { caseResultContract } from '@assayer/shared/contracts';
 import type { CaseResult, CoverageId, DerivedTestCase } from '@assayer/shared/contracts';
 
+import type { HarnessDeclaration } from '../../../contracts/harness-declaration/harness-declaration-contract';
 import type { ProbeRuntime } from '../../../contracts/probe-runtime/probe-runtime-contract';
+import { harnessValueTransformer } from '../../../transformers/harness-value/harness-value-transformer';
 
 export const jestInterpretCaseAdapter = ({
   entry,
@@ -56,12 +64,14 @@ export const jestInterpretCaseAdapter = ({
   exitIds,
   testCase,
   probe,
+  harness,
 }: {
   entry: unknown;
   entryName: string;
   exitIds: CoverageId[];
   testCase: DerivedTestCase;
   probe: ProbeRuntime;
+  harness?: readonly HarnessDeclaration[] | undefined;
 }): CaseResult => {
   probe.reset();
 
@@ -75,11 +85,46 @@ export const jestInterpretCaseAdapter = ({
     });
   }
 
-  // A param and an object both apply positionally, so both contribute one argument in arrange order; an
-  // env binding applies by writing a key, so it contributes none. The object binding's `value` is
-  // already the plain property map the entry receives ({ mode: 'dev' }), so it needs no reconstruction.
+  // Every harness-supplied argument looked up BEFORE anything runs, so a key the declaration does not
+  // carry stops the case instead of reaching the entry as a hole in the argument list.
+  const supplied = testCase.arrange.flatMap((binding) =>
+    binding.kind === 'harness'
+      ? [{ param: binding.param, key: binding.key, resolved: harnessValueTransformer({ declarations: harness ?? [], key: binding.key }) }]
+      : [],
+  );
+  const missing = supplied.filter((binding) => !binding.resolved.found);
+
+  if (missing.length > 0) {
+    const plural = missing.length !== 1;
+
+    return caseResultContract.parse({
+      entryName,
+      testCase,
+      status: 'errored',
+      trace: [],
+      message:
+        `harness input${plural ? 's' : ''} ${missing.map((binding) => `\`${String(binding.key)}\``).join(', ')} ` +
+        `${plural ? 'were' : 'was'} not registered when the colocated harness loaded, so '${entryName}' has no ` +
+        `argument for ${missing.map((binding) => `\`${String(binding.param)}\``).join(', ')}. The case was derived ` +
+        `from a declaration that named ${plural ? 'those keys' : 'that key'}, so the harness has changed since — ` +
+        'restore the declaration, or recompile so the case set matches what it declares now.',
+    });
+  }
+
+  const suppliedByParam = new Map(
+    supplied.map((binding) => [String(binding.param), binding.resolved.found ? binding.resolved.value : undefined]),
+  );
+
+  // A param, an array, an object and a harness input all apply positionally, so each contributes one
+  // argument in arrange order; an env binding applies by writing a key, so it contributes none. A
+  // composite binding's `value` is already the plain structure the entry receives — nested to whatever
+  // depth it carries ({ db: { host: 'localhost' } } exactly as [[7]]) — so it needs no reconstruction.
   const args = testCase.arrange.flatMap((binding): unknown[] =>
-    binding.kind === 'env' ? [] : [binding.value],
+    binding.kind === 'env'
+      ? []
+      : binding.kind === 'harness'
+        ? [suppliedByParam.get(String(binding.param))]
+        : [binding.value],
   );
   const envBindings = testCase.arrange.flatMap((binding) => (binding.kind === 'env' ? [binding] : []));
   // Snapshotted BEFORE the first write, so the restore below puts back what was there rather than

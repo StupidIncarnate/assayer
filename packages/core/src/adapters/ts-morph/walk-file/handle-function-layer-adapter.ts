@@ -36,6 +36,7 @@ import { conditionLeavesTransformer } from '../../../transformers/condition-leav
 import { coverageIdTransformer } from '../../../transformers/coverage-id/coverage-id-transformer';
 import { exitCoverageIdTransformer } from '../../../transformers/exit-coverage-id/exit-coverage-id-transformer';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
+import { typeTextTransformer } from '../../../transformers/type-text/type-text-transformer';
 import { walkContextTransformer } from '../../../transformers/walk-context/walk-context-transformer';
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';
@@ -45,6 +46,7 @@ import { readConditionTreeLayerAdapter } from './read-condition-tree-layer-adapt
 import { readEntryAccessLayerAdapter } from './read-entry-access-layer-adapter';
 import { readExportFlagLayerAdapter } from './read-export-flag-layer-adapter';
 import { readFunctionNameLayerAdapter } from './read-function-name-layer-adapter';
+import { readDeclaredTypeTextLayerAdapter } from './read-declared-type-text-layer-adapter';
 import { readTypeFactLayerAdapter } from './read-type-fact-layer-adapter';
 
 // The predicate kinds carrying a real COMPARISON — the operand's value or its length measured against
@@ -89,13 +91,50 @@ export const handleFunctionLayerAdapter = ({
   // Read from the context the CLASS handed down, before the scope below clears it.
   const access = readEntryAccessLayerAdapter({ node, context });
 
-  const params = node.getParameters().map((param) =>
-    paramDescriptorContract.parse({
+  // Optionality and rest-ness are read HERE, off the parameter, because that is the only node that
+  // knows them: the checker widens `report?: (m: string) => void` to the same type a required
+  // parameter declares, so nothing downstream of the type could tell that omitting it is a legal call.
+  // Carried only when true, so a plain required parameter reads exactly as it always did.
+  //
+  // The parameter's own type NODE travels with its type, because the checker alone cannot render a
+  // declaration `any` absorbed (`db: Db | string`, §5.10) — and a gap invoicing a type the signature
+  // does not declare is text nobody can act on.
+  const params = node.getParameters().map((param) => {
+    const typeNode = param.getTypeNode();
+    const type = typeDescriptorTransformer({
+      fact: readTypeFactLayerAdapter({
+        type: param.getType(),
+        ...(typeNode === undefined ? {} : { typeNode }),
+      }),
+    });
+    // The SOURCE's own name for the type, carried only where the descriptor cannot reproduce it. A
+    // `readonly [string, number]` enumerates as an anonymous shape carrying every member of
+    // `ReadonlyArray`, and rendering THAT into a P1 invoice buries the one fact the reader needs under
+    // three thousand characters of `concat`/`filter`/`reduce`. What the descriptor WILL render is the
+    // comparison, and for an opaque REFERENCE that is the declaration's bare name — a consume-time
+    // overlay replaces it with the shape it names, and `Box<string>` loses its argument the moment it
+    // does. Checker-rendered, never span text (§5.1), and omitted wherever the descriptor already says
+    // it, so an ordinary parameter serializes exactly as it always did.
+    const declared = typeNode === undefined ? undefined : readDeclaredTypeTextLayerAdapter({ node: typeNode });
+    const rendered =
+      type.kind === 'unknown' && type.typeRef !== undefined ? String(type.typeRef) : String(typeTextTransformer({ type }));
+    const declaredText = declared === undefined || String(declared) === rendered ? undefined : declared;
+
+    return paramDescriptorContract.parse({
       name: param.getName(),
-      type: typeDescriptorTransformer({ fact: readTypeFactLayerAdapter({ type: param.getType() }) }),
+      type,
+      ...(declaredText === undefined ? {} : { declaredText }),
+      ...(param.isOptional() ? { optional: true } : {}),
+      ...(param.isRestParameter() ? { rest: true } : {}),
+    });
+  });
+  const returnTypeNode = node.getReturnTypeNode();
+  const returnType = typeDescriptorTransformer({
+    fact: readTypeFactLayerAdapter({
+      type: node.getReturnType(),
+      ...(returnTypeNode === undefined ? {} : { typeNode: returnTypeNode }),
     }),
-  );
-  const returnType = typeDescriptorTransformer({ fact: readTypeFactLayerAdapter({ type: node.getReturnType() }) });
+  });
 
   const scoped = walkContextTransformer({ context, scopeSegment: name, params, exported });
   const body = node.getBody();

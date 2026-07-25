@@ -55,6 +55,12 @@ describe('typeDescriptorContract', () => {
       });
     });
 
+    it('VALID: {kind: "callable", text} => parses the callable descriptor carrying its signature text', () => {
+      const result = typeDescriptorContract.parse({ kind: 'callable', text: '(message: string) => string' });
+
+      expect(result).toStrictEqual({ kind: 'callable', text: '(message: string) => string' });
+    });
+
     it('VALID: {kind: "object", no typeName} => parses a keyless anonymous object', () => {
       const result = typeDescriptorContract.parse({
         kind: 'object',

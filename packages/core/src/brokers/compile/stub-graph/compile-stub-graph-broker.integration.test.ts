@@ -46,7 +46,12 @@ describe('compileStubGraphBroker (integration)', () => {
     // reader (it declares the type, it does not branch on it), so `readers` is exactly the two importers.
     // Asserted independent of the sad-path RUN verdict: the readers admit their branches undriven, but
     // the branched values are real demands the stitch collects regardless.
-    it('VALID: {Config declared in types.ts, mode read in one file and region in another} => one stub keyed on types.ts, mode+region demanded, retries unknown, both readers listed', async () => {
+    //
+    // Each demand is the branch LITERAL plus the representative for the open other arm — the SAME pair
+    // the same-file `branch-local` above demands for the same `=== 'a'` shape. The domain comes from the
+    // property's DECLARED type, which the definition blob carries, so where the type is declared makes
+    // no difference to what it demands.
+    it('VALID: {Config declared in types.ts, mode read in one file and region in another} => one stub keyed on types.ts, mode+region demanding their branch literal and the representative, retries unknown, both readers listed', async () => {
       const result = await stitch.stubCrossFileShape();
 
       expect({ objectStubs: result.index.objectStubs, envStubs: result.index.envStubs }).toStrictEqual({

@@ -10,7 +10,10 @@
  *   `gaps` rides here rather than stopping at the case set because a gap is Assayer telling a HUMAN
  *   what it could not drive, and it is worthless if only the cache knows. Required, not optional: a
  *   run reporting only its passes reads as complete coverage of the file, which is exactly the lie
- *   `darkSpots` exists to prevent.
+ *   `darkSpots` exists to prevent. Two producers fill the one channel — an INPUT no value of the
+ *   declared type can be built for, which the file's own analysis already carried, and an ACCESS the
+ *   runner cannot reach through, which the case-set projection adds — and they share one shape
+ *   because a reader owes the same act for both: supply what Assayer cannot derive.
  *
  *   `darkSpots` rides along for that same reason, and is a DIFFERENT admission from a gap. A gap is
  *   the caller's debt — Assayer understood the entry and could not construct it, so a harness fixes
@@ -33,17 +36,17 @@ import { z } from 'zod';
 
 import { caseResultContract } from '../case-result/case-result-contract';
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
+import { entryGapContract } from '../entry-gap/entry-gap-contract';
 import { lintEntryContract } from '../lint-entry/lint-entry-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
 import { runIdContract } from '../run-id/run-id-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { undrivenEntryContract } from '../undriven-entry/undriven-entry-contract';
 
 export const runResultContract = z.object({
   runId: runIdContract,
   relPath: relPathContract,
   cases: z.array(caseResultContract),
-  gaps: z.array(z.object({ name: symbolNameContract, reason: z.string().min(1).brand<'RunGapReason'>() })),
+  gaps: z.array(entryGapContract),
   darkSpots: z.array(darkSpotContract),
   undriven: z.array(undrivenEntryContract),
   // The fourth channel — patterns the repo should change, carried so `assayer unit` can fail on them

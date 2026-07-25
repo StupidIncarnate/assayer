@@ -28,6 +28,50 @@ describe('readCalleeLayerAdapter', () => {
 
       expect(result).toStrictEqual({ target: 'local', name: 'inner', startLine: 1 });
     });
+
+    it('VALID: {a call to a const-bound arrow} => a local link, the dominant function style resolving like any other', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({
+          source:
+            'const inner = (n: number): string => "x";\n' +
+            'export const outer = (v: number): string => inner(v);\n',
+        }),
+      });
+
+      expect(result).toStrictEqual({ target: 'local', name: 'inner', startLine: 1 });
+    });
+
+    it('VALID: {a call to a const-bound function expression} => a local link on the same terms', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({
+          source:
+            'const inner = function (n: number): string {\n  return "x";\n};\n' +
+            'export const outer = (v: number): string => inner(v);\n',
+        }),
+      });
+
+      expect(result).toStrictEqual({ target: 'local', name: 'inner', startLine: 1 });
+    });
+
+    // The scope the walk opened sits on the ARROW, not on the binding, so the line the link carries has
+    // to be read there — otherwise a follower's `name + startLine` join finds no scope record at all.
+    it('VALID: {a binding whose arrow starts on the next line} => the line of the arrow, not of the binding', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({
+          source:
+            'const inner =\n  (n: number): string => "x";\n' +
+            'export const outer = (v: number): string => inner(v);\n',
+        }),
+      });
+
+      expect(result).toStrictEqual({ target: 'local', name: 'inner', startLine: 2 });
+    });
   });
 
   describe('a call to an imported name', () => {
@@ -93,11 +137,21 @@ describe('readCalleeLayerAdapter', () => {
       expect(result).toStrictEqual({ target: 'unresolved' });
     });
 
-    it('VALID: {an arrow bound to a const} => unresolved, a shape v1 does not drive through its caller', () => {
+    it('VALID: {a const bound to a non-function} => unresolved, calling it is not a call to a scope', () => {
       readCalleeLayerAdapterProxy();
 
       const result = readCalleeLayerAdapter({
-        callee: calleeOf({ source: 'const f = (): void => {};\nexport const q = 1;\nf();\n' }),
+        callee: calleeOf({ source: 'const f = 5;\nexport const q = 1;\nf();\n' }),
+      });
+
+      expect(result).toStrictEqual({ target: 'unresolved' });
+    });
+
+    it('VALID: {a let declared with no initializer} => unresolved, there is no function-like node to key on', () => {
+      readCalleeLayerAdapterProxy();
+
+      const result = readCalleeLayerAdapter({
+        callee: calleeOf({ source: 'let f: () => void;\nexport const q = 1;\nf();\n' }),
       });
 
       expect(result).toStrictEqual({ target: 'unresolved' });

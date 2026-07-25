@@ -37,6 +37,7 @@ import { pathBasenameAdapter } from '../../../adapters/path/basename/path-basena
 
 import { compileResolveGraphBroker } from '../resolve-graph/compile-resolve-graph-broker';
 import { compileStubGraphBroker } from '../stub-graph/compile-stub-graph-broker';
+import { compileHarnessGraphBroker } from '../harness-graph/compile-harness-graph-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { stubOverlayReconcileBroker } from '../../stub-overlay/reconcile/stub-overlay-reconcile-broker';
 import { stubContradictionsTransformer } from '../../../transformers/stub-contradictions/stub-contradictions-transformer';
@@ -239,17 +240,43 @@ export const compileRunBroker = async ({
   // over the guards the stub stitch gathered from the same blobs). The overlay is in no hash, so the
   // derived cache written above stays valid — only the run fails, so the human rectifies the overlay
   // and reruns against an unchanged, already-warm cache.
+  // The harness stitch: the THIRD derived index, over the files classified out of the analysed surface.
+  // It runs beside the stub stitch on the same collision rule (stable first, current last) and carries
+  // its own `harnessHash` over the harness files' bytes, because neither the layout nor the tsconfig
+  // moves when a harness is edited — so that hash is what makes a harness-only edit rebuild it. Its
+  // validation failures are P1s of the same class as a broken import.
+  if (stable !== undefined && resolvedStable !== undefined) {
+    await compileHarnessGraphBroker({
+      configDir,
+      namespace: String(stable.resultEntry.namespace),
+      blobsDir,
+      resolvedIndex: resolvedStable.index,
+      files: stable.manifestNamespace.files,
+      harnesses: stable.harnesses,
+    });
+  }
+
+  const currentHarness = await compileHarnessGraphBroker({
+    configDir,
+    namespace: String(currentBranch),
+    blobsDir,
+    resolvedIndex: resolved.index,
+    files: currentProcessed.index,
+    harnesses: currentPlan.harnesses,
+  });
+
   const overlay = await stubOverlayLoadBroker({ repoRoot: String(root) });
-  const overlayErrors = [
+  const stitchErrors = [
     ...stubOverlayReconcileBroker({ index: currentStub.index, overlays: overlay }),
     ...stubContradictionsTransformer({ guards: currentStub.guards, overlays: overlay }),
+    ...currentHarness.errors,
   ].map((error) => ({
     namespace: namespaceNameContract.parse(String(currentBranch)),
     ...error,
   }));
 
-  if (overlayErrors.length > 0) {
-    return compileResultContract.parse({ status: 'errors', results, errors: overlayErrors });
+  if (stitchErrors.length > 0) {
+    return compileResultContract.parse({ status: 'errors', results, errors: stitchErrors });
   }
 
   return compileResultContract.parse({ status: 'ok', results, errors: [] });

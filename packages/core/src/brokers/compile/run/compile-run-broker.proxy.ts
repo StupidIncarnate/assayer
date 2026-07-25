@@ -1,5 +1,5 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { ResolvedIndexStub, StubIndexStub, StubOverlayStub } from '@assayer/shared/contracts';
+import { HarnessIndexStub, ResolvedIndexStub, StubIndexStub, StubOverlayStub } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
 import { PropertyGuardStub } from '../../../contracts/property-guard/property-guard.stub';
@@ -15,6 +15,8 @@ import { compileResolveGraphBroker } from '../resolve-graph/compile-resolve-grap
 import { compileResolveGraphBrokerProxy } from '../resolve-graph/compile-resolve-graph-broker.proxy';
 import { compileStubGraphBroker } from '../stub-graph/compile-stub-graph-broker';
 import { compileStubGraphBrokerProxy } from '../stub-graph/compile-stub-graph-broker.proxy';
+import { compileHarnessGraphBroker } from '../harness-graph/compile-harness-graph-broker';
+import { compileHarnessGraphBrokerProxy } from '../harness-graph/compile-harness-graph-broker.proxy';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
 import { stubOverlayReconcileBrokerProxy } from '../../stub-overlay/reconcile/stub-overlay-reconcile-broker.proxy';
@@ -31,6 +33,7 @@ export const compileRunBrokerProxy = (): {
   resolvesWithError: (params: { relPath: string; line: number; column: number; message: string }) => void;
   overlayStale: () => void;
   overlayContradicts: () => void;
+  harnessInvalid: (params: { relPath: string; message: string }) => void;
   getWrittenManifest: () => unknown;
   wasManifestWritten: () => boolean;
   getProcessedFileCount: () => FileCount;
@@ -49,12 +52,15 @@ export const compileRunBrokerProxy = (): {
   compileResolveGraphBrokerProxy();
   resolvedIndexWriteBrokerProxy();
   compileStubGraphBrokerProxy();
+  compileHarnessGraphBrokerProxy();
   const resolveHandle = registerMock({ fn: compileResolveGraphBroker });
   const resolvedWriteHandle = registerMock({ fn: resolvedIndexWriteBroker });
   const stubGraphHandle = registerMock({ fn: compileStubGraphBroker });
+  const harnessGraphHandle = registerMock({ fn: compileHarnessGraphBroker });
   resolveHandle.mockResolvedValue({ index: ResolvedIndexStub(), errors: [] });
   resolvedWriteHandle.mockResolvedValue({ success: true });
   stubGraphHandle.mockResolvedValue({ index: StubIndexStub(), guards: [] });
+  harnessGraphHandle.mockResolvedValue({ index: HarnessIndexStub({ harnesses: [] }), errors: [] });
 
   // The overlay LOAD is replaced wholesale (its own tests cover reading `assayer/stubs/`); it defaults
   // to no committed overlay. The overlay RECONCILE runs REAL against the mocked current stub index, so
@@ -127,6 +133,14 @@ export const compileRunBrokerProxy = (): {
     overlayContradicts: (): void => {
       stubGraphHandle.mockResolvedValue({ index: StubIndexStub(), guards: [PropertyGuardStub()] });
       overlayLoadHandle.mockResolvedValue([StubOverlayStub()]);
+    },
+    // A committed harness whose declaration the stitch rejected — the third producer on the same
+    // errors[] channel as a broken import and a stale overlay.
+    harnessInvalid: ({ relPath, message }: { relPath: string; message: string }): void => {
+      harnessGraphHandle.mockResolvedValue({
+        index: HarnessIndexStub({ harnesses: [] }),
+        errors: [{ relPath, line: 1, column: 1, message }],
+      });
     },
     getWrittenManifest: (): unknown => manifestProxy.getWrittenManifest(),
     wasManifestWritten: (): boolean => manifestProxy.wasWritten(),

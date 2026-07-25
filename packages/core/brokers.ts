@@ -38,8 +38,12 @@ export * from './src/brokers/run/find/run-find-broker';
 export * from './src/brokers/run/console-save/run-console-save-broker';
 export * from './src/brokers/run/console-find/run-console-find-broker';
 
+export * from './src/brokers/param-type/resolve/param-type-resolve-broker';
+
 export * from './src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
 export * from './src/brokers/compose/cross-file-map/compose-cross-file-map-broker';
 
 export * from './src/brokers/stub/realize/stub-realize-broker';
 export * from './src/brokers/stub-overlay/load/stub-overlay-load-broker';
+
+export * from './src/brokers/harness/realize/harness-realize-broker';

@@ -50,6 +50,14 @@ describe('collectNamedObjectTypesTransformer', () => {
       expect(collectNamedObjectTypesTransformer({ descriptor: TypeDescriptorStub({ kind: 'number' }) })).toStrictEqual([]);
     });
 
+    it('EMPTY: {a callable} => no declared types', () => {
+      expect(
+        collectNamedObjectTypesTransformer({
+          descriptor: TypeDescriptorStub({ kind: 'callable', text: '(message: string) => string' }),
+        }),
+      ).toStrictEqual([]);
+    });
+
     it('VALID: {anonymous object wrapping a named object} => only the named nested shape', () => {
       const result = collectNamedObjectTypesTransformer({
         descriptor: TypeDescriptorStub({

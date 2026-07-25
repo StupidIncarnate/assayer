@@ -1,14 +1,19 @@
 /**
  * PURPOSE: Desugars one `switch` into eq-branches — the discriminant's symbol name, one case info per
- *   string/number literal `case` (its value, its projection token, and the coverage ID of the
- *   equivalent `discriminant === literal` branch), plus the `default` clause. This is the ONE place a
- *   case clause is read, so no two callers can desugar a switch differently.
- *   Non-literal cases (enum-member references) and fallthrough are not desugared yet — they are
- *   skipped rather than guessed at.
+ *   `case` clause (its projection token, the coverage ID of the equivalent `discriminant === <case>`
+ *   branch, and the case's literal VALUE when the parse can read one), plus the `default` clause. This
+ *   is the ONE place a case clause is read, so no two callers can desugar a switch differently.
+ *
+ *   EVERY case clause yields an info, including one whose expression is not a literal (an enum member,
+ *   an imported constant). Its `literalValue` is absent, so the branch it becomes carries no
+ *   constraint and `derive-cases` admits it UNDRIVEN — which is honest. Skipping such a clause was
+ *   not: the clause was never descended, its exits never emitted, and the `default` lost the else that
+ *   guards it, so a case predicting the default reached the skipped clause's return instead and the
+ *   run failed against correct code. Fallthrough is still not desugared.
  *
  * USAGE:
  * desugarSwitchLayerAdapter({ switchStatement, scopePath: ['*module*', 'routeLabel'] });
- * // Returns { discName: 'method', caseInfos: [{ clause, literalValue: 'get', literalToken: 'str:get', branchCoverageId }], defaultClause }
+ * // Returns { discName: 'method', caseInfos: [{ clause, literalValue: 'get', caseToken: 'str:get', branchCoverageId }], defaultClause }
  */
 import { Node } from 'ts-morph';
 import type { CaseClause, DefaultClause, SwitchStatement } from 'ts-morph';
@@ -23,8 +28,8 @@ import { projectNodeLayerAdapter } from './project-node-layer-adapter';
 
 export interface SwitchCaseInfo {
   clause: CaseClause;
-  literalValue: RepresentativeValue;
-  literalToken: AstProjection;
+  literalValue?: RepresentativeValue;
+  caseToken: AstProjection;
   branchCoverageId: CoverageId;
 }
 
@@ -52,19 +57,26 @@ export const desugarSwitchLayerAdapter = ({
       return [];
     }
     const caseExpr = clause.getExpression();
-    if (!Node.isStringLiteral(caseExpr) && !Node.isNumericLiteral(caseExpr)) {
-      return [];
-    }
-    const literalValue = representativeValueContract.parse(caseExpr.getLiteralValue());
-    const literalToken = literalTokenTransformer({ value: literalValue });
+    const literalValue =
+      Node.isStringLiteral(caseExpr) || Node.isNumericLiteral(caseExpr)
+        ? representativeValueContract.parse(caseExpr.getLiteralValue())
+        : undefined;
+    // The identity of the arm, literal or not. A literal keys on its VALUE through the one token
+    // format; anything else keys on its structural projection, the same kinds-and-symbols identity
+    // every other coverage ID uses — never its source text.
+    const caseToken =
+      literalValue === undefined
+        ? projectNodeLayerAdapter({ node: caseExpr })
+        : literalTokenTransformer({ value: literalValue });
+
     return [
       {
         clause,
-        literalValue,
-        literalToken,
+        ...(literalValue === undefined ? {} : { literalValue }),
+        caseToken,
         branchCoverageId: coverageIdTransformer({
           scopePath,
-          segment: `switch:${discProjection},EqualsEqualsEqualsToken,${literalToken}`,
+          segment: `switch:${discProjection},EqualsEqualsEqualsToken,${caseToken}`,
         }),
       },
     ];

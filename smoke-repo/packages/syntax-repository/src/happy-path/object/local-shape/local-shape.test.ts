@@ -11,6 +11,9 @@ describe('object / local-shape — a branchless function over a locally-declared
   // The param types as an OBJECT enumerating the interface's full property list, sorted by name — the
   // walk reads a same-file declared shape rather than dropping it into an opaque `unknown`. Branchless,
   // so one case for the one exit, asserting only that it REACHES the exit (P4).
+  //
+  // The arrange is the payoff of reading that shape: `cfg` is an OBJECT binding carrying a value for
+  // every property the interface declares, so `cfg.mode` reads a string the case actually supplied.
   it('VALID: {export function pick(cfg: Config) { return cfg.mode }} => param typed as object Config with its properties, one derived case', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
@@ -41,7 +44,7 @@ describe('object / local-shape — a branchless function over a locally-declared
         cases: [
           {
             reachesPath: ['*module*/pick/return@top'],
-            arrange: [{ kind: 'param', param: 'cfg', value: 'abc123' }],
+            arrange: [{ kind: 'object', param: 'cfg', value: { mode: 'abc123', retries: 7 } }],
             salient: true,
           },
         ],

@@ -28,6 +28,19 @@ const CROSS_FILE_GUARDS_SPECIMEN = 'packages/syntax-repository/src/sad-path/unre
 // `smoke-repo/assayer/stubs/`. Only a real run proves the overlay reaches the merged stub view and a
 // human-supplied value becomes an arrange a case actually executes.
 const BRANCH_LOCAL_SPECIMEN = 'packages/syntax-repository/src/happy-path/object/branch-local/branch-local.ts';
+// The harness PAIR — byte for byte the same source, one with a committed `<basename>.harness.ts` beside
+// it and one without. Only a real run proves the whole chain the values travel: the shim REQUIREs the
+// harness through the same ts-jest transform the subject goes through, Jest maps `@assayer/core` to the
+// run-side registrar so the registration lands where the shim reads it, and the interpreter walks the
+// key path and applies the value positionally.
+const INPUT_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/input-gap/callback-param/callback-param.ts';
+const HARNESS_CALLBACK_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/callback-param/callback-param.ts';
+const HARNESS_OBJECT_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/object-param/object-param.ts';
+
+const AUDIT_THEN = '*module*/audit/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#then';
+const AUDIT_ELSE = '*module*/audit/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
+const EMIT_THEN = '*module*/emit/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#then';
+const EMIT_ELSE = '*module*/emit/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
 
 // Every eponymous ROOT on disk paired with the bucket its folder declares — not the handful anyone
 // thought to name. Walked rather than written down: a literal list goes stale the moment someone adds
@@ -140,6 +153,114 @@ describe('runUnitBroker (integration)', () => {
           [{ kind: 'object', param: 'config', value: { mode: 'dev' } }],
         ],
       });
+    });
+  });
+
+  // The whole harness chain, END TO END, and the only place it runs together: the compile's key
+  // inventory, the shim's `require` of the harness through ts-jest, the run-side registrar the mapped
+  // `@assayer/core` resolves to, and the interpreter that walks `inputs.<entry>.<param>` back to a live
+  // value. Every link is separately unit-tested; NONE of that proves they meet, and the way they fail to
+  // meet is silent — two module instances mean a declaration nobody collected and an argument of
+  // `undefined`, which is a verdict about an input nobody supplied.
+  describe('a colocated harness driving a real run', () => {
+    const engine = runUnitHarness();
+
+    // The control. Same source as the harnessed twin below, with no harness beside it: the seam refuses
+    // `report`, the entry derives nothing, and the invoice rides the artifact. Without this the pair
+    // below proves only that a file with a harness runs — not that the harness is what made it run.
+    it('VALID: {the same source with NO harness} => zero cases and the invoice on the artifact', async () => {
+      const result = await engine.run({ relPath: INPUT_GAP_SPECIMEN, runId: 'r-input-gap' });
+
+      expect({
+        cases: result.cases,
+        gaps: result.gaps.map((gap) => String(gap.name)),
+        undriven: result.undriven,
+        lints: result.lints,
+      }).toStrictEqual({ cases: [], gaps: ['audit'], undriven: [], lints: [] });
+    });
+
+    // The payoff. `audit` CALLS what it is handed on both arms — `report('over')` / `report('under')` —
+    // so anything that is not the author's own function throws and the case comes back `errored` with
+    // nothing observed. Two `passed` verdicts whose observed path IS the predicted one are therefore the
+    // evidence that the value resolved at run time was the live callback the harness file registered,
+    // and the arrange shows the key path rather than a value because that is all the case ever carries.
+    it('VALID: {a colocated harness supplying the refused callback} => both cases pass with the live value bound to its key path', async () => {
+      const result = await engine.run({ relPath: HARNESS_CALLBACK_SPECIMEN, runId: 'r-harness-callback' });
+
+      expect(
+        result.cases.map((testCase) => ({
+          status: String(testCase.status),
+          arrange: testCase.testCase.arrange,
+          predicted: testCase.testCase.reachesPath.map(String),
+          observed: testCase.observedPath.map(String),
+        })),
+      ).toStrictEqual([
+        {
+          status: 'passed',
+          arrange: [
+            { kind: 'param', param: 'size', value: 11 },
+            { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+          ],
+          predicted: [AUDIT_THEN],
+          observed: [AUDIT_THEN],
+        },
+        {
+          status: 'passed',
+          arrange: [
+            { kind: 'param', param: 'size', value: 10 },
+            { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
+          ],
+          predicted: [AUDIT_ELSE],
+          observed: [AUDIT_ELSE],
+        },
+      ]);
+    });
+
+    // The same chain carrying a whole SHAPE rather than a bare function. `emit` dereferences the value
+    // and calls a member of it (`sink.write('over')`), so a passing verdict here says more than the
+    // callback pair does: the object that reached the code was the author's own literal, with its method
+    // still attached — nothing a key path resolved to `undefined`, or serialized through the case set,
+    // could survive.
+    it('VALID: {a colocated harness supplying a whole object} => both cases pass with the shape bound to one key path', async () => {
+      const result = await engine.run({ relPath: HARNESS_OBJECT_SPECIMEN, runId: 'r-harness-object' });
+
+      expect(
+        result.cases.map((testCase) => ({
+          status: String(testCase.status),
+          arrange: testCase.testCase.arrange,
+          observed: testCase.observedPath.map(String),
+        })),
+      ).toStrictEqual([
+        {
+          status: 'passed',
+          arrange: [
+            { kind: 'param', param: 'size', value: 11 },
+            { kind: 'harness', param: 'sink', key: 'inputs.emit.sink' },
+          ],
+          observed: [EMIT_THEN],
+        },
+        {
+          status: 'passed',
+          arrange: [
+            { kind: 'param', param: 'size', value: 10 },
+            { kind: 'harness', param: 'sink', key: 'inputs.emit.sink' },
+          ],
+          observed: [EMIT_ELSE],
+        },
+      ]);
+    });
+
+    // The gap is PAID, not reprinted: a run that bought two passing cases must not also bill the reader
+    // for the input that bought them, and nothing may arrive on another channel in its place.
+    it('VALID: {a colocated harness supplying the refused callback} => the artifact carries no admission at all', async () => {
+      const result = await engine.run({ relPath: HARNESS_CALLBACK_SPECIMEN, runId: 'r-harness-paid' });
+
+      expect({
+        gaps: result.gaps,
+        undriven: result.undriven,
+        darkSpots: result.darkSpots,
+        lints: result.lints,
+      }).toStrictEqual({ gaps: [], undriven: [], darkSpots: [], lints: [] });
     });
   });
 

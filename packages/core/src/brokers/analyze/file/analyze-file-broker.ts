@@ -10,6 +10,18 @@
  *   are where those scopes stop — a private helper is never projected as one, so there is nothing
  *   there to filter and no way to notice it is gone.
  *
+ *   A GAP comes from the DERIVATION instead, and that is the only place it can: it is the fill seam
+ *   refusing a parameter, which nothing knows until a case asks for a value. The file admits it here
+ *   rather than at run time so an entry whose inputs cannot be built stops reading as an entry with
+ *   nothing to test. Every driving route reaches that seam, so every route's refusals arrive here too —
+ *   the entry's own derivation's, plus the ones a funnelled private or callback hit on its behalf.
+ *
+ *   A GAP takes PRECEDENCE over an UNDRIVEN admission on the same entry. They stay separate channels
+ *   saying separate things; this only decides which is printed. An entry Assayer cannot construct an
+ *   input for cannot be CALLED, so it has nothing to say about which branch it would steer — telling the
+ *   reader to make the deciding value a parameter, beside telling them to supply an input, is two
+ *   contradictory next actions for one entry. The gap is the one that is actionable now.
+ *
  *   It takes the WALK rather than source on purpose: the compile pipeline already walked the file to
  *   build its map, and parsing a second time here is what the single-parse seam exists to avoid.
  *   Returns an empty analysis when the source failed to parse — the pipeline already reports the
@@ -17,11 +29,11 @@
  *
  * USAGE:
  * analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
- * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], darkSpots: [...], undriven: [...] }
+ * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], gaps: [...], darkSpots: [...], undriven: [...] }
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 import { entryLabelContract, fileAnalysisContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { FileAnalysis } from '@assayer/shared/contracts';
+import type { EntryLabel, FileAnalysis, SymbolName, TypeText } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
@@ -31,6 +43,7 @@ import { declaredTypesProjectionTransformer } from '../../../transformers/declar
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
 import { followCallsTransformer } from '../../../transformers/follow-calls/follow-calls-transformer';
+import { inputGapTransformer } from '../../../transformers/input-gap/input-gap-transformer';
 import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
 import { undrivenProjectionTransformer } from '../../../transformers/undriven-projection/undriven-projection-transformer';
 import { unreachableLintTransformer } from '../../../transformers/unreachable-lint/unreachable-lint-transformer';
@@ -39,7 +52,15 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   const extracted = analysisProjectionTransformer({ walked });
 
   if (!extracted.success) {
-    return fileAnalysisContract.parse({ functions: [], enrichment: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
+    return fileAnalysisContract.parse({
+      functions: [],
+      enrichment: [],
+      gaps: [],
+      darkSpots: [],
+      undriven: [],
+      lints: [],
+      declaredTypes: [],
+    });
   }
 
   // A caller's opaque `if (helper(x))` guard is composed with the same-file predicate it calls BEFORE
@@ -73,6 +94,21 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // line, and they REPLACE the host's plain derived cases here — the host becomes the only entry.
   const funnelByHost = new Map(followed.funnels.map((funnel) => [`${String(funnel.host)}@${String(funnel.hostLine)}`, funnel.cases]));
 
+  // The fill seam's refusals from every DRIVING route, grouped by the entry that owes the invoice. A
+  // funnelled private or callback is no entry of its own, so its refusal is filed against the host a
+  // reader can drive and carries `owner` naming where the parameter is actually declared.
+  const followedRefusals = new Map<SymbolName, { param: SymbolName; type: TypeText; owner?: EntryLabel }[]>();
+  followed.refusals.forEach((refusal) => {
+    const existing = followedRefusals.get(refusal.entryName) ?? [];
+
+    existing.push({
+      param: refusal.param,
+      type: refusal.type,
+      ...(refusal.owner === undefined ? {} : { owner: refusal.owner }),
+    });
+    followedRefusals.set(refusal.entryName, existing);
+  });
+
   // Every walk exit keyed by its coverage ID, so a funnel entry can name the NESTED scope exits its
   // cases thread through — exits that belong to a callback or a returned private, not to the surface
   // itself. Straight off the walk's scope records, so each is a real ExitNode (coverageId + line +
@@ -83,9 +119,13 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
 
   const functions = [
     ...derived.map(({ fn, result }) => {
+      // The entry's own return comparison rides the analysis beside its cases: a consume-time overlay
+      // re-derives from what the analysis says, and one that cannot see this axis derives fewer cases
+      // than were derived here — a branchless predicate's single fill in place of its true/false pair.
+      const predicate = fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature };
       const funnelCases = funnelByHost.get(`${String(fn.entry.name)}@${String(fn.entry.line)}`);
       if (funnelCases === undefined) {
-        return { entry: fn.entry, branches: fn.branches, exits: fn.exits, cases: result.cases };
+        return { entry: fn.entry, branches: fn.branches, exits: fn.exits, cases: result.cases, ...predicate };
       }
 
       // A funnel entry's cases reach a nested scope's exit BEFORE the surface's own return, so their
@@ -105,7 +145,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
         ]).values(),
       ];
 
-      return { entry: fn.entry, branches: fn.branches, exits, cases: funnelCases };
+      return { entry: fn.entry, branches: fn.branches, exits, cases: funnelCases, ...predicate };
     }),
     ...followed.followedEntries,
   ];
@@ -145,6 +185,31 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
       ? []
       : undrivenBranchTransformer({ entryName: fn.entry.name, undrivenBranches: result.undrivenBranches }),
   );
+
+  // The INPUT gaps, one per entry: the entry's own refusals concatenated with the ones a driving route
+  // hit on its behalf (a funnelled private's, a callback's). `input-gap` de-duplicates on (declaring
+  // scope, parameter), so a refusal both channels report is invoiced once.
+  const gaps = derived.flatMap(({ fn, result }) =>
+    inputGapTransformer({
+      entryName: fn.entry.name,
+      unfillable: [...result.unfillable, ...(followedRefusals.get(fn.entry.name) ?? [])],
+    }),
+  );
+  // A followed entry the projection does not carry — a `through-caller` private — invoices under its own
+  // name, since it IS a named entry a reader sees and its refusals belong to its own signature.
+  const derivedNames = new Set(derived.map(({ fn }) => String(fn.entry.name)));
+  const followedGaps = [...followedRefusals.entries()].flatMap(([entryName, unfillable]) =>
+    derivedNames.has(String(entryName)) ? [] : inputGapTransformer({ entryName, unfillable }),
+  );
+
+  // PRECEDENCE, never a merge: an entry that carries an INPUT gap has its undriven admissions dropped.
+  // The two channels stay separate and both keep their own meaning — but an entry Assayer cannot even
+  // CALL has nothing to say about which branch it would steer, so "make the deciding value a parameter"
+  // is advice about a call that cannot happen, printed next to "supply this input first". Two remedies
+  // for one entry is worse than one: the reader has to guess which act comes first. The gap wins because
+  // it is the one that is actionable now, and its own text promises that anything still in the way is
+  // reported on its own line — which is exactly what happens the moment the input is supplied.
+  const gappedNames = new Set([...gaps, ...followedGaps].map((gap) => String(gap.name)));
 
   // A module scope's lint reads by its LABEL, never the internal `*module*`: the reader meets the file
   // basename (or its single export), exactly as the undriven admission does. A named entry keeps its
@@ -198,11 +263,19 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   return fileAnalysisContract.parse({
     functions,
     enrichment,
+    // The CALLER's debt, and the one admission that rides here because the derivation asked for a value
+    // and was refused: a parameter no value of the declared type can be built for. It rides the ANALYSIS
+    // rather than waiting for a run, because the reads-as-complete lie lives here — an entry that
+    // silently derives nothing is byte-identical to one with nothing to test.
+    gaps: [...gaps, ...followedGaps],
     darkSpots: darkSpotProjectionTransformer({ walked }),
     // Three sources feed the one channel: the whole welded MODULE scope from the walk, the fixed-arg
     // PRIVATE from the call graph, and the un-steerable BRANCH from the derivation. Separate questions,
-    // separate owners, never merged.
-    undriven: [...moduleUndriven, ...followed.undriven, ...branchUndriven],
+    // separate owners, never merged — and none of them is stated for an entry whose INPUT gap already
+    // told the reader what to do first (the precedence rule above).
+    undriven: [...moduleUndriven, ...followed.undriven, ...branchUndriven].filter(
+      (entry) => !gappedNames.has(String(entry.name)),
+    ),
     // Dead surface — a private nothing consumes — comes from the call graph; an unreachable exit comes
     // from the guard arithmetic, whether the guard is welded in the scope's own source or in a caller's
     // argument. All are the repo's debt rather than Assayer's, so all ride the lint channel rather than

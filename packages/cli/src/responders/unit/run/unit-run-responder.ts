@@ -28,8 +28,18 @@
  *   run because dead code is the REPO's debt, the party that can fix it. The report always names it;
  *   the severity decides whether the exit code does.
  *
+ *   A GAP fails the run on the same reasoning as the lint, pointed at the other party: `inputGaps:
+ *   'error'` is the default because a gap is the CALLER's debt — an input Assayer cannot construct, or
+ *   an entry the runner cannot reach through its access — and a harness the caller writes closes either.
+ *   Failing the build asks the one party who can act.
+ *
+ *   Every one of the three toggles governs the EXIT CODE alone. `off` and `warn` produce the same
+ *   report bytes, because a run that dropped an admission would print `1/1 passed` for a file with an
+ *   unconstructable input — indistinguishable from one with nothing left to say. The severity answers
+ *   "does this break the build", never "does the reader get told".
+ *
  * USAGE:
- * await UnitRunResponder({ configDir: '/repo', root: '/repo/smoke-repo', argv: ['src/a.ts'], darkSpots: 'warn', deadSurface: 'error' });
+ * await UnitRunResponder({ configDir: '/repo', root: '/repo/smoke-repo', argv: ['src/a.ts'], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' });
  * // Returns the report, or throws it when any case failed
  */
 import { runConsoleSaveBroker, runPathsBroker } from '@assayer/core/brokers';
@@ -47,12 +57,14 @@ export const UnitRunResponder = async ({
   argv,
   darkSpots,
   deadSurface,
+  inputGaps,
 }: {
   configDir: string;
   root: string;
   argv: readonly string[];
   darkSpots: string;
   deadSurface: string;
+  inputGaps: string;
 }): Promise<CliOutput> => {
   const paths = utilParseArgsAdapter({ argv }).map(String);
 
@@ -89,8 +101,9 @@ export const UnitRunResponder = async ({
   const failed = runs.some((run) => run.cases.some((testCase) => String(testCase.status) !== 'passed'));
   const darkened = darkSpots === 'error' && runs.some((run) => run.darkSpots.length > 0);
   const linted = deadSurface === 'error' && runs.some((run) => run.lints.length > 0);
+  const gapped = inputGaps === 'error' && runs.some((run) => run.gaps.length > 0);
 
-  if (failed || darkened || linted) {
+  if (failed || darkened || linted || gapped) {
     throw new CliExactOutputError({ message: String(report) });
   }
 

@@ -1,4 +1,4 @@
-import { BranchNodeStub, ExitNodeStub, symbolNameContract } from '@assayer/shared/contracts';
+import { BranchNodeStub, entryLabelContract, ExitNodeStub, symbolNameContract } from '@assayer/shared/contracts';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { funnelCasesTransformer } from './funnel-cases-transformer';
@@ -49,7 +49,8 @@ describe('funnelCasesTransformer', () => {
     it('VALID: {items.map((n) => …)} => empty, one per distinguished element, and the arm-crossing pair, each pathing through the surface exit', () => {
       const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
 
-      expect(result).toStrictEqual([
+      expect(result).toStrictEqual({
+        cases: [
         { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
         { reachesPath: ['cb/return@then', 'run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
         { reachesPath: ['cb/return@else', 'run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
@@ -58,7 +59,72 @@ describe('funnelCasesTransformer', () => {
           arrange: [{ kind: 'array', param: 'items', value: [6, 5] }],
           salient: true,
         },
-      ]);
+        ],
+        unfillable: [],
+      });
+    });
+  });
+
+  describe('a callback whose own parameter the fill seam refuses', () => {
+    // The callback folds INTO the surface, so it is no entry of its own — a parameter it declares that
+    // no value can be built for has nowhere else to be said. Dropped here, the surface derives only its
+    // empty-array case and reads as if the callback held nothing worth steering.
+    const SINK_CALLBACK = ScopeRecordStub({
+      scopePath: ['*module*', 'run', 'cb'],
+      name: 'cb',
+      exported: false,
+      access: { kind: 'unreachable' },
+      params: [{ name: 'sink', type: { kind: 'callable', text: '(m: string) => void' } }],
+      returnType: { kind: 'string' },
+      startLine: 2,
+      endLine: 5,
+      branches: [],
+      exits: [ExitNodeStub({ coverageId: 'cb/return@top', guardPath: [], line: 3 })],
+    });
+
+    const SURFACE = ScopeRecordStub({
+      scopePath: ['*module*', 'run'],
+      name: 'run',
+      params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
+      returnType: { kind: 'array', element: { kind: 'string' } },
+      startLine: 1,
+      endLine: 3,
+      branches: [],
+      exits: [SURFACE_EXIT],
+    });
+
+    it('VALID: {a callback param the seam refuses} => the refusal rides back, tagged with the label of the scope that declares it', () => {
+      const result = funnelCasesTransformer({
+        surface: SURFACE,
+        callbacks: [
+          {
+            callback: SINK_CALLBACK,
+            arrayParam: symbolNameContract.parse('items'),
+            label: entryLabelContract.parse('run › items.map((sink) => …) L2'),
+          },
+        ],
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
+        ],
+        unfillable: [{ param: 'sink', type: '(m: string) => void', owner: 'run › items.map((sink) => …) L2' }],
+      });
+    });
+
+    it('VALID: {an unlabelled callback} => the refusal is tagged with the callback`s own name', () => {
+      const result = funnelCasesTransformer({
+        surface: SURFACE,
+        callbacks: [{ callback: SINK_CALLBACK, arrayParam: symbolNameContract.parse('items') }],
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
+        ],
+        unfillable: [{ param: 'sink', type: '(m: string) => void', owner: 'cb' }],
+      });
     });
   });
 
@@ -80,7 +146,8 @@ describe('funnelCasesTransformer', () => {
     it('VALID: {surface also takes factor} => factor is filled representatively in every funnel case, in surface param order', () => {
       const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
 
-      expect(result).toStrictEqual([
+      expect(result).toStrictEqual({
+        cases: [
         {
           reachesPath: ['run/return@top'],
           arrange: [
@@ -113,7 +180,9 @@ describe('funnelCasesTransformer', () => {
           ],
           salient: true,
         },
-      ]);
+        ],
+        unfillable: [],
+      });
     });
   });
 
@@ -132,7 +201,7 @@ describe('funnelCasesTransformer', () => {
     it('EMPTY: {surface has no exits} => no funnel cases', () => {
       const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
 
-      expect(result).toStrictEqual([]);
+      expect(result).toStrictEqual({ cases: [], unfillable: [] });
     });
   });
 
@@ -151,7 +220,7 @@ describe('funnelCasesTransformer', () => {
     it('EMPTY: {no callbacks} => no funnel cases', () => {
       const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [] });
 
-      expect(result).toStrictEqual([]);
+      expect(result).toStrictEqual({ cases: [], unfillable: [] });
     });
   });
 
@@ -201,7 +270,8 @@ describe('funnelCasesTransformer', () => {
         ],
       });
 
-      expect(result).toStrictEqual([
+      expect(result).toStrictEqual({
+        cases: [
         {
           reachesPath: ['run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'array', param: 'others', value: [] }],
@@ -242,7 +312,9 @@ describe('funnelCasesTransformer', () => {
           arrange: [{ kind: 'array', param: 'items', value: [6, 5] }, { kind: 'array', param: 'others', value: [7] }],
           salient: true,
         },
-      ]);
+        ],
+        unfillable: [],
+      });
     });
   });
 });

@@ -1,8 +1,10 @@
 /**
- * PURPOSE: Handles a `switch` — emits one eq-branch per literal case and descends each clause with
- *   that case's guard appended. The `default` clause is guarded by the ELSE of every case at once,
- *   which is what lets case derivation intersect those constraints down to the single uncovered
- *   member of a union.
+ * PURPOSE: Handles a `switch` — emits one branch per `case` clause and descends each clause with that
+ *   case's guard appended. The `default` clause is guarded by the ELSE of every case at once, which is
+ *   what lets case derivation intersect those constraints down to the single uncovered member of a
+ *   union. A case whose expression the parse cannot read as a literal still gets its branch, carrying
+ *   an `unrecognized` predicate, so its clause is descended and its exits are emitted; the derivation
+ *   then admits that branch UNDRIVEN rather than mistaking the switch for a smaller one.
  *
  *   In TAIL position a clause that does not return is itself an exit — it falls out of the switch,
  *   and nothing runs after it — so it gets a guarded completion exit, exactly as an `if` arm does.
@@ -73,7 +75,10 @@ export const handleSwitchLayerAdapter = ({
         ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
         ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
         operandType,
-        predicate: { kind: 'eq', literal: caseInfo.literalValue },
+        // A case the parse could read as a literal is an equality on that value. One it could not
+        // (`case Sev.Low:`) names no value, so the predicate is `unrecognized` and the branch is
+        // admitted UNDRIVEN — never an equality against a value nobody has.
+        predicate: caseInfo.literalValue === undefined ? { kind: 'unrecognized' } : { kind: 'eq', literal: caseInfo.literalValue },
       },
       startLine: caseInfo.clause.getStartLineNumber(),
       endLine: caseInfo.clause.getEndLineNumber(),

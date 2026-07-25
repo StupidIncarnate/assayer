@@ -19,7 +19,9 @@ describe('optional-chain / basic — a single-level `a?.b` in a block return', (
           entry: {
             name: 'len',
             scopePath: ['*module*', 'len'],
-            params: [{ name: 's', type: { kind: 'string' } }],
+            // The checker collapses `string | null` to `string` in the hermetic walk, so the
+            // SIGNATURE's own rendering rides beside the descriptor for a P1 message to name.
+            params: [{ name: 's', type: { kind: 'string' }, declaredText: 'string | null' }],
             returnType: { kind: 'number' },
             line: 1,
             access: { kind: 'named' },

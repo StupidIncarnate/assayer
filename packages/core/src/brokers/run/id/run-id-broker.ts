@@ -10,14 +10,53 @@
  *   Keyed on relPath AND content: the path alone would collide across edits, so a stale run would
  *   answer for new code; the content alone would collide across files that happen to read the same.
  *
+ *   And keyed on the colocated HARNESS, because a harness is a second input to every case's RESULT:
+ *   the values it supplies are the arguments the entry actually runs on, so editing one changes what
+ *   the same bytes do. Discovery is the same conjunction every other harness reader uses — the
+ *   colocated basename plus the symbol gate — so a `*.harness.ts` that is some other tool's moves no
+ *   id, and a file with NO harness keys exactly as it always has: an absent ingredient contributes
+ *   nothing rather than a constant, which is what keeps every saved run of an unharnessed file valid.
+ *   The ingredient is a digest of the harness's own bytes, the same one the compile stitch folds into
+ *   the harness index for the same reason — neither the layout hash nor the tsconfig hash moves when a
+ *   file classified OUT of the analysed surface is edited.
+ *
  * USAGE:
- * runIdBroker({ relPath: 'src/a.ts', source: 'export const a = 1;\n' });
- * // Returns a RunId — the same one, for the same bytes, forever
+ * await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
+ * // Returns a RunId — the same one, for the same bytes and the same harness, forever
  */
-import { runIdContract } from '@assayer/shared/contracts';
+import { relPathContract, runIdContract } from '@assayer/shared/contracts';
 import type { RunId } from '@assayer/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
+import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
+import { typescriptHarnessGateAdapter } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 
-export const runIdBroker = ({ relPath, source }: { relPath: string; source: string }): RunId =>
-  runIdContract.parse(String(cryptoSha256Adapter({ content: `${relPath}\n${source}` })));
+export const runIdBroker = async ({
+  root,
+  relPath,
+  source,
+}: {
+  root: string;
+  relPath: string;
+  source: string;
+}): Promise<RunId> => {
+  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
+  const harnessSource = (await fsExistsAdapter({ path: harnessPath }))
+    ? String(await fsReadFileAdapter({ path: harnessPath }))
+    : undefined;
+  const harnessDigest =
+    harnessSource !== undefined && typescriptHarnessGateAdapter({ source: harnessSource })
+      ? String(cryptoSha256Adapter({ content: harnessSource }))
+      : undefined;
+
+  return runIdContract.parse(
+    String(
+      cryptoSha256Adapter({
+        content:
+          harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
+      }),
+    ),
+  );
+};

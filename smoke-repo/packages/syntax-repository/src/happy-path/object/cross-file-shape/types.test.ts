@@ -9,10 +9,11 @@ const relPath = 'src/happy-path/object/cross-file-shape/types.ts';
 
 describe('object / cross-file-shape — types.ts, the DEFINITION file whose declared Config the union splices onto', () => {
   // The definition file ENUMERATES the full `Config` shape into `declaredTypes` — the source the stub
-  // stitch reads to key the cross-file stub and splice every reader's per-property demands onto. It is
-  // enumerated because a same-file scope (`withDefaults`) uses it as a param; a bare interface with no
-  // local use would not enumerate in the hermetic walk. The passthrough is branchless, so it derives
-  // one case and admits nothing — this file is the type's definition, not one of its readers.
+  // stitch reads to key the cross-file stub and splice every reader's per-property demands onto. The
+  // DECLARATION is what enumerates it, so the shape is there whether or not anything in this file uses
+  // it. `withDefaults` is here to give the file a runnable entry: it is branchless, so it derives one
+  // case and admits nothing, which is what puts this file in happy-path. Its arrange is an OBJECT
+  // binding built from that same enumerated shape, one value per declared property.
   it('VALID: {export interface Config + withDefaults(config: Config)} => declaredTypes carries the full Config property list, one case, nothing admitted', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
 
@@ -36,7 +37,7 @@ describe('object / cross-file-shape — types.ts, the DEFINITION file whose decl
       cases: [
         {
           reachesPath: ['*module*/withDefaults/return@top'],
-          arrange: [{ kind: 'param', param: 'config', value: 'abc123' }],
+          arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123', retries: 7 } }],
           salient: true,
         },
       ],

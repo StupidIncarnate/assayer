@@ -1,6 +1,7 @@
 import { gitResolveCommitBrokerProxy } from '../../git/resolve-commit/git-resolve-commit-broker.proxy';
 import { gitLsTreeBrokerProxy } from '../../git/ls-tree/git-ls-tree-broker.proxy';
 import { gitCatFileBrokerProxy } from '../../git/cat-file/git-cat-file-broker.proxy';
+import { harnessClassifyBrokerProxy } from '../../harness/classify/harness-classify-broker.proxy';
 
 export const compilePlanStableBrokerProxy = (): {
   resolvesUnchanged: (params: { sha: string }) => void;
@@ -10,6 +11,7 @@ export const compilePlanStableBrokerProxy = (): {
   const resolveCommitProxy = gitResolveCommitBrokerProxy();
   const lsTreeProxy = gitLsTreeBrokerProxy();
   const catFileProxy = gitCatFileBrokerProxy();
+  harnessClassifyBrokerProxy();
 
   return {
     resolvesUnchanged: ({ sha }: { sha: string }): void => {
