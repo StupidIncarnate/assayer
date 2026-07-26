@@ -27,6 +27,13 @@
  *   UNDRIVEN once this gap stops suppressing it. Each of those states itself on its own line, so the
  *   promise is that the refusal ends, not that a test appears.
  *
+ *   `hasCases` says whether the SAME entry also derived at least one real case despite the refusal — a
+ *   truthy arm an object's own shape builds fine while its falsy arm needs a value nothing can build, or
+ *   any other bucket that never touches the refused parameter. "Derives no case" is a lie the moment one
+ *   exists, so the opening clause reads "derives a case, but not every one it could" instead; every other
+ *   sentence — which parameters, why, and the harness that closes it — stays the same, because the debt
+ *   is identical either way.
+ *
  * USAGE:
  * inputGapTransformer({ entryName: 'audit', unfillable: [{ param: 'report', type: '(m: string) => string' }] });
  * // Returns [{ name: 'audit', reason: '`audit` derives no case, because Assayer cannot construct…' }]
@@ -37,9 +44,14 @@ import type { EntryGap, EntryLabel, SymbolName, TypeText } from '@assayer/shared
 export const inputGapTransformer = ({
   entryName,
   unfillable,
+  hasCases = false,
 }: {
   entryName: SymbolName;
   unfillable: readonly { param: SymbolName; type: TypeText; owner?: EntryLabel | undefined }[];
+  // Whether the entry ALSO derived at least one real case alongside this refusal. Optional so a caller
+  // that has not threaded the fact through yet falls back to the prior "derives no case" wording — true
+  // for every producer that has, false or absent for one that has not caught up.
+  hasCases?: boolean;
 }): EntryGap[] => {
   if (unfillable.length === 0) {
     return [];
@@ -80,14 +92,17 @@ export const inputGapTransformer = ({
     entryGapContract.parse({
       name: entryName,
       reason:
-        `\`${String(entryName)}\` derives no case, because Assayer cannot construct an input it needs. ` +
-        'It builds inputs out of declared DATA — a scalar, a union, an array, or an object shape whose ' +
-        'every property is itself one — and refuses anything that bottoms out in a function or in a type ' +
+        `${hasCases
+          ? `\`${String(entryName)}\` derives a case, but not every one it could: Assayer cannot ` +
+            'construct an input it still needs. '
+          : `\`${String(entryName)}\` derives no case, because Assayer cannot construct an input it needs. ` 
+        }It builds inputs out of declared DATA — a scalar, a union, an array, or an object shape whose ` +
+        `every property is itself one — and refuses anything that bottoms out in a function or in a type ` +
         `carrying nothing but its name: ${refused}. Substituting a stand-in would be worse than deriving ` +
-        'nothing: code that CALLS the value throws on it, and code that merely measures it passes on ' +
-        'something nobody supplied. Assayer read the signature perfectly — this is not syntax it missed — ' +
-        'so the value is the caller\'s to supply. Colocate a harness with this file, the same basename ' +
-        'with a `.harness.ts` extension, and declare the input: `import { assayerHarness } from ' +
+        `nothing: code that CALLS the value throws on it, and code that merely measures it passes on ` +
+        `something nobody supplied. Assayer read the signature perfectly — this is not syntax it missed — ` +
+        `so the value is the caller's to supply. Colocate a harness with this file, the same basename ` +
+        `with a \`.harness.ts\` extension, and declare the input: \`import { assayerHarness } from ` +
         `'@assayer/core'; assayerHarness({ inputs: { ${inputs} } });\`. ` +
         `Assayer then builds them from that declaration instead of refusing them; anything else still ` +
         `standing between \`${String(entryName)}\` and a case is reported on its own line.`,

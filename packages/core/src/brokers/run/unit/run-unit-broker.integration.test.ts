@@ -36,6 +36,15 @@ const BRANCH_LOCAL_SPECIMEN = 'packages/syntax-repository/src/happy-path/object/
 const INPUT_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/input-gap/callback-param/callback-param.ts';
 const HARNESS_CALLBACK_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/callback-param/callback-param.ts';
 const HARNESS_OBJECT_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/object-param/object-param.ts';
+// A tail `if` with no else, whose only arm does not itself terminate. `handle-if` used to mint a
+// SECOND, always-firing completion for the `then` arm on top of the enclosing scope's own
+// unaccounted-for exit, so a real run observed BOTH probes firing on the `then` execution and the
+// case failed against correct code — an analyzer-level unit test cannot see two probes fire in one
+// execution, only a real run can.
+const TAIL_NO_ELSE_SPECIMEN = 'packages/syntax-repository/src/happy-path/if/no-else/no-else.ts';
+// The switch twin: a tail switch with no default, whose case clauses fall through rather than
+// returning. Same double-probe defect, one construct over.
+const SWITCH_NO_DEFAULT_SPECIMEN = 'packages/syntax-repository/src/happy-path/switch/no-default/no-default.ts';
 
 const AUDIT_THEN = '*module*/audit/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#then';
 const AUDIT_ELSE = '*module*/audit/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
@@ -98,6 +107,37 @@ describe('runUnitBroker (integration)', () => {
       const result = await engine.run({ relPath: NESTED_SPECIMEN, runId: 'r-nested' });
 
       expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed']);
+    });
+
+    // The defect this pins: with the fix, BOTH cases converge on the enclosing scope's own exit —
+    // condition true (the `then` arm falls through) and condition false (the missing else) reach the
+    // exact same physical continuation — so both PASS. Before the fix the `then` case predicted a
+    // second, `#then`-guarded completion that never matched what the run actually observed (the
+    // `then` arm's own probe, immediately followed by the enclosing one), and failed.
+    it('VALID: {a tail if with no else} => both cases pass, converging on the one enclosing exit', async () => {
+      const result = await engine.run({ relPath: TAIL_NO_ELSE_SPECIMEN, runId: 'r-tail-no-else' });
+
+      expect({
+        statuses: result.cases.map((testCase) => String(testCase.status)),
+        reachesPaths: result.cases.map((testCase) => testCase.testCase.reachesPath.map(String)),
+      }).toStrictEqual({
+        statuses: ['passed', 'passed'],
+        reachesPaths: [['*module*/classify/exit@top'], ['*module*/classify/exit@top']],
+      });
+    });
+
+    // The switch twin of the pin above: both cases converge on the enclosing scope's own exit rather
+    // than each case clause minting its own, always-firing completion.
+    it('VALID: {a tail switch with no default} => both cases pass, converging on the one enclosing exit', async () => {
+      const result = await engine.run({ relPath: SWITCH_NO_DEFAULT_SPECIMEN, runId: 'r-switch-no-default' });
+
+      expect({
+        statuses: result.cases.map((testCase) => String(testCase.status)),
+        reachesPaths: result.cases.map((testCase) => testCase.testCase.reachesPath.map(String)),
+      }).toStrictEqual({
+        statuses: ['passed', 'passed'],
+        reachesPaths: [['*module*/routeLabel/exit@top'], ['*module*/routeLabel/exit@top']],
+      });
     });
 
     // The Stage-C payoff: `greet` is driven and passes, while `unused` — a private nothing consumes —

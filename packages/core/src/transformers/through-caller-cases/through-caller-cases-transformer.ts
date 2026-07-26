@@ -26,13 +26,22 @@
  *   The CALLER's refusals are deliberately not repeated here: the caller is an entry in its own right
  *   and its own derivation already invoices them, and one parameter owes one invoice.
  *
+ *   `harness` is that refusal being CLOSED, named by the callee's OWN identity since that is what the
+ *   gap invoiced and what a harness declares. It answers the callee's OWN `deriveCasesTransformer` call
+ *   exactly as a directly-derived entry's harness would, so a supplied parameter binds instead of being
+ *   refused. The binding then rides the SAME rebase every steered value already takes —
+ *   `{ ...binding, param: param.name }` — onto the CALLER's own parameter slot, carrying the ORIGINAL key
+ *   path unchanged: the runner only ever calls the caller (`access.kind: 'through-caller'`), so the value
+ *   must be bound to an argument the caller's own signature actually has, never spliced onto its
+ *   argument list as an extra positional slot the signature has no room for.
+ *
  * USAGE:
  * throughCallerCasesTransformer({ callee, caller, call });
  * // Returns { analysis: FunctionAnalysis (entry.access { kind: 'through-caller', callerName }),
  * //   unreachableExits: [{ line, guardLines, welded? }, …], unfillable: [{ param, type }, …] }
  */
 import { derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, FunctionAnalysis, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { ArrangeBinding, FunctionAnalysis, SymbolName } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
@@ -46,10 +55,12 @@ export const throughCallerCasesTransformer = ({
   callee,
   caller,
   call,
+  harness,
 }: {
   callee: ScopeRecord;
   caller: ScopeRecord;
   call: CallSite;
+  harness?: { entry: SymbolName; params: readonly SymbolName[] };
 }): {
   analysis: FunctionAnalysis;
   unreachableExits: ReturnType<typeof deriveCasesTransformer>['unreachableExits'];
@@ -70,6 +81,8 @@ export const throughCallerCasesTransformer = ({
     // A branchless private predicate driven through its caller splits its true/false return the same
     // way a directly-analyzed one does — the callee's own comparison, never a recorded output (P4).
     ...(callee.predicateSignature === undefined ? {} : { returnPredicate: callee.predicateSignature }),
+    // A harness closing the callee's own refusal — see PURPOSE above.
+    ...(harness === undefined ? {} : { harness }),
   });
 
   // The caller parameters a call supplies, laid out in declaration order because the interpreter applies
@@ -77,24 +90,27 @@ export const throughCallerCasesTransformer = ({
   const callerParams = appliedParamsTransformer({ params: caller.params });
 
   const cases = derived.cases.flatMap((testCase) => {
-    const byCallerParam = new Map<SymbolName, RepresentativeValue>(
+    // Every binding the callee's own derivation produced for a STEERED param, keyed by the CALLER param
+    // that carries it — the whole binding, not just a value, so a harness key path rebases exactly as a
+    // scalar value does. Excludes `env`, which names no `param` to key by and never carries one.
+    const byCallerParam = new Map<SymbolName, Exclude<ArrangeBinding, { kind: 'env' }>>(
       testCase.arrange.flatMap((binding) => {
-        if (binding.kind !== 'param') {
+        if (binding.kind === 'env') {
           return [];
         }
         const callerParam = toCallerParam.get(binding.param);
-        return callerParam === undefined ? [] : [[callerParam, binding.value] as const];
+        return callerParam === undefined ? [] : [[callerParam, binding] as const];
       }),
     );
 
-    // A caller param the callee steers takes the mapped value as a scalar argument; every OTHER caller
+    // A caller param the callee steers takes the mapped binding under its OWN name; every OTHER caller
     // param is unsteered and filled through the seam — which can REFUSE, and then there is no value to
     // call the caller with, so the case is dropped rather than built on a placeholder.
     const arrange = callerParams.flatMap((param): ArrangeBinding[] => {
       const steered = byCallerParam.get(param.name);
 
       if (steered !== undefined) {
-        return [{ kind: 'param', param: param.name, value: steered }];
+        return [{ ...steered, param: param.name }];
       }
 
       const fill = fillParamTransformer({ param });

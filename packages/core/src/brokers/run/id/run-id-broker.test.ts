@@ -88,4 +88,15 @@ describe('runIdBroker', () => {
       expect(String(plain)).toBe('c73c5a78c49441e87716db0bd78ae3b2c0f5c1fa0c00c420f8ad7f32761c6931');
     });
   });
+
+  describe('the colocated harness cannot be read', () => {
+    it('ERROR: {a harness file exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+      const proxy = runIdBrokerProxy();
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
 });

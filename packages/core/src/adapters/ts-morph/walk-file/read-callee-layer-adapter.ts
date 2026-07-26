@@ -75,11 +75,7 @@ export const readCalleeLayerAdapter = ({ callee }: { callee: Node }): CalleeLink
       ? { name: declaration.getName(), node: initializer }
       : undefined;
 
-  if (
-    definition?.name === undefined ||
-    definition.name === '' ||
-    declaration.getSourceFile() !== callee.getSourceFile()
-  ) {
+  if (definition?.name === undefined || declaration.getSourceFile() !== callee.getSourceFile()) {
     return { target: 'unresolved' };
   }
 

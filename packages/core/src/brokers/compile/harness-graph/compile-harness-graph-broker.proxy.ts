@@ -1,5 +1,6 @@
 import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
+import { tsMorphReadHarnessValueTypesAdapterProxy } from '../../../adapters/ts-morph/read-harness-value-types/ts-morph-read-harness-value-types-adapter.proxy';
 import { typescriptLoadHarnessAdapterProxy } from '../../../adapters/typescript/load-harness/typescript-load-harness-adapter.proxy';
 import { harnessIndexWriteBrokerProxy } from '../../harness-index/write/harness-index-write-broker.proxy';
 
@@ -13,6 +14,7 @@ export const compileHarnessGraphBrokerProxy = (): {
   // their fs boundary, so the written content and tmp path can be read back.
   cryptoSha256AdapterProxy();
   typescriptLoadHarnessAdapterProxy();
+  tsMorphReadHarnessValueTypesAdapterProxy();
   const readFileProxy = fsReadFileAdapterProxy();
   const writeProxy = harnessIndexWriteBrokerProxy();
   writeProxy.succeeds();

@@ -11,6 +11,7 @@ import { runUnitBrokerProxy } from '../unit/run-unit-broker.proxy';
 export const runEachLayerBrokerProxy = (): {
   setupSource: ({ source }: { source: string }) => void;
   runCount: () => FileCount;
+  readThrows: ({ error }: { error: Error }) => void;
 } => {
   // Bare-called to satisfy enforce-proxy-child-creation. runUnitBroker is REPLACED wholesale below
   // rather than driven through its own proxy: both it and this broker read through
@@ -31,5 +32,10 @@ export const runEachLayerBrokerProxy = (): {
       readHandle.mockResolvedValue(source);
     },
     runCount: (): FileCount => fileCountContract.parse(runHandle.mock.calls.length),
+    // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and the
+    // like) propagates to the caller unmodified. This stages that rejection.
+    readThrows: ({ error }: { error: Error }): void => {
+      readHandle.mockRejectedValueOnce(error);
+    },
   };
 };

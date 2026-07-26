@@ -103,4 +103,16 @@ describe('compilePlanCurrentBroker', () => {
       expect(result).toStrictEqual({ targets: [], harnesses: [] });
     });
   });
+
+  describe('a target file that cannot be read from disk', () => {
+    it("ERROR: {root: one included file, fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+      const proxy = compilePlanCurrentBrokerProxy();
+      proxy.queueDir({ entries: [{ name: 'a.ts', isDirectory: false }] });
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(compilePlanCurrentBroker({ root: '/repo/smoke-repo' })).rejects.toThrow(
+        /^EACCES: permission denied$/u
+      );
+    });
+  });
 });

@@ -49,13 +49,23 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
   };
 
   // An ARRAY parameter takes the array BINDING, so the run passes a real array and the render shows one.
-  // `array-arrange` asks the same rule of the ELEMENT that the guard asks of the whole array type.
+  // `array-arrange` asks the same rule of the ELEMENT that the guard asks of the whole array type. A
+  // REST parameter's array carries `rest: true`, so the interpreter SPREADS it across the tail
+  // positional slots it stands for instead of handing it over as one argument.
   if (type.kind === 'array') {
     const elements = arrayArrangeTransformer({ element: type.element, count: arrayCardinalityStatics.counts.one });
 
     return elements === undefined
       ? unfillable
-      : { kind: 'filled', binding: arrangeBindingContract.parse({ kind: 'array', param: param.name, value: elements }) };
+      : {
+          kind: 'filled',
+          binding: arrangeBindingContract.parse({
+            kind: 'array',
+            param: param.name,
+            value: elements,
+            ...(param.rest === true ? { rest: true } : {}),
+          }),
+        };
   }
 
   const value = isTypeFillableGuard({ type }) ? fillValueTransformer({ type }) : undefined;

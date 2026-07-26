@@ -1,6 +1,7 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { contentHashContract } from '@assayer/shared/contracts';
 
+import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { nodeModuleBuiltinsAdapterProxy } from '../../../adapters/node-module/builtins/node-module-builtins-adapter.proxy';
@@ -17,9 +18,19 @@ const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852
 export const compileResolveGraphBrokerProxy = (): {
   queueBlob: ({ blob }: { blob: unknown }) => void;
   configHash: ({ tsconfigHash }: { tsconfigHash: string }) => void;
+  // Sets the tsconfig's own config-file path, the second condition (alongside a supplied `cacheDir`)
+  // that gates external/global signature reading on -- unset in every other test, so those reads stay
+  // silent unless a test opts in, exactly as the comment below states.
+  configFilePath: ({ path }: { path: string }) => void;
   resolvesLocal: ({ fileName }: { fileName: string }) => void;
   resolvesLocalOnce: ({ fileName }: { fileName: string }) => void;
   resolvesUnresolved: () => void;
+  // Exposes each call's own arguments (never a synthesized index), the only way to pin the "exactly
+  // once, keyed by cache identity, never once per importer" dedup invariant -- these two callees are
+  // replaced wholesale, so their real implementations (covered by their own tests) never run here to
+  // produce an observable side effect.
+  getExternalSignatureReadCalls: () => readonly unknown[];
+  getExternalSignatureReadGlobalCalls: () => readonly unknown[];
 } => {
   // Blob loading runs through the REAL fsReadFileAdapter with only the underlying readFile mocked, so
   // a composing broker's own source reads keep working (the adapter module is not auto-replaced). Each
@@ -53,6 +64,13 @@ export const compileResolveGraphBrokerProxy = (): {
     configHash: ({ tsconfigHash }: { tsconfigHash: string }): void => {
       readConfigHandle.mockReturnValue({ options: {}, tsconfigHash: contentHashContract.parse(tsconfigHash) });
     },
+    configFilePath: ({ path }: { path: string }): void => {
+      readConfigHandle.mockReturnValue({
+        options: {},
+        tsconfigHash: contentHashContract.parse(EMPTY_HASH),
+        configFilePath: FilePathStub({ value: path }),
+      });
+    },
     resolvesLocal: ({ fileName }: { fileName: string }): void => {
       layerProxy.resolvesLocal({ fileName });
     },
@@ -62,5 +80,8 @@ export const compileResolveGraphBrokerProxy = (): {
     resolvesUnresolved: (): void => {
       layerProxy.resolvesUnresolved();
     },
+    getExternalSignatureReadCalls: (): readonly unknown[] => externalHandle.mock.calls.map((call) => call[0]),
+    getExternalSignatureReadGlobalCalls: (): readonly unknown[] =>
+      externalGlobalHandle.mock.calls.map((call) => call[0]),
   };
 };

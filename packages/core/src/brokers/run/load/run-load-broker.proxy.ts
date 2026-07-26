@@ -9,6 +9,7 @@ import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-f
 export const runLoadBrokerProxy = (): {
   savedRun: ({ run }: { run: unknown }) => void;
   noSuchRun: () => void;
+  readThrows: ({ error }: { error: Error }) => void;
 } => {
   fsExistsAdapterProxy();
   fsReadFileAdapterProxy();
@@ -26,6 +27,12 @@ export const runLoadBrokerProxy = (): {
     },
     noSuchRun: (): void => {
       existsHandle.mockResolvedValue(false);
+    },
+    // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and the
+    // like) propagates to the caller unmodified. This stages that rejection.
+    readThrows: ({ error }: { error: Error }): void => {
+      existsHandle.mockResolvedValue(true);
+      readHandle.mockRejectedValueOnce(error);
     },
   };
 };

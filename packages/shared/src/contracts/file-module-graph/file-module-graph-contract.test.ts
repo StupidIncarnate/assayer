@@ -26,13 +26,17 @@ describe('fileModuleGraphContract', () => {
       const result = fileModuleGraphContract.parse({
         edges: [],
         references: [],
-        globalUses: [{ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1 }],
+        globalUses: [
+          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1, scopePath: ['*module*'] },
+        ],
       });
 
       expect(result).toStrictEqual({
         edges: [],
         references: [],
-        globalUses: [{ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1 }],
+        globalUses: [
+          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1, scopePath: ['*module*'] },
+        ],
         envReads: [],
       });
     });

@@ -354,9 +354,14 @@ describe('handleSwitchLayerAdapter', () => {
       expect(result.exits).toStrictEqual([]);
     });
 
-    // No `default` clause means `defaultGuards` names no clause to append — the completion set holds
-    // only the case's OWN implicit exit, never a synthetic else-arm entry for a clause that is not there.
-    it('VALID: {a switch with NO default clause} => only the case`s own completion, no else-arm entry', () => {
+    // No `default` clause means every clause's fallthrough and the wholly-unmatched path converge on
+    // the exact same physical continuation — whatever follows the whole `switch` — which the
+    // enclosing scope already probes as its own unaccounted-for exit. A per-clause completion here
+    // TOO would fire twice on one execution (the taken clause's own probe, then the enclosing one
+    // right behind it), so a case predicting only this handler's exit would fail against correct
+    // code — verified end to end by `run-unit-broker.integration.test.ts`'s
+    // `SWITCH_NO_DEFAULT_SPECIMEN`.
+    it('VALID: {a switch with NO default clause} => no completion exit at all', () => {
       handleSwitchLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile(
@@ -367,14 +372,7 @@ describe('handleSwitchLayerAdapter', () => {
 
       const result = handleSwitchLayerAdapter({ node, context: TAIL_CONTEXT });
 
-      expect(result.exits).toStrictEqual([
-        {
-          coverageId: 'routeLabel/exit@switch:id:method,EqualsEqualsEqualsToken,str:get#then',
-          kind: 'implicit',
-          guardPath: [{ branchCoverageId: 'routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:get', arm: 'then' }],
-          line: 4,
-        },
-      ]);
+      expect(result.exits).toStrictEqual([]);
     });
 
     // A clause holding only a bare `break` has no statement left once break statements are filtered

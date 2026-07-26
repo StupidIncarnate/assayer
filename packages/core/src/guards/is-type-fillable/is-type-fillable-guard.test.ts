@@ -1,4 +1,4 @@
-import { representativeValueContract, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { arrangeValueContract, representativeValueContract, TypeDescriptorStub } from '@assayer/shared/contracts';
 
 import { isTypeFillableGuard } from './is-type-fillable-guard';
 
@@ -202,8 +202,37 @@ describe('isTypeFillableGuard', () => {
       expect(isTypeFillableGuard({ type: { kind: 'boolean' }, value: representativeValueContract.parse(true) })).toBe(true);
     });
 
-    it('INVALID: {boolean type, a null candidate} => false', () => {
-      expect(isTypeFillableGuard({ type: { kind: 'boolean' }, value: representativeValueContract.parse(null) })).toBe(false);
+    // `null` passes every SCALAR kind whatever the declared type spells: the hermetic walk's checker has
+    // no strict-null-checks config, so it already treats `null` as assignable everywhere and a nullable
+    // union arrives here with `null` already gone from `type` — never from the value it can hold.
+    it('VALID: {boolean type, a null candidate} => true', () => {
+      expect(isTypeFillableGuard({ type: { kind: 'boolean' }, value: representativeValueContract.parse(null) })).toBe(true);
+    });
+
+    it('VALID: {string type, a null candidate} => true', () => {
+      expect(isTypeFillableGuard({ type: { kind: 'string' }, value: representativeValueContract.parse(null) })).toBe(true);
+    });
+
+    it('VALID: {number type, a null candidate} => true', () => {
+      expect(isTypeFillableGuard({ type: { kind: 'number' }, value: representativeValueContract.parse(null) })).toBe(true);
+    });
+
+    it('VALID: {a literal type, a null candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'literal', value: 'get' }),
+          value: representativeValueContract.parse(null),
+        }),
+      ).toBe(true);
+    });
+
+    it('VALID: {a union of scalars, a null candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }),
+          value: representativeValueContract.parse(null),
+        }),
+      ).toBe(true);
     });
 
     it('VALID: {a literal type, its own value} => true', () => {
@@ -264,6 +293,118 @@ describe('isTypeFillableGuard', () => {
 
     it('INVALID: {a callable, any candidate} => false', () => {
       expect(isTypeFillableGuard({ type: CALLABLE, value: representativeValueContract.parse('abc123') })).toBe(false);
+    });
+  });
+
+  // A COMPOSITE candidate — the recursive `ArrangeValue` shape an `array`/`object` binding carries, not
+  // just the scalar `RepresentativeValue` leaf. This is the general form: a producer that builds a
+  // binding by hand (not through the fill seam) can still disagree with the declared type, and this
+  // arity is what a caller checks it against.
+  describe('a composite candidate', () => {
+    it('VALID: {number[], a matching array candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }),
+          value: arrangeValueContract.parse([1, 2, 3]),
+        }),
+      ).toBe(true);
+    });
+
+    it('INVALID: {number[], a string in the array} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }),
+          value: arrangeValueContract.parse([1, 'x', 3]),
+        }),
+      ).toBe(false);
+    });
+
+    it('INVALID: {number[], a scalar candidate rather than an array} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }),
+          value: representativeValueContract.parse(7),
+        }),
+      ).toBe(false);
+    });
+
+    it('VALID: {number[][], a nested array candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'array', element: { kind: 'array', element: { kind: 'number' } } }),
+          value: arrangeValueContract.parse([[1, 2], [3]]),
+        }),
+      ).toBe(true);
+    });
+
+    it('EMPTY: {number[], an empty array candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }),
+          value: arrangeValueContract.parse([]),
+        }),
+      ).toBe(true);
+    });
+
+    it('VALID: {an object type, a matching object candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] }),
+          value: arrangeValueContract.parse({ host: 'abc123' }),
+        }),
+      ).toBe(true);
+    });
+
+    it('INVALID: {an object type, a required property holding the wrong type} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] }),
+          value: arrangeValueContract.parse({ host: 7 }),
+        }),
+      ).toBe(false);
+    });
+
+    it('INVALID: {an object type, a required property MISSING from the candidate} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] }),
+          value: arrangeValueContract.parse({}),
+        }),
+      ).toBe(false);
+    });
+
+    it('VALID: {an object type, an OPTIONAL property absent from the candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({
+            kind: 'object',
+            typeName: 'Db',
+            properties: [{ name: 'host', type: { kind: 'string' }, optional: true }],
+          }),
+          value: arrangeValueContract.parse({}),
+        }),
+      ).toBe(true);
+    });
+
+    it('INVALID: {an object type, an array candidate rather than an object} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] }),
+          value: arrangeValueContract.parse(['abc123']),
+        }),
+      ).toBe(false);
+    });
+
+    it('VALID: {an object property nested inside an array element} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({
+            kind: 'array',
+            element: { kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] },
+          }),
+          value: arrangeValueContract.parse([{ host: 'abc123' }, { host: 'def456' }]),
+        }),
+      ).toBe(true);
     });
   });
 });

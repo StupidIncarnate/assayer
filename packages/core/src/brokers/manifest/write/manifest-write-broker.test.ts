@@ -127,4 +127,33 @@ describe('manifestWriteBroker', () => {
       expect(content2).toBe(content1);
     });
   });
+
+  describe('a failure along the mkdir -> write -> rename sequence', () => {
+    it('ERROR: {cache dir cannot be created} => propagates the mkdir rejection unmodified, since it is never wrapped in try/catch', async () => {
+      const proxy = manifestWriteBrokerProxy();
+      proxy.mkdirThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        manifestWriteBroker({ configDir: '/repo', manifest: AssayerCacheManifestStub() }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+
+    it('ERROR: {tmp manifest cannot be written} => propagates the write rejection unmodified, since it is never wrapped in try/catch', async () => {
+      const proxy = manifestWriteBrokerProxy();
+      proxy.writeThrows({ error: new Error('ENOSPC: no space left on device') });
+
+      await expect(
+        manifestWriteBroker({ configDir: '/repo', manifest: AssayerCacheManifestStub() }),
+      ).rejects.toThrow(/^ENOSPC: no space left on device$/u);
+    });
+
+    it('ERROR: {tmp manifest cannot be renamed into place} => propagates the rename rejection unmodified, since it is never wrapped in try/catch', async () => {
+      const proxy = manifestWriteBrokerProxy();
+      proxy.renameThrows({ error: new Error('ENOENT: no such file or directory') });
+
+      await expect(
+        manifestWriteBroker({ configDir: '/repo', manifest: AssayerCacheManifestStub() }),
+      ).rejects.toThrow(/^ENOENT: no such file or directory$/u);
+    });
+  });
 });

@@ -7,7 +7,13 @@
  *   In TAIL position each arm's completion is itself an exit (nothing runs after the `if`, so
  *   falling off the end of an arm ends the scope) and gets a guarded implicit exit — unless the arm
  *   already returns. That single rule is what makes a bare top-level `if` and an `if` inside a
- *   function the same handler instead of two near-copies.
+ *   function the same handler instead of two near-copies. It applies only when there IS an else:
+ *   the two arms are then mutually exclusive AND jointly exhaustive, so each owns a disjoint
+ *   completion. With no else, the `then` arm's fallthrough and the missing else both continue into
+ *   the exact same code — whatever follows the whole `if` — which the enclosing scope already probes
+ *   as its own unaccounted-for exit (`read-accounted` reports an else-less `if` as unaccounted for
+ *   precisely so the enclosing scope owns that probe); minting a second one here would fire twice on
+ *   one execution and fail a case that predicted only one of them.
  *
  *   Each completion emits its PROBE SITE here too, from the same expression that mints the exit's id,
  *   for the same reason a leaf does: derive the sites in a second pass and the runtime observation
@@ -70,8 +76,17 @@ export const handleIfLayerAdapter = ({
           { step: elseStep, statement: elseStatement },
         ];
 
-  // Falling off the end of an arm only ENDS the scope when nothing runs after the `if`.
-  const completions = context.tail
+  // Falling off the end of an arm only ENDS the scope when nothing runs after the `if`. And only
+  // when there IS an else: with no else, the `then` arm's fallthrough and the missing else's own
+  // path converge on the exact same physical continuation — whatever follows the whole `if` — so
+  // minting a completion here as well as trusting the enclosing scope's own unaccounted-for
+  // fallback (`read-accounted` on THIS if already reports `false` without an else, exactly because
+  // it owes the reader an exit) would probe that one continuation twice. A real run takes both
+  // probes in a single pass through the `then` arm, so a case predicting only this handler's exit
+  // never matches the observed suffix and fails against correct code. Two mutually exclusive arms
+  // (`elseStatement !== undefined`) have no such overlap: each gets its OWN disjoint completion, as
+  // before.
+  const completions = context.tail && elseStatement !== undefined
     ? arms.flatMap(({ step, statement }) => {
         // An arm whose own ways out are already emitted (it returns, or it ends in an if/switch
         // that emitted its own completions) must not get a second exit stacked on top.

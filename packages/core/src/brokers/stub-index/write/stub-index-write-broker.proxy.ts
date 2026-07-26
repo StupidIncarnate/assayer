@@ -8,6 +8,11 @@ export const stubIndexWriteBrokerProxy = (): {
   getRenameArgs: () => readonly unknown[];
   wasWritten: () => boolean;
   getWrittenIndex: () => unknown;
+  // None of the three writes below are wrapped in try/catch, so each stages a distinct rejection
+  // point along the mkdir -> write -> rename sequence.
+  mkdirThrows: ({ error }: { error: Error }) => void;
+  writeThrows: ({ error }: { error: Error }) => void;
+  renameThrows: ({ error }: { error: Error }) => void;
 } => {
   const mkdirProxy = fsMkdirAdapterProxy();
   const writeFileProxy = fsWriteFileAdapterProxy();
@@ -23,5 +28,17 @@ export const stubIndexWriteBrokerProxy = (): {
     getRenameArgs: (): readonly unknown[] => renameProxy.getRenameArgs(),
     wasWritten: (): boolean => writeFileProxy.wasCalled(),
     getWrittenIndex: (): unknown => JSON.parse(String(writeFileProxy.getWrittenContent())),
+    mkdirThrows: ({ error }: { error: Error }): void => {
+      mkdirProxy.throws({ error });
+    },
+    writeThrows: ({ error }: { error: Error }): void => {
+      mkdirProxy.succeeds();
+      writeFileProxy.throws({ error });
+    },
+    renameThrows: ({ error }: { error: Error }): void => {
+      mkdirProxy.succeeds();
+      writeFileProxy.succeeds();
+      renameProxy.throws({ error });
+    },
   };
 };

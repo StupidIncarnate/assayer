@@ -25,9 +25,9 @@ describe('moduleGraphProjectionTransformer', () => {
     it('VALID: {walked with repeated global uses} => deduped by (name, member, called), first position kept', () => {
       const walked = WalkFileResultStub({
         globalUses: [
-          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 2, column: 3 },
-          { name: 'process', member: 'env', called: false, args: [], line: 4, column: 5 },
-          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 6, column: 3 },
+          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 2, column: 3, scopePath: ['*module*'] },
+          { name: 'process', member: 'env', called: false, args: [], line: 4, column: 5, scopePath: ['*module*'] },
+          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 6, column: 3, scopePath: ['*module*'] },
         ],
       });
 
@@ -37,8 +37,8 @@ describe('moduleGraphProjectionTransformer', () => {
         edges: [],
         references: [],
         globalUses: [
-          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 2, column: 3 },
-          { name: 'process', member: 'env', called: false, args: [], line: 4, column: 5 },
+          { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 2, column: 3, scopePath: ['*module*'] },
+          { name: 'process', member: 'env', called: false, args: [], line: 4, column: 5, scopePath: ['*module*'] },
         ],
         envReads: [],
       });

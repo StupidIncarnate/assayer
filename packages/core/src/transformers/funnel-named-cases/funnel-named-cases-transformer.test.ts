@@ -1,4 +1,4 @@
-import { BranchNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
+import { BranchNodeStub, ExitNodeStub, symbolNameContract } from '@assayer/shared/contracts';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
@@ -54,7 +54,7 @@ describe('funnelNamedCasesTransformer', () => {
           { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
         ],
         unreachable: [],
-        consumed: [{ name: 'inner', startLine: 2 }],
+        consumed: [{ name: 'inner', startLine: 2, params: [{ name: 'n', type: { kind: 'number' } }] }],
         unfillable: [],
       });
     });
@@ -104,8 +104,144 @@ describe('funnelNamedCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [],
         unreachable: [],
-        consumed: [{ name: 'inner', startLine: 2 }],
+        consumed: [
+          {
+            name: 'inner',
+            startLine: 2,
+            params: [
+              { name: 'n', type: { kind: 'number' } },
+              { name: 'cb', type: { kind: 'callable', text: '(m: number) => void' } },
+            ],
+          },
+        ],
         unfillable: [{ param: 'cb', type: '(m: number) => void', owner: 'inner' }],
+      });
+    });
+
+    it("VALID: {a harness names `cb` under `inner`} => the refusal closes and outer derives both arms; `cb` itself is the call's own inline literal, so nothing rebases onto `outer`", () => {
+      const outer = ScopeRecordStub({
+        scopePath: ['*module*', 'outer'],
+        name: 'outer',
+        access: { kind: 'named' },
+        params: [{ name: 'value', type: { kind: 'number' } }],
+        startLine: 1,
+        endLine: 9,
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'outer/return@top', kind: 'return', guardPath: [], line: 9 })],
+        calls: [
+          CallSiteStub({
+            callee: { target: 'local', name: 'inner', startLine: 2 },
+            args: [{ kind: 'param-ref', paramName: 'value' }, { kind: 'callback', startLine: 9 }],
+            guardPath: [],
+            position: { line: 9, column: 10 },
+          }),
+        ],
+      });
+      const harness = new Map([[symbolNameContract.parse('inner'), [symbolNameContract.parse('cb')]]]);
+
+      const result = funnelNamedCasesTransformer({ scope: outer, scopes: [outer, SINK_INNER], welds: new Map(), harness });
+
+      // `cb` arrives as the call's OWN inline callback literal — `outer` never declares a `cb` param of
+      // its own, so there is no slot to bind the harness value into. Supplying it unblocks `inner`'s own
+      // derivation (both arms now derive, where none did before); the harness key never appears in
+      // `outer`'s arrange because `outer` never passes it — the inline literal already IS `inner`'s `cb`
+      // whenever the compiled code runs, harness or not.
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
+          { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+        ],
+        unreachable: [],
+        consumed: [
+          {
+            name: 'inner',
+            startLine: 2,
+            params: [
+              { name: 'n', type: { kind: 'number' } },
+              { name: 'cb', type: { kind: 'callable', text: '(m: number) => void' } },
+            ],
+          },
+        ],
+        unfillable: [],
+      });
+    });
+
+    it("VALID: {a harness names both `passthroughOuter.sink` and `inner.cb`, outer passes its OWN sink straight through} => the value rebases onto outer's own argument, keyed under `inner`", () => {
+      const passthroughOuter = ScopeRecordStub({
+        scopePath: ['*module*', 'passthroughOuter'],
+        name: 'passthroughOuter',
+        access: { kind: 'named' },
+        params: [
+          { name: 'value', type: { kind: 'number' } },
+          { name: 'sink', type: { kind: 'callable', text: '(m: number) => void' } },
+        ],
+        startLine: 1,
+        endLine: 9,
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'passthroughOuter/return@top', kind: 'return', guardPath: [], line: 9 })],
+        calls: [
+          CallSiteStub({
+            callee: { target: 'local', name: 'inner', startLine: 2 },
+            args: [{ kind: 'param-ref', paramName: 'value' }, { kind: 'param-ref', paramName: 'sink' }],
+            guardPath: [],
+            position: { line: 9, column: 10 },
+          }),
+        ],
+      });
+      // `sink` is REQUIRED, so `passthroughOuter`'s OWN derivation needs it filled too — a harness that
+      // pays only `inner.cb` leaves `passthroughOuter` itself still refusing `sink` (its own gap, no
+      // `owner`), which masks the funnel entirely: `derived.cases` comes back empty, so `perBase` never
+      // reaches `inner` and `consumed` is `[]`. Both keys must be declared to close a single call chain
+      // — the same requirement `harness-validate` enforces at compile time.
+      const harness = new Map([
+        [symbolNameContract.parse('passthroughOuter'), [symbolNameContract.parse('sink')]],
+        [symbolNameContract.parse('inner'), [symbolNameContract.parse('cb')]],
+      ]);
+
+      const result = funnelNamedCasesTransformer({
+        scope: passthroughOuter,
+        scopes: [passthroughOuter, SINK_INNER],
+        welds: new Map(),
+        harness,
+      });
+
+      // The private's `cb` is reached through `passthroughOuter`'s OWN `sink` param, so once BOTH
+      // refusals close, the binding rebases onto `sink` — the CALLER's OWN argument name — while still
+      // carrying the KEY PATH the harness declared it under (`inputs.inner.cb`, not
+      // `inputs.passthroughOuter.sink`), because that is where the run resolves the live value from.
+      // Never spliced in as an argument `passthroughOuter`'s own signature has no slot for — it fills the
+      // slot the signature already has, `sink`.
+      expect(result).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['inner/return@then', 'passthroughOuter/return@top'],
+            arrange: [
+              { kind: 'param', param: 'value', value: 6 },
+              { kind: 'harness', param: 'sink', key: 'inputs.inner.cb' },
+            ],
+            salient: true,
+          },
+          {
+            reachesPath: ['inner/return@else', 'passthroughOuter/return@top'],
+            arrange: [
+              { kind: 'param', param: 'value', value: 5 },
+              { kind: 'harness', param: 'sink', key: 'inputs.inner.cb' },
+            ],
+            salient: true,
+          },
+        ],
+        unreachable: [],
+        consumed: [
+          {
+            name: 'inner',
+            startLine: 2,
+            params: [
+              { name: 'n', type: { kind: 'number' } },
+              { name: 'cb', type: { kind: 'callable', text: '(m: number) => void' } },
+            ],
+          },
+        ],
+        unfillable: [],
       });
     });
   });
@@ -136,7 +272,7 @@ describe('funnelNamedCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [{ reachesPath: ['inner/return@else', 'report/return@top'], arrange: [], salient: true }],
         unreachable: [{ line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 }, displayName: 'inner' }],
-        consumed: [{ name: 'inner', startLine: 2 }],
+        consumed: [{ name: 'inner', startLine: 2, params: [{ name: 'n', type: { kind: 'number' } }] }],
         unfillable: [],
       });
     });
@@ -229,8 +365,8 @@ describe('funnelNamedCasesTransformer', () => {
         ],
         unreachable: [],
         consumed: [
-          { name: 'middle', startLine: 5 },
-          { name: 'inner', startLine: 6 },
+          { name: 'middle', startLine: 5, params: [{ name: 'm', type: { kind: 'number' } }] },
+          { name: 'inner', startLine: 6, params: [{ name: 'i', type: { kind: 'number' } }] },
         ],
         unfillable: [],
       });
@@ -331,8 +467,15 @@ describe('funnelNamedCasesTransformer', () => {
         ],
         unreachable: [{ line: 10, guardLines: [9], welded: { line: 9, operand: 'i', value: 3 }, displayName: 'inner' }],
         consumed: [
-          { name: 'middle', startLine: 5 },
-          { name: 'inner', startLine: 8 },
+          {
+            name: 'middle',
+            startLine: 5,
+            params: [
+              { name: 'flag', type: { kind: 'boolean' } },
+              { name: 'm', type: { kind: 'number' } },
+            ],
+          },
+          { name: 'inner', startLine: 8, params: [{ name: 'i', type: { kind: 'number' } }] },
         ],
         unfillable: [],
       });

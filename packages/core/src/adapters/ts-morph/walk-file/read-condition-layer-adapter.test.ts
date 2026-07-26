@@ -173,6 +173,39 @@ describe('readConditionLayerAdapter', () => {
 
       expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'eq', literal: false });
     });
+
+    // `null` is a KEYWORD node (`NullKeyword`), read the same way as `TrueKeyword`/`FalseKeyword` — not
+    // an Identifier, so it never reaches `operandName`. Before this reader knew `NullKeyword`, the right
+    // side stayed unread and the predicate came back `unrecognized` for every `=== null` comparison.
+    it('VALID: {v === null} => an eq predicate carrying the literal null', () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (v === null) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'eq', literal: null });
+    });
+
+    it('VALID: {v !== null} => a neq predicate carrying the literal null', () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (v !== null) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'neq', literal: null });
+    });
+
+    // `undefined` is NOT a keyword — it is an IDENTIFIER referencing the global binding — so it stays
+    // unread exactly as before: `RepresentativeValue` has no `undefined` member, so there is no literal
+    // to carry even once the identifier is recognized as meaning "no value".
+    it('VALID: {v === undefined} => an unrecognized predicate, since undefined is an Identifier, not a keyword', () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (v === undefined) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'unrecognized' });
+    });
   });
 
   describe('conditions with no comparison at all', () => {

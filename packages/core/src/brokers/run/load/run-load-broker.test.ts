@@ -27,4 +27,15 @@ describe('runLoadBroker', () => {
       expect(result).toBe(undefined);
     });
   });
+
+  describe('a saved run that cannot be read', () => {
+    it('ERROR: {runId: run.json exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+      const proxy = runLoadBrokerProxy();
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(runLoadBroker({ configDir: '/repo', runId: 'abc123' })).rejects.toThrow(
+        /^EACCES: permission denied$/u,
+      );
+    });
+  });
 });

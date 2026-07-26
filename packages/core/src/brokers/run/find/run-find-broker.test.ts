@@ -37,4 +37,15 @@ describe('runFindBroker', () => {
       expect(result).toBe(undefined);
     });
   });
+
+  describe('the source cannot be read', () => {
+    it('ERROR: {relPath: file exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+      const proxy = runFindBrokerProxy();
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        runFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/a.ts' }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
 });

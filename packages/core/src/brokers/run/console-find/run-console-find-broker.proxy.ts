@@ -16,6 +16,8 @@ export const runConsoleFindBrokerProxy = (): {
   savedConsole: ({ console }: { console: string }) => void;
   neverRun: () => void;
   fileMissing: () => void;
+  sourceReadThrows: ({ error }: { error: Error }) => void;
+  consoleReadThrows: ({ error }: { error: Error }) => void;
   getReadArgs: () => readonly unknown[];
 } => {
   fsExistsAdapterProxy();
@@ -42,6 +44,15 @@ export const runConsoleFindBrokerProxy = (): {
     },
     fileMissing: (): void => {
       existsHandle.mockResolvedValueOnce(false);
+    },
+    // Both reads are deliberately unwrapped -- no try/catch -- so a filesystem rejection propagates to
+    // the caller unmodified. These stage that rejection at each of the two read positions in turn.
+    sourceReadThrows: ({ error }: { error: Error }): void => {
+      readHandle.mockRejectedValueOnce(error);
+    },
+    consoleReadThrows: ({ error }: { error: Error }): void => {
+      readHandle.mockResolvedValueOnce('export const a = 1;\n');
+      readHandle.mockRejectedValueOnce(error);
     },
     // Serialized rather than destructured: reading `.path` off a mock argument needs an inline
     // structural type, which brokers/ forbids. The JSON is exact and needs no assertion.

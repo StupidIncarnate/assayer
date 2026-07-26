@@ -56,6 +56,31 @@ describe('throughCallbackCasesTransformer', () => {
     });
   });
 
+  // A5: the interpreter applies an `array` binding as ONE positional argument UNLESS it is marked
+  // `rest` — a `...items: number[]` the entry maps over must SPREAD, not nest, or `items` binds to
+  // `[[6]]` instead of `[6]`.
+  describe('the entry`s array param is a REST parameter', () => {
+    const REST_ENTRY = ScopeRecordStub({
+      scopePath: ['*module*', 'run'],
+      name: 'run',
+      params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } }, optional: true, rest: true }],
+      returnType: { kind: 'array', element: { kind: 'string' } },
+    });
+
+    it('VALID: {a callback branch on n} => each steered element is marked rest: true', () => {
+      const result = throughCallbackCasesTransformer({
+        callback: CALLBACK,
+        entry: REST_ENTRY,
+        arrayParam: symbolNameContract.parse('items'),
+      });
+
+      expect(result.analysis.cases).toStrictEqual([
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6], rest: true }], salient: true },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [5], rest: true }], salient: true },
+      ]);
+    });
+  });
+
   describe('a callback whose own parameter the fill seam refuses', () => {
     // The callback's `name` is a structural projection, so its refusal cannot be filed under it — the
     // gap goes to the HOST a reader drives, and `owner` carries the label that names the callback.

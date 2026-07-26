@@ -47,5 +47,6 @@ export const FileAnalysisStub = ({ ...props }: StubArgument<FileAnalysis> = {}):
     undriven: [],
     lints: [],
     declaredTypes: [],
+    declaringScopes: [],
     ...props,
   });

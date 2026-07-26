@@ -11,5 +11,6 @@ export const GlobalUseStub = ({ ...props }: StubArgument<GlobalUse> = {}): Globa
     args: [{ kind: 'opaque' }],
     line: 1,
     column: 1,
+    scopePath: ['*module*'],
     ...props,
   });

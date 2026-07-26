@@ -22,6 +22,14 @@
  *   value demands onto. Required for the same reads-as-complete reason: a file states the shapes it
  *   owns even when it owns none.
  *
+ *   `declaringScopes` names every same-file PRIVATE or CALLBACK a driving route folded into a host
+ *   entry rather than projecting as an entry of its own — a funnelled private a branchless surface
+ *   returns, or an inline callback funnelled over an array param. It is the ONE source `harness-validate`
+ *   and the harness-realize overlay both read for a scope an input-gap invoice can name (`on 'build'`)
+ *   but `functions` does not carry, so the two can never disagree about what a driving route folded in.
+ *   REQUIRED, for the same reads-as-complete reason as `gaps`/`darkSpots`/`undriven`: a file states which
+ *   scopes it folded even when it folded none.
+ *
  * USAGE:
  * fileAnalysisContract.parse({ functions: [], enrichment: [], gaps: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
  * // Returns a validated FileAnalysis (branded fields)
@@ -30,6 +38,7 @@ import { z } from 'zod';
 
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
 import { declaredTypeContract } from '../declared-type/declared-type-contract';
+import { declaringScopeContract } from '../declaring-scope/declaring-scope-contract';
 import { entryGapContract } from '../entry-gap/entry-gap-contract';
 import { functionAnalysisContract } from '../function-analysis/function-analysis-contract';
 import { lineEnrichmentContract } from '../line-enrichment/line-enrichment-contract';
@@ -48,6 +57,8 @@ export const fileAnalysisContract = z.object({
   lints: z.array(lintEntryContract),
   // The file's locally-declared object shapes with their full property lists.
   declaredTypes: z.array(declaredTypeContract),
+  // Same-file scopes a driving route folded into one of `functions` — see PURPOSE above.
+  declaringScopes: z.array(declaringScopeContract),
 });
 
 export type FileAnalysis = z.infer<typeof fileAnalysisContract>;

@@ -21,20 +21,50 @@
  *   name one, and listing `*module*` among the file's entries would send a reader looking for a name
  *   they cannot use.
  *
+ *   A DECLARING SCOPE — a same-file private a named-call funnel folded into its host, no entry of its
+ *   own — is a candidate exactly like a top-level entry, read off `FileAnalysis.declaringScopes`: the
+ *   ONE source the input-gap invoice's `owner` and this validator both consult, so a key naming the
+ *   scope the invoice names (`on \`build\``) reconciles against the same fact that built the sentence,
+ *   never a second idea of what a driving route folded in. A funnelled CALLBACK is never a candidate —
+ *   see `FileAnalysis.declaringScopes`'s own doc for why realize can never bind one.
+ *
+ *   A FOURTH way a key is wrong, checked only once the first three have cleared it: the parameter EXISTS,
+ *   IS a genuine gap, and the value supplied for it is not a value of the declared type. `report:
+ *   undefined` and a callback of the wrong signature both validate today by the first three rules alone
+ *   — a key is a key whatever it is bound to — so this is where the VALUE half of the declaration is
+ *   finally read, off the harness's own AST via `suppliedTypes` (`compile-harness-graph-broker` reads it
+ *   with `ts-morph-read-harness-value-types-adapter`, the same conjunction of file and key this
+ *   transformer already walks). `undefined` needs no special rule: it reads as the opaque `unknown`
+ *   kind (`is-type-compatible`'s own doc), which fails unless the declared type itself admits it — the
+ *   same clause that already lets an opaque DECLARED type through untouched. This is Assayer
+ *   contradicting a type it read itself, never one of the four admissions.
+ *
  *   Errors ride the SAME `{ relPath, line, column, message }` channel as a broken import — exit 1, the
  *   same class — and each is filed against the HARNESS file, because that is the file to edit.
  *
  * USAGE:
- * harnessValidateTransformer({ relPath, targetRelPath, keys, entries });
- * // Returns [] when every key still names a refused parameter, or one record per wrong key
+ * harnessValidateTransformer({ relPath, targetRelPath, keys, entries, declaringScopes, suppliedTypes });
+ * // Returns [] when every key still names a refused parameter of a compatible type, or one record per wrong key
  */
 import { columnNumberContract, lineNumberContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, EntrySignature, HarnessInputKey, LineNumber, RelPath } from '@assayer/shared/contracts';
+import type {
+  ColumnNumber,
+  DeclaringScope,
+  EntrySignature,
+  HarnessInputKey,
+  LineNumber,
+  ParamDescriptor,
+  RelPath,
+  SymbolName,
+  TypeDescriptor,
+} from '@assayer/shared/contracts';
 import { errorMessageContract } from '@dungeonmaster/shared/contracts';
 import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
+import { isTypeCompatibleGuard } from '../../guards/is-type-compatible/is-type-compatible-guard';
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
 import { didYouMeanTransformer } from '../did-you-mean/did-you-mean-transformer';
+import { typeTextTransformer } from '../type-text/type-text-transformer';
 
 const HARNESS_LINE = 1;
 const HARNESS_COLUMN = 1;
@@ -44,13 +74,20 @@ export const harnessValidateTransformer = ({
   targetRelPath,
   keys,
   entries,
+  declaringScopes,
+  suppliedTypes,
 }: {
   relPath: RelPath;
   targetRelPath: RelPath;
   keys: readonly HarnessInputKey[];
   entries: readonly EntrySignature[];
+  declaringScopes: readonly DeclaringScope[];
+  suppliedTypes: readonly { entry: SymbolName; param: SymbolName; type: TypeDescriptor }[];
 }): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: ErrorMessage }[] => {
-  const callable = entries.filter((entry) => entry.access.kind !== 'module');
+  const callable: readonly { name: SymbolName; params: readonly ParamDescriptor[] }[] = [
+    ...entries.filter((entry) => entry.access.kind !== 'module'),
+    ...declaringScopes,
+  ];
   const entryByName = new Map(callable.map((entry) => [String(entry.name), entry]));
   const entryNames = callable.map((entry) => entry.name);
 
@@ -95,7 +132,24 @@ export const harnessValidateTransformer = ({
     }
 
     if (!isTypeFillableGuard({ type: param.type })) {
-      return [];
+      const supplied = suppliedTypes.find(
+        (candidate) => String(candidate.entry) === String(key.entry) && String(candidate.param) === String(key.param),
+      );
+
+      if (supplied === undefined || isTypeCompatibleGuard({ declared: param.type, supplied: supplied.type })) {
+        return [];
+      }
+
+      const declaredText = param.declaredText ?? typeTextTransformer({ type: param.type });
+      const suppliedText = typeTextTransformer({ type: supplied.type });
+
+      return [
+        `\`${String(relPath)}\` declares an input \`${String(key.param)}\` on \`${String(key.entry)}\`, but supplies a ` +
+          `value of the wrong type. \`${String(targetRelPath)}\` declares \`${String(key.entry)}\`'s \`${String(key.param)}\` ` +
+          `as \`${String(declaredText)}\`, and the value supplied here is \`${String(suppliedText)}\`. Supply a value of ` +
+          `type \`${String(declaredText)}\` instead, or change \`${String(key.param)}\`'s declared type in ` +
+          `\`${String(targetRelPath)}\` if it is meant to accept \`${String(suppliedText)}\`.`,
+      ];
     }
 
     return [

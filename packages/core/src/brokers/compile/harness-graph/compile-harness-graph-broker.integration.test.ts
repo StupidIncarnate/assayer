@@ -29,6 +29,24 @@ const WRONG_KEY_HARNESS = [
   '',
 ].join('\n');
 
+// `report` is declared `(message: string) => string` on `AUDIT_SOURCE`. `undefined` reads as the
+// opaque `unknown` kind off the harness's own AST — a runtime value could never tell it apart from a
+// genuine callback once the sandbox has run, which is why the read has to be STATIC.
+const UNDEFINED_VALUE_HARNESS = [
+  "import { assayerHarness } from '@assayer/core';",
+  '',
+  'assayerHarness({ inputs: { audit: { report: undefined } } });',
+  '',
+].join('\n');
+
+// A value of the WRONG type entirely — a string where the declaration names a callable.
+const WRONG_TYPE_VALUE_HARNESS = [
+  "import { assayerHarness } from '@assayer/core';",
+  '',
+  "assayerHarness({ inputs: { audit: { report: 'not-a-function' } } });",
+  '',
+].join('\n');
+
 const HASH_FOR_VALID = 'd8f5b1d1bc932089d9e0683360e4a8274c4244931987cd18ed327b72be0b8769';
 const HASH_FOR_EDITED = 'a1b98d93dc9257e692b46072405e2468dd71edca85dc389825da2c50a0f80e35';
 
@@ -254,6 +272,42 @@ describe('compileHarnessGraphBroker (integration)', () => {
           'declared type — no input gap was raised for it. A harness is GAP-FILL: a value here would silently ' +
           'displace the derived one, so a reader could no longer tell which value their case ran with. Delete ' +
           'this key; only a parameter `src/audit.ts` is invoiced for belongs here.',
+      ]);
+    });
+  });
+
+  // The defect this closes: a harness value was never checked against the type it is supplied for, so
+  // `report: undefined` validated and bought a passing run on an argument nobody supplied. Read off the
+  // REAL harness's AST through the REAL compile pipeline — never a hand-built fixture — so the P1 this
+  // proves is the one a real `assayer status` run would print.
+  describe('a real harness supplying UNDEFINED for a refused parameter', () => {
+    const stitch = harnessGraphHarness();
+
+    it('ERROR: {audit.report: undefined} => a P1 naming the declared type and the opaque supplied type', async () => {
+      const result = await stitch.stitchOnce({ harness: UNDEFINED_VALUE_HARNESS });
+
+      expect(result.errorMessages).toStrictEqual([
+        '`src/audit.harness.ts` declares an input `report` on `audit`, but supplies a value of the wrong type. ' +
+          "`src/audit.ts` declares `audit`'s `report` as `(message: string) => string`, and the value supplied " +
+          'here is `undefined`. Supply a value of type `(message: string) => string` instead, or change ' +
+          "`report`'s declared type in `src/audit.ts` if it is meant to accept `undefined`.",
+      ]);
+    });
+  });
+
+  describe('a real harness supplying a value of the WRONG type for a refused parameter', () => {
+    const stitch = harnessGraphHarness();
+
+    // The checker reports a bare harness value at its PRECISE literal type, never widened — see
+    // `is-type-compatible-guard`'s own doc — so the supplied type names the exact string, not `string`.
+    it('ERROR: {audit.report: a string literal, declared a callable} => a P1 naming both types', async () => {
+      const result = await stitch.stitchOnce({ harness: WRONG_TYPE_VALUE_HARNESS });
+
+      expect(result.errorMessages).toStrictEqual([
+        '`src/audit.harness.ts` declares an input `report` on `audit`, but supplies a value of the wrong type. ' +
+          "`src/audit.ts` declares `audit`'s `report` as `(message: string) => string`, and the value supplied " +
+          'here is `"not-a-function"`. Supply a value of type `(message: string) => string` instead, or change ' +
+          '`report`\'s declared type in `src/audit.ts` if it is meant to accept `"not-a-function"`.',
       ]);
     });
   });

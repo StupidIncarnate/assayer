@@ -36,4 +36,15 @@ describe('compileWalkWorkingTreeBroker', () => {
       expect(result).toStrictEqual(['/repo/smoke-repo/src/x.ts']);
     });
   });
+
+  describe('a directory that cannot be read', () => {
+    it("ERROR: {root: unreadable directory} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+      const proxy = compileWalkWorkingTreeBrokerProxy();
+      proxy.dirReadThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(compileWalkWorkingTreeBroker({ root: '/repo/smoke-repo' })).rejects.toThrow(
+        /^EACCES: permission denied$/u
+      );
+    });
+  });
 });

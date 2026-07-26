@@ -33,4 +33,15 @@ describe('fsReaddirAdapter', () => {
       expect(result).toStrictEqual([]);
     });
   });
+
+  describe('error cases', () => {
+    it('ERROR: {path: missing directory} => underlying fs error propagates unmodified', async () => {
+      const proxy = fsReaddirAdapterProxy();
+      proxy.throws({ error: new Error('ENOENT: no such file or directory') });
+
+      await expect(fsReaddirAdapter({ path: '/repo/missing' })).rejects.toThrow(
+        /^ENOENT: no such file or directory$/u
+      );
+    });
+  });
 });

@@ -15,6 +15,7 @@ describe('globalUseContract', () => {
         args: [{ kind: 'opaque' }],
         line: 1,
         column: 1,
+        scopePath: ['*module*'],
       });
     });
 
@@ -26,6 +27,7 @@ describe('globalUseContract', () => {
         args: [],
         line: 3,
         column: 1,
+        scopePath: ['*module*'],
       });
 
       expect(result).toStrictEqual({
@@ -35,6 +37,7 @@ describe('globalUseContract', () => {
         args: [],
         line: 3,
         column: 1,
+        scopePath: ['*module*'],
       });
     });
 
@@ -45,6 +48,7 @@ describe('globalUseContract', () => {
         args: [{ kind: 'param-ref', paramName: 'fn' }, { kind: 'literal', value: 0 }],
         line: 2,
         column: 1,
+        scopePath: ['*module*', 'schedule'],
       });
 
       expect(result).toStrictEqual({
@@ -53,6 +57,7 @@ describe('globalUseContract', () => {
         args: [{ kind: 'param-ref', paramName: 'fn' }, { kind: 'literal', value: 0 }],
         line: 2,
         column: 1,
+        scopePath: ['*module*', 'schedule'],
       });
     });
   });
@@ -67,6 +72,7 @@ describe('globalUseContract', () => {
           args: [{ kind: 'spread' }],
           line: 1,
           column: 1,
+          scopePath: ['*module*'],
         });
       }).toThrow(/Invalid discriminator value/u);
     });

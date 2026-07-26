@@ -68,6 +68,40 @@ const ELSE = '*module*/audit/return@if:BinaryExpression,id:score,GreaterThanToke
 const GRADE_THEN = '*module*/grade/return@if:BinaryExpression,id:score,GreaterThanToken,num:5#then';
 const GRADE_ELSE = '*module*/grade/return@if:BinaryExpression,id:score,GreaterThanToken,num:5#else';
 
+// `build` is a same-file PRIVATE `audit` returns unconditionally — funnelled into `audit`'s own case
+// set, so `build` is no entry of its own and its refusal is invoiced against `audit` (`on \`build\``).
+// The call passes an INLINE callback literal for `report`, not one of `audit`'s own params, so paying
+// the refusal unblocks `build`'s own derivation without binding anything onto `audit`'s arrange.
+const FUNNELLED_SOURCE =
+  'const build = (size: number, report: (message: string) => string): string => {\n  if (size > 10) {\n    return report(\'over\');\n  }\n\n  return report(\'under\');\n};\n\nexport function audit(size: number): string {\n  return build(size, (m) => m);\n}\n';
+
+const FUNNELLED_HARNESS =
+  "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { build: { report: (message: string): string => message } } });\n";
+
+const FUNNELLED_THEN = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#then';
+const FUNNELLED_ELSE = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
+const AUDIT_TOP = '*module*/audit/return@top';
+
+// `build` here is reached through a NAMED call `audit` does not return directly (its own exit is
+// `built.toUpperCase()`), so it is a THROUGH-CALLER entry — its own, separate from `audit`'s. `audit`
+// passes its OWN `report` param straight through, so `audit` independently refuses `report` too: TWO
+// separate gaps, only one of which this harness pays.
+const THROUGH_CALLER_SOURCE =
+  'const build = (size: number, report: (message: string) => string): string => {\n  if (size > 10) {\n    return report(\'over\');\n  }\n\n  return report(\'under\');\n};\n\nexport function audit(size: number, report: (message: string) => string): string {\n  const built = build(size, report);\n  return built.toUpperCase();\n}\n';
+
+const THROUGH_CALLER_HARNESS =
+  "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { build: { report: (message: string): string => message } } });\n";
+
+// `sinks` is a TRAILING rest parameter the fill seam refuses — `applied-params` truncates it before the
+// refusal ever becomes a gap, so `collect` derives its one case (over `size` alone) with NO gap at all.
+const TRAILING_REST_SOURCE =
+  'export function collect(size: number, ...sinks: ((m: string) => void)[]): number {\n  return size;\n}\n';
+
+const TRAILING_REST_HARNESS =
+  "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { collect: { sinks: [(message: string): void => undefined] } } });\n";
+
+const COLLECT_TOP = '*module*/collect/return@top';
+
 describe('harnessRealizeBroker', () => {
   describe('a harness that supplies every refused input', () => {
     it('VALID: {report declared} => both arms driven, the callback bound to its key path', () => {
@@ -332,6 +366,116 @@ describe('harnessRealizeBroker', () => {
               'passes an input straight through — which the follower would then drive.',
             startLine: 1,
             endLine: 7,
+          },
+        ],
+      });
+    });
+  });
+
+  describe('a funnelled private\'s own refusal, closed via a harness naming the private', () => {
+    // Without `walked`, this broker cannot re-classify the call graph, so a harness that names only
+    // `build` (never `audit` itself) touches nothing — exactly the P1 contradiction the invoice used to
+    // leave standing, now resolved by NOT silently mis-deriving rather than by a guess.
+    it("VALID: {no walked threaded} => backward compatible, the surface's gap stands untouched", () => {
+      const proxy = harnessRealizeBrokerProxy();
+      proxy.setupHarness({ source: FUNNELLED_HARNESS });
+      const walked = tsMorphWalkFileAdapter({ source: FUNNELLED_SOURCE, relPath: 'src/audit.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
+
+      expect(result).toBe(analysis);
+    });
+
+    it('VALID: {walked threaded} => the surface derives both arms, pathing through the private then its own return', () => {
+      const proxy = harnessRealizeBrokerProxy();
+      proxy.setupHarness({ source: FUNNELLED_HARNESS });
+      const walked = tsMorphWalkFileAdapter({ source: FUNNELLED_SOURCE, relPath: 'src/audit.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts', walked });
+
+      // `report` is the call's OWN inline literal, not one of `audit`'s params, so it never appears in
+      // the arrange — the harness only had to unblock `build`'s own derivation for the path to exist.
+      expect({
+        cases: result.functions.flatMap((fn) => fn.cases),
+        gaps: result.gaps,
+      }).toStrictEqual({
+        cases: [
+          { reachesPath: [FUNNELLED_THEN, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
+          { reachesPath: [FUNNELLED_ELSE, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+        ],
+        gaps: [],
+      });
+    });
+  });
+
+  describe('a through-caller private\'s own refusal, closed via a harness naming the private', () => {
+    it("VALID: {walked threaded} => build's gap closes, its cases rebase the harness binding onto audit's own `report` argument", () => {
+      const proxy = harnessRealizeBrokerProxy();
+      proxy.setupHarness({ source: THROUGH_CALLER_HARNESS });
+      const walked = tsMorphWalkFileAdapter({ source: THROUGH_CALLER_SOURCE, relPath: 'src/audit.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
+
+      const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts', walked });
+
+      // `audit` ALSO declares its own `report` param (needed to pass it through at all), and the harness
+      // never names `audit` directly — so `audit`'s own gap stays open beside `build`'s, which closes.
+      expect({
+        casesBuild: result.functions.find((fn) => String(fn.entry.name) === 'build')?.cases,
+        casesAudit: result.functions.find((fn) => String(fn.entry.name) === 'audit')?.cases,
+        gaps: result.gaps.map((gap) => String(gap.name)),
+      }).toStrictEqual({
+        casesBuild: [
+          {
+            reachesPath: [FUNNELLED_THEN],
+            arrange: [
+              { kind: 'param', param: 'size', value: 11 },
+              { kind: 'harness', param: 'report', key: 'inputs.build.report' },
+            ],
+            salient: true,
+          },
+          {
+            reachesPath: [FUNNELLED_ELSE],
+            arrange: [
+              { kind: 'param', param: 'size', value: 10 },
+              { kind: 'harness', param: 'report', key: 'inputs.build.report' },
+            ],
+            salient: true,
+          },
+        ],
+        casesAudit: [],
+        gaps: ['audit'],
+      });
+    });
+  });
+
+  // A trailing optional/rest parameter never raises a gap (`applied-params` truncates it first), so this
+  // is the one case this broker must find WITHOUT `gappedNames` naming the entry at all.
+  describe('a harness naming a TRAILING REST parameter — never gapped, but not inert', () => {
+    it('VALID: {sinks declared} => the case binds sinks, spread-ready, though collect was never gapped', () => {
+      const proxy = harnessRealizeBrokerProxy();
+      proxy.setupHarness({ source: TRAILING_REST_HARNESS });
+      const walked = tsMorphWalkFileAdapter({ source: TRAILING_REST_SOURCE, relPath: 'src/collect.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/collect.ts' });
+
+      const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/collect.ts' });
+
+      expect({
+        gapsBefore: analysis.gaps,
+        casesBefore: analysis.functions.flatMap((fn) => fn.cases),
+        casesAfter: result.functions.flatMap((fn) => fn.cases),
+      }).toStrictEqual({
+        gapsBefore: [],
+        casesBefore: [{ reachesPath: [COLLECT_TOP], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        casesAfter: [
+          {
+            reachesPath: [COLLECT_TOP],
+            arrange: [
+              { kind: 'param', param: 'size', value: 7 },
+              { kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true },
+            ],
+            salient: true,
           },
         ],
       });

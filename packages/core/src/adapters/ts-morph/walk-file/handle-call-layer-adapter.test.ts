@@ -11,6 +11,8 @@ const PASSTHROUGH_SOURCE =
 
 const IIFE_SOURCE = "export const label = ((n: number): string => { if (n > 5) { return 'big'; } return 'small'; })(7);\n";
 
+const GLOBAL_CALL_SOURCE = "setTimeout('tick', 0);\n";
+
 const UNGUARDED_CONTEXT = WalkContextStub({
   scopePath: ['outer'],
   guardPath: [],
@@ -60,6 +62,33 @@ describe('handleCallLayerAdapter', () => {
           position: { line: 5, column: 10 },
         },
       ]);
+    });
+  });
+
+  describe('the global use a bare-identifier ambient call records', () => {
+    it("VALID: {setTimeout('tick', 0)} => one called global use carrying the caller`s scope path", () => {
+      handleCallLayerAdapterProxy();
+
+      const result = handleCallLayerAdapter({ node: callOf({ source: GLOBAL_CALL_SOURCE }), context: UNGUARDED_CONTEXT });
+
+      expect(result.globalUses).toStrictEqual([
+        {
+          name: 'setTimeout',
+          called: true,
+          args: [{ kind: 'literal', value: 'tick' }, { kind: 'literal', value: 0 }],
+          line: 1,
+          column: 1,
+          scopePath: ['outer'],
+        },
+      ]);
+    });
+
+    it('VALID: {a named call, not an ambient global} => no global use', () => {
+      handleCallLayerAdapterProxy();
+
+      const result = handleCallLayerAdapter({ node: callOf({ source: PASSTHROUGH_SOURCE }), context: UNGUARDED_CONTEXT });
+
+      expect(result.globalUses).toStrictEqual([]);
     });
   });
 

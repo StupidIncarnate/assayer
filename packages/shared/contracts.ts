@@ -241,6 +241,9 @@ export * from './src/contracts/entry-access/entry-access.stub';
 export * from './src/contracts/entry-signature/entry-signature-contract';
 export * from './src/contracts/entry-signature/entry-signature.stub';
 
+export * from './src/contracts/declaring-scope/declaring-scope-contract';
+export * from './src/contracts/declaring-scope/declaring-scope.stub';
+
 export * from './src/contracts/function-analysis/function-analysis-contract';
 export * from './src/contracts/function-analysis/function-analysis.stub';
 

@@ -14,6 +14,7 @@ import { typescriptHarnessGateAdapterProxy } from '../../../adapters/typescript/
 export const runIdBrokerProxy = (): {
   noHarness: () => void;
   harness: ({ source }: { source: string }) => void;
+  readThrows: ({ error }: { error: Error }) => void;
 } => {
   cryptoSha256AdapterProxy();
   fsExistsAdapterProxy();
@@ -32,6 +33,12 @@ export const runIdBrokerProxy = (): {
     harness: ({ source }: { source: string }): void => {
       existsHandle.mockResolvedValue(true);
       readHandle.mockResolvedValue(source);
+    },
+    // The harness read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT
+    // and the like) propagates to the caller unmodified. This stages that rejection.
+    readThrows: ({ error }: { error: Error }): void => {
+      existsHandle.mockResolvedValue(true);
+      readHandle.mockRejectedValueOnce(error);
     },
   };
 };

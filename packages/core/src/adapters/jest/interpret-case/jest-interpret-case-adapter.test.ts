@@ -125,6 +125,92 @@ describe('jestInterpretCaseAdapter', () => {
     });
   });
 
+  describe('an array binding is one argument, UNLESS it realizes a rest parameter', () => {
+    it('VALID: {an ordinary array param} => the whole array arrives as ONE argument', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [{ kind: 'array', param: 'items', value: [6, 9] }],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (items: unknown) => probe.x(THEN, JSON.stringify(items)),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '[6,9]' }],
+      });
+    });
+
+    // The case that would have caught A5: reading an ELEMENT of the rest array, not merely its
+    // `.length`. Applied as one argument, `ns` would bind to `[[6, 9]]` and `ns[0]` would read an
+    // array instead of `6`, so this fails against the bug and passes against the fix.
+    it('VALID: {a rest param, two elements} => the elements SPREAD across the tail positional slots', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [
+          { kind: 'param', param: 'size', value: 11 },
+          { kind: 'array', param: 'ns', value: [6, 9], rest: true },
+        ],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (size: unknown, ...ns: unknown[]) => probe.x(THEN, `${String(size)}:${String(ns[0])}:${String(ns[1])}`),
+        entryName: 'tally',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'tally',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '11:6:9' }],
+      });
+    });
+
+    it('VALID: {a rest param, no elements} => contributes no argument, so the rest binds empty', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [
+          { kind: 'param', param: 'size', value: 11 },
+          { kind: 'array', param: 'ns', value: [], rest: true },
+        ],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (size: unknown, ...ns: unknown[]) => probe.x(THEN, `${String(size)}:${ns.length}`),
+        entryName: 'tally',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'tally',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '11:0' }],
+      });
+    });
+  });
+
   describe('a harness binding resolves against the loaded declaration', () => {
     it('VALID: {inputs.grade.report declared} => the registered callback is applied positionally', () => {
       jestInterpretCaseAdapterProxy();
@@ -152,6 +238,39 @@ describe('jestInterpretCaseAdapter', () => {
         status: 'passed',
         observedPath: [THEN],
         trace: [{ id: THEN, kind: 'exit', valueText: '6:the-declared-value' }],
+      });
+    });
+
+    // The case that would have caught the trailing-rest-parameter defect: a harness answering a REST
+    // parameter resolves to an array, and applied as ONE argument it would bind `sinks` to `[[cb]]`
+    // instead of `[cb]` — `sinks[0]` would then read an array, not the callback. Fails against the bug,
+    // passes against the fix.
+    it('VALID: {inputs.collect.sinks declared, rest: true} => the resolved array SPREADS across the tail slots', () => {
+      jestInterpretCaseAdapterProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({
+        reachesPath: [THEN],
+        arrange: [
+          { kind: 'param', param: 'size', value: 7 },
+          { kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true },
+        ],
+      });
+
+      const result = jestInterpretCaseAdapter({
+        entry: (size: unknown, ...sinks: unknown[]) => probe.x(THEN, `${String(size)}:${sinks.length}`),
+        entryName: 'collect',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+        harness: [{ inputs: { collect: { sinks: ['sink-a', 'sink-b'] } } }],
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'collect',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '7:2' }],
       });
     });
 

@@ -74,8 +74,10 @@ export const throughCallbackCasesTransformer = ({
     // unsteered and filled through the seam — which can REFUSE, and then the entry cannot be called at
     // all, so the case is dropped rather than built on a placeholder.
     const arrange = entryParams.flatMap((param): ArrangeBinding[] => {
+      // A REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
+      // positional slots the entry's `.map` steers instead of handing it over as one argument.
       if (String(param.name) === String(arrayParam)) {
-        return [{ kind: 'array', param: param.name, value: element }];
+        return [{ kind: 'array', param: param.name, value: element, ...(param.rest === true ? { rest: true } : {}) }];
       }
 
       const fill = fillParamTransformer({ param });

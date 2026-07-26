@@ -13,12 +13,24 @@
  *   `ArrangeValue` map keyed by property name and a nested `{ db: { host: string } }` arranges as
  *   `{ db: { host: 'localhost' } }`.
  *
+ *   An `array` binding carries `rest` only when it realizes a REST parameter — mirroring how
+ *   `ParamDescriptor` itself carries the fact — because the interpreter applies a binding differently
+ *   by it: an ordinary array param is ONE positional argument (the array itself), while a rest param's
+ *   array SPREADS across the tail positional slots it stands for, exactly as `tally(11, ...[7])` does.
+ *   Carried only when true, so a plain array binding serializes exactly as it always did.
+ *
  *   The `harness` arm carries NO value, and that is the whole reason it is its own arm. What a harness
  *   supplies is exactly what the fill seam has no vocabulary for — a callback, an instance, a thing with
  *   identity — so there is nothing to serialize into a case. It carries the parameter and the KEY PATH
  *   into the declaration instead, and the run resolves the live value by loading the same harness file
  *   the compile read. A value slot here would have to hold a rendering of a function, which is a second
  *   encoding of something only the run has.
+ *
+ *   A `harness` binding carries `rest` for the same reason an `array` one does: a harness can answer a
+ *   REST parameter (`...sinks: ((m: string) => void)[]`) as readily as an ordinary one, and the resolved
+ *   value at run time is an array either way — one the interpreter must SPREAD across the tail
+ *   positional slots the parameter stands for, never hand over as a single argument nested one level too
+ *   deep. Carried only when true, so a plain harness binding serializes exactly as it always did.
  *
  *   It is its OWN contract so every transformer that BUILDS an arrange — `derive-cases`, `cause-arrange`,
  *   the funnel's param fill — names one binding directly instead of indexing into the case's array type.
@@ -58,11 +70,15 @@ export const arrangeBindingContract = z.discriminatedUnion('kind', [
     kind: z.literal('array'),
     param: symbolNameContract,
     value: z.array(arrangeValueContract),
+    // Present only when this array realizes a REST parameter — see the PURPOSE doc above.
+    rest: z.boolean().optional(),
   }),
   z.object({
     kind: z.literal('harness'),
     param: symbolNameContract,
     key: harnessKeyPathContract,
+    // Present only when this key realizes a REST parameter — see the PURPOSE doc above.
+    rest: z.boolean().optional(),
   }),
 ]);
 

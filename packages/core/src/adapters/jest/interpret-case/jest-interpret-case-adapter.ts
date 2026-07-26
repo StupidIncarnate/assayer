@@ -11,13 +11,20 @@
  *   environment variable is a key written before the entry runs — which for a module scope is the
  *   entry running at all, since `entry` is then the thunk that re-imports it. That is the whole of
  *   what makes an uncallable scope drivable, and it needs no special case here: both kinds are set
- *   up, then one function is applied.
+ *   up, then one function is applied. An ARRAY binding marked `rest` is the one binding that is not
+ *   ONE argument: its elements SPREAD across the tail positional slots the rest parameter stands for,
+ *   because `Reflect.apply` is positional and a rest parameter collects everything from its own
+ *   position onward — handing the whole array over as a single argument would nest it one level too
+ *   deep (`ns` binding to `[[7]]` instead of `[7]`).
  *
  *   A HARNESS binding is an argument too, but its value is not in the case: the case names a key path and
  *   the value is whatever the colocated harness registered under it, loaded by the shim. A key the
  *   declaration does not carry is `errored` and NAMES the key — never a throw, and never a silent
  *   `undefined` slid into the argument list. The silent version is the worst outcome available here: the
  *   entry would run on a value nobody supplied and whatever it then did would be reported as a verdict.
+ *   A harness binding marked `rest` resolves to an array too, and SPREADS across the tail positional
+ *   slots exactly as a `rest`-marked array binding does — a harness answering `...sinks` hands over the
+ *   array itself, never `[theArray]` nested one level too deep.
  *
  *   The environment is GLOBAL and shared by every case in the process, so it is snapshotted before
  *   the first write and restored in `finally` — including when the entry throws, which is exactly
@@ -89,7 +96,14 @@ export const jestInterpretCaseAdapter = ({
   // carry stops the case instead of reaching the entry as a hole in the argument list.
   const supplied = testCase.arrange.flatMap((binding) =>
     binding.kind === 'harness'
-      ? [{ param: binding.param, key: binding.key, resolved: harnessValueTransformer({ declarations: harness ?? [], key: binding.key }) }]
+      ? [
+          {
+            param: binding.param,
+            key: binding.key,
+            rest: binding.rest === true,
+            resolved: harnessValueTransformer({ declarations: harness ?? [], key: binding.key }),
+          },
+        ]
       : [],
   );
   const missing = supplied.filter((binding) => !binding.resolved.found);
@@ -115,17 +129,28 @@ export const jestInterpretCaseAdapter = ({
     supplied.map((binding) => [String(binding.param), binding.resolved.found ? binding.resolved.value : undefined]),
   );
 
-  // A param, an array, an object and a harness input all apply positionally, so each contributes one
-  // argument in arrange order; an env binding applies by writing a key, so it contributes none. A
-  // composite binding's `value` is already the plain structure the entry receives — nested to whatever
-  // depth it carries ({ db: { host: 'localhost' } } exactly as [[7]]) — so it needs no reconstruction.
-  const args = testCase.arrange.flatMap((binding): unknown[] =>
-    binding.kind === 'env'
-      ? []
-      : binding.kind === 'harness'
-        ? [suppliedByParam.get(String(binding.param))]
-        : [binding.value],
-  );
+  // A param, an object and a harness input all apply positionally, so each contributes ONE argument in
+  // arrange order; an env binding applies by writing a key, so it contributes none. A composite binding's
+  // `value` is already the plain structure the entry receives — nested to whatever depth it carries
+  // ({ db: { host: 'localhost' } } exactly as [[7]]) — so it needs no reconstruction. An ARRAY binding is
+  // one exception: it contributes one argument UNLESS it realizes a REST parameter, in which case its
+  // elements SPREAD across the tail positional slots the parameter stands for — `tally(11, ...[7])`, never
+  // `tally(11, [7])`, which would bind `ns` to `[[7]]` instead of `[7]`. A HARNESS binding takes the SAME
+  // exception for the SAME reason: a harness answering `...sinks` resolves to an array the interpreter
+  // must spread, never hand over nested one level too deep.
+  const args = testCase.arrange.flatMap((binding): unknown[] => {
+    if (binding.kind === 'env') {
+      return [];
+    }
+
+    if (binding.kind === 'harness') {
+      const value = suppliedByParam.get(String(binding.param));
+
+      return binding.rest === true && Array.isArray(value) ? value : [value];
+    }
+
+    return binding.kind === 'array' && binding.rest === true ? binding.value : [binding.value];
+  });
   const envBindings = testCase.arrange.flatMap((binding) => (binding.kind === 'env' ? [binding] : []));
   // Snapshotted BEFORE the first write, so the restore below puts back what was there rather than
   // what this case put there.

@@ -1,6 +1,7 @@
 import { BranchNodeStub, GlobalUseStub } from '@assayer/shared/contracts';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
+import { InvokedFnStub } from '../../contracts/invoked-fn/invoked-fn.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { ValueUseStub } from '../../contracts/value-use/value-use.stub';
 import { WalkFileResultStub } from '../../contracts/walk-file-result/walk-file-result.stub';
@@ -305,6 +306,295 @@ describe('analysisProjectionTransformer', () => {
             params: [],
             branches: [],
             calls: [CallSiteStub({ callee: { target: 'local', name: 'inner', startLine: 2 } })],
+          }),
+        ],
+      });
+
+      expect(analysisProjectionTransformer({ walked })).toStrictEqual({ success: true, functions: [] });
+    });
+  });
+
+  describe('a called ambient global only counts when it runs at MODULE LOAD', () => {
+    // The reported defect: a global call nested inside a named, exported, but UNCALLED function fires
+    // only when a caller invokes that function — never on import — so it must not manufacture a module
+    // entry. `report` is the only real entry here.
+    it('VALID: {a called global inside a named exported function nothing calls} => no module entry, only the function`s own', () => {
+      const walked = WalkFileResultStub({
+        globalUses: [GlobalUseStub({ scopePath: ['*module*', 'report'] })],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            branches: [],
+          }),
+          ScopeRecordStub({ scopePath: ['*module*', 'report'], name: 'report', kind: 'function', exported: true }),
+        ],
+      });
+
+      expect(analysisProjectionTransformer({ walked })).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'report',
+              scopePath: ['*module*', 'report'],
+              params: [{ name: 'value', type: { kind: 'number' } }],
+              returnType: { kind: 'string' },
+              line: 1,
+              access: { kind: 'named' },
+            },
+            branches: [],
+            exits: [],
+          },
+        ],
+      });
+    });
+
+    // A private helper only a NAMED export calls is a chained variant of the same bug: the helper never
+    // runs except through that external call either, however many scopes separate it from the module.
+    it('VALID: {a called global inside a same-file private only a named export calls} => still no module entry', () => {
+      const walked = WalkFileResultStub({
+        globalUses: [GlobalUseStub({ scopePath: ['*module*', 'helper'] })],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            branches: [],
+          }),
+          ScopeRecordStub({ scopePath: ['*module*', 'helper'], name: 'helper', kind: 'function', exported: false, access: { kind: 'unreachable' } }),
+          ScopeRecordStub({ scopePath: ['*module*', 'report'], name: 'report', kind: 'function', exported: true }),
+        ],
+      });
+
+      expect(analysisProjectionTransformer({ walked })).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: 'report',
+              scopePath: ['*module*', 'report'],
+              params: [{ name: 'value', type: { kind: 'number' } }],
+              returnType: { kind: 'string' },
+              line: 1,
+              access: { kind: 'named' },
+            },
+            branches: [],
+            exits: [],
+          },
+        ],
+      });
+    });
+
+    // An IIFE runs the moment the module loads, so a global call inside one is import-time code — this
+    // must KEEP producing the module entry, not lose it to the narrowed check.
+    it('VALID: {a called global inside an IIFE} => the module entry, since an IIFE runs at module load', () => {
+      const walked = WalkFileResultStub({
+        globalUses: [GlobalUseStub({ scopePath: ['*module*', 'iife'] })],
+        invokedFns: [InvokedFnStub({ startLine: 2 })],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            branches: [],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'iife'],
+            name: 'iife',
+            kind: 'function',
+            exported: false,
+            access: { kind: 'unreachable' },
+            startLine: 2,
+            endLine: 2,
+          }),
+        ],
+      });
+
+      expect(analysisProjectionTransformer({ walked })).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: '*module*',
+              scopePath: ['*module*'],
+              params: [],
+              returnType: { kind: 'string' },
+              line: 1,
+              access: { kind: 'module' },
+            },
+            branches: [],
+            exits: [],
+          },
+        ],
+      });
+    });
+
+    // Two levels of immediate invocation nested inside each other are both still module-load code — the
+    // single depth-sorted pass must resolve the outer IIFE before the inner one is checked.
+    it('VALID: {a called global inside an IIFE nested inside another IIFE} => still the module entry', () => {
+      const walked = WalkFileResultStub({
+        globalUses: [GlobalUseStub({ scopePath: ['*module*', 'outer', 'inner'] })],
+        invokedFns: [InvokedFnStub({ startLine: 2 }), InvokedFnStub({ startLine: 3 })],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            branches: [],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'outer'],
+            name: 'outer',
+            kind: 'function',
+            exported: false,
+            access: { kind: 'unreachable' },
+            startLine: 2,
+            endLine: 4,
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'outer', 'inner'],
+            name: 'inner',
+            kind: 'function',
+            exported: false,
+            access: { kind: 'unreachable' },
+            startLine: 3,
+            endLine: 3,
+          }),
+        ],
+      });
+
+      expect(analysisProjectionTransformer({ walked })).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: '*module*',
+              scopePath: ['*module*'],
+              params: [],
+              returnType: { kind: 'string' },
+              line: 1,
+              access: { kind: 'module' },
+            },
+            branches: [],
+            exits: [],
+          },
+        ],
+      });
+    });
+
+    // A callback the module passes to a call it makes UNCONDITIONALLY at its own top level also runs
+    // the moment the module loads, exactly like an IIFE — `[1, 2].forEach(() => console.log(1))`.
+    it('VALID: {a called global inside a callback passed to an unconditional top-level call} => the module entry', () => {
+      const walked = WalkFileResultStub({
+        globalUses: [GlobalUseStub({ scopePath: ['*module*', 'each'] })],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            branches: [],
+            calls: [CallSiteStub({ callee: { target: 'unresolved' }, args: [{ kind: 'callback', startLine: 2 }], guardPath: [] })],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'each'],
+            name: 'each',
+            kind: 'function',
+            exported: false,
+            access: { kind: 'unreachable' },
+            startLine: 2,
+            endLine: 2,
+          }),
+        ],
+      });
+
+      expect(analysisProjectionTransformer({ walked })).toStrictEqual({
+        success: true,
+        functions: [
+          {
+            entry: {
+              name: '*module*',
+              scopePath: ['*module*'],
+              params: [],
+              returnType: { kind: 'string' },
+              line: 1,
+              access: { kind: 'module' },
+            },
+            branches: [],
+            exits: [],
+          },
+        ],
+      });
+    });
+
+    // The SAME callback shape, but reached only through a GUARDED top-level call — conditional code is
+    // not proven to run on every import, so it must not count.
+    it('VALID: {a called global inside a callback passed to a GUARDED top-level call} => no module entry', () => {
+      const walked = WalkFileResultStub({
+        globalUses: [GlobalUseStub({ scopePath: ['*module*', 'each'] })],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            branches: [],
+            calls: [
+              CallSiteStub({
+                callee: { target: 'unresolved' },
+                args: [{ kind: 'callback', startLine: 2 }],
+                guardPath: [{ branchCoverageId: '*module*/if:id:flag', arm: 'then' }],
+              }),
+            ],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'each'],
+            name: 'each',
+            kind: 'function',
+            exported: false,
+            access: { kind: 'unreachable' },
+            startLine: 2,
+            endLine: 2,
+          }),
+        ],
+      });
+
+      expect(analysisProjectionTransformer({ walked })).toStrictEqual({ success: true, functions: [] });
+    });
+
+    // A class opens no scope of its own (only module/function-like do), so a global call inside a
+    // property initializer or a static block names a scope this projection never opened. Honestly
+    // excluded rather than guessed at, never blanket-included the way the file-wide check used to.
+    it('VALID: {a called global inside a class property initializer} => no module entry', () => {
+      const walked = WalkFileResultStub({
+        globalUses: [GlobalUseStub({ scopePath: ['*module*', 'Foo'] })],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            branches: [],
           }),
         ],
       });

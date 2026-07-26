@@ -13,19 +13,39 @@
  *   A REQUIRED parameter the seam refuses is left in place: it is a real debt, the entry cannot be
  *   called without it, and `fill-param` reports the refusal that `input-gap` invoices.
  *
+ *   `harness` names the parameters a colocated harness ANSWERS for this entry — the same names
+ *   `cause-arrange` accepts to bind them instead of filling them. A trailing optional/rest parameter the
+ *   seam refuses is still not owed BY THE SEAM, but a harness that names it has already answered the
+ *   refusal, so truncating past it would throw the payment away before `cause-arrange` ever sees it:
+ *   the harness key would validate (`harness-validate` checks it against the entry's full declared
+ *   params, never this truncated list) and then bind nothing, because the parameter it names is no
+ *   longer in `applied` for anything downstream to attach a binding to. Naming it here is what keeps it
+ *   in the list truncation would otherwise drop.
+ *
  * USAGE:
  * appliedParamsTransformer({ params: [{ name: 'size', type: { kind: 'number' } },
  *   { name: 'report', type: { kind: 'callable', text: '(m: string) => void' }, optional: true }] });
  * // Returns [{ name: 'size', type: { kind: 'number' } }] — the entry is driven as `maybe(11)`
+ * appliedParamsTransformer({ params: [...], harness: ['report'] });
+ * // A harness-answered trailing parameter is kept even though the seam alone would refuse it
  */
-import type { ParamDescriptor } from '@assayer/shared/contracts';
+import type { ParamDescriptor, SymbolName } from '@assayer/shared/contracts';
 
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 
-export const appliedParamsTransformer = ({ params }: { params: ParamDescriptor[] }): ParamDescriptor[] => {
+export const appliedParamsTransformer = ({
+  params,
+  harness,
+}: {
+  params: ParamDescriptor[];
+  harness?: readonly SymbolName[] | undefined;
+}): ParamDescriptor[] => {
+  const harnessNames = new Set((harness ?? []).map((name) => String(name)));
   const unowed = params.findIndex(
     (param) =>
-      (param.optional === true || param.rest === true) && fillParamTransformer({ param }).kind === 'unfillable',
+      (param.optional === true || param.rest === true) &&
+      !harnessNames.has(String(param.name)) &&
+      fillParamTransformer({ param }).kind === 'unfillable',
   );
 
   return unowed === -1 ? params : params.slice(0, unowed);

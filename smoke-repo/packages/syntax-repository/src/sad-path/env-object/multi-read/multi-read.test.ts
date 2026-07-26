@@ -8,10 +8,10 @@ import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 const source = readFileSync(join(__dirname, 'multi-read.ts'), 'utf8');
 const relPath = 'src/sad-path/env-object/multi-read/multi-read.ts';
 
-const CASE_1_EXIT = '*module*/exit@switch:id:code,EqualsEqualsEqualsToken,num:1#then';
-const CASE_2_EXIT = '*module*/exit@switch:id:code,EqualsEqualsEqualsToken,num:2#then';
+const CASE_1_EXIT = '*module*/exit@switch:id:statusCode,EqualsEqualsEqualsToken,num:1#then';
+const CASE_2_EXIT = '*module*/exit@switch:id:statusCode,EqualsEqualsEqualsToken,num:2#then';
 const DEFAULT_EXIT =
-  '*module*/exit@switch:id:code,EqualsEqualsEqualsToken,num:1#else/switch:id:code,EqualsEqualsEqualsToken,num:2#else';
+  '*module*/exit@switch:id:statusCode,EqualsEqualsEqualsToken,num:1#else/switch:id:statusCode,EqualsEqualsEqualsToken,num:2#else';
 
 // The reason the analysis carries about the MODE branch, verbatim — pinned here rather than left to
 // the transformer's own unit test, because that test authors the sentence it then asserts; this reads
@@ -25,8 +25,9 @@ const MODE_REASON =
   'and each arm becomes a case Assayer drives.';
 
 describe('env-object / multi-read — two env reads, one DRIVEN and one UNDRIVEN, both feeding the stub', () => {
-  // `code` comes from `Number(process.env.CODE)`, so the switch is DRIVEN by the environment exactly as
-  // switch/pure-statement is: one case per arm, each writing CODE and importing the module fresh.
+  // `statusCode` comes from `Number(process.env.CODE)`, so the switch is DRIVEN by the environment
+  // exactly as switch/pure-statement is: one case per arm, each writing CODE and importing the module
+  // fresh.
   it('VALID: {a module-scope switch on Number(process.env.CODE)} => one env case per arm', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
 

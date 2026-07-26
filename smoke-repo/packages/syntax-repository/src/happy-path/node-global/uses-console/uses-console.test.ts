@@ -18,7 +18,9 @@ describe('node-global / uses-console — an ambient console.log call the file ne
     expect(graph).toStrictEqual({
       edges: [],
       references: [],
-      globalUses: [{ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 3, column: 1 }],
+      globalUses: [
+        { name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 3, column: 1, scopePath: ['*module*'] },
+      ],
       envReads: [],
     });
   });

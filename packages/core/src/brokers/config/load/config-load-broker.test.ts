@@ -56,4 +56,19 @@ describe('configLoadBroker', () => {
       );
     });
   });
+
+  describe('config file that cannot be read from disk', () => {
+    it("ERROR: {configPath: missing file, fsReadFileAdapter rejects with ENOENT} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+      const proxy = configLoadBrokerProxy();
+      proxy.readThrows({
+        error: Object.assign(new Error("ENOENT: no such file or directory, open '/repo/assayer.config.json'"), {
+          code: 'ENOENT',
+        }),
+      });
+
+      await expect(configLoadBroker({ configPath: '/repo/assayer.config.json' })).rejects.toThrow(
+        "ENOENT: no such file or directory, open '/repo/assayer.config.json'",
+      );
+    });
+  });
 });

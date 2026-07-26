@@ -15,11 +15,14 @@
  *   would then intersect against one string rather than against a bound — which is precisely how a
  *   satisfiable pair of guards used to come out empty.
  *
- *   Equality splits on whether the operand's type ENUMERATES its values. Against a union, the values
- *   other than the literal are known, so `!== 'a'` is the closed set of the rest and fans out one case
- *   per member (tier-2). Against an open type they are not, so it is the whole domain minus a point —
- *   an exclusion. Collapsing that second case to a single sample is what makes a later comparison on
- *   the same operand intersect to nothing.
+ *   Equality splits on whether the operand's type ENUMERATES its values. Against a union OR a boolean,
+ *   the values other than the literal are known — a boolean has exactly one other value, its logical
+ *   complement — so `!== 'a'` and `b !== false` are both the closed set of the rest and realize a real
+ *   member (tier-2). Against an open type they are not, so it is the whole domain minus a point — an
+ *   exclusion. Collapsing that second case to a single sample is what makes a later comparison on the
+ *   same operand intersect to nothing, which is also why a boolean cannot stay open: the seam's own
+ *   fallback fill for an unconstrained boolean is its OTHER value (`representative-value-statics`), so
+ *   an exclusion realizing to nothing would land the excluded arm on the exact literal it excludes.
  *
  *   A type with no SCALAR point at all — an object, an array, a callable, an opaque `Map<string,
  *   number>` — narrows only where the predicate itself carries the literal (`config.mode === 'a'` still
@@ -35,6 +38,7 @@
  * typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'length-gte', literal: 2 });
  * // Returns { satisfying: {lengthMin: 2}, violating: {lengthMax: 2, lengthMaxExclusive: true} }
  */
+import { representativeValueContract } from '@assayer/shared/contracts';
 import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { armValuesContract } from '../../contracts/arm-values/arm-values-contract';
@@ -52,20 +56,15 @@ export const typeToRangeTransformer = ({
 }): ArmValues => {
   const rep = representativeValueTransformer({ type });
   const num = typeof literal === 'number' ? literal : 0;
-  const distinct =
-    literal === undefined
-      ? rep
-      : typeof literal === 'number'
-        ? literal + 1
-        : typeof literal === 'boolean'
-          ? !literal
-          : `${literal}x`;
   const unionOthers: RepresentativeValue[] =
     type.kind === 'union'
       ? type.members.flatMap((member) => (member.kind === 'literal' && member.value !== literal ? [member.value] : []))
-      : [];
-  const excludedPoint = literal === undefined ? distinct : literal;
-  // An enumerated type knows the other members by name; an open one only knows the point to avoid, and
+      : type.kind === 'boolean' && typeof literal === 'boolean'
+        ? [representativeValueContract.parse(!literal)]
+        : [];
+  const excludedPoint = literal === undefined ? rep : literal;
+  // An enumerated type knows the other members by name; a BOOLEAN is a closed two-value enumeration of
+  // its own (`unionOthers` names the complement above); an open type only knows the point to avoid, and
   // a type with no scalar point knows neither — so it excludes nothing rather than excluding a fiction.
   const otherThanLiteral =
     unionOthers.length > 0

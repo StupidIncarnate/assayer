@@ -1,6 +1,7 @@
 import {
   CompiledFileBlobStub,
   ContentHashStub,
+  GlobalUseStub,
   ModuleEdgeStub,
   RelPathStub,
 } from '@assayer/shared/contracts';
@@ -145,6 +146,96 @@ describe('compileResolveGraphBroker', () => {
         },
         errors: [],
       });
+    });
+  });
+
+  describe('two files importing the same package export', () => {
+    it("VALID: {src/a.ts and src/b.ts both import { foo } from 'left-pad'} => reads the external signature exactly once, keyed by the shared dtsPath and export name", async () => {
+      const proxy = compileResolveGraphBrokerProxy();
+      proxy.configFilePath({ path: '/repo/tsconfig.json' });
+      proxy.queueBlob({
+        blob: CompiledFileBlobStub({
+          relPath: 'src/a.ts',
+          moduleGraph: {
+            edges: [ModuleEdgeStub({ kind: 'import', specifier: 'left-pad', bindings: [{ kind: 'named', name: 'foo' }] })],
+            references: [],
+          },
+        }),
+      });
+      proxy.queueBlob({
+        blob: CompiledFileBlobStub({
+          relPath: 'src/b.ts',
+          moduleGraph: {
+            edges: [ModuleEdgeStub({ kind: 'import', specifier: 'left-pad', bindings: [{ kind: 'named', name: 'foo' }] })],
+            references: [],
+          },
+        }),
+      });
+      proxy.resolvesLocal({ fileName: '/repo/node_modules/left-pad/index.d.ts' });
+
+      await compileResolveGraphBroker({
+        root: '/repo',
+        blobsDir: '/blobs',
+        cacheDir: '/repo/.assayer/cache',
+        files: [
+          { relPath: RelPathStub({ value: 'src/a.ts' }), contentHash: HASH },
+          { relPath: RelPathStub({ value: 'src/b.ts' }), contentHash: HASH },
+        ],
+      });
+
+      expect(proxy.getExternalSignatureReadCalls()).toStrictEqual([
+        {
+          tsConfigFilePath: '/repo/tsconfig.json',
+          dtsPath: '/repo/node_modules/left-pad/index.d.ts',
+          exportName: 'foo',
+          cacheDir: '/repo/.assayer/cache',
+        },
+      ]);
+    });
+  });
+
+  describe('two files reading the same ambient global', () => {
+    it("VALID: {src/a.ts and src/b.ts both read process.env, uncalled} => reads the global signature exactly once, keyed by the shared reference", async () => {
+      const proxy = compileResolveGraphBrokerProxy();
+      proxy.configFilePath({ path: '/repo/tsconfig.json' });
+      proxy.queueBlob({
+        blob: CompiledFileBlobStub({
+          relPath: 'src/a.ts',
+          moduleGraph: {
+            edges: [],
+            references: [],
+            globalUses: [GlobalUseStub({ name: 'process', member: 'env', called: false })],
+          },
+        }),
+      });
+      proxy.queueBlob({
+        blob: CompiledFileBlobStub({
+          relPath: 'src/b.ts',
+          moduleGraph: {
+            edges: [],
+            references: [],
+            globalUses: [GlobalUseStub({ name: 'process', member: 'env', called: false })],
+          },
+        }),
+      });
+
+      await compileResolveGraphBroker({
+        root: '/repo',
+        blobsDir: '/blobs',
+        cacheDir: '/repo/.assayer/cache',
+        files: [
+          { relPath: RelPathStub({ value: 'src/a.ts' }), contentHash: HASH },
+          { relPath: RelPathStub({ value: 'src/b.ts' }), contentHash: HASH },
+        ],
+      });
+
+      expect(proxy.getExternalSignatureReadGlobalCalls()).toStrictEqual([
+        {
+          tsConfigFilePath: '/repo/tsconfig.json',
+          reference: { kind: 'global', name: 'process', member: 'env', called: false },
+          cacheDir: '/repo/.assayer/cache',
+        },
+      ]);
     });
   });
 });

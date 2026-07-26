@@ -24,13 +24,27 @@
  *   reads-as-complete silence the gap channel exists to break. The surface's own refusals are tagged with
  *   the surface, and the gap channel de-duplicates them against its own derivation's.
  *
+ *   `harness` is that refusal being CLOSED, keyed by the scope it was raised against rather than a single
+ *   spec: a funnelled private is reached only through its host, but the harness that pays its refusal
+ *   names the PRIVATE (`on \`build\``), never the host, so the map is consulted at EVERY hop by that
+ *   hop's own `scope.name` — the surface's own params at the top, then each private's own params as the
+ *   recursion descends into it. A hop with no entry in the map derives exactly as it does with none at
+ *   all. The binding this seeds rides up through the SAME generic rebase every other binding kind
+ *   already does (`{ ...binding, param: param.name }`), so it is BOUND where the private is called —
+ *   the caller's own param slot — never spliced onto the host's argument list as an extra positional
+ *   argument the signature has no slot for.
+ *
+ *   `consumed` carries each private's own full parameter list alongside its name, so a caller building
+ *   the file's `declaringScopes` fact (what `harness-validate` and this same overlay both read) does not
+ *   have to re-walk the scope records this transformer already holds.
+ *
  * USAGE:
  * funnelNamedCasesTransformer({ scope: outer, scopes, welds: new Map() });
- * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }], consumed: [{ name, startLine }],
- * //   unfillable: [{ param, type, owner }] }
+ * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }],
+ * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
 import { derivedTestCaseContract, entryLabelContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumber, RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumber, ParamDescriptor, RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -44,10 +58,12 @@ export const funnelNamedCasesTransformer = ({
   scope,
   scopes,
   welds,
+  harness,
 }: {
   scope: ScopeRecord;
   scopes: ScopeRecord[];
   welds: Map<SymbolName, RepresentativeValue>;
+  harness?: ReadonlyMap<SymbolName, readonly SymbolName[]>;
 }): {
   cases: DerivedTestCase[];
   unreachable: {
@@ -56,17 +72,23 @@ export const funnelNamedCasesTransformer = ({
     welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
     displayName: SymbolName;
   }[];
-  consumed: { name: SymbolName; startLine: LineNumber }[];
+  consumed: { name: SymbolName; startLine: LineNumber; params: ParamDescriptor[] }[];
   unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[];
 } => {
+  // A harness spec for THIS hop alone — the map is consulted by this scope's own name, never a
+  // caller's, so a private's harness never leaks onto the surface's own derivation or a sibling private.
+  const ownHarness = harness?.get(scope.name);
+
   // This scope's own cases, over its own branches with any inherited weld stamped — the same derivation
-  // a directly-analyzed scope gets, so a welded arm evaluates rather than being admitted.
+  // a directly-analyzed scope gets, so a welded arm evaluates rather than being admitted, and a
+  // harness-supplied parameter binds rather than being refused.
   const derived = deriveCasesTransformer({
     params: scope.params,
     branches: stampBranchesTransformer({ branches: scope.branches, welds }),
     exits: scope.exits,
     envDrivable: false,
     ...(scope.predicateSignature === undefined ? {} : { returnPredicate: scope.predicateSignature }),
+    ...(ownHarness === undefined ? {} : { harness: { entry: scope.name, params: ownHarness } }),
   });
 
   // The scope parameters a call supplies, in declaration order because the interpreter applies them
@@ -83,7 +105,7 @@ export const funnelNamedCasesTransformer = ({
       return {
         cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
         unreachable: [],
-        consumed: [] as { name: SymbolName; startLine: LineNumber }[],
+        consumed: [] as { name: SymbolName; startLine: LineNumber; params: ParamDescriptor[] }[],
         unfillable: [] as { param: SymbolName; type: TypeText; owner: EntryLabel }[],
       };
     }
@@ -110,7 +132,12 @@ export const funnelNamedCasesTransformer = ({
       }
     });
 
-    const sub = funnelNamedCasesTransformer({ scope: privateScope, scopes, welds: privateWelds });
+    const sub = funnelNamedCasesTransformer({
+      scope: privateScope,
+      scopes,
+      welds: privateWelds,
+      ...(harness === undefined ? {} : { harness }),
+    });
 
     const cases = sub.cases.flatMap((subCase) => {
       // A steered surface param takes the private's arranged value under its own name; every other
@@ -160,7 +187,7 @@ export const funnelNamedCasesTransformer = ({
     return {
       cases,
       unreachable: sub.unreachable,
-      consumed: [{ name: privateScope.name, startLine: privateScope.startLine }, ...sub.consumed],
+      consumed: [{ name: privateScope.name, startLine: privateScope.startLine, params: privateScope.params }, ...sub.consumed],
       unfillable: sub.unfillable,
     };
   });

@@ -1,6 +1,12 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { HarnessIndexStub, ResolvedIndexStub, StubIndexStub, StubOverlayStub } from '@assayer/shared/contracts';
-import type { FileCount } from '@assayer/shared/contracts';
+import {
+  HarnessIndexStub,
+  ResolvedIndexStub,
+  StubIndexStub,
+  StubOverlayStub,
+  namespaceNameContract,
+} from '@assayer/shared/contracts';
+import type { FileCount, NamespaceName } from '@assayer/shared/contracts';
 
 import { PropertyGuardStub } from '../../../contracts/property-guard/property-guard.stub';
 
@@ -37,6 +43,9 @@ export const compileRunBrokerProxy = (): {
   getWrittenManifest: () => unknown;
   wasManifestWritten: () => boolean;
   getProcessedFileCount: () => FileCount;
+  getResolvedIndexWriteOrder: () => readonly NamespaceName[];
+  getPropertyIndexWriteOrder: () => readonly NamespaceName[];
+  getHarnessGraphWriteOrder: () => readonly NamespaceName[];
 } => {
   compileResolveRootBrokerProxy();
   pathBasenameAdapterProxy();
@@ -58,9 +67,6 @@ export const compileRunBrokerProxy = (): {
   const stubGraphHandle = registerMock({ fn: compileStubGraphBroker });
   const harnessGraphHandle = registerMock({ fn: compileHarnessGraphBroker });
   resolveHandle.mockResolvedValue({ index: ResolvedIndexStub(), errors: [] });
-  resolvedWriteHandle.mockResolvedValue({ success: true });
-  stubGraphHandle.mockResolvedValue({ index: StubIndexStub(), guards: [] });
-  harnessGraphHandle.mockResolvedValue({ index: HarnessIndexStub({ harnesses: [] }), errors: [] });
 
   // The overlay LOAD is replaced wholesale (its own tests cover reading `assayer/stubs/`); it defaults
   // to no committed overlay. The overlay RECONCILE runs REAL against the mocked current stub index, so
@@ -69,6 +75,30 @@ export const compileRunBrokerProxy = (): {
   stubOverlayReconcileBrokerProxy();
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
   overlayLoadHandle.mockResolvedValue([]);
+
+  // Captures the NAMESPACE each call reached, in call order -- the only way to pin the "write STABLE
+  // before CURRENT" collision-handling invariant the broker's own comments claim, since these three
+  // callees are replaced wholesale and their real implementations (covered by their own tests) never
+  // run here to produce an observable side effect.
+  const resolvedIndexWriteOrder: NamespaceName[] = [];
+  resolvedWriteHandle.mockImplementation(({ namespace }: { namespace: string }) => {
+    resolvedIndexWriteOrder.push(namespaceNameContract.parse(namespace));
+    return { success: true };
+  });
+
+  const stubGraphIndex = StubIndexStub();
+  const stubGraphWriteOrder: NamespaceName[] = [];
+  stubGraphHandle.mockImplementation(({ namespace }: { namespace: string }) => {
+    stubGraphWriteOrder.push(namespaceNameContract.parse(namespace));
+    return { index: stubGraphIndex, guards: [] };
+  });
+
+  const harnessGraphIndex = HarnessIndexStub({ harnesses: [] });
+  const harnessGraphWriteOrder: NamespaceName[] = [];
+  harnessGraphHandle.mockImplementation(({ namespace }: { namespace: string }) => {
+    harnessGraphWriteOrder.push(namespaceNameContract.parse(namespace));
+    return { index: harnessGraphIndex, errors: [] };
+  });
 
   return {
     onCurrentBranch: ({ name }: { name: string }): void => {
@@ -145,5 +175,8 @@ export const compileRunBrokerProxy = (): {
     getWrittenManifest: (): unknown => manifestProxy.getWrittenManifest(),
     wasManifestWritten: (): boolean => manifestProxy.wasWritten(),
     getProcessedFileCount: (): FileCount => processCurrentProxy.processedCount(),
+    getResolvedIndexWriteOrder: (): readonly NamespaceName[] => resolvedIndexWriteOrder,
+    getPropertyIndexWriteOrder: (): readonly NamespaceName[] => stubGraphWriteOrder,
+    getHarnessGraphWriteOrder: (): readonly NamespaceName[] => harnessGraphWriteOrder,
   };
 };

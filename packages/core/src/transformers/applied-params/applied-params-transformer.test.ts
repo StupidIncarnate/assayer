@@ -1,4 +1,4 @@
-import { ParamDescriptorStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub, SymbolNameStub, TypeDescriptorStub } from '@assayer/shared/contracts';
 
 import { appliedParamsTransformer } from './applied-params-transformer';
 
@@ -67,6 +67,57 @@ describe('appliedParamsTransformer', () => {
   describe('an entry with no parameters', () => {
     it('EMPTY: {no params} => no applied params', () => {
       expect(appliedParamsTransformer({ params: [] })).toStrictEqual([]);
+    });
+  });
+
+  // A trailing optional/rest parameter a harness ANSWERS is no longer unowed: the harness has already
+  // paid the refusal, so truncating it here would throw that payment away before `cause-arrange` ever
+  // sees it bound.
+  describe('a trailing parameter a HARNESS answers', () => {
+    it('VALID: {a rest array of callbacks the harness names} => kept, not truncated', () => {
+      const params = [SIZE, ParamDescriptorStub({ name: 'sinks', type: { kind: 'array', element: REPORT_TYPE }, rest: true })];
+
+      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'sinks' })] })).toStrictEqual([
+        { name: 'size', type: { kind: 'number' } },
+        { name: 'sinks', type: { kind: 'array', element: { kind: 'callable', text: '(m: string) => void' } }, rest: true },
+      ]);
+    });
+
+    it('VALID: {an optional callback the harness names} => kept, not truncated', () => {
+      const params = [SIZE, ParamDescriptorStub({ name: 'report', type: REPORT_TYPE, optional: true })];
+
+      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'report' })] })).toStrictEqual([
+        { name: 'size', type: { kind: 'number' } },
+        { name: 'report', type: { kind: 'callable', text: '(m: string) => void' }, optional: true },
+      ]);
+    });
+
+    it('VALID: {an unfillable optional followed by a fillable one, harness naming only the FIRST} => both kept', () => {
+      const params = [
+        SIZE,
+        ParamDescriptorStub({ name: 'report', type: REPORT_TYPE, optional: true }),
+        ParamDescriptorStub({ name: 'retries', type: { kind: 'number' }, optional: true }),
+      ];
+
+      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'report' })] })).toStrictEqual([
+        { name: 'size', type: { kind: 'number' } },
+        { name: 'report', type: { kind: 'callable', text: '(m: string) => void' }, optional: true },
+        { name: 'retries', type: { kind: 'number' }, optional: true },
+      ]);
+    });
+
+    it('VALID: {a harness naming a DIFFERENT, unrelated param} => the unowed tail still truncates', () => {
+      const params = [SIZE, ParamDescriptorStub({ name: 'report', type: REPORT_TYPE, optional: true })];
+
+      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'size' })] })).toStrictEqual([
+        { name: 'size', type: { kind: 'number' } },
+      ]);
+    });
+
+    it('EMPTY: {harness names nothing} => truncates exactly as with no harness at all', () => {
+      const params = [SIZE, ParamDescriptorStub({ name: 'report', type: REPORT_TYPE, optional: true })];
+
+      expect(appliedParamsTransformer({ params, harness: [] })).toStrictEqual([{ name: 'size', type: { kind: 'number' } }]);
     });
   });
 });

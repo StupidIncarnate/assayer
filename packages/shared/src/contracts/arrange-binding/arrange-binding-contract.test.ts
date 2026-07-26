@@ -40,6 +40,14 @@ describe('arrangeBindingContract', () => {
 
       expect(result).toStrictEqual({ kind: 'array', param: 'grid', value: [[7]] });
     });
+
+    // `rest` marks an array binding that realizes a REST parameter, so the interpreter SPREADS its
+    // elements across the tail positional slots instead of handing the array over as one argument.
+    it('VALID: {kind: "array", rest: true} => parses, marking the binding for interpreter spreading', () => {
+      const result = arrangeBindingContract.parse({ kind: 'array', param: 'ns', value: [7], rest: true });
+
+      expect(result).toStrictEqual({ kind: 'array', param: 'ns', value: [7], rest: true });
+    });
   });
 
   describe('an object binding', () => {
@@ -78,6 +86,15 @@ describe('arrangeBindingContract', () => {
       } as never);
 
       expect(result).toStrictEqual({ kind: 'harness', param: 'report', key: 'inputs.audit.report' });
+    });
+
+    // `rest` marks a harness binding that realizes a REST parameter, the same fact `array` carries it
+    // for — so the interpreter SPREADS the resolved value across the tail positional slots instead of
+    // handing it over as one argument.
+    it('VALID: {kind: "harness", rest: true} => parses, marking the binding for interpreter spreading', () => {
+      const result = arrangeBindingContract.parse({ kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true });
+
+      expect(result).toStrictEqual({ kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true });
     });
   });
 

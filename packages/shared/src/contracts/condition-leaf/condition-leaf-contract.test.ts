@@ -55,6 +55,24 @@ describe('conditionLeafContract', () => {
       });
     });
 
+    it('VALID: {a typeof operand} => carries operandIsTypeof', () => {
+      const result = conditionLeafContract.parse({
+        kind: 'leaf',
+        id: 'stub/if:BinaryExpression,TypeOfExpression,id:target,EqualsEqualsEqualsToken,str:string#leaf',
+        operandIsTypeof: true,
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'string' },
+      });
+
+      expect(result).toStrictEqual({
+        kind: 'leaf',
+        id: 'stub/if:BinaryExpression,TypeOfExpression,id:target,EqualsEqualsEqualsToken,str:string#leaf',
+        operandIsTypeof: true,
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'string' },
+      });
+    });
+
     it('VALID: {a call operand truthy leaf} => carries the operandCallPosition that joins it to its call site', () => {
       const result = conditionLeafContract.parse({
         kind: 'leaf',

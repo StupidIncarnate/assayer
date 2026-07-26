@@ -55,7 +55,7 @@
  */
 import { anonymousEntryLabelTransformer } from '@assayer/shared/transformers';
 import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LineNumber, LintEntry, RepresentativeValue, SymbolName, TypeText, UndrivenEntry } from '@assayer/shared/contracts';
+import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LineNumber, LintEntry, ParamDescriptor, RepresentativeValue, SymbolName, TypeText, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -98,8 +98,14 @@ const DEAD_SURFACE_MESSAGE =
 
 export const followCallsTransformer = ({
   walked,
+  harness,
 }: {
   walked: WalkFileResult;
+  // A harness spec per DECLARING scope name — the host's own, or a funnelled private's. Consulted by
+  // `funnelNamedCasesTransformer` and `throughCallerCasesTransformer` at each scope they derive, so a
+  // supplied parameter binds instead of being refused. Absent for the compile-time walk, which never
+  // sees a harness; present only on the consume-time re-derivation `harness-realize` runs.
+  harness?: ReadonlyMap<SymbolName, readonly SymbolName[]>;
 }): {
   followedEntries: FunctionAnalysis[];
   undriven: UndrivenEntry[];
@@ -130,9 +136,16 @@ export const followCallsTransformer = ({
   // reader can drive. `owner` names the scope that DECLARES it when that is not the entry — a private
   // or callback the entry folds in, which is no entry of its own and so has nowhere else to be said.
   refusals: { entryName: SymbolName; param: SymbolName; type: TypeText; owner?: EntryLabel }[];
+  // Every same-file PRIVATE a named-call funnel folded into a host — the ONE source `harness-validate`
+  // and this same overlay both read for a scope an `owner` names but `followedEntries` does not carry a
+  // signature for, so the two can never disagree about what a driving route folded in. A funnelled
+  // CALLBACK is deliberately absent: its refused element sits inside the ARRAY the host receives, and
+  // `ArrangeValue` has no representation for a harness-bound value living inside a composite, so naming
+  // it here would let `harness-validate` accept a key this overlay can never bind — see `funnel-cases`.
+  declaringScopes: { name: SymbolName; hostEntry: SymbolName; params: ParamDescriptor[] }[];
 } => {
   if (!walked.success) {
-    return { followedEntries: [], undriven: [], lints: [], unreachable: [], funnels: [], refusals: [] };
+    return { followedEntries: [], undriven: [], lints: [], unreachable: [], funnels: [], refusals: [], declaringScopes: [] };
   }
 
   const { scopes, reachedFns, invokedFns } = walked;
@@ -146,7 +159,15 @@ export const followCallsTransformer = ({
   // derived cases.
   const namedFunnels = reachable
     .filter((surface) => surface.branches.length === 0 && surface.exits.length === 1)
-    .map((surface) => ({ surface, funnel: funnelNamedCasesTransformer({ scope: surface, scopes, welds: new Map() }) }))
+    .map((surface) => ({
+      surface,
+      funnel: funnelNamedCasesTransformer({
+        scope: surface,
+        scopes,
+        welds: new Map(),
+        ...(harness === undefined ? {} : { harness }),
+      }),
+    }))
     .filter(({ funnel }) => funnel.consumed.length > 0);
 
   // Every private a named funnel drove: the follower drops these from its per-scope classification so a
@@ -362,7 +383,13 @@ export const followCallsTransformer = ({
         if (driver === undefined) {
           return [];
         }
-        const built = throughCallerCasesTransformer({ callee, caller: driver.caller, call: driver.call });
+        const calleeHarness = harness?.get(callee.name);
+        const built = throughCallerCasesTransformer({
+          callee,
+          caller: driver.caller,
+          call: driver.call,
+          ...(calleeHarness === undefined ? {} : { harness: { entry: callee.name, params: calleeHarness } }),
+        });
         return [
           {
             analysis: built.analysis,
@@ -490,6 +517,11 @@ export const followCallsTransformer = ({
             }),
           ]
         : [],
+    ),
+    // Every same-file PRIVATE a named-call funnel folded in, keyed to the HOST that a harness's key
+    // path resolves against — see the field's own doc above for why a funnelled CALLBACK is absent.
+    declaringScopes: namedFunnels.flatMap(({ surface, funnel }) =>
+      funnel.consumed.map((entry) => ({ name: entry.name, hostEntry: surface.name, params: entry.params })),
     ),
   };
 };

@@ -240,7 +240,15 @@ describe('dispatchNodeLayerAdapter', () => {
       const result = dispatchNodeLayerAdapter({ node, context: MODULE_CONTEXT });
 
       expect(result.globalUses).toStrictEqual([
-        { name: 'console', member: 'log', called: true, args: [{ kind: 'literal', value: 'x' }], line: 1, column: 1 },
+        {
+          name: 'console',
+          member: 'log',
+          called: true,
+          args: [{ kind: 'literal', value: 'x' }],
+          line: 1,
+          column: 1,
+          scopePath: ['*module*'],
+        },
       ]);
     });
   });

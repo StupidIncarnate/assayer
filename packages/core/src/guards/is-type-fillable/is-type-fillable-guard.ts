@@ -12,10 +12,20 @@
  *   `fill-param` declines to invent one rather than handing the code a placeholder it will call,
  *   dereference or measure.
  *
- *   A CANDIDATE is a scalar, so it fits only a type that HAS scalar values: its runtime kind must match
- *   `string`/`number`/`boolean`, it must BE a `literal`'s value, or some union member must admit it. No
- *   scalar is an array or an object, so those refuse a candidate however fillable they are — which is
- *   what keeps a string demand out of a `string[]` property.
+ *   A CANDIDATE is a scalar OR a COMPOSITE `ArrangeValue` — the same recursive shape a `param`/`array`/
+ *   `object` binding carries — so it fits only a type whose SHAPE matches: a scalar candidate only a
+ *   type with scalar values (its runtime kind must match `string`/`number`/`boolean`, it must BE a
+ *   `literal`'s value, or some union member must admit it), an array candidate only an `array` type
+ *   (checked element-wise, recursively), an object candidate only an `object` type (checked
+ *   property-wise, recursively). No scalar is an array or an object and neither is the other's
+ *   candidate, so each refuses the other's shape however fillable it is — which is what keeps a string
+ *   demand out of a `string[]` property and a number out of a `{ host: string }`.
+ *
+ *   `null` is a scalar candidate every SCALAR-admitting kind (`string`/`number`/`boolean`/`literal`, and
+ *   any `union` reaching one through them) accepts, whatever the declared type spells: the hermetic walk
+ *   has no strict-null-checks project config, so the checker already treats `null` as assignable
+ *   everywhere and a nullable union arrives here with its `null` member already gone from `type`, never
+ *   from the value it can hold.
  *
  *   An object with NO properties is fillable, as `{}`. What lands there is `interface Empty {}` and
  *   `Record<string, number>` (an index signature is invisible to the descriptor — a known limit of the
@@ -41,29 +51,36 @@
  * isTypeFillableGuard({ type: { kind: 'array', element: { kind: 'number' } } });    // true
  * isTypeFillableGuard({ type: { kind: 'callable', text: '(m: string) => void' } }); // false
  * isTypeFillableGuard({ type: { kind: 'array', element: { kind: 'string' } }, value: 'abc123' }); // false
+ * isTypeFillableGuard({ type: { kind: 'array', element: { kind: 'number' } }, value: [1, 'x'] });  // false
  */
-import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ArrangeValue, TypeDescriptor } from '@assayer/shared/contracts';
 
 export const isTypeFillableGuard = ({
   type,
   value,
 }: {
   type?: TypeDescriptor;
-  value?: RepresentativeValue;
+  value?: ArrangeValue;
 }): boolean => {
   if (type === undefined) {
     return false;
   }
 
   switch (type.kind) {
+    // `null` passes every SCALAR kind, never just a `literal`/`union` that spells it: the hermetic walk
+    // reads types with no strict-null-checks config (§5.10-adjacent), so the checker that produced `type`
+    // already treats `null` as assignable to everything and collapses `string | null` to plain `string`
+    // — the type-reference name is gone, not the domain member. `null` is a value in the domain BECAUSE a
+    // nullish operand has one (`representative-value-contract`), so refusing it here for a `string` would
+    // contradict the very read that decided the operand's comparison is a legitimate `eq null`.
     case 'string':
-      return value === undefined || typeof value === 'string';
+      return value === undefined || value === null || typeof value === 'string';
     case 'number':
-      return value === undefined || typeof value === 'number';
+      return value === undefined || value === null || typeof value === 'number';
     case 'boolean':
-      return value === undefined || typeof value === 'boolean';
+      return value === undefined || value === null || typeof value === 'boolean';
     case 'literal':
-      return value === undefined || value === type.value;
+      return value === undefined || value === null || value === type.value;
     // SOME member is enough: a value of one member is a value of the union, so `string | Map<K,V>`
     // fills as a string rather than being refused for the half nothing can build — and a candidate any
     // one member admits is a value of the union too.
@@ -72,13 +89,13 @@ export const isTypeFillableGuard = ({
         isTypeFillableGuard({ type: member, ...(value === undefined ? {} : { value }) }),
       );
     // The TRUNCATED element is the self-reference rung: `[]` terminates it and is a complete value of
-    // the array. No scalar is an array, so a candidate is refused here however fillable the type is.
+    // the array. WITHOUT a candidate this asks only whether one can be BUILT; WITH one, the candidate
+    // must itself be an array (never a scalar or an object) and every element must be a value of the
+    // element type — checked recursively, so `number[][]` matches `[[7]]` element by element.
     case 'array':
-      return (
-        value === undefined &&
-        ((type.element.kind === 'object' && type.element.truncated === true) ||
-          isTypeFillableGuard({ type: type.element }))
-      );
+      return value === undefined
+        ? (type.element.kind === 'object' && type.element.truncated === true) || isTypeFillableGuard({ type: type.element })
+        : Array.isArray(value) && value.every((element) => isTypeFillableGuard({ type: type.element, value: element }));
     // EVERY REQUIRED property, and `[].every()` is what makes the property-less shape fillable as `{}`.
     // One unfillable required property makes the whole object unfillable — a `Sink` whose `write` is a
     // callable cannot be built, and half an object is a wrong input, not a partial one. An OPTIONAL
@@ -86,13 +103,24 @@ export const isTypeFillableGuard = ({
     // `interface TreeNode { label: string; child?: TreeNode }`, so a shape whose only unbuildable member
     // is one the declaration says may be absent is built rather than refused. A TRUNCATED shape never
     // reaches that test: its property list is the reader's stopping point, so `{}` says nothing about
-    // what the type requires. No scalar is an object either, so a candidate is refused.
+    // what the type requires. WITH a candidate, it must itself be a plain object (never a scalar or an
+    // array) and every REQUIRED property must be present with a value of ITS declared type — an OPTIONAL
+    // property may be absent from the candidate too, the same rule the constructibility question states.
     case 'object':
-      return (
-        value === undefined &&
-        type.truncated !== true &&
-        type.properties.every((property) => property.optional === true || isTypeFillableGuard({ type: property.type }))
-      );
+      return value === undefined
+        ? type.truncated !== true &&
+            type.properties.every((property) => property.optional === true || isTypeFillableGuard({ type: property.type }))
+        : typeof value === 'object' &&
+            value !== null &&
+            !Array.isArray(value) &&
+            type.truncated !== true &&
+            type.properties.every((property) => {
+              const candidate = Reflect.get(value, String(property.name)) as ArrangeValue | undefined;
+
+              return property.optional === true
+                ? candidate === undefined || isTypeFillableGuard({ type: property.type, value: candidate })
+                : candidate !== undefined && isTypeFillableGuard({ type: property.type, value: candidate });
+            });
     // No value in the arrange vocabulary is a function, and an opaque type carries only its text.
     // Both are NAMED rather than left to the default, so a descriptor kind added later fails the
     // exhaustiveness check and forces a decision; the default shares their answer because refusing is

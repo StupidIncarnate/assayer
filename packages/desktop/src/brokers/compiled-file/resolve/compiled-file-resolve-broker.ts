@@ -95,10 +95,19 @@ export const compiledFileResolveBroker = async ({
   // The harness overlay last: an entry whose input Assayer refused is DRIVEN from the colocated
   // `<basename>.harness.ts` under the SAME source root, so the Tests tab shows the supplied cases and the
   // Admissions tab stops naming a debt the reader has already paid. Read fresh per serve, never persisted.
+  // `walked` is threaded (omitted, never `undefined`, under exactOptionalPropertyTypes) so a refusal
+  // owned by a funnelled or through-caller private — invoiced against its host — can be paid here too,
+  // exactly as the flat own-params payment already is; a missing `walked` (unreadable source) still runs
+  // the broker, which degrades to that same flat payment on its own.
   const analysis =
     mapped === undefined || root === undefined
       ? mapped
-      : harnessRealizeBroker({ analysis: mapped, root: String(root), relPath: String(relPath) });
+      : harnessRealizeBroker({
+          analysis: mapped,
+          root: String(root),
+          relPath: String(relPath),
+          ...(walked === undefined ? {} : { walked }),
+        });
 
   return compiledFileViewContract.parse({
     relPath,

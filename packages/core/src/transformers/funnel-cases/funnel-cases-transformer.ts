@@ -135,8 +135,10 @@ export const funnelCasesTransformer = ({
     const arrange = surfaceParams.flatMap((param): ArrangeBinding[] => {
       const value = valueByParam.get(String(param.name));
 
+      // A REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
+      // positional slots the funnel steers instead of handing it over as one argument.
       if (value !== undefined) {
-        return [{ kind: 'array', param: param.name, value }];
+        return [{ kind: 'array', param: param.name, value, ...(param.rest === true ? { rest: true } : {}) }];
       }
 
       const fill = fillParamTransformer({ param });

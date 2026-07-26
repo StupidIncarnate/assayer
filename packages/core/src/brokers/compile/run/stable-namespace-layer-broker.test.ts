@@ -157,6 +157,41 @@ describe('stableNamespaceLayerBroker', () => {
     });
   });
 
+  describe('a caller-supplied exclude pattern', () => {
+    it("EDGE: {exclude: ['src/skip.ts'], two stable files, one matching} => forwards exclude to compilePlanStableBroker, so the manifest namespace omits the matching file", async () => {
+      const proxy = stableNamespaceLayerBrokerProxy();
+      const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
+      const keepContent = 'export const keep = 1;\n';
+      const keepHash = cryptoSha256Adapter({ content: keepContent });
+      proxy.changed({
+        sha,
+        lsTreeStdout:
+          '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/skip.ts\n' +
+          '100644 blob a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\tsrc/keep.ts\n',
+        fileContents: [keepContent],
+      });
+
+      const result = await stableNamespaceLayerBroker({
+        root: '/repo',
+        branch: 'master',
+        exclude: ['src/skip.ts'],
+        currentMax: 0,
+        blobsDir: '/repo/.assayer/cache/blobs',
+      });
+
+      expect(result).toStrictEqual({
+        resultEntry: { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
+        manifestNamespace: {
+          branch: 'master',
+          commit: sha,
+          files: [{ relPath: 'src/keep.ts', contentHash: keepHash }],
+        },
+        harnesses: [],
+        errors: [],
+      });
+    });
+  });
+
   describe('onProgress callback provided', () => {
     it('VALID: {onProgress set, one clean stable file} => emits planned, advanced, and done events for the stable namespace in order', async () => {
       const proxy = stableNamespaceLayerBrokerProxy();

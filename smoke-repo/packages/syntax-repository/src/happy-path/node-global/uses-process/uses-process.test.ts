@@ -19,8 +19,8 @@ describe('node-global / uses-process — ambient process.env access plus a proce
       edges: [],
       references: [],
       globalUses: [
-        { name: 'process', member: 'env', called: false, args: [], line: 1, column: 21 },
-        { name: 'process', member: 'cwd', called: true, args: [], line: 3, column: 20 },
+        { name: 'process', member: 'env', called: false, args: [], line: 1, column: 21, scopePath: ['*module*'] },
+        { name: 'process', member: 'cwd', called: true, args: [], line: 3, column: 20, scopePath: ['*module*'] },
       ],
       // The bare `process.env.MODE` read is captured as an env read naming the property, with no
       // literal (it is assigned, not compared) — so `MODE` is a stub reader with a guessed value.

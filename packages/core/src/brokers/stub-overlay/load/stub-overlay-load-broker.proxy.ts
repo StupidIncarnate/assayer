@@ -10,6 +10,9 @@ export const stubOverlayLoadBrokerProxy = (): {
   dirMissing: () => void;
   queueDir: (params: { entries: readonly { name: string; isDirectory: boolean }[] }) => void;
   queueFileContent: (params: { content: string }) => void;
+  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
+  // the like) propagates to the caller unmodified. This stages that rejection.
+  readThrows: (params: { error: Error }) => void;
 } => {
   const walkProxy = compileWalkWorkingTreeBrokerProxy();
   const existsProxy = fsExistsAdapterProxy();
@@ -32,6 +35,9 @@ export const stubOverlayLoadBrokerProxy = (): {
     },
     queueFileContent: ({ content }: { content: string }): void => {
       readFileProxy.returns({ content });
+    },
+    readThrows: ({ error }: { error: Error }): void => {
+      readFileProxy.throws({ error });
     },
   };
 };

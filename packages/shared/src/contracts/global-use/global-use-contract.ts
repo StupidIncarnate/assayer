@@ -12,8 +12,14 @@
  *   literal, or opaque) — the same structural projection a local call carries, never a source value
  *   (P4). `line`/`column` anchor where a stitch build-error would land (the call site a reader acts on).
  *
+ *   `scopePath` is the walk's `context.scopePath` at the point the use was recorded — the same axis a
+ *   `ScopeRecord` carries, which EXTENDS at a function boundary. The channel itself stays FLAT (never
+ *   claimed by a scope, unlike `calls`), but this is what lets a reader tell a use recorded at a file's
+ *   own top level from one recorded inside a function body, even though both ride the same file-wide
+ *   list.
+ *
  * USAGE:
- * globalUseContract.parse({ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1 });
+ * globalUseContract.parse({ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1, scopePath: ['*module*'] });
  * // Returns a validated GlobalUse (branded fields)
  */
 import { z } from 'zod';
@@ -39,6 +45,7 @@ export const globalUseContract = z.object({
   args: z.array(globalCallArgContract),
   line: lineNumberContract,
   column: columnNumberContract,
+  scopePath: z.array(symbolNameContract),
 });
 
 export type GlobalUse = z.infer<typeof globalUseContract>;

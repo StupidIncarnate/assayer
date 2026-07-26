@@ -8,6 +8,12 @@
  *
  *   In TAIL position a clause that does not return is itself an exit — it falls out of the switch,
  *   and nothing runs after it — so it gets a guarded completion exit, exactly as an `if` arm does.
+ *   That applies only when a `default` clause exists: with none, every clause's fallthrough and the
+ *   wholly-unmatched path continue into the exact same code — whatever follows the whole `switch` —
+ *   which the enclosing scope already probes as its own unaccounted-for exit (`read-accounted`
+ *   reports a default-less `switch` as unaccounted for precisely so the enclosing scope owns that
+ *   probe). A `default` present makes every clause mutually exclusive AND jointly exhaustive, so each
+ *   keeps its own disjoint completion; the `if` twin of this rule is in `handle-if`.
  *
  *   Note what it does NOT do: hardcode its guard path. The old analyzer emitted switch exits with a
  *   guard of exactly one step, so a `switch` inside an `if` silently lost the `if` — a real bug that
@@ -114,8 +120,16 @@ export const handleSwitchLayerAdapter = ({
     }).descents,
   );
 
-  // Falling out of a clause only ENDS the scope when nothing runs after the `switch`.
-  const completions = context.tail
+  // Falling out of a clause only ENDS the scope when nothing runs after the `switch`. And only when
+  // there IS a `default`: with none, every clause's fallthrough and the wholly-unmatched path
+  // converge on the exact same physical continuation — whatever follows the whole `switch` — which
+  // the enclosing scope already probes as its own unaccounted-for exit (`read-accounted` reports a
+  // default-less `switch` as unaccounted for precisely so the enclosing scope owns that probe).
+  // Minting a per-clause completion here too would fire twice on one execution — the taken clause's
+  // own probe, then the enclosing one right behind it — so a case predicting only this handler's exit
+  // never matches the observed suffix and fails against correct code. A `default` present makes every
+  // clause mutually exclusive AND jointly exhaustive, so each keeps its own disjoint completion.
+  const completions = context.tail && desugared.defaultClause !== undefined
     ? clauses.flatMap((clause) => {
         if (readAccountedLayerAdapter({ node: clause.statements.at(-1) })) {
           return [];

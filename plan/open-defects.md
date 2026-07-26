@@ -5,224 +5,75 @@
 > where it is known, and what closing it involves. Delete an entry when it closes — never
 > annotate it as resolved.
 >
-> **Scope:** every open defect, with no companion register. Anything not here is not known.
+> **Scope:** every open defect. Capability Assayer does not have YET lives in
+> `plan/followups.md` — those shapes refuse honestly, with an accurate invoice, so they are
+> gaps and not defects. One moves here the moment it starts LYING: deriving a case that
+> fails against correct code, reporting coverage that did not happen, or printing a reason
+> that is not the reason. Anything in neither file is not known.
 >
-> **Verify any fix with BOTH** `npm run ward` and `npm run test:syntax` — the specimen
-> catalogue is not in ward's jest graph. `npm run typecheck:syntax` is a third gate and is
-> currently red (§E1).
+> **Verify any fix with ALL THREE** `npm run ward`, `npm run test:syntax`, and
+> `npm run typecheck:syntax` — the specimen catalogue is not in ward's jest graph, and
+> `typecheck:syntax` covers a graph neither of the other two does.
 >
 > **Probe before asserting.** Import by absolute path under `npx tsx`; run the built CLI
 > at `packages/cli/dist/bin/assayer.js` for anything end-to-end.
 
-## A. Derivation soundness — a case that fails, or passes, against correct code
-
-These are the worst class: a false RED fails a build and blames the reader's code, and a
-false GREEN reports coverage that never happened. All are PRE-EXISTING — verified against a
-detached worktree at HEAD — but none is covered by either gate.
-
-### A1. A tail-position `if` with no `else` fails against correct code
-
-The most serious open defect, and the catalogue structurally cannot see it.
-
-```ts
-export const decide = (n: number): string => { if (n > 5) { return 'big'; } return 'small'; };
-```
-
-Fails at module scope, inside a function, and inside a callback alike. The catalogue has
-exactly two tail-`if` specimens and **both carry an `else`**, which is the only reason
-`test:syntax` is green over it —
-`smoke-repo/.../happy-path/if-else/pure-statement/pure-statement.ts` is this shape plus
-four characters, and deleting its `else` turns the suite red.
-
-Closing it needs the derivation fix plus a no-else specimen. **Until it is fixed, do not
-author a specimen on a no-else tail `if`** — you would pin the bug.
-
-### A2. `is-predicate-constraining` ORs the arms instead of requiring they differ
-
-`packages/core/src/guards/is-predicate-constraining/`
-
-The steerability gate asks "does EITHER arm name a value" when steerability needs "can the
-arms be arranged to DIFFERENT values". Two verified consequences, both failing against
-correct code:
-
-- `if (b === false)` — the satisfying arm names `false`, passes the OR, then both arms
-  arrange `false` and the one predicting the other exit fails.
-- `ns.length > 2` — predicts an arm the cardinality fan-out can never build (see A3).
-
-One line in intent; a real design decision in practice, which is why it was left.
-
-### A3. A `.length` guard on an array param derives guaranteed-failing cases
-
-`packages/core/src/transformers/cause-arrange/cause-arrange-transformer.ts` (~160-170, 214)
-
-```ts
-export const pick = (xs: string[]): string => { if (xs.length > 3) { return 'many'; } return 'few'; };
-```
-
-Derives SIX cases. The three predicting the `#then` exit arrange `[]`, `['abc123']` and
-`['abc123','abc123']` — every one of length ≤ 2, so every one takes the `else` arm at
-runtime. The length domain the guard produced is computed into `bindings` and then silently
-discarded by the unconditional cardinality fan-out. No specimen exercises it.
-
-### A4. `null` / `undefined` comparisons derive zero cases silently
-
-`v === null`, `v !== null` and `v === undefined` — three of the commonest branches in
-TypeScript — are admitted UNDRIVEN, and the reason reads "compare against a literal", which
-is exactly what they already do. Net better than the prior false FAIL, but `0/0, exit 0` on
-a null check reads as success. The undriven text enumerates three comparand kinds and is
-applied to four shapes that are none of them (bare truthiness, `null`, `undefined`, a
-same-file const).
-
-Root cause: `read-condition-layer-adapter.ts`'s `rightLiteral` reader handles
-`StringLiteral`, `NumericLiteral`, `TrueKeyword` and `FalseKeyword` — not `NullKeyword`. So
-the leaf carries `rightLiteral: undefined`, `predicateTransformer` buckets it
-`{kind:'unrecognized'}` alongside a genuinely unreadable `m === TARGET`, and
-`isPredicateConstrainingGuard` calls it non-constraining.
-
-`typeToRangeTransformer` already computes the correct `null` domain, so extending the reader
-activates a path nothing currently reaches. The change moves analyzer output for every
-`=== null` in the catalogue: verify with `npm run test:syntax`, not ward alone.
-
-### A5. A fillable REST parameter is applied as one array argument instead of spread
-
-```ts
-export function tally(size: number, ...ns: number[]): number { return ns.length + size; }
-```
-
-arranges `{kind:'array', param:'ns', value:[7]}`, and `jest-interpret-case` applies every
-non-env binding positionally — so the entry is called `tally(11, [7])` and `ns` binds to
-`[[7]]`. Benign for the structural exit assertion in most shapes (`ns.length` still reads
-1), wrong for anything that reads an element. The descriptor now carries `rest: true`, so
-the fix has the fact it needs: spread a rest binding in the interpreter, or give the arrange
-a rest-shaped binding kind.
-
-### A6. A truthy guard on a PARAMETER is arranged truthy on both arms
-
-`object-arrange` refuses the falsy arm of a truthiness read on a PROPERTY with no scalar
-point (`is-falsy-arm-guard` is the rule), so `if (config.db)` derives ONE case. The same
-read of the PARAMETER itself does not: `cause-arrange` fills the param from the seam on
-both arms, and every value the seam builds — `{}`, `[]`, `{ host: 'abc123' }` — is truthy.
-
-Probed:
-
-- `if (config)` on a `Config` param → **2 cases**, both arranging `{ mode: 'abc123' }`. The
-  one predicting the else exit cannot reach it, and fails against correct code.
-- `if (tags)` on a `string[]` param → **6 cases** (3 cardinalities × 2 arms). All three else
-  cases arrange a truthy array, `[]` included.
-
-The rule and its guard already exist and are tested; what is missing is the refusal path in
-`cause-arrange`, whose `unfillable` channel is already carried out for the `fill-param`
-case. No specimen exercises either form.
-
-Of everything in section A this is the cheapest real fix — the decision is made, the guard
-is written, and only the call site is absent.
-
-## B. Types that are refused although a value exists
-
-Each derives 0 cases and a GAP (exit 1). The invoice is accurate and ~1000 characters,
-naming the type as the SOURCE spells it — so these are honest refusals, not false ones.
-Closing any of them means teaching `read-type-fact` / `is-type-fillable` to BUILD the shape,
-never changing the message.
-
-### B1. Structural and builtin shapes
-
-`v: Ay & Bee` (intersection), `when: Date`, `task: Promise<string>`,
-`` t: `id-${string}` `` (template literal), `payload: Map<string, number>`,
-`pair: readonly [string, number]`.
-
-`Date` and `Promise` enumerate as objects of ~40 callable members, so every method-bearing
-lib type refuses by the same route.
-
-### B2. A `typeof` narrowing is admitted UNDRIVEN with a misleading reason
-
-```ts
-export const choose = (target: Plain | string): string =>
-  typeof target === 'string' ? target : target.label;
-```
-
-Correctly NOT invoiced (the union fills), but the branch is admitted UNDRIVEN and the reason
-says "make the deciding value a parameter" — `target` **is** a parameter. The real limit is
-that `read-condition` does not decompose a `typeof` comparison into operand + predicate, so
-the leaf carries no `operandParamName`. Either read the `typeof` form (its satisfying domain
-per union member is derivable) or word the admission for what it actually is.
-
-### B3. A cross-file object-MEMBER leaf keeps an opaque operand type
-
-`param-type-resolve` substitutes a leaf's `operandType` by type reference, so a DIRECT param
-read (`level === 'low'` typed `Level`) gets its declared union and fans out per member. An
-object-MEMBER read (`config.mode` on an imported `Config`) does not: the member access has
-no type node of its own, so its leaf carries no `typeRef` and `operandType` stays
-`{kind:'unknown', text:'any'}`.
-
-The derived CASES are correct — `stub-realize` arranges those branches from the stub view's
-per-property demands — but the enrichment panel shows `any` on the branch line, and any
-future consumer of the leaf's operand type reads a collapsed one. Indexing the resolved
-object descriptor by `operandPropertyPath` would close it.
-
-### B4. A branch on a DEEP property path derives nothing, and says the wrong reason
-
-`fill-value-transformer` builds a nested object value for any declared shape, so an
-unsteered `{ db: { retry: { backoff: string } } }` param is a real nested object. What is
-still flat is the CONSTRAINED side: `object-arrange` and `collect-property-demands` match
-only a single-segment property path.
-
-Probed against a three-layer `Config → db → retry`:
-
-- The walk reads all three layers perfectly and the leaf captures
-  `operandPropertyPath: ["db","retry","backoff"]` with `operandTypeRef: "Config"`. Nothing
-  is lost on the way in.
-- A branch on that path derives **0 cases and admits UNDRIVEN**, and the message misleads —
-  it says "make the deciding value a parameter" when the real reason is DEPTH.
-
-Closing it means following a multi-segment path through both transformers, which also
-retires the misleading admission.
-
 ## C. Harness remainders
 
-### C1. A harness cannot pay a refusal owned by a funnelled scope
+### C1. A harness cannot pay a refusal owned by a funnelled CALLBACK, or one folded across a file boundary
 
-A refusal that a driving route hits on an entry's behalf — a funnelled private's parameter,
-or a callback's — is invoiced against the HOST and the invoice reads ``on `helper` ``. But
-`harness-validate` checks declared keys against `FileAnalysis.functions[].entry.params`,
-which does not include a funnelled scope's parameters, so **declaring the key the invoice
-literally prints is a compile-time P1** ("a parameter the entry does not take").
-`harness-realize-broker` narrows supplied keys to the entry's own declared params for the
-same reason, so the run side agrees with the stitch rather than arranging an argument the
-signature has no slot for.
+Closed for the NAMED-PRIVATE shape: a refusal a driving route hits on a same-file private's
+behalf (`funnel-named-cases`, a branchless surface returning a private call; `through-caller-cases`,
+a private reached through a resolvable named call) is invoiced against the HOST and the
+invoice reads ``on `build` ``. `FileAnalysis.declaringScopes` now carries every such private
+(its own name, full param list, and the host that reaches it), and `harness-validate` treats it
+as a candidate exactly like a top-level entry — the key the invoice prints validates.
+`harness-realize-broker` takes an OPTIONAL `walked` (the raw parse its callers already hold) and,
+when given it, re-runs `follow-calls-transformer` itself with the harness spec threaded per
+declaring-scope name — never a second derivation path, the SAME transformer the compile walk
+used — so the supplied value rebases onto the CALLER's own argument slot (`funnel-named-cases`'s
+existing generic rebase, `{ ...binding, param: param.name }`) with the key path unchanged, never
+spliced onto the host's argument list as a slot the signature has no room for. Without `walked`
+the entry is left untouched, rather than risk the wrong binding shape a flat per-entry
+re-derivation over the private's own params alone would produce. `run-unit-broker`,
+`compiled-file-resolve-broker`, and the `syntax-traits` harness — the CLI's, the desktop's, and
+the catalogue's own real run paths, the same three seams every consume-time overlay is wired
+at — all thread `walked` here, so a harness naming a funnelled or through-caller private pays
+that refusal in `assayer unit` and the desktop app, not only in the catalogue's cross-check.
 
-Closing it means carrying the declaring scopes onto `FileAnalysis` so both the validation
-and the derivation can see them. Pairs with D3.
-
-### C2. A harness key declared as `undefined` buys a green verdict
-
-`assayerHarness({ inputs: { measure: { report: undefined } } })` validates, and an entry
-that never CALLS the refused parameter then reports `2/2 passed`, exit 0.
-
-`harness-value-transformer` documents the choice deliberately — it tests `in` rather than
-truthiness, because "a key declared as `undefined` is a value a human deliberately
-supplied". The arrange never carries the value, so the report cannot show what actually ran.
-This is the single known route to a green verdict bought without a usable input; decide
-whether the deliberate choice is still the right one.
+Still open for a funnelled CALLBACK — `funnel-cases` (an inline `items.map((n) => …)` folded into
+a branchless host) and `through-callback-cases`'s own callback element — and for
+`compose-cross-file-map` (the cross-file callback twin). Widening `declaringScopes` to admit these
+the same way would make `harness-validate` accept a key `harness-realize` can never bind: the
+callback's refused parameter is the ARRAY ELEMENT itself, so paying it means embedding a
+harness-resolved value inside the array `causeArrangeTransformer` builds for the host's array
+param — and `ArrangeValue` (`packages/shared/src/contracts/arrange-value/arrange-value-contract.ts`)
+has no variant for a value that is a harness key path rather than a representable literal. Until
+that capability exists, admitting these scopes into `declaringScopes` would open the exact
+validate/realize disagreement this entry exists to close, just walked in the other direction.
+`compose-cross-file-map` carries a second, independent blocker even if that capability lands: the
+declaring scope is a symbol in a SIBLING file's own `FileAnalysis`, not this file's, so closing it
+also needs the sibling's own colocated harness composed in — a strictly larger change than
+threading one fact through one file's pipeline.
 
 ## D. Catalogue coverage — features the specimen matrix cannot see regress
 
 The catalogue is the ratchet: a feature with no specimen can be lost without a single test
 turning red. Each of these is pinned only by core unit tests today.
 
-### D1. No plain `type X = { … }` specimen
+**A P1 can never be specimen'd, and that is structural.** A harness P1 fails the whole compile,
+so one bad `*.harness.ts` in the catalogue blocks `assayer unit` for every OTHER specimen beside
+it — verified against the real CLI, where an unrelated file's P1 stopped `assayer unit
+src/other.ts`. That cascades into `compileSmokeCache()` and every app and desktop e2e that
+depends on a clean compile. It is also the correct behaviour: a P1 is a build error, the same
+class as a broken import, and a build error that let the build continue would not be one.
 
-`interface Config` and `type Config = { mode: string }` are now byte-identical downstream
-(probed: same `declaredTypes`, same verdict). The only alias specimen in the catalogue is
-GENERIC — `happy-path/object/generic-alias/box.ts` (`export type Box<T> = { value: T }`) —
-so the plain non-generic form, which most TypeScript repos prefer, is unexercised.
-
-### D2. No types-only specimen
-
-A types-only module analyzes to zero entries and zero cases, so it fits neither bucket's
-verdict rule (happy-path wants ≥1 passing case, sad-path wants an admission).
-`object/cross-file-shape/types.ts` keeps `withDefaults` precisely to have a runnable entry.
-Pinning "an interface no signature mentions still reaches `declaredTypes`" needs a **bucket
-ruling for declaration-only files first**.
+The consequence is that the bucket rule cannot reach it. `sad-path/` is defined by the four
+ADMISSIONS — dark spot, gap, undriven, lint — and a P1 is none of them; it is the channel that
+stops the run rather than reporting on it. So any P1 is pinned against real files by an
+integration test instead (`compile-harness-graph-broker.integration.test.ts` compiles real
+fixtures through the real pipeline in an isolated temp dir). Reach for that precedent rather
+than trying to make the catalogue hold one.
 
 ### D3. No funnelled/driven-route input gap specimen
 
@@ -230,19 +81,13 @@ ruling for declaration-only files first**.
 belonging to a folded private or a callback, so that channel — added so those builders stop
 dropping refusals on the floor — cannot be seen to regress. Pairs with C1.
 
-### D4. No `.tsx` specimen, and the walkers cannot hold one
-
-The runner transform now selects `.tsx` and a probe proves a `.tsx` entry derives and runs
-cases, but a smoke-repo `.tsx` specimen is **invisible to `specimen-catalogue`** — it filters
-`.ts`, derives roots with `basename(x, '.ts')`, and finds the colocated test with
-`.replace(/\.ts$/)`. That is the silent skip this repo forbids: the file would exist and no
-suite would look at it. Teach that walker `.tsx` first, then add the specimen. JSX inside a
-`.tsx` needs `jsx` in the consumer tsconfig for ts-jest to compile it.
-
-`syntax-surface.harness` no longer contributes to this: `fileLeaves`/`dirNames` and
-`surfaceHeaderPattern` now share one `isAnalysedSourceFile` predicate, so the tree sets and
-the header count enumerate the same files. The harness symbol gate applies only to `.ts`,
-since a harness is always `.ts`.
+The private half is now specimen-able (C1 closed the mechanism a specimen would pin): a
+`sad-path/input-gap/funnelled-param` byte-identical twin of `happy-path/harness/funnelled-param`
+— a branchless surface returning a same-file private by an inline-callback argument, the
+private's own callback param refused — the first pinning the `on \`helper\`` invoice text
+through the real catalogue, the second a colocated `.harness.ts` naming the private and
+asserting real cases derive. The callback half still cannot be specimen'd honestly: no harness
+closes it yet (see C1's still-open half), so a specimen would only pin the refusal staying open.
 
 ### D5. No specimen carries a GAP and an UNDRIVEN branch on one entry
 
@@ -252,104 +97,42 @@ specimen declares both on one entry (probed: no `'undriven'` and `'gap:input'` c
 in `specimen-registry.ts`), so the rule is pinned only by a hand-built core unit case and
 cannot be seen to regress through real parsing.
 
-### D6. Two `SyntaxTrait` members have no specimen
+### D6. `access:unreachable` can never reach a specimen
 
-`access:through-caller` and `access:unreachable`. `uncataloguedTraits` names both honestly,
-so nothing lies — but a trait with no specimen is a trait whose derivation can be lost
-silently.
+`access:through-caller` now has one — `happy-path/composition/through-caller` — a private a
+caller reaches but does not RETURN (so it cannot fold into a funnel), promoted to its own
+entry with `callerName` naming the caller. `uncataloguedTraits` shrinks to one key.
+
+`access:unreachable` cannot follow it, and not for lack of a specimen: it is structurally
+excluded from ever landing on an entry. `readEntryAccessLayerAdapter` assigns it only when the
+module's export table has no entry for the scope (`read-entry-access-layer-adapter.ts:71`),
+which is exactly the condition under which `analysisProjectionTransformer`'s own filter
+(`scope.kind === 'function' && scope.exported`) already excludes that scope from
+`FileAnalysis.functions`. The only route back in is `followCallsTransformer`, which either
+FUNNELS the scope (folded into its caller, no entry of its own), promotes it to
+`access:through-caller`, or leaves it on `undriven` — which carries no access kind at all. So
+no specimen, however written, can put `access:unreachable` on an entry: the value is real only
+inside the raw walk, one step before `FileAnalysis` is built, and is pinned there — and only
+there — by `read-entry-access-layer-adapter.test.ts`. Closing this would mean changing what the
+field can hold, not writing a source file; `uncataloguedTraits` documents that in place of one.
 
 ## E. Gate and test coverage
 
-### E1. `typecheck:syntax` is red at HEAD, and npm can swallow it
+### E5. A scratch repo for a CLI run must be nested INSIDE this tree
 
-```
-src/happy-path/switch/pure-statement/pure-statement.ts(1,7): error TS2451: Cannot redeclare block-scoped variable 'code'.
-src/sad-path/env-object/multi-read/multi-read.ts(7,7):       error TS2451: Cannot redeclare block-scoped variable 'code'.
-```
+`ts-jest` resolves `node_modules` by climbing from the target repo root, so a `/tmp` fixture
+dies with "Module ts-jest in the transform option was not found" before reaching anything
+under test. A scratch dir created UNDER this repo resolves fine — the climb reaches the
+monorepo root — and `assayer unit` then runs end to end against it. That is how the funnelled-
+harness fix was proved through `packages/cli/dist/bin/assayer.js`.
 
-Two specimens each declare a module-scope `const code`, which collide as global-scope
-block-scoped redeclarations under the smoke-repo tsconfig. Verified pre-existing by stashing
-all work and re-running. Fix by renaming one const, or by giving the catalogue per-file
-module scope.
+So a one-off end-to-end check needs no fixture repo, only the right parent. Standing coverage
+still belongs against the smoke-repo (`run-console.e2e.ts`, `run-unit-broker.integration.test.ts`),
+which is a real npm workspace rather than a dir that has to be cleaned up.
 
-**When you assert this gate, assert tsc's OUTPUT, not the shell exit code** — npm has been
-observed swallowing the workspace failure and exiting 0.
-
-### E2. No test proves a saved run goes missing after a harness edit
-
-`run-id-broker`'s own tests pin that an edited harness moves the id and that an unharnessed
-file keeps its id. But `run-find-broker`'s unit test replaces `runLoadBroker` wholesale, so
-nothing exercises "saved run + edited harness ⇒ not found" through the reader the desktop
-actually calls. Confirmed empirically: reverting the run-id ingredient leaves both harness
-integration tests GREEN. Needs an integration-shaped test over a real cache dir.
-
-### E3. Nothing in CI drives a `.tsx` through the runner
-
-Only the emitted config is pinned. A behavioural pin needs a fixture repo **inside the
-workspace** — Jest resolves `ts-jest` relative to `rootDir`, so a `/tmp` fixture dies with
-"Module ts-jest in the transform option was not found". Blocked on D4.
-
-### E4. Three branches need a proxy capability that does not exist
-
-`compile-run-broker`, `config-load-broker` and `stable-namespace-layer-broker` each have a
-branch no test reaches, because the colocated `.proxy.ts` cannot stage what the branch needs:
-a rejection from an unwrapped `fsReadFileAdapter` call, and an assertion that a given
-argument reached a mocked callee.
-
-### E5. `assayer unit <path>` is unreachable from a CLI temp dir
-
-`ts-jest` resolves from a `node_modules` tree relative to the target repo root, which
-`mkdtemp` cannot supply — the run dies with "Module ts-jest in the transform option was not
-found" before reaching anything under test. Real coverage lives in `run-console.e2e.ts`
-against the smoke-repo, which is a real npm workspace. Same root cause as E3.
-
-The generic non-`CliExactOutputError` catch-all in `packages/cli/bin/assayer.ts` is
-unreached for a different reason: it needs a manufactured runtime exception thrown through
+The generic non-`CliExactOutputError` catch-all in `packages/cli/bin/assayer.ts` stays
+unreached for an unrelated reason: it needs a manufactured runtime exception thrown through
 the real compiled pipeline.
-
-## F. Dead surface
-
-Each is probe-backed — no constructible input reaches it. Under this repo's own vocabulary
-that makes them LINT: the repo's debt, to delete rather than to test.
-
-### F1. `isEnumLiteral()` can never independently decide its guard
-
-In `isStringLiteral() || isNumberLiteral() || isEnumLiteral()`, across
-`read-signature-type-layer-adapter.ts`, `read-global-type-layer-adapter.ts` and
-`read-type-fact-layer-adapter.ts`. TypeScript sets the `EnumLiteral` flag only in combination
-with `StringLiteral`/`NumberLiteral`, or folds it into a union an earlier branch handles.
-Probed across seven enum shapes: string member, numeric member, `const enum`, heterogeneous,
-single- and multi-member whole-enum, ambient `declare enum`.
-
-The enum-syntax cases in those three test files are still worth keeping — they pin real
-behaviour — but they reach the branch through `isStringLiteral()`.
-
-### F2. The `declaration === undefined` fallback is unreachable
-
-`{ flavor: 'other', text: 'unknown' }`, in the same three readers. Reaching the properties
-loop requires `getSymbol()` to be defined, and every such symbol carries at least one
-declaration node. `Record<'a'|'b', string>` resolves through its synthetic `__type` symbol to
-the `MappedType` node in `lib.es5.d.ts`; an intersection of object literals has no symbol,
-but then fails `isObject()` and never enters the loop.
-
-### F3. `definition.name === ''` at `read-callee-layer-adapter.ts:80`
-
-Only two paths populate the field. `FunctionDeclaration.getName()` returns `undefined` for an
-anonymous declaration, never `''` — and an anonymous declaration has no identifier for a call
-site to resolve through. `VariableDeclaration.getName()` never sees a destructured binding,
-which produces `BindingElement` nodes that `isVariableDeclaration` excludes. A valid
-identifier is never empty.
-
-The sibling `definition?.name === undefined` disjunct IS reachable, via `const f = 5; f();`.
-
-### F4. Two computed-but-unread branches
-
-- `branch.operand === undefined` at `undriven-branch-transformer.ts:47`, for the
-  `unread-comparison` cause. Every path producing that cause requires all leaves to be
-  arrangeable, and every arrangeable route requires a nameable `operandParamName`.
-- The `distinct` local in `type-to-range-transformer.ts`: its
-  `typeof literal === 'number' ? literal + 1 : …` branches are computed but never read for any
-  `literal !== undefined` input, because the only read site uses `literal` directly.
 
 ## G. Invariants held by convention rather than by a rule
 
@@ -361,39 +144,16 @@ of `typeToRangeTransformer` produces its violating arm as exactly `{ members: [n
 which is what drives every `config.mode ?? fallback` object-member guard.
 
 So `a ?? b` over a derived value substitutes `b` for a correct `null`, and the generated case
-stops exercising the branch it names — while passing. `objectArrangeTransformer` and
-`typeToRangeTransformer` use explicit `=== undefined` checks for this reason, but nothing
-stops the next `??` from reintroducing it. Wants a lint rule over a `RepresentativeValue` /
-`ArrangeValue` operand, per the checklist ratchet.
+stops exercising the branch it names — while passing.
 
-### G2. Nothing checks a derived arrange against the type it was derived from
+It has bitten four times, in four unrelated files: `objectArrangeTransformer`'s three chains,
+`typeToRangeTransformer`'s `literal ?? rep`, a candidate filter that rejected `null` for a
+`string`-typed operand, and that filter's first replacement. Each was fixed the same way, with
+an explicit `=== undefined` check. Nothing stops the fifth.
 
-There is no TypeScript to typecheck, by ruling: the shim is `assayer.test.js` and the cases
-are `cases.json` DATA (`assemble-shim-transformer` — emitted `.test.ts` files would be a
-second source of truth that drifts and invites hand-editing).
-
-The check does not need `tsc`. Both halves are already in memory at derivation:
-`entry.params[].type` (a `TypeDescriptor`) and the `ArrangeBinding` just built. "Does this
-value satisfy this descriptor" is a pure structural comparison, and it is P4-clean — a
-derived INPUT against a DECLARED type, nothing executed.
-
-Routing every fill through one seam removed the class of bug this would have caught, so what
-remains is the ratchet: a NEW producer that builds a binding by hand can still disagree with
-the type, and nothing validates the join, because a binding names its parameter by string
-while the type lives one object over on `entry.params`. Every wrong-shape value found during
-this work — a string in a `string[]` property, `{}` for a truncated recursive type — reached
-a running case past exactly this missing seam.
-
-A violation is a **P1 build error**, never one of the four admissions: Assayer contradicting
-a type it read itself is its own invariant broken, not the reader's debt. It wants ONE seam,
-where the case set is finalized, so it covers every producer.
-
-### G3. `LaunchRunResponder` spawns Electron with no `error` handler
-
-The bare-launch path calls `child_process.spawn` for a detached Electron process and attaches
-no `error` handler to the child, so a spawn failure has nowhere to go. It is also why that
-path is untested — driving it for real risks an unhandled exception that depends on display
-and Electron-binary availability.
+The rule that would stop it belongs to the `@dungeonmaster/eslint-plugin` in the sibling repo,
+not here — this repo has no local rules directory. Until it exists the invariant is convention,
+so a `??` anywhere near a `RepresentativeValue` or `ArrangeValue` is worth reading twice.
 
 ## Belongs to `@dungeonmaster/testing`, not here
 

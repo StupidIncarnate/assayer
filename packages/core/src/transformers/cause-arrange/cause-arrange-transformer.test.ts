@@ -588,6 +588,28 @@ describe('causeArrangeTransformer', () => {
         ],
       });
     });
+
+    // A5: `jestInterpretCaseAdapter` applies an `array` binding as ONE positional argument, which is
+    // wrong for a REST parameter — its array must SPREAD across the tail positional slots it stands
+    // for. The binding carries `rest: true` so the interpreter can tell the two apart; a plain array
+    // param (above) carries no such flag.
+    it('VALID: {a rest number[] param} => the same cardinality fan-out, each binding marked rest: true', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [ParamDescriptorStub({ name: 'ns', type: { kind: 'array', element: { kind: 'number' } }, rest: true })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [
+          [{ kind: 'array', param: 'ns', value: [], rest: true }],
+          [{ kind: 'array', param: 'ns', value: [7], rest: true }],
+          [{ kind: 'array', param: 'ns', value: [7, 7], rest: true }],
+        ],
+      });
+    });
   });
 
   describe('a harness supplies what the seam refuses', () => {
@@ -651,6 +673,59 @@ describe('causeArrangeTransformer', () => {
         unfillable: [],
         arrangements: [[{ kind: 'harness', param: 'items', key: 'inputs.audit.items' }]],
       });
+    });
+
+    // A harness answering a REST parameter carries `rest: true` on the binding itself, the same fact an
+    // array binding carries it for — the interpreter needs it to SPREAD the resolved value across the
+    // tail positional slots instead of nesting it one level too deep.
+    it('EDGE: {a rest array param the harness declares} => the harness binding carries rest: true', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [
+          ParamDescriptorStub({
+            name: 'sinks',
+            type: { kind: 'array', element: { kind: 'callable', text: '(m: string) => void' } },
+            rest: true,
+          }),
+        ],
+        envDrivable: false,
+        harness: { entry: symbolNameContract.parse('collect'), params: [symbolNameContract.parse('sinks')] },
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true }]],
+      });
+    });
+  });
+
+  // The general invariant (§G2): a built binding must be a value OF the param it names. Every
+  // producer here builds FROM `param.type`, so on correct code this never fires — the scenario below is
+  // the one way it legitimately CAN: a leaf's own `operandType` (read by a DIFFERENT reader than the
+  // param's declared type) drifting out of agreement with it. `score` is declared `string`, but its
+  // condition leaf carries `operandType: number` — a real, reachable shape of drift, not a fabricated
+  // bug, since the two are two separate reads of the same operand that nothing currently cross-checks.
+  describe('a leaf whose operandType disagrees with its own param\'s declared type', () => {
+    const DRIFTED_LEAF = ConditionLeafStub({
+      id: 'x#leaf.drift',
+      operandParamName: 'score',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'gt', literal: 5 },
+    });
+    const STRING_SCORE_PARAM = [ParamDescriptorStub({ name: 'score', type: { kind: 'string' } })];
+
+    it('ERROR: {a number-typed domain value bound to a string-declared param} => throws, naming both types', () => {
+      expect(() =>
+        causeArrangeTransformer({
+          requirements: [{ leaf: DRIFTED_LEAF, want: true }],
+          params: STRING_SCORE_PARAM,
+          envDrivable: false,
+        }),
+      ).toThrow(
+        'cause-arrange built a `param` value for `score` that does not satisfy its own declared type `string`: 6. ' +
+          "Assayer contradicted a type it read itself — its own invariant broken, never the reader's debt.",
+      );
     });
   });
 });

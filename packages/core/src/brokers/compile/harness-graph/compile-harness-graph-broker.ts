@@ -18,6 +18,14 @@
  *   never managed to read. A harness that loaded is recorded even when its keys are wrong, because the
  *   index is the inventory of what was declared and the errors are what says the declaration is wrong.
  *
+ *   Validation also reads each key's SUPPLIED value at its STATIC type, off the harness's own AST —
+ *   `ts-morph-read-harness-value-types-adapter`, a second, narrower read of the SAME source
+ *   `typescript/load-harness` already loaded (a callback is `[Function]` after the sandbox runs, so only
+ *   the declaration answers what it IS). That fact is transient — reconciled against the target's
+ *   declared param type inside `harness-validate-transformer` and never written into the persisted
+ *   index, since nothing downstream needs it back and every compile re-reads the harness's own current
+ *   bytes anyway.
+ *
  * USAGE:
  * await compileHarnessGraphBroker({ configDir: '/repo', namespace: 'feature-x',
  *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files, harnesses });
@@ -42,6 +50,7 @@ import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
+import { tsMorphReadHarnessValueTypesAdapter } from '../../../adapters/ts-morph/read-harness-value-types/ts-morph-read-harness-value-types-adapter';
 import { typescriptLoadHarnessAdapter } from '../../../adapters/typescript/load-harness/typescript-load-harness-adapter';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { harnessKeysTransformer } from '../../../transformers/harness-keys/harness-keys-transformer';
@@ -130,6 +139,12 @@ export const compileHarnessGraphBroker = async ({
           relPath: harness.relPath,
           targetRelPath,
           keys: harnessKeysTransformer({ declarations: loaded.declarations }),
+          // The STATIC type of every supplied expression, read off the same source's AST — a SEPARATE,
+          // narrower read from the eval-based load above, which only ever produces runtime VALUES.
+          suppliedTypes: tsMorphReadHarnessValueTypesAdapter({
+            source: String(harness.content),
+            fileName: String(harness.relPath),
+          }),
         },
       ],
       errors: [],
@@ -175,6 +190,8 @@ export const compileHarnessGraphBroker = async ({
       targetRelPath: harness.targetRelPath,
       keys: harness.keys,
       entries: (blobByRelPath.get(String(harness.targetRelPath))?.analysis?.functions ?? []).map((fn) => fn.entry),
+      declaringScopes: blobByRelPath.get(String(harness.targetRelPath))?.analysis?.declaringScopes ?? [],
+      suppliedTypes: harness.suppliedTypes,
     }),
   );
 

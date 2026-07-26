@@ -1,4 +1,4 @@
-import { BranchNodeStub, ConditionNodeStub, ExitNodeStub } from '@assayer/shared/contracts';
+import { BranchNodeStub, ConditionNodeStub, ExitNodeStub, symbolNameContract } from '@assayer/shared/contracts';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
@@ -111,6 +111,41 @@ describe('throughCallerCasesTransformer', () => {
       expect({ cases: result.analysis.cases, unfillable: result.unfillable }).toStrictEqual({
         cases: [],
         unfillable: [{ param: 'cb', type: '() => void' }],
+      });
+    });
+
+    it("VALID: {a harness names `cb` under `inner`} => the refusal closes, `cb` bound onto the CALLER's own `cb` slot under `inner`'s key path", () => {
+      const result = throughCallerCasesTransformer({
+        callee: SINK_CALLEE,
+        caller: CALLER,
+        call: CALL,
+        harness: { entry: symbolNameContract.parse('inner'), params: [symbolNameContract.parse('cb')] },
+      });
+
+      // `cb` is passed straight through from the CALLER's own `cb` param (`param-ref`), so once the
+      // callee's refusal closes, the binding rebases onto the caller's `cb` slot — never spliced in as a
+      // positional argument the caller's signature has no room for — while the KEY PATH still points at
+      // `inner`, the scope that DECLARED the refusal and the name the harness author actually wrote.
+      expect({ cases: result.analysis.cases, unfillable: result.unfillable }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['inner/return@then'],
+            arrange: [
+              { kind: 'param', param: 'value', value: 6 },
+              { kind: 'harness', param: 'cb', key: 'inputs.inner.cb' },
+            ],
+            salient: true,
+          },
+          {
+            reachesPath: ['inner/return@else'],
+            arrange: [
+              { kind: 'param', param: 'value', value: 5 },
+              { kind: 'harness', param: 'cb', key: 'inputs.inner.cb' },
+            ],
+            salient: true,
+          },
+        ],
+        unfillable: [],
       });
     });
   });

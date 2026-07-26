@@ -78,24 +78,24 @@ describe('isPredicateConstrainingGuard', () => {
   });
 
   describe('an equality against null on a type with no scalar point', () => {
-    it('VALID: {report === null on a callable} => true, the excluded-null violating arm alone names a value', () => {
+    it('INVALID: {report === null on a callable} => false, no value of a callable is null and no OTHER callable is nameable either', () => {
       const leaf = ConditionLeafStub({
         operandParamName: 'report',
         operandType: { kind: 'callable', text: '() => void' },
         predicate: { kind: 'eq', literal: null },
       });
 
-      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(false);
     });
 
-    it('VALID: {report !== null on a callable} => true, the excluded-null satisfying arm alone names a value', () => {
+    it('INVALID: {report !== null on a callable} => false, the same pair of arms with the arms swapped', () => {
       const leaf = ConditionLeafStub({
         operandParamName: 'report',
         operandType: { kind: 'callable', text: '() => void' },
         predicate: { kind: 'neq', literal: null },
       });
 
-      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(false);
     });
   });
 });

@@ -56,4 +56,26 @@ describe('runConsoleFindBroker', () => {
       expect(result).toBe(undefined);
     });
   });
+
+  describe('the source cannot be read', () => {
+    it('ERROR: {fsReadFileAdapter rejects while reading the source} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+      const proxy = runConsoleFindBrokerProxy();
+      proxy.sourceReadThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        runConsoleFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/a.ts' }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
+
+  describe('the console report cannot be read', () => {
+    it('ERROR: {fsReadFileAdapter rejects while reading console.txt} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+      const proxy = runConsoleFindBrokerProxy();
+      proxy.consoleReadThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        runConsoleFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/a.ts' }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
 });

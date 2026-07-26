@@ -13,5 +13,33 @@ describe('nodeChildProcessSpawnAdapter', () => {
 
       expect(result).toStrictEqual({ success: true });
     });
+
+    it('VALID: {command, args} => writes nothing to stderr when the spawn succeeds', () => {
+      const proxy = nodeChildProcessSpawnAdapterProxy();
+
+      nodeChildProcessSpawnAdapter({
+        command: '/usr/bin/electron',
+        args: ['main.js', '--repo', '/repo'],
+      });
+
+      expect(proxy.getStderrWrites()).toStrictEqual([]);
+    });
+  });
+
+  describe('a spawn that fails', () => {
+    it('ERROR: {the child emits an ENOENT error} => still returns success, and writes an actionable message to stderr instead of crashing', () => {
+      const proxy = nodeChildProcessSpawnAdapterProxy();
+      proxy.failsToSpawn({ error: new Error('spawn /usr/bin/electron ENOENT') });
+
+      const result = nodeChildProcessSpawnAdapter({
+        command: '/usr/bin/electron',
+        args: ['main.js', '--repo', '/repo'],
+      });
+
+      expect(result).toStrictEqual({ success: true });
+      expect(proxy.getStderrWrites()).toStrictEqual([
+        'assayer: failed to launch /usr/bin/electron (spawn /usr/bin/electron ENOENT). Verify the executable exists and is runnable, then try again.\n',
+      ]);
+    });
   });
 });

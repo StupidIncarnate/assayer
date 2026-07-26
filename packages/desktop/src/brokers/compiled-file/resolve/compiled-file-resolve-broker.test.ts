@@ -215,7 +215,13 @@ describe('compiledFileResolveBroker', () => {
   });
 
   describe('harness overlay', () => {
-    it('VALID: {entry whose input gap a colocated harness pays} => serves the harness-driven analysis', async () => {
+    // `walkedPassed: true` is the WIRING half of this test: a refusal owned by a funnelled or
+    // through-caller private is invoiced against its HOST, and paying it needs the raw `walked` parse
+    // re-run through `follow-calls` — the flat re-derivation this overlay falls back to without it
+    // proves only the entry's own params and leaves that refusal standing. A caller that stops passing
+    // `walked` regresses silently for every OTHER assertion here (the mock still returns `harnessed`
+    // regardless), which is exactly why this field has to be checked on its own.
+    it('VALID: {entry whose input gap a colocated harness pays} => serves the harness-driven analysis, with the caller\'s walked threaded through', async () => {
       const persisted = FileAnalysisStub();
       const harnessed = FileAnalysisStub({ gaps: [{ name: 'harnessMarker', reason: 'harness overlay applied' }] });
       const manifest = AssayerCacheManifestStub({
@@ -234,14 +240,21 @@ describe('compiledFileResolveBroker', () => {
       });
 
       expect(result.analysis).toStrictEqual(harnessed);
-      expect(proxy.harnessReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts', analysis: persisted });
+      expect(proxy.harnessReceived()).toStrictEqual({
+        root: '/repo',
+        relPath: 'src/pick.ts',
+        analysis: persisted,
+        walkedPassed: true,
+      });
     });
 
-    // The harness overlay reads the COLOCATED harness file itself, never the caller's own walked AST
-    // (its call carries no `walked`, unlike the other four overlays) — so unlike them it still applies
-    // when the caller's OWN source cannot be read. A guard that skipped it alongside the others would
-    // silently stop paying a harness-closed gap the moment a caller file went briefly unreadable.
-    it('VALID: {caller source cannot be read} => the harness overlay still applies, since it never reads the caller AST', async () => {
+    // The harness overlay reads the COLOCATED harness file itself, so it still applies when the
+    // caller's OWN source cannot be read — `walked` is genuinely absent here (there is nothing to walk),
+    // so it is omitted rather than passed as `undefined`, which degrades this call to the SAME flat,
+    // entry-own-params-only payment a caller with no `walked` at all gets. A guard that skipped the
+    // overlay entirely alongside the others would silently stop paying a harness-closed gap the moment
+    // a caller file went briefly unreadable.
+    it('VALID: {caller source cannot be read} => the harness overlay still applies, with no walked to thread', async () => {
       const persisted = FileAnalysisStub();
       const harnessed = FileAnalysisStub({ gaps: [{ name: 'harnessMarker', reason: 'harness overlay applied' }] });
       const manifest = AssayerCacheManifestStub({
@@ -260,7 +273,12 @@ describe('compiledFileResolveBroker', () => {
       });
 
       expect(result.analysis).toStrictEqual(harnessed);
-      expect(proxy.harnessReceived()).toStrictEqual({ root: '/repo', relPath: 'src/pick.ts', analysis: persisted });
+      expect(proxy.harnessReceived()).toStrictEqual({
+        root: '/repo',
+        relPath: 'src/pick.ts',
+        analysis: persisted,
+        walkedPassed: false,
+      });
     });
   });
 

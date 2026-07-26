@@ -153,7 +153,7 @@ export const syntaxTraits = (): {
 
     const mapped = composeCrossFileMapBroker({ analysis: realized, walked, root: SMOKE_REPO, relPath });
 
-    return harnessRealizeBroker({ analysis: mapped, root: SMOKE_REPO, relPath });
+    return harnessRealizeBroker({ analysis: mapped, root: SMOKE_REPO, relPath, walked });
   };
 
   return {

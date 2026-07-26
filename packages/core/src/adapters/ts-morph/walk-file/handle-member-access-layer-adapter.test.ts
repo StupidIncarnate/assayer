@@ -20,7 +20,15 @@ describe('handleMemberAccessLayerAdapter', () => {
       const result = handleMemberAccessLayerAdapter({ node: accessOf({ source: "console.log('big');\n" }), context: MODULE_CONTEXT });
 
       expect(result.globalUses).toStrictEqual([
-        { name: 'console', member: 'log', called: true, args: [{ kind: 'literal', value: 'big' }], line: 1, column: 1 },
+        {
+          name: 'console',
+          member: 'log',
+          called: true,
+          args: [{ kind: 'literal', value: 'big' }],
+          line: 1,
+          column: 1,
+          scopePath: ['*module*'],
+        },
       ]);
     });
 
@@ -30,7 +38,29 @@ describe('handleMemberAccessLayerAdapter', () => {
       const result = handleMemberAccessLayerAdapter({ node: accessOf({ source: 'process.env;\n' }), context: MODULE_CONTEXT });
 
       expect(result.globalUses).toStrictEqual([
-        { name: 'process', member: 'env', called: false, args: [], line: 1, column: 1 },
+        { name: 'process', member: 'env', called: false, args: [], line: 1, column: 1, scopePath: ['*module*'] },
+      ]);
+    });
+
+    it('VALID: {console.log(x) inside a function body} => the global use carries the ENCLOSING function`s scope path', () => {
+      handleMemberAccessLayerAdapterProxy();
+      const FUNCTION_CONTEXT = WalkContextStub({ scopePath: ['*module*', 'report'], guardPath: [], params: [], exported: true });
+
+      const result = handleMemberAccessLayerAdapter({
+        node: accessOf({ source: "console.log('big');\n" }),
+        context: FUNCTION_CONTEXT,
+      });
+
+      expect(result.globalUses).toStrictEqual([
+        {
+          name: 'console',
+          member: 'log',
+          called: true,
+          args: [{ kind: 'literal', value: 'big' }],
+          line: 1,
+          column: 1,
+          scopePath: ['*module*', 'report'],
+        },
       ]);
     });
   });

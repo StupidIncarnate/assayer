@@ -149,8 +149,17 @@ export const compiledFileResolveBrokerProxy = (): {
     },
     mapReceived: (): unknown => mapCalls.at(-1),
     harnessesTo: ({ analysis }): void => {
-      harnessRealizeHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
-        harnessCalls.push({ root, relPath, analysis: received });
+      // Annotated explicitly (from the already-imported broker's own signature, never a fresh type
+      // import) because `MockHandle.mockImplementationOnce` contextually types its callback's params as
+      // `never` — every destructured field would otherwise read as `never`, which is fine for the fields
+      // merely re-packaged below but makes `walked !== undefined` compare against a type with no values.
+      harnessRealizeHandle.mockImplementationOnce((params: Parameters<typeof harnessRealizeBroker>[0]) => {
+        const { root, relPath, analysis: received, walked } = params;
+
+        // `walkedPassed` proves the WIRING, not merely that the overlay ran: the other four overlays
+        // are always handed `walked`, and this one is the one a caller can forget — a same-reference
+        // identity mock can never disagree with "the argument was dropped".
+        harnessCalls.push({ root, relPath, analysis: received, walkedPassed: walked !== undefined });
 
         return analysis;
       });

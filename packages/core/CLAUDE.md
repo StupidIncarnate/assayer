@@ -135,8 +135,9 @@ LOOKUP, not by re-parsing (§9). One parse per file still holds.
 | change what a harness can DECLARE | `contracts/harness-declaration` (the PUBLISHED type, two open catchall shapes rather than `z.record` — a branded-key record infers `Partial<Record<…>>`, which an author's `{ audit: { report } }` literal cannot satisfy) + `transformers/assayer-harness`, the registration seam itself, republished as `assayerHarness` from the package's MAIN barrel (`packages/core/index.ts`), which is the specifier the input-gap invoice tells a reader to import |
 | change how a harness is READ | `adapters/typescript/load-harness` — `transpileModule` (no require hook, nothing added to the module cache) then `runInContext` in a bare sandbox holding a CommonJS shell and ONE reachable import: `@assayer/core`, bound to that call's collector. A thrown error is read with `util.types.isNativeError`, never `instanceof Error`, because an error raised inside the sandbox belongs to that context's own constructor |
 | change the harness index (the key inventory) | `brokers/compile/harness-graph` (the THIRD stitch — §9) + `transformers/harness-target` (which source a harness addresses) / `transformers/harness-keys` (the sorted, deduped (entry, param) pairs); written by `brokers/harness-index/write` |
-| word a P1 about a WRONG harness key | `transformers/harness-validate` — the harness twin of `stub-overlay-reconcile`, reconciling declared keys against the target's ANALYSIS: an entry the file does not offer, a parameter the entry does not take (both with `transformers/did-you-mean` beside the full candidate list), a parameter `is-type-fillable` says Assayer builds itself, and a file that declares nothing at all |
-| PAY an input gap with the harness that answers it | `brokers/harness/realize` (the consume-time overlay, §9) — it re-derives each invoiced entry through the SAME `derive-cases`, handing it `harness: { entry, params }`, so `cause-arrange` emits a `harness` binding where the fill seam would have refused. Wired at the SAME three seams the other overlays are, LAST, because everything ahead of it can still turn a refusal into something Assayer builds itself. NEVER a second derivation path — a supplied entry's cases differ from a derived one's in exactly one binding |
+| word a P1 about a WRONG harness key | `transformers/harness-validate` — the harness twin of `stub-overlay-reconcile`, reconciling declared keys against the target's ANALYSIS: an entry the file does not offer, a parameter the entry does not take (both with `transformers/did-you-mean` beside the full candidate list), a parameter `is-type-fillable` says Assayer builds itself, and a file that declares nothing at all. A key naming a same-file private a NAMED-CALL funnel folded into its host validates too — `entries` alone would reject the exact key the funnelled refusal's invoice prints, since a folded private carries no `EntrySignature` of its own, so the candidate list is `entries` UNIONED with `FileAnalysis.declaringScopes` (§4's `declaringScopes` row), the one source the invoice's `owner` and this validator both read. A funnelled CALLBACK is never a candidate: its refused element sits inside the ARRAY its host receives, and `ArrangeValue` has no representation for a harness-bound value living inside a composite, so admitting the key here would let it validate with no way for `harness-realize` to ever bind it — see `funnel-cases` |
+| name a same-file scope a driving route folded into a host instead of projecting as an entry | `FileAnalysis.declaringScopes` — populated by `transformers/follow-calls` from `funnelNamedCasesTransformer`'s `consumed` list (every same-file PRIVATE a NAMED-CALL funnel folded in, transitively, each carrying its OWN full param list and its `hostEntry`). The ONE source `harness-validate` and `harness-realize` both consult for a scope an input-gap invoice names (`on \`build\``) but `functions` carries no signature for, so the two can never disagree about what a driving route folded in. Deliberately excludes a funnelled CALLBACK — see the row above |
+| PAY an input gap with the harness that answers it | `brokers/harness/realize` (the consume-time overlay, §9) — it re-derives each invoiced entry through the SAME `derive-cases`, handing it `harness: { entry, params }`, so `cause-arrange` emits a `harness` binding where the fill seam would have refused. Wired at the SAME three seams the other overlays are, LAST, because everything ahead of it can still turn a refusal into something Assayer builds itself. NEVER a second derivation path — a supplied entry's cases differ from a derived one's in exactly one binding. A refusal invoiced against a FUNNELLED or THROUGH-CALLER private (`on \`build\``) is not payable by that flat re-derivation alone — its own `deriveCasesTransformer` call only proves the PRIVATE's own axis, never the CALLER-side rebase `funnel-named-cases`/`through-caller-cases` perform — so `harness-realize` additionally re-runs `follow-calls` itself (with the harness spec threaded per declaring-scope name) whenever it is handed the raw `walked` result its caller already holds; the private's binding then rides the SAME rebase (`{ ...binding, param: param.name }`) those transformers already do, landing on the CALLER's own argument slot with the key path unchanged. `walked` is OPTIONAL — a caller that has not threaded it yet gets exactly the prior flat, entry-own-params-only payment, never a mis-bound case |
 | resolve a harness-supplied value AT RUN TIME | the generated shim (`transformers/assemble-shim`) REQUIRES the harness through ts-jest, and Jest maps `@assayer/core` to the root `harness-registrar.js` (`adapters/jest/run-cli`) so the registration lands where the shim can read it — resolving the package from the harness and from the shim can otherwise land on two installs in a workspace, and two module instances mean a declaration nobody collected. `adapters/jest/interpret-case` then walks the key path with `transformers/harness-value`; a key the declaration does not carry is an `errored` case NAMING it, never a silent `undefined` argument |
 | name a harness by its (entry, parameter) pair | `transformers/harness-key-path` writes `inputs.<entry>.<param>`, `transformers/harness-value` splits it back apart, and both read `statics/harness-module` — two spellings of one route is how a case comes to name a key nothing can resolve. `transformers/harness-path` is the source→harness direction (`harness-target` is the inverse) |
 
@@ -330,10 +331,15 @@ Do these in order. Skipping step 1 is how you end up asserting what the code doe
 should do.
 
 1. **Specimen first.** Add `smoke-repo/packages/syntax-repository/src/<bucket>/<category>/<rung>/<rung>.ts`
-   + a colocated `<rung>.test.ts` holding only what is BESPOKE to that file (exact coverage IDs, the
-   shape of its analysis). The catalogue is bucketed by RUN VERDICT: `<bucket>` is `happy-path/` if
-   running the root file comes out clean (≥1 case, all passed, no admission) or `sad-path/` if it is
-   meant to come out unclean (a failing case, or a dark spot / gap / undriven / lint). Category folders
+   (or `.tsx` — the walker treats the two extensions alike) + a colocated `<rung>.test.ts` (or
+   `.test.tsx`, matching the root's own extension) holding only what is BESPOKE to that file (exact
+   coverage IDs, the shape of its analysis). The catalogue is bucketed by RUN VERDICT: `<bucket>` is
+   `happy-path/` if
+   running the root file comes out clean (no admission, and either ≥1 case all passed OR zero cases —
+   a declaration-only file that derives no entry has nothing to fail, so `runUnitBroker` never invokes
+   Jest for it and the honest artifact is `cases: []` with every admission channel also empty) or
+   `sad-path/` if it is meant to come out unclean (a failing case, or a dark spot / gap / undriven /
+   lint). Category folders
    group examples; every example is its own eponymous folder (`<rung>/<rung>.ts`), so a multi-file rung
    keeps helper children beside its root. A ratchet that flips — a dark spot the day its handler lands —
    MOVES from `sad-path/` to `happy-path/`. If it's currently a dark spot, assert THAT first (a
@@ -355,6 +361,10 @@ should do.
    (`analyze-file-broker.integration.test.ts`) is only worth its runtime because the two sides are
    authored independently. A trait the analyzer cannot see, or a fact it sees that nobody declared,
    fails there — which is what a forgotten trait looks like.
+   **That cross-check is NOT in `test:syntax`** — it is a core integration test, so it runs under
+   `npm run ward`, while `test:syntax` runs only the colocated specimen tests. A declaration missing
+   a trait the file plainly has passes `test:syntax` and every scoped unit run, and fails only in
+   ward's integration graph. After adding or editing a specimen, run BOTH.
 2. **Handler.** `handle-<x>-layer-adapter.ts`. It emits its branch(es)/exit(s), and returns descents
    with `walkContextTransformer({ context, guardSteps: [...] })` per arm. It must not recurse, must not
    look at its parents, and must not know any other construct exists.
@@ -624,6 +634,21 @@ those into resolved edges. It never re-parses source — it reads already-finish
   overlay, NEVER persisted, wired at the SAME three seams the others are (`run-unit-broker`, the
   `syntax-traits` harness, `compiled-file-resolve-broker`) and LAST, because every overlay ahead of it can
   still turn a refusal into something Assayer builds itself.
+- **A refusal owned by a FUNNELLED or THROUGH-CALLER private is not payable by the flat re-derivation
+  above alone.** That refusal is invoiced against the HOST (`on \`build\``, `FileAnalysis.declaringScopes`
+  names it), and the flat `deriveCasesTransformer` call over the invoicing entry's own params proves only
+  the PRIVATE's own axis — never the CALLER-side rebase `funnel-named-cases`/`through-caller-cases` perform
+  onto the caller's own argument slot. `harness-realize-broker` takes an OPTIONAL `walked` — the raw parse
+  its callers already hold — and when present, re-runs `follow-calls-transformer` itself with the harness
+  spec threaded per DECLARING-SCOPE name (never a second derivation path: the SAME transformer the compile
+  walk used). The private's binding then rides the SAME generic rebase those transformers already perform
+  on every steered value (`{ ...binding, param: param.name }`), landing on the caller's own argument slot
+  with the key path UNCHANGED — never spliced onto the host's argument list as a positional slot the
+  signature has no room for. Without `walked` the entry is untouched exactly as before: a funnelled or
+  through-caller refusal stays open, re-invoiced honestly, rather than risk the WRONG binding shape a flat
+  re-derivation over the private's own params alone would produce. `run-unit-broker` and
+  `compiled-file-resolve-broker` do not thread `walked` yet, so the fix applies fully only where a caller
+  passes it — `syntax-traits` does.
 - **The VALUES resolve at run time, from the same file and the same registrar.** Only KEYS are cached, so
   the shim loads the harness itself: `case-set-projection` carries `harnessPath` (absolute, like
   `modulePath`) exactly when some case names a harness binding, the shim REQUIRES it through the same

@@ -56,6 +56,19 @@ const FOLDED_INVOICE =
   'builds them from that declaration instead of refusing them; anything else still standing between ' +
   '`surface` and a case is reported on its own line.';
 
+const PARTIAL_CASE_INVOICE =
+  '`checkConfigObj` derives a case, but not every one it could: Assayer cannot construct an input it ' +
+  'still needs. It builds inputs out of declared DATA — a scalar, a union, an array, or an object ' +
+  'shape whose every property is itself one — and refuses anything that bottoms out in a function or ' +
+  'in a type carrying nothing but its name: `config: Config`. Substituting a stand-in would be worse ' +
+  'than deriving nothing: code that CALLS the value throws on it, and code that merely measures it ' +
+  'passes on something nobody supplied. Assayer read the signature perfectly — this is not syntax it ' +
+  "missed — so the value is the caller's to supply. Colocate a harness with this file, the same " +
+  "basename with a `.harness.ts` extension, and declare the input: `import { assayerHarness } from " +
+  "'@assayer/core'; assayerHarness({ inputs: { checkConfigObj: { config: <a Config> } } });`. Assayer " +
+  'then builds them from that declaration instead of refusing them; anything else still standing ' +
+  'between `checkConfigObj` and a case is reported on its own line.';
+
 const MIXED_INVOICE =
   '`surface` derives no case, because Assayer cannot construct an input it needs. It builds inputs ' +
   'out of declared DATA — a scalar, a union, an array, or an object shape whose every property is ' +
@@ -160,6 +173,31 @@ describe('inputGapTransformer', () => {
       });
 
       expect(tagged).toStrictEqual([{ name: 'audit', reason: CALLBACK_INVOICE }]);
+    });
+  });
+
+  describe('a refusal alongside a case the entry already derives', () => {
+    // A bare truthiness read on an object param drives the truthy arm fine (every value the seam builds
+    // for an object is truthy) while the falsy arm needs a value nothing can build — so the entry derives
+    // ONE real case and is still refused a value. "Derives no case" would be false here.
+    it('VALID: {hasCases: true} => the opening clause says a case exists, never "derives no case"', () => {
+      const result = inputGapTransformer({
+        entryName: SymbolNameStub({ value: 'checkConfigObj' }),
+        unfillable: [{ param: SymbolNameStub({ value: 'config' }), type: TypeTextStub({ value: 'Config' }) }],
+        hasCases: true,
+      });
+
+      expect(result).toStrictEqual([{ name: 'checkConfigObj', reason: PARTIAL_CASE_INVOICE }]);
+    });
+
+    it('VALID: {hasCases: false} => the opening clause reverts to "derives no case"', () => {
+      const result = inputGapTransformer({
+        entryName: SymbolNameStub({ value: 'emit' }),
+        unfillable: [{ param: SymbolNameStub({ value: 'sink' }), type: TypeTextStub({ value: 'Sink' }) }],
+        hasCases: false,
+      });
+
+      expect(result).toStrictEqual([{ name: 'emit', reason: OBJECT_INVOICE }]);
     });
   });
 

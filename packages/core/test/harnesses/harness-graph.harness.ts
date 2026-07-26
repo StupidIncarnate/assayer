@@ -32,6 +32,7 @@ import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/co
 import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
+import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileHarnessGraphBroker } from '../../src/brokers/compile/harness-graph/compile-harness-graph-broker';
@@ -141,6 +142,8 @@ export const harnessGraphHarness = (): {
   // What a CONSUMER sees: the blob the compile left on disk, read back and put through the harness
   // overlay exactly as a run or the desktop does. Reading the blob rather than re-analysing is the point
   // — it is the same bytes the cache reused, so any change in the case set came from the harness alone.
+  // `walked` is the one exception: a raw PARSE, never a second `FileAnalysis`, so the funnel/through-caller
+  // axis the overlay needs is available without deriving a competing analysis to read from.
   const consume = ({
     dir,
     contentHash,
@@ -151,11 +154,16 @@ export const harnessGraphHarness = (): {
     const blob = compiledFileBlobContract.parse(
       JSON.parse(readFileSync(join(String(blobsDirOf({ dir })), `${String(contentHash)}.json`), 'utf8')),
     );
+    const walked = tsMorphWalkFileAdapter({
+      source: readFileSync(join(String(dir), SOURCE_REL), 'utf8'),
+      relPath: SOURCE_REL,
+    });
 
     return harnessRealizeBroker({
       analysis: fileAnalysisContract.parse(blob.analysis),
       root: String(dir),
       relPath: SOURCE_REL,
+      walked,
     });
   };
 

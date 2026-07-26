@@ -125,4 +125,33 @@ describe('harnessIndexWriteBroker', () => {
       ]);
     });
   });
+
+  describe('a failure along the mkdir -> write -> rename sequence', () => {
+    it('ERROR: {harness cache dir cannot be created} => propagates the mkdir rejection unmodified, since it is never wrapped in try/catch', async () => {
+      const proxy = harnessIndexWriteBrokerProxy();
+      proxy.mkdirThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+
+    it('ERROR: {tmp harness index cannot be written} => propagates the write rejection unmodified, since it is never wrapped in try/catch', async () => {
+      const proxy = harnessIndexWriteBrokerProxy();
+      proxy.writeThrows({ error: new Error('ENOSPC: no space left on device') });
+
+      await expect(
+        harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() }),
+      ).rejects.toThrow(/^ENOSPC: no space left on device$/u);
+    });
+
+    it('ERROR: {tmp harness index cannot be renamed into place} => propagates the rename rejection unmodified, since it is never wrapped in try/catch', async () => {
+      const proxy = harnessIndexWriteBrokerProxy();
+      proxy.renameThrows({ error: new Error('ENOENT: no such file or directory') });
+
+      await expect(
+        harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() }),
+      ).rejects.toThrow(/^ENOENT: no such file or directory$/u);
+    });
+  });
 });

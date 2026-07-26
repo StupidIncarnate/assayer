@@ -212,12 +212,12 @@ describe('handleIfLayerAdapter', () => {
       expect(result.exits).toStrictEqual([]);
     });
 
-    it('VALID: {tail if inside an enclosing guard} => the completion exit carries the FULL guard path', () => {
+    it('VALID: {tail if WITH an else, inside an enclosing guard} => the completion exit carries the FULL guard path', () => {
       handleIfLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
-        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',
+        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  } else {\n    noop();\n  }\n}\n',
       );
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -233,7 +233,50 @@ describe('handleIfLayerAdapter', () => {
           ],
           line: 4,
         },
+        {
+          coverageId: 'classify/exit@if:id:flag#then/if:BinaryExpression,id:value,GreaterThanToken,num:5#else',
+          kind: 'implicit',
+          guardPath: [
+            { branchCoverageId: 'classify/if:id:flag', arm: 'then' },
+            { branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' },
+          ],
+          line: 6,
+        },
       ]);
+    });
+
+    // The defect this pins: with no else, the `then` arm's fallthrough and the missing else both
+    // continue into the exact same code — whatever follows the whole `if` — which the enclosing
+    // scope already probes as its own unaccounted-for exit. Emitting a completion here TOO fires
+    // twice on one execution (the `then` arm's own probe, then the enclosing one right behind it),
+    // so a case predicting only this exit fails against correct code — verified end to end by
+    // `run-unit-broker.integration.test.ts`'s `TAIL_NO_ELSE_SPECIMEN`.
+    it('VALID: {tail if with NO else, whose only arm does not return} => no completion exit at all', () => {
+      handleIfLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerAdapter({ node, context: TAIL_CONTEXT });
+
+      expect(result.exits).toStrictEqual([]);
+    });
+
+    it('VALID: {tail if with NO else, nested inside an enclosing guard} => still no completion exit', () => {
+      handleIfLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerAdapter({ node, context: NESTED_GUARD_CONTEXT });
+
+      expect(result.exits).toStrictEqual([]);
     });
   });
 });

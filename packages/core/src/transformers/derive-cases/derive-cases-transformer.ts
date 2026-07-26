@@ -110,7 +110,9 @@ export const deriveCasesTransformer = ({
   // The parameters a CALL supplies — the declared list minus the trailing tail no caller owes and no
   // value can be built for (`applied-params`). Every question below is asked of these and not of the
   // declared list: a parameter the entry is driven WITHOUT can neither steer a branch nor be invoiced.
-  const applied = appliedParamsTransformer({ params });
+  // `harness` is threaded through so a trailing optional/rest parameter a harness ANSWERS survives the
+  // truncation instead of being dropped before `cause-arrange` ever sees it bound.
+  const applied = appliedParamsTransformer({ params, ...(harness === undefined ? {} : { harness: harness.params }) });
   const paramNames = new Set(applied.map((param) => String(param.name)));
 
   // A branch decided by a WELDED constant: its dead arm is unreachable not because guards contradict
@@ -178,7 +180,31 @@ export const deriveCasesTransformer = ({
     // The operand blocker is named first when both are present: an operand no case can set is the
     // outer problem, and a predicate over a value nothing supplies is not the reader's next move.
     const blocking = unarrangeable.length > 0 ? unarrangeable : unconstrained;
-    const cause = undrivenCauseContract.parse(unarrangeable.length > 0 ? 'unarrangeable-operand' : 'unread-comparison');
+    // The `unarrangeable-operand` bucket splits into two NAMEABLE limits before falling back to the
+    // generic one, because "make the deciding value a parameter" is FALSE advice for both: a property
+    // path more than one segment deep off a REAL parameter already names one (`config`), just past the
+    // ONE level `object-arrange` matches at consume time, and a `typeof` read's operand may already be
+    // one too — Assayer just does not decompose the comparison into a case per branch. A path exactly one
+    // segment deep stays `unarrangeable-operand`: it IS closed later, by `stub-realize` from the merged
+    // stub view. The depth check requires the root to be a PARAM this entry declares — `process.env.MODE`
+    // is a two-segment property path too, but its root is the ambient `process` global, never a parameter,
+    // so the generic text ("neither one of its parameters nor an environment variable") stays accurate
+    // for it; naming a depth limit on a root that names no parameter would be its own false advice.
+    const cause = undrivenCauseContract.parse(
+      unarrangeable.length > 0
+        ? unarrangeable.some(
+            (leaf) =>
+              leaf.operandPropertyPath !== undefined &&
+              leaf.operandPropertyPath.length > 1 &&
+              leaf.operandParamName !== undefined &&
+              paramNames.has(String(leaf.operandParamName)),
+          )
+          ? 'unarrangeable-property-depth'
+          : unarrangeable.some((leaf) => leaf.operandIsTypeof === true)
+            ? 'unarrangeable-typeof'
+            : 'unarrangeable-operand'
+        : 'unread-comparison',
+    );
     const operand = blocking
       .map((leaf) =>
         leaf.operandParamName === undefined

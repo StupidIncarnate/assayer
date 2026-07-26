@@ -241,6 +241,99 @@ describe('readSignatureTypeLayerAdapter', () => {
     });
   });
 
+  describe('tuple types', () => {
+    // A tuple's numeric-index properties (`0`, `1`) and `length` carry no declaration of their own —
+    // the checker synthesizes them structurally — AND the tuple type itself carries no symbol to fall
+    // back to, so `declaration` stays undefined for exactly these three. `unknown` is what the reader
+    // answers for a property with nowhere to read a type from; every inherited `ReadonlyArray` method
+    // DOES carry its own declaration (in `lib.es5.d.ts`) and reads as a normal callable.
+    it('VALID: {readonly [string, number] param} => the index and length properties read as unknown, the inherited methods as callables', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(pair: readonly [string, number]): void;\n');
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          properties: [
+            { name: '0', fact: { flavor: 'other', text: 'unknown' } },
+            { name: '1', fact: { flavor: 'other', text: 'unknown' } },
+            {
+              name: 'concat',
+              fact: {
+                flavor: 'callable',
+                text: '{ (...items: ConcatArray<string | number>[]): (string | number)[]; (...items: (string | number | ConcatArray<string | number>)[]): (string | number)[]; }',
+              },
+            },
+            {
+              name: 'every',
+              fact: {
+                flavor: 'callable',
+                text: '{ <S>(predicate: (value: string | number, index: number, array: readonly (string | number)[]) => value is S, thisArg?: any): this is readonly S[]; (predicate: (value: string | number, index: number, array: readonly (string | number)[]) => unknown, thisArg?: any): boolean; }',
+              },
+            },
+            {
+              name: 'filter',
+              fact: {
+                flavor: 'callable',
+                text: '{ <S>(predicate: (value: string | number, index: number, array: readonly (string | number)[]) => value is S, thisArg?: any): S[]; (predicate: (value: string | number, index: number, array: readonly (string | number)[]) => unknown, thisArg?: any): (string | number)[]; }',
+              },
+            },
+            {
+              name: 'forEach',
+              fact: {
+                flavor: 'callable',
+                text: '(callbackfn: (value: string | number, index: number, array: readonly (string | number)[]) => void, thisArg?: any) => void',
+              },
+            },
+            {
+              name: 'indexOf',
+              fact: { flavor: 'callable', text: '(searchElement: string | number, fromIndex?: number) => number' },
+            },
+            { name: 'join', fact: { flavor: 'callable', text: '(separator?: string) => string' } },
+            {
+              name: 'lastIndexOf',
+              fact: { flavor: 'callable', text: '(searchElement: string | number, fromIndex?: number) => number' },
+            },
+            { name: 'length', fact: { flavor: 'other', text: 'unknown' } },
+            {
+              name: 'map',
+              fact: {
+                flavor: 'callable',
+                text: '<U>(callbackfn: (value: string | number, index: number, array: readonly (string | number)[]) => U, thisArg?: any) => U[]',
+              },
+            },
+            {
+              name: 'reduce',
+              fact: {
+                flavor: 'callable',
+                text: '{ (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number): string | number; (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number, initialValue: string | number): string | number; <U>(callbackfn: (previousValue: U, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => U, initialValue: U): U; }',
+              },
+            },
+            {
+              name: 'reduceRight',
+              fact: {
+                flavor: 'callable',
+                text: '{ (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number): string | number; (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number, initialValue: string | number): string | number; <U>(callbackfn: (previousValue: U, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => U, initialValue: U): U; }',
+              },
+            },
+            { name: 'slice', fact: { flavor: 'callable', text: '(start?: number, end?: number) => (string | number)[]' } },
+            {
+              name: 'some',
+              fact: {
+                flavor: 'callable',
+                text: '(predicate: (value: string | number, index: number, array: readonly (string | number)[]) => unknown, thisArg?: any) => boolean',
+              },
+            },
+            { name: 'toLocaleString', fact: { flavor: 'callable', text: '() => string' } },
+            { name: 'toString', fact: { flavor: 'callable', text: '() => string' } },
+          ],
+        }),
+      );
+    });
+  });
+
   describe('opaque types', () => {
     it('VALID: {void return} => other fact carrying the type text', () => {
       readSignatureTypeLayerAdapterProxy();

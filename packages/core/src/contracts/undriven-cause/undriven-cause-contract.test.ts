@@ -7,6 +7,14 @@ describe('undrivenCauseContract', () => {
       expect(undrivenCauseContract.parse('unarrangeable-operand')).toBe('unarrangeable-operand');
     });
 
+    it('VALID: {unarrangeable-typeof} => parses unchanged', () => {
+      expect(undrivenCauseContract.parse('unarrangeable-typeof')).toBe('unarrangeable-typeof');
+    });
+
+    it('VALID: {unarrangeable-property-depth} => parses unchanged', () => {
+      expect(undrivenCauseContract.parse('unarrangeable-property-depth')).toBe('unarrangeable-property-depth');
+    });
+
     it('VALID: {unread-comparison} => parses unchanged', () => {
       expect(undrivenCauseContract.parse('unread-comparison')).toBe('unread-comparison');
     });
@@ -17,7 +25,7 @@ describe('undrivenCauseContract', () => {
   });
 
   describe('invalid causes', () => {
-    it('INVALID: {a cause outside the two blockers} => throws validation error', () => {
+    it('INVALID: {a cause outside the four blockers} => throws validation error', () => {
       expect(() => {
         return undrivenCauseContract.parse('undriven');
       }).toThrow(/Invalid enum value/u);

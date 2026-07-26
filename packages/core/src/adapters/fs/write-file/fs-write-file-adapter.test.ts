@@ -15,4 +15,16 @@ describe('fsWriteFileAdapter', () => {
       expect(proxy.getWrittenContent()).toBe('export const x = 1;');
     });
   });
+
+  describe('error cases', () => {
+    it('ERROR: {path: no permission to write} => underlying fs error propagates unmodified', async () => {
+      const proxy = fsWriteFileAdapterProxy();
+
+      proxy.throws({ error: new Error('EACCES: permission denied') });
+
+      await expect(fsWriteFileAdapter({ path: '/repo/out.ts', content: 'export const x = 1;' })).rejects.toThrow(
+        /^EACCES: permission denied$/u
+      );
+    });
+  });
 });

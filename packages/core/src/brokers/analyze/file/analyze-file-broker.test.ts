@@ -160,6 +160,7 @@ describe('analyzeFileBroker', () => {
           },
         ],
         declaredTypes: [],
+        declaringScopes: [],
       });
     });
 
@@ -374,6 +375,37 @@ describe('analyzeFileBroker', () => {
 
       expect(result.gaps).toStrictEqual([]);
     });
+
+    // A bare truthiness read on an object param drives ONE real case (every value the seam builds for an
+    // object is truthy) while the falsy arm needs a value nothing can build — so the entry derives a case
+    // AND carries a gap at once. "Derives no case" would be false the moment that case exists.
+    it('VALID: {a truthy arm builds while the falsy arm refuses} => the gap says a case exists, never "derives no case"', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        'export type Config = { mode: string };\n' +
+        "export function checkConfigObj(config: Config): string {\n  if (config) {\n    return 'truthy';\n  }\n\n  return 'falsy';\n}\n";
+      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/check-config-obj.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/check-config-obj.ts' });
+
+      expect({ gapReasons: result.gaps.map((gap) => gap.reason), caseCount: result.functions.flatMap((fn) => fn.cases).length }).toStrictEqual({
+        gapReasons: [
+          '`checkConfigObj` derives a case, but not every one it could: Assayer cannot construct an input ' +
+            'it still needs. It builds inputs out of declared DATA — a scalar, a union, an array, or an ' +
+            'object shape whose every property is itself one — and refuses anything that bottoms out in a ' +
+            'function or in a type carrying nothing but its name: `config: Config`. Substituting a stand-in ' +
+            'would be worse than deriving nothing: code that CALLS the value throws on it, and code that ' +
+            'merely measures it passes on something nobody supplied. Assayer read the signature perfectly ' +
+            "— this is not syntax it missed — so the value is the caller's to supply. Colocate a harness " +
+            'with this file, the same basename with a `.harness.ts` extension, and declare the input: ' +
+            "`import { assayerHarness } from '@assayer/core'; assayerHarness({ inputs: { checkConfigObj: " +
+            '{ config: <a Config> } } });`. Assayer then builds them from that declaration instead of ' +
+            'refusing them; anything else still standing between `checkConfigObj` and a case is reported ' +
+            'on its own line.',
+        ],
+        caseCount: 1,
+      });
+    });
   });
 
   describe('an entry whose FUNNELLED private declares the input nothing can construct', () => {
@@ -528,6 +560,7 @@ describe('analyzeFileBroker', () => {
         undriven: [],
         lints: [],
         declaredTypes: [],
+        declaringScopes: [],
       });
     });
   });

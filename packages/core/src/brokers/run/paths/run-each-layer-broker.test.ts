@@ -55,4 +55,22 @@ describe('runEachLayerBroker', () => {
       expect(result).toStrictEqual([]);
     });
   });
+
+  describe('a file that cannot be read', () => {
+    it('ERROR: {relPath: file exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+      const proxy = runEachLayerBrokerProxy();
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        runEachLayerBroker({
+          remaining: ['src/a.ts'],
+          root: '/repo',
+          cacheDir: '/repo/.assayer/cache',
+          coreRoot: '/core',
+          analyzerContentHash: 'abc',
+          results: [],
+        }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
 });

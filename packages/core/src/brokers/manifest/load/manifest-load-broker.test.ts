@@ -88,4 +88,19 @@ describe('manifestLoadBroker', () => {
       });
     });
   });
+
+  describe('manifest.json cannot be read from disk', () => {
+    it("ERROR: {configDir: manifest.json exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+      const proxy = manifestLoadBrokerProxy();
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        manifestLoadBroker({
+          configDir: '/repo',
+          expectedAssayerVersion: '1.0.0',
+          expectedConfigHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
 });

@@ -17,6 +17,9 @@
  *   `process.env`), read off the IMMEDIATE parent, and `args` is the call's structural argument shapes
  *   (never a source value, P4). It opens no scope; a member access binds no name and branches nothing.
  *   It descends its children so nested scopes/branches/calls in the object or arguments are still found.
+ *   A global use carries `scopePath` — the walk's `context.scopePath` where it was recorded — so a
+ *   reader can tell a use at the file's own top level from one inside a function body, even though the
+ *   channel itself stays flat and unclaimed.
  *
  * USAGE:
  * handleMemberAccessLayerAdapter({ node: propertyAccess, context });
@@ -112,6 +115,7 @@ export const handleMemberAccessLayerAdapter = ({
         args: called && Node.isCallExpression(parent) ? readCallArgsLayerAdapter({ args: parent.getArguments() }) : [],
         line: position.line,
         column: position.column,
+        scopePath: context.scopePath,
       }),
     ],
     descents,

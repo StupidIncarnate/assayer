@@ -662,6 +662,87 @@ describe('deriveCasesTransformer', () => {
       });
     });
 
+    // `if (typeof target === 'string')`: the leaf's operand is the WHOLE `typeof` expression, not
+    // `target` — `operandIsTypeof` marks the shape, but no `operandParamName` names it, so it stays
+    // unarrangeable. The cause distinguishes it from a fully opaque operand (a call result): the value
+    // `typeof` narrows may already be a parameter, so "make it a parameter" would be false advice.
+    const TYPEOF_BRANCH = BranchNodeStub({
+      coverageId: 'checkTypeof/if:typeof',
+      startLine: 3,
+      condition: {
+        kind: 'leaf',
+        id: 'checkTypeof/if:typeof#leaf',
+        operandIsTypeof: true,
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'string' },
+      },
+    });
+
+    it('VALID: {a typeof-narrowed comparison} => un-steerable, no case, cause names the typeof limit', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'target', type: { kind: 'string' } })],
+        branches: [TYPEOF_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'checkTypeof/return@then', guardPath: [{ branchCoverageId: 'checkTypeof/if:typeof', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'checkTypeof/return@else', guardPath: [{ branchCoverageId: 'checkTypeof/if:typeof', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-typeof' }],
+        unfillable: [],
+      });
+    });
+
+    // `if (config.db.retry.backoff === 3)`: the property path is THREE segments deep, past the ONE
+    // segment `object-arrange` matches at consume time — a different, permanent limit from the
+    // one-segment `config.mode` case above, which stays `unarrangeable-operand` because it IS closed
+    // later. The cause names the depth, never "make it a parameter" — `config` already is one.
+    const DEEP_MEMBER_BRANCH = BranchNodeStub({
+      coverageId: 'checkDeep/if:member',
+      startLine: 4,
+      condition: {
+        kind: 'leaf',
+        id: 'checkDeep/if:member#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['db', 'retry', 'backoff'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'eq', literal: 3 },
+      },
+    });
+
+    it('VALID: {a property path more than one segment deep} => un-steerable, no case, cause names the depth limit', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({
+            name: 'config',
+            type: {
+              kind: 'object',
+              typeName: 'Config',
+              properties: [{ name: 'db', type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'object', properties: [{ name: 'backoff', type: { kind: 'number' } }] } }] } }],
+            },
+          }),
+        ],
+        branches: [DEEP_MEMBER_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'checkDeep/return@then', guardPath: [{ branchCoverageId: 'checkDeep/if:member', arm: 'then' }], line: 5 }),
+          ExitNodeStub({ coverageId: 'checkDeep/return@else', guardPath: [{ branchCoverageId: 'checkDeep/if:member', arm: 'else' }], line: 7 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 4, cause: 'unarrangeable-property-depth', operand: 'config.db.retry.backoff' }],
+        unfillable: [],
+      });
+    });
+
     // `const TARGET = 'a'; if (m === TARGET)`: the operand `m` IS a param and IS arrangeable, but the
     // right-hand side is an identifier the parse cannot read as a value, so the predicate is
     // `unrecognized` and narrows NEITHER arm. Both arms would arrange `m` from its bare type, so one of
@@ -1038,6 +1119,64 @@ describe('deriveCasesTransformer', () => {
       expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
         cases: [],
         unfillable: [{ param: 'report', type: '(m: string) => string' }],
+      });
+    });
+
+    // The trailing-parameter shape: `sinks` is a REST param the seam refuses, so WITHOUT `harness`
+    // `applied-params` truncates it before it ever reaches the fill seam — never refused, never a gap,
+    // never bound. Naming it in `harness` is what keeps it in `applied` long enough for `cause-arrange`
+    // to bind it.
+    it('VALID: {harness names a trailing REST parameter} => kept and bound, not truncated away', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'size', type: { kind: 'number' } }),
+          ParamDescriptorStub({
+            name: 'sinks',
+            type: { kind: 'array', element: { kind: 'callable', text: '(m: string) => void' } },
+            rest: true,
+          }),
+        ],
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'collect/return@top', guardPath: [], line: 1 })],
+        envDrivable: false,
+        harness: { entry: symbolNameContract.parse('collect'), params: [symbolNameContract.parse('sinks')] },
+      });
+
+      expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['collect/return@top'],
+            arrange: [
+              { kind: 'param', param: 'size', value: 7 },
+              { kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true },
+            ],
+            salient: true,
+          },
+        ],
+        unfillable: [],
+      });
+    });
+
+    // The twin without a harness: `sinks` truncates silently, `size` alone derives the entry, and
+    // nothing is ever refused — this is C3's own repro, and the pair proves the harness is what changes.
+    it('VALID: {the same entry with no harness} => sinks truncates silently, no refusal at all', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'size', type: { kind: 'number' } }),
+          ParamDescriptorStub({
+            name: 'sinks',
+            type: { kind: 'array', element: { kind: 'callable', text: '(m: string) => void' } },
+            rest: true,
+          }),
+        ],
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'collect/return@top', guardPath: [], line: 1 })],
+        envDrivable: false,
+      });
+
+      expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
+        cases: [{ reachesPath: ['collect/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        unfillable: [],
       });
     });
   });

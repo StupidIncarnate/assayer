@@ -306,6 +306,32 @@ describe('compileRunBroker', () => {
     });
   });
 
+  describe('write ordering across the resolved-index, stub-graph, and harness-graph stitches', () => {
+    it("VALID: {stableBranch and currentBranch both defined, clean run} => writes each of the three derived indexes for the STABLE namespace before the CURRENT namespace", async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'feature-x' });
+      proxy.stableChanged({
+        sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+        lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
+        fileContents: ['export const stable = 1;\n'],
+      });
+      proxy.queueCurrentFiles({ contents: ['export const current = 1;\n'] });
+      proxy.manifestWriteSucceeds();
+      const config = AssayerConfigStub({ stableBranch: 'master' });
+
+      await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(proxy.getResolvedIndexWriteOrder()).toStrictEqual(['master', 'feature-x']);
+      expect(proxy.getPropertyIndexWriteOrder()).toStrictEqual(['master', 'feature-x']);
+      expect(proxy.getHarnessGraphWriteOrder()).toStrictEqual(['master', 'feature-x']);
+    });
+  });
+
   describe('a stable file that fails to parse (both a stable branch and the current branch resolved)', () => {
     it("ERROR: {stableBranch configured, one stable file with invalid syntax, no current files} => returns status errors with the stable namespace's relPath/line/column/message, never writes the manifest", async () => {
       const proxy = compileRunBrokerProxy();

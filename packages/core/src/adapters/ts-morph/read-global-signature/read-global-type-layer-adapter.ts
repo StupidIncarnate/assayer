@@ -35,7 +35,10 @@ export const readGlobalTypeLayerAdapter = ({ type }: { type: Type }): TypeFact =
   if (type.isBoolean()) {
     return { flavor: 'boolean' };
   }
-  if (type.isStringLiteral() || type.isNumberLiteral() || type.isEnumLiteral()) {
+  // An enum-member type carries `EnumLiteral` alongside `StringLiteral`/`NumberLiteral` — the checker
+  // never sets it alone — so a string- or number-literal enum member is already caught above; a
+  // computed member (no literal value at all) fails both and falls through to the opaque `other` arm.
+  if (type.isStringLiteral() || type.isNumberLiteral()) {
     return { flavor: 'literal', value: representativeValueContract.parse(type.getLiteralValueOrThrow()) };
   }
   // A boolean literal carries no `getLiteralValue()` — the checker models `true` and `false` as two

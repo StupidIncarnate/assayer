@@ -42,6 +42,19 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/boolean/mixed/mixed.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/boolean/not/not.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/boolean/or/or.ts`]: ['access:named', 'branch:if'],
+  // A boolean is a closed two-value enumeration: `active === false`'s violating arm is `active`'s only
+  // OTHER value, `true` — read off `type.kind === 'boolean'` the same way a union's `!== member` is read
+  // off its members. Before that complement, the violating arm named no value distinct from the
+  // satisfying one — the seam's own fallback fill for an unconstrained boolean IS `false` — so the else
+  // case arranged `active: false` too and failed against correct code.
+  [`${CATALOGUE}/happy-path/boolean/eq-false/eq-false.ts`]: ['access:named', 'branch:if'],
+
+  // null: `v === null` reads `NullKeyword` as the literal value `null`, a first-class RepresentativeValue,
+  // exactly as `active === false` reads `FalseKeyword`. The hermetic walk has no strict-null-checks project
+  // config, so the checker itself widens `string | null` to `string` — the leaf's own `operandType` is the
+  // scalar alone, and the literal carries the domain instead. Before the reader knew `NullKeyword`, this
+  // branch read `unrecognized` and was admitted UNDRIVEN — 0 cases, a silent false success.
+  [`${CATALOGUE}/happy-path/null/eq-null/eq-null.ts`]: ['access:named', 'branch:if'],
 
   // composition: both constructs in one file, which is the point of these rungs.
   [`${CATALOGUE}/happy-path/composition/fallthrough-in-if/fallthrough-in-if.ts`]: ['access:named', 'branch:if', 'branch:switch'],
@@ -62,6 +75,23 @@ const DECLARATIONS = {
   // funnel rather than surfacing on the entry, so the file owes only `access:named` and admits nothing;
   // the two funnel cases are pinned by the colocated test.
   [`${CATALOGUE}/happy-path/composition/const-arrow-callee/const-arrow-callee.ts`]: ['access:named'],
+  // The `through-caller` twin of `const-arrow-callee`, one folder over: `report` calls `classify(n)`
+  // UNCONDITIONALLY but its own exit does not RETURN the call — it discards the result — so `classify`
+  // cannot fold into `report`'s case set the way a funnel does. The follower instead promotes it to its
+  // OWN entry, access `through-caller`, driven with `report`'s own `n` threaded straight through. This
+  // is the only shape that puts `access:through-caller` on an entry at all: a private FUNNELS whenever
+  // its caller's exit returns the call, so a private a caller reaches but does not return is what is
+  // left over.
+  [`${CATALOGUE}/happy-path/composition/through-caller/through-caller.ts`]: ['access:named', 'access:through-caller', 'branch:if'],
+
+  // if. A bare `if` with NO else, in TAIL position, whose only arm does not itself terminate. With no
+  // else the `then` arm's fallthrough and the missing else converge on the exact same physical
+  // continuation — the enclosing scope's own unaccounted-for exit — so `handle-if` mints NO completion
+  // of its own here; both buckets (condition true, condition false) predict that ONE exit, the first
+  // salient and the second the grayed twin. Before the fix `handle-if` minted a SECOND, always-firing
+  // completion for the `then` arm, so a real run observed both probes and the `then` case failed
+  // against correct code — this is the specimen that pins the defect stays fixed.
+  [`${CATALOGUE}/happy-path/if/no-else/no-else.ts`]: ['access:named', 'branch:if'],
 
   // if-else. A class method is reached through an INSTANCE, not as a module property.
   [`${CATALOGUE}/happy-path/if-else/in-class/in-class.ts`]: ['access:method', 'branch:if'],
@@ -246,6 +276,23 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/object/generic-alias/generic-alias.ts`]: ['access:named', 'callee:import-local', 'param:object'],
   [`${CATALOGUE}/happy-path/object/generic-alias/box.ts`]: ['access:named', 'param:object'],
 
+  // The PLAIN (non-generic) twin of `local-shape.ts`: `type Config = { … }` instead of `interface
+  // Config { … }`. Downstream the two are indistinguishable — an object's name is its ALIAS symbol's
+  // whenever the object symbol itself is the anonymous `__type` a `type` produces (CLAUDE.md §3) — so
+  // this specimen's own analysis is the same shape `local-shape.ts` pins, just reached through the
+  // OTHER declaration kind `handle-type-declaration` reads.
+  [`${CATALOGUE}/happy-path/object/type-alias/type-alias.ts`]: ['access:named', 'param:object'],
+
+  // A DECLARATION-ONLY module: one exported interface, no signature anywhere in the file that mentions
+  // it, so no scope's params or return type carry an object descriptor to enumerate `Config` through —
+  // only the DECLARATION channel of `declared-types-projection` populates `declaredTypes` here
+  // (CLAUDE.md §3). No exported function and no top-level branch/call/value-use/global-call means
+  // `analysisProjectionTransformer` finds nothing worth an entry, so the file derives ZERO functions and
+  // ZERO cases — no `access:*` trait at all, since that trait rides an ENTRY and this file has none.
+  // Ruled happy-path anyway: nothing to run is not a failure, and a declared-but-unconsumed type is
+  // testable surface for whoever consumes it, never a debt this file owes on its own.
+  [`${CATALOGUE}/happy-path/object/types-only/types-only.ts`]: [],
+
   // The harness rungs — the PAID half of the input-gap channel, and the only place `harness:supplied`
   // is observed. Each is byte-for-byte the source of its `sad-path/input-gap/` twin, plus one committed
   // `<basename>.harness.ts` beside it; the harness is the only difference between the two specimens, so
@@ -309,6 +356,12 @@ const DECLARATIONS = {
   //   - `uses-process.ts` reads `process.env` and calls `process.cwd()`.
   [`${CATALOGUE}/happy-path/node-global/uses-console/uses-console.ts`]: ['access:module', 'callee:node-global'],
   [`${CATALOGUE}/happy-path/node-global/uses-process/uses-process.ts`]: ['access:module', 'callee:node-global'],
+  // The scoped twin of `uses-console`: the SAME ambient call, nested inside a named, exported function
+  // instead of sitting at the file's own top level. `console.log` still earns `callee:node-global` — the
+  // trait is named off `graph.globalUses`, which does not care which scope reached it — but `report` is
+  // never CALLED at import time, only exported, so the module scope earns no entry: `access:named` alone,
+  // never `access:module` beside it.
+  [`${CATALOGUE}/happy-path/node-global/nested-console/nested-console.ts`]: ['access:named', 'callee:node-global'],
 
   // ternary in EXIT position — the condition is a real branch, each arm a guarded exit of the return's
   // own kind. `return-basic` is the plainest block return; `return-nested` nests a ternary in the else
@@ -352,6 +405,22 @@ const DECLARATIONS = {
   // the module fresh. `operand:env` gates that check; the absence of `undriven` is the other half — a
   // switch reads its discriminant's env source exactly as an `if` reads its operand's.
   [`${CATALOGUE}/happy-path/switch/pure-statement/pure-statement.ts`]: ['access:module', 'branch:switch', 'callee:node-global', 'operand:env'],
+  // The switch twin of `if/no-else`: a tail switch with NO default, whose case clauses fall through
+  // rather than returning. With no default every clause's fallthrough and the wholly-unmatched path
+  // converge on the SAME physical continuation, so `handle-switch` mints no per-clause completion
+  // either — both cases (`'get'`, `'post'`) predict the one enclosing `exit@top`, the first salient
+  // and the second grayed. Before the fix each clause got its own always-firing completion stacked on
+  // top of the enclosing one, so a real run observed both probes and every case failed against correct
+  // code.
+  [`${CATALOGUE}/happy-path/switch/no-default/no-default.ts`]: ['access:named', 'branch:switch', 'param:union'],
+
+  // tsx: the FILE-EXTENSION rung — a `.tsx` component, read exactly as a `.ts` file otherwise. `Badge`
+  // branches on the `urgent` param the same way any boolean branch does; the JSX each arm RETURNS never
+  // enters analysis (P4 — an expression is descended for the scopes/calls it might hide, not analysed
+  // for its value), so the returned `<strong>`/`<span>` elements carry no trait of their own. What this
+  // pins is that `specimen-catalogue`, the compiler's own inclusion rule, and the walk's parse all treat
+  // `.tsx` as analysed surface.
+  [`${CATALOGUE}/happy-path/tsx/component/component.tsx`]: ['access:named', 'branch:if'],
 
   // The NEGATIVE controls, one per contradiction axis — ordinary code every exit reaches, so both run
   // clean and live in happy-path. A solver that flags either has learned to condemn correct code.
@@ -360,6 +429,12 @@ const DECLARATIONS = {
   //     satisfiable, so one string satisfies both bounds and NO unreachable-exit lint fires.
   [`${CATALOGUE}/happy-path/unreachable/compatible-guards/compatible-guards.ts`]: ['access:named', 'branch:if'],
   [`${CATALOGUE}/happy-path/length/bounded-name/bounded-name.ts`]: ['access:named', 'branch:if'],
+  // The ARRAY twin of `bounded-name`: a `.length` guard on an array param, not a string. An array has no
+  // scalar point, so its length can only be realized by building a real array AT a permitted length —
+  // never the cardinality fan-out's own empty/one/many classes, which top out at two elements and can
+  // never reach `length > 3`. `param:array` gates the read; the cases pin that each arm now arranges an
+  // array whose length actually decides it, rather than one every case shares regardless of the guard.
+  [`${CATALOGUE}/happy-path/length/array-guard/array-guard.ts`]: ['access:named', 'branch:if', 'param:array'],
 
   // ========================= sad-path/ — root is meant to run UNCLEAN =========================
 
@@ -431,6 +506,23 @@ const DECLARATIONS = {
   // single derived case reporting "reached no exit" on code that reaches one perfectly.
   [`${CATALOGUE}/sad-path/undriven/const-comparand/const-comparand.ts`]: ['access:named', 'branch:if', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/enum-case/enum-case.ts`]: ['access:named', 'branch:switch', 'param:union', 'undriven'],
+  // A THIRD unarrangeable-operand shape, distinguished from the other two by its own cause: `typeof
+  // target === 'string'` names an operand that is the WHOLE `typeof` expression, not `target` — so
+  // `target` being a parameter does not make the comparison arrangeable. Assayer does not yet decompose
+  // a `typeof` read into the per-type cases it names, and the admission says exactly that rather than
+  // "make it a parameter", which `target` already is.
+  [`${CATALOGUE}/sad-path/undriven/typeof-narrow/typeof-narrow.ts`]: [
+    'access:named',
+    'branch:if',
+    'param:union',
+    'undriven',
+  ],
+  // A property path MORE than one segment deep (`config.db.retry`, not `config.mode`): `operand:property`
+  // is what the walk records for either depth, but only a ONE-segment path is closed later by stub-realize
+  // (`object / branch-local`) — `object-arrange` matches a property path one segment deep, and no further,
+  // so this stays undriven through the SAME consume-time overlay that drives the shallower shape. The
+  // admission names the depth, never "make it a parameter": `config` already is one.
+  [`${CATALOGUE}/sad-path/undriven/property-depth/property-depth.ts`]: ['access:named', 'branch:if', 'operand:property', 'param:object', 'undriven'],
   // A branching callback passed to a same-file higher-order function (`apply(value, (x) => { if … })`).
   // The code REACHES the callback (it is passed as an argument), so it is NOT dead surface — but the
   // value `x` binds to is handed to it by `apply`, not an input any case at `run` controls, so its
@@ -547,6 +639,29 @@ const DECLARATIONS = {
     'gap:input',
     'param:callable',
   ],
+  // The PARAM twin of `object-param`, one door down from where the refusal lives: not a callable member
+  // buried inside an object, but a bare `if (settings)` on the param itself. `is-falsy-arm` — the same
+  // rule that already refuses a no-scalar-point PROPERTY — is asked here of the PARAM: the truthy arm
+  // gets a real built object and DOES derive a case, while only the falsy arm's own bucket is refused
+  // (no constructed object is ever falsy) and invoiced as a GAP. `cases` and `gaps` on the same entry is
+  // the point: before this call site, the falsy arm's bucket fell through to the generic seam fill and
+  // silently arranged the SAME `{ mode: 'abc123' }` the truthy arm gets, so the else case predicted an
+  // exit it could never reach.
+  [`${CATALOGUE}/sad-path/input-gap/truthy-object-param/truthy-object-param.ts`]: [
+    'access:named',
+    'branch:if',
+    'gap:input',
+    'param:object',
+  ],
+  // The ARRAY twin, one shape over: `if (tags)` on a `string[]` param. The truthy arm still fans out over
+  // cardinality (empty/one/many) — nothing about bare truthiness narrows a LENGTH, every array is truthy
+  // regardless of size — while the falsy arm is refused and invoiced exactly as the object shape's is.
+  [`${CATALOGUE}/sad-path/input-gap/truthy-array-param/truthy-array-param.ts`]: [
+    'access:named',
+    'branch:if',
+    'gap:input',
+    'param:array',
+  ],
 
   // `contradictory-bounds` nests `.length > 1` inside `.length < 1`, which no string satisfies — the
   // length axis is read over the integers, so this is provably dead where the same bounds on a plain
@@ -568,19 +683,15 @@ export const specimenRegistry = new Map<RelPath, readonly SyntaxTrait[]>(
 // nobody catalogued. Otherwise "the catalogue covers every syntax we model" is a claim with nothing
 // behind it.
 export const uncataloguedTraits = {
-  'access:through-caller':
-    'no ENTRY carries it. A same-file private a reachable surface calls is either FUNNELLED into that ' +
-    'surface (when the surface returns the call — `happy-path/function/nested`, `deep-nested`, and ' +
-    'the `sad-path/unreachable/welded-arg` funnel), or an inline callback FUNNELLED into its host ' +
-    '(`happy-path/array/map-conditional`) — in both the surface is the entry and the private is no ' +
-    'entry of its own. The `through-caller` entry the follower still emits — a private unconditionally ' +
-    'called whose result the surface does NOT return, so it cannot funnel — has no specimen yet; the ' +
-    'transformer that builds it is covered by its own unit test.',
   'access:unreachable':
-    'no ENTRY carries it. An unreachable scope is an unexported helper; the analysis makes it an ' +
-    'entry only when a caller drives it, and then the access is `through-caller`, not `unreachable`. ' +
-    'A helper no caller drives is reported on `undriven`, which carries no access kind. So the ' +
-    'unreachable access the walk records is real but never reaches the access field of an entry — ' +
-    '`happy-path/function/nested` is the driven case, `sad-path/undriven/hof-callback` the ' +
-    'admitted one.',
+    'no ENTRY can EVER carry it, by construction — not a missing specimen but a value the pipeline ' +
+    'always resolves away before analysis is exposed. `readEntryAccessLayerAdapter` assigns `unreachable` ' +
+    'only when the module export table has no entry for the scope, which is exactly the condition under ' +
+    'which `analysisProjectionTransformer`\'s own entry filter (`scope.kind === \'function\' && ' +
+    'scope.exported`) already excludes it from `FileAnalysis.functions`. The only route back in is ' +
+    '`followCallsTransformer`, which either FUNNELS the scope (folded into its caller, no entry of its ' +
+    'own — `happy-path/function/nested`), promotes it to `access:through-caller` ' +
+    '(`happy-path/composition/through-caller`), or leaves it UNDRIVEN (`sad-path/undriven/hof-callback`), ' +
+    'which carries no access kind at all. So `unreachable` is real only inside the raw walk, one step ' +
+    'before `FileAnalysis` — pinned there, and only there, by `read-entry-access-layer-adapter.test.ts`.',
 } as const;

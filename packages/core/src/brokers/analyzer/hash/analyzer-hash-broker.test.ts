@@ -43,4 +43,14 @@ describe('analyzerHashBroker', () => {
       expect(withTest).toBe(withoutTest);
     });
   });
+
+  describe('a source file that cannot be read from disk', () => {
+    it("ERROR: {roots: one file, fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+      const proxy = analyzerHashBrokerProxy();
+      proxy.walkReturns({ paths: ['/root/a.ts'] });
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(analyzerHashBroker({ roots: ['/root'] })).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
 });

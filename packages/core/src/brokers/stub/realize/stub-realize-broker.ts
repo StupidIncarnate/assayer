@@ -326,5 +326,6 @@ export const stubRealizeBroker = ({
     ),
     lints: analysis.lints,
     declaredTypes: analysis.declaredTypes,
+    declaringScopes: analysis.declaringScopes,
   });
 };

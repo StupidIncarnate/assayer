@@ -211,5 +211,7 @@ export const composeCrossFilePredicatesBroker = ({
     // The declared object shapes are a per-file fact the compose overlay never touches — carried
     // through unchanged from the analyze the walk already produced.
     declaredTypes: analysis.declaredTypes,
+    // A per-file fact the compose overlay never touches either — carried through unchanged.
+    declaringScopes: analysis.declaringScopes,
   });
 };

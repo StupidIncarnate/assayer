@@ -9,6 +9,10 @@
  *   the context — empty when the call always runs. Together these are what lets a follower drive a
  *   private callee through a caller that reaches it and passes its own input straight in.
  *
+ *   A bare-identifier callee that is an ambient external (`setTimeout(fn, 0)`) also records a GLOBAL
+ *   USE, carrying `scopePath` off `context.scopePath` — the same file-wide, unclaimed channel the
+ *   member-access handler feeds for `console.log(...)`.
+ *
  * USAGE:
  * handleCallLayerAdapter({ node: callExpression, context });
  * // Returns a HandlerResult with one call and the child descents
@@ -69,7 +73,16 @@ export const handleCallLayerAdapter = ({
   // the way down, so this only fires for the leftmost bare identifier and never double-counts.
   const globalUses =
     Node.isIdentifier(callee) && readAmbientRootLayerAdapter({ node: callee })
-      ? [globalUseContract.parse({ name: callee.getText(), called: true, args, line: position.line, column: position.column })]
+      ? [
+          globalUseContract.parse({
+            name: callee.getText(),
+            called: true,
+            args,
+            line: position.line,
+            column: position.column,
+            scopePath: context.scopePath,
+          }),
+        ]
       : [];
 
   return handlerResultLayerAdapter({

@@ -10,6 +10,9 @@ import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 export const analyzerHashBrokerProxy = (): {
   walkReturns: ({ paths }: { paths: string[] }) => void;
   fileContent: ({ content }: { content: string }) => void;
+  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
+  // the like) propagates to the caller unmodified. This stages that rejection.
+  readThrows: ({ error }: { error: Error }) => void;
 } => {
   compileWalkWorkingTreeBrokerProxy();
   fsReadFileAdapterProxy();
@@ -28,6 +31,9 @@ export const analyzerHashBrokerProxy = (): {
     },
     fileContent: ({ content }: { content: string }): void => {
       readHandle.mockResolvedValue(content);
+    },
+    readThrows: ({ error }: { error: Error }): void => {
+      readHandle.mockRejectedValueOnce(error);
     },
   };
 };

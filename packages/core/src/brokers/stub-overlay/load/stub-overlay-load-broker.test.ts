@@ -71,4 +71,17 @@ describe('stubOverlayLoadBroker', () => {
       ]);
     });
   });
+
+  describe('an object overlay file that cannot be read from disk', () => {
+    it("ERROR: {objects/foo.ts/Config.json exists, fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+      const proxy = stubOverlayLoadBrokerProxy();
+      proxy.dirExists();
+      proxy.dirMissing();
+      proxy.queueDir({ entries: [{ name: 'foo.ts', isDirectory: true }] });
+      proxy.queueDir({ entries: [{ name: 'Config.json', isDirectory: false }] });
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(stubOverlayLoadBroker({ repoRoot: '/repo' })).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
 });

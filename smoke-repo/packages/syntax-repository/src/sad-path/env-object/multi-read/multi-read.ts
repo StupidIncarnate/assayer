@@ -4,9 +4,9 @@ if (process.env.MODE === 'production') {
   console.log('dev');
 }
 
-const code = Number(process.env.CODE);
+const statusCode = Number(process.env.CODE);
 
-switch (code) {
+switch (statusCode) {
   case 1:
     console.log('one');
     break;

@@ -5,6 +5,9 @@ export const manifestLoadBrokerProxy = (): {
   present: ({ manifestJson }: { manifestJson: string }) => void;
   absent: () => void;
   malformed: () => void;
+  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
+  // the like) propagates to the caller unmodified. This stages that rejection.
+  readThrows: ({ error }: { error: Error }) => void;
 } => {
   const existsProxy = fsExistsAdapterProxy();
   const readProxy = fsReadFileAdapterProxy();
@@ -20,6 +23,10 @@ export const manifestLoadBrokerProxy = (): {
     malformed: (): void => {
       existsProxy.succeeds();
       readProxy.returns({ content: '{bad json' });
+    },
+    readThrows: ({ error }: { error: Error }): void => {
+      existsProxy.succeeds();
+      readProxy.throws({ error });
     },
   };
 };

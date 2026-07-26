@@ -60,6 +60,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
       undriven: [],
       lints: [],
       declaredTypes: [],
+      declaringScopes: [],
     });
   }
 
@@ -188,18 +189,28 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
 
   // The INPUT gaps, one per entry: the entry's own refusals concatenated with the ones a driving route
   // hit on its behalf (a funnelled private's, a callback's). `input-gap` de-duplicates on (declaring
-  // scope, parameter), so a refusal both channels report is invoiced once.
-  const gaps = derived.flatMap(({ fn, result }) =>
-    inputGapTransformer({
+  // scope, parameter), so a refusal both channels report is invoiced once. `hasCases` carries whether
+  // the entry's FINAL case set — `result.cases`, or the funnel cases that REPLACE them for a funnelled
+  // host — is non-empty: a bucket that never touches the refused parameter derives fine, so "derives no
+  // case" would be false the moment one exists, but a host whose funnel itself refused everything must
+  // NOT read as having a case just because its own pre-funnel derivation happened to produce one.
+  const gaps = derived.flatMap(({ fn, result }) => {
+    const finalCases = funnelByHost.get(`${String(fn.entry.name)}@${String(fn.entry.line)}`) ?? result.cases;
+
+    return inputGapTransformer({
       entryName: fn.entry.name,
       unfillable: [...result.unfillable, ...(followedRefusals.get(fn.entry.name) ?? [])],
-    }),
-  );
+      hasCases: finalCases.length > 0,
+    });
+  });
   // A followed entry the projection does not carry — a `through-caller` private — invoices under its own
   // name, since it IS a named entry a reader sees and its refusals belong to its own signature.
   const derivedNames = new Set(derived.map(({ fn }) => String(fn.entry.name)));
+  const followedCaseCounts = new Map(followed.followedEntries.map((entry) => [String(entry.entry.name), entry.cases.length]));
   const followedGaps = [...followedRefusals.entries()].flatMap(([entryName, unfillable]) =>
-    derivedNames.has(String(entryName)) ? [] : inputGapTransformer({ entryName, unfillable }),
+    derivedNames.has(String(entryName))
+      ? []
+      : inputGapTransformer({ entryName, unfillable, hasCases: (followedCaseCounts.get(String(entryName)) ?? 0) > 0 }),
   );
 
   // PRECEDENCE, never a merge: an entry that carries an INPUT gap has its undriven admissions dropped.
@@ -284,5 +295,9 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     // The file's locally-declared object shapes, read straight from the walk's enumerated object
     // descriptors — the full property list later phases splice per-property value demands onto.
     declaredTypes: declaredTypesProjectionTransformer({ walked }),
+    // Every same-file scope a driving route folded into one of `functions` instead of projecting as an
+    // entry of its own — straight off the call graph, which already computed it while classifying the
+    // routes above.
+    declaringScopes: followed.declaringScopes,
   });
 };

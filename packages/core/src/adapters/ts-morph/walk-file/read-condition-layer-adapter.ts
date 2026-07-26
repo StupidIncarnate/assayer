@@ -10,6 +10,12 @@
  *   comparison states a THRESHOLD, and dropping it left every length check but the two against zero
  *   with nothing to classify.
  *
+ *   `null` is a KEYWORD node (`NullKeyword`) and reads as the literal value `null`, which is a
+ *   first-class `RepresentativeValue` (`representative-value-contract`) — so `v === null` reads
+ *   exactly as `v === 'a'` does. `undefined` is not a keyword but an IDENTIFIER, and stays unread:
+ *   `RepresentativeValue` has no `undefined` member, so there is no domain value to carry even if the
+ *   identifier were resolved.
+ *
  *   It takes the condition EXPRESSION rather than the `if` that owns it, so a ternary, a `while`,
  *   or a `do` can reuse it unchanged when their handlers arrive.
  *
@@ -18,6 +24,11 @@
  *   `operandTypeRef` the type-reference NAME the root param declares (`Config`, read off
  *   `param.getTypeNode()` — a §5.1-sanctioned type-reference name). The predicate and the operand's own
  *   type read exactly as for any other operand; the extra fields are the stub stitch's foreign key.
+ *
+ *   A `typeof` operand (`typeof target === 'string'`) stays the WHOLE `TypeOfExpression` — its domain is
+ *   the runtime-type string `typeof` produces, never the value `target` itself holds — and `operandIsTypeof`
+ *   marks it so a caller can name the shape it does not decompose instead of reading it as a fully opaque
+ *   operand indistinguishable from a call result.
  *
  * USAGE:
  * readConditionLayerAdapter({ condition: ifStatement.getExpression() });
@@ -37,6 +48,7 @@ export interface ConditionReadout {
   operandRootName?: SymbolName;
   operandPropertyPath?: SymbolName[];
   operandTypeRef?: SymbolName;
+  operandIsTypeof?: true;
   predicate: Predicate;
 }
 
@@ -59,8 +71,11 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
             ? representativeValueContract.parse(true)
             : right.getKindName() === 'FalseKeyword'
               ? representativeValueContract.parse(false)
-              : undefined;
+              : Node.isNullLiteral(right)
+                ? representativeValueContract.parse(null)
+                : undefined;
   const operandName = Node.isIdentifier(operandNode) ? symbolNameContract.parse(operandNode.getText()) : undefined;
+  const operandIsTypeof = Node.isTypeOfExpression(operandNode) ? true : undefined;
 
   // An object-member operand is read PAST the property access: the leftmost identifier is the root the
   // read starts from, the `.member` chain is what it reads off it, and the root param's declared
@@ -81,6 +96,7 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
     ...(operandRootName === undefined ? {} : { operandRootName }),
     ...(property === undefined || property.path.length === 0 ? {} : { operandPropertyPath: property.path }),
     ...(operandTypeRef === undefined ? {} : { operandTypeRef }),
+    ...(operandIsTypeof === undefined ? {} : { operandIsTypeof }),
     predicate: predicateTransformer({
       opKind,
       isLengthAccess,

@@ -11,6 +11,7 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 export const fsReaddirAdapterProxy = (): {
   returns: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }) => void;
+  throws: ({ error }: { error: Error }) => void;
 } => {
   const handle = registerMock({ fn: readdir });
 
@@ -21,6 +22,9 @@ export const fsReaddirAdapterProxy = (): {
         isDirectory: (): boolean => entry.isDirectory,
       }));
       handle.mockResolvedValueOnce(direntLikes as unknown as Awaited<ReturnType<typeof readdir>>);
+    },
+    throws: ({ error }: { error: Error }): void => {
+      handle.mockRejectedValueOnce(error);
     },
   };
 };

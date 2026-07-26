@@ -42,6 +42,12 @@
  *   its own checker-based reader (`read-const-operand`) — recorded wherever true; whether it drives is
  *   policy the derivation owns.
  *
+ *   `operandIsTypeof` records that the operand is a `typeof` READ (`typeof target === 'string'`) rather
+ *   than the identifier or property access itself — the operand node stays the whole `typeof` expression
+ *   (its domain is a runtime-type string, not the value `target` holds), and this is the auxiliary flag
+ *   that lets the steerability gate name the shape it cannot decompose instead of reporting it as a
+ *   fully opaque operand.
+ *
  * USAGE:
  * conditionLeafContract.parse({
  *   kind: 'leaf', id: 'grade/if:…#leaf.0',
@@ -71,6 +77,7 @@ export const conditionLeafContract = z.object({
   operandConstValue: representativeValueContract.optional(),
   operandConstLength: constLengthContract.optional(),
   operandCallPosition: z.object({ line: lineNumberContract, column: columnNumberContract }).optional(),
+  operandIsTypeof: z.literal(true).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,
 });

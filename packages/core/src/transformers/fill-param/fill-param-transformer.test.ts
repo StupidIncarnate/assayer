@@ -35,6 +35,17 @@ describe('fillParamTransformer', () => {
 
       expect(result).toStrictEqual({ kind: 'filled', binding: { kind: 'array', param: 'grid', value: [[7]] } });
     });
+
+    // A5: the interpreter applies an `array` binding as ONE positional argument UNLESS it is marked
+    // `rest` — a rest parameter's array must SPREAD across the tail positional slots it stands for, so
+    // the binding this seam builds for one must carry the fact, mirroring the descriptor's own flag.
+    it('VALID: {a rest number[] param} => the array binding carries rest: true', () => {
+      const result = fillParamTransformer({
+        param: ParamDescriptorStub({ name: 'ns', type: { kind: 'array', element: { kind: 'number' } }, rest: true }),
+      });
+
+      expect(result).toStrictEqual({ kind: 'filled', binding: { kind: 'array', param: 'ns', value: [7], rest: true } });
+    });
   });
 
   describe('an object parameter', () => {

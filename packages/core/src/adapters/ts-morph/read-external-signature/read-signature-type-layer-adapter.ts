@@ -42,7 +42,10 @@ export const readSignatureTypeLayerAdapter = ({ type, seen }: { type: Type; seen
   if (type.isBoolean()) {
     return { flavor: 'boolean' };
   }
-  if (type.isStringLiteral() || type.isNumberLiteral() || type.isEnumLiteral()) {
+  // An enum-member type carries `EnumLiteral` alongside `StringLiteral`/`NumberLiteral` — the checker
+  // never sets it alone — so a string- or number-literal enum member is already caught above; a
+  // computed member (no literal value at all) fails both and falls through to the opaque `other` arm.
+  if (type.isStringLiteral() || type.isNumberLiteral()) {
     return { flavor: 'literal', value: representativeValueContract.parse(type.getLiteralValueOrThrow()) };
   }
   // A boolean literal carries no `getLiteralValue()` — the checker models `true` and `false` as two
@@ -85,6 +88,11 @@ export const readSignatureTypeLayerAdapter = ({ type, seen }: { type: Type; seen
       .getProperties()
       .map((symbol): { name: SymbolName; fact: TypeFact } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
+        // A TUPLE's numeric-index properties (`0`, `1`, `length` on `readonly [string, number]`) carry
+        // no declaration of their own AND the tuple type itself carries no symbol to fall back to — the
+        // checker synthesizes them structurally, with no node anywhere to read a type off. `unknown` is
+        // the honest answer for a property with nowhere to read a type from, the same shape the walk
+        // reader hits for a tuple-typed parameter (`sad-path/run-gap/tuple-param`).
         return {
           name: symbolNameContract.parse(symbol.getName()),
           fact:

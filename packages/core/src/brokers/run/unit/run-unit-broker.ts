@@ -105,8 +105,11 @@ export const runUnitBroker = async ({
   // Last, the harness overlay: an entry whose input Assayer refused is DRIVEN here from the colocated
   // `<basename>.harness.ts`, read fresh per run and never persisted. It runs after the overlays above
   // because each of those can turn a refusal into something Assayer builds itself, and a harness may only
-  // pay a debt that is still owed once everything derivable has been derived.
-  const analysis = harnessRealizeBroker({ analysis: mapped, root: repoRoot, relPath });
+  // pay a debt that is still owed once everything derivable has been derived. `walked` is threaded so a
+  // refusal owned by a funnelled or through-caller private (invoiced against its host) can be paid too —
+  // it re-runs the same `follow-calls` classification the compile walk used, rather than leaving that
+  // refusal open forever on this, the real run path.
+  const analysis = harnessRealizeBroker({ analysis: mapped, root: repoRoot, relPath, walked });
   const contentHash = cryptoSha256Adapter({ content: source });
 
   const probeDir = `${cacheDir}/probes`;

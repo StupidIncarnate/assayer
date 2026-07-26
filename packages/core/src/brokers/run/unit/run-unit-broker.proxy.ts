@@ -23,6 +23,13 @@ export const runUnitBrokerProxy = (): {
   runnerWasInvoked: () => boolean;
   lastWrittenPath: () => unknown;
   lastWrittenContent: () => unknown;
+  writtenContentFor: ({ pathIncludes }: { pathIncludes: string }) => unknown;
+  readThrows: ({ error }: { error: Error }) => void;
+  // The colocated harness file this run would read — real disk I/O a unit test has none of, so only
+  // the two reads underneath it are staged. Everything above them (the gate, the load, `derive-cases`,
+  // `follow-calls`) runs REAL, which is what lets a test prove `walked` reaching this overlay rather
+  // than merely that the overlay was called.
+  setupHarness: ({ source }: { source: string }) => void;
 } => {
   cryptoSha256AdapterProxy();
   fsMkdirAdapterProxy();
@@ -37,8 +44,8 @@ export const runUnitBrokerProxy = (): {
   // "no sibling", so both are same-reference no-ops for a target with no cross-file map reach.
   composeCrossFileMapBrokerProxy();
   // The harness overlay runs REAL. Its colocated-file read defaults to "nothing on disk", so it is a
-  // same-reference no-op for every target here.
-  harnessRealizeBrokerProxy();
+  // same-reference no-op for every target here unless a test stages one via setupHarness below.
+  const harness = harnessRealizeBrokerProxy();
   runCrossFileProbesBrokerProxy();
   // The overlay load is mocked wholesale to an EMPTY overlay: reading committed corrections off disk is
   // I/O a unit test does not stage, so stub-realize sees no correction and its object-arrange overlay is
@@ -60,5 +67,10 @@ export const runUnitBrokerProxy = (): {
     runnerWasInvoked: (): boolean => runner.lastConfig() !== undefined,
     lastWrittenPath: (): unknown => writes.getWrittenPath(),
     lastWrittenContent: (): unknown => writes.getWrittenContent(),
+    writtenContentFor: ({ pathIncludes }: { pathIncludes: string }): unknown => writes.getWrittenContentFor({ pathIncludes }),
+    // The read-back is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
+    // the like) propagates to the caller unmodified. This stages that rejection.
+    readThrows: ({ error }: { error: Error }): void => { reads.throws({ error }); },
+    setupHarness: ({ source }: { source: string }): void => { harness.setupHarness({ source }); },
   };
 };

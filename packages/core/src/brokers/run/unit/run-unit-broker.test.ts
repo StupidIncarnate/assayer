@@ -26,6 +26,20 @@ const MODULE_REASON =
   'drives it: a top-level `const x = Number(process.env.X)` makes X an input, and each arm ' +
   'becomes a case that sets it and imports the module fresh.';
 
+// `build` is a same-file PRIVATE `audit` returns unconditionally — funnelled into `audit`'s own case
+// set, so `build` is no entry of its own and its refusal is invoiced against `audit` (`on \`build\``).
+// Paying it needs the SAME `follow-calls` re-classification `harnessRealizeBroker` only performs when
+// its caller threads `walked` — the real seam this suite proves, not a unit probe of the broker alone.
+const FUNNELLED_SOURCE =
+  'const build = (size: number, report: (message: string) => string): string => {\n  if (size > 10) {\n    return report(\'over\');\n  }\n\n  return report(\'under\');\n};\n\nexport function audit(size: number): string {\n  return build(size, (m) => m);\n}\n';
+
+const FUNNELLED_HARNESS =
+  "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { build: { report: (message: string): string => message } } });\n";
+
+const FUNNELLED_THEN = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#then';
+const FUNNELLED_ELSE = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
+const FUNNELLED_AUDIT_TOP = '*module*/audit/return@top';
+
 describe('runUnitBroker', () => {
   describe('the artifact it returns', () => {
     // Read back from the FILE the shim wrote, not from Jest's reporting — which is what lets the CLI
@@ -222,6 +236,74 @@ describe('runUnitBroker', () => {
           '  The generated shim and the cases it was given are on disk at /cache/runs/r1 — running Jest ' +
           'against that directory reproduces the crash. Please report it with that output.',
       );
+    });
+  });
+
+  describe('the saved artifact cannot be read back', () => {
+    it('ERROR: {jest ran and wrote run.json, but fsReadFileAdapter rejects reading it back} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+      const proxy = runUnitBrokerProxy();
+      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+
+      await expect(
+        runUnitBroker({
+          cacheDir: '/cache',
+          coreRoot: '/core',
+          repoRoot: '/repo',
+          relPath: 'src/grade.ts',
+          absPath: '/repo/src/grade.ts',
+          source: SOURCE,
+          runId: 'r1',
+          analyzerContentHash: 'abc',
+        }),
+      ).rejects.toThrow(/^EACCES: permission denied$/u);
+    });
+  });
+
+  // The wiring this broker must thread, not merely a fact about `harnessRealizeBroker` in isolation:
+  // `build`'s refusal is invoiced against its host `audit` (a funnelled private), and paying it needs
+  // the raw `walked` parse re-run through `follow-calls` — a flat re-derivation over `audit`'s OWN
+  // params alone (what this broker did before it threaded `walked`) proves only that axis and leaves
+  // the gap standing. `harnessRealizeBroker` runs REAL here (only its own disk read is staged), so this
+  // fails the moment the call site stops passing `walked` — not merely when the broker's own unit
+  // tests stop covering it, which happens on a caller regardless of whether it remembers the argument.
+  describe('a funnelled private\'s refusal, closed via the colocated harness', () => {
+    it('VALID: {a harness naming the funnelled private} => walked reaches the overlay, so the written case set pays the gap and carries both arms', async () => {
+      const proxy = runUnitBrokerProxy();
+      proxy.setupHarness({ source: FUNNELLED_HARNESS });
+      proxy.setupSavedRun({ run: RunResultStub() });
+
+      await runUnitBroker({
+        cacheDir: '/cache',
+        coreRoot: '/core',
+        repoRoot: '/repo',
+        relPath: 'src/audit.ts',
+        absPath: '/repo/src/audit.ts',
+        source: FUNNELLED_SOURCE,
+        runId: 'r1',
+        analyzerContentHash: 'abc',
+      });
+
+      const written = JSON.parse(String(proxy.writtenContentFor({ pathIncludes: 'cases.json' }))) as unknown;
+
+      expect(written).toStrictEqual({
+        relPath: 'src/audit.ts',
+        modulePath: '/repo/src/audit.ts',
+        entries: [
+          {
+            name: 'audit',
+            access: { kind: 'named' },
+            exitIds: [FUNNELLED_AUDIT_TOP, FUNNELLED_THEN, FUNNELLED_ELSE],
+            cases: [
+              { reachesPath: [FUNNELLED_THEN, FUNNELLED_AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
+              { reachesPath: [FUNNELLED_ELSE, FUNNELLED_AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+            ],
+          },
+        ],
+        gaps: [],
+        darkSpots: [],
+        undriven: [],
+        lints: [],
+      });
     });
   });
 });

@@ -65,6 +65,51 @@ describe('funnelCasesTransformer', () => {
     });
   });
 
+  // A5: the interpreter applies an `array` binding as ONE positional argument UNLESS it is marked
+  // `rest` — a surface funnelling a callback over `...items: number[]` must mark the funnelled
+  // binding `rest: true`, or the interpreter would spread nothing and nest `items` one level deep.
+  describe('the surface`s array param is a REST parameter', () => {
+    const REST_SURFACE = ScopeRecordStub({
+      scopePath: ['*module*', 'run'],
+      name: 'run',
+      params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } }, optional: true, rest: true }],
+      returnType: { kind: 'array', element: { kind: 'string' } },
+      startLine: 1,
+      endLine: 3,
+      branches: [],
+      exits: [SURFACE_EXIT],
+    });
+
+    it('VALID: {items.map((n) => …)} => every funnelled binding is marked rest: true', () => {
+      const result = funnelCasesTransformer({
+        surface: REST_SURFACE,
+        callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }],
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [], rest: true }], salient: true },
+          {
+            reachesPath: ['cb/return@then', 'run/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [6], rest: true }],
+            salient: true,
+          },
+          {
+            reachesPath: ['cb/return@else', 'run/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [5], rest: true }],
+            salient: true,
+          },
+          {
+            reachesPath: ['cb/return@then', 'cb/return@else', 'run/return@top'],
+            arrange: [{ kind: 'array', param: 'items', value: [6, 5], rest: true }],
+            salient: true,
+          },
+        ],
+        unfillable: [],
+      });
+    });
+  });
+
   describe('a callback whose own parameter the fill seam refuses', () => {
     // The callback folds INTO the surface, so it is no entry of its own — a parameter it declares that
     // no value can be built for has nowhere else to be said. Dropped here, the surface derives only its

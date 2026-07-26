@@ -98,13 +98,17 @@ export const composeCrossFileMapBroker = ({
     );
 
     if (group === undefined) {
-      return { fn, refusals: [] };
+      return { fn, refusals: [], hasCases: fn.cases.length > 0 };
     }
 
     const funnel = funnelCasesTransformer({ surface: group.host, callbacks: group.callbacks });
 
+    // A REFUSED fold replaces the host's cases with NONE — `funnel.cases` is what `fn.cases` becomes
+    // below, so a refusal's `hasCases` must read THAT outcome, never the host's own pre-fold derivation
+    // (a branchless `return items.map(bandReading)` surface derives a trivial case of its own that the
+    // fold discards, and reporting it here would claim a case the final analysis does not carry).
     if (funnel.cases.length === 0) {
-      return { fn, refusals: funnel.unfillable };
+      return { fn, refusals: funnel.unfillable, hasCases: false };
     }
 
     // The host entry's own exit unioned with the sibling callees' exits its folded cases path through,
@@ -126,6 +130,7 @@ export const composeCrossFileMapBroker = ({
         ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
       },
       refusals: funnel.unfillable,
+      hasCases: true,
     };
   });
 
@@ -134,10 +139,10 @@ export const composeCrossFileMapBroker = ({
   // less than the file says. It is skipped for a host the analysis ALREADY invoiced — one entry owes one
   // gap, and its own refusals are stated there.
   const gappedNames = new Set(analysis.gaps.map((gap) => String(gap.name)));
-  const foldedGaps = folded.flatMap(({ fn, refusals }) =>
+  const foldedGaps = folded.flatMap(({ fn, refusals, hasCases }) =>
     gappedNames.has(String(fn.entry.name))
       ? []
-      : inputGapTransformer({ entryName: fn.entry.name, unfillable: refusals }),
+      : inputGapTransformer({ entryName: fn.entry.name, unfillable: refusals, hasCases }),
   );
   const foldedGapNames = new Set(foldedGaps.map((gap) => String(gap.name)));
 
@@ -151,5 +156,6 @@ export const composeCrossFileMapBroker = ({
     undriven: analysis.undriven.filter((entry) => !foldedGapNames.has(String(entry.name))),
     lints: analysis.lints,
     declaredTypes: analysis.declaredTypes,
+    declaringScopes: analysis.declaringScopes,
   });
 };

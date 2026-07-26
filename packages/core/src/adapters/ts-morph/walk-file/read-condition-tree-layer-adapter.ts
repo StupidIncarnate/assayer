@@ -138,6 +138,7 @@ export const readConditionTreeLayerAdapter = ({
       ...(operandParamName === undefined ? {} : { operandParamName }),
       ...(readout.operandPropertyPath === undefined ? {} : { operandPropertyPath: readout.operandPropertyPath }),
       ...(readout.operandTypeRef === undefined ? {} : { operandTypeRef: readout.operandTypeRef }),
+      ...(readout.operandIsTypeof === undefined ? {} : { operandIsTypeof: readout.operandIsTypeof }),
       ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
       ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
       ...(constOperand?.length === undefined ? {} : { operandConstLength: constOperand.length }),

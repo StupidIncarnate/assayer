@@ -9,6 +9,9 @@
     "isolatedModules": true,
     "strict": true,
     "noEmit": true,
+    // The one `.tsx` rung needs JSX typed, so the automatic runtime is on and its element types
+    // resolve through `react`'s own — no other specimen touches JSX, so this is otherwise inert.
+    "jsx": "react-jsx",
     "types": ["jest", "node"],
     "baseUrl": ".",
     // The specimens import the analyzer the way a consumer would, by package subpath. These paths
