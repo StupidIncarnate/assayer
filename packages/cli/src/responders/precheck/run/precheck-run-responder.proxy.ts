@@ -23,7 +23,11 @@ export const PrecheckRunResponderProxy = (): {
   compileSucceeds: () => void;
   stableCallCount: () => FileCount;
   compileCallCount: () => FileCount;
-  getCompileRunArgs: () => unknown;
+  // The options object every compile-run call received, in call order. The test reading this asserts
+  // WHICH arguments compile-run got, so addressing the read by one of those arguments would ask the
+  // question the test exists to answer. It reads the whole list instead, and asserts it complete.
+  // That is stronger than reading the last call: a second compile-run call nobody expected fails it.
+  getCompileRunArgs: () => unknown[];
 } => {
   // Bare-called to satisfy enforce-proxy-child-creation. analyzerHashBroker is a cross-package
   // core broker the responder calls directly, so (like the layer responders below) we registerMock
@@ -70,6 +74,6 @@ export const PrecheckRunResponderProxy = (): {
     },
     stableCallCount: (): FileCount => fileCountContract.parse(stableBranchHandle.callsMatching([]).length),
     compileCallCount: (): FileCount => fileCountContract.parse(compileRunHandle.callsMatching([]).length),
-    getCompileRunArgs: (): unknown => compileRunHandle.callsMatching([]).at(-1)?.[0],
+    getCompileRunArgs: (): unknown[] => compileRunHandle.callsMatching([]).map((call) => call[0]),
   };
 };

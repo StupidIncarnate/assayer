@@ -4,13 +4,14 @@ import { runConsoleSaveBrokerProxy } from './run-console-save-broker.proxy';
 describe('runConsoleSaveBroker', () => {
   describe('saving a report', () => {
     // Beside the run it narrates, in the run's OWN directory — so a run stays one directory a reader
-    // can delete whole, rather than data here and its report somewhere else.
-    it('VALID: {a runId and its report} => written to console.txt inside that run directory', async () => {
+    // can delete whole, rather than data here and its report somewhere else. The whole write list is
+    // named, so a second file landing somewhere else fails this too.
+    it('VALID: {a runId and its report} => written to console.txt inside that run directory, and nowhere else', async () => {
       const proxy = runConsoleSaveBrokerProxy();
 
       await runConsoleSaveBroker({ configDir: '/repo', runId: 'abc123', console: 'src/a.ts  1/1 passed\n' });
 
-      expect(String(proxy.getWrittenPath())).toBe('/repo/.assayer/cache/runs/abc123/console.txt');
+      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/.assayer/cache/runs/abc123/console.txt']);
     });
 
     // VERBATIM. The whole reason the text is stored rather than re-derived is that the desktop and a
@@ -23,7 +24,7 @@ describe('runConsoleSaveBroker', () => {
 
       await runConsoleSaveBroker({ configDir: '/repo', runId: 'abc123', console: report });
 
-      expect(String(proxy.getWrittenContent())).toBe(report);
+      expect(String(proxy.getWrittenContentFor({ path: '/repo/.assayer/cache/runs/abc123/console.txt' }))).toBe(report);
     });
 
     // A file whose cases were ALL admitted never reaches the runner, so its run directory may not
@@ -33,7 +34,10 @@ describe('runConsoleSaveBroker', () => {
 
       await runConsoleSaveBroker({ configDir: '/repo', runId: 'abc123', console: 'src/a.ts  0/0 passed\n' });
 
-      expect(proxy.getMkdirArgs()[0]).toBe('/repo/.assayer/cache/runs/abc123');
+      expect(proxy.getMkdirArgs({ path: '/repo/.assayer/cache/runs/abc123' })).toStrictEqual([
+        '/repo/.assayer/cache/runs/abc123',
+        { recursive: true },
+      ]);
     });
 
     it('VALID: {a saved report} => returns success', async () => {
@@ -51,7 +55,7 @@ describe('runConsoleSaveBroker', () => {
 
       await runConsoleSaveBroker({ configDir: '/repo', runId: 'abc123', console: '' });
 
-      expect(String(proxy.getWrittenContent())).toBe('');
+      expect(String(proxy.getWrittenContentFor({ path: '/repo/.assayer/cache/runs/abc123/console.txt' }))).toBe('');
     });
   });
 });

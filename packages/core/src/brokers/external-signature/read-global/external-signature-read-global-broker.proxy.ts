@@ -15,7 +15,11 @@ export const externalSignatureReadGlobalBrokerProxy = (): {
   readsType: ({ type, declText }: { type: unknown; declText: string }) => void;
   readsNoUsableTypes: () => void;
   wasWritten: () => boolean;
-  getWrittenContent: () => unknown;
+  // The payload the broker cached. One call writes exactly one file, into
+  // `<cacheDir>/global-signatures/`, so that directory is the address. The file's own NAME is a hash of
+  // the declaration text the read returned, which is the very thing this broker derives, so a test
+  // cannot name it up front without re-deriving it.
+  getWrittenPayload: () => unknown;
 } => {
   // The cache existence check and atomic write run through the REAL fs adapters with only their
   // underlying node calls mocked; the sha256 hasher runs REAL so the cache key is a true content hash;
@@ -50,6 +54,7 @@ export const externalSignatureReadGlobalBrokerProxy = (): {
       readHandle.calledWith([]).returns({ usable: false });
     },
     wasWritten: (): boolean => writeFileProxy.wasCalled(),
-    getWrittenContent: (): unknown => JSON.parse(String(writeFileProxy.getWrittenContent())),
+    getWrittenPayload: (): unknown =>
+      JSON.parse(String(writeFileProxy.getWrittenContentMatching({ pathIncludes: '/global-signatures/' }))),
   };
 };

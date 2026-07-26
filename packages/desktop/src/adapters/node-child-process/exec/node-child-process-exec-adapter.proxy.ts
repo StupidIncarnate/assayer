@@ -3,7 +3,7 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 export const nodeChildProcessExecAdapterProxy = (): {
   exitsWith: ({ exitCode, stdout, stderr }: { exitCode: number; stdout: string; stderr: string }) => void;
-  getLastCall: () => readonly unknown[] | undefined;
+  getCalls: () => unknown[][];
 } => {
   const handle = registerMock({ fn: spawn });
   const state = { exitCode: 0, stdout: '', stderr: '' };
@@ -42,8 +42,9 @@ export const nodeChildProcessExecAdapterProxy = (): {
       state.stdout = stdout;
       state.stderr = stderr;
     },
-    // Reports whatever the call actually was — the command and args are the thing under test, so
-    // filtering by them here would be circular.
-    getLastCall: (): readonly unknown[] | undefined => handle.callsMatching([]).at(-1),
+    // Reports every call spawn actually received, in order — the command and args are the thing under
+    // test, so filtering by them here would be circular. A test asserts this whole list, so a second,
+    // unwanted spawn shows up rather than hiding behind the one the test meant to check.
+    getCalls: (): unknown[][] => handle.callsMatching([]).map((call) => call),
   };
 };

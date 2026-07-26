@@ -146,7 +146,7 @@ describe('compileStubGraphBroker', () => {
         files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
       });
 
-      expect(proxy.getWrittenPath()).toBe('/repo/.assayer/cache/stubs/feature-x.json.tmp');
+      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/.assayer/cache/stubs/feature-x.json.tmp']);
     });
 
     // `stubIndexWriteBroker` re-canonicalizes (re-sorts objectStubs/envStubs by key) independently of the
@@ -165,7 +165,9 @@ describe('compileStubGraphBroker', () => {
         files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
       });
 
-      expect(proxy.getWrittenIndex()).toStrictEqual(result.index);
+      expect(proxy.getWrittenIndex({ path: '/repo/.assayer/cache/stubs/feature-x.json.tmp' })).toStrictEqual(
+        result.index,
+      );
     });
   });
 

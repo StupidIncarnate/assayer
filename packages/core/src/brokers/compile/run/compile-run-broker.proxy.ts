@@ -40,7 +40,10 @@ export const compileRunBrokerProxy = (): {
   overlayStale: () => void;
   overlayContradicts: () => void;
   harnessInvalid: (params: { relPath: string; message: string }) => void;
-  getWrittenManifest: () => unknown;
+  // Takes the same configDir the caller hands the broker, and addresses the read on the tmp manifest
+  // path the broker derives from it. Every write this compile makes shares one recording, so an
+  // unaddressed read would answer with whichever file happened to be written last.
+  getWrittenManifest: ({ configDir }: { configDir: string }) => unknown;
   wasManifestWritten: () => boolean;
   getProcessedFileCount: () => FileCount;
   getResolvedIndexWriteOrder: () => readonly NamespaceName[];
@@ -172,7 +175,8 @@ export const compileRunBrokerProxy = (): {
         errors: [{ relPath, line: 1, column: 1, message }],
       });
     },
-    getWrittenManifest: (): unknown => manifestProxy.getWrittenManifest(),
+    getWrittenManifest: ({ configDir }: { configDir: string }): unknown =>
+      manifestProxy.getWrittenManifest({ path: `${configDir}/.assayer/cache/manifest.json.tmp` }),
     wasManifestWritten: (): boolean => manifestProxy.wasWritten(),
     getProcessedFileCount: (): FileCount => processCurrentProxy.processedCount(),
     getResolvedIndexWriteOrder: (): readonly NamespaceName[] => resolvedIndexWriteOrder,

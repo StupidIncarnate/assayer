@@ -4,12 +4,18 @@ import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adap
 
 export const manifestWriteBrokerProxy = (): {
   succeeds: () => void;
-  getMkdirArgs: () => readonly unknown[];
-  getWrittenPath: () => unknown;
-  getWrittenContent: () => unknown;
-  getRenameArgs: () => readonly unknown[];
+  // Each read below names the address it is asking about, so it answers for that one call rather
+  // than for whichever call happened to run last.
+  getMkdirArgs: ({ path }: { path: string }) => readonly unknown[];
+  // Every path written, in call order. Asking WHICH path the broker wrote to cannot be addressed by
+  // that path without assuming the answer, so a caller reads the whole list and asserts it complete.
+  getWrittenPaths: () => unknown[];
+  getWrittenContentFor: ({ path }: { path: string }) => unknown;
+  // Addressed on the SOURCE path, so the destination it answers with is a real assertion rather than
+  // an echo of what the caller asked for.
+  getRenameArgs: ({ from }: { from: string }) => readonly unknown[];
   wasWritten: () => boolean;
-  getWrittenManifest: () => unknown;
+  getWrittenManifest: ({ path }: { path: string }) => unknown;
   // None of the three writes below are wrapped in try/catch, so each stages a distinct rejection
   // point along the mkdir -> write -> rename sequence.
   mkdirThrows: ({ error }: { error: Error }) => void;
@@ -26,12 +32,16 @@ export const manifestWriteBrokerProxy = (): {
       writeFileProxy.succeeds();
       renameProxy.succeeds();
     },
-    getMkdirArgs: (): readonly unknown[] => mkdirProxy.getMkdirArgs(),
-    getWrittenPath: (): unknown => writeFileProxy.getWrittenPath(),
-    getWrittenContent: (): unknown => writeFileProxy.getWrittenContent(),
-    getRenameArgs: (): readonly unknown[] => renameProxy.getRenameArgs(),
+    getMkdirArgs: ({ path }: { path: string }): readonly unknown[] =>
+      mkdirProxy.getMkdirArgs({ path }),
+    getWrittenPaths: (): unknown[] => writeFileProxy.getWrittenPaths(),
+    getWrittenContentFor: ({ path }: { path: string }): unknown =>
+      writeFileProxy.getWrittenContentFor({ path }),
+    getRenameArgs: ({ from }: { from: string }): readonly unknown[] =>
+      renameProxy.getRenameArgs({ from }),
     wasWritten: (): boolean => writeFileProxy.wasCalled(),
-    getWrittenManifest: (): unknown => JSON.parse(String(writeFileProxy.getWrittenContent())),
+    getWrittenManifest: ({ path }: { path: string }): unknown =>
+      JSON.parse(String(writeFileProxy.getWrittenContentFor({ path }))),
     mkdirThrows: ({ error }: { error: Error }): void => {
       mkdirProxy.throws({ error });
     },

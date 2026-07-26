@@ -11,8 +11,32 @@ describe('fsWriteFileAdapter', () => {
       const result = await fsWriteFileAdapter({ path: '/repo/out.ts', content: 'export const x = 1;' });
 
       expect(result).toStrictEqual({ success: true });
-      expect(proxy.getWrittenPath()).toBe('/repo/out.ts');
-      expect(proxy.getWrittenContent()).toBe('export const x = 1;');
+      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/out.ts']);
+      expect(proxy.getWrittenContentFor({ path: '/repo/out.ts' })).toBe('export const x = 1;');
+    });
+  });
+
+  describe('reading a write back by a partial path', () => {
+    it('VALID: {three writes into one run directory} => the substring address answers with that file, not with the write that ran last', async () => {
+      const proxy = fsWriteFileAdapterProxy();
+
+      proxy.succeeds();
+
+      await fsWriteFileAdapter({ path: '/runs/r1/cases.json', content: '{"cases":[]}' });
+      await fsWriteFileAdapter({ path: '/probes/abc.json', content: '{"probes":[]}' });
+      await fsWriteFileAdapter({ path: '/runs/r1/assayer.test.js', content: 'require("x");' });
+
+      expect(proxy.getWrittenContentMatching({ pathIncludes: 'cases.json' })).toBe('{"cases":[]}');
+    });
+
+    it('EMPTY: {a substring no written path contains} => answers undefined rather than the nearest write', async () => {
+      const proxy = fsWriteFileAdapterProxy();
+
+      proxy.succeeds();
+
+      await fsWriteFileAdapter({ path: '/runs/r1/cases.json', content: '{"cases":[]}' });
+
+      expect(proxy.getWrittenContentMatching({ pathIncludes: 'nothing.json' })).toBe(undefined);
     });
   });
 

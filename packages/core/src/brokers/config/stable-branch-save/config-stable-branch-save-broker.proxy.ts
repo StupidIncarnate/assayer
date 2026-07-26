@@ -2,8 +2,10 @@ import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-writ
 
 export const configStableBranchSaveBrokerProxy = (): {
   succeeds: () => void;
-  getWrittenPath: () => unknown;
-  getWrittenContent: () => unknown;
+  // Every path the broker wrote, in call order. A test asking WHICH path the config landed at asserts
+  // this whole list, so a second write nobody expected fails it.
+  getWrittenPaths: () => unknown[];
+  getWrittenContentFor: ({ path }: { path: string }) => unknown;
 } => {
   const writeFileProxy = fsWriteFileAdapterProxy();
 
@@ -11,7 +13,8 @@ export const configStableBranchSaveBrokerProxy = (): {
     succeeds: (): void => {
       writeFileProxy.succeeds();
     },
-    getWrittenPath: (): unknown => writeFileProxy.getWrittenPath(),
-    getWrittenContent: (): unknown => writeFileProxy.getWrittenContent(),
+    getWrittenPaths: (): unknown[] => writeFileProxy.getWrittenPaths(),
+    getWrittenContentFor: ({ path }: { path: string }): unknown =>
+      writeFileProxy.getWrittenContentFor({ path }),
   };
 };

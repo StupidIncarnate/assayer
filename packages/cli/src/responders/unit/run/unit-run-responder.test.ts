@@ -39,7 +39,12 @@ describe('UnitRunResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(proxy.getRelPaths()).toStrictEqual([RelPathStub({ value: 'src/a.ts' }), RelPathStub({ value: 'src/b.ts' })]);
+      expect(proxy.getRunPathsCalls()).toStrictEqual([
+        {
+          configDir: RelPathStub({ value: '/repo' }),
+          relPaths: [RelPathStub({ value: 'src/a.ts' }), RelPathStub({ value: 'src/b.ts' })],
+        },
+      ]);
     });
 
     it('VALID: {a configDir} => is where the run reads and writes', async () => {
@@ -54,7 +59,9 @@ describe('UnitRunResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(proxy.getConfigDir()).toBe(RelPathStub({ value: '/repo' }));
+      expect(proxy.getRunPathsCalls()).toStrictEqual([
+        { configDir: RelPathStub({ value: '/repo' }), relPaths: [RelPathStub({ value: 'src/a.ts' })] },
+      ]);
     });
   });
 

@@ -18,7 +18,9 @@ describe('resolvedIndexWriteBroker', () => {
       });
 
       expect(result).toStrictEqual({ success: true });
-      expect(proxy.getWrittenIndex()).toStrictEqual({
+      expect(
+        proxy.getWrittenIndex({ path: '/repo/.assayer/cache/resolved/feature-x.json.tmp' }),
+      ).toStrictEqual({
         layoutHash: EMPTY_HASH,
         tsconfigHash: EMPTY_HASH,
         edges: [
@@ -40,7 +42,9 @@ describe('resolvedIndexWriteBroker', () => {
 
       await resolvedIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: ResolvedIndexStub() });
 
-      expect(proxy.getWrittenPath()).toBe('/repo/.assayer/cache/resolved/feature-x.json.tmp');
+      expect(proxy.getWrittenPaths()).toStrictEqual([
+        '/repo/.assayer/cache/resolved/feature-x.json.tmp',
+      ]);
     });
   });
 

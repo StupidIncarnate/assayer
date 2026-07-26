@@ -18,17 +18,17 @@ describe('DesktopPreloadExposeResponder', () => {
       const result = DesktopPreloadExposeResponder();
 
       expect(result).toStrictEqual({ success: true });
-      expect(proxy.exposedBridgeKey()).toBe(desktopBridgeStatics.bridge.key);
+      expect(proxy.exposedBridgeKeys()).toStrictEqual([desktopBridgeStatics.bridge.key]);
 
       await proxy.triggerGetCompiledTree();
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual([desktopBridgeStatics.channels.compiledTree]);
+      expect(proxy.invokedArgs()).toStrictEqual([[desktopBridgeStatics.channels.compiledTree]]);
 
       await proxy.triggerGetCompiledFile({ relPath: 'src/index.ts' });
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual([
-        desktopBridgeStatics.channels.compiledFile,
-        'src/index.ts',
+      expect(proxy.invokedArgs()).toStrictEqual([
+        [desktopBridgeStatics.channels.compiledTree],
+        [desktopBridgeStatics.channels.compiledFile, 'src/index.ts'],
       ]);
     });
   });

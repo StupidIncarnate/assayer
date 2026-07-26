@@ -10,7 +10,11 @@ import type { FileCount } from '@assayer/shared/contracts';
 export const compileProcessFileBrokerProxy = (): {
   blobExists: () => void;
   blobMissing: () => void;
-  getWrittenBlob: () => unknown;
+  // The broker writes the blob atomically: the bytes go to `<blobsDir>/<contentHash>.json.tmp` first,
+  // and a rename moves them to the final path. So the address a caller asks with is that tmp path, and
+  // naming it in the test is what proves the write went through the tmp file rather than straight to
+  // the final one.
+  getWrittenBlobFor: ({ path }: { path: string }) => unknown;
   wasWriteCalled: () => boolean;
   processedCount: () => FileCount;
 } => {
@@ -32,7 +36,8 @@ export const compileProcessFileBrokerProxy = (): {
       writeFileProxy.succeeds();
       renameProxy.succeeds();
     },
-    getWrittenBlob: (): unknown => writeFileProxy.getWrittenContent(),
+    getWrittenBlobFor: ({ path }: { path: string }): unknown =>
+      writeFileProxy.getWrittenContentFor({ path }),
     wasWriteCalled: (): boolean => writeFileProxy.wasCalled(),
     processedCount: (): FileCount => existsProxy.callCount(),
   };

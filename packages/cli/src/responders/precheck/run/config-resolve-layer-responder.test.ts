@@ -32,7 +32,7 @@ describe('ConfigResolveLayerResponder', () => {
         configDir: '/repo',
         configPath: '/repo/assayer.config.json',
       });
-      expect(proxy.getWrittenPath()).toBe('/repo/assayer.config.json');
+      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/assayer.config.json']);
     });
   });
 

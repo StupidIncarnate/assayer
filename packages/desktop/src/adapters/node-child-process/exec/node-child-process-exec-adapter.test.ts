@@ -33,10 +33,8 @@ describe('nodeChildProcessExecAdapter', () => {
 
       await nodeChildProcessExecAdapter({ command: 'node', args: ['x.js', 'unit'], cwd: '/repo' });
 
-      expect(proxy.getLastCall()).toStrictEqual([
-        'node',
-        ['x.js', 'unit'],
-        { cwd: '/repo', env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] },
+      expect(proxy.getCalls()).toStrictEqual([
+        ['node', ['x.js', 'unit'], { cwd: '/repo', env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] }],
       ]);
     });
 
@@ -52,14 +50,16 @@ describe('nodeChildProcessExecAdapter', () => {
         env: { ELECTRON_RUN_AS_NODE: '1' },
       });
 
-      expect(proxy.getLastCall()).toStrictEqual([
-        'node',
-        ['x.js'],
-        {
-          cwd: '/repo',
-          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-          stdio: ['ignore', 'pipe', 'pipe'],
-        },
+      expect(proxy.getCalls()).toStrictEqual([
+        [
+          'node',
+          ['x.js'],
+          {
+            cwd: '/repo',
+            env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        ],
       ]);
     });
   });

@@ -164,7 +164,7 @@ describe('compileHarnessGraphBroker', () => {
         ],
       });
 
-      expect(proxy.getWrittenPath()).toBe('/repo/.assayer/cache/harness/feature-x.json.tmp');
+      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/.assayer/cache/harness/feature-x.json.tmp']);
     });
 
     it('VALID: {the same layout, an edited harness} => the harness hash moves while layout and tsconfig hashes stay', async () => {

@@ -48,7 +48,7 @@ describe('jestRunCliAdapter', () => {
         analyzerContentHash: 'abc123',
       });
 
-      expect(proxy.lastConfig()).toBe(
+      expect(proxy.configFor({ testPathPattern: '/cache/runs/r1/' })).toBe(
         JSON.stringify({
           rootDir: '/repo',
           // The runs PARENT, not this run's own directory — see the pattern assertion below.
@@ -104,7 +104,7 @@ describe('jestRunCliAdapter', () => {
         coreRoot: '/core',
         analyzerContentHash: 'abc123',
       });
-      const first = proxy.lastConfig();
+      const first = proxy.configFor({ testPathPattern: '/cache/runs/r1/' });
 
       await jestRunCliAdapter({
         runDir: '/cache/runs/r2',
@@ -114,7 +114,7 @@ describe('jestRunCliAdapter', () => {
         analyzerContentHash: 'abc123',
       });
 
-      expect(proxy.lastConfig()).toBe(first);
+      expect(proxy.configFor({ testPathPattern: '/cache/runs/r2/' })).toBe(first);
     });
 
     // Which run to execute travels in the test-path pattern, escaped because a run directory is a
@@ -131,7 +131,7 @@ describe('jestRunCliAdapter', () => {
         analyzerContentHash: 'abc123',
       });
 
-      expect(proxy.lastTestPathPatterns()).toStrictEqual(['/cache/\\.assayer/runs/r1/']);
+      expect(proxy.getTestPathPatterns()).toStrictEqual([['/cache/\\.assayer/runs/r1/']]);
     });
   });
 });

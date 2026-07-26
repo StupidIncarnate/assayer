@@ -11,7 +11,7 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 export const fsMkdirAdapterProxy = (): {
   succeeds: () => void;
   throws: ({ error }: { error: Error }) => void;
-  getMkdirArgs: () => readonly unknown[];
+  getMkdirArgs: ({ path }: { path: string }) => readonly unknown[];
 } => {
   const handle = registerMock({ fn: mkdir });
 
@@ -24,6 +24,9 @@ export const fsMkdirAdapterProxy = (): {
     throws: ({ error }: { error: Error }): void => {
       handle.onceFor([]).rejects(error);
     },
-    getMkdirArgs: (): readonly unknown[] => handle.callsMatching([]).at(-1) ?? [],
+    // Answers for the asked-for directory only. A caller that creates several directories gets the
+    // one it named, never whichever mkdir happened to run last.
+    getMkdirArgs: ({ path }: { path: string }): readonly unknown[] =>
+      handle.callsMatching([path]).at(-1) ?? [],
   };
 };

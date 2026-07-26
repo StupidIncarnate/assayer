@@ -15,8 +15,8 @@ describe('configStableBranchSaveBroker', () => {
         config,
       });
 
-      expect(proxy.getWrittenPath()).toBe('/repo/assayer.config.json');
-      expect(proxy.getWrittenContent()).toBe(
+      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/assayer.config.json']);
+      expect(proxy.getWrittenContentFor({ path: '/repo/assayer.config.json' })).toBe(
         '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}'
       );
       expect(result).toStrictEqual({
@@ -45,7 +45,7 @@ describe('configStableBranchSaveBroker', () => {
         config,
       });
 
-      expect(proxy.getWrittenContent()).toBe(
+      expect(proxy.getWrittenContentFor({ path: '/repo/assayer.config.json' })).toBe(
         '{"version":"1","repoRoot":"./smoke-repo","exclude":["dist"],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}'
       );
       expect(result).toStrictEqual({

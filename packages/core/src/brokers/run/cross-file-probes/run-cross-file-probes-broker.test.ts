@@ -23,10 +23,10 @@ describe('runCrossFileProbesBroker', () => {
 
       expect({
         instrumented: result.map((relPath) => String(relPath)),
-        written: String(proxy.lastWrittenPath()),
+        written: proxy.getWrittenPaths(),
       }).toStrictEqual({
         instrumented: ['src/band-reading.ts'],
-        written: `/repo/.assayer/cache/probes/${String(hash)}.json`,
+        written: [`/repo/.assayer/cache/probes/${String(hash)}.json`],
       });
     });
   });
@@ -38,9 +38,9 @@ describe('runCrossFileProbesBroker', () => {
 
       const result = await runCrossFileProbesBroker({ walked, root: '/repo', relPath: 'src/scale.ts', probeDir: '/repo/.assayer/cache/probes' });
 
-      expect({ instrumented: result.map((relPath) => String(relPath)), written: proxy.lastWrittenPath() }).toStrictEqual({
+      expect({ instrumented: result.map((relPath) => String(relPath)), written: proxy.getWrittenPaths() }).toStrictEqual({
         instrumented: [],
-        written: undefined,
+        written: [],
       });
     });
   });

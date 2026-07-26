@@ -40,7 +40,7 @@ describe('electronPreloadBridgeAdapter', () => {
 
       await proxy.triggerGetCompiledTree();
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:compiled-tree']);
+      expect(proxy.invokedArgs()).toStrictEqual([['assayer:compiled-tree']]);
     });
   });
 
@@ -62,7 +62,7 @@ describe('electronPreloadBridgeAdapter', () => {
 
       await proxy.triggerGetCompiledFile({ relPath: 'src/index.ts' });
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:compiled-file', 'src/index.ts']);
+      expect(proxy.invokedArgs()).toStrictEqual([['assayer:compiled-file', 'src/index.ts']]);
     });
   });
 
@@ -84,7 +84,7 @@ describe('electronPreloadBridgeAdapter', () => {
 
       await proxy.triggerGetMergedView();
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:stubs']);
+      expect(proxy.invokedArgs()).toStrictEqual([['assayer:stubs']]);
     });
   });
 
@@ -106,7 +106,7 @@ describe('electronPreloadBridgeAdapter', () => {
 
       await proxy.triggerRunFile({ relPath: 'src/index.ts' });
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:run', 'src/index.ts']);
+      expect(proxy.invokedArgs()).toStrictEqual([['assayer:run', 'src/index.ts']]);
     });
 
     it('VALID: {main answers a run result} => resolves with the payload, unwrapped from the reply', async () => {
@@ -225,7 +225,7 @@ describe('electronPreloadBridgeAdapter', () => {
 
       await proxy.triggerGetSavedRun({ relPath: 'src/index.ts' });
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:saved-run', 'src/index.ts']);
+      expect(proxy.invokedArgs()).toStrictEqual([['assayer:saved-run', 'src/index.ts']]);
     });
   });
 
@@ -249,7 +249,7 @@ describe('electronPreloadBridgeAdapter', () => {
 
       await proxy.triggerGetSavedConsole({ relPath: 'src/index.ts' });
 
-      expect(proxy.lastInvokeArgs()).toStrictEqual(['assayer:saved-console', 'src/index.ts']);
+      expect(proxy.invokedArgs()).toStrictEqual([['assayer:saved-console', 'src/index.ts']]);
     });
   });
 });

@@ -14,7 +14,7 @@ export const runExecuteBrokerProxy = (): {
   noArtifact: ({ stderr }: { stderr: string }) => void;
   cliNotBuilt: () => void;
   runSucceeds: () => void;
-  getSpawnArgs: () => readonly unknown[] | undefined;
+  getSpawnCalls: () => unknown[][];
 } => {
   // Bare-called for enforce-proxy-child-creation; the cross-package chain cannot intercept core's
   // I/O from here, so the direct registerMock is what drives it.
@@ -45,6 +45,6 @@ export const runExecuteBrokerProxy = (): {
     runSucceeds: (): void => {
       exec.exitsWith({ exitCode: 0, stdout: 'src/a.ts  1/1 passed', stderr: '' });
     },
-    getSpawnArgs: (): readonly unknown[] | undefined => exec.getLastCall(),
+    getSpawnCalls: (): unknown[][] => exec.getCalls(),
   };
 };

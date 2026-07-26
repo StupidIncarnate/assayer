@@ -18,7 +18,9 @@ describe('harnessIndexWriteBroker', () => {
       });
 
       expect(result).toStrictEqual({ success: true });
-      expect(proxy.getWrittenIndex()).toStrictEqual({
+      expect(
+        proxy.getWrittenIndex({ path: '/repo/.assayer/cache/harness/feature-x.json.tmp' }),
+      ).toStrictEqual({
         layoutHash: EMPTY_HASH,
         tsconfigHash: EMPTY_HASH,
         harnessHash: EMPTY_HASH,
@@ -43,7 +45,9 @@ describe('harnessIndexWriteBroker', () => {
         }),
       });
 
-      expect(proxy.getWrittenIndex()).toStrictEqual({
+      expect(
+        proxy.getWrittenIndex({ path: '/repo/.assayer/cache/harness/feature-x.json.tmp' }),
+      ).toStrictEqual({
         layoutHash: EMPTY_HASH,
         tsconfigHash: EMPTY_HASH,
         harnessHash: EMPTY_HASH,
@@ -76,7 +80,9 @@ describe('harnessIndexWriteBroker', () => {
         }),
       });
 
-      expect(proxy.getWrittenIndex()).toStrictEqual({
+      expect(
+        proxy.getWrittenIndex({ path: '/repo/.assayer/cache/harness/feature-x.json.tmp' }),
+      ).toStrictEqual({
         layoutHash: EMPTY_HASH,
         tsconfigHash: EMPTY_HASH,
         harnessHash: EMPTY_HASH,
@@ -104,7 +110,9 @@ describe('harnessIndexWriteBroker', () => {
         index: HarnessIndexStub({ harnesses: [] }),
       });
 
-      expect(proxy.getWrittenIndex()).toStrictEqual({
+      expect(
+        proxy.getWrittenIndex({ path: '/repo/.assayer/cache/harness/feature-x.json.tmp' }),
+      ).toStrictEqual({
         layoutHash: EMPTY_HASH,
         tsconfigHash: EMPTY_HASH,
         harnessHash: EMPTY_HASH,
@@ -118,8 +126,12 @@ describe('harnessIndexWriteBroker', () => {
 
       await harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() });
 
-      expect(proxy.getWrittenPath()).toBe('/repo/.assayer/cache/harness/feature-x.json.tmp');
-      expect(proxy.getRenameArgs()).toStrictEqual([
+      expect(proxy.getWrittenPaths()).toStrictEqual([
+        '/repo/.assayer/cache/harness/feature-x.json.tmp',
+      ]);
+      expect(
+        proxy.getRenameArgs({ from: '/repo/.assayer/cache/harness/feature-x.json.tmp' }),
+      ).toStrictEqual([
         '/repo/.assayer/cache/harness/feature-x.json.tmp',
         '/repo/.assayer/cache/harness/feature-x.json',
       ]);

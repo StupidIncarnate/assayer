@@ -23,7 +23,7 @@ describe('externalSignatureReadBroker', () => {
 
       expect(result).toStrictEqual({ usable: true, signature });
       expect(proxy.wasWritten()).toBe(true);
-      expect(proxy.getWrittenContent()).toStrictEqual(signature);
+      expect(proxy.getWrittenSignature()).toStrictEqual(signature);
     });
   });
 

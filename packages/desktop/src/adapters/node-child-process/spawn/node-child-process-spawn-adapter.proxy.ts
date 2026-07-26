@@ -2,7 +2,6 @@ import { spawn } from 'node:child_process';
 import { registerMock, registerSpyOn } from '@dungeonmaster/testing/register-mock';
 
 export const nodeChildProcessSpawnAdapterProxy = (): {
-  getLastCall: () => readonly unknown[] | undefined;
   getStderrWrites: () => unknown[];
   failsToSpawn: ({ error }: { error: Error }) => void;
 } => {
@@ -23,7 +22,6 @@ export const nodeChildProcessSpawnAdapterProxy = (): {
   } as ReturnType<typeof spawn>);
 
   return {
-    getLastCall: (): readonly unknown[] | undefined => handle.callsMatching([]).at(-1),
     // Every write regardless of what else write() was called with (encoding, callback) — a real
     // collector, not a narrowed one.
     getStderrWrites: (): unknown[] => stderrSpy.callsMatching([]).map((call) => String(call[0])),

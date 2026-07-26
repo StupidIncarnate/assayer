@@ -18,7 +18,11 @@ export const externalSignatureReadBrokerProxy = (): {
   readsNoUsableTypes: () => void;
   signatureReadCount: () => FileCount;
   wasWritten: () => boolean;
-  getWrittenContent: () => unknown;
+  // The signature the broker cached. One call writes exactly one file, into
+  // `<cacheDir>/external-signatures/`, so that directory is the address. The file's own NAME is a hash
+  // of the `.d.ts` bytes, which is the very thing this broker derives, so a test cannot name it up
+  // front without re-deriving it.
+  getWrittenSignature: () => unknown;
 } => {
   // The `.d.ts` byte read, existence check, and atomic write run through the REAL fs adapters with
   // only their underlying node calls mocked; the sha256 hasher runs REAL so the cache key is a true
@@ -56,6 +60,7 @@ export const externalSignatureReadBrokerProxy = (): {
     },
     signatureReadCount: (): FileCount => fileCountContract.parse(readHandle.callsMatching([]).length),
     wasWritten: (): boolean => writeFileProxy.wasCalled(),
-    getWrittenContent: (): unknown => JSON.parse(String(writeFileProxy.getWrittenContent())),
+    getWrittenSignature: (): unknown =>
+      JSON.parse(String(writeFileProxy.getWrittenContentMatching({ pathIncludes: '/external-signatures/' }))),
   };
 };

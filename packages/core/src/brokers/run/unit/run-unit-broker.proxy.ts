@@ -21,8 +21,16 @@ export const runUnitBrokerProxy = (): {
   setupSavedRun: ({ run }: { run: unknown }) => void;
   runnerWroteNothing: () => void;
   runnerWasInvoked: () => boolean;
-  lastWrittenPath: () => unknown;
-  lastWrittenContent: () => unknown;
+  // Every path this run wrote, in call order — the case set, the target's probe plan, each mapped
+  // sibling's plan, then the shim. A test asking WHICH files a run leaves behind cannot address that
+  // read by a path without assuming its own answer, so it names the whole list. That also pins what a
+  // run does NOT write: a file with nothing drivable skips the probe plan and the shim entirely.
+  writtenPaths: () => unknown[];
+  // Answers for the asked-for path only, for a test that already names the exact file it means.
+  writtenContentAt: ({ path }: { path: string }) => unknown;
+  // Answers for the LAST write whose path contains the substring. A run writes several files into one
+  // run directory, and a caller that only knows the file's BASE name — `cases.json`, rather than the
+  // whole `<cacheDir>/runs/<runId>/cases.json` — reaches it this way.
   writtenContentFor: ({ pathIncludes }: { pathIncludes: string }) => unknown;
   readThrows: ({ error }: { error: Error }) => void;
   // The colocated harness file this run would read — real disk I/O a unit test has none of, so only
@@ -64,10 +72,10 @@ export const runUnitBrokerProxy = (): {
     // The runner ran and left no artifact — it crashed, which is the ONE case that is Assayer's fault
     // rather than a verdict about the file.
     runnerWroteNothing: (): void => { exists.fails(); },
-    runnerWasInvoked: (): boolean => runner.lastConfig() !== undefined,
-    lastWrittenPath: (): unknown => writes.getWrittenPath(),
-    lastWrittenContent: (): unknown => writes.getWrittenContent(),
-    writtenContentFor: ({ pathIncludes }: { pathIncludes: string }): unknown => writes.getWrittenContentFor({ pathIncludes }),
+    runnerWasInvoked: (): boolean => runner.wasInvoked(),
+    writtenPaths: (): unknown[] => writes.getWrittenPaths(),
+    writtenContentAt: ({ path }: { path: string }): unknown => writes.getWrittenContentFor({ path }),
+    writtenContentFor: ({ pathIncludes }: { pathIncludes: string }): unknown => writes.getWrittenContentMatching({ pathIncludes }),
     // The read-back is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
     // the like) propagates to the caller unmodified. This stages that rejection.
     readThrows: ({ error }: { error: Error }): void => { reads.throws({ error }); },

@@ -13,8 +13,11 @@ export const ConfigResolveLayerResponderProxy = (): {
   neverFound: () => void;
   hasContent: (params: { content: string }) => void;
   succeeds: () => void;
-  getWrittenPath: () => unknown;
-  getWrittenContent: () => unknown;
+  // Every path a generated config was written to, in call order. The test reading this asserts WHICH
+  // path the responder wrote, so filtering the read by that path would ask the question the test
+  // exists to answer. It reads the whole list instead, and asserts it complete. That is stronger than
+  // reading the last write: a second write nobody expected fails it.
+  getWrittenPaths: () => unknown[];
 } => {
   // The @assayer/core/testing composed proxies below are instantiated to satisfy
   // enforce-proxy-child-creation, but the cross-package registerMock chain they set up cannot
@@ -79,12 +82,7 @@ export const ConfigResolveLayerResponderProxy = (): {
       });
     },
     succeeds: (): void => undefined,
-    getWrittenPath: (): unknown => {
-      const configDir = generatedConfigDirCalls.at(-1);
-
-      return configDir === undefined ? undefined : `${configDir}/assayer.config.json`;
-    },
-    getWrittenContent: (): unknown =>
-      generatedConfigDirCalls.length === 0 ? undefined : JSON.stringify(assayerConfigContract.parse({})),
+    getWrittenPaths: (): unknown[] =>
+      generatedConfigDirCalls.map((configDir) => `${configDir}/assayer.config.json`),
   };
 };

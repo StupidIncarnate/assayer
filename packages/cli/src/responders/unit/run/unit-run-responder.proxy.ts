@@ -9,8 +9,7 @@ import { utilParseArgsAdapterProxy } from '../../../adapters/util/parse-args/uti
 
 export const UnitRunResponderProxy = (): {
   runsReturn: ({ runs }: { runs: readonly RunResult[] }) => void;
-  getRelPaths: () => readonly RelPath[];
-  getConfigDir: () => RelPath;
+  getRunPathsCalls: () => readonly { configDir: RelPath; relPaths: readonly RelPath[] }[];
   getSavedConsoles: () => readonly { runId: RunId; console: RunConsole }[];
 } => {
   // Bare-called for enforce-proxy-child-creation: the cross-package proxy chain cannot intercept
@@ -34,19 +33,23 @@ export const UnitRunResponderProxy = (): {
     runsReturn: ({ runs }: { runs: readonly RunResult[] }): void => {
       handle.calledWith([]).resolves([...runs]);
     },
-    getRelPaths: (): readonly RelPath[] => {
-      const args = handle.callsMatching([]).at(-1)?.[0] as { relPaths?: readonly RelPath[] } | undefined;
+    // One record per call, with both keys read off that call's OWN options object. Two tests read
+    // this: one asserts which paths the run was handed, the other asserts which directory it reads
+    // and writes under. Those two facts travel together in a single call, so pulling them out of one
+    // record is what stops them from answering about two different calls. Reading every call rather
+    // than the last one also means a call nobody expected fails the assertion.
+    getRunPathsCalls: (): readonly { configDir: RelPath; relPaths: readonly RelPath[] }[] =>
+      handle.callsMatching([]).map((call) => {
+        const args = call[0] as { configDir?: RelPath; relPaths?: readonly RelPath[] } | undefined;
 
-      return (args?.relPaths ?? []).map((relPath) => RelPathStub({ value: String(relPath) }));
-    },
-    getConfigDir: (): RelPath => {
-      const args = handle.callsMatching([]).at(-1)?.[0] as { configDir?: RelPath } | undefined;
-
-      return RelPathStub({ value: String(args?.configDir ?? '') });
-    },
-    // Read as the BRANDED types the broker declares, not as `unknown`: stringifying an unknown would
-    // turn a non-string argument into '[object Object]' and assert that as if it were the report —
-    // exactly the class of bug this proxy exists to catch.
+        return {
+          configDir: RelPathStub({ value: String(args?.configDir ?? '') }),
+          relPaths: (args?.relPaths ?? []).map((relPath) => RelPathStub({ value: String(relPath) })),
+        };
+      }),
+    // This method and the one above both read as the BRANDED types the broker declares, not as
+    // `unknown`: stringifying an unknown would turn a non-string argument into '[object Object]' and
+    // assert that as if it were the report — exactly the class of bug this proxy exists to catch.
     getSavedConsoles: (): readonly { runId: RunId; console: RunConsole }[] =>
       consoleHandle.callsMatching([]).map((call) => {
         const args = call[0] as { runId?: RunId; console?: RunConsole } | undefined;

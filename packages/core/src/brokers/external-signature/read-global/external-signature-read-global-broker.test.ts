@@ -22,7 +22,7 @@ describe('externalSignatureReadGlobalBroker', () => {
 
       expect(result).toStrictEqual({ usable: true, result: 'signature', signature });
       expect(proxy.wasWritten()).toBe(true);
-      expect(proxy.getWrittenContent()).toStrictEqual({ result: 'signature', signature });
+      expect(proxy.getWrittenPayload()).toStrictEqual({ result: 'signature', signature });
     });
   });
 
@@ -40,7 +40,7 @@ describe('externalSignatureReadGlobalBroker', () => {
       });
 
       expect(result).toStrictEqual({ usable: true, result: 'type', type });
-      expect(proxy.getWrittenContent()).toStrictEqual({ result: 'type', type });
+      expect(proxy.getWrittenPayload()).toStrictEqual({ result: 'type', type });
     });
   });
 

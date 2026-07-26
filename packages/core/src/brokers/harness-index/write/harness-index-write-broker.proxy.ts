@@ -4,9 +4,14 @@ import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adap
 
 export const harnessIndexWriteBrokerProxy = (): {
   succeeds: () => void;
-  getWrittenPath: () => unknown;
-  getRenameArgs: () => readonly unknown[];
-  getWrittenIndex: () => unknown;
+  // Every path written, in call order. Asking WHICH path the broker wrote to cannot be addressed by
+  // that path without assuming the answer, so a caller reads the whole list and asserts it complete.
+  getWrittenPaths: () => unknown[];
+  // Addressed on the SOURCE path, so the destination it answers with is a real assertion rather than
+  // an echo of what the caller asked for.
+  getRenameArgs: ({ from }: { from: string }) => readonly unknown[];
+  // Answers with the index written to the asked-for path, never with whichever write ran last.
+  getWrittenIndex: ({ path }: { path: string }) => unknown;
   // None of the three writes below are wrapped in try/catch, so each stages a distinct rejection
   // point along the mkdir -> write -> rename sequence.
   mkdirThrows: ({ error }: { error: Error }) => void;
@@ -23,9 +28,11 @@ export const harnessIndexWriteBrokerProxy = (): {
       writeFileProxy.succeeds();
       renameProxy.succeeds();
     },
-    getWrittenPath: (): unknown => writeFileProxy.getWrittenPath(),
-    getRenameArgs: (): readonly unknown[] => renameProxy.getRenameArgs(),
-    getWrittenIndex: (): unknown => JSON.parse(String(writeFileProxy.getWrittenContent())),
+    getWrittenPaths: (): unknown[] => writeFileProxy.getWrittenPaths(),
+    getRenameArgs: ({ from }: { from: string }): readonly unknown[] =>
+      renameProxy.getRenameArgs({ from }),
+    getWrittenIndex: ({ path }: { path: string }): unknown =>
+      JSON.parse(String(writeFileProxy.getWrittenContentFor({ path }))),
     mkdirThrows: ({ error }: { error: Error }): void => {
       mkdirProxy.throws({ error });
     },

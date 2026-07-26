@@ -25,14 +25,16 @@ describe('runExecuteBroker', () => {
 
       await runExecuteBroker({ repoPath: '/repo', root: '/repo', relPath: 'src/a.ts' });
 
-      expect(proxy.getSpawnArgs()).toStrictEqual([
-        process.execPath,
-        ['/repo/packages/cli/dist/bin/assayer.js', 'unit', 'src/a.ts'],
-        {
-          cwd: '/repo',
-          env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-          stdio: ['ignore', 'pipe', 'pipe'],
-        },
+      expect(proxy.getSpawnCalls()).toStrictEqual([
+        [
+          process.execPath,
+          ['/repo/packages/cli/dist/bin/assayer.js', 'unit', 'src/a.ts'],
+          {
+            cwd: '/repo',
+            env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        ],
       ]);
     });
 

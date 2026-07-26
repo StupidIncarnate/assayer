@@ -37,7 +37,11 @@ describe('compileProcessFileBroker', () => {
 
       expect(result).toStrictEqual({ reused: false, contentHash });
 
-      const writtenBlob = JSON.parse(String(proxy.getWrittenBlob())) as unknown;
+      const writtenBlob = JSON.parse(
+        String(
+          proxy.getWrittenBlobFor({ path: `/repo/.assayer/cache/blobs/${contentHash}.json.tmp` }),
+        ),
+      ) as unknown;
 
       expect(writtenBlob).toStrictEqual({
         relPath: 'src/foo.ts',
@@ -85,7 +89,11 @@ describe('compileProcessFileBroker', () => {
 
       expect(result).toStrictEqual({ reused: false, contentHash });
 
-      const writtenBlob = JSON.parse(String(proxy.getWrittenBlob())) as unknown;
+      const writtenBlob = JSON.parse(
+        String(
+          proxy.getWrittenBlobFor({ path: `/repo/.assayer/cache/blobs/${contentHash}.json.tmp` }),
+        ),
+      ) as unknown;
 
       expect(writtenBlob).toStrictEqual({
         relPath: 'src/app.tsx',

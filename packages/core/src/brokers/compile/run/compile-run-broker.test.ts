@@ -59,7 +59,7 @@ describe('compileRunBroker', () => {
         ],
         errors: [],
       });
-      expect(proxy.getWrittenManifest()).toStrictEqual({
+      expect(proxy.getWrittenManifest({ configDir: '/repo' })).toStrictEqual({
         assayerVersion: '1.0.0',
         configHash: CONFIG_HASH,
         namespaces: {
@@ -289,7 +289,7 @@ describe('compileRunBroker', () => {
         ],
         errors: [],
       });
-      expect(proxy.getWrittenManifest()).toStrictEqual({
+      expect(proxy.getWrittenManifest({ configDir: '/repo' })).toStrictEqual({
         assayerVersion: '1.0.0',
         configHash: CONFIG_HASH,
         namespaces: {
@@ -454,7 +454,7 @@ describe('compileRunBroker', () => {
         ],
         errors: [],
       });
-      expect(proxy.getWrittenManifest()).toStrictEqual({
+      expect(proxy.getWrittenManifest({ configDir: '/repo' })).toStrictEqual({
         assayerVersion: '1.0.0',
         configHash: CONFIG_HASH,
         namespaces: {
@@ -498,7 +498,7 @@ describe('compileRunBroker', () => {
         ],
         errors: [],
       });
-      expect(proxy.getWrittenManifest()).toStrictEqual({
+      expect(proxy.getWrittenManifest({ configDir: '/repo' })).toStrictEqual({
         assayerVersion: '1.0.0',
         configHash: CONFIG_HASH,
         namespaces: {

@@ -20,7 +20,7 @@ registerModuleMock({
 });
 
 export const electronPreloadBridgeAdapterProxy = (): {
-  exposedBridgeKey: () => unknown;
+  exposedBridgeKeys: () => unknown[];
   mainAnswers: ({ valueRaw }: { valueRaw: unknown }) => void;
   mainFails: ({ message }: { message: string }) => void;
   triggerGetCompiledTree: () => Promise<void>;
@@ -35,8 +35,7 @@ export const electronPreloadBridgeAdapterProxy = (): {
   receivedChunks: () => unknown[];
   subscribedChannels: () => unknown[];
   removedChannels: () => unknown[];
-  invokedChannels: () => unknown[];
-  lastInvokeArgs: () => unknown[];
+  invokedArgs: () => unknown[][];
 } => {
   // Bare-invoked: the unwrap layer is pure, so it runs REAL here — a test asserting what the bridge
   // answers is asserting the real envelope being read, not a double of it.
@@ -74,9 +73,10 @@ export const electronPreloadBridgeAdapterProxy = (): {
       | undefined;
 
   return {
-    // Diagnostic: reports whatever key WAS exposed, so it stays unfiltered — matching on the expected
-    // key here would hide a wrong-key bug instead of surfacing it.
-    exposedBridgeKey: (): unknown => exposeSpy.callsMatching([]).at(-1)?.[0],
+    // Diagnostic: reports every key that WAS exposed, so it stays unfiltered. Matching on the key a
+    // test expects would hide a wrong-key bug instead of surfacing it. The adapter exposes exactly
+    // once, so a test asserts this whole list and sees a second, unwanted expose call too.
+    exposedBridgeKeys: (): unknown[] => exposeSpy.callsMatching([]).map((call) => call[0]),
     mainAnswers: ({ valueRaw }: { valueRaw: unknown }): void => {
       invokeSpy.calledWith([]).resolves({ success: true, valueRaw });
     },
@@ -127,15 +127,14 @@ export const electronPreloadBridgeAdapterProxy = (): {
         | undefined;
       listener?.(undefined, chunk);
     },
-    // Collectors: every subscribe/unsubscribe/invoke call regardless of channel, a real question a
-    // test asks about the whole sequence, not a narrowed one.
+    // Collectors: every subscribe and unsubscribe call regardless of channel, a real question a test
+    // asks about the whole sequence, not a narrowed one.
     subscribedChannels: (): unknown[] => onSpy.callsMatching([]).map((call) => call[0]),
     removedChannels: (): unknown[] => removeSpy.callsMatching([]).map((call) => call[0]),
-    invokedChannels: (): unknown[] => invokeSpy.callsMatching([]).map((call) => call[0]),
-    // Whatever channel ran last — the channel itself is what the caller is discovering, so filtering
-    // by channel here would be circular. A test comparing the FULL args (channel plus payload) is what
-    // catches a wrong-channel bug; a two-invoke test (getCompiledTree then getCompiledFile) needs this
-    // unfiltered to see each call's own channel in turn.
-    lastInvokeArgs: (): unknown[] => invokeSpy.callsMatching([]).at(-1) ?? [],
+    // Every invoke call's FULL arguments (channel plus payload), in the order they happened. The
+    // channel itself is what the caller is discovering, so filtering by channel here would be
+    // circular. Comparing the full args is what catches a wrong-channel bug, and a two-invoke test
+    // (getCompiledTree then getCompiledFile) reads both calls, each with its own channel.
+    invokedArgs: (): unknown[][] => invokeSpy.callsMatching([]).map((call) => call),
   };
 };

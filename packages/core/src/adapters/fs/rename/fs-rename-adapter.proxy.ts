@@ -11,7 +11,7 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 export const fsRenameAdapterProxy = (): {
   succeeds: () => void;
   throws: ({ error }: { error: Error }) => void;
-  getRenameArgs: () => readonly unknown[];
+  getRenameArgs: ({ from }: { from: string }) => readonly unknown[];
 } => {
   const handle = registerMock({ fn: rename });
 
@@ -24,6 +24,9 @@ export const fsRenameAdapterProxy = (): {
     throws: ({ error }: { error: Error }): void => {
       handle.onceFor([]).rejects(error);
     },
-    getRenameArgs: (): readonly unknown[] => handle.callsMatching([]).at(-1) ?? [],
+    // Addressed on the SOURCE path, the first argument, so the destination this returns is the one
+    // the named rename actually moved the file to, never whichever rename happened to run last.
+    getRenameArgs: ({ from }: { from: string }): readonly unknown[] =>
+      handle.callsMatching([from]).at(-1) ?? [],
   };
 };
