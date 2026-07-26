@@ -131,4 +131,28 @@ describe('readGlobalTypeLayerAdapter', () => {
       ).toStrictEqual({ flavor: 'other', text: 'Env' });
     });
   });
+
+  // An array carries one homogeneous element, never a set of members that would need their own probe,
+  // so it is enumerated here despite the sibling doc's object policy — unlike an object, refusing to
+  // enumerate it would make a builtin's plain `...args: string[]` unfillable (`unknown`) for no reason
+  // the type itself gives.
+  describe('an array type', () => {
+    it('VALID: {a string array} => an array fact whose element is a string fact', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: string[] = [];\n' }) })).toStrictEqual({
+        flavor: 'array',
+        element: { flavor: 'string' },
+      });
+    });
+
+    it('VALID: {a nested number array} => an array fact recursing into the nested element', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: number[][] = [];\n' }) })).toStrictEqual({
+        flavor: 'array',
+        element: { flavor: 'array', element: { flavor: 'number' } },
+      });
+    });
+  });
 });

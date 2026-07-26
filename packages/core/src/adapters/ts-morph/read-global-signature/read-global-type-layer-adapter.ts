@@ -1,13 +1,16 @@
 /**
  * PURPOSE: Reads a TypeScript type from the node_modules-aware GLOBAL-scope project into a serializable
  *   TypeFact — the raw type-checker readout (primitive flavor, a resolved literal value, a union of
- *   member facts, or a CALLABLE), recursing through union members. It mirrors
- *   `read-signature-type-layer-adapter` in the sibling external-signature action: adapters cannot import
- *   an adapter in a sibling action, so this reader owns its thin ts-morph read while sharing the
- *   semantic half — `typeDescriptorTransformer`, the sole place the TypeFact -> TypeDescriptor
- *   union-fanout rule lives. An ambient object shape is not enumerated here — a global's declared shape
- *   is read one member at a time, each member access probed on its own — so a non-callable object stays
- *   an opaque `other` carrying its rendering.
+ *   member facts, an ARRAY of its element type, or a CALLABLE), recursing through union members and
+ *   array elements. It mirrors `read-signature-type-layer-adapter` in the sibling external-signature
+ *   action: adapters cannot import an adapter in a sibling action, so this reader owns its thin ts-morph
+ *   read while sharing the semantic half — `typeDescriptorTransformer`, the sole place the TypeFact ->
+ *   TypeDescriptor union-fanout rule lives. An ambient object shape is not enumerated here — a global's
+ *   declared shape is read one member at a time, each member access probed on its own — so a
+ *   non-callable, non-array object stays an opaque `other` carrying its rendering. An ARRAY carries no
+ *   such cost: its element is one homogeneous type, not a set of members needing their own probe, so
+ *   `process.argv` and a builtin's `...args: string[]` read as a real `array` fact instead of an opaque
+ *   one a fillable `string[]` has no business being.
  *
  *   A type carrying CALL SIGNATURES is a callable, so a global bound as a VALUE (`const t = setTimeout`)
  *   keeps its own identity; its `text` is whatever the CHECKER renders the type as, which is the type's
@@ -17,7 +20,7 @@
  *
  * USAGE:
  * readGlobalTypeLayerAdapter({ type: propertyAccess.getType() });
- * // Returns { flavor: 'other', text: 'NodeJS.ProcessEnv' } or a union/primitive/callable fact
+ * // Returns { flavor: 'other', text: 'NodeJS.ProcessEnv' } or a union/array/primitive/callable fact
  */
 import type { Type } from 'ts-morph';
 
@@ -53,6 +56,13 @@ export const readGlobalTypeLayerAdapter = ({ type }: { type: Type }): TypeFact =
       members: type.getUnionTypes().map((member) => readGlobalTypeLayerAdapter({ type: member })),
       text: typeTextContract.parse(type.getText()),
     };
+  }
+  // Arrays are objects too, so this MUST precede the (absent) object branch — the same ordering the
+  // sibling readers give it ahead of theirs. One homogeneous element, never a set of members that would
+  // need their own probe, so this is the one composite shape enumerated here despite the doc's object
+  // policy above.
+  if (type.isArray()) {
+    return { flavor: 'array', element: readGlobalTypeLayerAdapter({ type: type.getArrayElementTypeOrThrow() }) };
   }
   // A function type is an object to the checker too, so a callable is claimed before anything can read
   // it as an opaque shape — the same ordering the sibling readers give it ahead of their object branch.

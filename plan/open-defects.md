@@ -97,6 +97,26 @@ specimen declares both on one entry (probed: no `'undriven'` and `'gap:input'` c
 in `specimen-registry.ts`), so the rule is pinned only by a hand-built core unit case and
 cannot be seen to regress through real parsing.
 
+### D7. No specimen exercises a branchless-predicate array callback (`.filter`/`.some`/`.every`/`.find`)
+
+Every array specimen in the catalogue (`happy-path/array/**`) maps a callback that either
+transforms its element (`map`) or branches on it with an `if` (`map-conditional`,
+`string-element`, `two-maps`). None gives the callback a bare `return n > 5` body — the shape
+that publishes `predicateSignature` (`scope-record-contract.ts`) instead of a `BranchNode`, and
+is exactly what `.filter`/`.some`/`.every`/`.find` look like in practice. So the return-predicate
+axis `through-callback-cases-transformer` and (through it) `funnel-cases-transformer` derive over
+a callback's element — the split into a satisfying and a violating case, rather than one
+representative fill — is pinned only by
+`through-callback-cases-transformer.test.ts` / `funnel-cases-transformer.test.ts`, never by a
+real parse. Probed: no `predicateSignature` in any `happy-path/array/**/*.ts` source file, and
+`discover({ grep: '\\.filter\\(|\\.some\\(|\\.every\\(|\\.find\\(' })` over the catalogue matches
+nothing outside `packages/core` itself.
+
+Closing this needs a new `happy-path/array/<name>/<name>.ts` — a branchless `items.filter((n) =>
+n > 5)` funnelled into its host exactly as `map-conditional` is, plus its `specimen-registry.ts`
+line — added the way §6 of `packages/core/CLAUDE.md` prescribes, coordinated with whoever else is
+touching `smoke-repo/**` at the time, since the directory and the registry are both shared.
+
 ### D6. `access:unreachable` can never reach a specimen
 
 `access:through-caller` now has one — `happy-path/composition/through-caller` — a private a
@@ -146,10 +166,21 @@ which is what drives every `config.mode ?? fallback` object-member guard.
 So `a ?? b` over a derived value substitutes `b` for a correct `null`, and the generated case
 stops exercising the branch it names — while passing.
 
-It has bitten four times, in four unrelated files: `objectArrangeTransformer`'s three chains,
+It has bitten six times, in six unrelated places: `objectArrangeTransformer`'s three chains,
 `typeToRangeTransformer`'s `literal ?? rep`, a candidate filter that rejected `null` for a
-`string`-typed operand, and that filter's first replacement. Each was fixed the same way, with
-an explicit `=== undefined` check. Nothing stops the fifth.
+`string`-typed operand, that filter's first replacement, `isTypeFillableGuard` refusing `null`
+for every scalar kind, and `typeToRangeTransformer`'s `non-nullish` violating arm returning
+`unrealizable` whenever the operand had no scalar representative. Each was fixed the same way,
+with an explicit `=== undefined` check or by admitting `null` unconditionally.
+
+The sixth is the one that says this needs a rule rather than vigilance: it was in a file already
+fixed once for this exact class, and it was found by a systematic per-kind sweep rather than by
+anything failing.
+
+A second reason the eye is a bad detector here: the hermetic walk runs without
+`strictNullChecks`, so the checker collapses `string | null` to plain `string` before Assayer
+sees it. Code that reasons about nullability from the checker's type is reasoning about the
+wrong thing, and it reads perfectly.
 
 The rule that would stop it belongs to the `@dungeonmaster/eslint-plugin` in the sibling repo,
 not here — this repo has no local rules directory. Until it exists the invariant is convention,

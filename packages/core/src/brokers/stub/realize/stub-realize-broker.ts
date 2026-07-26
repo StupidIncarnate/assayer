@@ -302,19 +302,23 @@ export const stubRealizeBroker = ({
     };
   });
 
-  // The stale branch admissions the per-file walk put on the now-driven entries, keyed by name + branch
-  // line — the same key compose reconciles on. Every driven entry's admissions drop; nothing new is
-  // owed, since its object-member branches are now driven.
-  const staleUndrivenKeys = new Set(
-    drivable.flatMap((fn) => fn.branches.map((branch) => `${String(fn.entry.name)}#${String(branch.startLine)}`)),
-  );
-
-  // The GAP twin of that reconciliation. An entry whose object param the per-file fill seam refused —
-  // a cross-file `Config` is opaque in the hermetic walk — is exactly the entry this overlay arranges
-  // from the merged stub view, so the input the invoice asked for has been supplied and the gap is
-  // paid. Keyed on the entries that gained cases here, which only a realized entry can have: a gap
-  // means zero cases, since a refused param drops every arrangement of the entry.
+  // Keyed on the entries that gained cases here, which only a REALIZED entry can have — an entry whose
+  // every bucket came back `unreachable`/`unfillable` (an array-length guard on the object's own
+  // property, say: `object-arrange` refuses both arms alike, so no case survives) produced zero cases
+  // exactly as the per-file walk did, and gained nothing this overlay can report in their place. Both
+  // reconciliations below share this ONE membership test rather than each re-deriving their own, so a
+  // bucket that fails to realize can never clear one channel while leaving the other's admission dangling.
   const realizedNames = new Set(functions.filter((fn) => fn.cases.length > 0).map((fn) => String(fn.entry.name)));
+
+  // The stale branch admissions the per-file walk put on the now-driven entries, keyed by name + branch
+  // line — the same key compose reconciles on. Restricted to REALIZED entries: an entry this overlay
+  // attempted but could not actually derive a case for stays exactly as undriven as the per-file walk
+  // left it, rather than losing its only admission to an attempt that produced nothing.
+  const staleUndrivenKeys = new Set(
+    drivable
+      .filter((fn) => realizedNames.has(String(fn.entry.name)))
+      .flatMap((fn) => fn.branches.map((branch) => `${String(fn.entry.name)}#${String(branch.startLine)}`)),
+  );
 
   return fileAnalysisContract.parse({
     functions,

@@ -27,7 +27,8 @@
  * // Returns the FileAnalysis with cross-file call-guards composed, cases re-derived, and any
  * // unreachable-exit lint appended
  */
-import { branchNodeContract, fileAnalysisContract } from '@assayer/shared/contracts';
+import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
+import { branchNodeContract, entryLabelContract, fileAnalysisContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -37,6 +38,7 @@ import { deriveCasesTransformer } from '../../../transformers/derive-cases/deriv
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
 import { rebasePredicateConditionTransformer } from '../../../transformers/rebase-predicate-condition/rebase-predicate-condition-transformer';
 import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
+import { unreachableLintTransformer } from '../../../transformers/unreachable-lint/unreachable-lint-transformer';
 import { resolveSiblingCalleeBroker } from '../../resolve-sibling/callee/resolve-sibling-callee-broker';
 
 export const composeCrossFilePredicatesBroker = ({
@@ -158,6 +160,14 @@ export const composeCrossFilePredicatesBroker = ({
       ...(fn.predicateSignature === undefined ? {} : { returnPredicate: fn.predicateSignature }),
     });
 
+    // The same label a same-file lint shows: a module scope reads by its file/export label, a named
+    // entry by its own name — computed exactly as `analyze-file-broker` does, so the two never disagree
+    // about what the reader sees.
+    const displayName =
+      fn.entry.access.kind === 'module'
+        ? moduleEntryLabelTransformer({ ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }), relPath })
+        : entryLabelContract.parse(String(fn.entry.name));
+
     return {
       fn: {
         entry: fn.entry,
@@ -166,13 +176,7 @@ export const composeCrossFilePredicatesBroker = ({
         cases: derived.cases,
         ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
       },
-      lints: derived.unreachableExits.map((unreachable) => ({
-        rule: 'unreachable-exit',
-        name: fn.entry.name,
-        message: `\`${String(fn.entry.name)}\` can never reach the exit on line ${String(unreachable.line)}: the guards on ${unreachable.guardLines.length === 1 ? 'line' : 'lines'} ${unreachable.guardLines.map((line) => String(line)).join(', ')} cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.`,
-        startLine: unreachable.line,
-        endLine: unreachable.line,
-      })),
+      lints: unreachableLintTransformer({ name: fn.entry.name, displayName, unreachableExits: derived.unreachableExits }),
       // The FRESH branch admissions the recomposed function owes — a guard rebased onto a caller param
       // is now steerable, so a leaf the per-file view admitted undriven drops out here.
       undriven: undrivenBranchTransformer({ entryName: fn.entry.name, undrivenBranches: derived.undrivenBranches }),

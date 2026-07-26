@@ -154,16 +154,18 @@ export const typeToRangeTransformer = ({
             ? unrealizable
             : armValuesContract.parse({ satisfying: { members: [''] }, violating: { members: [rep] } });
     // The `??` operand: satisfying is a NON-null value drawn from the type (`rep`, which the
-    // representative transformer never returns null for), violating is `null`. `null` is nullish, so
-    // it reaches the fall-through arm at runtime whatever the operand's non-null half is. The value is
-    // derived from the declared type, never from executing the code (P4).
+    // representative transformer never returns null for), violating is `null` — ALWAYS, regardless of
+    // whether the type has a scalar point. `null` is nullish independent of what the operand's non-null
+    // half is, so an object/array/callable/unknown operand (`rep === undefined`) still violates on
+    // exactly `null`: only the SATISFYING side has nothing to name (the fill seam builds the real
+    // non-null shape, `type-to-range` cannot), never the violating one. Narrowing the violating side to
+    // `{}` here would be the G1 mistake one arm over — the same `??`-discards-a-legitimate-`null` shape
+    // `plan/open-defects.md` names, just moved from a scalar operand to a composite one.
     case 'non-nullish':
-      return rep === undefined
-        ? unrealizable
-        : armValuesContract.parse({
-            satisfying: { members: [rep] },
-            violating: { members: [null] },
-          });
+      return armValuesContract.parse({
+        satisfying: rep === undefined ? {} : { members: [rep] },
+        violating: { members: [null] },
+      });
     default:
       // Unrecognized: constrain NOTHING on either arm. A predicate the analyzer could not read must
       // not narrow anything, or an unread guard would be able to prove a reachable exit impossible.

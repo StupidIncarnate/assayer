@@ -28,6 +28,12 @@ const TRUTHY_ARRAY_SOURCE =
 const TRUTHY_SCALAR_SOURCE =
   "interface Config {\n  mode: string;\n}\n\nexport function decide(config: Config): string {\n  if (config.mode) {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
 
+// `object-arrange` refuses `tags` on BOTH arms — a `.length` guard names a point on an axis no array
+// property is built at yet (see object-arrange-transformer's own docstring), so every bucket comes back
+// unfillable and the entry realizes no case at all.
+const LENGTH_GUARDED_ARRAY_SOURCE =
+  "interface Config {\n  tags: string[];\n}\n\nexport function decide(config: Config): string {\n  if (config.tags.length > 3) {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
+
 // A dead-surface LINT beside the entry this overlay drives: `unused` is a private nothing calls. Proves
 // `lints` (and every other pass-through channel it stands in for) survives the full reconstruction this
 // broker does once ANY entry is driven, rather than being silently reset to empty alongside it.
@@ -261,6 +267,44 @@ describe('stubRealizeBroker', () => {
           },
         ],
         undriven: [],
+      });
+    });
+  });
+
+  // An entry this overlay ATTEMPTS but cannot actually derive a case for must not lose the only
+  // admission that explained why: every bucket refusing (object-arrange refuses `tags` on both the
+  // satisfying and violating arm alike) leaves `cases: []`, exactly as the per-file walk already had it,
+  // so the per-file `undriven` admission stays rather than being cleared for an attempt that produced
+  // nothing to replace it with.
+  describe('an object-member branch whose property refuses on every arm (a `.length` guard on an array property)', () => {
+    it('VALID: {if (config.tags.length > 3)} => no case derives, and the per-file undriven admission survives', () => {
+      stubRealizeBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: LENGTH_GUARDED_ARRAY_SOURCE, relPath: 'src/decide.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
+
+      const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
+
+      expect({
+        cases: result.functions.flatMap((fn) => fn.cases),
+        undriven: result.undriven,
+        gaps: result.gaps,
+      }).toStrictEqual({
+        cases: [],
+        undriven: [
+          {
+            name: 'decide',
+            reason:
+              '`decide` has a branch on line 6 whose deciding value `config.tags` is neither one of its ' +
+              'parameters nor an environment variable, so no case can steer which arm runs: with nothing to ' +
+              'vary, both arms would arrange the same inputs and one would fail against correct code. Assayer ' +
+              'understood the branch — this is not syntax it missed — but its execution model cannot set the ' +
+              'value that decides it. Make the deciding value a parameter, or read it from the environment in ' +
+              'a module scope, and each arm becomes a case Assayer drives.',
+            startLine: 6,
+            endLine: 6,
+          },
+        ],
+        gaps: [],
       });
     });
   });

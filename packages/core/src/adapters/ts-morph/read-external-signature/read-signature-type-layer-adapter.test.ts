@@ -195,6 +195,56 @@ describe('readSignatureTypeLayerAdapter', () => {
       );
     });
 
+    // A `type X = { … }` alias names an ANONYMOUS `__type` object symbol and hangs the real name on the
+    // ALIAS symbol instead — the same split the walk reader (`read-type-fact-layer-adapter`) resolves.
+    // Reading only the raw symbol would spell every alias-declared external shape keyless and drop it
+    // out of the stub index, which keys on `typeName`.
+    it('VALID: {a type-alias object param} => the ALIAS name, not the anonymous __type symbol', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'type Config = { mode: string; retries: number };\nexport declare function f(cfg: Config): void;\n',
+      );
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('cfg').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Config',
+          properties: [
+            { name: 'mode', fact: { flavor: 'string' } },
+            { name: 'retries', fact: { flavor: 'number' } },
+          ],
+        }),
+      );
+    });
+
+    // `optional` is a fact about the PROPERTY's declaration, never about its type — the checker widens
+    // `retries?: number` to the same `number` a required property declares. The walk reader carries it
+    // through; this sibling must too, or a truly-optional external property reads as required and an
+    // otherwise-fillable object gets refused over a property nobody owes a value.
+    it('VALID: {an optional property} => carries optional: true, a required sibling carries nothing', () => {
+      readSignatureTypeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'interface Config { mode?: string; retries: number }\nexport declare function f(cfg: Config): void;\n',
+      );
+      const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('cfg').getType();
+
+      expect(readSignatureTypeLayerAdapter({ type })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Config',
+          properties: [
+            { name: 'mode', fact: { flavor: 'string' }, optional: true },
+            { name: 'retries', fact: { flavor: 'number' } },
+          ],
+        }),
+      );
+    });
+
     // No name lands on the fact at all — `typeName` is omitted, never an empty string — so an
     // anonymous shape and a named-but-empty interface stay distinguishable downstream.
     it('VALID: {inline anonymous-object param} => a keyless object fact enumerating its properties', () => {

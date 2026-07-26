@@ -163,20 +163,31 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // Its per-branch admissions would double-count it, so they are suppressed against the projection's
   // names below. A NAMED entry the projection never claims keeps its per-branch admissions — an opaque
   // `if (g())` or a non-param local `if (u > 5)` names the branch a case cannot steer.
-  const whollyUndrivenModuleNames = new Set(
-    derived
-      .filter(
-        ({ fn, result }) =>
-          fn.entry.access.kind === 'module' &&
-          fn.branches.length > 0 &&
-          result.cases.length === 0 &&
-          result.unreachableExits.length === 0,
-      )
-      .map(({ fn }) => String(fn.entry.name)),
-  );
+  // A wholly undriven module also carries WHY, so the projection can word the reason by cause instead
+  // of one fixed sentence: with no cases and no unreachable exits, every one of its branches failed the
+  // same steerability gate, so `undrivenBranches` can never be empty here — the FIRST one, in the walk's
+  // own encounter order, is the exemplar the module-level reason is built from.
+  const whollyUndrivenModules = derived.flatMap(({ fn, result }) => {
+    if (fn.entry.access.kind !== 'module' || fn.branches.length === 0 || result.cases.length > 0 || result.unreachableExits.length > 0) {
+      return [];
+    }
+
+    const [firstUndrivenBranch] = result.undrivenBranches;
+    if (firstUndrivenBranch === undefined) {
+      throw new Error(`unreachable: wholly undriven module \`${String(fn.entry.name)}\` carries no undriven branch`);
+    }
+
+    return [
+      {
+        name: fn.entry.name,
+        cause: firstUndrivenBranch.cause,
+        ...(firstUndrivenBranch.operand === undefined ? {} : { operand: firstUndrivenBranch.operand }),
+      },
+    ];
+  });
   const moduleUndriven = undrivenProjectionTransformer({
     walked,
-    undrivenModuleNames: whollyUndrivenModuleNames,
+    undrivenModules: whollyUndrivenModules,
     ...(relPath === undefined ? {} : { relPath }),
   });
   const moduleUndrivenNames = new Set(moduleUndriven.map((entry) => String(entry.name)));

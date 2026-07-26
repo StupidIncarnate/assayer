@@ -192,6 +192,26 @@ describe('typeToRangeTransformer', () => {
         violating: ValueDomainStub({ members: [null] }),
       });
     });
+
+    // A type with no scalar point still violates non-nullishness on exactly `null` — nullish-ness is a
+    // fact about the VALUE, not about the operand's own type, so an object/array/callable/unknown
+    // operand's else arm needs `null` from this engine exactly as a string-typed one does. Only the
+    // satisfying side has nothing to NAME (the fill seam builds the real non-null shape; this engine
+    // narrows nothing there), never the violating one — narrowing the violating side to `{}` here would
+    // be the G1 `??`-discards-a-legitimate-`null` mistake (`plan/open-defects.md`) one operand kind over.
+    it.each([
+      ['object', TypeDescriptorStub({ kind: 'object', properties: [] })],
+      ['array', TypeDescriptorStub({ kind: 'array', element: { kind: 'string' } })],
+      ['callable', TypeDescriptorStub({ kind: 'callable', text: '() => void' })],
+      ['unknown', TypeDescriptorStub({ kind: 'unknown', text: 'Map<string, number>' })],
+    ] as const)('VALID: {%s, non-nullish} => nothing satisfies by name, but null still violates', (_label, type) => {
+      const result = typeToRangeTransformer({ type, predicateKind: 'non-nullish' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub(),
+        violating: ValueDomainStub({ members: [null] }),
+      });
+    });
   });
 
   describe('unrecognized predicates', () => {

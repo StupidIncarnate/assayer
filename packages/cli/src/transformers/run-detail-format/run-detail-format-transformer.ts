@@ -10,6 +10,12 @@
  *   it. That is not the same as false, and the difference is the capability branch coverage throws
  *   away — so nothing here invents a line for it.
  *
+ *   All four admissions — gaps, dark spots, undriven entries, lints — print after the trace, in the
+ *   SAME order and the SAME `<MARKER> <subject> — <text>` shape `assayer unit` and the desktop panel
+ *   use. `assayer detail` is "one saved run in full", so leaving three of the four silent here would
+ *   make the detail view say LESS about the file than the summary it links from — the opposite of what
+ *   a detail view is for.
+ *
  * USAGE:
  * runDetailFormatTransformer({ run: RunResultStub() });
  * // Returns the full per-case trace text
@@ -19,6 +25,10 @@ import { arrangeTextTransformer } from '@assayer/shared/transformers';
 import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
 import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 import type { RunResult } from '@assayer/shared/contracts';
+import { darkSpotLineFormatTransformer } from '../dark-spot-line-format/dark-spot-line-format-transformer';
+import { gapLineFormatTransformer } from '../gap-line-format/gap-line-format-transformer';
+import { lintLineFormatTransformer } from '../lint-line-format/lint-line-format-transformer';
+import { undrivenLineFormatTransformer } from '../undriven-line-format/undriven-line-format-transformer';
 
 export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutput => {
   const header = `${String(run.relPath)}  run ${String(run.runId)}`;
@@ -43,9 +53,13 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
     ];
   });
 
-  // One space after the marker, exactly as DARK / UNDRIVEN / LINT and the desktop panel spell it: every
-  // admission row is `<MARKER> <subject> — <text>`, so the two surfaces over one artifact read alike.
-  const gaps = run.gaps.map((gap) => `  GAP ${String(gap.name)} — ${String(gap.reason)}`);
+  // The same four line-format transformers `assayer unit` uses, in the same order: gaps, dark spots,
+  // undriven entries, lints. One space after the marker, exactly as the desktop panel spells it — the
+  // two surfaces over one artifact must never word one admission two ways.
+  const gaps = run.gaps.map((gap) => gapLineFormatTransformer({ gap }));
+  const darkSpots = run.darkSpots.map((darkSpot) => darkSpotLineFormatTransformer({ darkSpot }));
+  const undriven = run.undriven.map((entry) => undrivenLineFormatTransformer({ entry }));
+  const lints = run.lints.map((lint) => lintLineFormatTransformer({ lint }));
 
-  return cliOutputContract.parse([header, ...cases, ...gaps].join('\n'));
+  return cliOutputContract.parse([header, ...cases, ...gaps, ...darkSpots, ...undriven, ...lints].join('\n'));
 };

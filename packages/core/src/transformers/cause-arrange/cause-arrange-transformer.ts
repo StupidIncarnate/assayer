@@ -88,6 +88,7 @@ import type { ValueDomain } from '../../contracts/value-domain/value-domain-cont
 import { isDomainEmptyGuard } from '../../guards/is-domain-empty/is-domain-empty-guard';
 import { isFalsyArmGuard } from '../../guards/is-falsy-arm/is-falsy-arm-guard';
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
+import { isValueBindingGuard } from '../../guards/is-value-binding/is-value-binding-guard';
 import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
 import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transformer';
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
@@ -359,27 +360,28 @@ export const causeArrangeTransformer = ({
       // expression's STATIC type — a runtime value here could not tell one callback from another). A
       // violation is Assayer contradicting a type it read itself, never the reader's debt, so it throws
       // rather than shipping a wrong-shape value into a case that would then pass or fail on it.
-      arrange.forEach((binding) => {
-        if (binding.kind === 'env' || binding.kind === 'harness') {
-          return;
-        }
+      arrange
+        .filter(
+          (binding): binding is Extract<ArrangeBinding, { kind: 'param' } | { kind: 'array' } | { kind: 'object' }> =>
+            isValueBindingGuard({ binding }),
+        )
+        .forEach((binding) => {
+          const param = paramByName.get(String(binding.param));
+          // Re-parsed through the SAME recursive contract the binding's own `value` field already
+          // satisfies (an `object` binding's zod-inferred record type is not structurally an `ArrangeValue`
+          // on its own, even though every value it ever holds is one) — never a bypass, since the contract
+          // re-validates rather than merely asserting.
+          const value = arrangeValueContract.parse(binding.value);
 
-        const param = paramByName.get(String(binding.param));
-        // Re-parsed through the SAME recursive contract the binding's own `value` field already
-        // satisfies (an `object` binding's zod-inferred record type is not structurally an `ArrangeValue`
-        // on its own, even though every value it ever holds is one) — never a bypass, since the contract
-        // re-validates rather than merely asserting.
-        const value = arrangeValueContract.parse(binding.value);
-
-        if (param !== undefined && !isTypeFillableGuard({ type: param.type, value })) {
-          throw new Error(
-            `cause-arrange built a \`${binding.kind}\` value for \`${String(binding.param)}\` that does not satisfy ` +
-              `its own declared type \`${String(param.declaredText ?? typeTextTransformer({ type: param.type }))}\`: ` +
-              `${JSON.stringify(binding.value)}. Assayer contradicted a type it read itself — its own invariant ` +
-              'broken, never the reader\'s debt.',
-          );
-        }
-      });
+          if (param !== undefined && !isTypeFillableGuard({ type: param.type, value })) {
+            throw new Error(
+              `cause-arrange built a \`${binding.kind}\` value for \`${String(binding.param)}\` that does not satisfy ` +
+                `its own declared type \`${String(param.declaredText ?? typeTextTransformer({ type: param.type }))}\`: ` +
+                `${JSON.stringify(binding.value)}. Assayer contradicted a type it read itself — its own invariant ` +
+                'broken, never the reader\'s debt.',
+            );
+          }
+        });
 
       return arrange;
     }),

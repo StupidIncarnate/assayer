@@ -41,6 +41,10 @@ import { arrangeTextTransformer } from '@assayer/shared/transformers';
 import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
 import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 import type { RunResult } from '@assayer/shared/contracts';
+import { darkSpotLineFormatTransformer } from '../dark-spot-line-format/dark-spot-line-format-transformer';
+import { gapLineFormatTransformer } from '../gap-line-format/gap-line-format-transformer';
+import { lintLineFormatTransformer } from '../lint-line-format/lint-line-format-transformer';
+import { undrivenLineFormatTransformer } from '../undriven-line-format/undriven-line-format-transformer';
 
 export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult[] }): CliOutput => {
   const lines = runs.flatMap((run) => {
@@ -64,19 +68,12 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
           ].join('\n');
     });
 
-    const gaps = run.gaps.map((gap) => `  GAP ${String(gap.name)} — ${String(gap.reason)}`);
-    const darkSpots = run.darkSpots.map(
-      (darkSpot) =>
-        `  DARK ${String(darkSpot.kind)} at L${String(darkSpot.startLine)}-L${String(darkSpot.endLine)} in ` +
-        `${darkSpot.scopePath.map((segment) => String(segment)).join('/')} — Assayer has no handler for it, so ` +
-        'nothing inside it is covered',
-    );
-    const undriven = run.undriven.map(
-      (entry) => `  UNDRIVEN ${String(entry.label ?? entry.name)} — ${String(entry.reason)}`,
-    );
+    const gaps = run.gaps.map((gap) => gapLineFormatTransformer({ gap }));
+    const darkSpots = run.darkSpots.map((darkSpot) => darkSpotLineFormatTransformer({ darkSpot }));
+    const undriven = run.undriven.map((entry) => undrivenLineFormatTransformer({ entry }));
     // A fourth line, worded to name the REPO as the one who owes the change: a lint is a pattern to
     // remove, not an admission Assayer owes. Unlike the three above, it can fail the build.
-    const lints = run.lints.map((lint) => `  LINT ${String(lint.name)} — ${String(lint.message)}`);
+    const lints = run.lints.map((lint) => lintLineFormatTransformer({ lint }));
     const link = unresolved.length === 0 ? [] : [`  assayer detail ${String(run.runId)}`];
 
     return [header, ...failed, ...gaps, ...darkSpots, ...undriven, ...lints, ...link];

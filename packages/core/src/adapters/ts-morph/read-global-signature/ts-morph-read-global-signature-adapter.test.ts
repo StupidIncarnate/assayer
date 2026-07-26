@@ -81,7 +81,10 @@ describe('tsMorphReadGlobalSignatureAdapter', () => {
       expect(result).toStrictEqual({
         usable: true,
         result: 'signature',
-        signature: { params: [{ name: 'paths', type: { kind: 'unknown', text: 'string[]' } }], returnType: { kind: 'string' } },
+        signature: {
+          params: [{ name: 'paths', type: { kind: 'array', element: { kind: 'string' } } }],
+          returnType: { kind: 'string' },
+        },
         declText: NODE_TYPES,
       });
     });

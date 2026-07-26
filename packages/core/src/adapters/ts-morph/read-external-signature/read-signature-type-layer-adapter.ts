@@ -23,6 +23,7 @@
  * readSignatureTypeLayerAdapter({ type: signature.getReturnType() });
  * // Returns { flavor: 'union', members: [{ flavor: 'literal', value: 'get' }, ...], text: '"get" | "post"' }
  */
+import { Node } from 'ts-morph';
 import type { Type } from 'ts-morph';
 
 import { representativeValueContract, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
@@ -73,8 +74,15 @@ export const readSignatureTypeLayerAdapter = ({ type, seen }: { type: Type; seen
     return { flavor: 'callable', text: typeTextContract.parse(type.getText()) };
   }
   if (type.isObject()) {
+    // Two ways a shape carries a name, and the checker answers them on different symbols — the same
+    // split the walk reader resolves. An `interface Config` names its own symbol; a
+    // `type Config = { … }` names an ANONYMOUS object symbol (`__type`) and hangs `Config` on the ALIAS
+    // symbol instead, so reading only the raw symbol spells every alias-declared external shape keyless
+    // and drops it out of every name-keyed artifact downstream (the stub index keys on `typeName`).
     const rawName = type.getSymbol()?.getName();
-    const typeName = rawName === undefined || rawName === '__type' ? undefined : symbolNameContract.parse(rawName);
+    const aliasName = type.getAliasSymbol()?.getName();
+    const declaredName = rawName === undefined || rawName === '__type' ? aliasName : rawName;
+    const typeName = declaredName === undefined ? undefined : symbolNameContract.parse(declaredName);
 
     // MARKED, because only the reader knows the empty property list is where it stopped rather than
     // what the type declares.
@@ -86,19 +94,30 @@ export const readSignatureTypeLayerAdapter = ({ type, seen }: { type: Type; seen
     const location = type.getSymbol()?.getDeclarations()[0];
     const properties = type
       .getProperties()
-      .map((symbol): { name: SymbolName; fact: TypeFact } => {
+      .map((symbol): { name: SymbolName; fact: TypeFact; optional?: boolean } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
         // A TUPLE's numeric-index properties (`0`, `1`, `length` on `readonly [string, number]`) carry
         // no declaration of their own AND the tuple type itself carries no symbol to fall back to — the
         // checker synthesizes them structurally, with no node anywhere to read a type off. `unknown` is
         // the honest answer for a property with nowhere to read a type from, the same shape the walk
         // reader hits for a tuple-typed parameter (`sad-path/run-gap/tuple-param`).
+        //
+        // Whether the shape DECLARES the property with a question mark — read off the declaration, the
+        // same reason the walk reader does: the checker widens `retries?: number` to the same `number` a
+        // required property declares, so the type alone cannot answer it.
+        const propertyDeclaration =
+          declaration !== undefined && (Node.isPropertySignature(declaration) || Node.isPropertyDeclaration(declaration))
+            ? declaration
+            : undefined;
+        const optional = propertyDeclaration?.hasQuestionToken() === true;
+
         return {
           name: symbolNameContract.parse(symbol.getName()),
           fact:
             declaration === undefined
               ? { flavor: 'other', text: typeTextContract.parse('unknown') }
               : readSignatureTypeLayerAdapter({ type: symbol.getTypeAtLocation(declaration), seen: nextSeen }),
+          ...(optional ? { optional: true } : {}),
         };
       })
       .sort((a, b) => (String(a.name) < String(b.name) ? -1 : String(a.name) > String(b.name) ? 1 : 0));

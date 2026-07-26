@@ -8,6 +8,12 @@
  *   stays callable, exactly as an unconstrained parameter is filled anywhere else — and a case whose
  *   entry has a param the seam REFUSES is dropped, because the entry cannot be called at all.
  *
+ *   A branchless callback (`items.filter((n) => n > 5)`) has no `if` — its true/false split rides the
+ *   RETURN comparison, published as `predicateSignature` — so it is threaded into the callback's own
+ *   derivation exactly as every other driving route threads it, and carried onto the entry the analysis
+ *   returns so a reader re-deriving from it sees the same axis. Skipping this collapses `.filter`/
+ *   `.some`/`.every`/`.find` callbacks to one representative element, proving neither side of the split.
+ *
  *   The entry keeps the callback's identity — its name, scope path, and exit ids — so coverage attaches
  *   where the logic lives; only its ACCESS becomes `through-caller`, naming the entry the runner drives.
  *   The callback is never invoked directly; the runner calls the entry with the steered array and the
@@ -27,10 +33,17 @@
  * // Returns { analysis: FunctionAnalysis (entry.access { kind: 'through-caller', callerName }),
  * //   unfillable: [{ param, type, owner }, …] }
  */
-import { derivedTestCaseContract, entryAccessContract, entryLabelContract, functionAnalysisContract } from '@assayer/shared/contracts';
+import {
+  arrangeValueContract,
+  derivedTestCaseContract,
+  entryAccessContract,
+  entryLabelContract,
+  functionAnalysisContract,
+} from '@assayer/shared/contracts';
 import type { ArrangeBinding, ArrangeValue, EntryLabel, FunctionAnalysis, SymbolName, TypeText } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
+import { isValueBindingGuard } from '../../guards/is-value-binding/is-value-binding-guard';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
@@ -59,16 +72,37 @@ export const throughCallbackCasesTransformer = ({
     branches: callback.branches,
     exits: callback.exits,
     envDrivable: false,
+    // The callback's own return comparison, never a recorded output (P4) — the branchless twin of a
+    // callback's `if`, so `.filter`/`.some`/`.every`/`.find` split their element into a satisfying and a
+    // violating case instead of collapsing to one representative fill.
+    ...(callback.predicateSignature === undefined ? {} : { returnPredicate: callback.predicateSignature }),
   });
 
   const cases = derived.cases.flatMap((testCase) => {
+    // The element binding may be a scalar `param`, or a composite `array`/`object` when the array's
+    // element type is itself an array or an object (`matrix.map((row) => …)`, `items.map((item, idx) =>
+    // …)` with an object element) — `isValueBindingGuard` is the one place that recognizes every
+    // value-carrying arm, so a nested-array or object element steers the same as a scalar one instead of
+    // silently reading as absent and running the callback zero times. TypeScript cannot narrow a
+    // destructured guard parameter (TS1230), so the kind check is restated here to type the match —
+    // `isValueBindingGuard` stays the one place the RULE is decided, this only satisfies the compiler.
     const elementBinding = testCase.arrange.find(
-      (binding) =>
-        binding.kind === 'param' && elementParamName !== undefined && String(binding.param) === String(elementParamName),
+      (binding): binding is Extract<ArrangeBinding, { kind: 'param' } | { kind: 'array' } | { kind: 'object' }> => {
+        if (binding.kind !== 'param' && binding.kind !== 'array' && binding.kind !== 'object') {
+          return false;
+        }
+
+        return (
+          isValueBindingGuard({ binding }) && elementParamName !== undefined && String(binding.param) === String(elementParamName)
+        );
+      },
     );
     // A one-element array carrying the steered element. An empty array runs the callback zero times, so
-    // the element that steers the branch must actually be present.
-    const element: ArrangeValue[] = elementBinding !== undefined && elementBinding.kind === 'param' ? [elementBinding.value] : [];
+    // the element that steers the branch must actually be present. Re-parsed through the SAME recursive
+    // contract the binding's own `value` field already satisfies — an `object` binding's zod-inferred
+    // record type is not structurally an `ArrangeValue` on its own, even though every value it ever
+    // holds is one (the same re-parse `cause-arrange-transformer` does for the identical reason).
+    const element: ArrangeValue[] = elementBinding === undefined ? [] : [arrangeValueContract.parse(elementBinding.value)];
 
     // The array param the callback iterates carries the steered one-element list; every OTHER param is
     // unsteered and filled through the seam — which can REFUSE, and then the entry cannot be called at
@@ -104,6 +138,9 @@ export const throughCallbackCasesTransformer = ({
       branches: callback.branches,
       exits: callback.exits,
       cases,
+      // The callback's own return comparison, carried onto the entry it becomes: this IS the callback, so
+      // a reader re-deriving from the analysis sees the axis its cases were derived with.
+      ...(callback.predicateSignature === undefined ? {} : { predicateSignature: callback.predicateSignature }),
     }),
     // Owned by the callback, invoiced against the entry: the label is the only handle a reader has on an
     // inline scope, and a named one shows its own name.

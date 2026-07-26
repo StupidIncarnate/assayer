@@ -167,4 +167,80 @@ describe('runDetailFormatTransformer', () => {
       );
     });
   });
+
+  describe('dark spots', () => {
+    // `assayer detail` is "one saved run in full" — a dark spot is a fact about the FILE the run
+    // belongs to, exactly as a gap is, so it must not go silent here while `assayer unit` still prints
+    // it.
+    it('VALID: {a dark spot} => reported alongside the trace', () => {
+      const run = RunResultStub({
+        cases: [],
+        darkSpots: [{ kind: 'ForStatement', scopePath: ['sumAll'], reason: 'unhandled-syntax', startLine: 3, endLine: 5 }],
+      });
+
+      const result = runDetailFormatTransformer({ run });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
+          '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
+      );
+    });
+  });
+
+  describe('undriven entries', () => {
+    it('VALID: {an undriven module} => reported by its label, alongside the trace', () => {
+      const run = RunResultStub({
+        cases: [],
+        undriven: [
+          { name: '*module*', label: 'welded-const.ts', reason: 'it runs at import time, so no case drove its branches', startLine: 1, endLine: 8 },
+        ],
+      });
+
+      const result = runDetailFormatTransformer({ run });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
+          '  UNDRIVEN welded-const.ts — it runs at import time, so no case drove its branches',
+      );
+    });
+  });
+
+  describe('lints', () => {
+    it('VALID: {a lint} => reported alongside the trace', () => {
+      const run = RunResultStub({
+        cases: [],
+        lints: [{ rule: 'dead-surface', name: 'decide', message: 'nothing calls it', startLine: 1, endLine: 7 }],
+      });
+
+      const result = runDetailFormatTransformer({ run });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n  LINT decide — nothing calls it',
+      );
+    });
+  });
+
+  describe('all four admissions on one run', () => {
+    // Never merged, and always in the same order `assayer unit` prints them: gaps, dark spots,
+    // undriven entries, lints.
+    it('VALID: {a gap, a dark spot, an undriven entry, and a lint} => four separate lines, in that order', () => {
+      const run = RunResultStub({
+        cases: [],
+        gaps: [{ name: 'find', reason: 'needs a harness' }],
+        darkSpots: [{ kind: 'ForStatement', scopePath: ['sumAll'], reason: 'unhandled-syntax', startLine: 3, endLine: 5 }],
+        undriven: [{ name: 'inner', reason: 'it is not exported', startLine: 2, endLine: 8 }],
+        lints: [{ rule: 'dead-surface', name: 'decide', message: 'nothing calls it', startLine: 1, endLine: 7 }],
+      });
+
+      const result = runDetailFormatTransformer({ run });
+
+      expect(String(result)).toBe(
+        'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
+          '  GAP find — needs a harness\n' +
+          '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered\n' +
+          '  UNDRIVEN inner — it is not exported\n' +
+          '  LINT decide — nothing calls it',
+      );
+    });
+  });
 });

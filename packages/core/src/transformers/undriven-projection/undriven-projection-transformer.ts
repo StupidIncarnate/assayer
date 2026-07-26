@@ -6,11 +6,17 @@
  *   Importing it always takes the same arm and no case or evaluation can say another; a case that
  *   claimed one would fail against correct code.
  *
- *   WHICH module scopes those are is NOT decided here — it is decided by `derive-cases`, the single
- *   drivability owner (§5.12), and handed in as `undrivenModuleNames`. A module scope reading the
+ *   WHICH module scopes those are, and WHY, is NOT decided here — it is decided by `derive-cases`, the
+ *   single drivability owner (§5.12), and handed in as `undrivenModules`: one entry per wholly undriven
+ *   module scope, carrying the CAUSE its first un-steerable branch reported. A module scope reading the
  *   environment DRIVES (a case writes the variable before import), and one welded to a literal const
  *   EVALUATES (a live arm plus an unreachable exit), so neither is in that set; only the genuinely
- *   opaque remainder is. This projection just turns those names into labelled entries.
+ *   opaque remainder is. This projection turns those names into labelled entries, wording the reason by
+ *   the cause it was handed exactly as the branch-level admission does — a module can never fail the
+ *   arrangeable check on a `config.mode`-shaped property path (a module scope declares no parameters for
+ *   one to be a segment off), so `unarrangeable-property-depth` cannot reach a module here, but the
+ *   other three causes can: an opaque operand, a `typeof` read, or a comparison against a value Assayer
+ *   could not read as a literal.
  *
  *   PRIVATE helpers are NOT here: whether a private is driven, admitted undriven, or dead surface is a
  *   fact about its CALL EDGES, which only `follow-calls` can read (it drives a private through a
@@ -21,36 +27,121 @@
  *   is, since a span recovered any other way could drift from the scope these branches were counted in.
  *
  * USAGE:
- * undrivenProjectionTransformer({ walked, undrivenModuleNames: new Set(['*module*']), relPath: 'src/…/x.ts' });
+ * undrivenProjectionTransformer({
+ *   walked,
+ *   undrivenModules: [{ name: '*module*', cause: 'unarrangeable-operand' }],
+ *   relPath: 'src/…/x.ts',
+ * });
  * // Returns [{ name: '*module*', label: 'x.ts', reason: '…', startLine: 1, endLine: 8 }]
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 import { undrivenEntryContract } from '@assayer/shared/contracts';
-import type { UndrivenEntry } from '@assayer/shared/contracts';
+import type { SymbolName, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
+import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
 
 export const undrivenProjectionTransformer = ({
   walked,
-  undrivenModuleNames,
+  undrivenModules,
   relPath,
 }: {
   walked: WalkFileResult;
-  undrivenModuleNames: Set<string>;
+  undrivenModules: { name: SymbolName; cause: UndrivenCause; operand?: SymbolName }[];
   relPath?: string;
-}): UndrivenEntry[] =>
-  walked.success
-    ? walked.scopes
-        .filter((scope) => scope.access.kind === 'module' && scope.branches.length > 0 && undrivenModuleNames.has(String(scope.name)))
-        .map((scope) => {
-          const exportName = scope.exportedBindings.length === 1 ? scope.exportedBindings[0] : undefined;
-          // The module scope renders by its LABEL, never the internal `*module*`: the single exported
-          // binding when there is one, else the file basename. `name` stays `*module*` because it keys
-          // the driven/undriven match; `label` is DISPLAY only. Without a relPath (a synthetic caller),
-          // the label falls away and the surface shows the name.
-          const label =
-            relPath === undefined ? undefined : moduleEntryLabelTransformer({ ...(exportName === undefined ? {} : { exportName }), relPath });
-          return undrivenEntryContract.parse({
+}): UndrivenEntry[] => {
+  const causeByName = new Map(undrivenModules.map((module) => [String(module.name), module]));
+
+  return walked.success
+    ? walked.scopes.flatMap((scope) => {
+        if (scope.access.kind !== 'module' || scope.branches.length === 0) {
+          return [];
+        }
+
+        const undrivenModule = causeByName.get(String(scope.name));
+        if (undrivenModule === undefined) {
+          return [];
+        }
+
+        const exportName = scope.exportedBindings.length === 1 ? scope.exportedBindings[0] : undefined;
+        // The module scope renders by its LABEL, never the internal `*module*`: the single exported
+        // binding when there is one, else the file basename. `name` stays `*module*` because it keys
+        // the driven/undriven match; `label` is DISPLAY only. Without a relPath (a synthetic caller),
+        // the label falls away and the surface shows the name.
+        const label =
+          relPath === undefined ? undefined : moduleEntryLabelTransformer({ ...(exportName === undefined ? {} : { exportName }), relPath });
+
+        if (String(undrivenModule.cause) === 'unread-comparison') {
+          // Same invariant `undrivenBranchTransformer` enforces: every leaf that reaches this cause
+          // already passed the arrangeable check, and every arrangeable route (env var included, at
+          // module scope) resolves through the same identifier node the operand is read off.
+          if (undrivenModule.operand === undefined) {
+            throw new Error(`unreachable: an 'unread-comparison' undriven module \`${String(scope.name)}\` carries no operand`);
+          }
+
+          return [
+            undrivenEntryContract.parse({
+              name: scope.name,
+              ...(label === undefined ? {} : { label }),
+              startLine: scope.startLine,
+              endLine: scope.endLine,
+              reason:
+                'nothing about it varies, so no case could drive its branches anywhere they do not already go: ' +
+                `it runs at import time, and its top-level branching compares \`${String(undrivenModule.operand)}\` ` +
+                'against a value Assayer could not read as a literal — an enum member, an imported or computed ' +
+                'constant, or a property of another object — so it has no value that satisfies the comparison and ' +
+                'none that violates it. Assayer understood the branch — this is not syntax it missed — but it ' +
+                'cannot yet name the value on the other side of the comparison. Compare against a literal and ' +
+                'each arm becomes a case Assayer drives.',
+            }),
+          ];
+        }
+
+        // `typeof x === 'string'` reads as opaque to the steerability gate even at module scope: the
+        // operand it names is the whole `typeof` expression, not `x`. Telling the reader to read `x`
+        // from the environment would be advice about a state that may already hold — the real limit
+        // is that Assayer does not decompose a `typeof` read into the per-type case it names.
+        if (String(undrivenModule.cause) === 'unarrangeable-typeof') {
+          return [
+            undrivenEntryContract.parse({
+              name: scope.name,
+              ...(label === undefined ? {} : { label }),
+              startLine: scope.startLine,
+              endLine: scope.endLine,
+              reason:
+                'nothing about it varies, so no case could drive its branches anywhere they do not already go: ' +
+                'it runs at import time, and its top-level branching turns on a `typeof` read, so no case can ' +
+                'steer which arm runs. Assayer understood the branch — this is not syntax it missed — but it ' +
+                'does not decompose a `typeof` comparison into the case each result names; the value `typeof` ' +
+                'narrows may already be read from the environment.',
+            }),
+          ];
+        }
+
+        // A module scope declares no parameters for a `config.db.retry`-shaped path to be a segment off,
+        // so `unarrangeable-property-depth` never reaches a module in practice — the arrangeable check
+        // that produces it requires the root to already be one of the entry's own params (§5.12), and a
+        // module entry's param list is always empty. Handled anyway so the cause's four members stay
+        // exhaustively worded rather than falling through to a mismatched default.
+        if (String(undrivenModule.cause) === 'unarrangeable-property-depth') {
+          return [
+            undrivenEntryContract.parse({
+              name: scope.name,
+              ...(label === undefined ? {} : { label }),
+              startLine: scope.startLine,
+              endLine: scope.endLine,
+              reason:
+                'nothing about it varies, so no case could drive its branches anywhere they do not already go: ' +
+                'it runs at import time, and its top-level branching reads a property more than one level deep ' +
+                'off an object, so no case can steer which arm runs. Assayer understood the branch — this is ' +
+                'not syntax it missed — but it matches an object-member comparison only ONE property level deep ' +
+                '(`config.mode`), never a path this long.',
+            }),
+          ];
+        }
+
+        return [
+          undrivenEntryContract.parse({
             name: scope.name,
             ...(label === undefined ? {} : { label }),
             startLine: scope.startLine,
@@ -63,6 +154,8 @@ export const undrivenProjectionTransformer = ({
               'value, a computed expression). Read an operand from the environment instead and Assayer ' +
               'drives it: a top-level `const x = Number(process.env.X)` makes X an input, and each arm ' +
               'becomes a case that sets it and imports the module fresh.',
-          });
-        })
+          }),
+        ];
+      })
     : [];
+};

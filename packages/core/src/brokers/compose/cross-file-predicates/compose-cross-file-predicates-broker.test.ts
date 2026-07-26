@@ -10,10 +10,24 @@ const PICK_CALLER =
   "import { over } from './over';\nimport { under } from './under';\n\nexport function pick(n: number): string {\n  if (over(n)) {\n    return 'a';\n  }\n\n  if (under(n)) {\n    return 'b';\n  }\n\n  return 'c';\n}\n";
 const PLAIN_CALLER = "export function grade(n: number): string {\n  if (n > 5) {\n    return 'p';\n  }\n\n  return 'f';\n}\n";
 
+const WELDED_CALLER =
+  "import { exceedsLimit } from './limit';\n\n" +
+  'const LEVEL = 7;\n\n' +
+  'export function report(size: number): string {\n' +
+  '  if (exceedsLimit(size)) {\n' +
+  "    return 'over';\n" +
+  '  }\n\n' +
+  '  if (LEVEL > 5) {\n' +
+  "    return 'high';\n" +
+  '  }\n\n' +
+  "  return 'low';\n" +
+  '}\n';
+
 const BIG_PREDICATE = 'export function big(n: number): boolean {\n  return n > 50;\n}\n';
 const OVER_PREDICATE = 'export function over(n: number): boolean {\n  return n > 50;\n}\n';
 const UNDER_PREDICATE = 'export function under(n: number): boolean {\n  return n > 100;\n}\n';
 const BIG_NO_PREDICATE = 'export function big(n: number): boolean {\n  return Boolean(n);\n}\n';
+const EXCEEDS_LIMIT_PREDICATE = 'export function exceedsLimit(n: number): boolean {\n  return n > 50;\n}\n';
 
 describe('composeCrossFilePredicatesBroker', () => {
   describe('a caller guarding on one imported predicate', () => {
@@ -107,6 +121,36 @@ describe('composeCrossFilePredicatesBroker', () => {
           },
         ],
       });
+    });
+  });
+
+  describe('a caller mixing a WELDED same-file branch with a rebased cross-file guard', () => {
+    // `LEVEL` is welded to 7 in `report`'s own source, so its `> 5` arm always holds and the `'low'`
+    // exit is dead for that reason alone — nothing about `exceedsLimit`'s now-sound guard on line 6 is
+    // involved. Pre-compose that dead arm is invisible (both exits past the still-opaque `exceedsLimit`
+    // truthy leaf are excluded from the steerable set), so it surfaces only once rebasing makes the
+    // whole function re-derive. The lint must read the WELDED sentence, never the contradictory-guards
+    // one — no two guards are in tension here.
+    it('VALID: {LEVEL welded to 7 beside exceedsLimit(size) > 50} => the dead exit reads the welded sentence, not the contradictory-guards one', () => {
+      const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.setupSibling({ fileName: '/repo/src/limit.ts', source: EXCEEDS_LIMIT_PREDICATE });
+      const walked = tsMorphWalkFileAdapter({ source: WELDED_CALLER, relPath: 'src/report.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/report.ts' });
+
+      expect(analysis.lints).toStrictEqual([]);
+
+      const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/report.ts' });
+
+      expect(result.lints).toStrictEqual([
+        {
+          rule: 'unreachable-exit',
+          name: 'report',
+          message:
+            '`report` can never reach the exit on line 14: `LEVEL` is welded to `7`, so the branch on line 10 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+          startLine: 14,
+          endLine: 14,
+        },
+      ]);
     });
   });
 

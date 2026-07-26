@@ -105,4 +105,56 @@ describe('arrangeTextTransformer', () => {
       expect(arrangeTextTransformer({ arrange: [] })).toBe('');
     });
   });
+
+  // A `rest` binding is not one argument at the call site — the interpreter SPREADS it across the tail
+  // positional slots — so `tally(11, [6,9])` is a call that never happens. The `...` prefix is what
+  // keeps `${entryName}(${arrangeText})` (both CLI reports and the desktop panel build exactly that
+  // string) truthful for the one binding shape that is not itself one argument.
+  describe('a rest binding spreads across the tail positional slots', () => {
+    it('VALID: {an array rest binding beside a scalar} => the array literal prefixed with "...", never bracketed as one argument', () => {
+      const result = arrangeTextTransformer({
+        arrange: [
+          { kind: 'param', param: 'size', value: 11 },
+          { kind: 'array', param: 'ns', value: [6, 9], rest: true },
+        ],
+      } as never);
+
+      expect(result).toBe('11, ...[6,9]');
+    });
+
+    it('VALID: {an array rest binding with no elements} => "...[]", so the empty spread still reads as spread', () => {
+      const result = arrangeTextTransformer({
+        arrange: [{ kind: 'array', param: 'ns', value: [], rest: true }],
+      } as never);
+
+      expect(result).toBe('...[]');
+    });
+
+    it('VALID: {a harness rest binding} => the key marker prefixed with "..."', () => {
+      const result = arrangeTextTransformer({
+        arrange: [{ kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true }],
+      } as never);
+
+      expect(result).toBe('...<harness inputs.collect.sinks>');
+    });
+
+    it('VALID: {a harness rest binding beside a scalar} => both, comma-separated, in arrange order', () => {
+      const result = arrangeTextTransformer({
+        arrange: [
+          { kind: 'param', param: 'size', value: 7 },
+          { kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true },
+        ],
+      } as never);
+
+      expect(result).toBe('7, ...<harness inputs.collect.sinks>');
+    });
+
+    it('VALID: {an ordinary array binding, rest omitted} => no "..." prefix, unchanged from a non-rest render', () => {
+      const result = arrangeTextTransformer({
+        arrange: [{ kind: 'array', param: 'items', value: [6, 9] }],
+      } as never);
+
+      expect(result).toBe('[6,9]');
+    });
+  });
 });

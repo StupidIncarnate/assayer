@@ -73,7 +73,10 @@ describe('compileResolveGraphBroker (integration)', () => {
             target: {
               kind: 'builtin',
               packageName: 'path',
-              signature: { params: [{ name: 'paths', type: { kind: 'unknown', text: 'string[]' } }], returnType: { kind: 'string' } },
+              signature: {
+                params: [{ name: 'paths', type: { kind: 'array', element: { kind: 'string' } } }],
+                returnType: { kind: 'string' },
+              },
             },
           },
           {
@@ -84,7 +87,10 @@ describe('compileResolveGraphBroker (integration)', () => {
               kind: 'global',
               name: 'console',
               member: 'log',
-              signature: { params: [{ name: 'data', type: { kind: 'unknown', text: 'any[]' } }], returnType: { kind: 'unknown', text: 'void' } },
+              signature: {
+                params: [{ name: 'data', type: { kind: 'array', element: { kind: 'unknown', text: 'any' } } }],
+                returnType: { kind: 'unknown', text: 'void' },
+              },
             },
           },
           {
