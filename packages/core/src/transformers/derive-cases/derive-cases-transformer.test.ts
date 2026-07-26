@@ -662,10 +662,11 @@ describe('deriveCasesTransformer', () => {
       });
     });
 
-    // `if (typeof target === 'string')`: the leaf's operand is the WHOLE `typeof` expression, not
-    // `target` — `operandIsTypeof` marks the shape, but no `operandParamName` names it, so it stays
-    // unarrangeable. The cause distinguishes it from a fully opaque operand (a call result): the value
-    // `typeof` narrows may already be a parameter, so "make it a parameter" would be false advice.
+    // `if (typeof someCall() === 'string')`: `typeof` is read past its own keyword, so the operand it
+    // names is what `typeof` APPLIES TO — but that expression is a call, not an identifier, so
+    // `read-condition` names no param for it. `operandIsTypeof` still marks the shape, so the cause
+    // distinguishes this from a fully opaque non-`typeof` operand: the reader is told the limit is the
+    // `typeof` read's own operand, not that `typeof` itself is unreadable.
     const TYPEOF_BRANCH = BranchNodeStub({
       coverageId: 'checkTypeof/if:typeof',
       startLine: 3,
@@ -674,13 +675,13 @@ describe('deriveCasesTransformer', () => {
         id: 'checkTypeof/if:typeof#leaf',
         operandIsTypeof: true,
         operandType: { kind: 'string' },
-        predicate: { kind: 'eq', literal: 'string' },
+        predicate: { kind: 'typeof-eq', literal: 'string' },
       },
     });
 
-    it('VALID: {a typeof-narrowed comparison} => un-steerable, no case, cause names the typeof limit', () => {
+    it('VALID: {a typeof read of an opaque operand} => un-steerable, no case, cause names the typeof limit', () => {
       const result = deriveCasesTransformer({
-        params: [ParamDescriptorStub({ name: 'target', type: { kind: 'string' } })],
+        params: [],
         branches: [TYPEOF_BRANCH],
         exits: [
           ExitNodeStub({ coverageId: 'checkTypeof/return@then', guardPath: [{ branchCoverageId: 'checkTypeof/if:typeof', arm: 'then' }], line: 4 }),
@@ -697,10 +698,108 @@ describe('deriveCasesTransformer', () => {
       });
     });
 
-    // `if (config.db.retry.backoff === 3)`: the property path is THREE segments deep, past the ONE
-    // segment `object-arrange` matches at consume time — a different, permanent limit from the
-    // one-segment `config.mode` case above, which stays `unarrangeable-operand` because it IS closed
-    // later. The cause names the depth, never "make it a parameter" — `config` already is one.
+    // `if (typeof target === 'string')` where `target: Plain | string`: `target` IS a parameter, so the
+    // operand question passes and the predicate DOES narrow — the union's `string` member matches, its
+    // `object` member does not. What blocks it is realizing a value for the non-matching side: the
+    // object member has no scalar point this engine can pick from a union on its own, so
+    // `isPredicateConstrainingGuard` reports the leaf as not (yet) constraining and the cause names the
+    // shape limit rather than either "make it a parameter" or "compare against a literal" — both false,
+    // since `target` already is one and `'string'` already is one.
+    const TYPEOF_MEMBER_BRANCH = BranchNodeStub({
+      coverageId: 'choose/if:typeof',
+      startLine: 2,
+      condition: {
+        kind: 'leaf',
+        id: 'choose/if:typeof#leaf',
+        operandParamName: 'target',
+        operandIsTypeof: true,
+        operandType: {
+          kind: 'union',
+          members: [{ kind: 'object', typeName: 'Plain', properties: [{ name: 'label', type: { kind: 'string' } }] }, { kind: 'string' }],
+        },
+        predicate: { kind: 'typeof-eq', literal: 'string' },
+      },
+    });
+
+    it('VALID: {a typeof narrowing a union with a non-scalar member} => un-steerable, no case, cause names the shape limit', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({
+            name: 'target',
+            type: {
+              kind: 'union',
+              members: [{ kind: 'object', typeName: 'Plain', properties: [{ name: 'label', type: { kind: 'string' } }] }, { kind: 'string' }],
+            },
+          }),
+        ],
+        branches: [TYPEOF_MEMBER_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'choose/return@then', guardPath: [{ branchCoverageId: 'choose/if:typeof', arm: 'then' }], line: 2 }),
+          ExitNodeStub({ coverageId: 'choose/return@else', guardPath: [{ branchCoverageId: 'choose/if:typeof', arm: 'else' }], line: 2 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 2, cause: 'unarrangeable-typeof-member', operand: 'target' }],
+        unfillable: [],
+      });
+    });
+
+    // `if (typeof target === 'string')` where `target: string | number`: BOTH members have a scalar
+    // point, so the predicate DOES realize a different value on each arm — the union member's tag is
+    // the whole point of the comparison, and this is the case where Assayer can actually steer it. Two
+    // cases, one per member, never an undriven admission.
+    it('VALID: {a typeof narrowing a fully scalar union} => steerable, one case per member, no admission', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'target', type: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] } })],
+        branches: [
+          BranchNodeStub({
+            coverageId: 'checkTypeof/if:typeof',
+            startLine: 2,
+            condition: {
+              kind: 'leaf',
+              id: 'checkTypeof/if:typeof#leaf',
+              operandParamName: 'target',
+              operandIsTypeof: true,
+              operandType: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] },
+              predicate: { kind: 'typeof-eq', literal: 'string' },
+            },
+          }),
+        ],
+        exits: [
+          ExitNodeStub({ coverageId: 'checkTypeof/return@then', guardPath: [{ branchCoverageId: 'checkTypeof/if:typeof', arm: 'then' }], line: 3 }),
+          ExitNodeStub({ coverageId: 'checkTypeof/return@else', guardPath: [{ branchCoverageId: 'checkTypeof/if:typeof', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['checkTypeof/return@then'],
+            arrange: [{ kind: 'param', param: 'target', value: 'abc123' }],
+            salient: true,
+          },
+          {
+            reachesPath: ['checkTypeof/return@else'],
+            arrange: [{ kind: 'param', param: 'target', value: 7 }],
+            salient: true,
+          },
+        ],
+        unreachableExits: [],
+        undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+
+    // `if (config.db.retry.backoff === 3)`: the property path is THREE segments deep. Un-steerable in
+    // the per-file gate exactly like the one-segment `config.mode` case above — an object param's
+    // property is not scalar-arrangeable here, whatever its depth — so it lands on the SAME
+    // `unarrangeable-operand` cause: `config` already is a parameter, and this is closed later, at
+    // consume time, by `stub-realize` walking the full path into the resolved type.
     const DEEP_MEMBER_BRANCH = BranchNodeStub({
       coverageId: 'checkDeep/if:member',
       startLine: 4,
@@ -715,7 +814,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a property path more than one segment deep} => un-steerable, no case, cause names the depth limit', () => {
+    it('VALID: {a property path more than one segment deep} => un-steerable, no case, same cause as a one-segment read', () => {
       const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({
@@ -738,7 +837,7 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [],
         unreachableExits: [],
-        undrivenBranches: [{ line: 4, cause: 'unarrangeable-property-depth', operand: 'config.db.retry.backoff' }],
+        undrivenBranches: [{ line: 4, cause: 'unarrangeable-operand', operand: 'config.db.retry.backoff' }],
         unfillable: [],
       });
     });

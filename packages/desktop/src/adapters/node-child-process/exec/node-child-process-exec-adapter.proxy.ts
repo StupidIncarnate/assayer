@@ -8,7 +8,7 @@ export const nodeChildProcessExecAdapterProxy = (): {
   const handle = registerMock({ fn: spawn });
   const state = { exitCode: 0, stdout: '', stderr: '' };
 
-  handle.mockImplementation((): unknown => {
+  handle.calledWith([]).implement((): unknown => {
     const listeners: { close?: (code: number | null) => void; error?: (error: Error) => void } = {};
 
     // The adapter attaches its handlers synchronously, so `close` must fire on a later tick or it
@@ -42,6 +42,8 @@ export const nodeChildProcessExecAdapterProxy = (): {
       state.stdout = stdout;
       state.stderr = stderr;
     },
-    getLastCall: (): readonly unknown[] | undefined => handle.mock.calls.at(-1),
+    // Reports whatever the call actually was — the command and args are the thing under test, so
+    // filtering by them here would be circular.
+    getLastCall: (): readonly unknown[] | undefined => handle.callsMatching([]).at(-1),
   };
 };

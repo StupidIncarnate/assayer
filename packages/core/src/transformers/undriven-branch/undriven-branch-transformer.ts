@@ -15,21 +15,24 @@
  *   flattened into one sentence:
  *
  *   - `unarrangeable-operand` — the branch decides on a value the entry has no input for at all (a call
- *     result, a closed-over binding), so the change is to make it a parameter or an environment read.
+ *     result, a closed-over binding), so the change is to make it a parameter or an environment read. An
+ *     object-member read (`config.mode`, `config.db.retry`, at any depth) reaches this cause too: `config`
+ *     already is a parameter, but its property is not scalar-arrangeable per-file (§5.12), and it is
+ *     closed later, at consume time, by `stub-realize` — so the reader owes no repo change here either.
  *   - `unread-comparison` — the operand already is a parameter, but the comparison against it names a
  *     value the parse could not read (an enum member, an imported or computed constant), so the change is
  *     to compare against a literal.
- *   - `unarrangeable-typeof` — the operand is a `typeof` read, and the value it narrows may already be a
- *     parameter; Assayer does not yet decompose the comparison into a case per branch, a followup
- *     capability rather than a repo change.
- *   - `unarrangeable-property-depth` — the operand is an object-member read more than one segment deep
- *     (`config.db.retry`); `config` already is a parameter, and `object-arrange` matches a property path
- *     only one segment deep at consume time, a followup capability rather than a repo change.
+ *   - `unarrangeable-typeof` — the operand is a `typeof` read whose OWN operand is opaque (a call result,
+ *     a member access with no parameter root), so Assayer cannot even ask what the comparison narrows; a
+ *     followup capability rather than a repo change.
+ *   - `unarrangeable-typeof-member` — the operand is a `typeof` read of a real parameter, and the
+ *     comparison DOES narrow the parameter's type by runtime tag; on at least one side, every member
+ *     carrying that tag is a shape (an object, an array) with no scalar point this engine can select from
+ *     a union on its own yet, a followup capability rather than a repo change.
  *
- *   Telling a reader to make `m` a parameter when `m` is already one, or to make `config` a parameter when
- *   a `typeof`/property-depth read is the real limit, is advice they cannot act on — which the last two
- *   causes exist to stop printing. The span is the branch's own line, so a surface can mark exactly the
- *   branch a case cannot steer.
+ *   Telling a reader to make `m` a parameter when `m` is already one is advice they cannot act on — which
+ *   the last two causes exist to stop printing. The span is the branch's own line, so a surface can mark
+ *   exactly the branch a case cannot steer.
  *
  * USAGE:
  * undrivenBranchTransformer({ entryName: 'opaqueIf', undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }] });
@@ -48,14 +51,17 @@ export const undrivenBranchTransformer = ({
   undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: SymbolName }[];
 }): UndrivenEntry[] =>
   undrivenBranches.map((branch) => {
-    // `unread-comparison` fires only once EVERY leaf of the branch already passed the arrangeable
-    // check (`derive-cases`'s gate), and every arrangeable route — a plain param, an env var, or a
-    // welded const — resolves through the same identifier node `operandParamName` is read off. So a
-    // leaf reaching this cause always carries an operand; the check below is the invariant, not a
-    // real branch of behaviour.
-    if (String(branch.cause) === 'unread-comparison' && branch.operand === undefined) {
+    // `unread-comparison` and `unarrangeable-typeof-member` both fire only once EVERY leaf of the
+    // branch already passed the arrangeable check (`derive-cases`'s gate), and every arrangeable route —
+    // a plain param, an env var, or a welded const — resolves through the same identifier node
+    // `operandParamName` is read off. So a leaf reaching either cause always carries an operand; the
+    // check below is the invariant, not a real branch of behaviour.
+    if (
+      (String(branch.cause) === 'unread-comparison' || String(branch.cause) === 'unarrangeable-typeof-member') &&
+      branch.operand === undefined
+    ) {
       throw new Error(
-        `unreachable: an 'unread-comparison' branch on line ${String(branch.line)} of \`${String(entryName)}\` carries no operand`,
+        `unreachable: an '${String(branch.cause)}' branch on line ${String(branch.line)} of \`${String(entryName)}\` carries no operand`,
       );
     }
 
@@ -77,11 +83,10 @@ export const undrivenBranchTransformer = ({
       });
     }
 
-    // `typeof target === 'string'` reads as opaque to the steerability gate: the operand it names is
-    // the whole `typeof` expression, not `target`, so `target` being a parameter does not make the
-    // comparison arrangeable. Telling the reader to make the deciding value a parameter would be advice
-    // about a state that may already hold — the real limit is that Assayer does not decompose a `typeof`
-    // read into the per-type cases it names, which is a followup capability, not a repo change.
+    // A `typeof` read whose OWN operand Assayer cannot arrange — a call result, a member access with no
+    // parameter root — never gets far enough to ask what the comparison narrows. This is the SAME limit
+    // an opaque non-`typeof` operand has, worded to say so: Assayer read the `typeof`, it is the thing
+    // `typeof` applies to that has no input a case can set.
     if (String(branch.cause) === 'unarrangeable-typeof') {
       return undrivenEntryContract.parse({
         name: entryName,
@@ -90,28 +95,32 @@ export const undrivenBranchTransformer = ({
         reason:
           `${named} whose deciding value is a \`typeof\` read, so no case can steer which arm runs: with ` +
           'nothing to vary, both arms would arrange the same inputs and one would fail against correct ' +
-          'code. Assayer understood the branch — this is not syntax it missed — but it does not decompose ' +
-          'a `typeof` comparison into the case each result names; the value `typeof` narrows may already be ' +
-          'a parameter this entry declares.',
+          'code. Assayer understood the branch — this is not syntax it missed — but the value `typeof` ' +
+          'applies to is neither one of this entry\'s parameters nor an environment variable, so Assayer ' +
+          'cannot yet ask what the comparison narrows. Make that value a parameter and each arm becomes a ' +
+          'case Assayer drives.',
       });
     }
 
-    // An object-member path more than one segment deep (`config.db.retry`) already names a parameter
-    // (`config`) — the gap is DEPTH, not the absence of a parameter, and `object-arrange` matches a
-    // property path only one segment deep at consume time. A one-segment path never reaches this cause:
-    // it stays `unarrangeable-operand` and is closed later by `stub-realize`.
-    if (String(branch.cause) === 'unarrangeable-property-depth') {
+    // `target` already is a parameter, and the comparison DOES narrow `target`'s type by runtime tag —
+    // Assayer reads exactly which union member each arm needs. What is missing is the fill: at least one
+    // arm's matching member is a shape (an object, an array), and Assayer cannot yet pick ONE member of a
+    // union to build a value from on its own, only the union's first fillable member regardless of which
+    // arm asked. Telling the reader to make `target` a parameter, or to compare against a literal, would
+    // both be advice about a state that already holds.
+    if (String(branch.cause) === 'unarrangeable-typeof-member') {
       return undrivenEntryContract.parse({
         name: entryName,
         startLine: branch.line,
         endLine: branch.line,
         reason:
-          `${named} whose deciding value${branch.operand === undefined ? '' : ` \`${String(branch.operand)}\``} ` +
-          'reads a property more than one level deep off one of its parameters, so no case can steer which ' +
-          'arm runs: with nothing to vary, both arms would arrange the same inputs and one would fail ' +
-          'against correct code. Assayer understood the branch — this is not syntax it missed — but it ' +
-          'matches an object-member comparison only ONE property level deep (`config.mode`), never a path ' +
-          'this long.',
+          `${named} that reads \`typeof ${String(branch.operand)}\`, so no case can steer which arm runs: ` +
+          'with nothing to vary, both arms would arrange the same inputs and one would fail against correct ' +
+          `code. Assayer understood the branch and read the comparison: it narrows \`${String(branch.operand)}\` ` +
+          "to the union member whose runtime type matches on one arm and to the rest on the other. On at " +
+          'least one side, every matching member is a shape Assayer cannot yet select on its own from a ' +
+          'union with more than one member — building the object or array is not the gap, choosing WHICH ' +
+          'member to build is. There is no repo change that closes this today; it is a followup capability.',
       });
     }
 

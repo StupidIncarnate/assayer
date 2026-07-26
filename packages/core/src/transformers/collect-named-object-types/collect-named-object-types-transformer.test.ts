@@ -62,11 +62,104 @@ describe('collectNamedObjectTypesTransformer', () => {
         { name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
       ]);
     });
+
+    it('VALID: {a tuple element carrying a named object} => the named shape', () => {
+      const result = collectNamedObjectTypesTransformer({
+        descriptor: TypeDescriptorStub({
+          kind: 'tuple',
+          elements: [
+            { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+            { kind: 'string' },
+          ],
+        }),
+      });
+
+      expect(result).toStrictEqual([{ name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }]);
+    });
+
+    it('VALID: {a tuple nested inside a tuple, innermost carrying a named object} => the nested shape', () => {
+      const result = collectNamedObjectTypesTransformer({
+        descriptor: TypeDescriptorStub({
+          kind: 'tuple',
+          elements: [{ kind: 'tuple', elements: [{ kind: 'object', typeName: 'Inner', properties: [] }] }],
+        }),
+      });
+
+      expect(result).toStrictEqual([{ name: 'Inner', properties: [] }]);
+    });
+
+    // Every position is walked, not just the first that carries a name — a flatMap over the whole
+    // elements list, not a find of one.
+    it('VALID: {two tuple positions each carrying a named object} => both shapes, in position order', () => {
+      const result = collectNamedObjectTypesTransformer({
+        descriptor: TypeDescriptorStub({
+          kind: 'tuple',
+          elements: [
+            { kind: 'object', typeName: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] },
+            { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+          ],
+        }),
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'Db', properties: [{ name: 'host', type: { kind: 'string' } }] },
+        { name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+      ]);
+    });
+
+    it('VALID: {a template substitution carrying a named object} => the named shape', () => {
+      const result = collectNamedObjectTypesTransformer({
+        descriptor: TypeDescriptorStub({
+          kind: 'template',
+          texts: ['id-', ''],
+          types: [{ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }],
+        }),
+      });
+
+      expect(result).toStrictEqual([{ name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }]);
+    });
+
+    it('VALID: {a template whose substitution is itself a tuple carrying a named object} => the shape found through both layers', () => {
+      const result = collectNamedObjectTypesTransformer({
+        descriptor: TypeDescriptorStub({
+          kind: 'template',
+          texts: ['', ''],
+          types: [{ kind: 'tuple', elements: [{ kind: 'object', typeName: 'Config', properties: [] }] }],
+        }),
+      });
+
+      expect(result).toStrictEqual([{ name: 'Config', properties: [] }]);
+    });
+
+    it('VALID: {a tuple element that is itself a template carrying a named object} => the shape found through both layers', () => {
+      const result = collectNamedObjectTypesTransformer({
+        descriptor: TypeDescriptorStub({
+          kind: 'tuple',
+          elements: [{ kind: 'template', texts: ['id-', ''], types: [{ kind: 'object', typeName: 'Config', properties: [] }] }],
+        }),
+      });
+
+      expect(result).toStrictEqual([{ name: 'Config', properties: [] }]);
+    });
   });
 
   describe('descriptors with no named object', () => {
     it('EMPTY: {a primitive} => no declared types', () => {
       expect(collectNamedObjectTypesTransformer({ descriptor: TypeDescriptorStub({ kind: 'number' }) })).toStrictEqual([]);
+    });
+
+    it('EMPTY: {an empty tuple} => no declared types', () => {
+      expect(
+        collectNamedObjectTypesTransformer({ descriptor: TypeDescriptorStub({ kind: 'tuple', elements: [] }) }),
+      ).toStrictEqual([]);
+    });
+
+    it('EMPTY: {a template with no substitutions} => no declared types', () => {
+      expect(
+        collectNamedObjectTypesTransformer({
+          descriptor: TypeDescriptorStub({ kind: 'template', texts: ['literal'], types: [] }),
+        }),
+      ).toStrictEqual([]);
     });
 
     it('EMPTY: {a callable} => no declared types', () => {

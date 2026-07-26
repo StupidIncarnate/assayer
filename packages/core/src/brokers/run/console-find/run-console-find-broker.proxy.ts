@@ -7,11 +7,19 @@ import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-f
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 
 // The broker reads TWO files through one pair of adapters — the source (to derive the content-keyed
-// run id) and then console.txt — so every scenario here is a QUEUE, in that order, not a single return
-// value. A flat mock would answer "the source exists" for the report too and hand the source back as
-// the report. The adapters are mocked rather than fs/promises underneath them because registerMock
-// dispatches on the CALL STACK, and a second mock of `readFile` registered from here is never reached:
-// the calling frame belongs to the adapter, which the adapter proxy already claims.
+// run id) and then console.txt. The report path always CONTAINS `console.txt`; the source (and the
+// colocated-harness check inside runIdBroker) never does. Matching on that substring, rather than on
+// which read happens first, is what keeps a source-content stub from silently answering a report read
+// (or the reverse) if the broker's own read order ever changes. The adapters are mocked rather than
+// fs/promises underneath them because a second mock of `readFile` registered from here would answer
+// calls this broker's OWN direct mock of `fsReadFileAdapter` already claims.
+const isReportPath = (path: unknown): boolean => typeof path === 'string' && path.includes('console.txt');
+// runIdBroker checks for a colocated harness before this broker ever asks for the report. None of this
+// proxy's scenarios exercise a harness, so that check is answered false here — a real path, matched
+// explicitly, rather than a spurious third read riding the same blanket default the source and report
+// share.
+const isHarnessPath = (path: unknown): boolean => typeof path === 'string' && path.endsWith('.harness.ts');
+
 export const runConsoleFindBrokerProxy = (): {
   savedConsole: ({ console }: { console: string }) => void;
   neverRun: () => void;
@@ -27,35 +35,31 @@ export const runConsoleFindBrokerProxy = (): {
   const existsHandle = registerMock({ fn: fsExistsAdapter });
   const readHandle = registerMock({ fn: fsReadFileAdapter });
 
-  existsHandle.mockResolvedValue(true);
-  readHandle.mockResolvedValue('export const a = 1;\n');
+  existsHandle.calledWith([]).resolves(true);
+  existsHandle.calledWith([{ path: isHarnessPath }]).resolves(false);
+  readHandle.calledWith([]).resolves('export const a = 1;\n');
 
   return {
     savedConsole: ({ console: consoleText }: { console: string }): void => {
-      existsHandle.mockResolvedValueOnce(true);
-      existsHandle.mockResolvedValueOnce(true);
-      readHandle.mockResolvedValueOnce('export const a = 1;\n');
-      readHandle.mockResolvedValueOnce(consoleText);
+      readHandle.calledWith([{ path: isReportPath }]).resolves(consoleText);
     },
     neverRun: (): void => {
-      existsHandle.mockResolvedValueOnce(true);
-      existsHandle.mockResolvedValueOnce(false);
-      readHandle.mockResolvedValueOnce('export const a = 1;\n');
+      existsHandle.calledWith([{ path: isReportPath }]).resolves(false);
     },
     fileMissing: (): void => {
-      existsHandle.mockResolvedValueOnce(false);
+      existsHandle.calledWith([]).resolves(false);
     },
     // Both reads are deliberately unwrapped -- no try/catch -- so a filesystem rejection propagates to
-    // the caller unmodified. These stage that rejection at each of the two read positions in turn.
+    // the caller unmodified. The source read is whichever read happens first; the report read is
+    // whichever read names the console.txt path, regardless of order.
     sourceReadThrows: ({ error }: { error: Error }): void => {
-      readHandle.mockRejectedValueOnce(error);
+      readHandle.onceFor([]).rejects(error);
     },
     consoleReadThrows: ({ error }: { error: Error }): void => {
-      readHandle.mockResolvedValueOnce('export const a = 1;\n');
-      readHandle.mockRejectedValueOnce(error);
+      readHandle.calledWith([{ path: isReportPath }]).rejects(error);
     },
     // Serialized rather than destructured: reading `.path` off a mock argument needs an inline
     // structural type, which brokers/ forbids. The JSON is exact and needs no assertion.
-    getReadArgs: (): readonly unknown[] => readHandle.mock.calls.map((call) => JSON.stringify(call[0])),
+    getReadArgs: (): readonly unknown[] => readHandle.callsMatching([]).map((call) => JSON.stringify(call[0])),
   };
 };

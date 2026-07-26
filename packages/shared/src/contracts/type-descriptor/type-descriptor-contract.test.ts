@@ -35,6 +35,25 @@ describe('typeDescriptorContract', () => {
       expect(result).toStrictEqual({ kind: 'array', element: { kind: 'number' } });
     });
 
+    it('VALID: {kind: "tuple", elements} => parses one descriptor per fixed position', () => {
+      const result = typeDescriptorContract.parse({
+        kind: 'tuple',
+        elements: [{ kind: 'string' }, { kind: 'number' }],
+      });
+
+      expect(result).toStrictEqual({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] });
+    });
+
+    it('VALID: {kind: "template", texts, types} => parses the literal segments and the substitution descriptors', () => {
+      const result = typeDescriptorContract.parse({
+        kind: 'template',
+        texts: ['id-', ''],
+        types: [{ kind: 'string' }],
+      });
+
+      expect(result).toStrictEqual({ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] });
+    });
+
     it('VALID: {kind: "object", typeName, properties} => parses the named property list', () => {
       const result = typeDescriptorContract.parse({
         kind: 'object',
@@ -147,10 +166,16 @@ describe('typeDescriptorContract', () => {
   });
 
   describe('invalid type descriptors', () => {
-    it('INVALID: {kind: "tuple"} => throws validation error', () => {
+    it('INVALID: {kind: "nonsense"} => throws validation error', () => {
+      expect(() => {
+        return typeDescriptorContract.parse({ kind: 'nonsense' });
+      }).toThrow(/Invalid discriminator/u);
+    });
+
+    it('INVALID: {kind: "tuple", no elements} => throws validation error', () => {
       expect(() => {
         return typeDescriptorContract.parse({ kind: 'tuple' });
-      }).toThrow(/Invalid discriminator/u);
+      }).toThrow(/Required/u);
     });
 
     it('INVALID: {kind: "literal", no value} => throws validation error', () => {

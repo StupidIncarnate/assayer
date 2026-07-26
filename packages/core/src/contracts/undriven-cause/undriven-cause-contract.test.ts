@@ -11,8 +11,8 @@ describe('undrivenCauseContract', () => {
       expect(undrivenCauseContract.parse('unarrangeable-typeof')).toBe('unarrangeable-typeof');
     });
 
-    it('VALID: {unarrangeable-property-depth} => parses unchanged', () => {
-      expect(undrivenCauseContract.parse('unarrangeable-property-depth')).toBe('unarrangeable-property-depth');
+    it('VALID: {unarrangeable-typeof-member} => parses unchanged', () => {
+      expect(undrivenCauseContract.parse('unarrangeable-typeof-member')).toBe('unarrangeable-typeof-member');
     });
 
     it('VALID: {unread-comparison} => parses unchanged', () => {

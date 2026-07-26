@@ -53,10 +53,14 @@ export const tsMorphReadExternalSignatureAdapter = ({
     const params = declaration.getParameters().map((param) =>
       paramDescriptorContract.parse({
         name: param.getName(),
-        type: typeDescriptorTransformer({ fact: readSignatureTypeLayerAdapter({ type: param.getType() }) }),
+        type: typeDescriptorTransformer({
+          fact: readSignatureTypeLayerAdapter({ type: param.getType(), typeNode: param.getTypeNode() }),
+        }),
       }),
     );
-    const returnType = typeDescriptorTransformer({ fact: readSignatureTypeLayerAdapter({ type: declaration.getReturnType() }) });
+    const returnType = typeDescriptorTransformer({
+      fact: readSignatureTypeLayerAdapter({ type: declaration.getReturnType(), typeNode: declaration.getReturnTypeNode() }),
+    });
 
     return { usable: true, signature: externalSignatureContract.parse({ params, returnType }) };
   }
@@ -67,13 +71,29 @@ export const tsMorphReadExternalSignatureAdapter = ({
     return { usable: false };
   }
 
-  const params = signature.getParameters().map((symbol) =>
+  // The signature's own declaration (a typed const's `(t: string) => string`, for example) carries a
+  // type node per parameter and one for the return type, in the SAME order `getParameters()` reports —
+  // the one handle this branch has on a template literal type, which the checker's `Type` API alone
+  // cannot decompose (see the reader's own PURPOSE doc). Not every declaration shape a signature can
+  // carry has these (a constructor has no return type node), so both reads stay optional.
+  const sigDeclaration = signature.getDeclaration();
+  const sigParamNodes = 'getParameters' in sigDeclaration ? sigDeclaration.getParameters() : undefined;
+  const sigReturnNode = 'getReturnTypeNode' in sigDeclaration ? sigDeclaration.getReturnTypeNode() : undefined;
+
+  const params = signature.getParameters().map((symbol, index) =>
     paramDescriptorContract.parse({
       name: symbol.getName(),
-      type: typeDescriptorTransformer({ fact: readSignatureTypeLayerAdapter({ type: symbol.getTypeAtLocation(declaration) }) }),
+      type: typeDescriptorTransformer({
+        fact: readSignatureTypeLayerAdapter({
+          type: symbol.getTypeAtLocation(declaration),
+          typeNode: sigParamNodes?.[index]?.getTypeNode(),
+        }),
+      }),
     }),
   );
-  const returnType = typeDescriptorTransformer({ fact: readSignatureTypeLayerAdapter({ type: signature.getReturnType() }) });
+  const returnType = typeDescriptorTransformer({
+    fact: readSignatureTypeLayerAdapter({ type: signature.getReturnType(), typeNode: sigReturnNode }),
+  });
 
   return { usable: true, signature: externalSignatureContract.parse({ params, returnType }) };
 };

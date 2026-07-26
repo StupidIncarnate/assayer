@@ -11,7 +11,7 @@ import { tsMorphReadGlobalSignatureAdapterProxy } from './ts-morph-read-global-s
 const TSCONFIG = '{ "compilerOptions": { "strict": true, "moduleResolution": "node" } }';
 const NODE_TYPES =
   'interface ProcessEnv { [key: string]: string | undefined; }\n' +
-  'declare var process: { env: ProcessEnv; cwd(): string };\n' +
+  `declare var process: { env: ProcessEnv; cwd(): string; hrtime(): readonly [number, number]; release: \`v\${number}\` };\n` +
   "declare module 'node:path' {\n  export function join(...paths: string[]): string;\n  export const sep: string;\n}\n";
 
 describe('tsMorphReadGlobalSignatureAdapter', () => {
@@ -58,6 +58,59 @@ describe('tsMorphReadGlobalSignatureAdapter', () => {
         usable: true,
         result: 'type',
         type: { kind: 'unknown', text: 'ProcessEnv' },
+        declText: NODE_TYPES,
+      });
+    });
+  });
+
+  describe('a called global method with a tuple return', () => {
+    // Before the tuple branch existed, `readonly [number, number]` read as an anonymous object
+    // enumerating `0`, `1`, `length` and every inherited `ReadonlyArray` method.
+    it('VALID: {process.hrtime()} => a tuple descriptor, not the ReadonlyArray dump', () => {
+      tsMorphReadGlobalSignatureAdapterProxy();
+      const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
+      writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
+      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
+      writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
+
+      const result = tsMorphReadGlobalSignatureAdapter({
+        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'hrtime' }), called: true },
+      });
+      rmSync(dir, { recursive: true, force: true });
+
+      expect(result).toStrictEqual({
+        usable: true,
+        result: 'signature',
+        signature: {
+          params: [],
+          returnType: { kind: 'tuple', elements: [{ kind: 'number' }, { kind: 'number' }] },
+        },
+        declText: NODE_TYPES,
+      });
+    });
+  });
+
+  describe('a global member access with a template literal type', () => {
+    it('VALID: {process.release} => a template descriptor, off the member access branch', () => {
+      tsMorphReadGlobalSignatureAdapterProxy();
+      const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
+      writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
+      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
+      writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
+
+      const result = tsMorphReadGlobalSignatureAdapter({
+        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'release' }), called: false },
+      });
+      rmSync(dir, { recursive: true, force: true });
+
+      expect(result).toStrictEqual({
+        usable: true,
+        result: 'type',
+        type: { kind: 'template', texts: ['v', ''], types: [{ kind: 'number' }] },
         declText: NODE_TYPES,
       });
     });

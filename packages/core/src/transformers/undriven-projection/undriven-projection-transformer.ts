@@ -12,11 +12,16 @@
  *   environment DRIVES (a case writes the variable before import), and one welded to a literal const
  *   EVALUATES (a live arm plus an unreachable exit), so neither is in that set; only the genuinely
  *   opaque remainder is. This projection turns those names into labelled entries, wording the reason by
- *   the cause it was handed exactly as the branch-level admission does — a module can never fail the
- *   arrangeable check on a `config.mode`-shaped property path (a module scope declares no parameters for
- *   one to be a segment off), so `unarrangeable-property-depth` cannot reach a module here, but the
- *   other three causes can: an opaque operand, a `typeof` read, or a comparison against a value Assayer
- *   could not read as a literal.
+ *   the cause it was handed exactly as the branch-level admission does. `unarrangeable-typeof-member`
+ *   cannot reach a module: a module's only arrangeable operand is an environment read, and an
+ *   environment read's type is always the plain `number` the `Number(process.env.X)` coercion produces
+ *   (§5.10), never a union, so there is no OTHER member for a tag to fail to match. The remaining three
+ *   causes CAN reach a module: an opaque operand (an object-member read included — a module scope
+ *   declares no parameters, so `config.mode` never resolves to one and falls to this same cause), a
+ *   `typeof` read of one, or a comparison against a value Assayer could not read as a literal. The
+ *   module-unreachable cause is still handled below, worded the same way the branch-level admission is,
+ *   so the cause's four members stay exhaustively worded rather than falling through to a mismatched
+ *   default.
  *
  *   PRIVATE helpers are NOT here: whether a private is driven, admitted undriven, or dead surface is a
  *   fact about its CALL EDGES, which only `follow-calls` can read (it drives a private through a
@@ -118,12 +123,20 @@ export const undrivenProjectionTransformer = ({
           ];
         }
 
-        // A module scope declares no parameters for a `config.db.retry`-shaped path to be a segment off,
-        // so `unarrangeable-property-depth` never reaches a module in practice — the arrangeable check
-        // that produces it requires the root to already be one of the entry's own params (§5.12), and a
-        // module entry's param list is always empty. Handled anyway so the cause's four members stay
-        // exhaustively worded rather than falling through to a mismatched default.
-        if (String(undrivenModule.cause) === 'unarrangeable-property-depth') {
+        // `unarrangeable-typeof-member` never reaches a module scope in practice: a module's only
+        // arrangeable operand is an environment read, and an environment read's type is always the
+        // plain `number` the `Number(process.env.X)` coercion produces (§5.10) — never a union, so
+        // there is no OTHER member for a tag to fail to match. Handled anyway so the cause's four
+        // members stay exhaustively worded rather than falling through to a mismatched default.
+        if (String(undrivenModule.cause) === 'unarrangeable-typeof-member') {
+          // Same invariant as `unread-comparison`: every leaf reaching this cause already passed the
+          // arrangeable check, so it always carries an operand.
+          if (undrivenModule.operand === undefined) {
+            throw new Error(
+              `unreachable: an 'unarrangeable-typeof-member' undriven module \`${String(scope.name)}\` carries no operand`,
+            );
+          }
+
           return [
             undrivenEntryContract.parse({
               name: scope.name,
@@ -131,11 +144,12 @@ export const undrivenProjectionTransformer = ({
               startLine: scope.startLine,
               endLine: scope.endLine,
               reason:
-                'nothing about it varies, so no case could drive its branches anywhere they do not already go: ' +
-                'it runs at import time, and its top-level branching reads a property more than one level deep ' +
-                'off an object, so no case can steer which arm runs. Assayer understood the branch — this is ' +
-                'not syntax it missed — but it matches an object-member comparison only ONE property level deep ' +
-                '(`config.mode`), never a path this long.',
+                'nothing about it varies, so no case could drive its branches anywhere they do not already go: it ' +
+                `runs at import time, and its top-level branching reads \`typeof ${String(undrivenModule.operand)}\`, ` +
+                `narrowing ${String(undrivenModule.operand)}'s own type by runtime tag — but on at least one side, ` +
+                'every matching member is a shape Assayer cannot yet select on its own from a union with more than ' +
+                'one member. Assayer understood the branch and read the comparison; only picking the union member ' +
+                'is unbuilt.',
             }),
           ];
         }

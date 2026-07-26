@@ -2,6 +2,9 @@ const dungeonmaster = require('@dungeonmaster/eslint-plugin').default;
 const tsparser = require('@typescript-eslint/parser');
 const dungeonmasterConfigs = dungeonmaster.configs.dungeonmaster;
 const dungeonmasterTestConfigs = dungeonmaster.configs.dungeonmasterTest;
+// Assayer's own local rules — this repo's value contracts mean nothing to any other project, so they
+// cannot live in @dungeonmaster/eslint-plugin. See eslint-rules/index.js.
+const assayerLocalRules = require('./eslint-rules');
 
 module.exports = [
     {
@@ -18,6 +21,11 @@ module.exports = [
             // smoke-repo is fixture INPUT for Assayer's own compiler (a plain TS repo
             // it analyzes), NOT dungeonmaster-standards code — exclude it from lint.
             'smoke-repo/**',
+            // eslint-rules/ holds Assayer's own local ESLint plugin. A lint rule fits none
+            // of the dungeonmaster folder types, so it lives outside packages/*/src and is
+            // excluded here for the same reason smoke-repo is: linting it under the
+            // dungeonmaster ruleset would fail enforce-project-structure.
+            'eslint-rules/**',
         ],
     },
     {
@@ -34,8 +42,12 @@ module.exports = [
         plugins: {
             ...dungeonmasterConfigs.typescript.plugins,
             '@dungeonmaster': dungeonmaster,
+            '@assayer': assayerLocalRules,
         },
-        rules: {...dungeonmasterConfigs.typescript.rules},
+        rules: {
+            ...dungeonmasterConfigs.typescript.rules,
+            '@assayer/no-nullish-coalescing-on-arrange-value': 'error',
+        },
     },
     ...dungeonmasterConfigs.fileOverrides,
     {
@@ -51,8 +63,12 @@ module.exports = [
         plugins: {
             ...dungeonmasterTestConfigs.test.plugins,
             '@dungeonmaster': dungeonmaster,
+            '@assayer': assayerLocalRules,
         },
-        rules: {...dungeonmasterTestConfigs.test.rules},
+        rules: {
+            ...dungeonmasterTestConfigs.test.rules,
+            '@assayer/no-nullish-coalescing-on-arrange-value': 'error',
+        },
     },
     ...dungeonmasterTestConfigs.fileOverrides,
 ];

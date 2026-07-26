@@ -99,13 +99,29 @@ export const tsMorphReadGlobalSignatureAdapter = ({
       return { usable: false };
     }
 
-    const params = signature.getParameters().map((symbol) =>
+    // The signature's own declaration carries a type node per parameter and one for the return type, in
+    // the SAME order `getParameters()` reports — the one handle this branch has on a template literal
+    // type, which the checker's `Type` API alone cannot decompose (see the reader's own PURPOSE doc). Not
+    // every declaration shape a signature can carry has these (a constructor has no return type node), so
+    // both reads stay optional.
+    const sigDeclaration = signature.getDeclaration();
+    const sigParamNodes = 'getParameters' in sigDeclaration ? sigDeclaration.getParameters() : undefined;
+    const sigReturnNode = 'getReturnTypeNode' in sigDeclaration ? sigDeclaration.getReturnTypeNode() : undefined;
+
+    const params = signature.getParameters().map((symbol, index) =>
       paramDescriptorContract.parse({
         name: symbol.getName(),
-        type: typeDescriptorTransformer({ fact: readGlobalTypeLayerAdapter({ type: symbol.getTypeAtLocation(expression) }) }),
+        type: typeDescriptorTransformer({
+          fact: readGlobalTypeLayerAdapter({
+            type: symbol.getTypeAtLocation(expression),
+            typeNode: sigParamNodes?.[index]?.getTypeNode(),
+          }),
+        }),
       }),
     );
-    const returnType = typeDescriptorTransformer({ fact: readGlobalTypeLayerAdapter({ type: signature.getReturnType() }) });
+    const returnType = typeDescriptorTransformer({
+      fact: readGlobalTypeLayerAdapter({ type: signature.getReturnType(), typeNode: sigReturnNode }),
+    });
     const declFile = signature.getDeclaration().getSourceFile();
 
     return {
@@ -122,10 +138,23 @@ export const tsMorphReadGlobalSignatureAdapter = ({
     return { usable: false };
   }
 
+  // The accessed member's (or the bare global's) own declaration — a PropertySignature for
+  // `process.env`, a VariableDeclaration for a bare ambient `declare const` — carries the type node a
+  // template literal type needs to decompose. Reading `expression.getSymbol()` here, rather than
+  // `rootSymbol` above, resolves the MEMBER itself when `expression` is a property access, not its root.
+  const memberDeclaration = expression.getSymbol()?.getDeclarations()[0];
+  const memberTypeNode =
+    memberDeclaration !== undefined &&
+    (Node.isVariableDeclaration(memberDeclaration) ||
+      Node.isPropertySignature(memberDeclaration) ||
+      Node.isPropertyDeclaration(memberDeclaration))
+      ? memberDeclaration.getTypeNode()
+      : undefined;
+
   return {
     usable: true,
     result: 'type',
-    type: typeDescriptorTransformer({ fact: readGlobalTypeLayerAdapter({ type: expression.getType() }) }),
+    type: typeDescriptorTransformer({ fact: readGlobalTypeLayerAdapter({ type: expression.getType(), typeNode: memberTypeNode }) }),
     declText: fileContentsContract.parse(rootDeclaration.getSourceFile().getFullText()),
   };
 };

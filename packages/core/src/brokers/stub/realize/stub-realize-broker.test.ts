@@ -51,6 +51,12 @@ const MIXED_ENTRIES_SOURCE =
 const UNRESOLVABLE_CROSS_FILE_SOURCE =
   "import { Config } from './types';\n\nexport function decideA(config: Config): string {\n  if (config.mode === 'a') {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
 
+// The property-depth followup: `config.db.retry`, a path more than one segment deep. `checkDeep`'s
+// branch was undriven at every depth before `object-arrange`/`collect-property-demands` recursed; this
+// is the same shape the `property-depth` specimen exercises, run through the full broker here.
+const DEEP_PROPERTY_SOURCE =
+  "interface Config {\n  db: { retry: number };\n}\n\nexport function checkDeep(config: Config): string {\n  if (config.db.retry === 3) {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
+
 const THEN = '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then';
 const ELSE = '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else';
 const GRADE_THEN = '*module*/grade/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then';
@@ -350,6 +356,35 @@ describe('stubRealizeBroker', () => {
             endLine: 7,
           },
         ],
+      });
+    });
+  });
+
+  describe('a same-file object-member branch more than one property level deep', () => {
+    it('VALID: {if (config.db.retry === 3)} => both arms driven, db built as a real nested object, undriven cleared', () => {
+      stubRealizeBrokerProxy();
+      const walked = tsMorphWalkFileAdapter({ source: DEEP_PROPERTY_SOURCE, relPath: 'src/check-deep.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/check-deep.ts' });
+
+      const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/check-deep.ts', overlays: [] });
+
+      expect({
+        cases: result.functions.flatMap((fn) => fn.cases),
+        undriven: result.undriven,
+      }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: ['*module*/checkDeep/return@if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3#then'],
+            arrange: [{ kind: 'object', param: 'config', value: { db: { retry: 3 } } }],
+            salient: true,
+          },
+          {
+            reachesPath: ['*module*/checkDeep/return@if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3#else'],
+            arrange: [{ kind: 'object', param: 'config', value: { db: { retry: 7 } } }],
+            salient: true,
+          },
+        ],
+        undriven: [],
       });
     });
   });

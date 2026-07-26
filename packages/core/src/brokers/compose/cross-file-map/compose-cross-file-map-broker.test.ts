@@ -185,8 +185,10 @@ describe('composeCrossFileMapBroker', () => {
 
     it('VALID: {items.map(bandReading), others.map(otherReading), same host} => the cartesian of both callbacks funnels into ONE case set', () => {
       const proxy = composeCrossFileMapBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SIMPLE_CHILD_A });
-      proxy.setupSibling({ fileName: '/repo/src/other-reading.ts', source: SIMPLE_CHILD_B });
+      // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
+      // actually answers rather than to the order the fold happens to resolve them in.
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SIMPLE_CHILD_A, specifier: './band-reading' });
+      proxy.setupSibling({ fileName: '/repo/src/other-reading.ts', source: SIMPLE_CHILD_B, specifier: './other-reading' });
       const walked = tsMorphWalkFileAdapter({ source: TWO_CALLBACK_PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({

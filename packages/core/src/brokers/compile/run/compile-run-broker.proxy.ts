@@ -66,7 +66,7 @@ export const compileRunBrokerProxy = (): {
   const resolvedWriteHandle = registerMock({ fn: resolvedIndexWriteBroker });
   const stubGraphHandle = registerMock({ fn: compileStubGraphBroker });
   const harnessGraphHandle = registerMock({ fn: compileHarnessGraphBroker });
-  resolveHandle.mockResolvedValue({ index: ResolvedIndexStub(), errors: [] });
+  resolveHandle.calledWith([]).resolves({ index: ResolvedIndexStub(), errors: [] });
 
   // The overlay LOAD is replaced wholesale (its own tests cover reading `assayer/stubs/`); it defaults
   // to no committed overlay. The overlay RECONCILE runs REAL against the mocked current stub index, so
@@ -74,28 +74,28 @@ export const compileRunBrokerProxy = (): {
   stubOverlayLoadBrokerProxy();
   stubOverlayReconcileBrokerProxy();
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
-  overlayLoadHandle.mockResolvedValue([]);
+  overlayLoadHandle.calledWith([]).resolves([]);
 
   // Captures the NAMESPACE each call reached, in call order -- the only way to pin the "write STABLE
   // before CURRENT" collision-handling invariant the broker's own comments claim, since these three
   // callees are replaced wholesale and their real implementations (covered by their own tests) never
   // run here to produce an observable side effect.
   const resolvedIndexWriteOrder: NamespaceName[] = [];
-  resolvedWriteHandle.mockImplementation(({ namespace }: { namespace: string }) => {
+  resolvedWriteHandle.calledWith([]).implement(({ namespace }: { namespace: string }) => {
     resolvedIndexWriteOrder.push(namespaceNameContract.parse(namespace));
     return { success: true };
   });
 
   const stubGraphIndex = StubIndexStub();
   const stubGraphWriteOrder: NamespaceName[] = [];
-  stubGraphHandle.mockImplementation(({ namespace }: { namespace: string }) => {
+  stubGraphHandle.calledWith([]).implement(({ namespace }: { namespace: string }) => {
     stubGraphWriteOrder.push(namespaceNameContract.parse(namespace));
     return { index: stubGraphIndex, guards: [] };
   });
 
   const harnessGraphIndex = HarnessIndexStub({ harnesses: [] });
   const harnessGraphWriteOrder: NamespaceName[] = [];
-  harnessGraphHandle.mockImplementation(({ namespace }: { namespace: string }) => {
+  harnessGraphHandle.calledWith([]).implement(({ namespace }: { namespace: string }) => {
     harnessGraphWriteOrder.push(namespaceNameContract.parse(namespace));
     return { index: harnessGraphIndex, errors: [] };
   });
@@ -150,10 +150,10 @@ export const compileRunBrokerProxy = (): {
       column: number;
       message: string;
     }): void => {
-      resolveHandle.mockResolvedValue({ index: ResolvedIndexStub(), errors: [{ relPath, line, column, message }] });
+      resolveHandle.calledWith([]).resolves({ index: ResolvedIndexStub(), errors: [{ relPath, line, column, message }] });
     },
     overlayStale: (): void => {
-      overlayLoadHandle.mockResolvedValue([
+      overlayLoadHandle.calledWith([]).resolves([
         StubOverlayStub({ key: 'src/gone.ts#Gone', overlayPath: 'assayer/stubs/objects/src/gone.ts/Gone.json' }),
       ]);
     },
@@ -161,13 +161,13 @@ export const compileRunBrokerProxy = (): {
     // silent) but whose authoritative values (`dev`, `prod`, `staging`) can never satisfy the `mode === 'a'`
     // guard the stub stitch gathered — a pre-run contradiction on the same errors[] channel.
     overlayContradicts: (): void => {
-      stubGraphHandle.mockResolvedValue({ index: StubIndexStub(), guards: [PropertyGuardStub()] });
-      overlayLoadHandle.mockResolvedValue([StubOverlayStub()]);
+      stubGraphHandle.calledWith([]).resolves({ index: StubIndexStub(), guards: [PropertyGuardStub()] });
+      overlayLoadHandle.calledWith([]).resolves([StubOverlayStub()]);
     },
     // A committed harness whose declaration the stitch rejected — the third producer on the same
     // errors[] channel as a broken import and a stale overlay.
     harnessInvalid: ({ relPath, message }: { relPath: string; message: string }): void => {
-      harnessGraphHandle.mockResolvedValue({
+      harnessGraphHandle.calledWith([]).resolves({
         index: HarnessIndexStub({ harnesses: [] }),
         errors: [{ relPath, line: 1, column: 1, message }],
       });

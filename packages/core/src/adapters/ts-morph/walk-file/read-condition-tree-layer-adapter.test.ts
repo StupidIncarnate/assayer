@@ -122,6 +122,42 @@ describe('readConditionTreeLayerAdapter', () => {
     });
   });
 
+  describe('typeof operand', () => {
+    it("VALID: {typeof target === 'string'} => a leaf naming target itself, carrying operandIsTypeof and the typeof-eq predicate", () => {
+      readConditionTreeLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const target: string | number;\nif (typeof target === 'string') {}\n",
+      );
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionTreeLayerAdapter({
+        condition,
+        context: WalkContextStub({
+          scopePath: ['checkTypeof'],
+          guardPath: [],
+          params: [{ name: 'target', type: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] } }],
+          exported: true,
+        }),
+        branchCoverageId: BRANCH,
+        path: [],
+      });
+
+      // `operandType` is `target`'s own declared descriptor — the union, never the bare `string` type
+      // `typeof target` would evaluate to at runtime — because the predicate narrows the PARAMETER by
+      // tag, not the typeof expression's own type.
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'target',
+        operandIsTypeof: true,
+        operandType: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] },
+        predicate: { kind: 'typeof-eq', literal: 'string' },
+      });
+    });
+  });
+
   describe('connectives', () => {
     it('VALID: {score > 5 && bonus > 1} => an and over two independently typed leaves', () => {
       readConditionTreeLayerAdapterProxy();

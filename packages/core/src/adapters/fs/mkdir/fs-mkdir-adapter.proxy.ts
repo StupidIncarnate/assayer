@@ -15,15 +15,15 @@ export const fsMkdirAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: mkdir });
 
-  handle.mockResolvedValue(undefined);
+  handle.calledWith([]).resolves(undefined);
 
   return {
     succeeds: (): void => {
-      handle.mockResolvedValueOnce(undefined);
+      handle.onceFor([]).resolves(undefined);
     },
     throws: ({ error }: { error: Error }): void => {
-      handle.mockRejectedValueOnce(error);
+      handle.onceFor([]).rejects(error);
     },
-    getMkdirArgs: (): readonly unknown[] => handle.mock.calls.at(-1) ?? [],
+    getMkdirArgs: (): readonly unknown[] => handle.callsMatching([]).at(-1) ?? [],
   };
 };

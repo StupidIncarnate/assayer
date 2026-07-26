@@ -7,18 +7,23 @@ import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 const source = readFileSync(join(__dirname, 'pop.ts'), 'utf8');
 const relPath = 'src/happy-path/array/pop/pop.ts';
 
+// The hermetic walk parses with strict-null-checks on, so `number | undefined` arrives as a genuine
+// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-adapter` has no
+// dedicated case for the undefined type, so its member reads through the generic opaque path as
+// `{ kind: 'unknown', text: 'undefined' }`, sitting beside the real `{ kind: 'number' }` member.
+const OPTIONAL_NUMBER = { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] };
+
 describe('array / pop — a branchless function returning `items.pop()`', () => {
   // The param types as an ARRAY of number, read structurally like element-length. The annotated return
-  // is `number | undefined`, but the walk reads it as `{ kind: 'number' }`: the hermetic project runs
-  // without `strictNullChecks` (§5.10 — the same in-memory project that keeps `node_modules` out), so
-  // the checker strips `undefined` from the union and hands back a bare `number`. Branchless, so all
-  // cases reach the one exit — but an array param FANS OUT over cardinality: empty / one / many. Three
-  // cases arrange `items` as REAL arrays of the element type — the salient representative `[]` (empty),
-  // then the grayed twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient
-  // case is the empty array; all three RUN, `intelligent` grays the two twins. Every value is a real
-  // array so `items.pop()` runs on an actual array — a scalar placeholder would throw. The values are
-  // INPUTS (P4); each case asserts only that the flow REACHES the exit.
-  it('VALID: {export function popLast(items: number[]): number | undefined { return items.pop() }} => array-of-number param, return read as number, three cardinality cases', () => {
+  // is `number | undefined`, and the walk reads that as a real union — `items.pop()` genuinely can
+  // return nothing on an empty array, and the analysis now says so. Branchless, so all cases reach the
+  // one exit — but an array param FANS OUT over cardinality: empty / one / many. Three cases arrange
+  // `items` as REAL arrays of the element type — the salient representative `[]` (empty), then the
+  // grayed twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient case is
+  // the empty array; all three RUN, `intelligent` grays the two twins. Every value is a real array so
+  // `items.pop()` runs on an actual array — a scalar placeholder would throw. The values are INPUTS
+  // (P4); each case asserts only that the flow REACHES the exit.
+  it('VALID: {export function popLast(items: number[]): number | undefined { return items.pop() }} => array-of-number param, return read as a real optional union, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
@@ -27,7 +32,7 @@ describe('array / pop — a branchless function returning `items.pop()`', () => 
           name: 'popLast',
           scopePath: ['*module*', 'popLast'],
           params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
-          returnType: { kind: 'number' },
+          returnType: OPTIONAL_NUMBER,
           line: 1,
           access: { kind: 'named' },
         },

@@ -1,12 +1,23 @@
 /**
  * PURPOSE: Reads a TypeScript type into a serializable TypeFact — the raw type-checker readout
  *   (primitive flavor, a resolved literal value, a union of member facts, an ARRAY of its element
- *   type, an OBJECT enumerating its named properties, or a CALLABLE carrying the checker's canonical
- *   rendering of the type) with NO interpretation, which `typeDescriptorTransformer` alone owns.
- *   RECURSES through union members, array elements and object properties, so nested and enumerated
- *   shapes are read by this one function rather than a second copy of the classifier. Per §5.10 only
- *   types the hermetic walk resolves are enumerated — a same-file declaration — because an imported
- *   type is `any` here and stays opaque.
+ *   type, a TUPLE of one fact per fixed position, a TEMPLATE LITERAL of alternating text segments and
+ *   substitution facts, an OBJECT enumerating its named properties, or a CALLABLE carrying the
+ *   checker's canonical rendering of the type) with NO interpretation, which `typeDescriptorTransformer`
+ *   alone owns. RECURSES through union members, array elements, tuple positions, template
+ *   substitutions and object properties, so nested and enumerated shapes are read by this one function
+ *   rather than a second copy of the classifier. Per §5.10 only types the hermetic walk resolves are
+ *   enumerated — a same-file declaration — because an imported type is `any` here and stays opaque.
+ *
+ *   An INTERSECTION (`Ay & Bee`) reads through the SAME branch as a plain object, not a separate one:
+ *   the checker keeps it a distinct type flavor even when every member is an object type, but
+ *   `getProperties()` on the intersection already returns the MERGED members — the checker's own
+ *   apparent-type computation — and `getSymbol()`/`getAliasSymbol()` answer exactly as they do for an
+ *   ordinary object (undefined for an inline `Ay & Bee`, the alias name for `type AB = Ay & Bee`).
+ *   Intersecting with a non-object type (`Ay & string`) still reads correctly with no special case: the
+ *   merged properties then also carry `string`'s own prototype methods, which are callable and so still
+ *   refuse via `is-type-fillable`'s object rule, exactly as intersecting with a genuinely unbuildable
+ *   type should.
  *
  *   `widen` first collapses a literal binding (`const n = 7`) to its base type, which module-scope
  *   operands need. `boolean` is a primitive here (never fanned out into its `true | false` union),
@@ -41,8 +52,8 @@
 import { Node } from 'ts-morph';
 import type { Type, TypeNode } from 'ts-morph';
 
-import { representativeValueContract, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
+import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
+import type { SymbolName, TemplateText } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../../contracts/type-fact/type-fact-contract';
 import { readDeclaredTypeTextLayerAdapter } from './read-declared-type-text-layer-adapter';
@@ -89,6 +100,45 @@ export const readTypeFactLayerAdapter = ({
       text: typeTextContract.parse(readType.getText()),
     };
   }
+  // A template literal type whose every substitution is a closed set of literals (`` `${'a'|'b'}-x` ``)
+  // already collapsed into a plain union of literal strings above, so `isUnion()` catches it before this
+  // branch is reached. What reaches here has at least one substitution that is not a literal union
+  // (`string`, `number`, or similar), and needs its OWN type node to read: the union recursion above
+  // does not thread one per member, so a template literal type reached that way stays opaque instead of
+  // guessing at its structure.
+  if (readType.isTemplateLiteral() && typeNode !== undefined && Node.isTemplateLiteralTypeNode(typeNode)) {
+    const spans = typeNode.getTemplateSpans().map((span): { text: TemplateText; fact: TypeFact } => {
+      const [substitutionNode, literalNode] = span.getChildren();
+      // The literal segment AFTER this substitution — the checker's own cooked text, read off the
+      // TemplateMiddle/TemplateTail node the same way `getLiteralValue()` reads an ordinary literal's
+      // value, never off `getText()`, which would include the surrounding `}`/backtick punctuation.
+      const text =
+        Node.isTemplateMiddle(literalNode) || Node.isTemplateTail(literalNode) ? literalNode.getLiteralText() : '';
+
+      // A span always carries exactly two children (the substitution's type, then its trailing
+      // literal) — `getChildren()`'s array type just cannot say so. The opaque fallback below is
+      // unreached in practice; it exists only so this stays total if that ever stopped holding.
+      return {
+        text: templateTextContract.parse(text),
+        fact:
+          substitutionNode === undefined
+            ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+            : readTypeFactLayerAdapter({
+                type: substitutionNode.getType(),
+                ...(Node.isTypeNode(substitutionNode) ? { typeNode: substitutionNode } : {}),
+                seen: onPath,
+              }),
+      };
+    });
+
+    return {
+      flavor: 'template',
+      // The head segment (before the first substitution) plus each span's trailing segment, in source
+      // order — always one more text than there are substitutions, even when a segment is empty.
+      texts: [templateTextContract.parse(typeNode.getHead().getLiteralText()), ...spans.map((span) => span.text)],
+      types: spans.map((span) => span.fact),
+    };
+  }
   // Arrays are objects too, so this MUST precede the object branch — otherwise an array would be
   // enumerated as an object with only its `length`/method members.
   if (readType.isArray()) {
@@ -105,13 +155,44 @@ export const readTypeFactLayerAdapter = ({
       }),
     };
   }
+  // A tuple is an object to the checker too (`isObject()` is true), so this MUST precede the object
+  // branch below — otherwise a fixed-length, heterogeneous tuple would enumerate as an anonymous shape
+  // carrying every `ReadonlyArray` method plus numeric-index properties with no declaration to read a
+  // type off, burying its two real positions under the whole array prototype.
+  if (readType.isTuple()) {
+    // `readonly [string, number]` wraps the tuple in a TypeOperator node for the modifier; an ordinary
+    // `[string, number]` has no wrapper. Either way the elements travel with their own type node, so a
+    // position holding an opaque shape still renders per §5.10 instead of `any`.
+    const inner = typeNode !== undefined && Node.isTypeOperatorTypeNode(typeNode) ? typeNode.getTypeNode() : typeNode;
+    const elementNodes = inner !== undefined && Node.isTupleTypeNode(inner) ? inner.getElements() : undefined;
+
+    return {
+      flavor: 'tuple',
+      elements: readType.getTupleElements().map((elementType, index) => {
+        const elementNode = elementNodes?.[index];
+        // A named tuple position (`[a: string, b: number]`) wraps its type node in a NamedTupleMember;
+        // an unnamed position IS its own type node.
+        const resolvedNode =
+          elementNode !== undefined && Node.isNamedTupleMember(elementNode) ? elementNode.getTypeNode() : elementNode;
+
+        return readTypeFactLayerAdapter({
+          type: elementType,
+          ...(resolvedNode === undefined ? {} : { typeNode: resolvedNode }),
+          seen: onPath,
+        });
+      }),
+    };
+  }
   // A function type is an object to the checker too, so this MUST precede the object branch — the
   // same ordering reason the array check does. Enumerated as an object a callback comes back with an
   // empty property list, indistinguishable from an empty interface.
   if (readType.getCallSignatures().length > 0) {
     return { flavor: 'callable', text: typeTextContract.parse(readType.getText()) };
   }
-  if (readType.isObject()) {
+  // An INTERSECTION reads through this SAME branch as a plain object — see the PURPOSE doc for why
+  // `getProperties()`/`getSymbol()`/`getAliasSymbol()` already answer correctly with no merge logic
+  // of our own.
+  if (readType.isObject() || readType.isIntersection()) {
     // Two ways a shape carries a name, and the checker answers them on different symbols. An
     // `interface Config` names its own symbol; a `type Config = { … }` names an ANONYMOUS object
     // symbol (`__type`) and hangs `Config` on the ALIAS symbol, so reading only the first spells every

@@ -104,7 +104,7 @@ describe('typeDescriptorTextTransformer', () => {
   });
 
   describe('an unrecognized kind', () => {
-    // The TypeDescriptor union is exhaustive over the 9 declared kinds, so this arm is unreachable
+    // The TypeDescriptor union is exhaustive over the 11 declared kinds, so this arm is unreachable
     // through any value the type system admits — `as never` is the documented escape hatch for
     // driving a case the checker itself refuses to construct.
     it("EDGE: {kind not in the TypeDescriptor union} => falls back to 'unknown'", () => {

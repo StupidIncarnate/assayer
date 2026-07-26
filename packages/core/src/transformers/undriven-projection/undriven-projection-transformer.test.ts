@@ -31,12 +31,12 @@ const MODULE_REASON_TYPEOF =
   'decompose a `typeof` comparison into the case each result names; the value `typeof` narrows may ' +
   'already be read from the environment.';
 
-const MODULE_REASON_PROPERTY_DEPTH =
+const MODULE_REASON_TYPEOF_MEMBER =
   'nothing about it varies, so no case could drive its branches anywhere they do not already go: it ' +
-  'runs at import time, and its top-level branching reads a property more than one level deep off an ' +
-  'object, so no case can steer which arm runs. Assayer understood the branch — this is not syntax it ' +
-  'missed — but it matches an object-member comparison only ONE property level deep (`config.mode`), ' +
-  'never a path this long.';
+  "runs at import time, and its top-level branching reads `typeof mode`, narrowing mode's own type by " +
+  'runtime tag — but on at least one side, every matching member is a shape Assayer cannot yet select ' +
+  'on its own from a union with more than one member. Assayer understood the branch and read the ' +
+  'comparison; only picking the union member is unbuilt.';
 
 const moduleScopeWith = ({ branches }: { branches: ReturnType<typeof BranchNodeStub>[] }): ReturnType<typeof WalkFileResultStub> =>
   WalkFileResultStub({
@@ -110,17 +110,30 @@ describe('undrivenProjectionTransformer', () => {
     });
   });
 
-  describe('a module scope undriven by an object-member read more than one segment deep', () => {
-    // `unarrangeable-property-depth` cannot reach a module scope through the real analyzer (a module
-    // declares no parameters), but the cause is handled exhaustively rather than falling through to a
-    // mismatched default.
-    it('VALID: {cause unarrangeable-property-depth} => the reason names the depth limit, never the opaque-operand text', () => {
+  describe('a module scope undriven by a typeof read that narrows a union with a non-scalar member', () => {
+    // `unarrangeable-typeof-member` cannot reach a module scope through the real analyzer (its only
+    // arrangeable operand is an environment read, always typed `number`), but the cause is handled
+    // exhaustively rather than falling through to a mismatched default.
+    it('VALID: {cause unarrangeable-typeof-member, operand mode} => the reason names the shape limit, never the opaque-operand text', () => {
       const result = undrivenProjectionTransformer({
         walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
-        undrivenModules: [{ name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unarrangeable-property-depth' }) }],
+        undrivenModules: [
+          { name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }), operand: SymbolNameStub({ value: 'mode' }) },
+        ],
       });
 
-      expect(result).toStrictEqual([{ name: '*module*', reason: MODULE_REASON_PROPERTY_DEPTH, startLine: 1, endLine: 8 }]);
+      expect(result).toStrictEqual([{ name: '*module*', reason: MODULE_REASON_TYPEOF_MEMBER, startLine: 1, endLine: 8 }]);
+    });
+
+    // Same invariant as `unread-comparison`: every leaf reaching this cause already passed the
+    // arrangeable check, so it always carries an operand.
+    it('ERROR: {cause unarrangeable-typeof-member, no operand} => throws the invariant violation', () => {
+      expect(() =>
+        undrivenProjectionTransformer({
+          walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
+          undrivenModules: [{ name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }) }],
+        }),
+      ).toThrow(/^unreachable: an 'unarrangeable-typeof-member' undriven module `\*module\*` carries no operand$/u);
     });
   });
 

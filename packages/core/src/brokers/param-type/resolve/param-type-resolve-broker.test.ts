@@ -32,6 +32,13 @@ const PLAIN_SOURCE = "export function grade(n: number): string {\n  if (n > 5) {
 const THEN = '*module*/shout/return@if:BinaryExpression,id:level,EqualsEqualsEqualsToken,str:low#then';
 const ELSE = '*module*/shout/return@if:BinaryExpression,id:level,EqualsEqualsEqualsToken,str:low#else';
 
+// A reader that BRANCHES on an object-member property of the imported type, rather than merely using
+// the whole value — the display followup: the leaf's own `operandType` reads `any` in the hermetic walk
+// (the property access has no type of its own to look up), and stays that way unless the ROOT
+// type-reference this broker resolves is also walked into by the leaf's own property path.
+const OBJECT_MEMBER_READER_SOURCE =
+  "import type { Config } from './types';\n\nexport function decideA(config: Config): string {\n  if (config.mode === 'a') {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
+
 describe('paramTypeResolveBroker', () => {
   describe('a NON-BRANCHING reader of an imported object type', () => {
     it('VALID: {return config.mode} => the declared shape is filled and the false gap is gone', () => {
@@ -226,6 +233,56 @@ describe('paramTypeResolveBroker', () => {
         gapsBefore: ['isHigh'],
         gapsAfter: [],
       });
+    });
+  });
+
+  // The display followup: fixing this must not move which cases derive — that stays `stub-realize`'s
+  // job, run separately from this overlay — so this test asserts the analysis STAYS otherwise as the
+  // per-file walk left it (still no case, still the object-member fact captured) and checks ONLY that
+  // the leaf's `operandType` display moved off the opaque `any`.
+  describe('a BRANCHING reader of an object-member property of an imported type', () => {
+    it("VALID: {if (config.mode === 'a') on an imported Config} => the leaf's operandType becomes mode's real type, string — not any", () => {
+      const proxy = paramTypeResolveBrokerProxy();
+      proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
+      const walked = tsMorphWalkFileAdapter({ source: OBJECT_MEMBER_READER_SOURCE, relPath: 'src/decide-a.ts' });
+      const analysis = analyzeFileBroker({ walked, relPath: 'src/decide-a.ts' });
+
+      const before = analysis.functions
+        .flatMap((fn) => fn.branches)
+        .map((branch) => branch.condition);
+      const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/decide-a.ts' });
+      const after = result.functions
+        .flatMap((fn) => fn.branches)
+        .map((branch) => branch.condition);
+
+      expect({ before, after }).toStrictEqual({
+        before: [
+          {
+            kind: 'leaf',
+            id: '*module*/decideA/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#leaf',
+            operandParamName: 'config',
+            operandPropertyPath: ['mode'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'unknown', text: 'any' },
+            predicate: { kind: 'eq', literal: 'a' },
+          },
+        ],
+        after: [
+          {
+            kind: 'leaf',
+            id: '*module*/decideA/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#leaf',
+            operandParamName: 'config',
+            operandPropertyPath: ['mode'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'string' },
+            predicate: { kind: 'eq', literal: 'a' },
+          },
+        ],
+      });
+
+      // The derived CASES are untouched by this fix — this overlay derives none for an object-member
+      // entry either way (that payoff is `stub-realize`'s, run separately); only the display moved.
+      expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
     });
   });
 

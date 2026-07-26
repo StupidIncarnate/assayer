@@ -15,15 +15,15 @@ export const fsRenameAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: rename });
 
-  handle.mockResolvedValue(undefined);
+  handle.calledWith([]).resolves(undefined);
 
   return {
     succeeds: (): void => {
-      handle.mockResolvedValueOnce(undefined);
+      handle.onceFor([]).resolves(undefined);
     },
     throws: ({ error }: { error: Error }): void => {
-      handle.mockRejectedValueOnce(error);
+      handle.onceFor([]).rejects(error);
     },
-    getRenameArgs: (): readonly unknown[] => handle.mock.calls.at(-1) ?? [],
+    getRenameArgs: (): readonly unknown[] => handle.callsMatching([]).at(-1) ?? [],
   };
 };

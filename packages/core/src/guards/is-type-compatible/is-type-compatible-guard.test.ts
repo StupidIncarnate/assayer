@@ -122,6 +122,40 @@ describe('isTypeCompatibleGuard', () => {
     });
   });
 
+  describe('a template declared type', () => {
+    const TEMPLATE_DECLARED = TypeDescriptorStub({ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] });
+
+    // The declared PATTERN is not re-checked: a supplied plain string satisfies it on sight, the same
+    // latitude a declared `string` gives a supplied string's own content.
+    it('VALID: {a template declared, a string supplied} => true', () => {
+      expect(isTypeCompatibleGuard({ declared: TEMPLATE_DECLARED, supplied: { kind: 'string' } })).toBe(true);
+    });
+
+    it('VALID: {a template declared, a template supplied} => true, whatever its own pattern', () => {
+      expect(
+        isTypeCompatibleGuard({
+          declared: TEMPLATE_DECLARED,
+          supplied: TypeDescriptorStub({ kind: 'template', texts: ['out-', ''], types: [{ kind: 'number' }] }),
+        }),
+      ).toBe(true);
+    });
+
+    it('INVALID: {a template declared, a number supplied} => false', () => {
+      expect(isTypeCompatibleGuard({ declared: TEMPLATE_DECLARED, supplied: { kind: 'number' } })).toBe(false);
+    });
+
+    // The literal-widening rule only admits a matching-kind SCALAR (string/number/boolean); `template`
+    // is not one of those, so a literal is refused here even though it would satisfy a declared string.
+    it('INVALID: {a template declared, a literal supplied} => false', () => {
+      expect(
+        isTypeCompatibleGuard({
+          declared: TEMPLATE_DECLARED,
+          supplied: TypeDescriptorStub({ kind: 'literal', value: 'id-abc123' }),
+        }),
+      ).toBe(false);
+    });
+  });
+
   describe('an array declared type', () => {
     it('VALID: {number[] declared, number[] supplied} => true', () => {
       expect(
@@ -167,6 +201,58 @@ describe('isTypeCompatibleGuard', () => {
           supplied: TypeDescriptorStub({ kind: 'array', element: { kind: 'string' } }),
         }),
       ).toBe(false);
+    });
+  });
+
+  describe('a tuple declared type', () => {
+    const TUPLE_DECLARED = TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] });
+
+    it('VALID: {a tuple declared, a matching tuple supplied} => true', () => {
+      expect(
+        isTypeCompatibleGuard({
+          declared: TUPLE_DECLARED,
+          supplied: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }),
+        }),
+      ).toBe(true);
+    });
+
+    // Fixed-length: the supplied tuple must match the declared LENGTH exactly.
+    it('INVALID: {a tuple declared, a supplied tuple of a DIFFERENT length} => false', () => {
+      expect(
+        isTypeCompatibleGuard({
+          declared: TUPLE_DECLARED,
+          supplied: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }] }),
+        }),
+      ).toBe(false);
+    });
+
+    // HETEROGENEOUS: each position is checked against the SAME position, never against one shared
+    // element type.
+    it('INVALID: {a tuple declared, a supplied tuple with one position incompatible} => false', () => {
+      expect(
+        isTypeCompatibleGuard({
+          declared: TUPLE_DECLARED,
+          supplied: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'string' }] }),
+        }),
+      ).toBe(false);
+    });
+
+    it('INVALID: {a tuple declared, a non-tuple supplied} => false', () => {
+      expect(
+        isTypeCompatibleGuard({
+          declared: TUPLE_DECLARED,
+          supplied: TypeDescriptorStub({ kind: 'array', element: { kind: 'string' } }),
+        }),
+      ).toBe(false);
+    });
+
+    it('EMPTY: {an empty tuple declared, an empty tuple supplied} => true', () => {
+      expect(
+        isTypeCompatibleGuard({
+          declared: TypeDescriptorStub({ kind: 'tuple', elements: [] }),
+          supplied: TypeDescriptorStub({ kind: 'tuple', elements: [] }),
+        }),
+      ).toBe(true);
     });
   });
 

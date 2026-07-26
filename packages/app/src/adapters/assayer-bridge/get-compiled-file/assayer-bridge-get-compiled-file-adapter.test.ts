@@ -15,17 +15,20 @@ describe('assayerBridgeGetCompiledFileAdapter', () => {
       expect(result).toStrictEqual(fileView);
     });
 
-    it('VALID: {relPath: "packages/web/app.tsx"} => resolves the view for that path, not another registered path', async () => {
+    it('VALID: {relPath: "packages/web/other.tsx"} => resolves the view for that path, not the first registered path', async () => {
       const proxy = assayerBridgeGetCompiledFileAdapterProxy();
       const fileViewA = CompiledFileViewStub({ relPath: 'packages/web/app.tsx' });
       const fileViewB = CompiledFileViewStub({ relPath: 'packages/web/other.tsx' });
       proxy.register({ relPath: 'packages/web/app.tsx', fileView: fileViewA });
       proxy.register({ relPath: 'packages/web/other.tsx', fileView: fileViewB });
-      const relPath = RelPathStub({ value: 'packages/web/app.tsx' });
+      // Requests the SECOND registered path. A lookup that ignored relPath and always answered with
+      // whichever view was registered first would return fileViewA here and this assertion would catch
+      // it; requesting the first-registered path (as this test used to) cannot tell the two apart.
+      const relPath = RelPathStub({ value: 'packages/web/other.tsx' });
 
       const result = await assayerBridgeGetCompiledFileAdapter({ relPath });
 
-      expect(result.relPath).toBe('packages/web/app.tsx');
+      expect(result).toStrictEqual(fileViewB);
     });
   });
 

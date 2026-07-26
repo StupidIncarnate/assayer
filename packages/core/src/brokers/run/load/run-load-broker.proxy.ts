@@ -17,22 +17,22 @@ export const runLoadBrokerProxy = (): {
   const existsHandle = registerMock({ fn: fsExistsAdapter });
   const readHandle = registerMock({ fn: fsReadFileAdapter });
 
-  existsHandle.mockResolvedValue(true);
-  readHandle.mockResolvedValue(JSON.stringify(RunResultStub()));
+  existsHandle.calledWith([]).resolves(true);
+  readHandle.calledWith([]).resolves(JSON.stringify(RunResultStub()));
 
   return {
     savedRun: ({ run }: { run: unknown }): void => {
-      existsHandle.mockResolvedValue(true);
-      readHandle.mockResolvedValue(JSON.stringify(run));
+      existsHandle.calledWith([]).resolves(true);
+      readHandle.calledWith([]).resolves(JSON.stringify(run));
     },
     noSuchRun: (): void => {
-      existsHandle.mockResolvedValue(false);
+      existsHandle.calledWith([]).resolves(false);
     },
     // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and the
     // like) propagates to the caller unmodified. This stages that rejection.
     readThrows: ({ error }: { error: Error }): void => {
-      existsHandle.mockResolvedValue(true);
-      readHandle.mockRejectedValueOnce(error);
+      existsHandle.calledWith([]).resolves(true);
+      readHandle.onceFor([]).rejects(error);
     },
   };
 };

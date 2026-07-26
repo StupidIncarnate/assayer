@@ -32,14 +32,14 @@ export const ConfigResolveLayerResponderProxy = (): {
   const loadHandle = registerMock({ fn: configLoadBroker });
   const generatedConfigDirCalls: FilePath[] = [];
 
-  findHandle.mockImplementation(async ({ startDir }: { startDir: string }) => {
+  findHandle.calledWith([]).implement(async ({ startDir }: { startDir: string }) => {
     return Promise.resolve({
       found: true as const,
       configDir: filePathContract.parse(startDir),
       configPath: filePathContract.parse(`${startDir}/assayer.config.json`),
     });
   });
-  generateHandle.mockImplementation(async ({ configDir }: { configDir: string }) => {
+  generateHandle.calledWith([]).implement(async ({ configDir }: { configDir: string }) => {
     generatedConfigDirCalls.push(filePathContract.parse(configDir));
 
     return Promise.resolve(assayerConfigContract.parse({}));
@@ -48,10 +48,10 @@ export const ConfigResolveLayerResponderProxy = (): {
   return {
     configLivesIn: (_params: { levelsBelow: number }): void => undefined,
     neverFound: (): void => {
-      findHandle.mockResolvedValueOnce({ found: false });
+      findHandle.onceFor([]).resolves({ found: false });
     },
     hasContent: ({ content }: { content: string }): void => {
-      loadHandle.mockImplementationOnce(async () => {
+      loadHandle.onceFor([]).implement(async () => {
         try {
           const parsed = JSON.parse(content) as unknown;
 

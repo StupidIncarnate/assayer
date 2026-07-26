@@ -99,11 +99,98 @@ describe('collectTypeRefsTransformer', () => {
         { kind: 'unknown', text: 'Config', typeRef: 'Config' },
       ]);
     });
+
+    it('VALID: {a tuple element carrying an opaque reference} => the reference at its position', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }, { kind: 'string' }],
+      });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([
+        { kind: 'unknown', text: 'Config', typeRef: 'Config' },
+      ]);
+    });
+
+    it('VALID: {a tuple nested inside a tuple} => the reference two levels down is still found', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [{ kind: 'tuple', elements: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }] }],
+      });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([
+        { kind: 'unknown', text: 'Config', typeRef: 'Config' },
+      ]);
+    });
+
+    it('VALID: {two tuple positions each naming a reference} => both names, in position order', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [
+          { kind: 'unknown', text: 'Db', typeRef: 'Db' },
+          { kind: 'unknown', text: 'Cache', typeRef: 'Cache' },
+        ],
+      });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([
+        { kind: 'unknown', text: 'Db', typeRef: 'Db' },
+        { kind: 'unknown', text: 'Cache', typeRef: 'Cache' },
+      ]);
+    });
+
+    // The literal segments carry no name; only each substitution's own type does.
+    it('VALID: {a template substitution carrying an opaque reference} => the reference at its substitution', () => {
+      const type = TypeDescriptorStub({
+        kind: 'template',
+        texts: ['id-', ''],
+        types: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }],
+      });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([
+        { kind: 'unknown', text: 'Config', typeRef: 'Config' },
+      ]);
+    });
+
+    it('VALID: {a template whose substitution is itself a tuple carrying a reference} => the reference found through both layers', () => {
+      const type = TypeDescriptorStub({
+        kind: 'template',
+        texts: ['', ''],
+        types: [{ kind: 'tuple', elements: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }] }],
+      });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([
+        { kind: 'unknown', text: 'Config', typeRef: 'Config' },
+      ]);
+    });
+
+    it('VALID: {a tuple element that is itself a template carrying a reference} => the reference found through both layers', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [
+          { kind: 'template', texts: ['id-', ''], types: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }] },
+        ],
+      });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([
+        { kind: 'unknown', text: 'Config', typeRef: 'Config' },
+      ]);
+    });
   });
 
   describe('a type that names no reference', () => {
     it('EMPTY: {a string} => no names', () => {
       const type = TypeDescriptorStub({ kind: 'string' });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([]);
+    });
+
+    it('EMPTY: {an empty tuple} => no names', () => {
+      const type = TypeDescriptorStub({ kind: 'tuple', elements: [] });
+
+      expect(collectTypeRefsTransformer({ type })).toStrictEqual([]);
+    });
+
+    it('EMPTY: {a template with no substitutions} => no names', () => {
+      const type = TypeDescriptorStub({ kind: 'template', texts: ['literal'], types: [] });
 
       expect(collectTypeRefsTransformer({ type })).toStrictEqual([]);
     });

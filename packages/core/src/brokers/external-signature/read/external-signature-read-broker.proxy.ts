@@ -33,7 +33,7 @@ export const externalSignatureReadBrokerProxy = (): {
   tsMorphReadExternalSignatureAdapterProxy();
 
   const readHandle = registerMock({ fn: tsMorphReadExternalSignatureAdapter });
-  readHandle.mockReturnValue({ usable: false });
+  readHandle.calledWith([]).returns({ usable: false });
 
   return {
     cacheMiss: ({ dtsContent }: { dtsContent: string }): void => {
@@ -49,12 +49,12 @@ export const externalSignatureReadBrokerProxy = (): {
       readFileProxy.returns({ content: signatureJson });
     },
     readsSignature: ({ signature }: { signature: unknown }): void => {
-      readHandle.mockReturnValue({ usable: true, signature });
+      readHandle.calledWith([]).returns({ usable: true, signature });
     },
     readsNoUsableTypes: (): void => {
-      readHandle.mockReturnValue({ usable: false });
+      readHandle.calledWith([]).returns({ usable: false });
     },
-    signatureReadCount: (): FileCount => fileCountContract.parse(readHandle.mock.calls.length),
+    signatureReadCount: (): FileCount => fileCountContract.parse(readHandle.callsMatching([]).length),
     wasWritten: (): boolean => writeFileProxy.wasCalled(),
     getWrittenContent: (): unknown => JSON.parse(String(writeFileProxy.getWrittenContent())),
   };

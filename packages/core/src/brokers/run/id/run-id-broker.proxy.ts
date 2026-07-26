@@ -24,21 +24,21 @@ export const runIdBrokerProxy = (): {
   const existsHandle = registerMock({ fn: fsExistsAdapter });
   const readHandle = registerMock({ fn: fsReadFileAdapter });
 
-  existsHandle.mockResolvedValue(false);
+  existsHandle.calledWith([]).resolves(false);
 
   return {
     noHarness: (): void => {
-      existsHandle.mockResolvedValue(false);
+      existsHandle.calledWith([]).resolves(false);
     },
     harness: ({ source }: { source: string }): void => {
-      existsHandle.mockResolvedValue(true);
-      readHandle.mockResolvedValue(source);
+      existsHandle.calledWith([]).resolves(true);
+      readHandle.calledWith([]).resolves(source);
     },
     // The harness read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT
     // and the like) propagates to the caller unmodified. This stages that rejection.
     readThrows: ({ error }: { error: Error }): void => {
-      existsHandle.mockResolvedValue(true);
-      readHandle.mockRejectedValueOnce(error);
+      existsHandle.calledWith([]).resolves(true);
+      readHandle.onceFor([]).rejects(error);
     },
   };
 };

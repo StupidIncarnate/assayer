@@ -55,6 +55,45 @@ describe('StubRepositoryWidget', () => {
       expect(getAllByTestId('STUB_READER').map((element) => element.textContent)).toStrictEqual([READER_A, READER_B]);
     });
 
+    // A property whose own type is an object read PAST itself carries a NESTED demand — the view
+    // expands it into one row per leaf property, named by its full dotted path, rather than needing a
+    // third demand shape of its own.
+    it("VALID: {a nested demand, config.db.retry} => renders ONE row named 'db.retry', never a raw nested badge", async () => {
+      const proxy = StubRepositoryWidgetProxy();
+      proxy.setupView({
+        view: StubViewStub({
+          objectStubs: [
+            ObjectStubStub({
+              key: `${CROSS_FILE_TYPES}#Config`,
+              definitionRelPath: CROSS_FILE_TYPES,
+              typeName: 'Config',
+              properties: [
+                {
+                  name: 'db',
+                  demand: { kind: 'nested', properties: [{ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } }] },
+                },
+              ],
+              readers: [READER_A],
+            }),
+          ],
+          envStubs: [],
+        }),
+      });
+
+      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+
+      await testingLibraryWaitForAdapter({
+        callback: () => {
+          expect(getByTestId('STUB_CARD')).toBeInTheDocument();
+        },
+      });
+
+      expect(getAllByTestId('STUB_PROPERTY').map((element) => element.getAttribute('data-propname'))).toStrictEqual([
+        'db.retry',
+      ]);
+      expect(getAllByTestId('STUB_PROPERTY_VALUE').map((element) => element.textContent)).toStrictEqual(['3', '7']);
+    });
+
     it('VALID: {an env stub} => renders its process.env key, its guessed values, and its readers', async () => {
       const proxy = StubRepositoryWidgetProxy();
       proxy.setupView({

@@ -9,6 +9,12 @@ const BRANCH_A = '*module*/orElse/ternary:id:a';
 const A_EXIT = '*module*/orElse/return@ternary:id:a#then';
 const B_EXIT = '*module*/orElse/return@ternary:id:a#else';
 
+// The hermetic walk parses with strict-null-checks on, so `string | null` arrives as a genuine
+// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-adapter` has no
+// dedicated case for the null type, so its member reads through the generic opaque path as `{ kind:
+// 'unknown', text: 'null' }`, sitting beside the real `{ kind: 'string' }` member.
+const NULLABLE_STRING = { kind: 'union', members: [{ kind: 'unknown', text: 'null' }, { kind: 'string' }] };
+
 describe('short-circuit / nullish — a `??` in a block return', () => {
   it('VALID: {block `return a ?? b`} => a ternary branch on the operand\'s non-nullishness, one exit per path', () => {
     const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/short-circuit/nullish/nullish.ts' });
@@ -19,10 +25,10 @@ describe('short-circuit / nullish — a `??` in a block return', () => {
           entry: {
             name: 'orElse',
             scopePath: ['*module*', 'orElse'],
-            // The checker collapses `string | null` to `string` in the hermetic walk, so the
-            // SIGNATURE's own rendering rides beside the descriptor for a P1 message to name.
+            // `declaredText` is the SIGNATURE's own rendering, riding beside the descriptor for a P1
+            // message to name — unaffected by whichever union shape the checker reports.
             params: [
-              { name: 'a', type: { kind: 'string' }, declaredText: 'string | null' },
+              { name: 'a', type: NULLABLE_STRING, declaredText: 'string | null' },
               { name: 'b', type: { kind: 'string' } },
             ],
             returnType: { kind: 'string' },
@@ -37,7 +43,7 @@ describe('short-circuit / nullish — a `??` in a block return', () => {
                 kind: 'leaf',
                 id: `${BRANCH_A}#leaf`,
                 operandParamName: 'a',
-                operandType: { kind: 'string' },
+                operandType: NULLABLE_STRING,
                 predicate: { kind: 'non-nullish' },
               },
               startLine: 2,

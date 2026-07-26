@@ -52,7 +52,7 @@ export const runUnitBrokerProxy = (): {
   // a same-reference no-op. The child proxy satisfies structure; the direct registerMock is the intercept.
   stubOverlayLoadBrokerProxy();
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
-  overlayLoadHandle.mockResolvedValue([]);
+  overlayLoadHandle.calledWith([]).resolves([]);
 
   const runner = jestRunCliAdapterProxy();
   const exists = fsExistsAdapterProxy();

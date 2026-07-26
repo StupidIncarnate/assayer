@@ -47,9 +47,9 @@ import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
+import { deriveCasesRequestTransformer } from '../derive-cases-request/derive-cases-request-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
-import { stampBranchesTransformer } from '../stamp-branches/stamp-branches-transformer';
 
 export const throughCallerCasesTransformer = ({
   callee,
@@ -72,18 +72,11 @@ export const throughCallerCasesTransformer = ({
   const { toCallerParam, weldByParam } = callArgBindingsTransformer({ calleeParams: callee.params, args: call.args });
 
   // Stamp the welded value onto the leaves that read it, so derive-cases evaluates the branch it decides
-  // — the live arm a case, the dead arm an unreachable exit — instead of admitting it undriven.
-  const derived = deriveCasesTransformer({
-    params: callee.params,
-    branches: stampBranchesTransformer({ branches: callee.branches, welds: weldByParam }),
-    exits: callee.exits,
-    envDrivable: false,
-    // A branchless private predicate driven through its caller splits its true/false return the same
-    // way a directly-analyzed one does — the callee's own comparison, never a recorded output (P4).
-    ...(callee.predicateSignature === undefined ? {} : { returnPredicate: callee.predicateSignature }),
-    // A harness closing the callee's own refusal — see PURPOSE above.
-    ...(harness === undefined ? {} : { harness }),
-  });
+  // — the live arm a case, the dead arm an unreachable exit — instead of admitting it undriven. `harness`
+  // is threaded through: a harness closing the callee's own refusal — see PURPOSE above.
+  const derived = deriveCasesTransformer(
+    deriveCasesRequestTransformer({ scope: callee, params: callee.params, welds: weldByParam, envDrivable: false, harness }),
+  );
 
   // The caller parameters a call supplies, laid out in declaration order because the interpreter applies
   // them positionally. A trailing one no caller owes and the seam cannot build is not part of the call.

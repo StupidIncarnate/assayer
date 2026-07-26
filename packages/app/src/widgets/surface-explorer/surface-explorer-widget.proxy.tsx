@@ -46,7 +46,7 @@ export const SurfaceExplorerWidgetProxy = (): {
   // Suppress + observe the surface-explorer's own console.error fallback so a failed file load
   // stays silent in the test output while still being assertable.
   const consoleErrorSpy = registerSpyOn({ object: globalThis.console, method: 'error' });
-  consoleErrorSpy.mockImplementation(() => undefined);
+  consoleErrorSpy.calledWith([]).implement(() => undefined);
 
   return {
     setupTree: ({ tree }: { tree: ReturnType<typeof CompiledTreeStub> }): void => {
@@ -81,6 +81,6 @@ export const SurfaceExplorerWidgetProxy = (): {
     emitRunOutput: ({ chunk }: { chunk: string }): void => {
       runProxy.emitRunOutput({ chunk });
     },
-    errorLogged: (): boolean => consoleErrorSpy.mock.calls.length > 0,
+    errorLogged: (): boolean => consoleErrorSpy.callsMatching([]).length > 0,
   };
 };

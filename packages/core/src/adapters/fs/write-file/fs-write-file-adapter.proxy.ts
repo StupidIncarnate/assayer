@@ -14,19 +14,19 @@ export const fsWriteFileAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: writeFile });
 
-  handle.mockResolvedValue(undefined);
+  handle.calledWith([]).resolves(undefined);
 
   return {
     succeeds: (): void => {
-      handle.mockResolvedValueOnce(undefined);
+      handle.onceFor([]).resolves(undefined);
     },
     throws: ({ error }: { error: Error }): void => {
-      handle.mockRejectedValueOnce(error);
+      handle.onceFor([]).rejects(error);
     },
-    getWrittenPath: (): unknown => handle.mock.calls.at(-1)?.[0],
-    getWrittenContent: (): unknown => handle.mock.calls.at(-1)?.[1],
+    getWrittenPath: (): unknown => handle.callsMatching([]).at(-1)?.[0],
+    getWrittenContent: (): unknown => handle.callsMatching([]).at(-1)?.[1],
     getWrittenContentFor: ({ pathIncludes }: { pathIncludes: string }): unknown =>
-      handle.mock.calls.filter((call) => String(call[0]).includes(pathIncludes)).at(-1)?.[1],
-    wasCalled: (): boolean => handle.mock.calls.length > 0,
+      handle.callsMatching([]).filter((call) => String(call[0]).includes(pathIncludes)).at(-1)?.[1],
+    wasCalled: (): boolean => handle.callsMatching([]).length > 0,
   };
 };

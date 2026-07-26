@@ -16,6 +16,50 @@ describe('propertyDemandContract', () => {
 
       expect(result).toStrictEqual({ name: 'retries', demand: { kind: 'unknown' } });
     });
+
+    it('VALID: {a nested property} => the sub-object\'s own demands, one level down', () => {
+      const result = propertyDemandContract.parse(
+        PropertyDemandStub({
+          name: 'db',
+          demand: { kind: 'nested', properties: [{ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } }] },
+        }),
+      );
+
+      expect(result).toStrictEqual({
+        name: 'db',
+        demand: { kind: 'nested', properties: [{ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } }] },
+      });
+    });
+
+    it('VALID: {a nested property whose own child is itself nested} => the demand tree walks arbitrarily deep', () => {
+      const result = propertyDemandContract.parse(
+        PropertyDemandStub({
+          name: 'db',
+          demand: {
+            kind: 'nested',
+            properties: [
+              {
+                name: 'retry',
+                demand: { kind: 'nested', properties: [{ name: 'backoff', demand: { kind: 'demanded', values: ['x'] } }] },
+              },
+            ],
+          },
+        }),
+      );
+
+      expect(result).toStrictEqual({
+        name: 'db',
+        demand: {
+          kind: 'nested',
+          properties: [
+            {
+              name: 'retry',
+              demand: { kind: 'nested', properties: [{ name: 'backoff', demand: { kind: 'demanded', values: ['x'] } }] },
+            },
+          ],
+        },
+      });
+    });
   });
 
   describe('invalid property demands', () => {

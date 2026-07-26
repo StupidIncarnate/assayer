@@ -13,6 +13,13 @@
  *   null nor undefined, and falls through to `b` otherwise. It carries no literal — it partitions the
  *   operand's declared type into its non-null values (satisfying) and null (violating).
  *
+ *   `typeof-eq`/`typeof-neq` are a `typeof` comparison (`typeof target === 'string'`): a THIRD axis,
+ *   next to the plain value axis and the length axis, that partitions the operand's type by which
+ *   members produce the literal's RUNTIME TAG (`'string'`, `'number'`, `'boolean'`, `'object'`,
+ *   `'function'`, and so on) versus which do not. The literal is always a string (the only thing
+ *   `typeof` ever produces), so a `typeof` comparison against a non-string literal, or using any
+ *   operator other than `===`/`!==`, is `unrecognized` rather than one of these two kinds.
+ *
  * USAGE:
  * predicateContract.parse({ kind: 'length-eq', literal: 0 });
  * predicateContract.parse({ kind: 'eq', literal: 'blocked' });
@@ -40,6 +47,8 @@ export const predicateContract = z.object({
       'truthy',
       'falsy',
       'non-nullish',
+      'typeof-eq',
+      'typeof-neq',
       'unrecognized',
     ])
     .brand<'PredicateKind'>(),

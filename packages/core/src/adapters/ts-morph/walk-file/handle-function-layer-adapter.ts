@@ -107,14 +107,14 @@ export const handleFunctionLayerAdapter = ({
         ...(typeNode === undefined ? {} : { typeNode }),
       }),
     });
-    // The SOURCE's own name for the type, carried only where the descriptor cannot reproduce it. A
-    // `readonly [string, number]` enumerates as an anonymous shape carrying every member of
-    // `ReadonlyArray`, and rendering THAT into a P1 invoice buries the one fact the reader needs under
-    // three thousand characters of `concat`/`filter`/`reduce`. What the descriptor WILL render is the
-    // comparison, and for an opaque REFERENCE that is the declaration's bare name — a consume-time
-    // overlay replaces it with the shape it names, and `Box<string>` loses its argument the moment it
-    // does. Checker-rendered, never span text (§5.1), and omitted wherever the descriptor already says
-    // it, so an ordinary parameter serializes exactly as it always did.
+    // The SOURCE's own name for the type, carried only where the descriptor cannot reproduce it. An
+    // anonymous object with no `typeName` (an inline `{ a: string; write: () => void }`) renders as its
+    // full braced property list, and pasting THAT into a P1 invoice buries the one fact the reader needs
+    // under every property the shape declares. What the descriptor WILL render is the comparison, and
+    // for an opaque REFERENCE that is the declaration's bare name — a consume-time overlay replaces it
+    // with the shape it names, and `Box<string>` loses its argument the moment it does. Checker-rendered,
+    // never span text (§5.1), and omitted wherever the descriptor already says it, so an ordinary
+    // parameter serializes exactly as it always did.
     const declared = typeNode === undefined ? undefined : readDeclaredTypeTextLayerAdapter({ node: typeNode });
     const rendered =
       type.kind === 'unknown' && type.typeRef !== undefined ? String(type.typeRef) : String(typeTextTransformer({ type }));

@@ -21,6 +21,18 @@
  *   candidate, so each refuses the other's shape however fillable it is — which is what keeps a string
  *   demand out of a `string[]` property and a number out of a `{ host: string }`.
  *
+ *   A TUPLE is fillable when every one of its own per-position types is — fixed-length and
+ *   HETEROGENEOUS, unlike an array, so a `readonly [string, number]` candidate must itself be an array
+ *   of exactly two elements, checked position by position against its own type rather than one shared
+ *   element type. It fills as a real array, the same `ArrangeValue` composite an `array` type fills as.
+ *
+ *   A TEMPLATE is fillable when every one of its substitutions can produce a scalar point — the same
+ *   question `representative-value-transformer` answers for a plain `string`/`number`/`boolean`, asked
+ *   here instead of re-decided, so the two never disagree about which substitution kinds count. It
+ *   fills as a plain STRING, built by interpolating each substitution's own representative point between
+ *   the type's literal segments — never a placeholder, because the segments and the substitution kinds
+ *   both come from the declaration.
+ *
  *   `null` is a scalar candidate every SCALAR-admitting kind (`string`/`number`/`boolean`/`literal`, and
  *   any `union` reaching one through them) accepts, whatever the declared type spells: the hermetic walk
  *   has no strict-null-checks project config, so the checker already treats `null` as assignable
@@ -55,6 +67,8 @@
  */
 import type { ArrangeValue, TypeDescriptor } from '@assayer/shared/contracts';
 
+import { representativeValueTransformer } from '../../transformers/representative-value/representative-value-transformer';
+
 export const isTypeFillableGuard = ({
   type,
   value,
@@ -67,12 +81,16 @@ export const isTypeFillableGuard = ({
   }
 
   switch (type.kind) {
-    // `null` passes every SCALAR kind, never just a `literal`/`union` that spells it: the hermetic walk
-    // reads types with no strict-null-checks config (§5.10-adjacent), so the checker that produced `type`
-    // already treats `null` as assignable to everything and collapses `string | null` to plain `string`
-    // — the type-reference name is gone, not the domain member. `null` is a value in the domain BECAUSE a
-    // nullish operand has one (`representative-value-contract`), so refusing it here for a `string` would
-    // contradict the very read that decided the operand's comparison is a legitimate `eq null`.
+    // `null` passes every SCALAR kind (`string`/`number`/`boolean`/`literal`), never only a `union` that
+    // spells it out. The hermetic walk parses with strict-null-checks ON, so `string | null` arrives here
+    // as a genuine two-member union. But `read-type-fact-layer-adapter` has no dedicated case for the
+    // null or undefined type: that member reads through the generic opaque path and comes out as `kind:
+    // 'unknown'`, which the `unknown` case below refuses unconditionally, with or without a candidate
+    // value. So a scalar member's OWN allowance here is the only way the union ends up admitting the
+    // literal `null` a branch case arranges for it — the `unknown` sibling standing in for the null type
+    // never admits anything on its own. `null` is a value in the domain BECAUSE a nullish operand has one
+    // (`representative-value-contract`), so refusing it here for a `string` would contradict the very
+    // read that decided the operand's comparison is a legitimate `eq null`.
     case 'string':
       return value === undefined || value === null || typeof value === 'string';
     case 'number':
@@ -96,6 +114,28 @@ export const isTypeFillableGuard = ({
       return value === undefined
         ? (type.element.kind === 'object' && type.element.truncated === true) || isTypeFillableGuard({ type: type.element })
         : Array.isArray(value) && value.every((element) => isTypeFillableGuard({ type: type.element, value: element }));
+    // Fixed-length and HETEROGENEOUS: every POSITION must admit its own type, checked pairwise rather
+    // than against one shared element type. WITHOUT a candidate this asks only whether every position
+    // can be BUILT; WITH one, the candidate must be an array of the exact same length.
+    case 'tuple':
+      return value === undefined
+        ? type.elements.every((element) => isTypeFillableGuard({ type: element }))
+        : Array.isArray(value) &&
+            value.length === type.elements.length &&
+            type.elements.every((element, index) => {
+              const candidate = value[index];
+
+              return candidate !== undefined && isTypeFillableGuard({ type: element, value: candidate });
+            });
+    // Fillable when every substitution can produce a SCALAR point — asked through
+    // `representative-value-transformer`, the same function that will actually build the interpolated
+    // string, so this can never say yes to a substitution kind fill-value then refuses. WITH a
+    // candidate, the value only needs to BE a string: the declared pattern is not re-validated here any
+    // more than a plain `literal` type re-validates its own exact spelling against a supplied string.
+    case 'template':
+      return value === undefined
+        ? type.types.every((substitution) => representativeValueTransformer({ type: substitution }) !== undefined)
+        : value === null || typeof value === 'string';
     // EVERY REQUIRED property, and `[].every()` is what makes the property-less shape fillable as `{}`.
     // One unfillable required property makes the whole object unfillable — a `Sink` whose `write` is a
     // callable cannot be built, and half an object is a wrong input, not a partial one. An OPTIONAL

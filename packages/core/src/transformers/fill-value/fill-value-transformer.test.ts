@@ -57,6 +57,42 @@ describe('fillValueTransformer', () => {
     });
   });
 
+  describe('a tuple', () => {
+    it('EMPTY: {an empty tuple} => the empty array', () => {
+      expect(fillValueTransformer({ type: TypeDescriptorStub({ kind: 'tuple', elements: [] }) })).toStrictEqual([]);
+    });
+
+    it('VALID: {a two-element tuple of different scalar types} => a real heterogeneous array, one value per position', () => {
+      expect(
+        fillValueTransformer({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }),
+        }),
+      ).toStrictEqual(['abc123', 7]);
+    });
+
+    it('VALID: {a tuple nested inside a tuple} => a real array nested one level deep', () => {
+      expect(
+        fillValueTransformer({
+          type: TypeDescriptorStub({
+            kind: 'tuple',
+            elements: [{ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'boolean' }] }, { kind: 'number' }],
+          }),
+        }),
+      ).toStrictEqual([['abc123', false], 7]);
+    });
+
+    // The length check is how this decides: one unfillable position drops out of the flatMap, so the
+    // built array is one element short. Comparing that count against the declared position count is
+    // what refuses the whole tuple instead of silently returning the short array.
+    it('INVALID: {a tuple containing an element nothing can fill} => undefined, never a short array', () => {
+      expect(
+        fillValueTransformer({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, CALLABLE, { kind: 'number' }] }),
+        }),
+      ).toBe(undefined);
+    });
+  });
+
   describe('an object', () => {
     // The nesting is the point: an object value nests exactly as an array value does, so a deep
     // property shape is BUILT rather than flattened to one level.

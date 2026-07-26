@@ -21,10 +21,10 @@ export const fsReaddirAdapterProxy = (): {
         name: entry.name,
         isDirectory: (): boolean => entry.isDirectory,
       }));
-      handle.mockResolvedValueOnce(direntLikes as unknown as Awaited<ReturnType<typeof readdir>>);
+      handle.onceFor([]).resolves(direntLikes as unknown as Awaited<ReturnType<typeof readdir>>);
     },
     throws: ({ error }: { error: Error }): void => {
-      handle.mockRejectedValueOnce(error);
+      handle.onceFor([]).rejects(error);
     },
   };
 };

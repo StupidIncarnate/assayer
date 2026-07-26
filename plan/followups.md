@@ -1,175 +1,182 @@
 # Assayer — Followups
 
-> Work that is not a defect. Two kinds live here.
->
-> **Capability Assayer does not have yet** — a shape it REFUSES honestly, with an accurate
-> invoice naming the type as the source spells it. The reader is told the truth and can act
-> on it. Closing one means teaching Assayer to BUILD the shape; never change the message to
-> make the gap quieter.
->
-> **Structure that keeps producing defects** — code that is correct today but arranged so
-> that the next change to it is likely to be wrong. Closing one means removing the
-> opportunity, not fixing an instance.
->
-> An entry graduates to `plan/open-defects.md` only if something here starts LYING — deriving
-> a case that fails against correct code, reporting coverage that did not happen, or printing
-> a reason that is not the reason.
->
-> **Probe before asserting.** Import by absolute path under `npx tsx`; run the built CLI at
-> `packages/cli/dist/bin/assayer.js` for anything end-to-end.
+Work to do later. Three kinds of thing live in this file.
 
-## Four routes hand-assemble the same call to `derive-cases`
+**Things Assayer cannot do yet.** It hits an input it cannot build, stops, and tells you
+clearly what it could not build and why. Nobody is misled. Fixing one means teaching Assayer
+to build that thing. Never fix one by softening the message.
 
-**This one has a measured cost: eight defects traced to it.** Everything below is currently
-correct — the entry is here because the arrangement invites the next one.
+**Code that is correct but keeps causing bugs.** It works today. It is here because the way
+it is arranged makes the next change to it likely to be wrong. Fixing one means removing the
+opportunity, not patching an instance.
 
-### The structure
+**Known problems that are real but not urgent.** Filed here rather than in
+`plan/open-defects.md` because they are scheduled work, not something to drop everything for.
 
-Case derivation itself is properly funnelled. One walk, one parse, one
-`deriveCasesTransformer` engine, one `fillParamTransformer` fill authority. That held up.
+If something here starts giving wrong answers that mislead a user, move it to
+`plan/open-defects.md`.
 
-What is not funnelled is the GLUE. Four routes each answer "given this scope, what options
-does `derive-cases` need?" in their own hand-written call:
+Before writing down what the code does, run it. Use `npx tsx` with absolute import paths for
+a single function, or the built CLI at `packages/cli/dist/bin/assayer.js` for anything end to
+end.
 
-- `through-caller-cases-transformer.ts` — a private reached by a resolvable named call
-- `through-callback-cases-transformer.ts` — an array-iteration callback
-- `through-invocation-cases-transformer.ts` — an IIFE, module-load code
-- `funnel-named-cases-transformer.ts` — a private folded into a branchless surface
+Four commands check a change. They cover different things and none of them contains the
+others, so run all four:
 
-(`funnel-cases-transformer` does not call the engine at all; it delegates to
-`through-callback-cases`, and correctly inherits whatever that route does.)
+- `npm run ward`
+- `npm run test:syntax`
+- `npm run typecheck:syntax`
+- `npm run test:eslint-rules`
 
-Each was written for a different syntax shape, at a different time, by whoever needed it. So
-when an axis is added to `derive-cases`, it reaches whichever route the author had open.
+---
 
-### What it has already cost
+## Three input types Assayer cannot build a value for
 
-Every one of these was a capability present in one route and absent in a sibling. None was
-visible reading the file it lived in — each file was internally consistent and passed review.
+Each of these makes Assayer stop, produce no test cases, and exit 1 with a message naming the
+type:
 
-- **`predicateSignature` → `returnPredicate` was threaded by three routes and not by
-  `through-callback-cases`.** A branchless callback has no `if`; its true/false split rides
-  the return comparison. Without the thread it collapsed to ONE case. That is the shape of
-  `.filter`, `.some`, `.every`, `.find` — so `ns.filter((n) => n > 5)` derived
-  `arrange: [{kind:'array', value:[7]}]` and never fed the predicate a failing value.
-  Changing `>` to `>=` would not have gone red.
-- **Rest-parameter spreading** landed on the `array` binding arm; the `harness` arm beside it
-  applied `[[cb]]` instead of `[cb]`.
-- **The falsy-arm refusal** was implemented at PROPERTY level in `object-arrange` and absent
-  at PARAM level in `cause-arrange`, so a truthy guard on a parameter arranged truthy on both
-  arms.
-- **`hasCases` on the invoice** was threaded at two call sites and not the third.
-- **`declaringScopes`** admits two routes and not four — that one is DELIBERATE and documented
-  (see below), which is exactly why the seam has to make refusal explicit rather than silent.
+- `when: Date`
+- `task: Promise<string>`
+- `payload: Map<string, number>`
 
-Two more of the same family sat outside these routes and are worth knowing about, because
-they show the shape is not confined to this seam: `assayer detail` rendered one admission
-channel while `assayer unit` and the desktop rendered four, and three sibling type readers
-drifted apart on arrays, alias names, and `optional`.
+**Two different rules refuse them, for two different reasons.** Do not assume one fix closes
+all three:
 
-### Why the fixes did not close it
+- `Date` and `Promise` are refused by the object rule in `is-type-fillable`. An object is
+  fillable only when every one of its properties is fillable. Both types carry a long list of
+  METHODS, a method is a callable, and a callable is never fillable. So one method refuses the
+  whole type.
+- `Map` never reaches that rule. The analyzer parses with `target: ES3`, whose library files
+  declare `Date` and `Promise` but not `Map` or `Set`. Those live in a library file the walk
+  never loads. So `Map<string, number>` is already opaque by the time it arrives, and it is
+  refused by the `unknown` rule instead.
 
-Each was fixed by adding the missing line to the second copy. The copies remain. The next
-axis added to `derive-cases` can go missing the same way, and nothing fails when it does —
-the route simply derives fewer cases and reports them as complete.
+**Do not close these by making the guard say yes.** The value would still have to be built,
+and there is nothing to build it with. `RepresentativeValue` holds only a string, a number, a
+boolean, or null, and the part of Assayer that runs a case applies that value to the function
+with no conversion at all. A `Map` parameter filled with a plain object is worse than a
+refusal: reading `payload.size` gives `undefined`, both branches run without throwing, and
+both cases report as passing against a value nobody supplied.
 
-### What closing it looks like
+What closing them actually requires:
 
-ONE seam that maps a scope onto `derive-cases`' options, called by all four routes. A new
-axis then reaches every route by construction, and a route that genuinely should not receive
-one has to say so in code rather than by omission.
+- the vocabulary that describes an arranged value has to gain a way to say "construct one of
+  these", holding a type and a fixed set of arguments
+- the part of Assayer that runs a case has to build the real instance from that description
+- the instant, the resolved value, and the entry order all have to be fixed and derived, never
+  taken from a clock or a random source, because determinism is what the content-hash cache,
+  the ref-to-ref diffs, and CI cold start all rest on
 
-Scope it to the assembly only. **Do not change `deriveCasesTransformer` itself** — it is the
-engine and it is not the problem.
+That is a change to the run-time contract, not to type reading. Sizing it is the first task.
 
-### The asymmetries that MUST survive
+---
 
-A naive consolidation would flatten these into uniformity and be worse than the duplication.
-Each is deliberate, probed, and documented:
+## `null` has no type kind of its own
 
-- **`through-invocation-cases` derives over `params: []`.** A module is driven by importing
-  it, not by calling it, so an IIFE's parameters are never applied by a caller. Its inputs
-  are env reads and welded invocation arguments. It must not gain param handling.
-- **Only `funnel-named-cases` appears in `declaringScopes`.** `through-caller-cases` and
-  `through-invocation-cases` produce their own top-level entries, so there is nothing folded
-  to name. A funnelled CALLBACK is excluded because its refused parameter is the ARRAY ELEMENT
-  itself, and `ArrangeValue` has no variant for a harness key path inside a composite —
-  admitting it would let `harness-validate` accept a key `harness-realize` can never bind.
-- **`through-caller-cases` and `funnel-named-cases` do not build rest arrays**; they rebase a
-  binding the callee's own derivation already produced, so `rest` rides through on the spread.
-  Only routes that build a fresh array value need explicit handling.
-- **`compose-cross-file-predicates` produces no gaps at all** — it rebases branch conditions
-  and never fills a parameter, so `unfillable`/`owner`/`hasCases` do not apply to it.
+`null` reads as `{ kind: 'unknown', text: 'null' }`. It is a union member like any other, but
+nothing downstream can tell it apart from a genuinely opaque type, because the only thing
+distinguishing it is the `text` field. Reading `text` to make a decision is banned:
+`packages/core/CLAUDE.md` section 5.1 says text is for display and must never enter analysis.
 
-### How to verify
+Two things are blocked on this:
 
-Behaviour must be byte-identical per route, before and after. Probe each of the five routes
-through the real transformers, capture the full derived case set, refactor, re-probe, diff.
-`npm run test:syntax` is the other half — the catalogue exercises all five through real
-parses, and it has already caught one wrong conclusion in this area that unit tests missed.
+**`typeof x === 'object'` cannot narrow to `null`.** In JavaScript `typeof null` is `'object'`,
+which is a real wart, not a curiosity. Assayer reads `typeof` comparisons and partitions a
+union by which members carry the compared-against tag. A `null` member carries no tag it can
+read, so it contributes to neither arm. The narrowing is correct as far as it goes and simply
+stops short.
 
-### Not part of this
+**`is-type-fillable` has to reason about `null` indirectly.** It allows `null` for every scalar
+kind. It has to, because a `null` member of a union is inert on its own, so the only thing that
+lets a legitimate `null` through is the sibling scalar member's own allowance. The rule works.
+It is just not saying what it means, and the comment explaining that is doing work the type
+should do.
 
-The three type readers (`read-type-fact`, `read-signature-type`, `read-global-type`) are
-duplicated too, and CANNOT be merged: the architecture forbids layer files importing across
-domain folders, and each file's own header says so. They were made byte-exact rather than
-approximate. Leave them; a shared entry file is a different, larger decision.
+Fixing it means giving `null` its own kind and letting both readers ask a structural question
+instead of an indirect one.
 
-## Input shapes the fill seam cannot build
+**One trap the fix has to answer.** The transformer that picks a representative value for a
+union takes the FIRST fillable member, and the checker orders `null` before `string` in
+`string | null`. So a new kind that simply reads as fillable makes every plain nullable
+parameter fill as `null` everywhere. Whatever shape the kind takes has to handle that before
+it lands.
 
-Each derives 0 cases and a GAP, exit 1.
+There is a second reason to want this, in `plan/open-defects.md`: `null` being an ordinary
+JavaScript value is what lets `??`, `!x` and `== null` silently discard it.
 
-`v: Ay & Bee` (intersection), `when: Date`, `task: Promise<string>`,
-`` t: `id-${string}` `` (template literal), `payload: Map<string, number>`,
-`pair: readonly [string, number]`.
+---
 
-`Date` and `Promise` enumerate as objects of ~40 callable members, so every method-bearing
-lib type refuses by that one route — a single seam decides all of them.
+## Three files read a type, and nothing keeps them in step
 
-Closing it lives in `read-type-fact` / `is-type-fillable`.
+This one is the "works today, but the next change to it is likely to be wrong" kind.
 
-## A `typeof` narrowing is not decomposed into operand + predicate
+Assayer reads a TypeScript type into a serializable fact in three places, because it reads
+types in three different situations:
+
+- `read-type-fact` — types written in the user's own files, parsed with no `node_modules`
+- `read-signature-type` — types from npm packages and node builtins, parsed with
+  `node_modules` and `@types` resolving
+- `read-global-type` — ambient globals, which resolve only in the checker and never at a file
+  path
+
+**Two of the three should be one adapter, and that is the fix.** `read-external-signature` and
+`read-global-signature` construct an identical ts-morph project:
 
 ```ts
-export const choose = (target: Plain | string): string =>
-  typeof target === 'string' ? target : target.label;
+new Project({ tsConfigFilePath: String(tsConfigFilePath), skipAddingFilesFromTsConfig: true })
 ```
 
-Correctly NOT invoiced — the union fills — but `read-condition` does not decompose the
-`typeof` form, so the leaf carries no `operandParamName` and the branch cannot be steered.
-The satisfying domain per union member is derivable, so this is buildable when it comes up.
+Same configuration, same package, same boundary. They are one operation living in two folders,
+which is the only reason their two readers cannot share code. Merge the folders and the shared
+reader becomes an ordinary layer file that both parents call by relative path. That is allowed:
+a layer belongs to its own folder and is not "another adapter". Three hand-matched readers
+become two.
 
-`derive-cases` names the shape it hit (`unarrangeable-typeof`) so the admission reads "does
-not decompose a `typeof` comparison" rather than the generic "make it a parameter" — worded
-honestly today, closing the capability is still this entry.
+**The third cannot join them, and the reason is load-bearing.** `walk-file` parses with
+`useInMemoryFileSystem: true` and no `node_modules`. Merging it in would put a project that
+resolves `node_modules` in the same folder, behind the same proxy, as the parse that must never
+see one. Section 5.10 of `packages/core/CLAUDE.md` explains what rests on that: the hermetic
+parse is what lets `read-env-operand` PROVE an identifier is the real `process.env` instead of
+pattern-matching the name, so a file declaring its own `const process = { env: … }` is correctly
+refused. Right now the walk cannot see `node_modules` because there is nothing there to see.
+Merging turns that guarantee into a convention somebody has to remember.
 
-## A constrained property path is matched only one segment deep
+**Two routes that look like the fix are closed.** Check before proposing either again:
 
-`fill-value-transformer` builds a nested object value for any declared shape, so an
-unsteered `{ db: { retry: { backoff: string } } }` param is a real nested object. The
-CONSTRAINED side is flat: `object-arrange` and `collect-property-demands` match only a
-single-segment property path.
+- A shared layer the three parents all import. The architecture says a layer is internal to its
+  folder and must never be imported from another one, and that an adapter cannot import another
+  adapter.
+- A shared transformer. Transformers may import only `contracts/`, `statics/`, `errors/`,
+  `guards/` and other transformers. The shared logic has to accept a ts-morph `Type`, which is
+  an npm package type, so it cannot live there.
 
-Nothing is lost on the way in — probed against a three-layer `Config → db → retry`, the
-walk reads all three layers and the leaf captures
-`operandPropertyPath: ["db","retry","backoff"]` with `operandTypeRef: "Config"`. Closing it
-means following a multi-segment path through both transformers.
+**After the merge, one pair still has to be kept matching by hand, and nothing enforces it.**
+Add a type shape to one and not the other, and no test fails. Each file still reads fine on its
+own, because each is internally consistent. What a user sees is the same type behaving
+differently depending on where it was declared: a shape written in their own file gets a value
+built for it, while the same shape in a package's declared signature is refused and dumps the
+whole expanded type into the error message.
 
-`derive-cases` names the shape it hit (`unarrangeable-property-depth`) so the admission
-reads "matches an object-member comparison only ONE property level deep" rather than the
-generic "make it a parameter" — worded honestly today, closing the capability is still this
-entry.
+For that remaining pair the fix is not more sharing. It is a test that feeds both readers the
+same list of type shapes and asserts they answer alike, so a shape added to one and missed by
+the other FAILS instead of going quiet.
 
-## A cross-file object-MEMBER leaf keeps an opaque operand type
+**Some differences between them are deliberate and must survive any fix.** Erasing these would
+be worse than the duplication, and the merge above is exactly when that is most likely to
+happen: the first difference below is between the two readers that end up sharing a folder, so
+it will look like the duplication you just came to remove.
 
-`param-type-resolve` substitutes a leaf's `operandType` by type reference, so a DIRECT param
-read (`level === 'low'` typed `Level`) gets its declared union and fans out per member. An
-object-MEMBER read (`config.mode` on an imported `Config`) does not: the member access has
-no type node of its own, so its leaf carries no `typeRef` and `operandType` stays
-`{kind:'unknown', text:'any'}`.
+- `read-global-type` never enumerates the properties of an object or an intersection. An
+  ambient global's members are reachable only by probing each one with its own expression.
+  Array and tuple positions need no probe, which is why those two are handled and objects are
+  not.
+- Neither of the two external readers collapses a literal to its base type. There is no `const`
+  binding to collapse from.
+- Only `read-type-fact` records the type-reference name and its arguments. That name is a key a
+  later step uses to resolve a sibling file's declaration. The other two already read the real
+  declaration, so there is nothing left for them to resolve.
+- Only the first two guard against a type that contains itself. The global reader never
+  recurses into named members, so it has no cycle to guard against.
 
-The derived CASES are correct — `stub-realize` arranges those branches from the stub view's
-per-property demands. What reads wrong is the enrichment panel, which shows `any` on the
-branch line, and any future consumer of the leaf's operand type would read a collapsed one.
-
-Indexing the resolved object descriptor by `operandPropertyPath` would close it.
+The fix is something that makes a missing shape FAIL, not something that makes the three files
+one file.

@@ -49,25 +49,27 @@ export const PrecheckRunResponderProxy = (): {
   const stableBranchHandle = registerMock({ fn: StableBranchLayerResponder });
   const compileRunHandle = registerMock({ fn: CompileRunLayerResponder });
 
-  analyzerHashHandle.mockResolvedValue(ContentHashStub());
-  stableBranchHandle.mockImplementation(async ({ config }: { config: AssayerConfig }) => Promise.resolve(config));
-  compileRunHandle.mockResolvedValue(undefined);
+  analyzerHashHandle.calledWith([]).resolves(ContentHashStub());
+  stableBranchHandle
+    .calledWith([])
+    .implement(async ({ config }: { config: AssayerConfig }) => Promise.resolve(config));
+  compileRunHandle.calledWith([]).resolves(undefined);
 
   return {
     resolvesConfig: ({ config, configDir, configPath }: { config: AssayerConfig; configDir: FilePath; configPath: FilePath }): void => {
-      configResolveHandle.mockResolvedValueOnce({ config, configDir, configPath });
+      configResolveHandle.onceFor([]).resolves({ config, configDir, configPath });
     },
     throwsConfigError: ({ message }: { message: string }): void => {
-      configResolveHandle.mockRejectedValueOnce(new CliExactOutputError({ message }));
+      configResolveHandle.onceFor([]).rejects(new CliExactOutputError({ message }));
     },
     stableReturns: ({ config }: { config: AssayerConfig }): void => {
-      stableBranchHandle.mockResolvedValueOnce(config);
+      stableBranchHandle.onceFor([]).resolves(config);
     },
     compileSucceeds: (): void => {
-      compileRunHandle.mockResolvedValueOnce(undefined);
+      compileRunHandle.onceFor([]).resolves(undefined);
     },
-    stableCallCount: (): FileCount => fileCountContract.parse(stableBranchHandle.mock.calls.length),
-    compileCallCount: (): FileCount => fileCountContract.parse(compileRunHandle.mock.calls.length),
-    getCompileRunArgs: (): unknown => compileRunHandle.mock.calls.at(-1)?.[0],
+    stableCallCount: (): FileCount => fileCountContract.parse(stableBranchHandle.callsMatching([]).length),
+    compileCallCount: (): FileCount => fileCountContract.parse(compileRunHandle.callsMatching([]).length),
+    getCompileRunArgs: (): unknown => compileRunHandle.callsMatching([]).at(-1)?.[0],
   };
 };

@@ -16,7 +16,8 @@
     "typecheck": "dungeonmaster-ward --only typecheck",
     "test": "dungeonmaster-ward --only test",
     "test:syntax": "jest --config smoke-repo/packages/syntax-repository/jest.config.js",
-    "typecheck:syntax": "npm run typecheck --prefix smoke-repo"
+    "typecheck:syntax": "npm run typecheck --prefix smoke-repo",
+    "test:eslint-rules": "jest --config eslint-rules/jest.config.js"
   },
   "devDependencies": {
     "@dungeonmaster/cli": "file:../codex-of-consentient-craft/packages/cli",
@@ -48,6 +49,7 @@
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
+    "@typescript-eslint/rule-tester": "^8.36.0",
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^9.0.1",
     "electron": "^32.1.0",

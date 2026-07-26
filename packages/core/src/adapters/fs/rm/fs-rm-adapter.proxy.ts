@@ -15,15 +15,15 @@ export const fsRmAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: rm });
 
-  handle.mockResolvedValue(undefined);
+  handle.calledWith([]).resolves(undefined);
 
   return {
     succeeds: (): void => {
-      handle.mockResolvedValueOnce(undefined);
+      handle.onceFor([]).resolves(undefined);
     },
     throws: ({ error }: { error: Error }): void => {
-      handle.mockRejectedValueOnce(error);
+      handle.onceFor([]).rejects(error);
     },
-    getRmArgs: (): readonly unknown[] => handle.mock.calls.at(-1) ?? [],
+    getRmArgs: (): readonly unknown[] => handle.callsMatching([]).at(-1) ?? [],
   };
 };

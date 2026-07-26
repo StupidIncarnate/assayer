@@ -25,19 +25,22 @@ export const runExecuteBrokerProxy = (): {
   const findHandle = registerMock({ fn: runFindBroker });
   const entryHandle = registerMock({ fn: assayerCliEntryPathAdapter });
 
-  entryHandle.mockReturnValue(ExecutablePathStub({ value: '/repo/packages/cli/dist/bin/assayer.js' }));
-  findHandle.mockResolvedValue(RunResultStub());
+  // Each broker call reads the CLI entry and finds the run's artifact at most once, so there is no
+  // second real call either handle could confuse it with — `calledWith([])` is a blanket match on
+  // purpose, not a stand-in for a real argument.
+  entryHandle.calledWith([]).returns(ExecutablePathStub({ value: '/repo/packages/cli/dist/bin/assayer.js' }));
+  findHandle.calledWith([]).resolves(RunResultStub());
 
   return {
     savedRun: ({ run }: { run: RunResult }): void => {
-      findHandle.mockResolvedValue(run);
+      findHandle.calledWith([]).resolves(run);
     },
     noArtifact: ({ stderr }: { stderr: string }): void => {
-      findHandle.mockResolvedValue(undefined);
+      findHandle.calledWith([]).resolves(undefined);
       exec.exitsWith({ exitCode: 1, stdout: '', stderr });
     },
     cliNotBuilt: (): void => {
-      entryHandle.mockReturnValue(undefined);
+      entryHandle.calledWith([]).returns(undefined);
     },
     runSucceeds: (): void => {
       exec.exitsWith({ exitCode: 0, stdout: 'src/a.ts  1/1 passed', stderr: '' });

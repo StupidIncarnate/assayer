@@ -37,6 +37,25 @@ describe('typeFactContract', () => {
       expect(result).toStrictEqual({ flavor: 'array', element: { flavor: 'number' } });
     });
 
+    it('VALID: {flavor: "tuple", elements} => parses one fact per fixed position', () => {
+      const result = typeFactContract.parse({
+        flavor: 'tuple',
+        elements: [{ flavor: 'string' }, { flavor: 'number' }],
+      });
+
+      expect(result).toStrictEqual({ flavor: 'tuple', elements: [{ flavor: 'string' }, { flavor: 'number' }] });
+    });
+
+    it('VALID: {flavor: "template", texts, types} => parses the literal segments and the substitution facts', () => {
+      const result = typeFactContract.parse({
+        flavor: 'template',
+        texts: ['id-', ''],
+        types: [{ flavor: 'string' }],
+      });
+
+      expect(result).toStrictEqual({ flavor: 'template', texts: ['id-', ''], types: [{ flavor: 'string' }] });
+    });
+
     it('VALID: {flavor: "object", typeName, properties} => parses the named property list', () => {
       const result = typeFactContract.parse({
         flavor: 'object',
@@ -155,10 +174,16 @@ describe('typeFactContract', () => {
   });
 
   describe('invalid type facts', () => {
-    it('INVALID: {flavor: "tuple"} => throws validation error', () => {
+    it('INVALID: {flavor: "nonsense"} => throws validation error', () => {
+      expect(() => {
+        return typeFactContract.parse({ flavor: 'nonsense' });
+      }).toThrow(/Invalid discriminator/u);
+    });
+
+    it('INVALID: {flavor: "tuple", no elements} => throws validation error', () => {
       expect(() => {
         return typeFactContract.parse({ flavor: 'tuple' });
-      }).toThrow(/Invalid discriminator/u);
+      }).toThrow(/Required/u);
     });
 
     it('INVALID: {flavor: "other", no text} => throws validation error', () => {

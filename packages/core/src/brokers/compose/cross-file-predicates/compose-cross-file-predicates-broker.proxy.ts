@@ -2,7 +2,9 @@ import { typescriptReadConfigAdapterProxy } from '../../../adapters/typescript/r
 import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/resolve-sibling-callee-broker.proxy';
 
 export const composeCrossFilePredicatesBrokerProxy = (): {
-  setupSibling: ({ fileName, source }: { fileName: string; source: string }) => void;
+  // `specifier` is optional — only needed when a test composes more than one imported guard, so each
+  // resolve can be matched to the import it actually answers instead of call order.
+  setupSibling: ({ fileName, source, specifier }: { fileName: string; source: string; specifier?: string }) => void;
   resolvesTo: ({ fileName }: { fileName: string }) => void;
 } => {
   // The tsconfig read runs REAL; the sibling resolve is staged, since resolving a specifier against a
@@ -13,9 +15,9 @@ export const composeCrossFilePredicatesBrokerProxy = (): {
 
   return {
     // The sibling both RESOLVES to `fileName` and READS back `source` — the pair a composable branch
-    // needs. Queued once so multiple siblings are wired in the order their branches compose.
-    setupSibling: ({ fileName, source }: { fileName: string; source: string }): void => {
-      sibling.resolvesToSibling({ fileName, source });
+    // needs.
+    setupSibling: ({ fileName, source, specifier }: { fileName: string; source: string; specifier?: string }): void => {
+      sibling.resolvesToSibling({ fileName, source, ...(specifier === undefined ? {} : { specifier }) });
     },
     // Resolution lands somewhere but its source is never read — a node_modules / outside-root file the
     // compose skips as non-local.

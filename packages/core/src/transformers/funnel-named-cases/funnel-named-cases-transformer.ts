@@ -49,10 +49,10 @@ import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumb
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
+import { deriveCasesRequestTransformer } from '../derive-cases-request/derive-cases-request-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { findReturnedPrivateTransformer } from '../find-returned-private/find-returned-private-transformer';
-import { stampBranchesTransformer } from '../stamp-branches/stamp-branches-transformer';
 
 export const funnelNamedCasesTransformer = ({
   scope,
@@ -82,14 +82,15 @@ export const funnelNamedCasesTransformer = ({
   // This scope's own cases, over its own branches with any inherited weld stamped — the same derivation
   // a directly-analyzed scope gets, so a welded arm evaluates rather than being admitted, and a
   // harness-supplied parameter binds rather than being refused.
-  const derived = deriveCasesTransformer({
-    params: scope.params,
-    branches: stampBranchesTransformer({ branches: scope.branches, welds }),
-    exits: scope.exits,
-    envDrivable: false,
-    ...(scope.predicateSignature === undefined ? {} : { returnPredicate: scope.predicateSignature }),
-    ...(ownHarness === undefined ? {} : { harness: { entry: scope.name, params: ownHarness } }),
-  });
+  const derived = deriveCasesTransformer(
+    deriveCasesRequestTransformer({
+      scope,
+      params: scope.params,
+      welds,
+      envDrivable: false,
+      harness: ownHarness === undefined ? undefined : { entry: scope.name, params: ownHarness },
+    }),
+  );
 
   // The scope parameters a call supplies, in declaration order because the interpreter applies them
   // positionally — a trailing one no caller owes and the seam cannot build is not part of the call.

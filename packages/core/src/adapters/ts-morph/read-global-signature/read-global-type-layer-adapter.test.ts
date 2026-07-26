@@ -1,5 +1,5 @@
 import { Project, SyntaxKind } from 'ts-morph';
-import type { Type } from 'ts-morph';
+import type { Type, TypeNode } from 'ts-morph';
 
 import { readGlobalTypeLayerAdapter } from './read-global-type-layer-adapter';
 import { readGlobalTypeLayerAdapterProxy } from './read-global-type-layer-adapter.proxy';
@@ -10,6 +10,16 @@ const typeOf = ({ source }: { source: string }): Type =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.VariableDeclaration)
     .getType();
+
+// The type AND the declaring type node of the first declared const — what a real caller threads in for
+// a called global's parameter/return, or a member access's own declaration.
+const typeAndNodeOf = ({ source }: { source: string }): { type: Type; typeNode: TypeNode } => {
+  const declaration = new Project({ useInMemoryFileSystem: true })
+    .createSourceFile('src/x.ts', source)
+    .getFirstDescendantByKindOrThrow(SyntaxKind.VariableDeclaration);
+
+  return { type: declaration.getType(), typeNode: declaration.getTypeNodeOrThrow() };
+};
 
 describe('readGlobalTypeLayerAdapter', () => {
   describe('primitive types', () => {
@@ -130,6 +140,19 @@ describe('readGlobalTypeLayerAdapter', () => {
         readGlobalTypeLayerAdapter({ type: typeOf({ source: 'interface Env { a: string }\nconst a: Env = { a: "x" };\n' }) }),
       ).toStrictEqual({ flavor: 'other', text: 'Env' });
     });
+
+    // An intersection reads as an object to the checker, and an ambient OBJECT shape is deliberately not
+    // enumerated here (see the file's own PURPOSE doc), so an intersection stays opaque too, with no
+    // separate branch needed — the same reason a plain interface reference stays opaque above.
+    it('VALID: {v: Ay & Bee} => an other fact carrying the checker text, never a merged object', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(
+        readGlobalTypeLayerAdapter({
+          type: typeOf({ source: 'interface Ay { a: string }\ninterface Bee { b: number }\nconst v: Ay & Bee = { a: "x", b: 1 };\n' }),
+        }),
+      ).toStrictEqual({ flavor: 'other', text: 'Ay & Bee' });
+    });
   });
 
   // An array carries one homogeneous element, never a set of members that would need their own probe,
@@ -152,6 +175,69 @@ describe('readGlobalTypeLayerAdapter', () => {
       expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'const a: number[][] = [];\n' }) })).toStrictEqual({
         flavor: 'array',
         element: { flavor: 'array', element: { flavor: 'number' } },
+      });
+    });
+  });
+
+  // A tuple is fixed-length and bounded, the same reason an array carries no per-member probe cost —
+  // `process.hrtime()` really does return `[number, number]` in @types/node, so this is not hypothetical.
+  describe('a tuple type', () => {
+    it('VALID: {readonly [number, number], typeNode threaded} => a tuple fact with one element fact per position', () => {
+      readGlobalTypeLayerAdapterProxy();
+      const { type, typeNode } = typeAndNodeOf({ source: 'declare const a: readonly [number, number];\n' });
+
+      expect(readGlobalTypeLayerAdapter({ type, typeNode })).toStrictEqual({
+        flavor: 'tuple',
+        elements: [{ flavor: 'number' }, { flavor: 'number' }],
+      });
+    });
+
+    it('VALID: {readonly [number, number], no typeNode threaded} => still a tuple fact', () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: 'declare const a: readonly [number, number];\n' }) })).toStrictEqual({
+        flavor: 'tuple',
+        elements: [{ flavor: 'number' }, { flavor: 'number' }],
+      });
+    });
+  });
+
+  describe('a template literal type', () => {
+    // Needs the type NODE threaded in: the checker's `Type` API has nothing that decomposes a template
+    // literal type's segments on its own — see the file's own PURPOSE doc.
+    it(`VALID: {\`id-\${string}\`, typeNode threaded} => a template fact with the literal segments and the string substitution`, () => {
+      readGlobalTypeLayerAdapterProxy();
+      const { type, typeNode } = typeAndNodeOf({ source: `declare const a: \`id-\${string}\`;\n` });
+
+      expect(readGlobalTypeLayerAdapter({ type, typeNode })).toStrictEqual({
+        flavor: 'template',
+        texts: ['id-', ''],
+        types: [{ flavor: 'string' }],
+      });
+    });
+
+    it(`VALID: {\`id-\${string}\`, no typeNode threaded} => an opaque other fact carrying the checker text`, () => {
+      readGlobalTypeLayerAdapterProxy();
+
+      expect(readGlobalTypeLayerAdapter({ type: typeOf({ source: `declare const a: \`id-\${string}\`;\n` }) })).toStrictEqual({
+        flavor: 'other',
+        text: `\`id-\${string}\``,
+      });
+    });
+
+    // A template whose every substitution is a closed set of literals collapses to a plain UNION before
+    // this adapter ever sees a template literal type — proof the `isUnion()` check runs first.
+    it(`VALID: {\`\${'a'|'b'}-x\`} => a union fact of the two literal strings, never a template fact`, () => {
+      readGlobalTypeLayerAdapterProxy();
+      const { type, typeNode } = typeAndNodeOf({ source: `declare const a: \`\${'a'|'b'}-x\`;\n` });
+
+      expect(readGlobalTypeLayerAdapter({ type, typeNode })).toStrictEqual({
+        flavor: 'union',
+        members: [
+          { flavor: 'literal', value: 'a-x' },
+          { flavor: 'literal', value: 'b-x' },
+        ],
+        text: '"a-x" | "b-x"',
       });
     });
   });

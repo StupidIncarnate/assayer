@@ -28,7 +28,9 @@ export const stubIndexResolveBrokerProxy = (): {
   // overlay rather than touching the real filesystem — the same pattern repoSourceRootBrokerProxy uses.
   stubOverlayLoadBrokerProxy();
   const overlayHandle = registerMock({ fn: stubOverlayLoadBroker });
-  overlayHandle.mockResolvedValue([]);
+  // The resolver calls this at most once per resolve, so there is no second real call to confuse it
+  // with — `calledWith([])` is a blanket match on purpose, not a stand-in for a real argument.
+  overlayHandle.calledWith([]).resolves([]);
 
   return {
     setup: ({ manifest, index }): void => {
@@ -45,7 +47,7 @@ export const stubIndexResolveBrokerProxy = (): {
       existsProxy.missing();
     },
     withOverlays: ({ overlays }): void => {
-      overlayHandle.mockResolvedValue([...overlays]);
+      overlayHandle.calledWith([]).resolves([...overlays]);
     },
   };
 };

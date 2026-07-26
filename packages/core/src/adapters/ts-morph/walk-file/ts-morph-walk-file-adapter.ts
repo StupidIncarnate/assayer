@@ -26,7 +26,7 @@ export const tsMorphWalkFileAdapter = ({
   source: string;
   relPath: string;
 }): WalkFileResult => {
-  const project = new Project({ useInMemoryFileSystem: true });
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strictNullChecks: true } });
   const sourceFile = project.createSourceFile(relPath, source);
 
   const diagnostics = project.getProgram().getSyntacticDiagnostics(sourceFile);

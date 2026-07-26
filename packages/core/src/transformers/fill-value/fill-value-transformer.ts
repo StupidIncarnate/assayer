@@ -1,10 +1,13 @@
 /**
  * PURPOSE: Builds ONE runnable value of a declared type — the recursive core the fill seam is made of.
- *   An ARRAY becomes a real array of the `one` cardinality (`number[][]` → `[[7]]`), an OBJECT becomes a
- *   real map of every property it declares (`{ db: { host: string } }` → `{ db: { host: 'abc123' } }`,
- *   the property-less shape → `{}`), a UNION becomes a value of its first fillable member, and anything
- *   scalar becomes its representative point. Every value is an INPUT drawn from the declared type, never
- *   a code-derived output (P4).
+ *   An ARRAY becomes a real array of the `one` cardinality (`number[][]` → `[[7]]`), a TUPLE becomes a
+ *   real array with one element per fixed position (`readonly [string, number]` → `['abc123', 7]`), an
+ *   OBJECT becomes a real map of every property it declares (`{ db: { host: string } }` →
+ *   `{ db: { host: 'abc123' } }`, the property-less shape → `{}`), a UNION becomes a value of its first
+ *   fillable member, a TEMPLATE LITERAL becomes an interpolated string (handled by
+ *   `representative-value-transformer`, which every other scalar already falls through to), and anything
+ *   else scalar becomes its representative point. Every value is an INPUT drawn from the declared type,
+ *   never a code-derived output (P4).
  *
  *   `undefined` means the type is UNFILLABLE — `is-type-fillable` is the rule, and this is the only
  *   thing that answers it with a value. It is returned rather than substituted so a callable, an opaque
@@ -42,6 +45,20 @@ export const fillValueTransformer = ({ type }: { type: TypeDescriptor }): Arrang
     return element === undefined
       ? undefined
       : Array.from({ length: arrayCardinalityStatics.counts.one }, () => element);
+  }
+
+  // Fixed-length and HETEROGENEOUS, unlike `array` above: one element PER POSITION, filled from that
+  // position's own type rather than one shared element type repeated. One unfillable position refuses
+  // the whole tuple — the same short-circuit an unfillable required object property applies below —
+  // caught by the length check against the declared position count.
+  if (type.kind === 'tuple') {
+    const elements = type.elements.flatMap((element) => {
+      const value = fillValueTransformer({ type: element });
+
+      return value === undefined ? [] : [value];
+    });
+
+    return elements.length === type.elements.length ? elements : undefined;
   }
 
   if (type.kind === 'object') {

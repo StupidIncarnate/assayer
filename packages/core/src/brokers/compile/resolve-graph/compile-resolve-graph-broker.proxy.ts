@@ -43,29 +43,29 @@ export const compileResolveGraphBrokerProxy = (): {
   const layerProxy = resolveSpecifierLayerBrokerProxy();
 
   const readConfigHandle = registerMock({ fn: typescriptReadConfigAdapter });
-  readConfigHandle.mockReturnValue({ options: {}, tsconfigHash: contentHashContract.parse(EMPTY_HASH) });
+  readConfigHandle.calledWith([]).returns({ options: {}, tsconfigHash: contentHashContract.parse(EMPTY_HASH) });
 
   // External type reading is REPLACED wholesale (its own broker tests cover caching); this broker's
   // tests drive classification, so it stays silent unless a test opts into a cache dir.
   externalSignatureReadBrokerProxy();
   const externalHandle = registerMock({ fn: externalSignatureReadBroker });
-  externalHandle.mockResolvedValue({ usable: false });
+  externalHandle.calledWith([]).resolves({ usable: false });
 
   // Global/ambient reading is likewise replaced wholesale — its own broker tests cover caching, and
   // this broker's tests drive classification, so it stays silent unless a test opts into a cache dir.
   externalSignatureReadGlobalBrokerProxy();
   const externalGlobalHandle = registerMock({ fn: externalSignatureReadGlobalBroker });
-  externalGlobalHandle.mockResolvedValue({ usable: false });
+  externalGlobalHandle.calledWith([]).resolves({ usable: false });
 
   return {
     queueBlob: ({ blob }: { blob: unknown }): void => {
       readFileProxy.returns({ content: JSON.stringify(blob) });
     },
     configHash: ({ tsconfigHash }: { tsconfigHash: string }): void => {
-      readConfigHandle.mockReturnValue({ options: {}, tsconfigHash: contentHashContract.parse(tsconfigHash) });
+      readConfigHandle.calledWith([]).returns({ options: {}, tsconfigHash: contentHashContract.parse(tsconfigHash) });
     },
     configFilePath: ({ path }: { path: string }): void => {
-      readConfigHandle.mockReturnValue({
+      readConfigHandle.calledWith([]).returns({
         options: {},
         tsconfigHash: contentHashContract.parse(EMPTY_HASH),
         configFilePath: FilePathStub({ value: path }),
@@ -80,8 +80,8 @@ export const compileResolveGraphBrokerProxy = (): {
     resolvesUnresolved: (): void => {
       layerProxy.resolvesUnresolved();
     },
-    getExternalSignatureReadCalls: (): readonly unknown[] => externalHandle.mock.calls.map((call) => call[0]),
+    getExternalSignatureReadCalls: (): readonly unknown[] => externalHandle.callsMatching([]).map((call) => call[0]),
     getExternalSignatureReadGlobalCalls: (): readonly unknown[] =>
-      externalGlobalHandle.mock.calls.map((call) => call[0]),
+      externalGlobalHandle.callsMatching([]).map((call) => call[0]),
   };
 };

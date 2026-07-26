@@ -158,6 +158,137 @@ describe('substituteConditionTypesTransformer', () => {
     });
   });
 
+  describe('an object-member leaf (operandPropertyPath set)', () => {
+    // The leaf's OWN `operandType` is plain `any` — the hermetic walk cannot see `config.mode`'s type
+    // when `Config` is imported (§5.10) — so there is no reference on the leaf itself for
+    // `substitute-type-refs` to look up. The ROOT type-reference (`operandTypeRef: 'Config'`) is what
+    // resolves, and the property path is walked into ITS shape instead.
+    it("VALID: {config.mode, operandTypeRef 'Config' resolves} => operandType becomes mode's real type, string", () => {
+      const condition = ConditionLeafStub({
+        id: 'decideA/if:config.mode===a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+
+      expect(
+        substituteConditionTypesTransformer({
+          condition,
+          resolved: new Map([
+            [
+              'Config',
+              TypeDescriptorStub({
+                kind: 'object',
+                typeName: 'Config',
+                properties: [{ name: 'mode', type: { kind: 'string' } }],
+              }),
+            ],
+          ]),
+        }),
+      ).toStrictEqual({
+        kind: 'leaf',
+        id: 'decideA/if:config.mode===a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+    });
+
+    // The nested case: a two-segment path walks past the first property into ITS own shape.
+    it('VALID: {config.db.retry, a two-segment path} => operandType becomes retry\'s real type, number', () => {
+      const condition = ConditionLeafStub({
+        id: 'checkDeep/if:config.db.retry===3#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['db', 'retry'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'eq', literal: 3 },
+      });
+
+      expect(
+        substituteConditionTypesTransformer({
+          condition,
+          resolved: new Map([
+            [
+              'Config',
+              TypeDescriptorStub({
+                kind: 'object',
+                typeName: 'Config',
+                properties: [
+                  {
+                    name: 'db',
+                    type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
+                  },
+                ],
+              }),
+            ],
+          ]),
+        }),
+      ).toStrictEqual({
+        kind: 'leaf',
+        id: 'checkDeep/if:config.db.retry===3#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['db', 'retry'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'eq', literal: 3 },
+      });
+    });
+
+    it('VALID: {the root type-reference never resolves} => the leaf is unchanged, still plain any', () => {
+      const condition = ConditionLeafStub({
+        id: 'decideA/if:config.mode===a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+
+      expect(substituteConditionTypesTransformer({ condition, resolved: new Map() })).toStrictEqual({
+        kind: 'leaf',
+        id: 'decideA/if:config.mode===a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['mode'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+    });
+
+    it('VALID: {the root resolves but the property path names nothing the shape declares} => the leaf is unchanged', () => {
+      const condition = ConditionLeafStub({
+        id: 'decideA/if:config.other===a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['other'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+
+      expect(
+        substituteConditionTypesTransformer({
+          condition,
+          resolved: new Map([
+            ['Config', TypeDescriptorStub({ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] })],
+          ]),
+        }),
+      ).toStrictEqual({
+        kind: 'leaf',
+        id: 'decideA/if:config.other===a#leaf',
+        operandParamName: 'config',
+        operandPropertyPath: ['other'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'eq', literal: 'a' },
+      });
+    });
+  });
+
   describe('a leaf whose operand names no reference', () => {
     it('EMPTY: {an empty map} => the condition is unchanged', () => {
       const condition = ConditionLeafStub({

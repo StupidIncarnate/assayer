@@ -95,6 +95,61 @@ describe('isTypeFillableGuard', () => {
     });
   });
 
+  describe('a tuple', () => {
+    // Fixed-length and HETEROGENEOUS: every POSITION must admit its own type. An empty tuple has no
+    // positions to fail, so `[].every()` is vacuously true, the same reason an object with no
+    // properties fills as `{}`.
+    it('EMPTY: {an empty tuple} => true, fillable as []', () => {
+      expect(isTypeFillableGuard({ type: TypeDescriptorStub({ kind: 'tuple', elements: [] }) })).toBe(true);
+    });
+
+    it('VALID: {a tuple whose every position is fillable} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }),
+        }),
+      ).toBe(true);
+    });
+
+    // One unfillable position makes the whole tuple unbuildable, the same rule an object's required
+    // property states: half a tuple is a wrong input, not a partial one.
+    it('INVALID: {a tuple with one unfillable position} => false', () => {
+      expect(
+        isTypeFillableGuard({ type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, CALLABLE] }) }),
+      ).toBe(false);
+    });
+  });
+
+  describe('a template', () => {
+    // No substitutions is still a valid template: a plain string constant spelled through the
+    // template syntax. `[].every()` is vacuously true here too.
+    it('VALID: {a template with no substitutions} => true', () => {
+      expect(isTypeFillableGuard({ type: TypeDescriptorStub({ kind: 'template', texts: ['id-'], types: [] }) })).toBe(
+        true,
+      );
+    });
+
+    it('VALID: {a template with several fillable substitutions} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({
+            kind: 'template',
+            texts: ['id-', '-', ''],
+            types: [{ kind: 'string' }, { kind: 'number' }],
+          }),
+        }),
+      ).toBe(true);
+    });
+
+    // Asked through `representative-value-transformer`, the same function that will actually build the
+    // interpolated string: a substitution it cannot produce a point for refuses the whole template.
+    it('INVALID: {a template whose substitution cannot produce a representative value} => false', () => {
+      expect(
+        isTypeFillableGuard({ type: TypeDescriptorStub({ kind: 'template', texts: ['id-', ''], types: [CALLABLE] }) }),
+      ).toBe(false);
+    });
+  });
+
   describe('an object', () => {
     it('VALID: {every property scalar, nested} => true', () => {
       expect(
@@ -294,6 +349,36 @@ describe('isTypeFillableGuard', () => {
     it('INVALID: {a callable, any candidate} => false', () => {
       expect(isTypeFillableGuard({ type: CALLABLE, value: representativeValueContract.parse('abc123') })).toBe(false);
     });
+
+    // WITH a candidate, only the SHAPE matters: the value must be a string, or `null` under the same
+    // rule every scalar-admitting kind gives it. The declared PATTERN is not re-validated, the same
+    // latitude a `literal` type gives a supplied string's own spelling.
+    it('VALID: {a template type, a string candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] }),
+          value: representativeValueContract.parse('id-abc123'),
+        }),
+      ).toBe(true);
+    });
+
+    it('VALID: {a template type, a null candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] }),
+          value: representativeValueContract.parse(null),
+        }),
+      ).toBe(true);
+    });
+
+    it('INVALID: {a template type, a number candidate} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] }),
+          value: representativeValueContract.parse(7),
+        }),
+      ).toBe(false);
+    });
   });
 
   // A COMPOSITE candidate — the recursive `ArrangeValue` shape an `array`/`object` binding carries, not
@@ -341,6 +426,54 @@ describe('isTypeFillableGuard', () => {
       expect(
         isTypeFillableGuard({
           type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }),
+          value: arrangeValueContract.parse([]),
+        }),
+      ).toBe(true);
+    });
+
+    it('VALID: {a tuple type, a matching array candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }),
+          value: arrangeValueContract.parse(['abc123', 7]),
+        }),
+      ).toBe(true);
+    });
+
+    // Fixed-length: a candidate array of the wrong length is not a value of the tuple, however
+    // fillable each position it does have is.
+    it('INVALID: {a tuple type, a candidate array of the wrong length} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }),
+          value: arrangeValueContract.parse(['abc123']),
+        }),
+      ).toBe(false);
+    });
+
+    // HETEROGENEOUS: each position is checked against its OWN type, never one shared element type.
+    it('INVALID: {a tuple type, a candidate array with a wrong element type at one position} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }),
+          value: arrangeValueContract.parse(['abc123', 'not-a-number']),
+        }),
+      ).toBe(false);
+    });
+
+    it('INVALID: {a tuple type, an object candidate rather than an array} => false', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }] }),
+          value: arrangeValueContract.parse({ host: 'abc123' }),
+        }),
+      ).toBe(false);
+    });
+
+    it('EMPTY: {an empty tuple, an empty array candidate} => true', () => {
+      expect(
+        isTypeFillableGuard({
+          type: TypeDescriptorStub({ kind: 'tuple', elements: [] }),
           value: arrangeValueContract.parse([]),
         }),
       ).toBe(true);

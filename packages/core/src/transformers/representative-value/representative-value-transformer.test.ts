@@ -54,6 +54,52 @@ describe('representativeValueTransformer', () => {
     });
   });
 
+  describe('a template literal type', () => {
+    it('EMPTY: {template with no substitutions} => returns its single literal segment unchanged', () => {
+      expect(
+        representativeValueTransformer({
+          type: TypeDescriptorStub({ kind: 'template', texts: ['no-subs'], types: [] }),
+        }),
+      ).toBe('no-subs');
+    });
+
+    it('VALID: {template with one substitution} => interpolates its point between the literal segments', () => {
+      expect(
+        representativeValueTransformer({
+          type: TypeDescriptorStub({ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] }),
+        }),
+      ).toBe('id-abc123');
+    });
+
+    it('VALID: {template with several substitutions} => interpolates each point in order', () => {
+      expect(
+        representativeValueTransformer({
+          type: TypeDescriptorStub({
+            kind: 'template',
+            texts: ['a-', '-b-', ''],
+            types: [{ kind: 'string' }, { kind: 'number' }],
+          }),
+        }),
+      ).toBe('a-abc123-b-7');
+    });
+
+    // One substitution refusing (an object has no scalar point) refuses the whole template — there is
+    // no way to interpolate a hole into a string.
+    it('INVALID: {template whose substitution has no representative point} => returns undefined', () => {
+      expect(
+        representativeValueTransformer({
+          type: TypeDescriptorStub({
+            kind: 'template',
+            texts: ['cfg-', ''],
+            types: [
+              TypeDescriptorStub({ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
+            ],
+          }),
+        }),
+      ).toBe(undefined);
+    });
+  });
+
   // No placeholder, on any of them. A string standing in for a shape is the defect: `payload.size` on
   // 'abc123' reads 6 and the case PASSES against an input the code was never given.
   describe('a type with no scalar point', () => {

@@ -2,7 +2,9 @@ import { typescriptReadConfigAdapterProxy } from '../../../adapters/typescript/r
 import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/resolve-sibling-callee-broker.proxy';
 
 export const composeCrossFileMapBrokerProxy = (): {
-  setupSibling: ({ fileName, source }: { fileName: string; source: string }) => void;
+  // `specifier` is optional — only needed when a test folds more than one sibling callee into the same
+  // host, so each resolve can be matched to the import it actually answers instead of call order.
+  setupSibling: ({ fileName, source, specifier }: { fileName: string; source: string; specifier?: string }) => void;
 } => {
   // The tsconfig read runs REAL, and the reaches + funnel transformers are pure — only the sibling
   // resolve is staged, since resolving an imported callee against a real filesystem is exactly what a
@@ -11,8 +13,8 @@ export const composeCrossFileMapBrokerProxy = (): {
   const sibling = resolveSiblingCalleeBrokerProxy();
 
   return {
-    setupSibling: ({ fileName, source }: { fileName: string; source: string }): void => {
-      sibling.resolvesToSibling({ fileName, source });
+    setupSibling: ({ fileName, source, specifier }: { fileName: string; source: string; specifier?: string }): void => {
+      sibling.resolvesToSibling({ fileName, source, ...(specifier === undefined ? {} : { specifier }) });
     },
   };
 };

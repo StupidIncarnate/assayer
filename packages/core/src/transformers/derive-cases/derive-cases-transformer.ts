@@ -81,6 +81,8 @@ import { causeArrangeTransformer } from '../cause-arrange/cause-arrange-transfor
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
 import { inputBucketsTransformer } from '../input-buckets/input-buckets-transformer';
 import { predictedOutputTransformer } from '../predicted-output/predicted-output-transformer';
+import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
+import { typeofTagTransformer } from '../typeof-tag/typeof-tag-transformer';
 
 export const deriveCasesTransformer = ({
   params,
@@ -180,30 +182,44 @@ export const deriveCasesTransformer = ({
     // The operand blocker is named first when both are present: an operand no case can set is the
     // outer problem, and a predicate over a value nothing supplies is not the reader's next move.
     const blocking = unarrangeable.length > 0 ? unarrangeable : unconstrained;
-    // The `unarrangeable-operand` bucket splits into two NAMEABLE limits before falling back to the
-    // generic one, because "make the deciding value a parameter" is FALSE advice for both: a property
-    // path more than one segment deep off a REAL parameter already names one (`config`), just past the
-    // ONE level `object-arrange` matches at consume time, and a `typeof` read's operand may already be
-    // one too — Assayer just does not decompose the comparison into a case per branch. A path exactly one
-    // segment deep stays `unarrangeable-operand`: it IS closed later, by `stub-realize` from the merged
-    // stub view. The depth check requires the root to be a PARAM this entry declares — `process.env.MODE`
-    // is a two-segment property path too, but its root is the ambient `process` global, never a parameter,
-    // so the generic text ("neither one of its parameters nor an environment variable") stays accurate
-    // for it; naming a depth limit on a root that names no parameter would be its own false advice.
+    // The `unarrangeable-operand` bucket splits into one NAMEABLE limit before falling back to the
+    // generic one, because "make the deciding value a parameter" is FALSE advice for it: a `typeof`
+    // read whose OWN operand is opaque (a call result, a member access with no param root) never gets
+    // far enough to ask the predicate question at all. An object-member read of ANY depth
+    // (`config.mode`, `config.db.retry`) stays `unarrangeable-operand`: `object-arrange` and
+    // `collect-property-demands` walk a property path of any length into the type it resolves to, so
+    // every depth alike is closed later, by `stub-realize` from the merged stub view.
+    //
+    // `unread-comparison` splits the same way for the SAME reason, one question over: a `typeof` read
+    // whose own operand already passed the first question (`typeof target === 'string'`, `target` a real
+    // param) can still fail the second when the type is a union with a member `is-predicate-constraining`
+    // cannot realize a scalar point for on one side (an object, an array) — the comparison IS read, the
+    // arm just has nothing this engine can name inside it yet, which is a different limit than "the
+    // comparison names no value at all" and would be false advice to word the same way.
+    //
+    // That specific limit is checked directly rather than assumed from `operandIsTypeof` alone: a
+    // `typeof` read of a type with NO shape problem at all (a bare, non-union operand, or a union whose
+    // every member has a scalar point) can still fail to constrain — the comparison is tautological for
+    // that type, not blocked on picking a union member — and `unarrangeable-typeof-member`'s wording,
+    // which names a union member Assayer cannot pick, would be wrong for it. So the union (or the
+    // operand's own type, read as one) is checked for a member whose tag is KNOWN and which
+    // `representativeValueTransformer` names no scalar point for; only THAT shape blocker earns the cause.
     const cause = undrivenCauseContract.parse(
       unarrangeable.length > 0
-        ? unarrangeable.some(
+        ? unarrangeable.some((leaf) => leaf.operandIsTypeof === true)
+          ? 'unarrangeable-typeof'
+          : 'unarrangeable-operand'
+        : unconstrained.some(
             (leaf) =>
-              leaf.operandPropertyPath !== undefined &&
-              leaf.operandPropertyPath.length > 1 &&
-              leaf.operandParamName !== undefined &&
-              paramNames.has(String(leaf.operandParamName)),
+              leaf.operandIsTypeof === true &&
+              (leaf.operandType.kind === 'union' ? leaf.operandType.members : [leaf.operandType]).some(
+                (member) =>
+                  typeofTagTransformer({ type: member }) !== undefined &&
+                  representativeValueTransformer({ type: member }) === undefined,
+              ),
           )
-          ? 'unarrangeable-property-depth'
-          : unarrangeable.some((leaf) => leaf.operandIsTypeof === true)
-            ? 'unarrangeable-typeof'
-            : 'unarrangeable-operand'
-        : 'unread-comparison',
+          ? 'unarrangeable-typeof-member'
+          : 'unread-comparison',
     );
     const operand = blocking
       .map((leaf) =>

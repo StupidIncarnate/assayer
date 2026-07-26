@@ -32,27 +32,27 @@ export const runFindBrokerProxy = (): {
   const readHandle = registerMock({ fn: fsReadFileAdapter });
   const loadHandle = registerMock({ fn: runLoadBroker });
 
-  existsHandle.mockResolvedValue(true);
-  readHandle.mockResolvedValue('');
-  loadHandle.mockResolvedValue(RunResultStub());
+  existsHandle.calledWith([]).resolves(true);
+  readHandle.calledWith([]).resolves('');
+  loadHandle.calledWith([]).resolves(RunResultStub());
 
   return {
     savedRun: ({ run }: { run: unknown }): void => {
-      existsHandle.mockResolvedValue(true);
-      loadHandle.mockResolvedValue(run);
+      existsHandle.calledWith([]).resolves(true);
+      loadHandle.calledWith([]).resolves(run);
     },
     neverRun: (): void => {
-      existsHandle.mockResolvedValue(true);
-      loadHandle.mockResolvedValue(undefined);
+      existsHandle.calledWith([]).resolves(true);
+      loadHandle.calledWith([]).resolves(undefined);
     },
     fileMissing: (): void => {
-      existsHandle.mockResolvedValue(false);
+      existsHandle.calledWith([]).resolves(false);
     },
     // The source read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT
     // and the like) propagates to the caller unmodified. This stages that rejection.
     readThrows: ({ error }: { error: Error }): void => {
-      existsHandle.mockResolvedValue(true);
-      readHandle.mockRejectedValueOnce(error);
+      existsHandle.calledWith([]).resolves(true);
+      readHandle.onceFor([]).rejects(error);
     },
   };
 };

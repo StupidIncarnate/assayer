@@ -24,18 +24,18 @@ export const runEachLayerBrokerProxy = (): {
   const runHandle = registerMock({ fn: runUnitBroker });
   const readHandle = registerMock({ fn: fsReadFileAdapter });
 
-  runHandle.mockResolvedValue(RunResultStub());
-  readHandle.mockResolvedValue('');
+  runHandle.calledWith([]).resolves(RunResultStub());
+  readHandle.calledWith([]).resolves('');
 
   return {
     setupSource: ({ source }: { source: string }): void => {
-      readHandle.mockResolvedValue(source);
+      readHandle.calledWith([]).resolves(source);
     },
-    runCount: (): FileCount => fileCountContract.parse(runHandle.mock.calls.length),
+    runCount: (): FileCount => fileCountContract.parse(runHandle.callsMatching([]).length),
     // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and the
     // like) propagates to the caller unmodified. This stages that rejection.
     readThrows: ({ error }: { error: Error }): void => {
-      readHandle.mockRejectedValueOnce(error);
+      readHandle.onceFor([]).rejects(error);
     },
   };
 };

@@ -107,6 +107,48 @@ describe('readConditionLayerAdapter', () => {
     });
   });
 
+  describe('typeof operand', () => {
+    it("VALID: {typeof target === 'string'} => the operand is target itself, past the typeof keyword, and it is marked operandIsTypeof", () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (typeof target === 'string') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionLayerAdapter({ condition });
+
+      expect({
+        kind: result.operandNode.getKindName(),
+        name: result.operandName,
+        operandIsTypeof: result.operandIsTypeof,
+      }).toStrictEqual({
+        kind: 'Identifier',
+        name: 'target',
+        operandIsTypeof: true,
+      });
+    });
+
+    it("VALID: {typeof config.mode === 'string'} => typeof unwraps to the property access, which still decomposes into its root and path", () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (typeof config.mode === 'string') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionLayerAdapter({ condition });
+
+      expect({
+        kind: result.operandNode.getKindName(),
+        operandRootName: result.operandRootName,
+        operandPropertyPath: result.operandPropertyPath,
+        operandIsTypeof: result.operandIsTypeof,
+      }).toStrictEqual({
+        kind: 'PropertyAccessExpression',
+        operandRootName: 'config',
+        operandPropertyPath: ['mode'],
+        operandIsTypeof: true,
+      });
+    });
+  });
+
   describe('the predicate it parses', () => {
     it('VALID: {name.length === 0} => a length-eq predicate carrying the threshold', () => {
       readConditionLayerAdapterProxy();
@@ -202,6 +244,35 @@ describe('readConditionLayerAdapter', () => {
       readConditionLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (v === undefined) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'unrecognized' });
+    });
+
+    it("VALID: {typeof target === 'string'} => a typeof-eq predicate carrying the tag", () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (typeof target === 'string') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'typeof-eq', literal: 'string' });
+    });
+
+    it("VALID: {typeof target !== 'string'} => a typeof-neq predicate carrying the tag", () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (typeof target !== 'string') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'typeof-neq', literal: 'string' });
+    });
+
+    // `typeof` never produces a number, so a numeric right-hand side names no real tag — unrecognized,
+    // never read as though the number were a valid typeof result.
+    it('EDGE: {typeof target === 3} => unrecognized, since a typeof tag must be a string', () => {
+      readConditionLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (typeof target === 3) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
       expect(readConditionLayerAdapter({ condition }).predicate).toStrictEqual({ kind: 'unrecognized' });

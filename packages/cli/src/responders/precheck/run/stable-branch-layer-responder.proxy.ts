@@ -47,7 +47,7 @@ export const StableBranchLayerResponderProxy = (): {
 
   const savedConfig: { json: unknown } = { json: undefined };
 
-  configSaveHandle.mockImplementation(async ({ config }: { config: unknown }) => {
+  configSaveHandle.calledWith([]).implement(async ({ config }: { config: unknown }) => {
     const parsed = assayerConfigContract.parse(config);
 
     savedConfig.json = JSON.stringify(parsed);
@@ -57,7 +57,7 @@ export const StableBranchLayerResponderProxy = (): {
 
   return {
     notGitRepo: (): void => {
-      gitDetectHandle.mockResolvedValueOnce({ hasGitRepo: false });
+      gitDetectHandle.onceFor([]).resolves({ hasGitRepo: false });
     },
     insideWith: ({ branchListStdout }: { branchListStdout: string }): void => {
       const present = new Set(
@@ -71,21 +71,21 @@ export const StableBranchLayerResponderProxy = (): {
         .map((branch) => branchNameContract.parse(branch));
       const [preselected] = candidates;
 
-      gitDetectHandle.mockResolvedValueOnce(
+      gitDetectHandle.onceFor([]).resolves(
         preselected === undefined
           ? { hasGitRepo: true, candidates: [] }
           : { hasGitRepo: true, candidates, preselected },
       );
     },
     insideNoMainMaster: (): void => {
-      gitDetectHandle.mockResolvedValueOnce({ hasGitRepo: true, candidates: [] });
+      gitDetectHandle.onceFor([]).resolves({ hasGitRepo: true, candidates: [] });
     },
     picksBranch: ({ branch }: { branch: BranchName }): void => {
-      pickerHandle.mockResolvedValueOnce(branch);
+      pickerHandle.onceFor([]).resolves(branch);
     },
-    pickerCallCount: (): FileCount => fileCountContract.parse(pickerHandle.mock.calls.length),
+    pickerCallCount: (): FileCount => fileCountContract.parse(pickerHandle.callsMatching([]).length),
     saveSucceeds: (): void => undefined,
-    wasSaveCalled: (): boolean => configSaveHandle.mock.calls.length > 0,
+    wasSaveCalled: (): boolean => configSaveHandle.callsMatching([]).length > 0,
     getSavedConfigJson: (): unknown => savedConfig.json,
     enableTty: (): void => {
       ttyProxy.enableTty();

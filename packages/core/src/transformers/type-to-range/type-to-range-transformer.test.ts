@@ -214,6 +214,73 @@ describe('typeToRangeTransformer', () => {
     });
   });
 
+  describe('typeof predicates', () => {
+    // Every member has a scalar point, so both sides realize a real value — the case that actually
+    // steers a branch.
+    it("VALID: {string|number, typeof-eq 'string'} => the string member's point vs the number member's", () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({ kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }),
+        predicateKind: 'typeof-eq',
+        literal: 'string',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['abc123'] }),
+        violating: ValueDomainStub({ members: [7] }),
+      });
+    });
+
+    it("VALID: {string|number, typeof-neq 'string'} => the exact mirror of typeof-eq", () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({ kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }),
+        predicateKind: 'typeof-neq',
+        literal: 'string',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: [7] }),
+        violating: ValueDomainStub({ members: ['abc123'] }),
+      });
+    });
+
+    // The `Plain` member IS on the non-matching side, but it has no scalar point this engine can name —
+    // so that side constrains nothing rather than falsely claiming no value satisfies it.
+    it("VALID: {Plain|string, typeof-eq 'string'} => the string member's point vs an unconstrained domain", () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({
+          kind: 'union',
+          members: [{ kind: 'object', typeName: 'Plain', properties: [{ name: 'label', type: { kind: 'string' } }] }, { kind: 'string' }],
+        }),
+        predicateKind: 'typeof-eq',
+        literal: 'string',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['abc123'] }),
+        violating: ValueDomainStub(),
+      });
+    });
+
+    // A bare, non-union type is one member of itself: every value shares its one tag, so the
+    // non-matching side is a genuine impossibility, not merely unconstrained.
+    it("VALID: {string, typeof-eq 'string'} => the representative point vs a genuine empty domain", () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'typeof-eq', literal: 'string' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['abc123'] }),
+        violating: ValueDomainStub({ members: [] }),
+      });
+    });
+
+    // A non-string literal names no real typeof tag at all — `typeof` never produces one — so both
+    // arms stay open rather than being narrowed by a tag nothing could ever carry.
+    it('VALID: {typeof-eq with a non-string literal} => neither arm constrains anything', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'typeof-eq', literal: 3 });
+
+      expect(result).toStrictEqual({ satisfying: ValueDomainStub(), violating: ValueDomainStub() });
+    });
+  });
+
   describe('unrecognized predicates', () => {
     // Both arms OPEN, and this is a safety property rather than a default. A predicate the analyzer
     // could not read must be incapable of narrowing anything — otherwise an unread guard could make a

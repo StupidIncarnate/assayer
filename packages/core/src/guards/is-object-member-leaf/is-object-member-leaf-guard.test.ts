@@ -26,7 +26,7 @@ describe('isObjectMemberLeafGuard', () => {
   });
 
   describe('a nested object-member read', () => {
-    it('INVALID: {config.user.role, path length 2} => false, only single-level reads qualify', () => {
+    it('VALID: {config.user.role, path length 2} => true, a deeper read is the same shape of leaf', () => {
       const leaf = ConditionLeafStub({
         operandParamName: 'config',
         operandPropertyPath: ['user', 'role'],
@@ -35,7 +35,19 @@ describe('isObjectMemberLeafGuard', () => {
         predicate: { kind: 'eq', literal: 'admin' },
       });
 
-      expect(isObjectMemberLeafGuard({ leaf })).toBe(false);
+      expect(isObjectMemberLeafGuard({ leaf })).toBe(true);
+    });
+
+    it('VALID: {config.db.retry.backoff, path length 3} => true, any depth qualifies', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'config',
+        operandPropertyPath: ['db', 'retry', 'backoff'],
+        operandTypeRef: 'Config',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'x' },
+      });
+
+      expect(isObjectMemberLeafGuard({ leaf })).toBe(true);
     });
   });
 

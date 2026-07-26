@@ -7,10 +7,14 @@
  *   descriptor `entry.params[].type` already carries.
  *
  *   Kind-for-kind: a scalar declared type admits only its own kind, a `literal` only its exact value, an
- *   `array` only a supplied `array` whose element is compatible (recursed), an `object` only a supplied
- *   `object` whose every REQUIRED property is present and compatible (an OPTIONAL declared property may
- *   be absent from the supplied shape too). A declared `union` admits a supplied type compatible with
- *   ANY of its members; a SUPPLIED union (a ternary's inferred type, `string | number`) is admitted only
+ *   `array` only a supplied `array` whose element is compatible (recursed), a `tuple` only a supplied
+ *   `tuple` of the exact same length whose every position is compatible with the SAME position
+ *   (checked pairwise, never against one shared element type), an `object` only a supplied `object`
+ *   whose every REQUIRED property is present and compatible (an OPTIONAL declared property may be
+ *   absent from the supplied shape too), and a `template` only a supplied `string` or another
+ *   `template` — the declared PATTERN is not re-checked here any more than a declared `string` checks a
+ *   supplied string's content. A declared `union` admits a supplied type compatible with ANY of its
+ *   members; a SUPPLIED union (a ternary's inferred type, `string | number`) is admitted only
  *   when EVERY one of its members is compatible — a value that might be any of several shapes must
  *   satisfy the declared type whichever it turns out to be.
  *
@@ -77,6 +81,14 @@ export const isTypeCompatibleGuard = ({
     return declared.members.some((member) => isTypeCompatibleGuard({ declared: member, supplied }));
   }
 
+  // A supplied STRING (or another TEMPLATE) satisfies a declared template literal type — the declared
+  // PATTERN is not re-checked here, the same latitude a declared `string` gives a supplied string's
+  // content. Checked before the kind-equality gate below, because `template` never supplies-and-declares
+  // the same literal `kind` a plain string does.
+  if (declared.kind === 'template' && (supplied.kind === 'string' || supplied.kind === 'template')) {
+    return true;
+  }
+
   // A supplied LITERAL still satisfies a declared scalar of the matching runtime kind — see the PURPOSE
   // doc for why the checker hands back literal precision here rather than the widened base type.
   if (supplied.kind === 'literal' && declared.kind !== 'literal') {
@@ -106,8 +118,25 @@ export const isTypeCompatibleGuard = ({
       // Only the EXACT value satisfies a literal type — a same-kind primitive that is not the one
       // permitted value is still a mismatch.
       return supplied.kind === 'literal' && supplied.value === declared.value;
+    // Unreachable in practice: the pre-check above already returns for every supplied kind a declared
+    // `template` admits (`string` or another `template`), so anything reaching here already failed the
+    // kind-equality gate. Named for exhaustiveness, the same reason `default` below answers `false`.
+    case 'template':
+      return true;
     case 'array':
       return supplied.kind === 'array' && isTypeCompatibleGuard({ declared: declared.element, supplied: supplied.element });
+    // Fixed-length and HETEROGENEOUS: the supplied tuple must match the declared LENGTH exactly, and
+    // each position is checked against that SAME position, never against one shared element type.
+    case 'tuple':
+      return (
+        supplied.kind === 'tuple' &&
+        declared.elements.length === supplied.elements.length &&
+        declared.elements.every((element, index) => {
+          const suppliedElement = supplied.elements[index];
+
+          return suppliedElement !== undefined && isTypeCompatibleGuard({ declared: element, supplied: suppliedElement });
+        })
+      );
     case 'object':
       return (
         supplied.kind === 'object' &&

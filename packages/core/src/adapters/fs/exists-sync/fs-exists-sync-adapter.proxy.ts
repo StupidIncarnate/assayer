@@ -7,14 +7,14 @@ export const fsExistsSyncAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: existsSync });
 
-  handle.mockReturnValue(false);
+  handle.calledWith([]).returns(false);
 
   return {
     exists: (): void => {
-      handle.mockReturnValueOnce(true);
+      handle.onceFor([]).returns(true);
     },
     missing: (): void => {
-      handle.mockReturnValueOnce(false);
+      handle.onceFor([]).returns(false);
     },
   };
 };

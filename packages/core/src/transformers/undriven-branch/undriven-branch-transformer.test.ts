@@ -38,16 +38,27 @@ const REASON_WITH_OPERAND_PICK =
 const REASON_TYPEOF =
   '`checkTypeof` has a branch on line 3 whose deciding value is a `typeof` read, so no case can steer ' +
   'which arm runs: with nothing to vary, both arms would arrange the same inputs and one would fail ' +
-  'against correct code. Assayer understood the branch — this is not syntax it missed — but it does ' +
-  'not decompose a `typeof` comparison into the case each result names; the value `typeof` narrows ' +
-  'may already be a parameter this entry declares.';
+  "against correct code. Assayer understood the branch — this is not syntax it missed — but the value " +
+  "`typeof` applies to is neither one of this entry's parameters nor an environment variable, so " +
+  'Assayer cannot yet ask what the comparison narrows. Make that value a parameter and each arm ' +
+  'becomes a case Assayer drives.';
 
-const REASON_PROPERTY_DEPTH =
-  '`checkDeep` has a branch on line 4 whose deciding value `config.db.retry.backoff` reads a property ' +
-  'more than one level deep off one of its parameters, so no case can steer which arm runs: with ' +
-  'nothing to vary, both arms would arrange the same inputs and one would fail against correct code. ' +
-  'Assayer understood the branch — this is not syntax it missed — but it matches an object-member ' +
-  'comparison only ONE property level deep (`config.mode`), never a path this long.';
+const REASON_TYPEOF_MEMBER =
+  '`choose` has a branch on line 2 that reads `typeof target`, so no case can steer which arm runs: ' +
+  'with nothing to vary, both arms would arrange the same inputs and one would fail against correct ' +
+  "code. Assayer understood the branch and read the comparison: it narrows `target` to the union " +
+  'member whose runtime type matches on one arm and to the rest on the other. On at least one side, ' +
+  'every matching member is a shape Assayer cannot yet select on its own from a union with more than ' +
+  'one member — building the object or array is not the gap, choosing WHICH member to build is. There ' +
+  'is no repo change that closes this today; it is a followup capability.';
+
+const REASON_DEEP_PROPERTY =
+  '`checkDeep` has a branch on line 4 whose deciding value `config.db.retry.backoff` is neither one of ' +
+  'its parameters nor an environment variable, so no case can steer which arm runs: with nothing to ' +
+  'vary, both arms would arrange the same inputs and one would fail against correct code. Assayer ' +
+  'understood the branch — this is not syntax it missed — but its execution model cannot set the value ' +
+  'that decides it. Make the deciding value a parameter, or read it from the environment in a module ' +
+  'scope, and each arm becomes a case Assayer drives.';
 
 describe('undrivenBranchTransformer', () => {
   describe('an opaque-call branch with no nameable operand', () => {
@@ -128,21 +139,56 @@ describe('undrivenBranchTransformer', () => {
     });
   });
 
+  describe('a typeof branch that narrows a union whose matching member has no scalar point', () => {
+    it('VALID: {a branch on line 2 narrowing `target` to a union member Assayer cannot pick} => the reason names the shape limit, never "compare against a literal"', () => {
+      const result = undrivenBranchTransformer({
+        entryName: SymbolNameStub({ value: 'choose' }),
+        undrivenBranches: [
+          {
+            line: LineNumberStub({ value: 2 }),
+            cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }),
+            operand: SymbolNameStub({ value: 'target' }),
+          },
+        ],
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'choose', startLine: 2, endLine: 2, reason: REASON_TYPEOF_MEMBER },
+      ]);
+    });
+
+    // Same invariant as `unread-comparison`: every leaf reaching this cause already passed the
+    // arrangeable check, so it always carries an operand.
+    it('ERROR: {a branch on line 2, no operand, cause unarrangeable-typeof-member} => throws the invariant violation', () => {
+      expect(() =>
+        undrivenBranchTransformer({
+          entryName: SymbolNameStub({ value: 'choose' }),
+          undrivenBranches: [
+            { line: LineNumberStub({ value: 2 }), cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }) },
+          ],
+        }),
+      ).toThrow(/^unreachable: an 'unarrangeable-typeof-member' branch on line 2 of `choose` carries no operand$/u);
+    });
+  });
+
+  // A property path of any depth reaches the SAME `unarrangeable-operand` cause a plain opaque operand
+  // does — `stub-realize` closes an object-member branch at consume time regardless of how deep its
+  // path runs, so there is no separate depth-specific limit left to word differently here.
   describe('an object-member branch reading a property more than one segment deep', () => {
-    it('VALID: {a branch on line 4 deciding on `config.db.retry.backoff`} => the reason names the depth limit, never "make it a parameter"', () => {
+    it('VALID: {a branch on line 4 deciding on `config.db.retry.backoff`} => the same generic reason a plain opaque operand gets', () => {
       const result = undrivenBranchTransformer({
         entryName: SymbolNameStub({ value: 'checkDeep' }),
         undrivenBranches: [
           {
             line: LineNumberStub({ value: 4 }),
-            cause: UndrivenCauseStub({ value: 'unarrangeable-property-depth' }),
+            cause: UndrivenCauseStub(),
             operand: SymbolNameStub({ value: 'config.db.retry.backoff' }),
           },
         ],
       });
 
       expect(result).toStrictEqual([
-        { name: 'checkDeep', startLine: 4, endLine: 4, reason: REASON_PROPERTY_DEPTH },
+        { name: 'checkDeep', startLine: 4, endLine: 4, reason: REASON_DEEP_PROPERTY },
       ]);
     });
   });

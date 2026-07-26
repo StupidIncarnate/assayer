@@ -128,8 +128,8 @@ describe('resolveSpecifierLayerBroker', () => {
   describe('a re-export barrel followed to the definition', () => {
     it('VALID: {barrel re-exports foo from ../b/foo} => local keyed by the definition, not the barrel', () => {
       const proxy = resolveSpecifierLayerBrokerProxy();
-      proxy.resolvesLocalOnce({ fileName: '/repo/src/barrel/index.ts' });
-      proxy.resolvesLocalOnce({ fileName: '/repo/src/b/foo.ts' });
+      proxy.resolvesLocalOnce({ fileName: '/repo/src/barrel/index.ts', specifier: '../barrel' });
+      proxy.resolvesLocalOnce({ fileName: '/repo/src/b/foo.ts', specifier: '../b/foo' });
       const barrel = CompiledFileBlobStub({
         relPath: 'src/barrel/index.ts',
         moduleGraph: {

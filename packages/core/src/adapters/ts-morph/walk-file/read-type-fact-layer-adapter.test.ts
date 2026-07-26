@@ -446,93 +446,130 @@ describe('readTypeFactLayerAdapter', () => {
   });
 
   describe('tuple types', () => {
-    // A tuple's numeric-index properties (`0`, `1`) and `length` carry no declaration of their own —
-    // the checker synthesizes them structurally — AND the tuple type itself carries no symbol to fall
-    // back to, so `declaration` stays undefined for exactly these three. `unknown` is what the reader
-    // answers for a property with nowhere to read a type from; every inherited `ReadonlyArray` method
-    // DOES carry its own declaration (in `lib.es5.d.ts`) and reads as a normal callable.
-    it('VALID: {readonly [string, number] param} => the index and length properties read as unknown, the inherited methods as callables', () => {
+    // A tuple is fixed-length and HETEROGENEOUS: read as its own `tuple` flavor, one fact per position,
+    // BEFORE the object branch — never as an anonymous object enumerating `0`, `1`, `length` and every
+    // inherited `ReadonlyArray` method, which is what the same param read as an object.
+    it('VALID: {readonly [string, number] param} => a tuple fact with one element fact per position', () => {
       readTypeFactLayerAdapterProxy();
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(pair: readonly [string, number]): void {}\n');
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair');
 
       expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({ flavor: 'tuple', elements: [{ flavor: 'string' }, { flavor: 'number' }] }),
+      );
+    });
+
+    // The non-`readonly` spelling has no TypeOperator wrapper around its TupleTypeNode, so the element
+    // node lookup has to unwrap only when the wrapper is actually there.
+    it('VALID: {[string, number] param, no readonly} => the same tuple fact', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export function f(pair: [string, number]): void {}\n');
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({ flavor: 'tuple', elements: [{ flavor: 'string' }, { flavor: 'number' }] }),
+      );
+    });
+  });
+
+  describe('intersection types', () => {
+    // An intersection of two same-file interfaces reads through the SAME branch as a plain object: the
+    // checker's own `getProperties()` on the intersection already returns the MERGED members, so no
+    // separate merge logic is needed. Keyless, because an inline `Ay & Bee` names no symbol of its own.
+    it('VALID: {v: Ay & Bee, both same-file interfaces} => an object fact merging both shapes, no typeName', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export interface Ay { a: string }\nexport interface Bee { b: number }\nexport function f(v: Ay & Bee): void {}\n',
+      );
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('v');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
         TypeFactStub({
           flavor: 'object',
           properties: [
-            { name: '0', fact: { flavor: 'other', text: 'unknown' } },
-            { name: '1', fact: { flavor: 'other', text: 'unknown' } },
-            {
-              name: 'concat',
-              fact: {
-                flavor: 'callable',
-                text: '{ (...items: ConcatArray<string | number>[]): (string | number)[]; (...items: (string | number | ConcatArray<string | number>)[]): (string | number)[]; }',
-              },
-            },
-            {
-              name: 'every',
-              fact: {
-                flavor: 'callable',
-                text: '{ <S>(predicate: (value: string | number, index: number, array: readonly (string | number)[]) => value is S, thisArg?: any): this is readonly S[]; (predicate: (value: string | number, index: number, array: readonly (string | number)[]) => unknown, thisArg?: any): boolean; }',
-              },
-            },
-            {
-              name: 'filter',
-              fact: {
-                flavor: 'callable',
-                text: '{ <S>(predicate: (value: string | number, index: number, array: readonly (string | number)[]) => value is S, thisArg?: any): S[]; (predicate: (value: string | number, index: number, array: readonly (string | number)[]) => unknown, thisArg?: any): (string | number)[]; }',
-              },
-            },
-            {
-              name: 'forEach',
-              fact: {
-                flavor: 'callable',
-                text: '(callbackfn: (value: string | number, index: number, array: readonly (string | number)[]) => void, thisArg?: any) => void',
-              },
-            },
-            {
-              name: 'indexOf',
-              fact: { flavor: 'callable', text: '(searchElement: string | number, fromIndex?: number) => number' },
-            },
-            { name: 'join', fact: { flavor: 'callable', text: '(separator?: string) => string' } },
-            {
-              name: 'lastIndexOf',
-              fact: { flavor: 'callable', text: '(searchElement: string | number, fromIndex?: number) => number' },
-            },
-            { name: 'length', fact: { flavor: 'other', text: 'unknown' } },
-            {
-              name: 'map',
-              fact: {
-                flavor: 'callable',
-                text: '<U>(callbackfn: (value: string | number, index: number, array: readonly (string | number)[]) => U, thisArg?: any) => U[]',
-              },
-            },
-            {
-              name: 'reduce',
-              fact: {
-                flavor: 'callable',
-                text: '{ (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number): string | number; (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number, initialValue: string | number): string | number; <U>(callbackfn: (previousValue: U, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => U, initialValue: U): U; }',
-              },
-            },
-            {
-              name: 'reduceRight',
-              fact: {
-                flavor: 'callable',
-                text: '{ (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number): string | number; (callbackfn: (previousValue: string | number, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => string | number, initialValue: string | number): string | number; <U>(callbackfn: (previousValue: U, currentValue: string | number, currentIndex: number, array: readonly (string | number)[]) => U, initialValue: U): U; }',
-              },
-            },
-            { name: 'slice', fact: { flavor: 'callable', text: '(start?: number, end?: number) => (string | number)[]' } },
-            {
-              name: 'some',
-              fact: {
-                flavor: 'callable',
-                text: '(predicate: (value: string | number, index: number, array: readonly (string | number)[]) => unknown, thisArg?: any) => boolean',
-              },
-            },
-            { name: 'toLocaleString', fact: { flavor: 'callable', text: '() => string' } },
-            { name: 'toString', fact: { flavor: 'callable', text: '() => string' } },
+            { name: 'a', fact: { flavor: 'string' } },
+            { name: 'b', fact: { flavor: 'number' } },
           ],
+        }),
+      );
+    });
+
+    // A NAMED intersection (`type AB = Ay & Bee`) hangs its name on the ALIAS symbol, exactly as a
+    // `type Config = { … }` object alias does — the same split §3 documents for a plain object.
+    it('VALID: {type AB = Ay & Bee, referenced by name} => an object fact carrying the alias as typeName', () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export interface Ay { a: string }\nexport interface Bee { b: number }\nexport type AB = Ay & Bee;\nexport function f(v: AB): void {}\n',
+      );
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('v');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'AB',
+          properties: [
+            { name: 'a', fact: { flavor: 'string' } },
+            { name: 'b', fact: { flavor: 'number' } },
+          ],
+        }),
+      );
+    });
+  });
+
+  describe('template literal types', () => {
+    // A template literal type with at least one non-literal-union substitution reads as its own
+    // `template` flavor: the literal segments in source order, and one fact per substitution.
+    it(`VALID: {t: \`id-\${string}\`} => a template fact with the literal segments and the string substitution`, () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', `export function f(t: \`id-\${string}\`): void {}\n`);
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({ flavor: 'template', texts: ['id-', ''], types: [{ flavor: 'string' }] }),
+      );
+    });
+
+    // Two substitutions: `texts` still carries exactly one more segment than there are substitutions,
+    // with the middle segment landing between them.
+    it(`VALID: {t: \`\${string}-\${number}!\`} => texts and types both carry two entries in source order`, () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', `export function f(t: \`\${string}-\${number}!\`): void {}\n`);
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'template',
+          texts: ['', '-', '!'],
+          types: [{ flavor: 'string' }, { flavor: 'number' }],
+        }),
+      );
+    });
+
+    // A template whose every substitution is a closed set of literals collapses to a plain UNION before
+    // this adapter ever sees a template literal type — proof the `isUnion()` check above still runs
+    // first, exactly as the file's own PURPOSE doc says.
+    it(`VALID: {t: \`\${'a'|'b'}-x\`} => a union fact of the two literal strings, never a template fact`, () => {
+      readTypeFactLayerAdapterProxy();
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('src/f.ts', `export function f(t: \`\${'a'|'b'}-x\`): void {}\n`);
+      const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
+
+      expect(readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNodeOrThrow() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'union',
+          members: [
+            { flavor: 'literal', value: 'a-x' },
+            { flavor: 'literal', value: 'b-x' },
+          ],
+          text: '"a-x" | "b-x"',
         }),
       );
     });

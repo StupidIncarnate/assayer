@@ -221,6 +221,99 @@ describe('collectPropertyDemandsTransformer', () => {
     });
   });
 
+  describe('a property whose own type is an object, read past itself', () => {
+    it("VALID: {Config{db:{retry:number}}, config.db.retry === 3} => db demanded NESTED, retry demanded [3, 7]", () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub({
+          name: 'Config',
+          properties: [{ name: 'db', type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] } }],
+        }),
+        leaves: [
+          ConditionLeafStub({
+            operandParamName: 'config',
+            operandPropertyPath: ['db', 'retry'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'number' },
+            predicate: { kind: 'eq', literal: 3 },
+          }),
+        ],
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'db', demand: { kind: 'nested', properties: [{ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } }] } },
+      ]);
+    });
+
+    it("VALID: {Config{db:{retry:{backoff:string}}}, config.db.retry.backoff === 'x'} => the nested tree walks three levels deep", () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub({
+          name: 'Config',
+          properties: [
+            {
+              name: 'db',
+              type: {
+                kind: 'object',
+                properties: [
+                  { name: 'retry', type: { kind: 'object', properties: [{ name: 'backoff', type: { kind: 'string' } }] } },
+                ],
+              },
+            },
+          ],
+        }),
+        leaves: [
+          ConditionLeafStub({
+            operandParamName: 'config',
+            operandPropertyPath: ['db', 'retry', 'backoff'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'string' },
+            predicate: { kind: 'eq', literal: 'x' },
+          }),
+        ],
+      });
+
+      expect(result).toStrictEqual([
+        {
+          name: 'db',
+          demand: {
+            kind: 'nested',
+            properties: [
+              {
+                name: 'retry',
+                demand: { kind: 'nested', properties: [{ name: 'backoff', demand: { kind: 'demanded', values: ['abc123', 'x'] } }] },
+              },
+            ],
+          },
+        },
+      ]);
+    });
+
+    it('VALID: {a sibling property beside the nested one} => the sibling is unaffected and still sorts alphabetically', () => {
+      const result = collectPropertyDemandsTransformer({
+        declaredType: DeclaredTypeStub({
+          name: 'Config',
+          properties: [
+            { name: 'db', type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] } },
+            { name: 'mode', type: { kind: 'string' } },
+          ],
+        }),
+        leaves: [
+          ConditionLeafStub({
+            operandParamName: 'config',
+            operandPropertyPath: ['db', 'retry'],
+            operandTypeRef: 'Config',
+            operandType: { kind: 'number' },
+            predicate: { kind: 'eq', literal: 3 },
+          }),
+        ],
+      });
+
+      expect(result).toStrictEqual([
+        { name: 'db', demand: { kind: 'nested', properties: [{ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } }] } },
+        { name: 'mode', demand: { kind: 'unknown' } },
+      ]);
+    });
+  });
+
   describe('property ordering', () => {
     it("VALID: {Config{retries,mode} declared out of alphabetical order} => properties returned sorted 'mode' before 'retries'", () => {
       const result = collectPropertyDemandsTransformer({

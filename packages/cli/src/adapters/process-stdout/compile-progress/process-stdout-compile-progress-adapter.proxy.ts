@@ -7,10 +7,10 @@ export const processStdoutCompileProgressAdapterProxy = (): {
   process.stdout.isTTY = false;
 
   const writeSpy = registerSpyOn({ object: process.stdout, method: 'write' });
-  writeSpy.mockImplementation(() => true);
+  writeSpy.calledWith([]).implement(() => true);
 
   return {
-    getWrites: (): unknown[] => writeSpy.mock.calls.map((call) => String(call[0])),
+    getWrites: (): unknown[] => writeSpy.callsMatching([]).map((call) => String(call[0])),
     enableTty: (): void => {
       process.stdout.isTTY = true;
     },

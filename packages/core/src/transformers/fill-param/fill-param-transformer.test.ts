@@ -80,6 +80,91 @@ describe('fillParamTransformer', () => {
     });
   });
 
+  describe('a tuple parameter', () => {
+    // Fixed-length and HETEROGENEOUS: one element per position, filled from that position's own type
+    // rather than one shared element type. Fills as a real array, the array binding's `value`, never a
+    // scalar `param` binding — `arrangeBindingContract`'s `param` arm only accepts a scalar.
+    it('VALID: {a readonly [string, number] param} => a real array with one filled value per position, an array binding', () => {
+      const result = fillParamTransformer({
+        param: ParamDescriptorStub({
+          name: 'pair',
+          type: { kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] },
+        }),
+      });
+
+      expect(result).toStrictEqual({ kind: 'filled', binding: { kind: 'array', param: 'pair', value: ['abc123', 7] } });
+    });
+
+    // One position refusing (a callable, here) refuses the whole tuple — the same short-circuit an
+    // unfillable required object property applies.
+    it('INVALID: {a tuple with one unfillable position} => unfillable, named by the type', () => {
+      const result = fillParamTransformer({
+        param: ParamDescriptorStub({
+          name: 'pair',
+          type: { kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'callable', text: '() => void' }] },
+          declaredText: 'readonly [string, () => void]',
+        }),
+      });
+
+      expect(result).toStrictEqual({ kind: 'unfillable', param: 'pair', type: 'readonly [string, () => void]' });
+    });
+  });
+
+  describe('a union parameter whose first fillable member is composite', () => {
+    // `fillValueTransformer` fills a union from its first fillable MEMBER, which can be an object as
+    // readily as a scalar — the declared parameter's own kind is still `union`, never `object`, so the
+    // binding kind has to come from the VALUE actually built, not from `type.kind`. Before this was
+    // read off the value, a `Plain | string` parameter with no branch narrowing it threw a zod error
+    // trying to carry a built object inside a `param` binding, which only accepts a scalar.
+    it('VALID: {an object-first union param} => the object binding, never a param binding holding an object', () => {
+      const result = fillParamTransformer({
+        param: ParamDescriptorStub({
+          name: 'target',
+          type: {
+            kind: 'union',
+            members: [
+              { kind: 'object', typeName: 'Plain', properties: [{ name: 'label', type: { kind: 'string' } }] },
+              { kind: 'string' },
+            ],
+          },
+        }),
+      });
+
+      expect(result).toStrictEqual({
+        kind: 'filled',
+        binding: { kind: 'object', param: 'target', value: { label: 'abc123' } },
+      });
+    });
+
+    // The array twin of the case above: a union whose first fillable member is itself a tuple fills as
+    // an array binding, not a param binding.
+    it('VALID: {a tuple-first union param} => the array binding, never a param binding holding an array', () => {
+      const result = fillParamTransformer({
+        param: ParamDescriptorStub({
+          name: 'pair',
+          type: { kind: 'union', members: [{ kind: 'tuple', elements: [{ kind: 'string' }] }, { kind: 'number' }] },
+        }),
+      });
+
+      expect(result).toStrictEqual({ kind: 'filled', binding: { kind: 'array', param: 'pair', value: ['abc123'] } });
+    });
+  });
+
+  describe('a template literal type parameter', () => {
+    // Fills as a plain interpolated STRING — each substitution's own representative point, joined
+    // between the type's literal segments — so it takes the scalar `param` binding, never `array`.
+    it(`VALID: {a \`id-\${string}\` param} => the literal segments interpolated with the substitution's representative, a param binding`, () => {
+      const result = fillParamTransformer({
+        param: ParamDescriptorStub({
+          name: 't',
+          type: { kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] },
+        }),
+      });
+
+      expect(result).toStrictEqual({ kind: 'filled', binding: { kind: 'param', param: 't', value: 'id-abc123' } });
+    });
+  });
+
   // The refusal. A placeholder here is worse than nothing twice over: `report('over')` throws on a
   // string, and `payload.size` quietly reads 6 and PASSES against an input the code never had.
   describe('a parameter no value of the right shape exists for', () => {
@@ -145,9 +230,9 @@ describe('fillParamTransformer', () => {
       expect(result).toStrictEqual({ kind: 'unfillable', param: 'hooks', type: '() => void[]' });
     });
 
-    // A tuple enumerates as an anonymous object carrying every ReadonlyArray member — rendering the
-    // descriptor buries the one actionable fact. `declaredText` is what the SOURCE spelled, and it wins
-    // over the descriptor's own rendering whenever the two differ.
+    // An anonymous object with no `typeName` renders as its full braced property list — rendering the
+    // descriptor for one with many properties buries the one actionable fact. `declaredText` is what
+    // the SOURCE spelled, and it wins over the descriptor's own rendering whenever the two differ.
     it('INVALID: {a param whose declaredText differs from the descriptor rendering} => unfillable, named by declaredText', () => {
       const result = fillParamTransformer({
         param: ParamDescriptorStub({

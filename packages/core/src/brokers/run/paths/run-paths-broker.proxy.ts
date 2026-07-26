@@ -21,15 +21,15 @@ export const runPathsBrokerProxy = (): {
   const hashHandle = registerMock({ fn: analyzerHashBroker });
   const runEachHandle = registerMock({ fn: runEachLayerBroker });
 
-  findUpHandle.mockReturnValue(FilePathStub({ value: '/core' }));
-  hashHandle.mockResolvedValue(ContentHashStub());
-  runEachHandle.mockImplementation(async ({ remaining }: { remaining: readonly string[] }) =>
+  findUpHandle.calledWith([]).returns(FilePathStub({ value: '/core' }));
+  hashHandle.calledWith([]).resolves(ContentHashStub());
+  runEachHandle.calledWith([]).implement(async ({ remaining }: { remaining: readonly string[] }) =>
     Promise.resolve(remaining.map(() => RunResultStub())),
   );
 
   return {
     coreRootMissing: (): void => {
-      findUpHandle.mockReturnValue(undefined);
+      findUpHandle.calledWith([]).returns(undefined);
     },
   };
 };

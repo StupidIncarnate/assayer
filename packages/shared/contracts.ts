@@ -115,6 +115,9 @@ export * from './src/contracts/predicate/predicate.stub';
 export * from './src/contracts/type-text/type-text-contract';
 export * from './src/contracts/type-text/type-text.stub';
 
+export * from './src/contracts/template-text/template-text-contract';
+export * from './src/contracts/template-text/template-text.stub';
+
 export * from './src/contracts/type-descriptor/type-descriptor-contract';
 export * from './src/contracts/type-descriptor/type-descriptor.stub';
 

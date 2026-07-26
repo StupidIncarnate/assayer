@@ -34,9 +34,23 @@
  *   (`is-falsy-arm`, which `object-arrange` refuses on) and never by narrowing to empty here — an empty
  *   domain would mean the guards CONTRADICT, and nothing about that arm is dead.
  *
+ *   `typeof-eq`/`typeof-neq` narrow by the operand's RUNTIME TAG rather than its value, via
+ *   `typeofDomainTransformer`: each candidate member of the type — or the type itself, treated as a
+ *   one-member union, when it is not one — is classified onto the tag `typeof` would give it
+ *   (`typeofTagTransformer`), and split into the side that matches the compared-against tag versus the
+ *   side that does not. A member that matches but has no scalar point (an object, an array) still keeps
+ *   that arm real; this engine just cannot name a point inside it, so it constrains NOTHING there and the
+ *   fill seam builds the shape, mirroring the no-scalar-point rule two paragraphs up. Only a side with NO
+ *   matching member at all, where some other member's tag is known, becomes the genuine empty domain
+ *   that marks an arm impossible — which is how a bare, non-union `target: string` still gets a real
+ *   `{members: []}` on its `typeof target !== 'string'` arm: every value matches the other side, so this
+ *   one truly cannot be reached.
+ *
  * USAGE:
  * typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'length-gte', literal: 2 });
  * // Returns { satisfying: {lengthMin: 2}, violating: {lengthMax: 2, lengthMaxExclusive: true} }
+ * typeToRangeTransformer({ type: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }, predicateKind: 'typeof-eq', literal: 'string' });
+ * // Returns { satisfying: {members: ['abc123']}, violating: {members: [7]} }
  */
 import { representativeValueContract } from '@assayer/shared/contracts';
 import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
@@ -44,6 +58,8 @@ import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contra
 import { armValuesContract } from '../../contracts/arm-values/arm-values-contract';
 import type { ArmValues } from '../../contracts/arm-values/arm-values-contract';
 import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
+import { typeofDomainTransformer } from '../typeof-domain/typeof-domain-transformer';
+import type { TypeofTag } from '../typeof-tag/typeof-tag-transformer';
 
 export const typeToRangeTransformer = ({
   type,
@@ -166,6 +182,25 @@ export const typeToRangeTransformer = ({
         satisfying: rep === undefined ? {} : { members: [rep] },
         violating: { members: [null] },
       });
+    // The runtime-tag axis: `literal` here is always the STRING tag `typeof` compared against
+    // (`predicateTransformer` never emits this kind otherwise), never a value of the operand's own
+    // type. `typeof-eq`'s satisfying side is the tag-matching side and its violating side is
+    // everything else; `typeof-neq` is the exact mirror.
+    case 'typeof-eq':
+    case 'typeof-neq': {
+      const tag = typeof literal === 'string' ? (literal as TypeofTag) : undefined;
+
+      if (tag === undefined) {
+        return armValuesContract.parse({ satisfying: {}, violating: {} });
+      }
+
+      const matching = typeofDomainTransformer({ type, tag, wantMatch: true });
+      const rest = typeofDomainTransformer({ type, tag, wantMatch: false });
+
+      return armValuesContract.parse(
+        predicateKind === 'typeof-eq' ? { satisfying: matching, violating: rest } : { satisfying: rest, violating: matching },
+      );
+    }
     default:
       // Unrecognized: constrain NOTHING on either arm. A predicate the analyzer could not read must
       // not narrow anything, or an unread guard would be able to prove a reachable exit impossible.

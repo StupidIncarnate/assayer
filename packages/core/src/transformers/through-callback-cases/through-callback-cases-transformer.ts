@@ -45,6 +45,7 @@ import type { ArrangeBinding, ArrangeValue, EntryLabel, FunctionAnalysis, Symbol
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { isValueBindingGuard } from '../../guards/is-value-binding/is-value-binding-guard';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
+import { deriveCasesRequestTransformer } from '../derive-cases-request/derive-cases-request-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 
@@ -67,16 +68,20 @@ export const throughCallbackCasesTransformer = ({
   // positionally — a trailing one no caller owes and the seam cannot build is not part of the call.
   const entryParams = appliedParamsTransformer({ params: entry.params });
 
-  const derived = deriveCasesTransformer({
-    params: callback.params,
-    branches: callback.branches,
-    exits: callback.exits,
-    envDrivable: false,
-    // The callback's own return comparison, never a recorded output (P4) — the branchless twin of a
-    // callback's `if`, so `.filter`/`.some`/`.every`/`.find` split their element into a satisfying and a
-    // violating case instead of collapsing to one representative fill.
-    ...(callback.predicateSignature === undefined ? {} : { returnPredicate: callback.predicateSignature }),
-  });
+  const derived = deriveCasesTransformer(
+    deriveCasesRequestTransformer({
+      scope: callback,
+      params: callback.params,
+      // A callback's element comes from iterating the entry's array, never from a call argument, so
+      // there is no weld map to compute here — nothing ever welds a value into a callback's parameter.
+      welds: undefined,
+      envDrivable: false,
+      // No harness route reaches a callback: its steered value is an ArrangeValue nested inside the
+      // entry's array binding, and ArrangeValue has no `harness` arm the way ArrangeBinding does — there
+      // is no slot to bind a key path onto (see `derive-cases-request`'s PURPOSE).
+      harness: undefined,
+    }),
+  );
 
   const cases = derived.cases.flatMap((testCase) => {
     // The element binding may be a scalar `param`, or a composite `array`/`object` when the array's

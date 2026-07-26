@@ -5,12 +5,20 @@
  *   type, never from executing the code (P4).
  *
  *   It answers ONLY for a type that genuinely has a scalar point: `string`, `number`, `boolean`, a
- *   literal, and a union through the first member that has one. Every other type — an array, an object,
- *   a callable, an opaque unknown, an empty union — returns `undefined`, because there is no string that
+ *   literal, a union through the first member that has one, and a TEMPLATE LITERAL type through the
+ *   scalar point of each of its own substitutions. Every other type — an array, a tuple, an object, a
+ *   callable, an opaque unknown, an empty union — returns `undefined`, because there is no string that
  *   is an array and no number that is a callback. Substituting one is the defect this refusal exists to
  *   make impossible: a `Map` filled with a string reads `payload.size` as 6 and the case passes against
- *   an input the code was never given. Composite values are `fill-value`'s job; refusing a parameter
- *   outright is `fill-param`'s.
+ *   an input the code was never given. Composite values (an array, a tuple) are `fill-value`'s job;
+ *   refusing a parameter outright is `fill-param`'s.
+ *
+ *   A template literal type's scalar point is built by INTERPOLATING each substitution's own point
+ *   between the type's literal segments, so `` `id-${string}` `` reads its `string` substitution's point
+ *   and produces `'id-abc123'` — a value drawn from the declared shape, never a stand-in. A SINGLE
+ *   substitution refusing (an object, a callable — TypeScript itself never actually declares one, but
+ *   the check stays honest either way) refuses the whole template, the same short-circuit `fill-value`
+ *   applies to one unfillable array element.
  *
  * USAGE:
  * representativeValueTransformer({ type: { kind: 'string' } });
@@ -48,10 +56,33 @@ export const representativeValueTransformer = ({
 
       return first;
     }
+    // Interpolates each substitution's own scalar point between the type's literal segments. One
+    // substitution refusing (returning `undefined`) refuses the whole template — there is no way to
+    // interpolate a hole into a string — mirrored by `flatMap` dropping short if any point is missing,
+    // caught by the length check against the substitution count.
+    case 'template': {
+      const points = type.types.flatMap((substitution) => {
+        const point = representativeValueTransformer({ type: substitution });
+
+        return point === undefined ? [] : [point];
+      });
+
+      if (points.length !== type.types.length) {
+        return undefined;
+      }
+
+      const joined = type.texts.reduce(
+        (accumulated, text, index) => `${accumulated}${String(text)}${index < points.length ? String(points[index]) : ''}`,
+        '',
+      );
+
+      return representativeValueContract.parse(joined);
+    }
     // None of these has a member of the scalar domain (string/number/boolean/null), so refuse rather
-    // than stand something in. All four are NAMED so a kind added later fails the exhaustiveness check
+    // than stand something in. All are NAMED so a kind added later fails the exhaustiveness check
     // and forces a decision; the default shares their answer because refusing is the safe one.
     case 'array':
+    case 'tuple':
     case 'object':
     case 'callable':
     case 'unknown':

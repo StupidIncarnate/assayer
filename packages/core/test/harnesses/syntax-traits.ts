@@ -65,6 +65,16 @@ export type SyntaxTrait =
   // shape, so the callback specimen would be indistinguishable from one taking an empty interface and
   // the catalogue could lose the callable reader's coverage in silence.
   | 'param:callable'
+  // A fixed-length, HETEROGENEOUS tuple (`readonly [string, number]`). Its own trait for the same
+  // reason `param:callable` is: read generically as an object it would enumerate every inherited
+  // `ReadonlyArray` method plus undeclared numeric-index properties, so a tuple specimen losing its own
+  // descriptor kind would look identical to one Assayer never learned to read at all.
+  | 'param:tuple'
+  // A template literal type (`` `id-${string}` ``) whose substitutions are not a closed set of literals
+  // — one that survives as its OWN descriptor kind rather than collapsing to a plain union of literal
+  // strings. Its own trait so a specimen that stopped reading the template structurally would look like
+  // an ordinary opaque `unknown` param instead.
+  | 'param:template'
   | 'operand:env'
   // A branch whose operand is an OBJECT-MEMBER read (`if (config.mode === 'a')`) — the walk records the
   // property path and the root's type-reference on the leaf, so the branch is admitted UNDRIVEN in the
@@ -198,6 +208,18 @@ export const syntaxTraits = (): {
         .flatMap((fn) => fn.entry.params)
         .filter((param) => param.type.kind === 'callable')
         .map((): SyntaxTrait => 'param:callable');
+      // Same yes/no shape, gating its own check: a TUPLE param proves the walk reads it as its own
+      // fixed-length, heterogeneous kind rather than an anonymous object dump.
+      const tuples = analysis.functions
+        .flatMap((fn) => fn.entry.params)
+        .filter((param) => param.type.kind === 'tuple')
+        .map((): SyntaxTrait => 'param:tuple');
+      // Same yes/no shape, gating its own check: a TEMPLATE LITERAL param proves the walk reads its
+      // literal segments and substitutions structurally rather than dropping it into an opaque unknown.
+      const templates = analysis.functions
+        .flatMap((fn) => fn.entry.params)
+        .filter((param) => param.type.kind === 'template')
+        .map((): SyntaxTrait => 'param:template');
       // Same yes/no shape, and it earns a trait for the same reason `param:union` does: a check is
       // gated on it. It is what separates the two identically-shaped module-scope specimens — one
       // reads its operand from the environment and is driven, one does not and is admitted undriven
@@ -291,6 +313,8 @@ export const syntaxTraits = (): {
           ...arrays,
           ...objects,
           ...callables,
+          ...tuples,
+          ...templates,
           ...envOperands,
           ...propertyOperands,
           ...callees,

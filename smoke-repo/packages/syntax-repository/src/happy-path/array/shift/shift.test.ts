@@ -7,15 +7,21 @@ import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 const source = readFileSync(join(__dirname, 'shift.ts'), 'utf8');
 const relPath = 'src/happy-path/array/shift/shift.ts';
 
+// The hermetic walk parses with strict-null-checks on, so `number | undefined` arrives as a genuine
+// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-adapter` has no
+// dedicated case for the undefined type, so its member reads through the generic opaque path as
+// `{ kind: 'unknown', text: 'undefined' }`, sitting beside the real `{ kind: 'number' }` member.
+const OPTIONAL_NUMBER = { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] };
+
 describe('array / shift — a branchless function returning `items.shift()`', () => {
   // The mirror of pop from the front of the array: same array-of-number param, same `number | undefined`
-  // annotation collapsed to `{ kind: 'number' }` by the non-strict hermetic project (§5.10). Branchless,
-  // but the single array param FANS OUT over cardinality: three cases reach the one exit, arranged with
-  // REAL arrays of the element type so `items.shift()` runs on an actual array. Emit order fixes salience
-  // — the empty `[]` is the salient representative; the one-element `[7]` and many `[7,7]` twins are the
-  // grayed breadth (all run under `thorough`; only `intelligent` grays the two). Values are INPUTS (P4);
-  // each case asserts only that the flow REACHES the exit.
-  it('VALID: {export function takeFirst(items: number[]): number | undefined { return items.shift() }} => array-of-number param, return read as number, three cardinality cases', () => {
+  // annotation, now read as a real union — `items.shift()` genuinely can return nothing on an empty
+  // array. Branchless, but the single array param FANS OUT over cardinality: three cases reach the one
+  // exit, arranged with REAL arrays of the element type so `items.shift()` runs on an actual array. Emit
+  // order fixes salience — the empty `[]` is the salient representative; the one-element `[7]` and many
+  // `[7,7]` twins are the grayed breadth (all run under `thorough`; only `intelligent` grays the two).
+  // Values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
+  it('VALID: {export function takeFirst(items: number[]): number | undefined { return items.shift() }} => array-of-number param, return read as a real optional union, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
@@ -24,7 +30,7 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
           name: 'takeFirst',
           scopePath: ['*module*', 'takeFirst'],
           params: [{ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }],
-          returnType: { kind: 'number' },
+          returnType: OPTIONAL_NUMBER,
           line: 1,
           access: { kind: 'named' },
         },

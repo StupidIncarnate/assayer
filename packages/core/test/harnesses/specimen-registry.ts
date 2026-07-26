@@ -50,11 +50,11 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/boolean/eq-false/eq-false.ts`]: ['access:named', 'branch:if'],
 
   // null: `v === null` reads `NullKeyword` as the literal value `null`, a first-class RepresentativeValue,
-  // exactly as `active === false` reads `FalseKeyword`. The hermetic walk has no strict-null-checks project
-  // config, so the checker itself widens `string | null` to `string` — the leaf's own `operandType` is the
-  // scalar alone, and the literal carries the domain instead. Before the reader knew `NullKeyword`, this
+  // exactly as `active === false` reads `FalseKeyword`. The hermetic walk parses with strict-null-checks
+  // on, so `string | null` arrives as a real two-member union — `v`'s own `operandType` carries both
+  // members, which is why the file also owes `param:union`. Before the reader knew `NullKeyword`, this
   // branch read `unrecognized` and was admitted UNDRIVEN — 0 cases, a silent false success.
-  [`${CATALOGUE}/happy-path/null/eq-null/eq-null.ts`]: ['access:named', 'branch:if'],
+  [`${CATALOGUE}/happy-path/null/eq-null/eq-null.ts`]: ['access:named', 'branch:if', 'param:union'],
 
   // composition: both constructs in one file, which is the point of these rungs.
   [`${CATALOGUE}/happy-path/composition/fallthrough-in-if/fallthrough-in-if.ts`]: ['access:named', 'branch:if', 'branch:switch'],
@@ -158,8 +158,9 @@ const DECLARATIONS = {
   // so each derives THREE cases reaching one exit — the salient `[7]` plus the grayed `[]`/`[7,7]` twins;
   // a two-param op fixes its scalar across the three. A builtin method or index op is not a reportable
   // callee and no object shape is declared, so each owes only `access:named` + `param:array` and admits
-  // nothing. `pop`/`shift`/`at` annotate `number | undefined`, read as bare `number` by the non-strict
-  // hermetic walk (§5.10). `nested` takes `number[][]`, arranged as real nested arrays (`[[7]]`, and
+  // nothing. `pop`/`shift`/`at` annotate `number | undefined`; the walk reads that as a real two-member
+  // union on the RETURN type. `param:union` tracks entry PARAMS only, so it is not owed here — each
+  // param stays `number[]`. `nested` takes `number[][]`, arranged as real nested arrays (`[[7]]`, and
   // `many` is `[[7],[7]]` since only the top param fans out). The `const-*` rungs bind an array to a
   // const: `const-alias` aliases the param (still driven, 3 cases), while `const-literal` reads a LOCAL
   // literal array with no array PARAM — one case, `access:named` alone. `map`'s `(n) => n*2` callback is
@@ -237,6 +238,12 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/array/const-literal/const-literal.ts`]: ['access:named'],
   [`${CATALOGUE}/happy-path/object/local-shape/local-shape.ts`]: ['access:named', 'param:object'],
 
+  // An INTERSECTION of two same-file interfaces (`v: Ay & Bee`). Not `isObject()` to the checker, but
+  // `getProperties()` on the intersection already returns the MERGED members, so it reads through the
+  // exact same branch a plain object does — `param:object`, not a trait of its own. Branchless and
+  // DRIVEN with one case, its arrange the merged shape both interfaces declare.
+  [`${CATALOGUE}/happy-path/object/intersection/intersection.ts`]: ['access:named', 'param:object'],
+
   // Object-member branches, DRIVEN at consume time by stub-realize: it arranges the object param from the
   // merged stub view (derived per-property demands + the committed `assayer/stubs/` overlay), so each arm
   // becomes a driven case and the per-file `undriven` admission drops — a clean run, hence happy-path.
@@ -253,6 +260,12 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/object/cross-file-shape/cross-file-shape.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property', 'param:object'],
   [`${CATALOGUE}/happy-path/object/cross-file-shape/reader-b.ts`]: ['access:named', 'branch:if', 'callee:import-local', 'operand:property', 'param:object'],
   [`${CATALOGUE}/happy-path/object/cross-file-shape/types.ts`]: ['access:named', 'param:object'],
+
+  // `config.db.retry`, a property path more than one segment deep — the SAME `branch-local` shape, one
+  // level further in. `object-arrange` and `collect-property-demands` both recurse into `db`'s own
+  // shape, so stub-realize drives this exactly as it drives a one-segment `config.mode` read: both arms
+  // become real cases, `db` built out as a real nested object rather than left unconstrained.
+  [`${CATALOGUE}/happy-path/object/property-depth/property-depth.ts`]: ['access:named', 'branch:if', 'operand:property', 'param:object'],
 
   // The imported shape a reader merely USES — no branch reads a member of it, so nothing about the
   // entry's own control flow could rescue the type. `param-type-resolve` reads the declaration off the
@@ -323,6 +336,13 @@ const DECLARATIONS = {
   // it is what proves the union parameter had to be fillable for any case to derive at all.
   [`${CATALOGUE}/happy-path/union/mixed-union/mixed-union.ts`]: ['access:named', 'branch:if', 'param:union'],
 
+  // typeof: `typeof target === 'string'` narrows `target`'s own declared union by which member's
+  // runtime tag the comparison names — the `string` member answers the then arm, the `number` member
+  // answers the else. Every member has a scalar point, so both arms realize a real, distinguishing
+  // value and the branch is fully driven: two cases, no admission. `param:union` is what the branch
+  // narrows; `branch:if` is the shape it narrows through.
+  [`${CATALOGUE}/happy-path/typeof/typeof-narrow/typeof-narrow.ts`]: ['access:named', 'branch:if', 'param:union'],
+
   // The cross-file example rungs — one per classification the resolver must make, so the catalogue
   // proves each import shape has a specimen. Analyzed single-file here (the stitch that resolves them
   // to definitions is exercised by the resolve-graph harnesses); the trait names WHICH shape.
@@ -388,14 +408,16 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/short-circuit/and-chain/and-chain.ts`]: ['access:named', 'branch:ternary'],
   // `??` in exit position — the controlling operand is read as a `non-nullish` leaf (not truthy), so
   // `a ?? b` fans out to the first non-null operand's exit and the null fall-through's. The else arm
-  // arranges the operand to `null`, a value the `??` operator inherently admits.
-  [`${CATALOGUE}/happy-path/short-circuit/nullish/nullish.ts`]: ['access:named', 'branch:ternary'],
+  // arranges the operand to `null`, a value the `??` operator inherently admits. `a: string | null`
+  // arrives as a real union, so `param:union` is owed alongside the branch.
+  [`${CATALOGUE}/happy-path/short-circuit/nullish/nullish.ts`]: ['access:named', 'branch:ternary', 'param:union'],
   // A SINGLE-LEVEL optional property access `a?.b` in exit position — an assumed ternary on the
   // receiver's non-nullishness, reusing the same `non-nullish` leaf `??` reads. `s` non-null returns
   // `s.length` (the then exit), `s` null short-circuits to `undefined` (the else exit). Its ONE
   // `optional` probe site observes both, so the null path — which has no expression to wrap — is still
-  // driven: `s: string` reuses the B2 string+null machinery, no object representative-value needed.
-  [`${CATALOGUE}/happy-path/optional-chain/basic/basic.ts`]: ['access:named', 'branch:ternary'],
+  // driven: `s: string | null` arrives as a real union, so `param:union` is owed alongside the branch,
+  // and no object representative-value is needed.
+  [`${CATALOGUE}/happy-path/optional-chain/basic/basic.ts`]: ['access:named', 'branch:ternary', 'param:union'],
 
   // switch.
   [`${CATALOGUE}/happy-path/switch/in-class/in-class.ts`]: ['access:method', 'branch:switch', 'param:union'],
@@ -436,6 +458,22 @@ const DECLARATIONS = {
   // array whose length actually decides it, rather than one every case shares regardless of the guard.
   [`${CATALOGUE}/happy-path/length/array-guard/array-guard.ts`]: ['access:named', 'branch:if', 'param:array'],
 
+  // A fixed-length, HETEROGENEOUS tuple param (`readonly [string, number]`). `isObject()` to the
+  // checker too, but read as its OWN `tuple` kind before the object branch — one descriptor per fixed
+  // position, never an anonymous object enumerating `0`, `1`, `length` and every inherited
+  // `ReadonlyArray` method. That symptom is what kept this specimen in `sad-path/run-gap/` before the
+  // reader gained its own tuple kind; it MOVES here now that the fill seam builds a real value for it —
+  // a real two-element array, a string at position 0 and a number at position 1. `param:tuple` gates
+  // the read; branchless, one case.
+  [`${CATALOGUE}/happy-path/tuple/tuple-param/tuple-param.ts`]: ['access:named', 'param:tuple'],
+
+  // A template literal type param (`` t: `id-${string}` ``) whose one substitution is plain `string`,
+  // not a closed set of literals — a genuine template, never pre-collapsed into a union. `param:template`
+  // gates the read. The fill seam builds it as a plain interpolated STRING, the substitution's own
+  // representative point joined between the type's literal segments, so it fills as a scalar `param`
+  // binding rather than a composite. Branchless, one case.
+  [`${CATALOGUE}/happy-path/template-literal/basic/basic.ts`]: ['access:named', 'param:template'],
+
   // ========================= sad-path/ — root is meant to run UNCLEAN =========================
 
   // A dark spot: no loop handler exists yet, so the for-of is ADMITTED rather than skipped. This is the
@@ -458,13 +496,6 @@ const DECLARATIONS = {
   // (non-constructable) method entry. This is the ONLY specimen exercising `access:constructor`, which is
   // why it drops off the uncatalogued list below.
   [`${CATALOGUE}/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts`]: ['access:constructor', 'access:method', 'access:named', 'branch:if'],
-
-  // An INPUT gap whose declared type the descriptor cannot name. A readonly tuple enumerates as an
-  // anonymous shape carrying every member of `ReadonlyArray` — `concat`, `every`, `filter`, `reduce`
-  // and their overloads — so the refusal is correct (nothing here builds a tuple yet) and the MESSAGE
-  // is what its colocated test pins: the wording AND the length, since error text is product surface
-  // and an unreadable one is a bug whatever it says.
-  [`${CATALOGUE}/sad-path/run-gap/tuple-param/tuple-param.ts`]: ['access:named', 'gap:input', 'param:object'],
 
   // The REPO's debt: a private with real branching that nothing in the file calls, so nothing ever
   // will (an unexported symbol is reachable only from its own file). Rides the LINT channel — "change
@@ -506,23 +537,25 @@ const DECLARATIONS = {
   // single derived case reporting "reached no exit" on code that reaches one perfectly.
   [`${CATALOGUE}/sad-path/undriven/const-comparand/const-comparand.ts`]: ['access:named', 'branch:if', 'undriven'],
   [`${CATALOGUE}/sad-path/undriven/enum-case/enum-case.ts`]: ['access:named', 'branch:switch', 'param:union', 'undriven'],
-  // A THIRD unarrangeable-operand shape, distinguished from the other two by its own cause: `typeof
-  // target === 'string'` names an operand that is the WHOLE `typeof` expression, not `target` — so
-  // `target` being a parameter does not make the comparison arrangeable. Assayer does not yet decompose
-  // a `typeof` read into the per-type cases it names, and the admission says exactly that rather than
-  // "make it a parameter", which `target` already is.
-  [`${CATALOGUE}/sad-path/undriven/typeof-narrow/typeof-narrow.ts`]: [
+  // `typeof` of a genuinely OPAQUE operand: `readValue()` is a call, not a parameter, so `typeof` is
+  // read past its own keyword onto something that still has no input a case can set. This is the SAME
+  // opaque-operand limit `opaque-if` has (above), worded to name the value `typeof` reads rather than
+  // claim `typeof` itself is unreadable — `unarrangeable-typeof` is the cause. `checkKind` takes no
+  // parameters, so this comparison has nothing to ever narrow by.
+  [`${CATALOGUE}/sad-path/undriven/typeof-narrow-opaque/typeof-narrow-opaque.ts`]: ['access:named', 'branch:if', 'undriven'],
+  // A typeof read that DOES narrow: `target` is a parameter and the comparison names a real tag, but
+  // the union's other member (`Plain`, an object) has no scalar point Assayer can pick from a union on
+  // its own — only the first fillable member, which is what an UNCONSTRAINED parameter gets, not what
+  // one arm of one branch needs. `unarrangeable-typeof-member` is the cause, distinguished from the
+  // fully opaque typeof operand above and from an unread comparison (`const-comparand`, above): the
+  // comparison IS read here, the fill just cannot be steered per arm yet. `branch:ternary` proves the
+  // same steerability gate reads a ternary's condition exactly as an `if`'s.
+  [`${CATALOGUE}/sad-path/undriven/typeof-narrow-member/typeof-narrow-member.ts`]: [
     'access:named',
-    'branch:if',
+    'branch:ternary',
     'param:union',
     'undriven',
   ],
-  // A property path MORE than one segment deep (`config.db.retry`, not `config.mode`): `operand:property`
-  // is what the walk records for either depth, but only a ONE-segment path is closed later by stub-realize
-  // (`object / branch-local`) — `object-arrange` matches a property path one segment deep, and no further,
-  // so this stays undriven through the SAME consume-time overlay that drives the shallower shape. The
-  // admission names the depth, never "make it a parameter": `config` already is one.
-  [`${CATALOGUE}/sad-path/undriven/property-depth/property-depth.ts`]: ['access:named', 'branch:if', 'operand:property', 'param:object', 'undriven'],
   // A branching callback passed to a same-file higher-order function (`apply(value, (x) => { if … })`).
   // The code REACHES the callback (it is passed as an argument), so it is NOT dead surface — but the
   // value `x` binds to is handed to it by `apply`, not an input any case at `run` controls, so its

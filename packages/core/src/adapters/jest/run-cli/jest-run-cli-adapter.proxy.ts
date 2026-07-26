@@ -8,13 +8,13 @@ export const jestRunCliAdapterProxy = (): {
   lastTestPathPatterns: () => unknown;
 } => {
   const handle = registerMock({ fn: runCLI });
-  handle.mockResolvedValue({ results: { success: true } });
+  handle.calledWith([]).resolves({ results: { success: true } });
 
   return {
-    succeeds: (): void => { handle.mockResolvedValueOnce({ results: { success: true } }); },
-    fails: (): void => { handle.mockResolvedValueOnce({ results: { success: false } }); },
+    succeeds: (): void => { handle.onceFor([]).resolves({ results: { success: true } }); },
+    fails: (): void => { handle.onceFor([]).resolves({ results: { success: false } }); },
     lastConfig: (): unknown => {
-      const call = handle.mock.calls.at(-1);
+      const call = handle.callsMatching([]).at(-1);
       const argv = call?.[0];
 
       return typeof argv === 'object' && argv !== null && 'config' in argv ? argv.config : undefined;
@@ -22,7 +22,7 @@ export const jestRunCliAdapterProxy = (): {
     // yargs' positionals, which is where Jest reads its test-path patterns from — the one place the
     // run being executed is named, so that the config above can stay identical between runs.
     lastTestPathPatterns: (): unknown => {
-      const call = handle.mock.calls.at(-1);
+      const call = handle.callsMatching([]).at(-1);
       const argv = call?.[0];
 
       return typeof argv === 'object' && argv !== null && '_' in argv ? argv._ : undefined;

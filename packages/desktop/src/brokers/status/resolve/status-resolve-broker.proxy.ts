@@ -16,19 +16,22 @@ export const statusResolveBrokerProxy = (): {
   const findHandle = registerMock({ fn: configFindBroker });
   const loadHandle = registerMock({ fn: configLoadBroker });
 
-  findHandle.mockResolvedValue({
+  // The broker calls each at most once per resolve, so there is no second real call either handle
+  // could confuse it with — `calledWith([])` is a blanket match on purpose, not a stand-in for a real
+  // argument.
+  findHandle.calledWith([]).resolves({
     found: true,
     configDir: filePathContract.parse('/repo'),
     configPath: filePathContract.parse('/repo/assayer.config.json'),
   });
-  loadHandle.mockResolvedValue({ success: true, data: AssayerConfigStub() });
+  loadHandle.calledWith([]).resolves({ success: true, data: AssayerConfigStub() });
 
   return {
     configRunMode: ({ runMode }: { runMode: 'thorough' | 'intelligent' }): void => {
-      loadHandle.mockResolvedValue({ success: true, data: AssayerConfigStub({ runMode }) });
+      loadHandle.calledWith([]).resolves({ success: true, data: AssayerConfigStub({ runMode }) });
     },
     configAbsent: (): void => {
-      findHandle.mockResolvedValue({ found: false });
+      findHandle.calledWith([]).resolves({ found: false });
     },
   };
 };

@@ -11,10 +11,22 @@
  *   and PASSES.
  *
  *   The filled arm carries the binding whose kind matches the parameter: an ARRAY takes a real array of
- *   the `one` cardinality, an OBJECT takes a real map built recursively over its declared properties
- *   (`{ db: { host: 'abc123' } }`), and everything else takes its scalar representative. Values are
- *   INPUTS drawn from the declared type, never code-derived outputs (P4), and the property order is the
- *   reader's sorted order, so the output is byte-identical run to run.
+ *   the `one` cardinality, a TUPLE takes a real array too — one element per fixed position rather than
+ *   the `one`-cardinality fan-out, since its length is already fixed by the declaration — an OBJECT
+ *   takes a real map built recursively over its declared properties (`{ db: { host: 'abc123' } }`), and
+ *   everything else (including a TEMPLATE LITERAL type, which fills as a plain interpolated string)
+ *   takes its scalar representative. Values are INPUTS drawn from the declared type, never code-derived
+ *   outputs (P4), and the property order is the reader's sorted order, so the output is byte-identical
+ *   run to run.
+ *
+ *   The binding kind is read off the FILLED VALUE's own shape, never off `type.kind` directly: a UNION
+ *   parameter's declared kind is `union`, but `fillValueTransformer` fills it from its first fillable
+ *   MEMBER, and that member can be an object or a tuple as readily as a scalar (`Plain | string` fills
+ *   from `Plain` when it sorts first). `arrangeBindingContract`'s `param` arm only accepts a scalar, so
+ *   binding a `union`-kind parameter to `kind: 'param'` unconditionally would hand it a built object and
+ *   fail that contract's own parse — the exact shape a `tuple` parameter is already special-cased around
+ *   two paragraphs up, one level of nesting higher. Reading the shape off the value once covers every
+ *   declared kind whose fill can be composite, not just the two named directly.
  *
  * USAGE:
  * fillParamTransformer({ param: { name: 'ys', type: { kind: 'array', element: { kind: 'number' } } } });
@@ -38,10 +50,12 @@ export type FillParamResult =
 export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): FillParamResult => {
   const { type } = param;
   // The refusal carries what a P1 message needs: WHICH parameter, and the type as the SOURCE spells it.
-  // The descriptor's own rendering is the fallback, not the answer: a `readonly [string, number]`
-  // enumerates as every member of `ReadonlyArray`, and pasting that into the message buries the one
-  // fact the reader needs. `declaredText` is present exactly where the two differ. Built once, so
-  // every refusal below is the same sentence.
+  // The descriptor's own rendering is the fallback, not the answer: an anonymous object with no
+  // `typeName` (an inline `{ a: string; write: () => void }`, never a `readonly [string, number]` — a
+  // tuple carries its own descriptor kind now, one entry per fixed position, not an object dump)
+  // renders as its full braced property list, and pasting that into the message buries the one fact
+  // the reader needs under every property the shape declares. `declaredText` is present exactly where
+  // the two differ. Built once, so every refusal below is the same sentence.
   const unfillable: FillParamResult = {
     kind: 'unfillable',
     param: param.name,
@@ -70,14 +84,25 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
 
   const value = isTypeFillableGuard({ type }) ? fillValueTransformer({ type }) : undefined;
 
-  return value === undefined
-    ? unfillable
-    : {
-        kind: 'filled',
-        binding: arrangeBindingContract.parse({
-          kind: type.kind === 'object' ? 'object' : 'param',
-          param: param.name,
-          value,
-        }),
-      };
+  if (value === undefined) {
+    return unfillable;
+  }
+
+  // Read off the VALUE, not `type.kind`: a `tuple` fills as a real array (one element per fixed
+  // position), an `object` fills as a real map, and a `union` fills as whatever its first fillable
+  // MEMBER produces — which can itself be an array or an object. `arrangeBindingContract`'s `param` arm
+  // only accepts a scalar, so anything else has to carry the binding kind that actually matches.
+  const bindingKind = Array.isArray(value) ? 'array' : typeof value === 'object' && value !== null ? 'object' : 'param';
+
+  return {
+    kind: 'filled',
+    binding: arrangeBindingContract.parse({
+      kind: bindingKind,
+      param: param.name,
+      value,
+      // A REST parameter's array binding must SPREAD, whether the array came from a declared `tuple`
+      // or from a union's first fillable member landing on one.
+      ...(bindingKind === 'array' && param.rest === true ? { rest: true } : {}),
+    }),
+  };
 };

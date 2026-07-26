@@ -10,15 +10,15 @@ export const fsExistsAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: access });
 
-  handle.mockResolvedValue(undefined);
+  handle.calledWith([]).resolves(undefined);
 
   return {
     succeeds: (): void => {
-      handle.mockResolvedValueOnce(undefined);
+      handle.onceFor([]).resolves(undefined);
     },
     fails: (): void => {
-      handle.mockRejectedValueOnce(new Error('ENOENT: no such file or directory'));
+      handle.onceFor([]).rejects(new Error('ENOENT: no such file or directory'));
     },
-    callCount: (): FileCount => fileCountContract.parse(handle.mock.calls.length),
+    callCount: (): FileCount => fileCountContract.parse(handle.callsMatching([]).length),
   };
 };

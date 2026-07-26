@@ -11,22 +11,27 @@ const BRANCH = '*module*/checkNull/if:BinaryExpression,id:v,EqualsEqualsEqualsTo
 const THEN = `${BRANCH.replace('/if:', '/return@if:')}#then`;
 const ELSE = `${BRANCH.replace('/if:', '/return@if:')}#else`;
 
+// The hermetic walk parses with strict-null-checks on, so `string | null` arrives as a genuine
+// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-adapter` has no
+// dedicated case for the null type, so its member reads through the generic opaque path as `{ kind:
+// 'unknown', text: 'null' }`, sitting beside the real `{ kind: 'string' }` member.
+const NULLABLE_STRING = { kind: 'union', members: [{ kind: 'unknown', text: 'null' }, { kind: 'string' }] };
+
 describe('null / eq-null — an explicit equality against the literal null', () => {
   // `null` is a KEYWORD node, read the same way as `true`/`false`: the leaf carries the literal value
-  // `null`, never an `unrecognized` predicate. The hermetic walk has no strict-null-checks project
-  // config, so the checker itself widens `string | null` to `string` — `operandType` reads the scalar
-  // alone, and `declaredText` is what still shows the source spelled a nullable union.
+  // `null`, never an `unrecognized` predicate. `operandType` carries the full nullable union, and
+  // `declaredText` shows the source's own spelling of the same union.
   it('VALID: {v === null} => an eq leaf carrying the literal null, not an unrecognized comparison', () => {
     const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
 
     expect(analysis.functions[0]?.entry.params).toStrictEqual([
-      { name: 'v', type: { kind: 'string' }, declaredText: 'string | null' },
+      { name: 'v', type: NULLABLE_STRING, declaredText: 'string | null' },
     ]);
     expect(analysis.functions[0]?.branches[0]?.condition).toStrictEqual({
       kind: 'leaf',
       id: `${BRANCH}#leaf`,
       operandParamName: 'v',
-      operandType: { kind: 'string' },
+      operandType: NULLABLE_STRING,
       predicate: { kind: 'eq', literal: null },
     });
   });

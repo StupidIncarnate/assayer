@@ -54,34 +54,38 @@ export const compiledFileResolveBrokerProxy = (): {
   // structure; the direct registerMock is the intercept, a same-reference pass-through by default.
   paramTypeResolveBrokerProxy();
   const paramTypeHandle = registerMock({ fn: paramTypeResolveBroker });
-  paramTypeHandle.mockImplementation(({ analysis }) => analysis);
+  // Each of these six overlay brokers is its own distinct function reference (not shared with any
+  // other proxy), and the resolve broker calls each at most once per resolve — one relPath, one
+  // straight-line pipeline — so there is no second real call any of these could be confused with.
+  // `calledWith([])`/`onceFor([])` are a blanket match on purpose, not a stand-in for a real argument.
+  paramTypeHandle.calledWith([]).implement(({ analysis }) => analysis);
   composeCrossFilePredicatesBrokerProxy();
   tsMorphWalkFileAdapterProxy();
   const composeHandle = registerMock({ fn: composeCrossFilePredicatesBroker });
   // Default: a same-reference pass-through, so a file with no imported-predicate guard serves its
   // persisted analysis untouched.
-  composeHandle.mockImplementation(({ analysis }) => analysis);
+  composeHandle.calledWith([]).implement(({ analysis }) => analysis);
   // The object-arrange overlay is mocked at the same seam for the same reason: driving an object-member
   // branch reaches for the type definition + the committed overlay on disk. Its child proxy satisfies
   // structure; the direct registerMock is the intercept, a same-reference pass-through by default.
   stubRealizeBrokerProxy();
   stubOverlayLoadBrokerProxy();
   const stubRealizeHandle = registerMock({ fn: stubRealizeBroker });
-  stubRealizeHandle.mockImplementation(({ analysis }) => analysis);
+  stubRealizeHandle.calledWith([]).implement(({ analysis }) => analysis);
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
-  overlayLoadHandle.mockResolvedValue([]);
+  overlayLoadHandle.calledWith([]).resolves([]);
   // The cross-file-map fold is mocked at the same seam and for the same reason: folding an imported
   // callee reaches for the sibling file on disk. Its child proxy satisfies structure; the direct
   // registerMock is the intercept, a same-reference pass-through by default.
   composeCrossFileMapBrokerProxy();
   const composeMapHandle = registerMock({ fn: composeCrossFileMapBroker });
-  composeMapHandle.mockImplementation(({ analysis }) => analysis);
+  composeMapHandle.calledWith([]).implement(({ analysis }) => analysis);
   // The harness overlay is mocked at the same seam and for the same reason: paying an input gap reaches
   // for the colocated harness on disk and RUNS it. Its child proxy satisfies structure; the direct
   // registerMock is the intercept, a same-reference pass-through by default.
   harnessRealizeBrokerProxy();
   const harnessRealizeHandle = registerMock({ fn: harnessRealizeBroker });
-  harnessRealizeHandle.mockImplementation(({ analysis }) => analysis);
+  harnessRealizeHandle.calledWith([]).implement(({ analysis }) => analysis);
 
   // The { root, relPath } the broker hands the overlay, captured off the real call so a test can
   // prove the SOURCE root (not the config dir) is threaded.
@@ -117,7 +121,7 @@ export const compiledFileResolveBrokerProxy = (): {
       sourceReadProxy.missing();
     },
     composesTo: ({ analysis }): void => {
-      composeHandle.mockImplementationOnce(({ root, relPath }) => {
+      composeHandle.onceFor([]).implement(({ root, relPath }) => {
         composeCalls.push({ root, relPath });
 
         return analysis;
@@ -125,7 +129,7 @@ export const compiledFileResolveBrokerProxy = (): {
     },
     composeReceived: (): unknown => composeCalls.at(-1),
     resolvesParamTypesTo: ({ analysis }): void => {
-      paramTypeHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
+      paramTypeHandle.onceFor([]).implement(({ root, relPath, analysis: received }) => {
         paramTypeCalls.push({ root, relPath, analysis: received });
 
         return analysis;
@@ -133,7 +137,7 @@ export const compiledFileResolveBrokerProxy = (): {
     },
     paramTypeReceived: (): unknown => paramTypeCalls.at(-1),
     arrangesTo: ({ analysis }): void => {
-      stubRealizeHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
+      stubRealizeHandle.onceFor([]).implement(({ root, relPath, analysis: received }) => {
         arrangeCalls.push({ root, relPath, analysis: received });
 
         return analysis;
@@ -141,7 +145,7 @@ export const compiledFileResolveBrokerProxy = (): {
     },
     arrangeReceived: (): unknown => arrangeCalls.at(-1),
     mapsTo: ({ analysis }): void => {
-      composeMapHandle.mockImplementationOnce(({ root, relPath, analysis: received }) => {
+      composeMapHandle.onceFor([]).implement(({ root, relPath, analysis: received }) => {
         mapCalls.push({ root, relPath, analysis: received });
 
         return analysis;
@@ -150,10 +154,10 @@ export const compiledFileResolveBrokerProxy = (): {
     mapReceived: (): unknown => mapCalls.at(-1),
     harnessesTo: ({ analysis }): void => {
       // Annotated explicitly (from the already-imported broker's own signature, never a fresh type
-      // import) because `MockHandle.mockImplementationOnce` contextually types its callback's params as
-      // `never` — every destructured field would otherwise read as `never`, which is fine for the fields
-      // merely re-packaged below but makes `walked !== undefined` compare against a type with no values.
-      harnessRealizeHandle.mockImplementationOnce((params: Parameters<typeof harnessRealizeBroker>[0]) => {
+      // import) because `MockStaging.implement` contextually types its callback's params as `never` —
+      // every destructured field would otherwise read as `never`, which is fine for the fields merely
+      // re-packaged below but makes `walked !== undefined` compare against a type with no values.
+      harnessRealizeHandle.onceFor([]).implement((params: Parameters<typeof harnessRealizeBroker>[0]) => {
         const { root, relPath, analysis: received, walked } = params;
 
         // `walkedPassed` proves the WIRING, not merely that the overlay ran: the other four overlays

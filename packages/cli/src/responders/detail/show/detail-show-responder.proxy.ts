@@ -18,14 +18,14 @@ export const DetailShowResponderProxy = (): {
 
   const handle = registerMock({ fn: runLoadBroker });
 
-  handle.mockResolvedValue(RunResultStub());
+  handle.calledWith([]).resolves(RunResultStub());
 
   return {
     savedRun: ({ run }: { run: RunResult }): void => {
-      handle.mockResolvedValue(run);
+      handle.calledWith([]).resolves(run);
     },
     noSuchRun: (): void => {
-      handle.mockResolvedValue(undefined);
+      handle.calledWith([]).resolves(undefined);
     },
   };
 };

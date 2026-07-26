@@ -71,6 +71,53 @@ describe('isPredicateConstrainingGuard', () => {
     });
   });
 
+  describe('a typeof read narrowing a union of scalar members', () => {
+    it("VALID: {typeof target === 'string' on string|number} => true, both arms realize a different member's point", () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'target',
+        operandIsTypeof: true,
+        operandType: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] },
+        predicate: { kind: 'typeof-eq', literal: 'string' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+    });
+  });
+
+  describe('a typeof read narrowing a union with a non-scalar matching member', () => {
+    // The `Plain` member has no scalar point, so the violating side falls back to the SAME
+    // representative the satisfying side already used — this engine genuinely cannot tell the two
+    // arms apart yet, so it must say so rather than claim it can.
+    it("INVALID: {typeof target === 'string' on Plain|string} => false, the shape Assayer cannot select yet", () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'target',
+        operandIsTypeof: true,
+        operandType: {
+          kind: 'union',
+          members: [{ kind: 'object', typeName: 'Plain', properties: [{ name: 'label', type: { kind: 'string' } }] }, { kind: 'string' }],
+        },
+        predicate: { kind: 'typeof-eq', literal: 'string' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(false);
+    });
+  });
+
+  describe('a typeof read that is tautological for its type', () => {
+    // Every value of a bare `string` type already carries the 'string' tag, so the comparison never
+    // varies — a safe, conservative "no" rather than a false claim of steerability.
+    it("INVALID: {typeof target === 'string' on a bare string} => false, the comparison never varies", () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'target',
+        operandIsTypeof: true,
+        operandType: { kind: 'string' },
+        predicate: { kind: 'typeof-eq', literal: 'string' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(false);
+    });
+  });
+
   describe('a missing leaf', () => {
     it('EMPTY: {no leaf} => false', () => {
       expect(isPredicateConstrainingGuard({})).toBe(false);

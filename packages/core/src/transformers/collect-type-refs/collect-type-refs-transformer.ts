@@ -11,9 +11,10 @@
  *   signature declared — is the KEY both halves agree on. Spelling-invariant, so respacing a signature
  *   moves nothing.
  *
- *   It descends array elements, union members and object properties by the SAME recursion
- *   `collect-named-object-types` uses, and answers in first-seen order with duplicates removed, so the
- *   caller's resolution is asked once per distinct reference and stays byte-stable.
+ *   It descends array elements, tuple positions, template substitutions, union members and object
+ *   properties by the SAME recursion `collect-named-object-types` uses, and answers in first-seen order
+ *   with duplicates removed, so the caller's resolution is asked once per distinct reference and stays
+ *   byte-stable.
  *
  * USAGE:
  * collectTypeRefsTransformer({ type: { kind: 'array', element: { kind: 'unknown', text: 'Config', typeRef: 'Config' } } });
@@ -28,6 +29,10 @@ export const collectTypeRefsTransformer = ({ type }: { type: TypeDescriptor }): 
     switch (type.kind) {
       case 'array':
         return collectTypeRefsTransformer({ type: type.element });
+      case 'tuple':
+        return type.elements.flatMap((element) => collectTypeRefsTransformer({ type: element }));
+      case 'template':
+        return type.types.flatMap((substitution) => collectTypeRefsTransformer({ type: substitution }));
       case 'union':
         return type.members.flatMap((member) => collectTypeRefsTransformer({ type: member }));
       case 'object':

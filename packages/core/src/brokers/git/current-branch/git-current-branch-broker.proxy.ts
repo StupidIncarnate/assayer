@@ -9,11 +9,11 @@ export const gitCurrentBranchBrokerProxy = (): {
 
   return {
     onBranch: ({ name }: { name: string }): void => {
-      gitProxy.succeeds({ stdout: `${name}\n` });
+      gitProxy.succeeds({ stdout: `${name}\n`, args: ['rev-parse', '--abbrev-ref'] });
     },
     detachedAt: ({ shortSha }: { shortSha: string }): void => {
-      gitProxy.succeeds({ stdout: 'HEAD\n' });
-      gitProxy.succeeds({ stdout: `${shortSha}\n` });
+      gitProxy.succeeds({ stdout: 'HEAD\n', args: ['rev-parse', '--abbrev-ref'] });
+      gitProxy.succeeds({ stdout: `${shortSha}\n`, args: ['rev-parse', '--short'] });
     },
     notGitRepo: (): void => {
       gitProxy.fails({ exitCode: 128, stderr: 'fatal: not a git repository' });

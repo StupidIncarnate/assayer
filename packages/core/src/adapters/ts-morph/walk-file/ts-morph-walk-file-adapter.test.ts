@@ -94,6 +94,120 @@ describe('tsMorphWalkFileAdapter', () => {
     });
   });
 
+  describe('nullable parameter types', () => {
+    // The parse turns on strict-null-checks, so `string | null` arrives as a genuine two-member union
+    // instead of collapsing to plain `string`. `read-type-fact-layer-adapter` has no dedicated case for
+    // the null type, so that member reads through the generic opaque path as `{ kind: 'unknown', text:
+    // 'null' }`, sitting beside the real `{ kind: 'string' }` member.
+    it('VALID: {a parameter declared string | null} => a real two-member union, not collapsed to string', () => {
+      tsMorphWalkFileAdapterProxy();
+      const source = 'export function greet(name: string | null): string {\n  return "hi";\n}\n';
+
+      const result = tsMorphWalkFileAdapter({ source, relPath: 'src/greet.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        globalUses: [],
+        envReads: [],
+        moduleEdges: [],
+        declaredShapes: [],
+        reachedFns: [],
+        invokedFns: [],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 70 },
+          { id: '*module*/greet/return@top', kind: 'exit', start: 62, end: 66 },
+        ],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            startLine: 1,
+            endLine: 4,
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'greet'],
+            name: 'greet',
+            params: [
+              {
+                name: 'name',
+                type: { kind: 'union', members: [{ kind: 'unknown', text: 'null' }, { kind: 'string' }] },
+                declaredText: 'string | null',
+              },
+            ],
+            exits: [{ coverageId: '*module*/greet/return@top', kind: 'return', guardPath: [], line: 2 }],
+          }),
+        ],
+        nodes: [
+          WalkNodeStub({
+            kind: 'FunctionDeclaration',
+            scopePath: ['*module*', 'greet'],
+            name: 'greet',
+            startLine: 1,
+            endLine: 3,
+          }),
+        ],
+      });
+    });
+
+    // The control case: a plain, non-nullable `string` parameter is unaffected by the flag and stays
+    // exactly the scalar descriptor it always was.
+    it('VALID: {a parameter declared plain string} => stays a plain string, unaffected by the flag', () => {
+      tsMorphWalkFileAdapterProxy();
+      const source = 'export function greet(name: string): string {\n  return "hi";\n}\n';
+
+      const result = tsMorphWalkFileAdapter({ source, relPath: 'src/greet.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        globalUses: [],
+        envReads: [],
+        moduleEdges: [],
+        declaredShapes: [],
+        reachedFns: [],
+        invokedFns: [],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 63 },
+          { id: '*module*/greet/return@top', kind: 'exit', start: 55, end: 59 },
+        ],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            startLine: 1,
+            endLine: 4,
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'greet'],
+            name: 'greet',
+            params: [{ name: 'name', type: { kind: 'string' } }],
+            exits: [{ coverageId: '*module*/greet/return@top', kind: 'return', guardPath: [], line: 2 }],
+          }),
+        ],
+        nodes: [
+          WalkNodeStub({
+            kind: 'FunctionDeclaration',
+            scopePath: ['*module*', 'greet'],
+            name: 'greet',
+            startLine: 1,
+            endLine: 3,
+          }),
+        ],
+      });
+    });
+  });
+
   describe('nested scopes', () => {
     it('VALID: {function inside a function} => BOTH are walked, the inner under the outer path and unexported', () => {
       tsMorphWalkFileAdapterProxy();

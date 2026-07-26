@@ -1,13 +1,13 @@
 /**
  * PURPOSE: Collects every NAMED object shape reachable within one type descriptor — the recursive
- *   half of the declared-types projection. It descends array elements, union members and object
- *   properties, emitting a DeclaredType for each object descriptor that carries a `typeName` (an
- *   anonymous shape is skipped — it has no name to key a stub on; a callable carries only the checker's
- *   rendering of its type and no property list, so it names no shape to stub either). Reading a callable
- *   as a callable is what keeps a METHOD from arriving as an object named after itself and keying a stub
- *   on a type that does not exist. A self-referential type is already truncated to a
- *   reference-only object by the reader, so the descriptor is a finite tree and this recursion
- *   terminates without a seen-set.
+ *   half of the declared-types projection. It descends array elements, tuple positions, template
+ *   substitutions, union members and object properties, emitting a DeclaredType for each object
+ *   descriptor that carries a `typeName` (an anonymous shape is skipped — it has no name to key a stub
+ *   on; a callable carries only the checker's rendering of its type and no property list, so it names
+ *   no shape to stub either). Reading a callable as a callable is what keeps a METHOD from arriving as
+ *   an object named after itself and keying a stub on a type that does not exist. A self-referential
+ *   type is already truncated to a reference-only object by the reader, so the descriptor is a finite
+ *   tree and this recursion terminates without a seen-set.
  *
  * USAGE:
  * collectNamedObjectTypesTransformer({ descriptor: { kind: 'object', typeName: 'Config', properties: [...] } });
@@ -20,6 +20,10 @@ export const collectNamedObjectTypesTransformer = ({ descriptor }: { descriptor:
   switch (descriptor.kind) {
     case 'array':
       return collectNamedObjectTypesTransformer({ descriptor: descriptor.element });
+    case 'tuple':
+      return descriptor.elements.flatMap((element) => collectNamedObjectTypesTransformer({ descriptor: element }));
+    case 'template':
+      return descriptor.types.flatMap((substitution) => collectNamedObjectTypesTransformer({ descriptor: substitution }));
     case 'union':
       return descriptor.members.flatMap((member) => collectNamedObjectTypesTransformer({ descriptor: member }));
     case 'object': {

@@ -41,6 +41,19 @@ export const substituteTypeRefsTransformer = ({
         element: substituteTypeRefsTransformer({ type: type.element, resolved }),
         ...(type.cardinality === undefined ? {} : { cardinality: type.cardinality }),
       });
+    // Descended the same way an array's element is, one substitution per fixed position.
+    case 'tuple':
+      return typeDescriptorContract.parse({
+        kind: 'tuple',
+        elements: type.elements.map((element) => substituteTypeRefsTransformer({ type: element, resolved })),
+      });
+    // The literal segments carry no reference to resolve; only each substitution's own type does.
+    case 'template':
+      return typeDescriptorContract.parse({
+        kind: 'template',
+        texts: type.texts,
+        types: type.types.map((substitution) => substituteTypeRefsTransformer({ type: substitution, resolved })),
+      });
     case 'union':
       return typeDescriptorContract.parse({
         kind: 'union',

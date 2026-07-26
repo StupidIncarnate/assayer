@@ -25,10 +25,14 @@
  *   `param.getTypeNode()` — a §5.1-sanctioned type-reference name). The predicate and the operand's own
  *   type read exactly as for any other operand; the extra fields are the stub stitch's foreign key.
  *
- *   A `typeof` operand (`typeof target === 'string'`) stays the WHOLE `TypeOfExpression` — its domain is
- *   the runtime-type string `typeof` produces, never the value `target` itself holds — and `operandIsTypeof`
- *   marks it so a caller can name the shape it does not decompose instead of reading it as a fully opaque
- *   operand indistinguishable from a call result.
+ *   A `typeof` operand (`typeof target === 'string'`) is read PAST the `typeof` keyword, exactly as a
+ *   `.length` operand is read past the property access: `operandNode` becomes the expression `typeof`
+ *   applies to (`target`), so an identifier reads as that identifier's own name and an object-member
+ *   read still decomposes into its root and path. `operandIsTypeof` marks that the comparison is a
+ *   `typeof` READ rather than a direct comparison of the operand's own value, which is what lets
+ *   `predicateTransformer` classify it onto the runtime-tag axis instead of the value axis: the
+ *   deciding value is genuinely `target`, but what it is compared against is a TAG, not a value of
+ *   `target`'s own type.
  *
  * USAGE:
  * readConditionLayerAdapter({ condition: ifStatement.getExpression() });
@@ -58,8 +62,18 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
   const right = binary?.getRight();
   const opKind = binary === undefined ? '' : binary.getOperatorToken().getKindName();
   const isLengthAccess = left !== undefined && Node.isPropertyAccessExpression(left) && left.getName() === 'length';
+  // A `typeof` operand is unwrapped the SAME way a `.length` access is: `operandIsTypeof` is read off
+  // the LEFT node before the unwrap, so it survives even though `operandNode` becomes what `typeof`
+  // applies to, not the `typeof` expression itself.
+  const typeOfExpr = left !== undefined && Node.isTypeOfExpression(left) ? left : undefined;
   const operandNode: Node =
-    left === undefined ? condition : isLengthAccess && Node.isPropertyAccessExpression(left) ? left.getExpression() : left;
+    left === undefined
+      ? condition
+      : typeOfExpr === undefined
+        ? isLengthAccess && Node.isPropertyAccessExpression(left)
+          ? left.getExpression()
+          : left
+        : typeOfExpr.getExpression();
   const rightLiteral =
     right === undefined
       ? undefined
@@ -75,7 +89,7 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
                 ? representativeValueContract.parse(null)
                 : undefined;
   const operandName = Node.isIdentifier(operandNode) ? symbolNameContract.parse(operandNode.getText()) : undefined;
-  const operandIsTypeof = Node.isTypeOfExpression(operandNode) ? true : undefined;
+  const operandIsTypeof = typeOfExpr === undefined ? undefined : true;
 
   // An object-member operand is read PAST the property access: the leftmost identifier is the root the
   // read starts from, the `.member` chain is what it reads off it, and the root param's declared
@@ -100,6 +114,7 @@ export const readConditionLayerAdapter = ({ condition }: { condition: Node }): C
     predicate: predicateTransformer({
       opKind,
       isLengthAccess,
+      isTypeofAccess: typeOfExpr !== undefined,
       ...(rightLiteral === undefined ? {} : { rightLiteral }),
     }),
   };

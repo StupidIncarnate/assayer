@@ -1,203 +1,272 @@
 # Assayer — Open defects
 
-> Every defect here is CURRENTLY REAL and was read off a real run, never reasoned about.
-> Each entry states the symptom, a repro you can paste, the root cause with file paths
-> where it is known, and what closing it involves. Delete an entry when it closes — never
-> annotate it as resolved.
->
-> **Scope:** every open defect. Capability Assayer does not have YET lives in
-> `plan/followups.md` — those shapes refuse honestly, with an accurate invoice, so they are
-> gaps and not defects. One moves here the moment it starts LYING: deriving a case that
-> fails against correct code, reporting coverage that did not happen, or printing a reason
-> that is not the reason. Anything in neither file is not known.
->
-> **Verify any fix with ALL THREE** `npm run ward`, `npm run test:syntax`, and
-> `npm run typecheck:syntax` — the specimen catalogue is not in ward's jest graph, and
-> `typecheck:syntax` covers a graph neither of the other two does.
->
-> **Probe before asserting.** Import by absolute path under `npx tsx`; run the built CLI
-> at `packages/cli/dist/bin/assayer.js` for anything end-to-end.
+Everything in this file is a bug that exists right now, confirmed by running the code.
+Each entry says what goes wrong, how to reproduce it, where the cause is, and what a fix
+involves. Delete an entry when it is fixed. Do not mark it "resolved" and leave it here.
 
-## C. Harness remainders
+Things Assayer cannot do yet live in `plan/followups.md` instead. The difference is
+whether Assayer lies. If it refuses a job and says so clearly, that is a missing feature.
+If it gives a wrong answer, or claims it tested something it did not, that is a defect and
+it belongs here.
 
-### C1. A harness cannot pay a refusal owned by a funnelled CALLBACK, or one folded across a file boundary
+Check any fix with all three commands. They cover different things and none is a superset
+of the others:
 
-Closed for the NAMED-PRIVATE shape: a refusal a driving route hits on a same-file private's
-behalf (`funnel-named-cases`, a branchless surface returning a private call; `through-caller-cases`,
-a private reached through a resolvable named call) is invoiced against the HOST and the
-invoice reads ``on `build` ``. `FileAnalysis.declaringScopes` now carries every such private
-(its own name, full param list, and the host that reaches it), and `harness-validate` treats it
-as a candidate exactly like a top-level entry — the key the invoice prints validates.
-`harness-realize-broker` takes an OPTIONAL `walked` (the raw parse its callers already hold) and,
-when given it, re-runs `follow-calls-transformer` itself with the harness spec threaded per
-declaring-scope name — never a second derivation path, the SAME transformer the compile walk
-used — so the supplied value rebases onto the CALLER's own argument slot (`funnel-named-cases`'s
-existing generic rebase, `{ ...binding, param: param.name }`) with the key path unchanged, never
-spliced onto the host's argument list as a slot the signature has no room for. Without `walked`
-the entry is left untouched, rather than risk the wrong binding shape a flat per-entry
-re-derivation over the private's own params alone would produce. `run-unit-broker`,
-`compiled-file-resolve-broker`, and the `syntax-traits` harness — the CLI's, the desktop's, and
-the catalogue's own real run paths, the same three seams every consume-time overlay is wired
-at — all thread `walked` here, so a harness naming a funnelled or through-caller private pays
-that refusal in `assayer unit` and the desktop app, not only in the catalogue's cross-check.
+- `npm run ward`
+- `npm run test:syntax`
+- `npm run typecheck:syntax`
 
-Still open for a funnelled CALLBACK — `funnel-cases` (an inline `items.map((n) => …)` folded into
-a branchless host) and `through-callback-cases`'s own callback element — and for
-`compose-cross-file-map` (the cross-file callback twin). Widening `declaringScopes` to admit these
-the same way would make `harness-validate` accept a key `harness-realize` can never bind: the
-callback's refused parameter is the ARRAY ELEMENT itself, so paying it means embedding a
-harness-resolved value inside the array `causeArrangeTransformer` builds for the host's array
-param — and `ArrangeValue` (`packages/shared/src/contracts/arrange-value/arrange-value-contract.ts`)
-has no variant for a value that is a harness key path rather than a representable literal. Until
-that capability exists, admitting these scopes into `declaringScopes` would open the exact
-validate/realize disagreement this entry exists to close, just walked in the other direction.
-`compose-cross-file-map` carries a second, independent blocker even if that capability lands: the
-declaring scope is a symbol in a SIBLING file's own `FileAnalysis`, not this file's, so closing it
-also needs the sibling's own colocated harness composed in — a strictly larger change than
-threading one fact through one file's pipeline.
+Before you write down what the code does, run it. Use `npx tsx` with absolute import paths
+for a single function. Use the built CLI at `packages/cli/dist/bin/assayer.js` for anything
+end to end.
 
-## D. Catalogue coverage — features the specimen matrix cannot see regress
+---
 
-The catalogue is the ratchet: a feature with no specimen can be lost without a single test
-turning red. Each of these is pinned only by core unit tests today.
+## A harness cannot supply a value for a callback's parameter
 
-**A P1 can never be specimen'd, and that is structural.** A harness P1 fails the whole compile,
-so one bad `*.harness.ts` in the catalogue blocks `assayer unit` for every OTHER specimen beside
-it — verified against the real CLI, where an unrelated file's P1 stopped `assayer unit
-src/other.ts`. That cascades into `compileSmokeCache()` and every app and desktop e2e that
-depends on a clean compile. It is also the correct behaviour: a P1 is a build error, the same
-class as a broken import, and a build error that let the build continue would not be one.
+Some background first. When Assayer cannot invent an input for a function, it stops and
+tells you to write a small file that supplies one. That file is called a harness.
 
-The consequence is that the bucket rule cannot reach it. `sad-path/` is defined by the four
-ADMISSIONS — dark spot, gap, undriven, lint — and a P1 is none of them; it is the channel that
-stops the run rather than reporting on it. So any P1 is pinned against real files by an
-integration test instead (`compile-harness-graph-broker.integration.test.ts` compiles real
-fixtures through the real pipeline in an isolated temp dir). Reach for that precedent rather
-than trying to make the catalogue hold one.
+This works now when the input belongs to a *named helper function* that Assayer folded into
+its caller. Assayer reports the error against the outer function but names the helper, and
+you can write a harness naming that helper. Both the error message and the checker read the
+same list of helper names, so they agree.
 
-### D3. No funnelled/driven-route input gap specimen
+It does not work when the input belongs to a *callback* — an inline function passed to
+something like `items.map(n => ...)`.
 
-`sad-path/input-gap/` covers entry-own refusals only. Nothing exercises a refused parameter
-belonging to a folded private or a callback, so that channel — added so those builders stop
-dropping refusals on the floor — cannot be seen to regress. Pairs with C1.
+Why it is not a quick fix. A callback's missing input is the array element itself. To supply
+it, Assayer would have to put your value inside the array it builds for the outer function's
+array parameter. The type that describes an arranged value has no option for "this slot is
+filled from a harness." It only holds plain values. Until that option exists, allowing
+harnesses to name callbacks would let the checker accept a key that nothing can actually
+use — the same mismatch this whole area exists to prevent, just in the other direction.
 
-The private half is now specimen-able (C1 closed the mechanism a specimen would pin): a
-`sad-path/input-gap/funnelled-param` byte-identical twin of `happy-path/harness/funnelled-param`
-— a branchless surface returning a same-file private by an inline-callback argument, the
-private's own callback param refused — the first pinning the `on \`helper\`` invoice text
-through the real catalogue, the second a colocated `.harness.ts` naming the private and
-asserting real cases derive. The callback half still cannot be specimen'd honestly: no harness
-closes it yet (see C1's still-open half), so a specimen would only pin the refusal staying open.
+The cross-file version has a second problem on top: the callback lives in a different file,
+so closing it also needs that file's own harness pulled in.
 
-### D5. No specimen carries a GAP and an UNDRIVEN branch on one entry
+Files: `packages/shared/src/contracts/arrange-value/arrange-value-contract.ts`,
+`funnel-cases-transformer.ts`, `through-callback-cases-transformer.ts`,
+`compose-cross-file-map-broker.ts`.
 
-`analyze-file-broker` drops an entry's undriven admissions when that entry also carries an
-input gap — precedence, never a merge, and one of the few places two admissions meet. No
-specimen declares both on one entry (probed: no `'undriven'` and `'gap:input'` co-occurrence
-in `specimen-registry.ts`), so the rule is pinned only by a hand-built core unit case and
-cannot be seen to regress through real parsing.
+---
 
-### D7. No specimen exercises a branchless-predicate array callback (`.filter`/`.some`/`.every`/`.find`)
+## Missing test fixtures
 
-Every array specimen in the catalogue (`happy-path/array/**`) maps a callback that either
-transforms its element (`map`) or branches on it with an `if` (`map-conditional`,
-`string-element`, `two-maps`). None gives the callback a bare `return n > 5` body — the shape
-that publishes `predicateSignature` (`scope-record-contract.ts`) instead of a `BranchNode`, and
-is exactly what `.filter`/`.some`/`.every`/`.find` look like in practice. So the return-predicate
-axis `through-callback-cases-transformer` and (through it) `funnel-cases-transformer` derive over
-a callback's element — the split into a satisfying and a violating case, rather than one
-representative fill — is pinned only by
-`through-callback-cases-transformer.test.ts` / `funnel-cases-transformer.test.ts`, never by a
-real parse. Probed: no `predicateSignature` in any `happy-path/array/**/*.ts` source file, and
-`discover({ grep: '\\.filter\\(|\\.some\\(|\\.every\\(|\\.find\\(' })` over the catalogue matches
-nothing outside `packages/core` itself.
+`smoke-repo/` holds small example files. Each one is a fixture that proves a piece of
+behaviour still works. If a behaviour has no example there, it can break without any test
+failing. These are the behaviours with no example.
 
-Closing this needs a new `happy-path/array/<name>/<name>.ts` — a branchless `items.filter((n) =>
-n > 5)` funnelled into its host exactly as `map-conditional` is, plus its `specimen-registry.ts`
-line — added the way §6 of `packages/core/CLAUDE.md` prescribes, coordinated with whoever else is
-touching `smoke-repo/**` at the time, since the directory and the registry are both shared.
+**One thing to know first: a build error can never have an example here.** When a harness
+has a bad key, Assayer fails the whole build. So one broken example file would stop every
+other example from running, and would break the desktop and app tests too. That is correct
+behaviour for a build error. It just means build errors get proven a different way, by an
+integration test that compiles throwaway files in a temp directory. See
+`compile-harness-graph-broker.integration.test.ts` for the pattern.
 
-### D6. `access:unreachable` can never reach a specimen
+### No example of a missing input on a helper or callback
 
-`access:through-caller` now has one — `happy-path/composition/through-caller` — a private a
-caller reaches but does not RETURN (so it cannot fold into a funnel), promoted to its own
-entry with `callerName` naming the caller. `uncataloguedTraits` shrinks to one key.
+The existing examples under `sad-path/input-gap/` only cover an input missing on the
+exported function itself.
 
-`access:unreachable` cannot follow it, and not for lack of a specimen: it is structurally
-excluded from ever landing on an entry. `readEntryAccessLayerAdapter` assigns it only when the
-module's export table has no entry for the scope (`read-entry-access-layer-adapter.ts:71`),
-which is exactly the condition under which `analysisProjectionTransformer`'s own filter
-(`scope.kind === 'function' && scope.exported`) already excludes that scope from
-`FileAnalysis.functions`. The only route back in is `followCallsTransformer`, which either
-FUNNELS the scope (folded into its caller, no entry of its own), promotes it to
-`access:through-caller`, or leaves it on `undriven` — which carries no access kind at all. So
-no specimen, however written, can put `access:unreachable` on an entry: the value is real only
-inside the raw walk, one step before `FileAnalysis` is built, and is pinned there — and only
-there — by `read-entry-access-layer-adapter.test.ts`. Closing this would mean changing what the
-field can hold, not writing a source file; `uncataloguedTraits` documents that in place of one.
+The helper-function version can be written now. It needs two files that are byte-identical
+except one has a harness beside it:
 
-## E. Gate and test coverage
+- `sad-path/input-gap/funnelled-param` — no harness, proves the error message names the
+  helper
+- `happy-path/harness/funnelled-param` — with a harness, proves real test cases come out
 
-### E5. A scratch repo for a CLI run must be nested INSIDE this tree
+The callback version cannot be written yet. No harness can supply a callback's input (see
+the first entry), so the example would only prove the thing is still broken.
 
-`ts-jest` resolves `node_modules` by climbing from the target repo root, so a `/tmp` fixture
-dies with "Module ts-jest in the transform option was not found" before reaching anything
-under test. A scratch dir created UNDER this repo resolves fine — the climb reaches the
-monorepo root — and `assayer unit` then runs end to end against it. That is how the funnelled-
-harness fix was proved through `packages/cli/dist/bin/assayer.js`.
+### No example where one function has both a missing input and an unreachable branch
 
-So a one-off end-to-end check needs no fixture repo, only the right parent. Standing coverage
-still belongs against the smoke-repo (`run-console.e2e.ts`, `run-unit-broker.integration.test.ts`),
-which is a real npm workspace rather than a dir that has to be cleaned up.
+When a function has both, Assayer reports only the missing input and drops the branch
+report. The reasoning is that you cannot run the function at all until you supply the input,
+so telling you about the branch is noise.
 
-The generic non-`CliExactOutputError` catch-all in `packages/cli/bin/assayer.ts` stays
-unreached for an unrelated reason: it needs a manufactured runtime exception thrown through
-the real compiled pipeline.
+No example file has both at once. Checked: no entry in `specimen-registry.ts` is tagged with
+both `undriven` and `gap:input`. So this rule is only covered by a hand-written unit test,
+never by a real parse.
 
-## G. Invariants held by convention rather than by a rule
+### No example of a `.filter` / `.some` / `.every` / `.find` callback
 
-### G1. `??` silently discards a legitimate `null` from a derived value
+Every array example passes a callback that either transforms its element (`map`) or has an
+`if` inside it. None has a callback whose whole body is a comparison, like `n => n > 5`.
 
-`null` is a first-class member of the domain — `representative-value-contract.ts` states it:
-"`null` is a value in the domain because a nullish operand HAS one." The `non-nullish` case
-of `typeToRangeTransformer` produces its violating arm as exactly `{ members: [null] }`,
-which is what drives every `config.mode ?? fallback` object-member guard.
+That shape is what `.filter`, `.some`, `.every` and `.find` look like in real code, and
+Assayer handles it differently: it produces two test cases, one where the comparison is true
+and one where it is false. That behaviour is only covered by unit tests right now.
 
-So `a ?? b` over a derived value substitutes `b` for a correct `null`, and the generated case
-stops exercising the branch it names — while passing.
+To close it, add `happy-path/array/<name>/<name>.ts` containing something like
+`items.filter(n => n > 5)`, plus its line in `specimen-registry.ts`. Follow the recipe in
+section 6 of `packages/core/CLAUDE.md`. Coordinate with anyone else editing `smoke-repo/` at
+the time, since the directory and the registry are shared.
 
-It has bitten six times, in six unrelated places: `objectArrangeTransformer`'s three chains,
-`typeToRangeTransformer`'s `literal ?? rep`, a candidate filter that rejected `null` for a
-`string`-typed operand, that filter's first replacement, `isTypeFillableGuard` refusing `null`
-for every scalar kind, and `typeToRangeTransformer`'s `non-nullish` violating arm returning
-`unrealizable` whenever the operand had no scalar representative. Each was fixed the same way,
-with an explicit `=== undefined` check or by admitting `null` unconditionally.
+### No example pairs a folded-in helper with a harness, or with a bare comparison
 
-The sixth is the one that says this needs a rule rather than vigilance: it was in a file already
-fixed once for this exact class, and it was found by a systematic per-kind sweep rather than by
-anything failing.
+Four files build the request they hand to the case engine, all through one shared place, so an
+option added to the engine reaches all four. Two of those options are not covered by any
+example file.
 
-A second reason the eye is a bad detector here: the hermetic walk runs without
-`strictNullChecks`, so the checker collapses `string | null` to plain `string` before Assayer
-sees it. Code that reasons about nullability from the checker's type is reasoning about the
-wrong thing, and it reads perfectly.
+To see it, remove each option from the shared place and watch which test goes red:
 
-The rule that would stop it belongs to the `@dungeonmaster/eslint-plugin` in the sibling repo,
-not here — this repo has no local rules directory. Until it exists the invariant is convention,
-so a `??` anywhere near a `RepresentativeValue` or `ArrangeValue` is worth reading twice.
+- Remove the harness option, and `npm run test:syntax` stays GREEN. No example pairs a helper
+  folded into its caller with a harness that supplies that helper's own input. Both existing
+  harness examples supply an input to a top-level function instead.
+- Remove the return-comparison option, and `test:syntax` stays green too. No example pairs a
+  folded-in helper with a function whose whole body is a comparison.
+
+Both options are real and both are load-bearing. They are only held in place by unit tests in
+`packages/core`. So a change that drops either one passes the example catalogue, which is the
+suite meant to catch exactly that.
+
+To close it, add an example whose exported function calls a private helper, where the helper
+has an input Assayer cannot build, and put a harness beside it naming the helper. Then add a
+second where the helper's whole body is a comparison like `n > 5`.
+
+### `access:unreachable` can never have an example, and that is fine
+
+`access:through-caller` now has one: `happy-path/composition/through-caller`.
+
+`access:unreachable` cannot get one, no matter how the file is written. Assayer only assigns
+that value to a function the module does not export, and it already drops unexported
+functions before that value could ever be attached to anything. So the value only exists
+briefly during parsing, and it is tested there, in
+`read-entry-access-layer-adapter.test.ts`. Changing that would mean changing what the field
+is allowed to hold, not writing an example file.
+
+---
+
+## Running the CLI against a scratch directory
+
+`ts-jest` looks for `node_modules` by walking up from the directory you point it at. A
+directory in `/tmp` has nothing above it, so the run dies with "Module ts-jest in the
+transform option was not found" before it reaches any of your code.
+
+A scratch directory created *inside this repo* works fine, because the walk up reaches the
+monorepo root.
+
+So a one-off end-to-end check is easy. Just put the directory in the right place. Permanent
+test coverage should still go against `smoke-repo/`, which is a real npm workspace and does
+not need cleaning up. See `run-console.e2e.ts` and `run-unit-broker.integration.test.ts`.
+
+Separately: the catch-all error handler in `packages/cli/bin/assayer.ts` has no test. It
+needs a genuine crash thrown through the real compiled pipeline, which is hard to arrange
+on purpose.
+
+---
+
+## `??` throws away a valid `null`, and nothing stops it
+
+In Assayer, `null` is a real value that a test case can use, not a stand-in for "missing."
+The contract says so directly: "`null` is a value in the domain because a nullish operand
+HAS one." When Assayer works out what value makes `config.mode ?? fallback` take its second
+branch, the answer is `null`.
+
+So writing `someValue ?? fallback` in Assayer's own code is a trap. If `someValue` is a
+legitimate `null`, `??` replaces it with the fallback. The generated test case then stops
+testing the branch it claims to test, and still passes.
+
+**This has happened six times, in six different places:**
+
+1. Three `??` chains in `objectArrangeTransformer`
+2. `literal ?? rep` in `typeToRangeTransformer`
+3. A filter that rejected `null` as a value for a `string` parameter
+4. That filter's replacement, same mistake
+5. `isTypeFillableGuard` refusing `null` for every scalar type
+6. `typeToRangeTransformer` again, returning "no possible value" whenever the type had no
+   simple example value
+
+Each was fixed by checking `=== undefined` explicitly, or by allowing `null` outright.
+
+Number six is the reason this needs a lint rule rather than care. It was in a file already
+fixed once for exactly this, and nothing failed — it was found by going through every case
+by hand.
+
+**Only two of those six were written with `??`.** This was checked by reading each fix in
+git, not by reading the list above:
+
+- Entries 1 and 2 used `??`. That is five expressions in total, once the three chains are
+  counted separately.
+- Entry 5 was `value === undefined || typeof value === 'string'`, fixed by adding
+  `|| value === null`. There is no `??` in it.
+- Entry 6 was `rep === undefined ? unrealizable : …`, fixed by dropping the ternary. No `??`
+  either.
+- Entries 3 and 4 could not be found as separate commits. `is-type-fillable-guard.ts` has
+  exactly one change in its whole history, which is entry 5. The most likely reading is that
+  3, 4 and 5 are the same guard described three times, and that 3 and 4 were iterations
+  nobody committed. That is a guess, and it is written here as one.
+
+This matters because it changes what the lint rule below can do for you.
+
+TypeScript cannot catch this. `??` is legal on every type, and there is no compiler setting
+for "warn me when the left side is a null I meant to keep." TypeScript makes it worse, in
+fact: `a ?? b` strips null out of the result type, so it reports the outcome as safer than it
+is.
+
+**A lint rule now catches the `??` shape.** It lives in `eslint-rules/` at the repo root, is
+registered under `@assayer` in `eslint.config.js`, and runs as an error in `npm run ward`. Its
+own tests run with `npm run test:eslint-rules`, which is a separate command from ward.
+
+The rule asks the type checker what the left operand is. It fires when that type, or one of
+its own union members, is a `RepresentativeValue` or an `ArrangeValue`.
+
+It must not match on the checker's rendered type text, and this is the trap to avoid if you
+change it. That text prints a type's whole nested shape, so the name appears wherever it
+occurs at any depth. A text match fires on an array of objects that merely contains one of
+these types three levels down, which is correct code.
+
+It is a rule for people working on Assayer. It is not part of what Assayer ships. Nobody using
+Assayer installs it, enables it, or ever sees it.
+
+**The rule is not a fix for this defect. It covers one operator.** Of the six recorded
+instances, it catches the two that were written with `??`. It cannot catch entry 5, which was
+a `typeof` filter, or entry 6, which was a ternary. Both discarded a legitimate `null` just as
+effectively. A seventh instance written as `!x`, `x || fallback`, or `x == null` would pass the
+rule silently.
+
+So treat the rule as a tripwire on the most common spelling, not as a guarantee.
+
+**The fix that would kill the whole family: stop using JavaScript's `null` for the domain
+value.** Use something like `{ kind: 'null' }` instead. Then `??` cannot fire on it, and
+neither can `!x`, `== null`, or a `typeof` test. Every one of the six becomes impossible to
+write rather than merely detectable in one of its forms.
+
+It is invasive. Every producer, every consumer, and the cache file format all change. But the
+evidence above is that this keeps happening in shapes a per-operator rule does not see, and
+each new shape needs a new rule that only exists after the bug does.
+
+There is a second reason to want it, unrelated to `??`. `null` currently has no `TypeDescriptor`
+kind of its own. That entry is in `plan/followups.md`.
 
 ## Belongs to `@dungeonmaster/testing`, not here
 
-`registerMock`'s stack-based dispatch routes a write to the wrong handle when a broker's own
-write never fires (an early return) AND a sibling untracked write to the same underlying
-`fs/promises.writeFile` happens elsewhere in the same call graph. Probed:
-`manifestWriteBrokerProxy().getWrittenManifest()` returns a compiled blob rather than a
-manifest. This is the exact collision stack dispatch exists to prevent.
+A mock set up for one call can answer a different call, and the error you get does not say so.
 
-## Not a defect, but know it
+Every proxy in this repo now describes its calls by their arguments. When a call matches
+nothing that was described, the mock throws, and the message names both what the code asked
+for and what was set up. That message is the most useful part of the design.
 
-Compiling THIS monorepo with Assayer OOMs: `assayer status` against
-`repoRoot=/home/brutus-home/projects/assayer` (1781 targets) dies with
-`FATAL ERROR: Ineffective mark-compacts near heap limit`, exit 134, at ~3.3GB after 150s —
-during the walk, before any stitch. It is why the harness symbol gate was proved by a
-plan-broker probe plus byte-exact copies rather than by compiling the repo itself.
+You do not always get it. When the unmatched call is a file read, and the test composes
+several proxies over the same underlying read, the throw does not surface. What surfaces
+instead is a `JSON.parse` failing on an empty string, further down, in whichever broker tried
+to use the content. Confirmed by printing the raw value at the point of failure: it is `""`.
+
+The protection itself is real. Corrupting a matcher does make the right tests go red. It is
+the diagnostic that is missing, and that is the difference between a five-minute fix and an
+afternoon, because the error names a file the test never mentions.
+
+The fix belongs in `@dungeonmaster/testing`, in the sibling repo, not here.
+
+---
+
+## Not a defect, but worth knowing
+
+Assayer cannot compile this repo. Running `assayer status` against
+`repoRoot=/home/brutus-home/projects/assayer` (1781 files) runs out of memory and dies with
+`FATAL ERROR: Ineffective mark-compacts near heap limit`, exit code 134, after about 150
+seconds and 3.3GB. It dies during parsing, before any cross-file work starts.
+
+That is why some features get tested with small copied files rather than by pointing Assayer
+at this repo.

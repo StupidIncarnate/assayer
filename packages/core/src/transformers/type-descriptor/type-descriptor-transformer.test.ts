@@ -152,6 +152,116 @@ describe('typeDescriptorTransformer', () => {
     });
   });
 
+  describe('tuple facts', () => {
+    it('VALID: {tuple of string and number} => tuple descriptor with one descriptor per position', () => {
+      const fact = TypeFactStub({ flavor: 'tuple', elements: [{ flavor: 'string' }, { flavor: 'number' }] });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }),
+      );
+    });
+
+    it('EMPTY: {an empty tuple} => tuple descriptor with no elements', () => {
+      const fact = TypeFactStub({ flavor: 'tuple', elements: [] });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(TypeDescriptorStub({ kind: 'tuple', elements: [] }));
+    });
+
+    // Recursion goes more than one level: the inner tuple's own elements are re-parsed through the
+    // same transformer, not merely copied across.
+    it('VALID: {a tuple nested inside a tuple} => the inner tuple descriptor at its own position', () => {
+      const fact = TypeFactStub({
+        flavor: 'tuple',
+        elements: [{ flavor: 'tuple', elements: [{ flavor: 'string' }] }, { flavor: 'number' }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'tuple',
+          elements: [{ kind: 'tuple', elements: [{ kind: 'string' }] }, { kind: 'number' }],
+        }),
+      );
+    });
+
+    it('VALID: {a tuple element that is an opaque reference} => the reference re-parsed through the same contract', () => {
+      const fact = TypeFactStub({
+        flavor: 'tuple',
+        elements: [{ flavor: 'other', text: 'Config', typeRef: 'Config' }, { flavor: 'number' }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'tuple',
+          elements: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }, { kind: 'number' }],
+        }),
+      );
+    });
+
+    it('VALID: {a tuple element that is itself a template} => the template descriptor at its own position', () => {
+      const fact = TypeFactStub({
+        flavor: 'tuple',
+        elements: [{ flavor: 'template', texts: ['id-', ''], types: [{ flavor: 'string' }] }, { flavor: 'number' }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'tuple',
+          elements: [{ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] }, { kind: 'number' }],
+        }),
+      );
+    });
+  });
+
+  describe('template facts', () => {
+    it('VALID: {a template literal type} => template descriptor carrying the segments and substitution descriptors', () => {
+      const fact = TypeFactStub({ flavor: 'template', texts: ['id-', ''], types: [{ flavor: 'string' }] });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] }),
+      );
+    });
+
+    it('EMPTY: {a template with no substitutions} => template descriptor with an empty types list', () => {
+      const fact = TypeFactStub({ flavor: 'template', texts: ['literal'], types: [] });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({ kind: 'template', texts: ['literal'], types: [] }),
+      );
+    });
+
+    it('VALID: {a template substitution that is an opaque reference} => the reference re-parsed through the same contract', () => {
+      const fact = TypeFactStub({
+        flavor: 'template',
+        texts: ['id-', ''],
+        types: [{ flavor: 'other', text: 'Config', typeRef: 'Config' }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'template',
+          texts: ['id-', ''],
+          types: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }],
+        }),
+      );
+    });
+
+    it('VALID: {a template substitution that is itself a tuple} => the tuple descriptor at its own position', () => {
+      const fact = TypeFactStub({
+        flavor: 'template',
+        texts: ['', '-suffix'],
+        types: [{ flavor: 'tuple', elements: [{ flavor: 'string' }, { flavor: 'number' }] }],
+      });
+
+      expect(typeDescriptorTransformer({ fact })).toStrictEqual(
+        TypeDescriptorStub({
+          kind: 'template',
+          texts: ['', '-suffix'],
+          types: [{ kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] }],
+        }),
+      );
+    });
+  });
+
   describe('object facts', () => {
     it('VALID: {named object} => object descriptor carrying the name and mapped properties', () => {
       const fact = TypeFactStub({

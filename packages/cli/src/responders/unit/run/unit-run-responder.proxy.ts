@@ -27,20 +27,20 @@ export const UnitRunResponderProxy = (): {
   // about WHAT it saves, not about the filesystem underneath.
   const consoleHandle = registerMock({ fn: runConsoleSaveBroker });
 
-  handle.mockResolvedValue([RunResultStub()]);
-  consoleHandle.mockResolvedValue({ success: true });
+  handle.calledWith([]).resolves([RunResultStub()]);
+  consoleHandle.calledWith([]).resolves({ success: true });
 
   return {
     runsReturn: ({ runs }: { runs: readonly RunResult[] }): void => {
-      handle.mockResolvedValue([...runs]);
+      handle.calledWith([]).resolves([...runs]);
     },
     getRelPaths: (): readonly RelPath[] => {
-      const args = handle.mock.calls.at(-1)?.[0] as { relPaths?: readonly RelPath[] } | undefined;
+      const args = handle.callsMatching([]).at(-1)?.[0] as { relPaths?: readonly RelPath[] } | undefined;
 
       return (args?.relPaths ?? []).map((relPath) => RelPathStub({ value: String(relPath) }));
     },
     getConfigDir: (): RelPath => {
-      const args = handle.mock.calls.at(-1)?.[0] as { configDir?: RelPath } | undefined;
+      const args = handle.callsMatching([]).at(-1)?.[0] as { configDir?: RelPath } | undefined;
 
       return RelPathStub({ value: String(args?.configDir ?? '') });
     },
@@ -48,7 +48,7 @@ export const UnitRunResponderProxy = (): {
     // turn a non-string argument into '[object Object]' and assert that as if it were the report —
     // exactly the class of bug this proxy exists to catch.
     getSavedConsoles: (): readonly { runId: RunId; console: RunConsole }[] =>
-      consoleHandle.mock.calls.map((call) => {
+      consoleHandle.callsMatching([]).map((call) => {
         const args = call[0] as { runId?: RunId; console?: RunConsole } | undefined;
 
         return {

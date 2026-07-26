@@ -27,8 +27,8 @@ import type { FunctionAnalysis } from '@assayer/shared/contracts';
 import type { CallArg } from '../../contracts/call-site/call-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
+import { deriveCasesRequestTransformer } from '../derive-cases-request/derive-cases-request-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
-import { stampBranchesTransformer } from '../stamp-branches/stamp-branches-transformer';
 
 export const throughInvocationCasesTransformer = ({
   arrow,
@@ -42,17 +42,22 @@ export const throughInvocationCasesTransformer = ({
   // non-literal argument (an env-sourced call, an opaque expression) welds nothing.
   const { weldByParam } = callArgBindingsTransformer({ calleeParams: arrow.params, args });
 
-  const derived = deriveCasesTransformer({
-    // The runner drives a module by importing it, so its parameters are not settable: derive over an
-    // empty list, and an env or welded leaf arranges itself without a param binding.
-    params: [],
-    branches: stampBranchesTransformer({ branches: arrow.branches, welds: weldByParam }),
-    exits: arrow.exits,
-    // The arrow runs at import time, so the environment it reads is an input — exactly why a module
-    // scope is env-drivable and a function is not.
-    envDrivable: true,
-    ...(arrow.predicateSignature === undefined ? {} : { returnPredicate: arrow.predicateSignature }),
-  });
+  const derived = deriveCasesTransformer(
+    deriveCasesRequestTransformer({
+      scope: arrow,
+      // The runner drives a module by importing it, so its parameters are not settable: derive over an
+      // empty list, and an env or welded leaf arranges itself without a param binding. It must not gain
+      // parameter handling — this is the module-load entry's one fixed axis, never `arrow.params`.
+      params: [],
+      welds: weldByParam,
+      // The arrow runs at import time, so the environment it reads is an input — exactly why a module
+      // scope is env-drivable and a function is not.
+      envDrivable: true,
+      // No harness route reaches module-load code: this entry's params are always the empty list above,
+      // so there is no parameter slot a harness key could bind to.
+      harness: undefined,
+    }),
+  );
 
   return {
     analysis: functionAnalysisContract.parse({

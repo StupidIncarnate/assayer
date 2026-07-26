@@ -16,14 +16,16 @@ export const repoSourceRootBrokerProxy = (): {
 
   const handle = registerMock({ fn: configLoadBroker });
 
-  handle.mockResolvedValue({ success: true, data: AssayerConfigStub() });
+  // The broker calls this at most once per resolve, so there is no second real call to confuse it
+  // with — `calledWith([])` is a blanket match on purpose, not a stand-in for a real argument.
+  handle.calledWith([]).resolves({ success: true, data: AssayerConfigStub() });
 
   return {
     configHasRepoRoot: ({ repoRoot }: { repoRoot: string }): void => {
-      handle.mockResolvedValue({ success: true, data: AssayerConfigStub({ repoRoot }) });
+      handle.calledWith([]).resolves({ success: true, data: AssayerConfigStub({ repoRoot }) });
     },
     configUnreadable: ({ message }: { message: string }): void => {
-      handle.mockResolvedValue({
+      handle.calledWith([]).resolves({
         success: false,
         message: errorMessageContract.parse(message),
         line: 1,

@@ -5,8 +5,11 @@
  *   `literal` descriptor; an ARRAY maps to an `array` descriptor over its element; an OBJECT to an
  *   `object` descriptor carrying its name (when named), its `truncated` mark and property list; a
  *   CALLABLE to a `callable` descriptor carrying the checker's rendering of the type — its NAME when it
- *   has one, its rendered signature when it is anonymous. Recurses over union members, array elements
- *   and object properties, so nested/enumerated shapes are handled by the same one unit.
+ *   has one, its rendered signature when it is anonymous. A TUPLE maps to a `tuple` descriptor over its
+ *   own per-position descriptors, and a TEMPLATE maps to a `template` descriptor carrying its literal
+ *   segments and its substitutions' descriptors. Recurses over union members, array elements, tuple
+ *   positions, template substitutions and object properties, so nested/enumerated shapes are handled by
+ *   the same one unit.
  *
  *   A union stays a `union` descriptor when ANY member is REPRESENTABLE — every member read through
  *   this same transformer, so a literal, a primitive, an array and an object all count — and degrades
@@ -49,6 +52,17 @@ export const typeDescriptorTransformer = ({ fact }: { fact: TypeFact }): TypeDes
     }
     case 'array':
       return typeDescriptorContract.parse({ kind: 'array', element: typeDescriptorTransformer({ fact: fact.element }) });
+    case 'tuple':
+      return typeDescriptorContract.parse({
+        kind: 'tuple',
+        elements: fact.elements.map((element) => typeDescriptorTransformer({ fact: element })),
+      });
+    case 'template':
+      return typeDescriptorContract.parse({
+        kind: 'template',
+        texts: fact.texts,
+        types: fact.types.map((substitution) => typeDescriptorTransformer({ fact: substitution })),
+      });
     case 'object':
       return typeDescriptorContract.parse({
         kind: 'object',

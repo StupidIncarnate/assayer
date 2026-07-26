@@ -79,8 +79,10 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('a caller whose two imported guards contradict', () => {
     it('VALID: {over(n) > 50 then under(n) > 100} => the first exit takes two buckets, the middle is unreachable', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE });
-      proxy.setupSibling({ fileName: '/repo/src/under.ts', source: UNDER_PREDICATE });
+      // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
+      // actually answers rather than to the order the compose happens to resolve them in.
+      proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE, specifier: './over' });
+      proxy.setupSibling({ fileName: '/repo/src/under.ts', source: UNDER_PREDICATE, specifier: './under' });
       const walked = tsMorphWalkFileAdapter({ source: PICK_CALLER, relPath: 'src/pick.ts' });
       const analysis = analyzeFileBroker({ walked });
 
@@ -161,8 +163,10 @@ describe('composeCrossFilePredicatesBroker', () => {
     // its operand's range — never the stale entry-only rows the input carried.
     it('VALID: {over(n) > 50 then under(n) > 100} => enrichment re-derives both branch-line ranges, not the input row', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE });
-      proxy.setupSibling({ fileName: '/repo/src/under.ts', source: UNDER_PREDICATE });
+      // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
+      // actually answers rather than to the order the compose happens to resolve them in.
+      proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE, specifier: './over' });
+      proxy.setupSibling({ fileName: '/repo/src/under.ts', source: UNDER_PREDICATE, specifier: './under' });
       const walked = tsMorphWalkFileAdapter({ source: PICK_CALLER, relPath: 'src/pick.ts' });
       const analysis = analyzeFileBroker({ walked });
 

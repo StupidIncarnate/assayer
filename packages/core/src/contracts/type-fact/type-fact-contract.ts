@@ -13,18 +13,26 @@
  *   union has three representable members. An `other` fact carries `typeRef` when the opaque type was
  *   declared as a plain type reference, which is what a consume-time overlay resolves it by.
  *
+ *   A TUPLE fact (`elements`) carries one fact per fixed position, never one shared element the way an
+ *   array does — `readonly [string, number]` needs a string at position 0 and a number at position 1.
+ *   A TEMPLATE fact mirrors the checker's own `texts`/`types` split for a template literal type
+ *   (`` `id-${string}` ``): the literal segments in source order, and one fact per substitution
+ *   between them.
+ *
  * USAGE:
  * typeFactContract.parse({ flavor: 'string' });
  * typeFactContract.parse({ flavor: 'union', members: [{ flavor: 'literal', value: 'a' }], text: '"a"' });
  * typeFactContract.parse({ flavor: 'array', element: { flavor: 'number' } });
+ * typeFactContract.parse({ flavor: 'tuple', elements: [{ flavor: 'string' }, { flavor: 'number' }] });
+ * typeFactContract.parse({ flavor: 'template', texts: ['id-', ''], types: [{ flavor: 'string' }] });
  * typeFactContract.parse({ flavor: 'object', typeName: 'Config', properties: [{ name: 'mode', fact: { flavor: 'string' } }] });
  * typeFactContract.parse({ flavor: 'callable', text: '(message: string) => string' });
  * // Returns a validated TypeFact (recursive discriminated union)
  */
 import { z } from 'zod';
 
-import { representativeValueContract, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
+import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
+import type { RepresentativeValue, SymbolName, TemplateText, TypeText } from '@assayer/shared/contracts';
 
 export type TypeFact =
   | { flavor: 'string' }
@@ -33,6 +41,10 @@ export type TypeFact =
   | { flavor: 'literal'; value: RepresentativeValue }
   | { flavor: 'union'; members: TypeFact[]; text: TypeText }
   | { flavor: 'array'; element: TypeFact }
+  // Fixed-length and HETEROGENEOUS, unlike `array` — see the PURPOSE doc.
+  | { flavor: 'tuple'; elements: TypeFact[] }
+  // The checker's own `texts`/`types` split for a template literal type — see the PURPOSE doc.
+  | { flavor: 'template'; texts: TemplateText[]; types: TypeFact[] }
   /**
    * `truncated` is true when the reader re-entered a type already on its own path
    * (`interface Tree { next: Tree }`) and stopped, so the empty property list is where the read ended
@@ -62,6 +74,8 @@ export const typeFactContract: z.ZodType<TypeFact, z.ZodTypeDef, unknown> = z.la
     z.object({ flavor: z.literal('literal'), value: representativeValueContract }),
     z.object({ flavor: z.literal('union'), members: z.array(typeFactContract), text: typeTextContract }),
     z.object({ flavor: z.literal('array'), element: typeFactContract }),
+    z.object({ flavor: z.literal('tuple'), elements: z.array(typeFactContract) }),
+    z.object({ flavor: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeFactContract) }),
     z.object({
       flavor: z.literal('object'),
       typeName: symbolNameContract.optional(),

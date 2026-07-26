@@ -549,4 +549,78 @@ describe('objectArrangeTransformer', () => {
       });
     });
   });
+
+  // The property-depth followup: `config.db.retry`, a path more than one segment deep. `object-arrange`
+  // delegates the recursive build to `arrange-object-properties`; these two cases are the same
+  // `checkDeep` shape the `property-depth` specimen exercises end to end, pinned here at the transformer
+  // level with a before/after value pair for each arm.
+  describe('a property path more than one segment deep (config.db.retry)', () => {
+    const modeAndDeepDb = DeclaredTypeStub({
+      name: 'Config',
+      properties: [{ name: 'db', type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] } }],
+    });
+    const dbRetryEq3Leaf = ConditionLeafStub({
+      operandParamName: 'config',
+      operandPropertyPath: ['db', 'retry'],
+      operandTypeRef: 'Config',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'eq', literal: 3 },
+    });
+
+    it("VALID: {config.db.retry === 3, the THEN arm} => db built as { retry: 3 }, never left unconstrained", () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeAndDeepDb,
+        demands: [
+          PropertyDemandStub({
+            name: 'db',
+            demand: { kind: 'nested', properties: [PropertyDemandStub({ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } })] },
+          }),
+        ],
+        requirements: [{ leaf: dbRetryEq3Leaf, want: true }],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'db', value: { retry: 3 } }] });
+    });
+
+    it("VALID: {config.db.retry === 3, the ELSE arm} => db built as { retry: 7 }, the demanded non-3 value", () => {
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeAndDeepDb,
+        demands: [
+          PropertyDemandStub({
+            name: 'db',
+            demand: { kind: 'nested', properties: [PropertyDemandStub({ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } })] },
+          }),
+        ],
+        requirements: [{ leaf: dbRetryEq3Leaf, want: false }],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'db', value: { retry: 7 } }] });
+    });
+
+    // A depth-1 requirement on a DIFFERENT param's own `db.retry` must not leak in — the param filter
+    // that used to check `operandPropertyPath.length === 1` at this level now only checks the param
+    // name, so this proves the depth check moved without loosening the param check beside it.
+    it("VALID: {a same-shaped requirement on a DIFFERENT param} => this param's db stays unconstrained", () => {
+      const otherDbRetryLeaf = ConditionLeafStub({
+        operandParamName: 'other',
+        operandPropertyPath: ['db', 'retry'],
+        operandTypeRef: 'Other',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'eq', literal: 3 },
+      });
+      const result = objectArrangeTransformer({
+        param: CONFIG,
+        declaredType: modeAndDeepDb,
+        demands: [],
+        requirements: [{ leaf: otherDbRetryLeaf, want: true }],
+        corrected: [],
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'db', value: { retry: 7 } }] });
+    });
+  });
 });

@@ -7,14 +7,14 @@ export const fsReadFileAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: readFile });
 
-  handle.mockResolvedValue('');
+  handle.calledWith([]).resolves('');
 
   return {
     returns: ({ content }: { content: string }): void => {
-      handle.mockResolvedValueOnce(content);
+      handle.onceFor([]).resolves(content);
     },
     throws: ({ error }: { error: Error }): void => {
-      handle.mockRejectedValueOnce(error);
+      handle.onceFor([]).rejects(error);
     },
   };
 };

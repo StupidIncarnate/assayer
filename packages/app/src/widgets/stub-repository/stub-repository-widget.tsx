@@ -10,6 +10,11 @@
  *   `guessed` flag. An object property's demanded values are the derived-or-corrected union spliced by
  *   the read-time combine and are shown as-is; the view cannot tell which single value a human supplied.
  *
+ *   A property whose own type is an object read PAST itself (`config.db.retry`) carries a NESTED
+ *   demand, not a leaf one — `flatten-property-demand` expands it into one row per leaf property,
+ *   named by its full dotted path (`db.retry`), before this view ever sees it, so the render below only
+ *   ever needs to know `unknown` or `demanded`.
+ *
  * USAGE:
  * <StubRepositoryWidget />
  * // Renders the stub cards once the preload bridge resolves the merged stub view
@@ -19,6 +24,7 @@ import { Badge, Box, Card, Group, Stack, Text, Title } from '@mantine/core';
 
 import { useStubIndexBinding } from '../../bindings/use-stub-index/use-stub-index-binding';
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';
+import { flattenPropertyDemandTransformer } from '../../transformers/flatten-property-demand/flatten-property-demand-transformer';
 
 export const StubRepositoryWidget = (): ReactElement => {
   const { data, loading, error } = useStubIndexBinding();
@@ -55,7 +61,7 @@ export const StubRepositoryWidget = (): ReactElement => {
                       {String(stub.key)}
                     </Text>
                     <Stack gap={4} mt="xs">
-                      {stub.properties.map((property) => (
+                      {flattenPropertyDemandTransformer({ properties: stub.properties }).map((property) => (
                         <Group
                           key={String(property.name)}
                           data-testid="STUB_PROPERTY"

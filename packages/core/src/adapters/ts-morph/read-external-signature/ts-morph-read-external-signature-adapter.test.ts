@@ -143,6 +143,120 @@ describe('tsMorphReadExternalSignatureAdapter', () => {
     });
   });
 
+  describe('a tuple parameter', () => {
+    // Before this branch existed, a `readonly [string, number]` parameter read as an anonymous object
+    // enumerating `0`, `1`, `length` and every inherited `ReadonlyArray` method — a multi-thousand-
+    // character dump in both this result and the P1 message built from it.
+    it('VALID: {export declare function pairOf(pair: readonly [string, number]): void} => a tuple descriptor, not the ReadonlyArray dump', () => {
+      tsMorphReadExternalSignatureAdapterProxy();
+      const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-extsig-')));
+      writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
+      writeFileSync(join(dir, 'lib.d.ts'), 'export declare function pairOf(pair: readonly [string, number]): void;\n');
+
+      const result = tsMorphReadExternalSignatureAdapter({
+        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
+        exportName: SymbolNameStub({ value: 'pairOf' }),
+      });
+      rmSync(dir, { recursive: true, force: true });
+
+      expect(result).toStrictEqual({
+        usable: true,
+        signature: {
+          params: [{ name: 'pair', type: { kind: 'tuple', elements: [{ kind: 'string' }, { kind: 'number' }] } }],
+          returnType: { kind: 'unknown', text: 'void' },
+        },
+      });
+    });
+  });
+
+  describe('a template literal parameter and return, on both callable shapes', () => {
+    it(`VALID: {export declare function idOf(t: \`id-\${string}\`): \`out-\${number}\`} => a template descriptor for the param AND the return`, () => {
+      tsMorphReadExternalSignatureAdapterProxy();
+      const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-extsig-')));
+      writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
+      writeFileSync(join(dir, 'lib.d.ts'), `export declare function idOf(t: \`id-\${string}\`): \`out-\${number}\`;\n`);
+
+      const result = tsMorphReadExternalSignatureAdapter({
+        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
+        exportName: SymbolNameStub({ value: 'idOf' }),
+      });
+      rmSync(dir, { recursive: true, force: true });
+
+      expect(result).toStrictEqual({
+        usable: true,
+        signature: {
+          params: [{ name: 't', type: { kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] } }],
+          returnType: { kind: 'template', texts: ['out-', ''], types: [{ kind: 'number' }] },
+        },
+      });
+    });
+
+    // The typed-const branch reads its type node off the SIGNATURE's own declaration
+    // (`signature.getDeclaration()`), never off the exported declaration passed in, so this proves that
+    // second thread independently of the function-declaration branch above.
+    it(`VALID: {export declare const idConst: (t: \`id-\${string}\`) => \`out-\${number}\`} => the same template descriptors, off the call-signature branch`, () => {
+      tsMorphReadExternalSignatureAdapterProxy();
+      const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-extsig-')));
+      writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
+      writeFileSync(join(dir, 'lib.d.ts'), `export declare const idConst: (t: \`id-\${string}\`) => \`out-\${number}\`;\n`);
+
+      const result = tsMorphReadExternalSignatureAdapter({
+        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
+        exportName: SymbolNameStub({ value: 'idConst' }),
+      });
+      rmSync(dir, { recursive: true, force: true });
+
+      expect(result).toStrictEqual({
+        usable: true,
+        signature: {
+          params: [{ name: 't', type: { kind: 'template', texts: ['id-', ''], types: [{ kind: 'string' }] } }],
+          returnType: { kind: 'template', texts: ['out-', ''], types: [{ kind: 'number' }] },
+        },
+      });
+    });
+  });
+
+  describe('an intersection parameter', () => {
+    it('VALID: {export declare function combine(v: Ay & Bee): string} => an object descriptor merging both shapes', () => {
+      tsMorphReadExternalSignatureAdapterProxy();
+      const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-extsig-')));
+      writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
+      writeFileSync(
+        join(dir, 'lib.d.ts'),
+        'export interface Ay { a: string }\nexport interface Bee { b: number }\nexport declare function combine(v: Ay & Bee): string;\n',
+      );
+
+      const result = tsMorphReadExternalSignatureAdapter({
+        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
+        exportName: SymbolNameStub({ value: 'combine' }),
+      });
+      rmSync(dir, { recursive: true, force: true });
+
+      expect(result).toStrictEqual({
+        usable: true,
+        signature: {
+          params: [
+            {
+              name: 'v',
+              type: {
+                kind: 'object',
+                properties: [
+                  { name: 'a', type: { kind: 'string' } },
+                  { name: 'b', type: { kind: 'number' } },
+                ],
+              },
+            },
+          ],
+          returnType: { kind: 'string' },
+        },
+      });
+    });
+  });
+
   describe('an export that names no callable', () => {
     it('EMPTY: {export declare const config: { a: number }} => ships no usable types', () => {
       tsMorphReadExternalSignatureAdapterProxy();

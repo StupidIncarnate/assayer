@@ -16,7 +16,7 @@ export const readlineStableBranchPickAdapterProxy = (): {
 
   const handle = registerMock({ fn: createInterface });
 
-  handle.mockReturnValue({
+  handle.calledWith([]).returns({
     on: (event: string, listener: () => void): void => {
       if (event === 'close') {
         closeHandlers.push(listener);
@@ -37,6 +37,9 @@ export const readlineStableBranchPickAdapterProxy = (): {
   });
 
   const stdoutSpy = registerSpyOn({ object: process.stdout, method: 'write' });
+  // `write` answers a boolean nothing here reads, but a spied call still has to be described:
+  // an undescribed call throws rather than falling through to the real stdout.
+  stdoutSpy.calledWith([]).implement(() => true);
 
   return {
     answersWith: ({ input }: { input: string }): void => {
@@ -51,7 +54,7 @@ export const readlineStableBranchPickAdapterProxy = (): {
       answerState.eof = true;
     },
     getPrompt: (): CliOutput =>
-      CliOutputStub({ value: stdoutSpy.mock.calls.map((call) => String(call[0])).join('') }),
-    promptWasWritten: (): boolean => stdoutSpy.mock.calls.length > 0,
+      CliOutputStub({ value: stdoutSpy.callsMatching([]).map((call) => String(call[0])).join('') }),
+    promptWasWritten: (): boolean => stdoutSpy.callsMatching([]).length > 0,
   };
 };

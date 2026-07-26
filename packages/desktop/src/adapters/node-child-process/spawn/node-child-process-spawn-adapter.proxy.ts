@@ -8,10 +8,12 @@ export const nodeChildProcessSpawnAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: spawn });
   const stderrSpy = registerSpyOn({ object: process.stderr, method: 'write' });
-  stderrSpy.mockImplementation(() => true);
+  stderrSpy.calledWith([]).implement(() => true);
   const state: { error: Error | undefined } = { error: undefined };
 
-  handle.mockReturnValue({
+  // Every spawn call gets the same fake ChildProcess back regardless of command/args, since the
+  // adapter is called once per launch with nothing this proxy needs to tell apart.
+  handle.calledWith([]).returns({
     on: (event: string, listener: (error: Error) => void): void => {
       if (event === 'error' && state.error !== undefined) {
         listener(state.error);
@@ -21,8 +23,10 @@ export const nodeChildProcessSpawnAdapterProxy = (): {
   } as ReturnType<typeof spawn>);
 
   return {
-    getLastCall: (): readonly unknown[] | undefined => handle.mock.calls.at(-1),
-    getStderrWrites: (): unknown[] => stderrSpy.mock.calls.map((call) => String(call[0])),
+    getLastCall: (): readonly unknown[] | undefined => handle.callsMatching([]).at(-1),
+    // Every write regardless of what else write() was called with (encoding, callback) — a real
+    // collector, not a narrowed one.
+    getStderrWrites: (): unknown[] => stderrSpy.callsMatching([]).map((call) => String(call[0])),
     failsToSpawn: ({ error }: { error: Error }): void => {
       state.error = error;
     },

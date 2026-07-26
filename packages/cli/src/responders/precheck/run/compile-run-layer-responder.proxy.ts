@@ -48,10 +48,10 @@ export const CompileRunLayerResponderProxy = (): {
 
   const callOrder: unknown[] = [];
 
-  configHashHandle.mockReturnValue(
-    contentHashContract.parse('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
-  );
-  manifestTrashHandle.mockImplementation(async () => {
+  configHashHandle
+    .calledWith([])
+    .returns(contentHashContract.parse('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'));
+  manifestTrashHandle.calledWith([]).implement(async () => {
     callOrder.push('trash');
 
     return Promise.resolve({ success: true });
@@ -60,34 +60,34 @@ export const CompileRunLayerResponderProxy = (): {
   return {
     configHashReturns: (): void => undefined,
     manifestMissing: (): void => {
-      manifestLoadHandle.mockResolvedValueOnce({ status: 'missing' });
+      manifestLoadHandle.onceFor([]).resolves({ status: 'missing' });
     },
     manifestInvalid: (): void => {
-      manifestLoadHandle.mockResolvedValueOnce({
+      manifestLoadHandle.onceFor([]).resolves({
         status: 'invalid',
         reason: errorMessageContract.parse('manifest failed schema validation'),
       });
     },
     manifestOk: ({ manifest }: { manifest: AssayerCacheManifest }): void => {
-      manifestLoadHandle.mockResolvedValueOnce({ status: 'ok', manifest });
+      manifestLoadHandle.onceFor([]).resolves({ status: 'ok', manifest });
     },
     trashSucceeds: (): void => undefined,
     compileSucceeds: (): void => {
-      compileRunHandle.mockImplementationOnce(async () => {
+      compileRunHandle.onceFor([]).implement(async () => {
         callOrder.push('compile');
 
         return Promise.resolve(compileResultContract.parse({ status: 'ok', results: [], errors: [] }));
       });
     },
     compileFails: ({ errors }: { errors: CompileResultErrors }): void => {
-      compileRunHandle.mockImplementationOnce(async () => {
+      compileRunHandle.onceFor([]).implement(async () => {
         callOrder.push('compile');
 
         return Promise.resolve(compileResultContract.parse({ status: 'errors', results: [], errors }));
       });
     },
     getCallOrder: (): unknown[] => callOrder,
-    wasTrashCalled: (): boolean => manifestTrashHandle.mock.calls.length > 0,
-    wasCompileCalled: (): boolean => compileRunHandle.mock.calls.length > 0,
+    wasTrashCalled: (): boolean => manifestTrashHandle.callsMatching([]).length > 0,
+    wasCompileCalled: (): boolean => compileRunHandle.callsMatching([]).length > 0,
   };
 };

@@ -142,6 +142,144 @@ describe('substituteTypeRefsTransformer', () => {
         properties: [],
       });
     });
+
+    // Descended the same way an array's element is, one substitution per fixed position — a
+    // reference sitting inside any one of them still needs replacing.
+    it('VALID: {a tuple with an opaque reference in one position} => that position replaced, the sibling kept', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }, { kind: 'number' }],
+      });
+      const config = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
+      });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'tuple',
+        elements: [
+          { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] },
+          { kind: 'number' },
+        ],
+      });
+    });
+
+    it('VALID: {a tuple nested inside a tuple} => the reference two levels down is still replaced', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [
+          { kind: 'tuple', elements: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }] },
+          { kind: 'string' },
+        ],
+      });
+      const config = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
+      });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'tuple',
+        elements: [
+          {
+            kind: 'tuple',
+            elements: [{ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }],
+          },
+          { kind: 'string' },
+        ],
+      });
+    });
+
+    it('EMPTY: {an empty tuple} => stays an empty tuple', () => {
+      const type = TypeDescriptorStub({ kind: 'tuple', elements: [] });
+      const config = TypeDescriptorStub({ kind: 'string' });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'tuple',
+        elements: [],
+      });
+    });
+
+    // The literal segments carry no reference to resolve; only each substitution's own type does.
+    it('VALID: {a template substitution carrying an opaque reference} => the substitution replaced, the segments untouched', () => {
+      const type = TypeDescriptorStub({
+        kind: 'template',
+        texts: ['id-', ''],
+        types: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }],
+      });
+      const config = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
+      });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'template',
+        texts: ['id-', ''],
+        types: [{ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }],
+      });
+    });
+
+    it('EMPTY: {a template with no substitutions} => stays an empty types list', () => {
+      const type = TypeDescriptorStub({ kind: 'template', texts: ['literal'], types: [] });
+      const config = TypeDescriptorStub({ kind: 'string' });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'template',
+        texts: ['literal'],
+        types: [],
+      });
+    });
+
+    it('VALID: {a template substitution that is itself a tuple carrying a reference} => the reference replaced through both layers', () => {
+      const type = TypeDescriptorStub({
+        kind: 'template',
+        texts: ['', ''],
+        types: [{ kind: 'tuple', elements: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }] }],
+      });
+      const config = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
+      });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'template',
+        texts: ['', ''],
+        types: [
+          {
+            kind: 'tuple',
+            elements: [{ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }],
+          },
+        ],
+      });
+    });
+
+    it('VALID: {a tuple element that is itself a template carrying a reference} => the reference replaced through both layers', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [
+          { kind: 'template', texts: ['id-', ''], types: [{ kind: 'unknown', text: 'Config', typeRef: 'Config' }] },
+        ],
+      });
+      const config = TypeDescriptorStub({
+        kind: 'object',
+        typeName: 'Config',
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
+      });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'tuple',
+        elements: [
+          {
+            kind: 'template',
+            texts: ['id-', ''],
+            types: [{ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }],
+          },
+        ],
+      });
+    });
   });
 
   describe('a reference the map does not carry', () => {
@@ -153,6 +291,19 @@ describe('substituteTypeRefsTransformer', () => {
         kind: 'unknown',
         text: 'Widget',
         typeRef: 'Widget',
+      });
+    });
+
+    it('VALID: {a tuple with an unresolved reference} => left exactly as read', () => {
+      const type = TypeDescriptorStub({
+        kind: 'tuple',
+        elements: [{ kind: 'unknown', text: 'Widget', typeRef: 'Widget' }],
+      });
+      const config = TypeDescriptorStub({ kind: 'string' });
+
+      expect(substituteTypeRefsTransformer({ type, resolved: new Map([['Config', config]]) })).toStrictEqual({
+        kind: 'tuple',
+        elements: [{ kind: 'unknown', text: 'Widget', typeRef: 'Widget' }],
       });
     });
 
