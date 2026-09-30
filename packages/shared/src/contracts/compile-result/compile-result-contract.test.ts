@@ -28,7 +28,7 @@ describe('compileResultContract', () => {
           results: [{ namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 }],
           errors: [],
         });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
 
     it('INVALID: {error missing message} => throws validation error', () => {

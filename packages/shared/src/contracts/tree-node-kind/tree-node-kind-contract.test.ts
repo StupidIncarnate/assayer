@@ -22,7 +22,7 @@ describe('treeNodeKindContract', () => {
     it('INVALID: {value: "symlink"} => throws validation error', () => {
       expect(() => {
         return treeNodeKindContract.parse('symlink');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

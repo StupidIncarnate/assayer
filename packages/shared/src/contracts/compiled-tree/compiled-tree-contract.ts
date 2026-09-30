@@ -27,7 +27,7 @@ export interface TreeNode {
   children?: TreeNode[] | undefined;
 }
 
-const treeNodeContract: z.ZodType<TreeNode, z.ZodTypeDef, unknown> = z.lazy(() =>
+const treeNodeContract: z.ZodType<TreeNode> = z.lazy(() =>
   z.object({
     name: treeNodeNameContract,
     path: relPathContract,

@@ -28,7 +28,7 @@ describe('arrayCardinalityContract', () => {
     it('INVALID: {value: "two"} => throws validation error', () => {
       expect(() => {
         return arrayCardinalityContract.parse('two');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

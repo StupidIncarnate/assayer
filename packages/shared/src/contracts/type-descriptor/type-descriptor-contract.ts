@@ -92,7 +92,7 @@ export type TypeDescriptor =
    */
   | { kind: 'unknown'; text: TypeText; typeRef?: SymbolName | undefined; typeArgs?: TypeDescriptor[] | undefined };
 
-export const typeDescriptorContract: z.ZodType<TypeDescriptor, z.ZodTypeDef, unknown> = z.lazy(() =>
+export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
   z.discriminatedUnion('kind', [
     z.object({ kind: z.literal('string') }),
     z.object({ kind: z.literal('number') }),

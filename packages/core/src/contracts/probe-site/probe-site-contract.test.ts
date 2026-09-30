@@ -40,7 +40,7 @@ describe('probeSiteContract', () => {
     it('INVALID: {kind: "branch"} => throws, since only cond and exit are probed', () => {
       expect(() => {
         return probeSiteContract.parse({ id: 'x', kind: 'branch', start: 0, end: 1 });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
 
     it('INVALID: {negative offset} => throws validation error', () => {

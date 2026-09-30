@@ -27,7 +27,7 @@ describe('caseRunStatusContract', () => {
     it('INVALID: {an invented status} => throws', () => {
       expect(() => {
         return caseRunStatusContract.parse('probably-fine');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

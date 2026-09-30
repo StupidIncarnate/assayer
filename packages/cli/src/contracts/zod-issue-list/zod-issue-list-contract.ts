@@ -8,7 +8,7 @@
  *   assayerConfigContract.parse(rawConfig);
  * } catch (error) {
  *   const { issues } = zodIssueListContract.parse(error);
- *   // issues: [{ path: ['repoRoot'], message: 'Expected string, received number' }, ...]
+ *   // issues: [{ path: ['repoRoot'], message: 'Invalid input: expected string, received number' }, ...]
  * }
  */
 import { z } from 'zod';

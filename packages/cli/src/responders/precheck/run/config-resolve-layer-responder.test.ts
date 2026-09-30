@@ -57,7 +57,7 @@ describe('ConfigResolveLayerResponder', () => {
       proxy.hasContent({ content: '{"repoRoot": 123}' });
 
       await expect(ConfigResolveLayerResponder({ repoPath: '/repo' })).rejects.toThrow(
-        new CliExactOutputError({ message: 'repoRoot: Expected string, received number' }),
+        new CliExactOutputError({ message: 'repoRoot: Invalid input: expected string, received number' }),
       );
     });
   });

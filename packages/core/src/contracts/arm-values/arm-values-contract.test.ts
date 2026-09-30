@@ -41,7 +41,7 @@ describe('armValuesContract', () => {
     it('INVALID: {satisfying: "everything"} => throws validation error', () => {
       expect(() => {
         return armValuesContract.parse({ satisfying: 'everything', violating: {} });
-      }).toThrow(/Expected object, received string/u);
+      }).toThrow(/Invalid input: expected object, received string/u);
     });
   });
 });

@@ -22,7 +22,7 @@ describe('lintEntryContract', () => {
     it('INVALID: {rule: "made-up"} => throws, since only declared rules exist', () => {
       expect(() => {
         return lintEntryContract.parse({ rule: 'made-up', name: 'decide', message: 'x', startLine: 1, endLine: 7 });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
 
     it('INVALID: {message: ""} => throws, since a lint with no message is unactionable', () => {

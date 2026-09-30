@@ -23,21 +23,14 @@ import { z } from 'zod';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
+import type { SymbolName } from '../symbol-name/symbol-name-contract';
 
-// One definition of "a property name": the symbol-name contract with its BRAND unwrapped, so the same
-// non-empty check runs on every key while the record's OUTPUT stays a full index signature. Keeping the
-// brand makes zod infer a `Partial`, which describes no keys at all and so cannot carry the nesting.
-const propertyNameContract = symbolNameContract.unwrap();
+export type ArrangeValue = RepresentativeValue | ArrangeValue[] | { [key: SymbolName]: ArrangeValue };
 
-export type ArrangeValue =
-  | RepresentativeValue
-  | ArrangeValue[]
-  | { [key: z.infer<typeof propertyNameContract>]: ArrangeValue };
-
-export const arrangeValueContract: z.ZodType<ArrangeValue, z.ZodTypeDef, unknown> = z.lazy(() =>
+export const arrangeValueContract: z.ZodType<ArrangeValue> = z.lazy(() =>
   z.union([
     representativeValueContract,
     z.array(arrangeValueContract),
-    z.record(propertyNameContract, arrangeValueContract),
+    z.record(symbolNameContract, arrangeValueContract),
   ]),
 );

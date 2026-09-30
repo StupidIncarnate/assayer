@@ -27,7 +27,7 @@ describe('configValidateBroker', () => {
 
       expect(result).toStrictEqual({
         success: false,
-        issues: [{ path: 'repoRoot', message: 'Expected string, received number' }],
+        issues: [{ path: 'repoRoot', message: 'Invalid input: expected string, received number' }],
       });
     });
 
@@ -41,8 +41,8 @@ describe('configValidateBroker', () => {
       expect(result).toStrictEqual({
         success: false,
         issues: [
-          { path: 'repoRoot', message: 'Expected string, received number' },
-          { path: 'exclude.0', message: 'Expected string, received number' },
+          { path: 'repoRoot', message: 'Invalid input: expected string, received number' },
+          { path: 'exclude.0', message: 'Invalid input: expected string, received number' },
         ],
       });
     });

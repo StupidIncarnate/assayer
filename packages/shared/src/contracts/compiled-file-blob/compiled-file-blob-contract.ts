@@ -29,7 +29,8 @@ export const compiledFileBlobContract = z.object({
   analysis: fileAnalysisContract.optional(),
   // The file's raw, unresolved module graph (imports/re-exports it declares, imported names it
   // calls) — the per-file input a later cross-file stitch pass resolves. Empty when the file has none.
-  moduleGraph: fileModuleGraphContract.default({ edges: [], references: [] }),
+  // `prefault` parses the fallback through the graph contract, so its own defaults fill in the rest.
+  moduleGraph: fileModuleGraphContract.prefault({ edges: [], references: [] }),
 });
 
 export type CompiledFileBlob = z.infer<typeof compiledFileBlobContract>;

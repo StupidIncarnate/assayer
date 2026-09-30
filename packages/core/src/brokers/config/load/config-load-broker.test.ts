@@ -52,7 +52,7 @@ describe('configLoadBroker', () => {
       proxy.hasContent({ content: '{"version":"2","repoRoot":".","exclude":[]}' });
 
       await expect(configLoadBroker({ configPath: '/repo/assayer.config.json' })).rejects.toThrow(
-        /Invalid literal value/u
+        /Invalid input: expected/u
       );
     });
   });

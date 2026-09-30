@@ -22,7 +22,7 @@ describe('compileModeContract', () => {
     it('INVALID: {value: "cached"} => throws validation error', () => {
       expect(() => {
         return compileModeContract.parse('cached');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

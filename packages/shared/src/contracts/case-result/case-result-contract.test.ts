@@ -85,7 +85,7 @@ describe('caseResultContract', () => {
           status: 'skipped',
           trace: [],
         });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

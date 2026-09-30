@@ -4,9 +4,9 @@
  *
  * USAGE:
  * zodErrorMessageFormatTransformer({
- *   issues: [{ path: 'repoRoot', message: 'Expected string, received number' }],
+ *   issues: [{ path: 'repoRoot', message: 'Invalid input: expected string, received number' }],
  * });
- * // Returns 'repoRoot: Expected string, received number'
+ * // Returns 'repoRoot: Invalid input: expected string, received number'
  */
 import { cliErrorMessageContract } from '../../contracts/cli-error-message/cli-error-message-contract';
 import type { CliErrorMessage } from '../../contracts/cli-error-message/cli-error-message-contract';

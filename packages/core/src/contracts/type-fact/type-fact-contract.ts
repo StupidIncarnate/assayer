@@ -66,7 +66,7 @@ export type TypeFact =
    */
   | { flavor: 'other'; text: TypeText; typeRef?: SymbolName | undefined; typeArgs?: TypeFact[] | undefined };
 
-export const typeFactContract: z.ZodType<TypeFact, z.ZodTypeDef, unknown> = z.lazy(() =>
+export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
   z.discriminatedUnion('flavor', [
     z.object({ flavor: z.literal('string') }),
     z.object({ flavor: z.literal('number') }),

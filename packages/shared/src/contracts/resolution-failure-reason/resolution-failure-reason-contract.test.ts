@@ -28,7 +28,7 @@ describe('resolutionFailureReasonContract', () => {
     it('INVALID: {value: "who-knows"} => throws validation error', () => {
       expect(() => {
         return resolutionFailureReasonContract.parse('who-knows');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

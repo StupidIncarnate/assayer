@@ -51,7 +51,7 @@ describe('predicateContract', () => {
     it('INVALID: {kind: "always"} => throws validation error', () => {
       expect(() => {
         return predicateContract.parse({ kind: 'always' });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

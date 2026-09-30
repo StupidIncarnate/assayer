@@ -174,7 +174,7 @@ export const syntaxTraits = (): {
     // union appears here the moment it is declared, with no second list to remember to update.
     declaredByContracts: (): SyntaxTrait[] => [
       ...entryAccessContract.options.map((option) => `access:${option.shape.kind.value}` as SyntaxTrait),
-      ...branchNodeContract.shape.kind.unwrap().options.map((kind) => `branch:${kind}` as SyntaxTrait),
+      ...branchNodeContract.shape.kind.options.map((kind) => `branch:${kind}` as SyntaxTrait),
     ],
 
     observed: ({ relPath }: { relPath: string }): SyntaxTrait[] => {

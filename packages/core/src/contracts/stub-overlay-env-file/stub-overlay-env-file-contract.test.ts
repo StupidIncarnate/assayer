@@ -14,7 +14,7 @@ describe('stubOverlayEnvFileContract', () => {
     it('INVALID: {source not process.env} => throws validation error', () => {
       expect(() => {
         return stubOverlayEnvFileContract.parse({ source: 'os.environ', property: 'CODE', values: [] });
-      }).toThrow(/Invalid literal value/u);
+      }).toThrow(/Invalid input: expected/u);
     });
   });
 });

@@ -80,7 +80,7 @@ describe('valueDomainContract', () => {
     it('INVALID: {min: "10"} => throws validation error', () => {
       expect(() => {
         return valueDomainContract.parse({ min: '10' });
-      }).toThrow(/Expected number, received string/u);
+      }).toThrow(/Invalid input: expected number, received string/u);
     });
 
     it('INVALID: {excluded: [{}]} => throws validation error', () => {

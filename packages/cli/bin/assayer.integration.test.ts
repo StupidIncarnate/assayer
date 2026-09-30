@@ -187,7 +187,7 @@ describe('assayer CLI precheck flow (real built binary)', () => {
       const result = await cli.run({ argv: ['status'] });
 
       expect(result).toStrictEqual(
-        CliRunResultStub({ stdout: '', stderr: 'repoRoot: Expected string, received number\n', exitCode: 1 }),
+        CliRunResultStub({ stdout: '', stderr: 'repoRoot: Invalid input: expected string, received number\n', exitCode: 1 }),
       );
       expect(cli.exists({ relPath: '.assayer/cache' })).toBe(false);
     });

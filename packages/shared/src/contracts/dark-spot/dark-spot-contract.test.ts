@@ -43,7 +43,7 @@ describe('darkSpotContract', () => {
           startLine: 3,
           endLine: 5,
         });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
 
     it('INVALID: {startLine: 0} => throws validation error', () => {

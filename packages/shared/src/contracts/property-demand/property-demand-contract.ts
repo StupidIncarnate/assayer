@@ -38,7 +38,7 @@ export interface PropertyDemand {
     | { kind: 'nested'; properties: PropertyDemand[] };
 }
 
-export const propertyDemandContract: z.ZodType<PropertyDemand, z.ZodTypeDef, unknown> = z.lazy(() =>
+export const propertyDemandContract: z.ZodType<PropertyDemand> = z.lazy(() =>
   z.object({
     name: symbolNameContract,
     demand: z.discriminatedUnion('kind', [

@@ -28,7 +28,7 @@ describe('undrivenCauseContract', () => {
     it('INVALID: {a cause outside the four blockers} => throws validation error', () => {
       expect(() => {
         return undrivenCauseContract.parse('undriven');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

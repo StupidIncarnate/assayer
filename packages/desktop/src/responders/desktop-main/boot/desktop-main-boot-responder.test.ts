@@ -9,11 +9,10 @@ import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-br
 const RELPATH_NOT_A_STRING_MESSAGE = [
   '[',
   '  {',
-  '    "code": "invalid_type",',
   '    "expected": "string",',
-  '    "received": "number",',
+  '    "code": "invalid_type",',
   '    "path": [],',
-  '    "message": "Expected string, received number"',
+  '    "message": "Invalid input: expected string, received number"',
   '  }',
   ']',
 ].join('\n');

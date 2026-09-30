@@ -22,7 +22,7 @@ describe('compileStatusContract', () => {
     it('INVALID: {value: "partial"} => throws validation error', () => {
       expect(() => {
         return compileStatusContract.parse('partial');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

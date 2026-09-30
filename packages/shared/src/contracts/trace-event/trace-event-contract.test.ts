@@ -26,7 +26,7 @@ describe('traceEventContract', () => {
     it('INVALID: {kind: "branch"} => throws, since only cond and exit are traced', () => {
       expect(() => {
         return traceEventContract.parse({ id: 'x', kind: 'branch', valueText: '1' });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
 
     it('INVALID: {no valueText} => throws, since an event with no rendering cannot be displayed', () => {

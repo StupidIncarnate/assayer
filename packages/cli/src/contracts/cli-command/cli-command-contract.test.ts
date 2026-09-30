@@ -16,7 +16,7 @@ describe('cliCommandContract', () => {
     it('INVALID: {value: "nope"} => throws validation error', () => {
       expect(() => {
         return cliCommandContract.parse('nope');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

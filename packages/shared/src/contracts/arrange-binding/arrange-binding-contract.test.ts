@@ -24,7 +24,7 @@ describe('arrangeBindingContract', () => {
     it('INVALID: {kind: "env", name: ""} => throws, since an empty name addresses no environment slot', () => {
       expect(() => {
         return arrangeBindingContract.parse({ kind: 'env', name: '', value: '6' });
-      }).toThrow(/String must contain at least 1 character\(s\)/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 

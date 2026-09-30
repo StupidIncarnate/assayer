@@ -106,7 +106,7 @@ describe('moduleEdgeContract', () => {
     it('INVALID: {kind: "sideways"} => throws on the edge kind', () => {
       expect(() => {
         return moduleEdgeContract.parse({ kind: 'sideways', specifier: './other', bindings: [], line: 1, column: 1 });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
 
     it('INVALID: {a binding kind that is not projected} => throws on the discriminator', () => {

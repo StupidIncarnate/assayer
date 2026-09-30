@@ -64,7 +64,7 @@ describe('assayerConfigContract', () => {
     it('INVALID: {version: "2"} => throws validation error', () => {
       expect(() => {
         return assayerConfigContract.parse({ version: '2' });
-      }).toThrow(/Invalid literal value/u);
+      }).toThrow(/Invalid input: expected/u);
     });
 
     it('INVALID: {repoRoot: 123} => throws validation error', () => {
@@ -76,43 +76,43 @@ describe('assayerConfigContract', () => {
     it('INVALID: {repoRoot: ""} => throws, since an empty path names no root', () => {
       expect(() => {
         return assayerConfigContract.parse({ repoRoot: '' });
-      }).toThrow(/String must contain at least 1 character\(s\)/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {stableBranch: ""} => throws, since an empty branch name names nothing to diff against', () => {
       expect(() => {
         return assayerConfigContract.parse({ stableBranch: '' });
-      }).toThrow(/String must contain at least 1 character\(s\)/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {exclude: [""]} => throws, since an empty glob pattern excludes nothing', () => {
       expect(() => {
         return assayerConfigContract.parse({ exclude: [''] });
-      }).toThrow(/String must contain at least 1 character\(s\)/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {darkSpots: "off"} => throws, since darkSpots (unlike deadSurface/inputGaps) admits no off value', () => {
       expect(() => {
         return assayerConfigContract.parse({ darkSpots: 'off' });
-      }).toThrow(/Invalid enum value\. Expected 'warn' \| 'error', received 'off'/u);
+      }).toThrow(/Invalid option: expected one of \\"warn\\"\|\\"error\\"/u);
     });
 
     it('INVALID: {deadSurface: "bogus"} => throws validation error', () => {
       expect(() => {
         return assayerConfigContract.parse({ deadSurface: 'bogus' });
-      }).toThrow(/Invalid enum value\. Expected 'off' \| 'warn' \| 'error', received 'bogus'/u);
+      }).toThrow(/Invalid option: expected one of \\"off\\"\|\\"warn\\"\|\\"error\\"/u);
     });
 
     it('INVALID: {inputGaps: "bogus"} => throws validation error', () => {
       expect(() => {
         return assayerConfigContract.parse({ inputGaps: 'bogus' });
-      }).toThrow(/Invalid enum value\. Expected 'off' \| 'warn' \| 'error', received 'bogus'/u);
+      }).toThrow(/Invalid option: expected one of \\"off\\"\|\\"warn\\"\|\\"error\\"/u);
     });
 
     it('INVALID: {runMode: "bogus"} => throws validation error', () => {
       expect(() => {
         return assayerConfigContract.parse({ runMode: 'bogus' });
-      }).toThrow(/Invalid enum value\. Expected 'thorough' \| 'intelligent', received 'bogus'/u);
+      }).toThrow(/Invalid option: expected one of \\"thorough\\"\|\\"intelligent\\"/u);
     });
   });
 });

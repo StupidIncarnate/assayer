@@ -54,7 +54,7 @@ describe('conditionCauseContract', () => {
         return conditionCauseContract.parse({
           requirements: [{ leaf: { kind: 'and', left: {}, right: {} }, want: true }],
         });
-      }).toThrow(/Invalid literal value/u);
+      }).toThrow(/Invalid input: expected/u);
     });
   });
 });

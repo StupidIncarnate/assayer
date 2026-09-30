@@ -485,8 +485,9 @@ reason.
 **Change what a harness can declare.** Touch
 `contracts/harness-declaration` (the published type; it uses two open
 catchall shapes rather than `z.record`, because a branded-key record
-infers as `Partial<Record<...>>`, which an author's literal object like
-`{ audit: { report } }` cannot satisfy), plus
+infers as `Record<SymbolName, ...>`, and an author's literal object like
+`{ audit: { report } }` cannot satisfy it: the plain key `audit` is not a
+`SymbolName`), plus
 `transformers/assayer-harness`, the registration function itself,
 published as `assayerHarness` from the package's main barrel
 (`packages/core/index.ts`). That is the exact specifier the input-gap

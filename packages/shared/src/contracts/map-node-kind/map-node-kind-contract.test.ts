@@ -22,7 +22,7 @@ describe('mapNodeKindContract', () => {
     it('INVALID: {value: "else"} => throws validation error', () => {
       expect(() => {
         return mapNodeKindContract.parse('else');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

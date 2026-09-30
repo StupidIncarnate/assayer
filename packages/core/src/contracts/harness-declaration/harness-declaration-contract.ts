@@ -18,8 +18,9 @@
 import { z } from 'zod';
 
 // Two open shapes rather than `z.record`: a record keyed by a BRANDED name infers
-// `Partial<Record<SymbolName, …>>`, which an author's `{ audit: { report } }` literal cannot satisfy —
-// and an author who cannot write the artifact is the one failure this type exists to prevent. A
+// `Record<SymbolName, …>`, and an author's `{ audit: { report } }` literal cannot satisfy it, because the
+// plain key `audit` is not a `SymbolName`. An author who cannot write the artifact is the one failure
+// this type exists to prevent. A
 // property-less object with a catchall carries the same runtime validation and infers the open
 // `{ [entry: string]: { [param: string]: unknown } }` an editor accepts.
 export const harnessDeclarationContract = z.object({

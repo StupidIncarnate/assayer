@@ -42,7 +42,7 @@ describe('compiledTreeContract', () => {
           },
           nodes: [{ name: 'weird', path: 'packages/shared/src/weird', kind: 'symlink' }],
         });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

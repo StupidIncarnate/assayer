@@ -48,7 +48,7 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
         const raw = await fsReadFileAdapter({ path: String(abs) });
         const file = stubOverlayObjectFileContract.parse(JSON.parse(String(raw)));
         const properties = Object.entries(file.properties)
-          .map(([name, spec]) => ({ name, values: spec === undefined ? [] : spec.values }))
+          .map(([name, spec]) => ({ name, values: spec.values }))
           .sort((a, b) => (a.name < b.name ? -1 : 1));
 
         return stubOverlayContract.parse({

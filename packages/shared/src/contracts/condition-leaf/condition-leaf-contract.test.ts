@@ -101,7 +101,7 @@ describe('conditionLeafContract', () => {
           operandType: { kind: 'boolean' },
           predicate: { kind: 'truthy' },
         });
-      }).toThrow(/Invalid literal value/u);
+      }).toThrow(/Invalid input: expected/u);
     });
 
     it('INVALID: {empty id} => throws validation error', () => {

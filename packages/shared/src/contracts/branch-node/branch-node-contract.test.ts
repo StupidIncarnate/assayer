@@ -31,7 +31,7 @@ describe('branchNodeContract', () => {
           startLine: 2,
           endLine: 4,
         });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

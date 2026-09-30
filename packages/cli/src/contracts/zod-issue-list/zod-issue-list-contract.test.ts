@@ -9,19 +9,19 @@ describe('zodIssueListContract', () => {
       const result = zodIssueListContract.parse(issueList);
 
       expect(result).toStrictEqual({
-        issues: [{ path: ['repoRoot'], message: 'Expected string, received number' }],
+        issues: [{ path: ['repoRoot'], message: 'Invalid input: expected string, received number' }],
       });
     });
 
     it('VALID: {issues: [{path: ["exclude", 0], message}]} => parses a numeric path segment', () => {
       const issueList = ZodIssueListStub({
-        issues: [{ path: ['exclude', 0], message: 'Expected string, received number' }],
+        issues: [{ path: ['exclude', 0], message: 'Invalid input: expected string, received number' }],
       });
 
       const result = zodIssueListContract.parse(issueList);
 
       expect(result).toStrictEqual({
-        issues: [{ path: ['exclude', 0], message: 'Expected string, received number' }],
+        issues: [{ path: ['exclude', 0], message: 'Invalid input: expected string, received number' }],
       });
     });
 
@@ -38,7 +38,7 @@ describe('zodIssueListContract', () => {
     it('INVALID: {issues: "not-an-array"} => throws validation error', () => {
       expect(() => {
         return zodIssueListContract.parse({ issues: 'not-an-array' });
-      }).toThrow(/Expected array, received string/u);
+      }).toThrow(/Invalid input: expected array, received string/u);
     });
 
     it('INVALID: {issues: [{path: [true], message}]} => throws on a non-string/number path segment', () => {
@@ -54,7 +54,7 @@ describe('zodIssueListContract', () => {
         return zodIssueListContract.parse({
           issues: [{ path: [], message: 123 }],
         });
-      }).toThrow(/Expected string, received number/u);
+      }).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

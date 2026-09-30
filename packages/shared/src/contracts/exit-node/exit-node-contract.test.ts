@@ -29,7 +29,7 @@ describe('exitNodeContract', () => {
           guardPath: [],
           line: 3,
         });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

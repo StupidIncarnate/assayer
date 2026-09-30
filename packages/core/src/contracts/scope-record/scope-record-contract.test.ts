@@ -68,7 +68,7 @@ describe('scopeRecordContract', () => {
           branches: [],
           exits: [],
         });
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });

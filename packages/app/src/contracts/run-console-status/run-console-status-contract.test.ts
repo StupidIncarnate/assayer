@@ -22,7 +22,7 @@ describe('runConsoleStatusContract', () => {
     it('INVALID: {an invented status} => throws', () => {
       expect(() => {
         return runConsoleStatusContract.parse('probably-fine');
-      }).toThrow(/Invalid enum value/u);
+      }).toThrow(/Invalid option: expected one of/u);
     });
   });
 });
