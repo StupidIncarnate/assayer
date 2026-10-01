@@ -154,7 +154,6 @@ export * from './exit-node/exit-node-contract';
 
 export * from './derived-test-case/derived-test-case-contract';
 
-export * from './arrange-text/arrange-text-contract';
 
 export * from './entry-label/entry-label-contract';
 
