@@ -82,6 +82,7 @@ describe('compileStubGraphBroker', () => {
   describe('a blob declaring a type it reads on one property', () => {
     it('VALID: {Config{mode,retries}, reads config.mode === "a"} => mode demanded, retries unknown, this file the reader', async () => {
       const proxy = compileStubGraphBrokerProxy();
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
       proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       const result = await compileStubGraphBroker({
@@ -113,6 +114,7 @@ describe('compileStubGraphBroker', () => {
 
     it("VALID: {Config{mode,retries}, reads config.mode === 'a'} => one property guard naming Config#mode, this file as reader, the branch's line, eq 'a', string operand type", async () => {
       const proxy = compileStubGraphBrokerProxy();
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
       proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       const result = await compileStubGraphBroker({
@@ -135,8 +137,9 @@ describe('compileStubGraphBroker', () => {
       ]);
     });
 
-    it('VALID: {a config-dir + namespace} => writes the index to the tmp path under .assayer/cache/stubs', async () => {
+    it('VALID: {a config-dir + namespace} => renames the tmp index onto .assayer/cache/stubs/<namespace>.json', async () => {
       const proxy = compileStubGraphBrokerProxy();
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
       proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       await compileStubGraphBroker({
@@ -147,7 +150,9 @@ describe('compileStubGraphBroker', () => {
         files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
       });
 
-      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/.assayer/cache/stubs/feature-x.json.tmp']);
+      expect(proxy.getIndexRenames({ configDir: '/repo', namespace: 'feature-x' })).toStrictEqual([
+        ['/repo/.assayer/cache/stubs/feature-x.json.tmp', '/repo/.assayer/cache/stubs/feature-x.json'],
+      ]);
     });
 
     // `stubIndexWriteBroker` re-canonicalizes (re-sorts objectStubs/envStubs by key) independently of the
@@ -156,6 +161,7 @@ describe('compileStubGraphBroker', () => {
     // WRITTEN cache file could disagree about one compile.
     it('VALID: {Config{mode,retries}, reads config.mode === "a"} => the written index is byte-identical to the returned index', async () => {
       const proxy = compileStubGraphBrokerProxy();
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
       proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       const result = await compileStubGraphBroker({
@@ -175,6 +181,7 @@ describe('compileStubGraphBroker', () => {
   describe('a blob that declares no types', () => {
     it('EMPTY: {no declared types} => a stub index with no object stubs and no env stubs', async () => {
       const proxy = compileStubGraphBrokerProxy();
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
       proxy.queueBlob({ path: BLOB_PATH, blob: CompiledFileBlobStub({ relPath: 'src/plain.ts', analysis: FileAnalysisStub({ functions: [], declaredTypes: [] }) }) });
 
       const result = await compileStubGraphBroker({
@@ -202,6 +209,7 @@ describe('compileStubGraphBroker', () => {
 
     it("VALID: {process.env.MODE === 'production'} => one env stub, MODE guessed ['abc123','production'], this file the reader", async () => {
       const proxy = compileStubGraphBrokerProxy();
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
       proxy.queueBlob({ path: BLOB_PATH, blob: ENV_BLOB });
 
       const result = await compileStubGraphBroker({

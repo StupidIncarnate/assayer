@@ -9,9 +9,13 @@ export const compileHarnessGraphBrokerProxy = (): {
   // The index write is atomic: the bytes go to `<namespace>.json.tmp` first and a rename moves them
   // into place, so the address a caller asks with is that tmp path.
   getWrittenIndex: ({ path }: { path: string }) => unknown;
-  // Every path written, in call order. Asking WHICH path the index landed at cannot be addressed by
-  // that path without assuming the answer, so a caller reads the whole list and asserts it complete.
-  getWrittenPaths: () => unknown[];
+  // Stages the mkdir -> write -> rename of `<configDir>/.assayer/cache/harness/<namespace>.json`. A
+  // write to any other path is not staged, so it throws.
+  indexWriteSucceeds: ({ configDir, namespace }: { configDir: string; namespace: string }) => void;
+  // Every path written under `<configDir>/.assayer/cache/harness/`, in call order. Asking WHICH path the
+  // index landed at cannot be addressed by that path without assuming the answer, so a caller reads the
+  // whole list and asserts it complete.
+  getWrittenPaths: ({ configDir }: { configDir: string }) => unknown[];
 } => {
   // Hashing and harness loading run REAL — the digest IS the rebuild key under test, and a stubbed load
   // would prove a declaration nobody registered. Only the blob read and the index write are mocked, at
@@ -21,13 +25,15 @@ export const compileHarnessGraphBrokerProxy = (): {
   harnessValueTypesTransformerProxy();
   const readFileGateway = readFileProxy();
   const writeProxy = harnessIndexWriteBrokerProxy();
-  writeProxy.succeeds();
 
   return {
     queueBlob: ({ path, blob }: { path: string; blob: unknown }): void => {
       readFileGateway.returns({ path, contents: JSON.stringify(blob) });
     },
     getWrittenIndex: ({ path }: { path: string }): unknown => writeProxy.getWrittenIndex({ path }),
-    getWrittenPaths: (): unknown[] => writeProxy.getWrittenPaths(),
+    indexWriteSucceeds: ({ configDir, namespace }: { configDir: string; namespace: string }): void => {
+      writeProxy.succeeds({ configDir, namespace });
+    },
+    getWrittenPaths: ({ configDir }: { configDir: string }): unknown[] => writeProxy.getWrittenPaths({ configDir }),
   };
 };

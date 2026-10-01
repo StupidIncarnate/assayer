@@ -123,7 +123,7 @@ export const compileHarnessGraphBroker = async ({
           {
             relPath: harness.relPath,
             message:
-              `\`${String(harness.relPath)}\` threw while Assayer read it: ${String(loaded.message)}. Loading IS ` +
+              `\`${String(harness.relPath)}\` threw while Assayer read it: ${loaded.message}. Loading IS ` +
               'the read — the `assayerHarness` call is what registers a harness — so a module body that cannot ' +
               'run declares nothing at all. Keep the file to the `assayerHarness` call and the values it hands ' +
               'over.',
