@@ -19,7 +19,6 @@
  * // CliExactOutputError (from whichever layer failed) without running the later stages
  */
 import type { AssayerConfig } from '@assayer/shared/contracts';
-import type { FilePath } from '@assayer/core/contracts';
 import { analyzerHashBroker, compileResolveRootBroker } from '@assayer/core/brokers';
 
 import { ConfigResolveLayerResponder } from './config-resolve-layer-responder';
@@ -31,7 +30,7 @@ export const PrecheckRunResponder = async ({
   repoPath,
 }: {
   repoPath: string;
-}): Promise<{ configDir: FilePath; root: FilePath; config: AssayerConfig }> => {
+}): Promise<{ configDir: string; root: string; config: AssayerConfig }> => {
   const resolved = await ConfigResolveLayerResponder({ repoPath });
   const config = await StableBranchLayerResponder({
     config: resolved.config,

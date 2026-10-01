@@ -2,7 +2,6 @@ import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signat
 import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadGlobalBroker } from './external-signature-read-global-broker';
 import { externalSignatureReadGlobalBrokerProxy } from './external-signature-read-global-broker.proxy';
 
@@ -14,7 +13,7 @@ describe('externalSignatureReadGlobalBroker', () => {
     it('VALID: {cache miss} => reads the signature via ts-morph and writes it to the cache once', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
       const signature = ExternalSignatureStub({ params: [], returnType: { kind: 'string' } });
-      const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
+      const tsConfigFilePath = '/repo/tsconfig.json';
       proxy.cacheMiss({
         reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         declText: DECL_TEXT,
@@ -43,7 +42,7 @@ describe('externalSignatureReadGlobalBroker', () => {
     it('VALID: {cache miss} => reads the member type and writes it to the cache once', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
       const type = TypeDescriptorStub({ kind: 'unknown', text: 'ProcessEnv' });
-      const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
+      const tsConfigFilePath = '/repo/tsconfig.json';
       proxy.cacheMiss({
         reference: { kind: 'global', name: 'process', member: 'env', called: false },
         declText: DECL_TEXT,
@@ -71,7 +70,7 @@ describe('externalSignatureReadGlobalBroker', () => {
     it('VALID: {cache hit} => returns the signature and writes nothing further', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
       const signature = ExternalSignatureStub({ params: [], returnType: { kind: 'string' } });
-      const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
+      const tsConfigFilePath = '/repo/tsconfig.json';
       proxy.cacheHit({
         reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         declText: DECL_TEXT,
@@ -98,7 +97,7 @@ describe('externalSignatureReadGlobalBroker', () => {
   describe('a reference @types/node cannot type', () => {
     it('EMPTY: {ts-morph reports no usable types} => returns usable: false and writes nothing', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
-      const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
+      const tsConfigFilePath = '/repo/tsconfig.json';
       proxy.readsNoUsableTypes({
         tsConfigFilePath,
         reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: 'x', called: true },

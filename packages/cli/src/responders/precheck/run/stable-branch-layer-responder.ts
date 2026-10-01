@@ -12,7 +12,6 @@
  * // resolved (interactively on a TTY, else the detected default) and saved to disk
  */
 import { gitDetectStableBranchBroker, configStableBranchSaveBroker } from '@assayer/core/brokers';
-import type { FilePath } from '@assayer/core/contracts';
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 
@@ -25,7 +24,7 @@ export const StableBranchLayerResponder = async ({
   repoRoot,
 }: {
   config: AssayerConfig;
-  configPath: FilePath;
+  configPath: string;
   repoRoot: string;
 }): Promise<AssayerConfig> => {
   if (config.stableBranch !== undefined) {

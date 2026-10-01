@@ -21,19 +21,18 @@ import { Node, Project } from '#gateway/npm/ts-morph';
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
 import type { ExternalSignature } from '@assayer/shared/contracts';
 
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { readSignatureTypeLayerBroker } from './read-signature-type-layer-broker';
 
-const projectByConfig = new Map<FilePath, Project>();
+const projectByConfig = new Map<string, Project>();
 
 export const externalSignatureReadDeclarationBroker = ({
   tsConfigFilePath,
   dtsPath,
   exportName,
 }: {
-  tsConfigFilePath: FilePath;
-  dtsPath: FilePath;
+  tsConfigFilePath: string;
+  dtsPath: string;
   exportName: string;
 }): { usable: true; signature: ExternalSignature } | { usable: false } => {
   const existing = projectByConfig.get(tsConfigFilePath);

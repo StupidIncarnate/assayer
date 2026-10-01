@@ -18,13 +18,11 @@
  */
 import { existsSync } from '#gateway/node/fs';
 import { join, dirname } from '#gateway/node/path';
-import { filePathContract } from '@assayer/core/contracts';
-import type { FilePath } from '@assayer/core/contracts';
 
 export const analyzerRootsResolveBroker = ({
   from,
   loadedFrom,
-}: { from?: FilePath; loadedFrom?: FilePath } = {}): FilePath[] => {
+}: { from?: string; loadedFrom?: string } = {}): string[] => {
   const dir = from === undefined ? __dirname : String(from);
   const origin = loadedFrom === undefined ? dir : String(loadedFrom);
 
@@ -33,8 +31,8 @@ export const analyzerRootsResolveBroker = ({
     // The `/` after the folder name keeps a sibling such as `distant` from counting as `dist`.
     const tree = origin === cliDist || origin.startsWith(`${cliDist}/`) ? 'dist' : 'src';
     return [
-      filePathContract.parse(join(dir, 'packages', 'core', tree)),
-      filePathContract.parse(join(dir, 'packages', 'shared', tree)),
+      join(dir, 'packages', 'core', tree),
+      join(dir, 'packages', 'shared', tree),
     ];
   }
 
@@ -43,5 +41,5 @@ export const analyzerRootsResolveBroker = ({
     return [];
   }
 
-  return analyzerRootsResolveBroker({ from: filePathContract.parse(parent), loadedFrom: filePathContract.parse(origin) });
+  return analyzerRootsResolveBroker({ from: parent, loadedFrom: origin });
 };

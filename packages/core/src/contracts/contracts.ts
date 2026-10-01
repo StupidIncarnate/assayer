@@ -12,7 +12,6 @@
 
 export * from './compile-progress-event/compile-progress-event-contract';
 
-export * from './file-path/file-path-contract';
 
 
 export * from './dir-entry/dir-entry-contract';

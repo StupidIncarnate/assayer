@@ -36,7 +36,6 @@ import { compileProcessFileBroker } from '../../src/brokers/compile/process-file
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileHarnessGraphBroker } from '../../src/brokers/compile/harness-graph/compile-harness-graph-broker';
 import { harnessRealizeBroker } from '../../src/brokers/harness/realize/harness-realize-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 const NAMESPACE = 'main';
@@ -78,13 +77,13 @@ export const harnessGraphHarness = (): {
     second: { index: HarnessIndex; blob: 'compiled' | 'reused'; contentHash: ContentHash; analysis: FileAnalysis };
   }>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
-  const blobsDirOf = ({ dir }: { dir: ReturnType<typeof FilePathStub> }): ReturnType<typeof FilePathStub> =>
-    FilePathStub({ value: join(String(dir), '.assayer', 'cache', 'blobs') });
+  const blobsDirOf = ({ dir }: { dir: string }): string =>
+    join(String(dir), '.assayer', 'cache', 'blobs');
 
-  const seed = ({ source }: { source: string }): ReturnType<typeof FilePathStub> => {
-    const dir = FilePathStub({ value: realpathSync(mkdtempSync(join(tmpdir(), 'assayer-harness-'))) });
+  const seed = ({ source }: { source: string }): string => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-harness-')));
     dirs.push(dir);
     writeFileSync(join(String(dir), 'tsconfig.json'), NODE_TSCONFIG);
     ensureDirSync(join(String(dir), 'src'));
@@ -97,7 +96,7 @@ export const harnessGraphHarness = (): {
   // graph, stitch the harness index, and read that index back off disk. The cache's own `reused` flag is
   // carried out rather than inferred, so a caller never has to guess whether the source was re-parsed.
   const stitch = async (params: {
-    dir: ReturnType<typeof FilePathStub>;
+    dir: string;
     source: string;
     harness: string;
   }): Promise<{
@@ -146,7 +145,7 @@ export const harnessGraphHarness = (): {
     dir,
     contentHash,
   }: {
-    dir: ReturnType<typeof FilePathStub>;
+    dir: string;
     contentHash: ContentHash;
   }): FileAnalysis => {
     const blob = compiledFileBlobContract.parse(

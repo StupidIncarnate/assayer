@@ -32,7 +32,6 @@ import type { RunResult } from '@assayer/shared/contracts';
 import { runConsoleFindBroker } from '../../src/brokers/run/console-find/run-console-find-broker';
 import { runFindBroker } from '../../src/brokers/run/find/run-find-broker';
 import { runIdBroker } from '../../src/brokers/run/id/run-id-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const SOURCE_REL = 'src/audit.ts';
 const HARNESS_REL = 'src/audit.harness.ts';
@@ -43,12 +42,12 @@ export const runFindHarness = (): {
   afterEach: () => void;
   seed: (params: {
     harness?: string;
-  }) => Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: string; runId: RunResult['runId'] }>;
+  }) => Promise<{ configDir: string; relPath: string; runId: RunResult['runId'] }>;
   editHarness: (params: { configDir: string; harness: string }) => void;
   findRun: (params: { configDir: string; relPath: string }) => Promise<RunResult | undefined>;
   findConsole: (params: { configDir: string; relPath: string }) => Promise<string | undefined>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
   return {
     afterEach: (): void => {
@@ -63,8 +62,8 @@ export const runFindHarness = (): {
       harness,
     }: {
       harness?: string;
-    }): Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: string; runId: RunResult['runId'] }> => {
-      const configDir = FilePathStub({ value: realpathSync(mkdtempSync(join(tmpdir(), 'assayer-run-find-'))) });
+    }): Promise<{ configDir: string; relPath: string; runId: RunResult['runId'] }> => {
+      const configDir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-run-find-')));
       dirs.push(configDir);
       ensureDirSync(join(String(configDir), 'src'));
       writeFileSync(join(String(configDir), SOURCE_REL), AUDIT_SOURCE);

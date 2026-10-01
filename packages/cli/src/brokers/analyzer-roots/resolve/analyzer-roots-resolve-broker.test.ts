@@ -1,4 +1,3 @@
-import { FilePathStub } from '@assayer/core/contracts/file-path/file-path.stub';
 
 import { analyzerRootsResolveBroker } from './analyzer-roots-resolve-broker';
 import { analyzerRootsResolveBrokerProxy } from './analyzer-roots-resolve-broker.proxy';
@@ -18,11 +17,11 @@ describe('analyzerRootsResolveBroker', () => {
       const proxy = analyzerRootsResolveBrokerProxy();
       proxy.rootAt({ from: '/repo/packages/cli', root: '/repo' });
 
-      const roots = analyzerRootsResolveBroker({ from: FilePathStub({ value: '/repo/packages/cli' }) });
+      const roots = analyzerRootsResolveBroker({ from: '/repo/packages/cli' });
 
       expect(roots).toStrictEqual([
-        FilePathStub({ value: '/repo/packages/core/src' }),
-        FilePathStub({ value: '/repo/packages/shared/src' }),
+        '/repo/packages/core/src',
+        '/repo/packages/shared/src',
       ]);
     });
 
@@ -30,11 +29,11 @@ describe('analyzerRootsResolveBroker', () => {
       const proxy = analyzerRootsResolveBrokerProxy();
       proxy.rootAt({ from: '/repo', root: '/repo' });
 
-      const roots = analyzerRootsResolveBroker({ from: FilePathStub({ value: '/repo' }) });
+      const roots = analyzerRootsResolveBroker({ from: '/repo' });
 
       expect(roots).toStrictEqual([
-        FilePathStub({ value: '/repo/packages/core/src' }),
-        FilePathStub({ value: '/repo/packages/shared/src' }),
+        '/repo/packages/core/src',
+        '/repo/packages/shared/src',
       ]);
     });
 
@@ -43,12 +42,12 @@ describe('analyzerRootsResolveBroker', () => {
       proxy.rootAt({ from: '/repo/packages/cli/dist/src/brokers/analyzer-roots/resolve', root: '/repo' });
 
       const roots = analyzerRootsResolveBroker({
-        from: FilePathStub({ value: '/repo/packages/cli/dist/src/brokers/analyzer-roots/resolve' }),
+        from: '/repo/packages/cli/dist/src/brokers/analyzer-roots/resolve',
       });
 
       expect(roots).toStrictEqual([
-        FilePathStub({ value: '/repo/packages/core/dist' }),
-        FilePathStub({ value: '/repo/packages/shared/dist' }),
+        '/repo/packages/core/dist',
+        '/repo/packages/shared/dist',
       ]);
     });
 
@@ -57,12 +56,12 @@ describe('analyzerRootsResolveBroker', () => {
       proxy.rootAt({ from: '/repo/packages/cli/src/brokers/analyzer-roots/resolve', root: '/repo' });
 
       const roots = analyzerRootsResolveBroker({
-        from: FilePathStub({ value: '/repo/packages/cli/src/brokers/analyzer-roots/resolve' }),
+        from: '/repo/packages/cli/src/brokers/analyzer-roots/resolve',
       });
 
       expect(roots).toStrictEqual([
-        FilePathStub({ value: '/repo/packages/core/src' }),
-        FilePathStub({ value: '/repo/packages/shared/src' }),
+        '/repo/packages/core/src',
+        '/repo/packages/shared/src',
       ]);
     });
 
@@ -70,11 +69,11 @@ describe('analyzerRootsResolveBroker', () => {
       const proxy = analyzerRootsResolveBrokerProxy();
       proxy.rootAt({ from: '/repo/packages/cli/distant/resolve', root: '/repo' });
 
-      const roots = analyzerRootsResolveBroker({ from: FilePathStub({ value: '/repo/packages/cli/distant/resolve' }) });
+      const roots = analyzerRootsResolveBroker({ from: '/repo/packages/cli/distant/resolve' });
 
       expect(roots).toStrictEqual([
-        FilePathStub({ value: '/repo/packages/core/src' }),
-        FilePathStub({ value: '/repo/packages/shared/src' }),
+        '/repo/packages/core/src',
+        '/repo/packages/shared/src',
       ]);
     });
 
@@ -82,7 +81,7 @@ describe('analyzerRootsResolveBroker', () => {
       const proxy = analyzerRootsResolveBrokerProxy();
       proxy.noRootAbove({ from: '/nonexistent-xyz' });
 
-      const roots = analyzerRootsResolveBroker({ from: FilePathStub({ value: '/nonexistent-xyz' }) });
+      const roots = analyzerRootsResolveBroker({ from: '/nonexistent-xyz' });
 
       expect(roots).toStrictEqual([]);
     });

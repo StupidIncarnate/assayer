@@ -8,8 +8,6 @@
  * // or { found: false } when no assayer.config.json exists between startDir and the filesystem
  * // root.
  */
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { pathExists } from '#gateway/node/fs__promises';
 import { dirname } from '#gateway/node/path';
 
@@ -17,7 +15,7 @@ export const configFindBroker = async ({
   startDir,
 }: {
   startDir: string;
-}): Promise<{ found: true; configDir: FilePath; configPath: FilePath } | { found: false }> => {
+}): Promise<{ found: true; configDir: string; configPath: string } | { found: false }> => {
   const configPath = `${startDir}/assayer.config.json`;
 
   const exists = await pathExists(configPath);
@@ -25,12 +23,12 @@ export const configFindBroker = async ({
   if (exists) {
     return {
       found: true,
-      configDir: filePathContract.parse(startDir),
-      configPath: filePathContract.parse(configPath),
+      configDir: startDir,
+      configPath: configPath,
     };
   }
 
-  const parent = filePathContract.parse(dirname(startDir));
+  const parent = dirname(startDir);
 
   if (String(parent) === startDir) {
     return { found: false };

@@ -2,7 +2,6 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 
 export const resolveSpecifierLayerBrokerProxy = (): {
   // Each resolve is staged by the specifier the caller asks for. Following a re-export barrel resolves
@@ -24,12 +23,12 @@ export const resolveSpecifierLayerBrokerProxy = (): {
     resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
       resolveHandle
         .calledWith([{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+        .returns({ resolved: true, fileName: fileName });
     },
     resolvesLocalOnce: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
       resolveHandle
         .onceFor([{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+        .returns({ resolved: true, fileName: fileName });
     },
     resolvesUnresolved: ({ specifier }: { specifier: string }): void => {
       resolveHandle.calledWith([{ specifier }]).returns({ resolved: false });

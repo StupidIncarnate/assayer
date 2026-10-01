@@ -12,8 +12,6 @@
  */
 import ts from '#gateway/npm/typescript';
 
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 
 export const importSpecifierResolveBroker = ({
   specifier,
@@ -23,7 +21,7 @@ export const importSpecifierResolveBroker = ({
   specifier: string;
   containingFile: string;
   options: ts.CompilerOptions;
-}): { resolved: false } | { resolved: true; fileName: FilePath } => {
+}): { resolved: false } | { resolved: true; fileName: string } => {
   const result = ts.resolveModuleName(specifier, containingFile, options, ts.sys);
   const {resolvedModule} = result;
 
@@ -31,5 +29,5 @@ export const importSpecifierResolveBroker = ({
     return { resolved: false };
   }
 
-  return { resolved: true, fileName: filePathContract.parse(resolvedModule.resolvedFileName) };
+  return { resolved: true, fileName: resolvedModule.resolvedFileName };
 };

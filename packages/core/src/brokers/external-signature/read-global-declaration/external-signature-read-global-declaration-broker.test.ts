@@ -4,7 +4,6 @@ import { join } from '#gateway/node/path';
 
 import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
 
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadGlobalDeclarationBroker } from './external-signature-read-global-declaration-broker';
 import { externalSignatureReadGlobalDeclarationBrokerProxy } from './external-signature-read-global-declaration-broker.proxy';
 
@@ -25,7 +24,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
         reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
@@ -49,7 +48,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
         reference: { kind: 'global', name: 'process', member: 'env', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
@@ -75,7 +74,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
         reference: { kind: 'global', name: 'process', member: 'hrtime', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
@@ -102,7 +101,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
         reference: { kind: 'global', name: 'process', member: 'release', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
@@ -126,7 +125,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
         reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: 'join', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
@@ -153,7 +152,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
         reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: 'sep', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
@@ -177,7 +176,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
         reference: { kind: 'global', name: 'zzzNoSuchGlobal', member: 'foo', called: true },
       });
       rmSync(dir, { recursive: true, force: true });

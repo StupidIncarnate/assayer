@@ -12,11 +12,10 @@
  * // Returns '/repo/smoke-repo' when the config sets repoRoot, '/repo' when it does not
  */
 import { configLoadBroker, compileResolveRootBroker } from '@assayer/core/brokers';
-import type { FilePath } from '@assayer/core/contracts';
 
 import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 
-export const repoSourceRootBroker = async ({ repoPath }: { repoPath: RepoPath }): Promise<FilePath> => {
+export const repoSourceRootBroker = async ({ repoPath }: { repoPath: RepoPath }): Promise<string> => {
   const loaded = await configLoadBroker({ configPath: `${String(repoPath)}/assayer.config.json` });
 
   if (!loaded.success) {

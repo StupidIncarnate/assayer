@@ -2,7 +2,6 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { contentHashContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { externalSignatureReadBrokerProxy } from '../../external-signature/read/external-signature-read-broker.proxy';
@@ -84,7 +83,7 @@ export const compileResolveGraphBrokerProxy = (): {
       readConfigHandle.calledWith([{ searchPath: root }]).returns({
         options: {},
         tsconfigHash: contentHashContract.parse(EMPTY_HASH),
-        configFilePath: FilePathStub({ value: path }),
+        configFilePath: path,
       });
     },
     resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {

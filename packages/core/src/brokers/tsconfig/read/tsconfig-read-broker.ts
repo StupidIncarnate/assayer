@@ -19,14 +19,12 @@ import ts from '#gateway/npm/typescript';
 import { contentHashContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
 
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 
 export const tsconfigReadBroker = ({
   searchPath,
 }: {
   searchPath: string;
-}): { options: ts.CompilerOptions; tsconfigHash: ContentHash; configFilePath?: FilePath } => {
+}): { options: ts.CompilerOptions; tsconfigHash: ContentHash; configFilePath?: string } => {
   const configPath = ts.findConfigFile(searchPath, (file) => ts.sys.fileExists(file), 'tsconfig.json');
   const rawText = configPath === undefined ? '' : ts.sys.readFile(configPath) ?? '';
   const tsconfigHash = contentHashContract.parse(createHash('sha256').update(rawText, 'utf8').digest('hex'));
@@ -38,5 +36,5 @@ export const tsconfigReadBroker = ({
   const read = ts.readConfigFile(configPath, (path) => ts.sys.readFile(path));
   const parsed = ts.parseJsonConfigFileContent(read.config ?? {}, ts.sys, dirname(configPath));
 
-  return { options: parsed.options, tsconfigHash, configFilePath: filePathContract.parse(configPath) };
+  return { options: parsed.options, tsconfigHash, configFilePath: configPath };
 };

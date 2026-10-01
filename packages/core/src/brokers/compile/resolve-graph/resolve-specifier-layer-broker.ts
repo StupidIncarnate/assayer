@@ -18,8 +18,6 @@
 import { packageNameContract } from '@assayer/shared/contracts';
 import type { CompiledFileBlob, PackageName } from '@assayer/shared/contracts';
 
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { relative } from '#gateway/node/path';
 
@@ -45,7 +43,7 @@ export const resolveSpecifierLayerBroker = ({
   seen: ReadonlySet<string>;
 }):
   | { kind: 'local'; relPath: string }
-  | { kind: 'package'; packageName: PackageName; dtsPath: FilePath }
+  | { kind: 'package'; packageName: PackageName; dtsPath: string }
   | { kind: 'builtin'; packageName: PackageName }
   | { kind: 'unresolved' } => {
   const bareBuiltin = specifier.startsWith('node:') ? specifier.slice('node:'.length) : specifier;
@@ -71,7 +69,7 @@ export const resolveSpecifierLayerBroker = ({
 
     // The resolved `.d.ts` path rides ALONG the classification so the stitch can read the declared
     // signature; it is absolute and machine-specific, so it never enters the persisted edge.
-    return { kind: 'package', packageName: packageNameContract.parse(packageName), dtsPath: filePathContract.parse(fileName) };
+    return { kind: 'package', packageName: packageNameContract.parse(packageName), dtsPath: fileName };
   }
 
   const relPath = rel;

@@ -14,7 +14,6 @@
 import { externalSignatureContract } from '@assayer/shared/contracts';
 import type { ExternalSignature } from '@assayer/shared/contracts';
 
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
 import { ensureDir, pathExists, readFile, rename, writeFile } from '#gateway/node/fs__promises';
@@ -25,8 +24,8 @@ export const externalSignatureReadBroker = async ({
   exportName,
   cacheDir,
 }: {
-  tsConfigFilePath: FilePath;
-  dtsPath: FilePath;
+  tsConfigFilePath: string;
+  dtsPath: string;
   exportName: string;
   cacheDir: string;
 }): Promise<{ usable: true; signature: ExternalSignature } | { usable: false }> => {

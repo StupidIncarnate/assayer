@@ -43,7 +43,6 @@ import { stubContradictionsTransformer } from '../../../transformers/stub-contra
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';
 import { basename } from '#gateway/node/path';
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 
 export const compileRunBroker = async ({
   configDir,
@@ -61,8 +60,8 @@ export const compileRunBroker = async ({
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<CompileResult> => {
   const root = compileResolveRootBroker({ repoRoot: config.repoRoot, configDir });
-  const rootFolderName = filePathContract.parse(basename(String(root)));
-  const repoName = filePathContract.parse(basename(configDir));
+  const rootFolderName = basename(String(root));
+  const repoName = basename(configDir);
   const blobsDir = `${configDir}/.assayer/cache/blobs`;
 
   const currentBranch = await gitCurrentBranchBroker({ repoRoot: String(root) });

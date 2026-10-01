@@ -29,7 +29,6 @@ import { Node, Project } from '#gateway/npm/ts-morph';
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
 import type { ExternalSignature, ModuleSpecifier, TypeDescriptor } from '@assayer/shared/contracts';
 
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { readGlobalTypeLayerBroker } from './read-global-type-layer-broker';
 
@@ -45,14 +44,14 @@ type GlobalSignatureResult =
   | { usable: true; result: 'type'; type: TypeDescriptor; declText: string }
   | { usable: false };
 
-const globalProjectByConfig = new Map<FilePath, Project>();
+const globalProjectByConfig = new Map<string, Project>();
 const PROBE_PATH = '__assayer_global_probe__.ts';
 
 export const externalSignatureReadGlobalDeclarationBroker = ({
   tsConfigFilePath,
   reference,
 }: {
-  tsConfigFilePath: FilePath;
+  tsConfigFilePath: string;
   reference: GlobalReference;
 }): GlobalSignatureResult => {
   const existing = globalProjectByConfig.get(tsConfigFilePath);

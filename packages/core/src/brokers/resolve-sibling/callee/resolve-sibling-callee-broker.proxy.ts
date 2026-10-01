@@ -2,7 +2,6 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { readFileSyncProxy } from '#gateway/node/fs/read-file-sync/read-file-sync.proxy';
 
 export const resolveSiblingCalleeBrokerProxy = (): {
@@ -28,7 +27,7 @@ export const resolveSiblingCalleeBrokerProxy = (): {
     resolvesToSibling: ({ fileName, source, specifier }: { fileName: string; source: string; specifier: string }): void => {
       resolveHandle
         .onceFor([{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+        .returns({ resolved: true, fileName: fileName });
       reads.returns({ path: fileName, contents: source });
     },
     // Resolution lands somewhere but the file is a node_modules / outside-root file the broker skips as
@@ -36,7 +35,7 @@ export const resolveSiblingCalleeBrokerProxy = (): {
     resolvesToOutside: ({ fileName, specifier }: { fileName: string; specifier: string }): void => {
       resolveHandle
         .onceFor([{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+        .returns({ resolved: true, fileName: fileName });
     },
     // The specifier points at nothing: a broken import.
     resolvesToNothing: ({ specifier }: { specifier: string }): void => {

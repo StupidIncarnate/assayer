@@ -14,7 +14,6 @@
  */
 import type { ExternalSignature, ModuleSpecifier, TypeDescriptor } from '@assayer/shared/contracts';
 
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
 import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
@@ -33,7 +32,7 @@ export const externalSignatureReadGlobalBroker = async ({
   reference,
   cacheDir,
 }: {
-  tsConfigFilePath: FilePath;
+  tsConfigFilePath: string;
   reference: GlobalReference;
   cacheDir: string;
 }): Promise<GlobalSignatureResult> => {

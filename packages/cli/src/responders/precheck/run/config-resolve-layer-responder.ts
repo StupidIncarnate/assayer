@@ -9,8 +9,6 @@
  * // config when none is found); throws CliExactOutputError on malformed JSON or an invalid schema
  */
 import { configFindBroker, configGenerateBroker, configLoadBroker } from '@assayer/core/brokers';
-import { filePathContract } from '@assayer/core/contracts';
-import type { FilePath } from '@assayer/core/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 
 import { zodIssueListContract } from '../../../contracts/zod-issue-list/zod-issue-list-contract';
@@ -22,7 +20,7 @@ export const ConfigResolveLayerResponder = async ({
   repoPath,
 }: {
   repoPath: string;
-}): Promise<{ config: AssayerConfig; configDir: FilePath; configPath: FilePath }> => {
+}): Promise<{ config: AssayerConfig; configDir: string; configPath: string }> => {
   const found = await configFindBroker({ startDir: repoPath });
 
   if (!found.found) {
@@ -30,8 +28,8 @@ export const ConfigResolveLayerResponder = async ({
 
     return {
       config,
-      configDir: filePathContract.parse(repoPath),
-      configPath: filePathContract.parse(`${repoPath}/assayer.config.json`),
+      configDir: repoPath,
+      configPath: `${repoPath}/assayer.config.json`,
     };
   }
 

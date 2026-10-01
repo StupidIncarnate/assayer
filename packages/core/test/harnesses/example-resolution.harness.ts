@@ -22,7 +22,6 @@ import { resolve, join, dirname } from '#gateway/node/path';
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const SMOKE_REPO = resolve(__dirname, '..', '..', '..', '..', 'smoke-repo');
 const CATALOGUE = 'packages/syntax-repository/src';
@@ -60,7 +59,7 @@ export const exampleResolutionHarness = (): {
   resolveBroken: () => Promise<ResolveResult>;
   resolveNodeExamples: () => Promise<ResolveResult>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
   return {
     afterEach: (): void => {
@@ -72,7 +71,7 @@ export const exampleResolutionHarness = (): {
 
     resolveNodeExamples: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-node-example-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), NODE_TYPES_PKG_JSON);
@@ -95,7 +94,7 @@ export const exampleResolutionHarness = (): {
 
     resolveExamples: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-example-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'node_modules', 'vendored-fixture'));
       writeFileSync(join(dir, 'node_modules', 'vendored-fixture', 'package.json'), VENDORED_PKG_JSON);
@@ -117,7 +116,7 @@ export const exampleResolutionHarness = (): {
 
     resolveBroken: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-example-broken-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       const relPath = `${CATALOGUE}/happy-path/import-local/broken.ts`;
       ensureDirSync(join(dir, dirname(relPath)));

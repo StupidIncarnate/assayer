@@ -20,7 +20,6 @@ import { join } from '#gateway/node/path';
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 const VENDORED_PKG_JSON = '{ "name": "vendored-pkg", "version": "1.0.0", "types": "index.d.ts" }';
@@ -51,7 +50,7 @@ export const resolveGraphHarness = (): {
   resolveBrokenRepo: () => Promise<ResolveResult>;
   resolveDynamicRepo: () => Promise<ResolveResult>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
   return {
     afterEach: (): void => {
@@ -61,7 +60,7 @@ export const resolveGraphHarness = (): {
 
     resolveMixedRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stitch-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
@@ -86,7 +85,7 @@ export const resolveGraphHarness = (): {
 
     resolveTypedRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-typed-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
@@ -112,7 +111,7 @@ export const resolveGraphHarness = (): {
 
     resolveBarrelRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-barrel-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'src', 'b'));
       ensureDirSync(join(dir, 'src', 'barrel'));
@@ -138,7 +137,7 @@ export const resolveGraphHarness = (): {
 
     resolveBrokenRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-broken-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'broken.ts'), BROKEN_SRC);
@@ -154,7 +153,7 @@ export const resolveGraphHarness = (): {
 
     resolveDynamicRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-dynamic-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'dynamic.ts'), DYNAMIC_SRC);
