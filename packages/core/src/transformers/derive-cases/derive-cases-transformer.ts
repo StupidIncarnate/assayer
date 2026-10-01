@@ -70,8 +70,6 @@ import type {
   TypeText,
 } from '@assayer/shared/contracts';
 
-import { caseSignatureContract } from '../../contracts/case-signature/case-signature-contract';
-import type { CaseSignature } from '../../contracts/case-signature/case-signature-contract';
 import type { PredictedOutput } from '../../contracts/predicted-output/predicted-output-contract';
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
@@ -294,14 +292,14 @@ export const deriveCasesTransformer = ({
 
   // Feasible buckets, in enumeration order, de-duplicated by (exit, arrange): identical inputs render
   // once, so the salient representative below is stable. Each carries its predicted-output key.
-  const seen = new Set<CaseSignature>();
+  const seen = new Set<string>();
   const feasibleCases = evaluated.flatMap(({ predWant, arrange, exit }) => {
     if (exit === undefined || arrange.unreachable) {
       return [];
     }
 
     return arrange.arrangements.flatMap((arrangement) => {
-      const signature = caseSignatureContract.parse(`${String(exit.coverageId)}::${JSON.stringify(arrangement)}`);
+      const signature = `${String(exit.coverageId)}::${JSON.stringify(arrangement)}`;
 
       if (seen.has(signature)) {
         return [];

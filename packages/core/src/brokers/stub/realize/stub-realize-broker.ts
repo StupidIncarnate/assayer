@@ -45,8 +45,6 @@ import type {
 } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { caseSignatureContract } from '../../../contracts/case-signature/case-signature-contract';
-import type { CaseSignature } from '../../../contracts/case-signature/case-signature-contract';
 import type { PredictedOutput } from '../../../contracts/predicted-output/predicted-output-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
@@ -269,13 +267,13 @@ export const stubRealizeBroker = ({
 
     // Feasible buckets in enumeration order, de-duplicated by (exit, arrange), then marked salient — the
     // first per predicted output is the execution representative — exactly as derive-cases does.
-    const seen = new Set<CaseSignature>();
+    const seen = new Set<string>();
     const feasible = evaluated.flatMap((entry) => {
       if (entry.exit === undefined || entry.unreachable || entry.unfillable) {
         return [];
       }
 
-      const signature = caseSignatureContract.parse(`${String(entry.exit.coverageId)}::${JSON.stringify(entry.arrange)}`);
+      const signature = `${String(entry.exit.coverageId)}::${JSON.stringify(entry.arrange)}`;
 
       if (seen.has(signature)) {
         return [];
