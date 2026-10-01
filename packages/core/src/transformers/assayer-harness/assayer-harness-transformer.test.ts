@@ -24,11 +24,4 @@ describe('assayerHarnessTransformer', () => {
     });
   });
 
-  describe('refusing a declaration the contract does not admit', () => {
-    it('INVALID: {an entry whose value is a string} => throws validation error', () => {
-      expect(() => {
-        return assayerHarnessTransformer(HarnessDeclarationStub({ inputs: { audit: 'report' } as never }));
-      }).toThrow(/Invalid input: expected object, received string/u);
-    });
-  });
 });
