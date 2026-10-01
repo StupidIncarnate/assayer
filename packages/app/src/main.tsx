@@ -6,6 +6,7 @@
  * USAGE:
  * // Referenced by index.html as the module entry script
  */
+import '@mantine/core/styles.css';
 import { StartApp } from './startup/start-app';
 
 StartApp();

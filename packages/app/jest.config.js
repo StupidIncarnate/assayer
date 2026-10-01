@@ -11,11 +11,8 @@ module.exports = {
   roots: ['<rootDir>/src'],
   // The base's setupFilesAfterEnv loads MSW's Node interceptors, which subclass the global
   // `Response` at module load. jsdom has no `Response`, so dungeonmaster's published jsdom polyfills
-  // put undici's fetch classes on the global first. The package's own file adds matchMedia.
-  setupFiles: [
-    '@dungeonmaster/testing/jsdom-polyfills',
-    '<rootDir>/src/__mocks__/jsdom-polyfills.cjs',
-  ],
+  // put undici's fetch classes on the global first.
+  setupFiles: ['@dungeonmaster/testing/jsdom-polyfills'],
   setupFilesAfterEnv: [...baseConfig.setupFilesAfterEnv, '@testing-library/jest-dom'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testMatch: ['**/src/**/*.test.[jt]s?(x)'],
@@ -25,7 +22,6 @@ module.exports = {
     // run against the last `npm run build` while every other package tests the working tree — the
     // two silently disagree until someone rebuilds.
     ...baseConfig.moduleNameMapper,
-    '\\.(css|less|scss)$': '<rootDir>/src/__mocks__/style-mock.cjs',
     '^react$': reactDir,
     '^react-dom$': reactDomDir,
     '^react-dom/(.*)$': `${reactDomDir}/$1`,
