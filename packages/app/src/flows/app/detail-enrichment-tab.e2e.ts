@@ -53,7 +53,7 @@ test.describe('Compiled Surface Explorer — Enrichment tab', () => {
     ]);
   });
 
-  test('VALID: {compile+launch once, walk a switch, a class method, and an import-only module} => union-member ranges, class-method facts, and the empty prompt', async ({ smokeWindow: window }) => {
+  test('VALID: {one shared window, walk a switch, a class method, and an import-only module} => union-member ranges, class-method facts, and the empty prompt', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
 
     // Switch discriminant: each `case` line's range is the whole union, rotated so the matched member is

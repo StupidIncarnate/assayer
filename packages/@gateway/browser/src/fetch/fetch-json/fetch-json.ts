@@ -9,8 +9,8 @@
  * what it hands back — the caller parses the result through one.
  *
  * USAGE:
- * const parsed = await fetchJson({ url: '/api/quests', method: 'POST', body: { name: 'quest-1' } });
- * const quest = questContract.parse(parsed);
+ * const parsed = await fetchJson({ url: '/api/docs/overview' });
+ * const docs = docsResultContract.parse(parsed);
  * // fetchJson resolves the parsed JSON response body as `unknown`; throws naming url, status and
  * // body text otherwise
  */

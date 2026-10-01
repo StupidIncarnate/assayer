@@ -7,10 +7,10 @@
  *
  * USAGE:
  * await stableBranchPickBroker({
- *   candidates: [BranchNameStub({ value: 'main' }), BranchNameStub({ value: 'develop' })],
- *   preselected: BranchNameStub({ value: 'main' }),
+ *   candidates: ['main', 'develop'],
+ *   preselected: 'main',
  * });
- * // Prompts on stdin/stdout; returns the matched BranchName or the preselected one
+ * // Prompts on stdin/stdout; returns the matched branch name or the preselected one
  */
 import { question } from '#gateway/node/readline';
 import { getStdin, stdout } from '#gateway/node/process';

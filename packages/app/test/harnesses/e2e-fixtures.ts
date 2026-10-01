@@ -16,7 +16,7 @@
  * USAGE:
  * import { test, expect } from '../../../test/harnesses/e2e-fixtures';
  * test('…', async ({ smokeWindow: window }) => {
- *   await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+ *   await expect(window.getByTestId('FILE_TREE')).toBeVisible();
  * });
  */
 import { test as base, expect, _electron } from '#gateway/npm/playwright__test';

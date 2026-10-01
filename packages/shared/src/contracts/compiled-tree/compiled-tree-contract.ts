@@ -21,7 +21,7 @@ export interface TreeNode {
 }
 
 // `children` is a getter whose return type wraps `z.core.$ZodType<TreeNode>`, so the lookup of
-// `treeNodeContract` waits until a parse runs.
+// the node contract below waits until a parse runs.
 const treeNodeContract: z.ZodType<TreeNode> = z.object({
   name: z.string().min(1).brand<'TreeNodeName'>(),
   path: z.string().min(1).brand<'TreeNodePath'>(),

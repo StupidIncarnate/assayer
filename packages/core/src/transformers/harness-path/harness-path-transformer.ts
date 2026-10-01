@@ -11,7 +11,7 @@
  *   It answers for any source path, whether or not that file exists — existence is the caller's read.
  *
  * USAGE:
- * harnessPathTransformer({ relPath: relPathContract.parse('src/audit.ts') });
+ * harnessPathTransformer({ relPath: 'src/audit.ts' });
  * // Returns 'src/audit.harness.ts'
  */
 

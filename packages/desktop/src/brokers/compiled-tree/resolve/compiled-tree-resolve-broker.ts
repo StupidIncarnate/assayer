@@ -7,7 +7,7 @@
  *   its empty-state terminal cleanly instead of the desktop main throwing ENOENT.
  *
  * USAGE:
- * const tree = await compiledTreeResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+ * const tree = await compiledTreeResolveBroker({ repoPath: '/repo' });
  * // Returns the validated CompiledTree (summary + nodes) for the current namespace
  */
 import { compiledTreeContract } from '@assayer/shared/contracts';

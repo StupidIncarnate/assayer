@@ -25,8 +25,8 @@ const NESTED_FUNCTION = 'packages/syntax-repository/src/happy-path/function/nest
 // cardinality matrix and its salient lens reach the renderer.
 const ARRAY_ELEMENT_LENGTH = 'packages/syntax-repository/src/happy-path/array/element-length/element-length.ts';
 
-// The remaining branch/pure rungs, each selected by exact relPath and asserted in ONE launch (compile
-// + launch once, walk many). Class rungs (if-else / switch in a method), the three boolean shapes, the
+// The remaining branch/pure rungs, each selected by exact relPath and asserted in ONE test on the shared
+// window (walk many). Class rungs (if-else / switch in a method), the three boolean shapes, the
 // composition rungs, and the branchless pure function + method.
 const IF_ELSE_IN_CLASS = 'packages/syntax-repository/src/happy-path/if-else/in-class/in-class.ts';
 const SWITCH_IN_CLASS = 'packages/syntax-repository/src/happy-path/switch/in-class/in-class.ts';
@@ -259,7 +259,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
   });
 
-  test('VALID: {compile+launch once, walk the class/boolean/composition/pure rungs} => each file\'s Tests tab lists its exact entry title and derived cases', async ({ smokeWindow: window }) => {
+  test('VALID: {one shared window, walk the class/boolean/composition/pure rungs} => each file\'s Tests tab lists its exact entry title and derived cases', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible();
 
     // Each file is selected by its exact relPath; gating on the (unique) entry title lets the case-row
@@ -425,7 +425,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     ]);
   });
 
-  test('VALID: {compile+launch once, walk the module-scope + consumption entries} => each is a DRIVEN module entry labelled by export-or-filename, its case row carrying no args', async ({ smokeWindow: window }) => {
+  test('VALID: {one shared window, walk the module-scope + consumption entries} => each is a DRIVEN module entry labelled by export-or-filename, its case row carrying no args', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible();
 
     // A module scope DRIVEN from `process.env` — labelled by its filename, no `()`, and its case rows

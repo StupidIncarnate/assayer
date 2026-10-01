@@ -7,40 +7,21 @@
  *   against a real tsconfig (`./fixtures/tsconfig.json`), and runs the rule against the actual
  *   type-checked AST, exactly as `npm run ward -- --only lint` does.
  *
- *   Every fixture here imports the REAL `RepresentativeValue`/`ArrangeValue` types from
- *   packages/shared/src/contracts, rather than a hand-rolled stand-in. That matters: those contracts
- *   are BRANDED (zod's `.brand<'RepresentativeValue'>()`), and the checker represents a branded type
- *   very differently once it is unioned with `undefined` than a plain, unbranded alias would be — the
- *   rule's matching logic is written against that branded shape, so a fixture using a simplified
- *   unbranded stand-in would not exercise the real code path.
+ *   Every fixture imports the REAL `RepresentativeValue` and `ArrangeValue` types from
+ *   packages/shared/src/contracts, not a hand-rolled stand-in. The rule matches on the checker's model
+ *   of those exact types, so a simplified stand-in would not exercise the real code path.
  *
- *   The invalid cases below are NOT invented shapes. They reconstruct the exact code that shipped in
- *   this repo before each of the two `??` fixes recorded in the "`??` throws away a valid `null`" entry
- *   of plan/open-defects.md, read back out of git history (`git show 20dc86c -- <path>`):
+ *   The invalid cases are the `??` shapes this rule exists to catch. Three are `??` chains modelled on
+ *   `objectArrangeTransformer` (packages/core/src/transformers/object-arrange/). One is
+ *   `const literalPoint = literal ?? rep;`, modelled on `typeToRangeTransformer`
+ *   (packages/core/src/transformers/type-to-range/). In each, `null` is a valid arrange value, and `??`
+ *   throws it away. The "`??` throws away a valid `null`" entry of plan/open-defects.md explains why
+ *   that is a defect.
  *
- *   - Three separate `??` chains lived in `objectArrangeTransformer`
- *     (packages/core/src/transformers/object-arrange/object-arrange-transformer.ts). Each is
- *     reconstructed below as its own invalid case.
- *   - `const literalPoint = literal ?? rep;` lived in `typeToRangeTransformer`
- *     (packages/core/src/transformers/type-to-range/type-to-range-transformer.ts).
- *
- *   Four of the six defect-register entries never used `??` at all, confirmed by `git show` on the
- *   commits that fixed them (20dc86c, 7d94948, 8c2dcb4): "a filter that rejected null as a value for a
- *   string parameter" and "that filter's replacement, same mistake" both describe
- *   `isTypeFillableGuard`'s candidate check (packages/core/src/guards/is-type-fillable/), which read
- *   `typeof value === 'string'` (silently missing every scalar kind) and was fixed by adding
- *   `value === undefined || value === null || typeof value === 'string'` — an `||` chain. The
- *   `typeToRangeTransformer` mistake fixed in 8c2dcb4 read `rep === undefined ? unrealizable : …` — a
- *   ternary, not `??`. None of those four have a `??` node for this rule to reach, so they are not
- *   reconstructed as invalid cases here; doing so would assert a shape the real bug never had.
- *
- *   The last two valid cases below are a REGRESSION lock, not an invented worry: an earlier version of
- *   this rule matched by scanning `checker.typeToString`'s full rendered text for the words
- *   "RepresentativeValue"/"ArrangeValue" anywhere in it, and that version fired on nine sites across
- *   packages/core/src when run for real against this repo (`npm run ward -- --only lint`) — every one
- *   an array or a `Map#get()` result being defaulted to `[]`/a fallback array, never a scalar `null`
- *   being discarded. `handler-result-layer-transformer.ts` and `is-domain-empty/is-domain-empty-guard.ts`
- *   are two of those nine; the shapes below reconstruct them.
+ *   The last two valid cases default an array, and a `Map#get()` result, to a fallback array. These are
+ *   the shapes `handler-result-layer-transformer.ts` and `is-domain-empty-guard.ts` use. The rule must
+ *   not fire on them, because only a discarded scalar `null` is a defect. A rule that matched on the
+ *   rendered type text would fire on both.
  */
 
 const path = require('node:path');

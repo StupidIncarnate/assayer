@@ -14,8 +14,8 @@
  *
  * USAGE:
  * const view = await compiledFileResolveBroker({
- *   repoPath: RepoPathStub({ value: '/repo' }),
- *   relPath: RelPathStub({ value: 'src/index.ts' }),
+ *   repoPath: '/repo',
+ *   relPath: 'src/index.ts',
  * });
  * // Returns a validated CompiledFileView; throws if relPath is not in the current namespace.
  */

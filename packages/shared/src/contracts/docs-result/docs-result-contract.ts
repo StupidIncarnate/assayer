@@ -3,7 +3,7 @@
  *   resolved, LLM-consumable documentation body.
  *
  * USAGE:
- * docsResultContract.parse({ topic: docsTopicContract.parse('overview'), body: '# Assayer' });
+ * docsResultContract.parse({ topic: 'overview', body: '# Assayer' });
  * // Returns a validated DocsResult (branded fields)
  */
 import { z } from '#gateway/npm/zod';

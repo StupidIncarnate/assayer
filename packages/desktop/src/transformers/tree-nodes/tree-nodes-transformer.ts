@@ -5,7 +5,7 @@
  *   Siblings at every level (including the root) are sorted ascending by name.
  *
  * USAGE:
- * treeNodesTransformer({ relPaths: [RelPathStub({ value: 'packages/shared/src/index.ts' })] });
+ * treeNodesTransformer({ relPaths: ['packages/shared/src/index.ts'] });
  * // Returns [{ name: 'packages', path: 'packages', kind: 'dir', children: [...] }]
  */
 import { compiledTreeContract } from '@assayer/shared/contracts';

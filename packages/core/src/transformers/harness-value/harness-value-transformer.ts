@@ -13,7 +13,7 @@
  *   wins — the module body ran top to bottom, so the later call is the one the author left in force.
  *
  * USAGE:
- * harnessValueTransformer({ declarations, key: harnessKeyPathContract.parse('inputs.audit.report') });
+ * harnessValueTransformer({ declarations, key: 'inputs.audit.report' });
  * // Returns { found: true, value: [Function] }, or { found: false } when nothing declared that key
  */
 

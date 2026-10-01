@@ -61,7 +61,7 @@ test.describe('Compiled Surface Explorer — Contracts tab', () => {
     await expect(window.getByTestId('CONTRACT_OUTPUT')).toHaveText(USES_PACKAGE_CONTRACT_OUTPUT);
   });
 
-  test('VALID: {compile+launch once, walk the local/builtin/global edge shapes} => each renders its own source form and typed contract, and an import-free file shows the empty prompt', async ({ smokeWindow: window }) => {
+  test('VALID: {one shared window, walk the local/builtin/global edge shapes} => each renders its own source form and typed contract, and an import-free file shows the empty prompt', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible();
 
     // LOCAL import: the source names the specifier AND the resolved definition path, and the stitch

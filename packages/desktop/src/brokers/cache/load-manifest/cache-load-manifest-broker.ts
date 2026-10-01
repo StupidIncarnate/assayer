@@ -3,7 +3,7 @@
  *   JSON via the node-fs adapter and parses it through the shared cache manifest contract.
  *
  * USAGE:
- * const manifest = await cacheLoadManifestBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+ * const manifest = await cacheLoadManifestBroker({ repoPath: '/repo' });
  * // Returns the validated AssayerCacheManifest; propagates fs/JSON/validation errors unmodified.
  */
 import { assayerCacheManifestContract } from '@assayer/shared/contracts';

@@ -5,8 +5,8 @@
  *
  *   Everything is optional and defaults to empty, so a handler states only what it contributes: the
  *   class handler names descents, the exit handler names exits, and neither mentions the other's
- *   fields. This is deliberately a LEAF — it imports nothing else in the walk — because every
- *   handler depends on it, and putting it beside the recursion would make the proxy graph circular.
+ *   fields. This is a LEAF: it imports no other walk transformer, only contracts. Every
+ *   handler imports it, so a dependency on the walk recursion would make the import graph circular.
  *
  * USAGE:
  * handlerResultLayerTransformer({ descents, opensScope });

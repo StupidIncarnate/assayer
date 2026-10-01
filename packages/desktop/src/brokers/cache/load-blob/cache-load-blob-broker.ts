@@ -4,7 +4,7 @@
  *
  * USAGE:
  * const blob = await cacheLoadBlobBroker({
- *   repoPath: RepoPathStub({ value: '/repo' }),
+ *   repoPath: '/repo',
  *   contentHash: 'abc123',
  * });
  * // Returns a validated CompiledFileBlob; throws if the file is missing or fails validation.

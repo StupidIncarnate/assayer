@@ -3,7 +3,7 @@
  *   P1-grade error naming the available topics. Backs the `assayer docs <topic>` command.
  *
  * USAGE:
- * docsGetBroker({ topic: docsTopicContract.parse('overview') });
+ * docsGetBroker({ topic: 'overview' });
  * // Returns a validated DocsResult { topic, body }; throws on an unknown topic
  */
 import { docsResultContract } from '@assayer/shared/contracts';

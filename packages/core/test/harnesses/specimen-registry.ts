@@ -13,7 +13,7 @@
  *   which is what a forgotten trait looks like.
  *
  * USAGE:
- * specimenRegistry.get(relPathContract.parse('packages/syntax-repository/src/happy-path/boolean/and/and.ts'));
+ * specimenRegistry.get('packages/syntax-repository/src/happy-path/boolean/and/and.ts');
  * // ['access:named', 'branch:if']
  */
 

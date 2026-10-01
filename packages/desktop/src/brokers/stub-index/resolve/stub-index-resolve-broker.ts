@@ -13,7 +13,7 @@
  *   the tree resolver.
  *
  * USAGE:
- * const view = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+ * const view = await stubIndexResolveBroker({ repoPath: '/repo' });
  * // Returns the validated StubView (derived stubs merged with the committed overlay) for the current namespace
  */
 import { stubViewContract } from '@assayer/shared/contracts';
