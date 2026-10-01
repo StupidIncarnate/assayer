@@ -9,11 +9,9 @@
 import { docsGetBroker } from '@assayer/core/brokers';
 import { docsTopicContract } from '@assayer/shared/contracts';
 
-import { cliOutputContract } from '../../../contracts/cli-output/cli-output-contract';
-import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
 
-export const DocsShowResponder = ({ topic }: { topic: string }): CliOutput => {
+export const DocsShowResponder = ({ topic }: { topic: string }): string => {
   const docs = docsGetBroker({ topic: docsTopicContract.parse(topic) });
 
-  return cliOutputContract.parse(docs.body);
+  return docs.body;
 };

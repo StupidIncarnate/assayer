@@ -22,15 +22,13 @@
  */
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
-import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
-import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 import type { RunResult } from '@assayer/shared/contracts';
 import { darkSpotLineFormatTransformer } from '../dark-spot-line-format/dark-spot-line-format-transformer';
 import { gapLineFormatTransformer } from '../gap-line-format/gap-line-format-transformer';
 import { lintLineFormatTransformer } from '../lint-line-format/lint-line-format-transformer';
 import { undrivenLineFormatTransformer } from '../undriven-line-format/undriven-line-format-transformer';
 
-export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutput => {
+export const runDetailFormatTransformer = ({ run }: { run: RunResult }): string => {
   const header = `${String(run.relPath)}  run ${String(run.runId)}`;
 
   const cases = run.cases.flatMap((testCase) => {
@@ -61,5 +59,5 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
   const undriven = run.undriven.map((entry) => undrivenLineFormatTransformer({ entry }));
   const lints = run.lints.map((lint) => lintLineFormatTransformer({ lint }));
 
-  return cliOutputContract.parse([header, ...cases, ...gaps, ...darkSpots, ...undriven, ...lints].join('\n'));
+  return [header, ...cases, ...gaps, ...darkSpots, ...undriven, ...lints].join('\n');
 };

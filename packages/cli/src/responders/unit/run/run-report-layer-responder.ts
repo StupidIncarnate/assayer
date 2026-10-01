@@ -24,7 +24,6 @@ import type { RunResult } from '@assayer/shared/contracts';
 
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
-import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
 
 export const RunReportLayerResponder = async ({
   configDir,
@@ -38,7 +37,7 @@ export const RunReportLayerResponder = async ({
   darkSpots: string;
   deadSurface: string;
   inputGaps: string;
-}): Promise<CliOutput> => {
+}): Promise<string> => {
   await Promise.all(
     runs.map(async (run) =>
       runConsoleSaveBroker({

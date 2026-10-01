@@ -22,9 +22,7 @@ import { LaunchRunResponder } from '../../responders/launch/run/launch-run-respo
 import { PrecheckRunResponder } from '../../responders/precheck/run/precheck-run-responder';
 import { docsOverviewStatics } from '../../statics/docs-overview/docs-overview-statics';
 import { cliUsageStatics } from '../../statics/cli-usage/cli-usage-statics';
-import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
 import { CliExactOutputError } from '../../errors/cli-exact-output/cli-exact-output-error';
-import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 
 export const AssayerFlow = async ({
   argv,
@@ -32,7 +30,7 @@ export const AssayerFlow = async ({
 }: {
   argv: readonly string[];
   repoPath: string;
-}): Promise<CliOutput> => {
+}): Promise<string> => {
   const command = cliCommandNormalizeTransformer(argv[0] === undefined ? {} : { arg: argv[0] });
 
   if (command === 'help') {
@@ -45,7 +43,7 @@ export const AssayerFlow = async ({
 
   if (command === 'docs') {
     return argv[1] === undefined
-      ? cliOutputContract.parse(docsOverviewStatics.text)
+      ? docsOverviewStatics.text
       : DocsShowResponder({ topic: argv[1] });
   }
 

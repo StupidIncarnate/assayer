@@ -7,11 +7,9 @@
  */
 import { statusGetBroker } from '@assayer/core/brokers';
 
-import { cliOutputContract } from '../../../contracts/cli-output/cli-output-contract';
-import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
 
-export const StatusShowResponder = (): CliOutput => {
+export const StatusShowResponder = (): string => {
   const status = statusGetBroker();
 
-  return cliOutputContract.parse(`assayer ${status.version}\n${status.message}`);
+  return `assayer ${status.version}\n${status.message}`;
 };

@@ -38,15 +38,13 @@
  */
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
-import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
-import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 import type { RunResult } from '@assayer/shared/contracts';
 import { darkSpotLineFormatTransformer } from '../dark-spot-line-format/dark-spot-line-format-transformer';
 import { gapLineFormatTransformer } from '../gap-line-format/gap-line-format-transformer';
 import { lintLineFormatTransformer } from '../lint-line-format/lint-line-format-transformer';
 import { undrivenLineFormatTransformer } from '../undriven-line-format/undriven-line-format-transformer';
 
-export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult[] }): CliOutput => {
+export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult[] }): string => {
   const lines = runs.flatMap((run) => {
     // Everything that did not pass, in case order — an ERROR and a FAIL are equally unresolved, and
     // interleaving them by outcome would scramble the order the cases were derived in.
@@ -79,5 +77,5 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
     return [header, ...failed, ...gaps, ...darkSpots, ...undriven, ...lints, ...link];
   });
 
-  return cliOutputContract.parse(lines.join('\n'));
+  return lines.join('\n');
 };
