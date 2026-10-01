@@ -41,10 +41,10 @@ const FUNNELLED_THEN = '*module*/build/return@if:BinaryExpression,id:size,Greate
 const FUNNELLED_ELSE = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
 const FUNNELLED_AUDIT_TOP = '*module*/audit/return@top';
 
-const SOURCE_HASH = String(contentHashTransformer({ content: SOURCE }));
-const TWO_ENTRY_HASH = String(contentHashTransformer({ content: TWO_ENTRY_SOURCE }));
-const MODULE_HASH = String(contentHashTransformer({ content: MODULE_SOURCE }));
-const FUNNELLED_HASH = String(contentHashTransformer({ content: FUNNELLED_SOURCE }));
+const SOURCE_HASH = contentHashTransformer({ content: SOURCE });
+const TWO_ENTRY_HASH = contentHashTransformer({ content: TWO_ENTRY_SOURCE });
+const MODULE_HASH = contentHashTransformer({ content: MODULE_SOURCE });
+const FUNNELLED_HASH = contentHashTransformer({ content: FUNNELLED_SOURCE });
 
 describe('runUnitBroker', () => {
   describe('the artifact it returns', () => {
@@ -103,7 +103,7 @@ describe('runUnitBroker', () => {
       }).toStrictEqual({
         paths: [
           '/cache/runs/r1/cases.json',
-          `/cache/probes/${String(contentHashTransformer({ content: SOURCE }))}.json`,
+          `/cache/probes/${contentHashTransformer({ content: SOURCE })}.json`,
           '/cache/runs/r1/assayer.test.js',
         ],
         content:

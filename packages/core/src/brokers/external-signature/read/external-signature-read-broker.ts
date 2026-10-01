@@ -33,7 +33,7 @@ export const externalSignatureReadBroker = async ({
   const dtsContent = (await readFile(dtsPath));
   const declHash = contentHashTransformer({ content: `${exportName}\n${dtsContent}` });
   const dir = `${cacheDir}/external-signatures`;
-  const cachePath = `${dir}/${String(declHash)}.json`;
+  const cachePath = `${dir}/${declHash}.json`;
 
   if (await pathExists(cachePath)) {
     const cached = (await readFile(cachePath));

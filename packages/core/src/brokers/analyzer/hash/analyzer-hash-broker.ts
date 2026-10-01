@@ -33,10 +33,10 @@ export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promis
       const entries = await Promise.all(
         codeFiles.map(async ({ path, relPath }) => {
           const content = (await readFile(path));
-          return `${relPath}:${String(contentHashTransformer({ content }))}`;
+          return `${relPath}:${contentHashTransformer({ content })}`;
         }),
       );
-      return String(contentHashTransformer({ content: [...entries].sort().join('\n') }));
+      return contentHashTransformer({ content: [...entries].sort().join('\n') });
     }),
   );
 

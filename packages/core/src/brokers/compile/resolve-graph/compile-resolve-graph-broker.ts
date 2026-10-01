@@ -55,7 +55,7 @@ export const compileResolveGraphBroker = async ({
 
   const blobs = await Promise.all(
     files.map(async (file) => {
-      const raw = (await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
+      const raw = (await readFile(`${blobsDir}/${file.contentHash}.json`));
       return compiledFileBlobContract.parse(JSON.parse(raw));
     }),
   );
@@ -63,7 +63,7 @@ export const compileResolveGraphBroker = async ({
   const blobsByRelPath = new Map(blobs.map((blob) => [String(blob.relPath), blob]));
 
   const sortedFiles = [...files]
-    .map((file) => ({ relPath: file.relPath, contentHash: String(file.contentHash) }))
+    .map((file) => ({ relPath: file.relPath, contentHash: file.contentHash }))
     .sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
   const layoutHash = contentHashTransformer({ content: JSON.stringify(sortedFiles) });
 

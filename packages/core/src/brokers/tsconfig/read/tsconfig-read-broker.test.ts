@@ -30,7 +30,7 @@ describe('tsconfigReadBroker', () => {
       const result = tsconfigReadBroker({ searchPath: dir });
       rmSync(dir, { recursive: true, force: true });
 
-      expect(String(result.tsconfigHash)).toBe(createHash('sha256').update(tsconfig, 'utf8').digest('hex'));
+      expect(result.tsconfigHash).toBe(createHash('sha256').update(tsconfig, 'utf8').digest('hex'));
     });
   });
 
@@ -42,7 +42,7 @@ describe('tsconfigReadBroker', () => {
       const result = tsconfigReadBroker({ searchPath: dir });
       rmSync(dir, { recursive: true, force: true });
 
-      expect(String(result.tsconfigHash)).toBe(EMPTY_HASH);
+      expect(result.tsconfigHash).toBe(EMPTY_HASH);
     });
   });
 });

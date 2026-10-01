@@ -307,12 +307,12 @@ describe('assayer compile flow (real built binary)', () => {
 
       await compile.run({ argv: ['status'] });
       const stayHashBefore = compile.manifestContentHash({ namespace: 'default', relPath: 'src/stay.ts' });
-      const stayBlobBefore = compile.readBlobText({ hash: String(stayHashBefore) });
+      const stayBlobBefore = compile.readBlobText({ hash: stayHashBefore });
 
       compile.writeSource({ relPath: 'src/edit.ts', source: SRC_A_EDITED });
       const { exitCode: secondExit } = await compile.run({ argv: ['status'] });
       const stayHashAfter = compile.manifestContentHash({ namespace: 'default', relPath: 'src/stay.ts' });
-      const stayBlobAfter = compile.readBlobText({ hash: String(stayHashBefore) });
+      const stayBlobAfter = compile.readBlobText({ hash: stayHashBefore });
 
       expect(secondExit).toBe(0);
       expect(stayHashAfter).toBe(stayHashBefore);

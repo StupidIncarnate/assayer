@@ -72,7 +72,7 @@ export const compileHarnessGraphBroker = async ({
     content: ordered
       .map(
         (harness) =>
-          `${harness.relPath}\n${String(contentHashTransformer({ content: harness.content }))}`,
+          `${harness.relPath}\n${contentHashTransformer({ content: harness.content })}`,
       )
       .join('\n'),
   });

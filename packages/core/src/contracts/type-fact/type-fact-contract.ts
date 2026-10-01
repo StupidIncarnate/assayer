@@ -66,30 +66,60 @@ export type TypeFact =
    */
   | { flavor: 'other'; text: string; typeRef?: string | undefined; typeArgs?: TypeFact[] | undefined };
 
-export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
-  z.discriminatedUnion('flavor', [
-    z.object({ flavor: z.literal('string') }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('number') }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('boolean') }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('literal'), value: representativeValueContract }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('union'), members: z.array(typeFactContract), text: z.string().min(1).brand<'TypeFactText'>() }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('array'), element: typeFactContract }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('tuple'), elements: z.array(typeFactContract) }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('template'), texts: z.array(z.string().brand<'TypeFactTexts'>()), types: z.array(typeFactContract) }).brand<'TypeFact'>(),
-    z.object({
-      flavor: z.literal('object'),
-      typeName: z.string().min(1).brand<'TypeFactTypeName'>().optional(),
-      truncated: z.boolean().optional(),
-      properties: z.array(
-        z.object({ name: z.string().min(1).brand<'TypeFactPropertiesName'>(), fact: typeFactContract, optional: z.boolean().optional() }).brand<'TypeFactProperties'>(),
-      ),
-    }).brand<'TypeFact'>(),
-    z.object({ flavor: z.literal('callable'), text: z.string().min(1).brand<'TypeFactText'>() }).brand<'TypeFact'>(),
-    z.object({
-      flavor: z.literal('other'),
-      text: z.string().min(1).brand<'TypeFactText'>(),
-      typeRef: z.string().min(1).brand<'TypeFactTypeRef'>().optional(),
-      typeArgs: z.array(typeFactContract).optional(),
-    }).brand<'TypeFact'>(),
-  ]),
-);
+// Each self-reference is a getter whose return type wraps `z.core.$ZodType<TypeFact>`, so the lookup
+// of `typeFactContract` waits until a parse runs.
+export const typeFactContract: z.ZodType<TypeFact> = z.discriminatedUnion('flavor', [
+  z.object({ flavor: z.literal('string') }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('number') }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('boolean') }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('literal'), value: representativeValueContract }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('union'),
+    get members(): z.ZodArray<z.core.$ZodType<TypeFact>> {
+      return z.array(typeFactContract);
+    },
+    text: z.string().min(1).brand<'TypeFactText'>(),
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('array'),
+    get element(): z.core.$ZodType<TypeFact> {
+      return typeFactContract;
+    },
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('tuple'),
+    get elements(): z.ZodArray<z.core.$ZodType<TypeFact>> {
+      return z.array(typeFactContract);
+    },
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('template'),
+    texts: z.array(z.string().brand<'TypeFactTexts'>()),
+    get types(): z.ZodArray<z.core.$ZodType<TypeFact>> {
+      return z.array(typeFactContract);
+    },
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('object'),
+    typeName: z.string().min(1).brand<'TypeFactTypeName'>().optional(),
+    truncated: z.boolean().optional(),
+    properties: z.array(
+      z.object({
+        name: z.string().min(1).brand<'TypeFactPropertiesName'>(),
+        get fact(): z.core.$ZodType<TypeFact> {
+          return typeFactContract;
+        },
+        optional: z.boolean().optional(),
+      }).brand<'TypeFactProperties'>(),
+    ),
+  }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('callable'), text: z.string().min(1).brand<'TypeFactText'>() }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('other'),
+    text: z.string().min(1).brand<'TypeFactText'>(),
+    typeRef: z.string().min(1).brand<'TypeFactTypeRef'>().optional(),
+    get typeArgs(): z.ZodOptional<z.ZodArray<z.core.$ZodType<TypeFact>>> {
+      return z.array(typeFactContract).optional();
+    },
+  }).brand<'TypeFact'>(),
+]);

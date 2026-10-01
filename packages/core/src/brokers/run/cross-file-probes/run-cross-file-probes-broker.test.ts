@@ -31,7 +31,7 @@ describe('runCrossFileProbesBroker', () => {
         written: proxy.getWrittenPaths({ probeDir: '/repo/.assayer/cache/probes' }),
       }).toStrictEqual({
         instrumented: ['src/band-reading.ts'],
-        written: [`/repo/.assayer/cache/probes/${String(hash)}.json`],
+        written: [`/repo/.assayer/cache/probes/${hash}.json`],
       });
     });
   });

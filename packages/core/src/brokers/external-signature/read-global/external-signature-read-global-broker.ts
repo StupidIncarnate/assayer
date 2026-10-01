@@ -52,7 +52,7 @@ export const externalSignatureReadGlobalBroker = async ({
 
   const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${read.declText}` });
   const dir = `${cacheDir}/global-signatures`;
-  const cachePath = `${dir}/${String(cacheKey)}.json`;
+  const cachePath = `${dir}/${cacheKey}.json`;
 
   const payload =
     read.result === 'signature' ? { result: 'signature', signature: read.signature } : { result: 'type', type: read.type };

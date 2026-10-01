@@ -43,7 +43,7 @@ export const runCrossFileProbesBrokerProxy = (): {
       probeDir: string;
     }): void => {
       sibling.resolvesToSibling({ fileName, source, specifier });
-      writes.succeeds({ path: `${probeDir}/${String(contentHashTransformer({ content: source }))}.json` });
+      writes.succeeds({ path: `${probeDir}/${contentHashTransformer({ content: source })}.json` });
     },
     getWrittenPaths: ({ probeDir }: { probeDir: string }): unknown[] =>
       writes

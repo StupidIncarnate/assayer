@@ -66,9 +66,9 @@ export const runCrossFileProbesBroker = async ({
     return [
       {
         relPath: sibling.relPath,
-        path: `${probeDir}/${String(contentHash)}.json`,
+        path: `${probeDir}/${contentHash}.json`,
         content: JSON.stringify(
-          probePlanProjectionTransformer({ walked: sibling.walked, relPath: sibling.relPath, contentHash: String(contentHash) }),
+          probePlanProjectionTransformer({ walked: sibling.walked, relPath: sibling.relPath, contentHash }),
         ),
       },
     ];

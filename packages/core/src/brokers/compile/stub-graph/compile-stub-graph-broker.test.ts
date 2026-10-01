@@ -8,7 +8,7 @@ import { compileStubGraphBrokerProxy } from './compile-stub-graph-broker.proxy';
 
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 const HASH = ContentHashStub();
-const BLOB_PATH = `/blobs/${String(HASH)}.json`;
+const BLOB_PATH = `/blobs/${HASH}.json`;
 
 const CONFIG_BLOB = CompiledFileBlobStub({
   relPath: 'src/config/config.ts',

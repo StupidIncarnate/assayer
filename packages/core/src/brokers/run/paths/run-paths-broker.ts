@@ -47,7 +47,7 @@ export const runPathsBroker = async ({
     root,
     cacheDir: `${configDir}/.assayer/cache`,
     coreRoot: dirname(runtimeFile),
-    analyzerContentHash: String(analyzerContentHash),
+    analyzerContentHash,
     results: [],
   });
 };

@@ -149,7 +149,7 @@ export const harnessGraphHarness = (): {
     contentHash: ContentHash;
   }): FileAnalysis => {
     const blob = compiledFileBlobContract.parse(
-      JSON.parse(readFileSync(join(blobsDirOf({ dir }), `${String(contentHash)}.json`))),
+      JSON.parse(readFileSync(join(blobsDirOf({ dir }), `${contentHash}.json`))),
     );
     const walked = walkFileTransformer({
       source: readFileSync(join(dir, SOURCE_REL)),

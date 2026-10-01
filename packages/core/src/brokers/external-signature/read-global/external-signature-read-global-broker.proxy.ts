@@ -26,7 +26,7 @@ const cachePathFor = ({
       : `g:${reference.name}.${reference.member === undefined ? '' : reference.member}.${String(reference.called)}`;
   const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${declText}` });
 
-  return `${cacheDir}/global-signatures/${String(cacheKey)}.json`;
+  return `${cacheDir}/global-signatures/${cacheKey}.json`;
 };
 
 export const externalSignatureReadGlobalBrokerProxy = (): {

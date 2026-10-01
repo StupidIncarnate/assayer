@@ -10,7 +10,7 @@ import { compileResolveGraphBrokerProxy } from './compile-resolve-graph-broker.p
 
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 const HASH = ContentHashStub();
-const BLOB_PATH = `/blobs/${String(HASH)}.json`;
+const BLOB_PATH = `/blobs/${HASH}.json`;
 
 describe('compileResolveGraphBroker', () => {
   describe('an empty file set', () => {
@@ -56,7 +56,7 @@ describe('compileResolveGraphBroker', () => {
       expect(result).toStrictEqual({
         index: {
           layoutHash: contentHashTransformer({
-            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: String(HASH) }]),
+            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: HASH }]),
           }),
           tsconfigHash: EMPTY_HASH,
           edges: [],
@@ -93,7 +93,7 @@ describe('compileResolveGraphBroker', () => {
       expect(result).toStrictEqual({
         index: {
           layoutHash: contentHashTransformer({
-            content: JSON.stringify([{ relPath: 'src/a/caller.ts', contentHash: String(HASH) }]),
+            content: JSON.stringify([{ relPath: 'src/a/caller.ts', contentHash: HASH }]),
           }),
           tsconfigHash: EMPTY_HASH,
           edges: [
@@ -136,7 +136,7 @@ describe('compileResolveGraphBroker', () => {
       expect(result).toStrictEqual({
         index: {
           layoutHash: contentHashTransformer({
-            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: String(HASH) }]),
+            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: HASH }]),
           }),
           tsconfigHash: EMPTY_HASH,
           edges: [
@@ -203,8 +203,8 @@ describe('compileResolveGraphBroker', () => {
         index: {
           layoutHash: contentHashTransformer({
             content: JSON.stringify([
-              { relPath: 'src/a.ts', contentHash: String(HASH) },
-              { relPath: 'src/b.ts', contentHash: String(HASH) },
+              { relPath: 'src/a.ts', contentHash: HASH },
+              { relPath: 'src/b.ts', contentHash: HASH },
             ]),
           }),
           tsconfigHash: EMPTY_HASH,

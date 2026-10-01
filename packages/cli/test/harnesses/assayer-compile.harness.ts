@@ -235,7 +235,7 @@ export const assayerCompileHarness = (): {
         throw new Error(`no manifest entry for ${relPath} in namespace ${namespace}`);
       }
       const blob = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${String(entry.contentHash)}.json`)),
+        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${entry.contentHash}.json`)),
       ) as Blob;
       return blob.displayLines.map((line) => String(line.text)).join('\n');
     },

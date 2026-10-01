@@ -47,15 +47,13 @@ export const runIdBroker = async ({
     : undefined;
   const harnessDigest =
     harnessSource !== undefined && isAssayerHarnessGuard({ source: harnessSource })
-      ? String(contentHashTransformer({ content: harnessSource }))
+      ? contentHashTransformer({ content: harnessSource })
       : undefined;
 
   return runResultContract.shape.runId.parse(
-    String(
-      contentHashTransformer({
-        content:
-          harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
-      }),
-    ),
+    contentHashTransformer({
+      content:
+        harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
+    }),
   );
 };

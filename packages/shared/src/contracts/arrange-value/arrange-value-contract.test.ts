@@ -74,7 +74,7 @@ describe('arrangeValueContract', () => {
     it('INVALID: {a property named ""} => throws, since a property key is a symbol name', () => {
       expect(() => {
         return arrangeValueContract.parse({ '': 7 });
-      }).toThrow(/Too small: expected string to have >=1 characters/u);
+      }).toThrow(/A property key of an arrange value is never empty\./u);
     });
   });
 });

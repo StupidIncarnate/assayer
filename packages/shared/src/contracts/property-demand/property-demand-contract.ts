@@ -36,17 +36,22 @@ export interface PropertyDemand {
     | { kind: 'nested'; properties: PropertyDemand[] };
 }
 
-export const propertyDemandContract: z.ZodType<PropertyDemand> = z.lazy(() =>
-  z.object({
-    name: z.string().min(1).brand<'PropertyDemandName'>(),
-    demand: z.discriminatedUnion('kind', [
-      z.object({
-        kind: z.literal('demanded'),
-        values: z.array(representativeValueContract),
-        cardinality: arrayCardinalityContract.optional(),
-      }).brand<'PropertyDemandDemand'>(),
-      z.object({ kind: z.literal('unknown') }).brand<'PropertyDemandDemand'>(),
-      z.object({ kind: z.literal('nested'), properties: z.array(propertyDemandContract) }).brand<'PropertyDemandDemand'>(),
-    ]),
-  }).brand<'PropertyDemand'>(),
-);
+// The nested arm's `properties` is a getter whose return type wraps
+// `z.core.$ZodType<PropertyDemand>`, so the lookup of `propertyDemandContract` waits until a parse runs.
+export const propertyDemandContract: z.ZodType<PropertyDemand> = z.object({
+  name: z.string().min(1).brand<'PropertyDemandName'>(),
+  demand: z.discriminatedUnion('kind', [
+    z.object({
+      kind: z.literal('demanded'),
+      values: z.array(representativeValueContract),
+      cardinality: arrayCardinalityContract.optional(),
+    }).brand<'PropertyDemandDemand'>(),
+    z.object({ kind: z.literal('unknown') }).brand<'PropertyDemandDemand'>(),
+    z.object({
+      kind: z.literal('nested'),
+      get properties(): z.ZodArray<z.core.$ZodType<PropertyDemand>> {
+        return z.array(propertyDemandContract);
+      },
+    }).brand<'PropertyDemandDemand'>(),
+  ]),
+}).brand<'PropertyDemand'>();

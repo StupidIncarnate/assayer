@@ -13,23 +13,23 @@ import { z } from '#gateway/npm/zod';
 
 import { treeNodeKindContract } from '../tree-node-kind/tree-node-kind-contract';
 
-const treeNodeNameContract = z.string().min(1).brand<'TreeNodeName'>();
-
 export interface TreeNode {
-  name: z.infer<typeof treeNodeNameContract>;
+  name: string & z.core.$brand<'TreeNodeName'>;
   path: string;
   kind: z.infer<typeof treeNodeKindContract>;
   children?: TreeNode[] | undefined;
 }
 
-const treeNodeContract: z.ZodType<TreeNode> = z.lazy(() =>
-  z.object({
-    name: treeNodeNameContract,
-    path: z.string().min(1).brand<'TreeNodePath'>(),
-    kind: treeNodeKindContract,
-    children: z.array(treeNodeContract).optional(),
-  }).brand<'TreeNode'>(),
-);
+// `children` is a getter whose return type wraps `z.core.$ZodType<TreeNode>`, so the lookup of
+// `treeNodeContract` waits until a parse runs.
+const treeNodeContract: z.ZodType<TreeNode> = z.object({
+  name: z.string().min(1).brand<'TreeNodeName'>(),
+  path: z.string().min(1).brand<'TreeNodePath'>(),
+  kind: treeNodeKindContract,
+  get children(): z.ZodOptional<z.ZodArray<z.core.$ZodType<TreeNode>>> {
+    return z.array(treeNodeContract).optional();
+  },
+}).brand<'TreeNode'>();
 
 export const compiledTreeContract = z.object({
   summary: z.object({
