@@ -16,11 +16,8 @@ import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } f
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
-import { pathExists } from '#gateway/node/fs__promises';
+import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
 
 type GlobalReference =
   | { kind: 'global'; name: SymbolName; member?: SymbolName; called: boolean }
@@ -62,10 +59,10 @@ export const externalSignatureReadGlobalBroker = async ({
     read.result === 'signature' ? { result: 'signature', signature: read.signature } : { result: 'type', type: read.type };
 
   if (!(await pathExists(cachePath))) {
-    await fsMkdirAdapter({ path: dir });
+    await ensureDir(dir);
     const tmpPath = `${cachePath}.tmp`;
-    await fsWriteFileAdapter({ path: tmpPath, content: JSON.stringify(payload) });
-    await fsRenameAdapter({ from: tmpPath, to: cachePath });
+    await writeFile(tmpPath, JSON.stringify(payload));
+    await rename(tmpPath, cachePath);
   }
 
   return read.result === 'signature'
