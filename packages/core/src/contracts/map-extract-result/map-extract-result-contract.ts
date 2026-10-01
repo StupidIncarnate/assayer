@@ -9,14 +9,14 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { mapNodeContract, lineNumberContract } from '@assayer/shared/contracts';
+import { mapNodeContract } from '@assayer/shared/contracts';
 
 export const mapExtractResultContract = z.discriminatedUnion('success', [
   z.object({ success: z.literal(true), nodes: z.array(mapNodeContract) }),
   z.object({
     success: z.literal(false),
     error: z.object({
-      line: lineNumberContract,
+      line: z.number().int().positive().brand<'MapExtractResultErrorLine'>(),
       column: z.number().int().positive().brand<'ColumnNumber'>(),
       message: z.string().min(1).brand<'ExtractErrorMessage'>(),
     }),

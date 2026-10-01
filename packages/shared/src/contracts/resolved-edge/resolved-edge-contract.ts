@@ -25,7 +25,6 @@ import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { externalSignatureContract } from '../external-signature/external-signature-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
 import { packageNameContract } from '../package-name/package-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
@@ -70,7 +69,7 @@ export const resolvedEdgeContract = z.object({
   // module specifier. Every import edge carries one.
   specifier: moduleSpecifierContract.optional(),
   importedName: z.string().min(1).brand<'ResolvedEdgeImportedName'>().optional(),
-  line: lineNumberContract,
+  line: z.number().int().positive().brand<'ResolvedEdgeLine'>(),
   column: columnNumberContract,
   target: resolvedTargetContract,
 });

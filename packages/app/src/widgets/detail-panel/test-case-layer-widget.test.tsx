@@ -5,7 +5,6 @@ import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
 import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
 import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
-import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 const DECIDE = FunctionAnalysisStub({
@@ -99,7 +98,7 @@ describe('TestCaseLayerWidget', () => {
                 driver="decide"
                 entryLabel="decide"
                 isModule={false}
-                hoveredLine={LineNumberStub({ value: 4 })}
+                hoveredLine={4}
               />
             ))}
           </>
@@ -123,7 +122,7 @@ describe('TestCaseLayerWidget', () => {
                 driver="decide"
                 entryLabel="decide"
                 isModule={false}
-                hoveredLine={LineNumberStub({ value: 9 })}
+                hoveredLine={9}
               />
             ))}
           </>

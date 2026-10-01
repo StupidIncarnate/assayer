@@ -15,14 +15,14 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract, syntaxKindNameContract } from '@assayer/shared/contracts';
+import { syntaxKindNameContract } from '@assayer/shared/contracts';
 
 export const walkNodeContract = z.object({
   kind: syntaxKindNameContract,
   scopePath: z.array(z.string().min(1).brand<'WalkNodeScopePath'>()),
   name: z.string().min(1).brand<'WalkNodeName'>().optional(),
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
+  startLine: z.number().int().positive().brand<'WalkNodeStartLine'>(),
+  endLine: z.number().int().positive().brand<'WalkNodeEndLine'>(),
   handled: z.boolean(),
 });
 

@@ -19,7 +19,6 @@ export * from './docs-result/docs-result-contract';
 
 export * from './content-hash/content-hash-contract';
 
-export * from './line-number/line-number-contract';
 
 export * from './column-number/column-number-contract';
 

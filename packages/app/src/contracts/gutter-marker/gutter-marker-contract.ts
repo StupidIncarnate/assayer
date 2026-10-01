@@ -8,10 +8,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '@assayer/shared/contracts';
 
 export const gutterMarkerContract = z.object({
-  line: lineNumberContract,
+  line: z.number().int().positive().brand<'GutterMarkerLine'>(),
   count: z.number().int().positive().brand<'TestCaseCount'>(),
 });
 

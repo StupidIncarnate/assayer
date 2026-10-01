@@ -21,7 +21,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { conditionNodeContract } from '../condition-node/condition-node-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 import { coverageContract } from '../coverage/coverage-contract';
 
 export const branchNodeContract = z.object({
@@ -31,8 +30,8 @@ export const branchNodeContract = z.object({
   // handle a case that cannot occur. Add a kind when its handler lands, never before.
   kind: z.enum(['if', 'switch', 'ternary']).brand<'BranchKind'>(),
   condition: conditionNodeContract,
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
+  startLine: z.number().int().positive().brand<'BranchNodeStartLine'>(),
+  endLine: z.number().int().positive().brand<'BranchNodeEndLine'>(),
 });
 
 export type BranchNode = z.infer<typeof branchNodeContract>;

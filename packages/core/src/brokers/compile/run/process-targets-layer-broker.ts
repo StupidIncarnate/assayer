@@ -12,7 +12,7 @@
  * });
  * // Returns { index: [{ relPath, contentHash }], errors: [] } after writing/reusing each blob
  */
-import type { ContentHash, LineNumber } from '@assayer/shared/contracts';
+import type { ContentHash } from '@assayer/shared/contracts';
 
 import { compileProcessFileBroker } from '../process-file/compile-process-file-broker';
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
@@ -41,11 +41,11 @@ export const processTargetsLayerBroker = async ({
   currentMax: number;
   current: number;
   index: { relPath: string; contentHash: ContentHash }[];
-  errors: { relPath: string; line: LineNumber; column: SourcePosition['column']; message: string }[];
+  errors: { relPath: string; line: number; column: SourcePosition['column']; message: string }[];
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<{
   index: { relPath: string; contentHash: ContentHash }[];
-  errors: { relPath: string; line: LineNumber; column: SourcePosition['column']; message: string }[];
+  errors: { relPath: string; line: number; column: SourcePosition['column']; message: string }[];
 }> => {
   const [target, ...rest] = remaining;
 

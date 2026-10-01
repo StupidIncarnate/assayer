@@ -24,8 +24,8 @@
  * // [{ relPath: 'assayer/stubs/objects/src/decide.ts/Config.json', line: 1, column: 1,
  * //    message: "corrected values for property 'mode' cannot satisfy the guard at src/decide.ts:6 (needs 'mode' === 'a') — rectify this stub" }]
  */
-import { columnNumberContract, lineNumberContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, LineNumber, StubOverlay } from '@assayer/shared/contracts';
+import { columnNumberContract } from '@assayer/shared/contracts';
+import type { ColumnNumber, StubOverlay } from '@assayer/shared/contracts';
 
 import type { PropertyGuard } from '../../contracts/property-guard/property-guard-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -59,7 +59,7 @@ export const stubContradictionsTransformer = ({
 }: {
   guards: readonly PropertyGuard[];
   overlays: readonly StubOverlay[];
-}): readonly { relPath: string; line: LineNumber; column: ColumnNumber; message: string }[] => {
+}): readonly { relPath: string; line: number; column: ColumnNumber; message: string }[] => {
   // The corrected values a human committed for each `(typeKey, property)`, with the overlay file they
   // live in — the authoritative domain each guard on that property must be satisfiable within.
   const correctionByKeyProperty = new Map(
@@ -108,7 +108,7 @@ export const stubContradictionsTransformer = ({
   return [...new Map(raw.map((entry) => [`${String(entry.overlayPath)}::${entry.message}`, entry])).values()]
     .map((entry) => ({
       relPath: String(entry.overlayPath),
-      line: lineNumberContract.parse(OVERLAY_LINE),
+      line: OVERLAY_LINE,
       column: columnNumberContract.parse(OVERLAY_COLUMN),
       message: entry.message,
     }))

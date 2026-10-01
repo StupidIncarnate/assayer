@@ -32,13 +32,12 @@
 import { z } from '#gateway/npm/zod';
 
 import { entryLabelContract } from '../entry-label/entry-label-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const undrivenEntryContract = z.object({
   name: z.string().min(1).brand<'UndrivenEntryName'>(),
   reason: z.string().min(1).brand<'UndrivenReason'>(),
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
+  startLine: z.number().int().positive().brand<'UndrivenEntryStartLine'>(),
+  endLine: z.number().int().positive().brand<'UndrivenEntryEndLine'>(),
   // The human label a surface shows instead of the internal `name`, present whenever `name` is a key
   // rather than something a reader recognises: a MODULE entry's single exported binding, else the file
   // basename (`welded-const.ts`), and an ANONYMOUS scope's callsite (`makeClassifier › return (n) => …

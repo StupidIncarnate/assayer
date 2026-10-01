@@ -23,7 +23,6 @@
 import { entryLabelContract } from '../../contracts/entry-label/entry-label-contract';
 import type { EntryLabel } from '../../contracts/entry-label/entry-label-contract';
 import type { AnonymousReach } from '../../contracts/anonymous-reach/anonymous-reach-contract';
-import type { LineNumber } from '../../contracts/line-number/line-number-contract';
 import type { ParamDescriptor } from '../../contracts/param-descriptor/param-descriptor-contract';
 
 export const anonymousEntryLabelTransformer = ({
@@ -35,7 +34,7 @@ export const anonymousEntryLabelTransformer = ({
   host?: string;
   reach: AnonymousReach;
   params: readonly ParamDescriptor[];
-  line: LineNumber;
+  line: number;
 }): EntryLabel => {
   // The arrow as the reader wrote it, minus its body: the signature is what distinguishes two
   // callbacks at a glance, and the body is on screen beside the label anyway.

@@ -9,11 +9,11 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Text } from '#gateway/npm/mantine__core';
-import type { FileAnalysis, LineNumber } from '@assayer/shared/contracts';
+import type { FileAnalysis } from '@assayer/shared/contracts';
 
 export interface EnrichmentRowLayerWidgetProps {
   row: FileAnalysis['enrichment'][number];
-  hoveredLine?: LineNumber | null | undefined;
+  hoveredLine?: number | null | undefined;
 }
 
 export const EnrichmentRowLayerWidget = ({ row, hoveredLine }: EnrichmentRowLayerWidgetProps): ReactElement => {

@@ -57,7 +57,7 @@
  * //   undrivenBranches: [{ line, operand? }, …], unfillable: [{ param, type }, …] }
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { BranchNode, ConditionNode, ConstLength, DerivedTestCase, ExitNode, LineNumber, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
+import type { BranchNode, ConditionNode, ConstLength, DerivedTestCase, ExitNode, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
 
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
@@ -87,11 +87,11 @@ export const deriveCasesTransformer = ({
 }): {
   cases: DerivedTestCase[];
   unreachableExits: {
-    line: LineNumber;
-    guardLines: LineNumber[];
-    welded?: { line: LineNumber; operand?: string; value?: RepresentativeValue; length?: ConstLength };
+    line: number;
+    guardLines: number[];
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: ConstLength };
   }[];
-  undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: string }[];
+  undrivenBranches: { line: number; cause: UndrivenCause; operand?: string }[];
   unfillable: { param: string; type: TypeText }[];
 } => {
   const lineByBranch = new Map(branches.map((branch) => [branch.coverageId, branch.startLine]));

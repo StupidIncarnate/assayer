@@ -28,7 +28,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
 
 const moduleBindingContract = z.discriminatedUnion('kind', [
@@ -44,7 +43,7 @@ export const moduleEdgeContract = z.object({
   // names no module the single-file parse can read.
   specifier: moduleSpecifierContract.optional(),
   bindings: z.array(moduleBindingContract),
-  line: lineNumberContract,
+  line: z.number().int().positive().brand<'ModuleEdgeLine'>(),
   column: columnNumberContract,
 });
 

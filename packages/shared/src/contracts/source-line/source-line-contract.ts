@@ -12,10 +12,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const sourceLineContract = z.object({
-  n: lineNumberContract,
+  n: z.number().int().positive().brand<'SourceLineN'>(),
   text: z.string().brand<'SourceLineText'>(),
   hash: z
     .string()

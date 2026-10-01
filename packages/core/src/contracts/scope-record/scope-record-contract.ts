@@ -22,7 +22,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { branchNodeContract, conditionNodeContract, entryAccessContract, exitNodeContract, lineNumberContract, paramDescriptorContract, typeDescriptorContract } from '@assayer/shared/contracts';
+import { branchNodeContract, conditionNodeContract, entryAccessContract, exitNodeContract, paramDescriptorContract, typeDescriptorContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
 import { valueUseContract } from '../value-use/value-use-contract';
@@ -41,8 +41,8 @@ export const scopeRecordContract = z.object({
   access: entryAccessContract,
   params: z.array(paramDescriptorContract),
   returnType: typeDescriptorContract,
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
+  startLine: z.number().int().positive().brand<'ScopeRecordStartLine'>(),
+  endLine: z.number().int().positive().brand<'ScopeRecordEndLine'>(),
   branches: z.array(branchNodeContract),
   exits: z.array(exitNodeContract),
   // The calls this scope makes, LOOSE facts claimed on the way up like branches and exits. Defaults

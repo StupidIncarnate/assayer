@@ -44,7 +44,7 @@
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
 import { derivedTestCaseContract, entryLabelContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumber, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -67,12 +67,12 @@ export const funnelNamedCasesTransformer = ({
 }): {
   cases: DerivedTestCase[];
   unreachable: {
-    line: LineNumber;
-    guardLines: LineNumber[];
-    welded?: { line: LineNumber; operand?: string; value?: RepresentativeValue; length?: ConstLength };
+    line: number;
+    guardLines: number[];
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: ConstLength };
     displayName: string;
   }[];
-  consumed: { name: string; startLine: LineNumber; params: ParamDescriptor[] }[];
+  consumed: { name: string; startLine: number; params: ParamDescriptor[] }[];
   unfillable: { param: string; type: TypeText; owner: EntryLabel }[];
 } => {
   // A harness spec for THIS hop alone — the map is consulted by this scope's own name, never a
@@ -106,7 +106,7 @@ export const funnelNamedCasesTransformer = ({
       return {
         cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
         unreachable: [],
-        consumed: [] as { name: string; startLine: LineNumber; params: ParamDescriptor[] }[],
+        consumed: [] as { name: string; startLine: number; params: ParamDescriptor[] }[],
         unfillable: [] as { param: string; type: TypeText; owner: EntryLabel }[],
       };
     }

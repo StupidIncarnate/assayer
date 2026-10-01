@@ -46,8 +46,8 @@
  * harnessValidateTransformer({ relPath, targetRelPath, keys, entries, declaringScopes, suppliedTypes });
  * // Returns [] when every key still names a refused parameter of a compatible type, or one record per wrong key
  */
-import { columnNumberContract, lineNumberContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, DeclaringScope, EntrySignature, HarnessInputKey, LineNumber, ParamDescriptor, TypeDescriptor } from '@assayer/shared/contracts';
+import { columnNumberContract } from '@assayer/shared/contracts';
+import type { ColumnNumber, DeclaringScope, EntrySignature, HarnessInputKey, ParamDescriptor, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { isTypeCompatibleGuard } from '../../guards/is-type-compatible/is-type-compatible-guard';
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
@@ -71,7 +71,7 @@ export const harnessValidateTransformer = ({
   entries: readonly EntrySignature[];
   declaringScopes: readonly DeclaringScope[];
   suppliedTypes: readonly { entry: string; param: string; type: TypeDescriptor }[];
-}): readonly { relPath: string; line: LineNumber; column: ColumnNumber; message: string }[] => {
+}): readonly { relPath: string; line: number; column: ColumnNumber; message: string }[] => {
   const callable: readonly { name: string; params: readonly ParamDescriptor[] }[] = [
     ...entries.filter((entry) => entry.access.kind !== 'module'),
     ...declaringScopes,
@@ -150,7 +150,7 @@ export const harnessValidateTransformer = ({
 
   return [...emptyFile, ...keyErrors].map((message) => ({
     relPath,
-    line: lineNumberContract.parse(HARNESS_LINE),
+    line: HARNESS_LINE,
     column: columnNumberContract.parse(HARNESS_COLUMN),
     message,
   }));

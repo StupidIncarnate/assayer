@@ -1,4 +1,3 @@
-import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 
 import { UndrivenCauseStub } from '../../contracts/undriven-cause/undriven-cause.stub';
 import { undrivenBranchTransformer } from './undriven-branch-transformer';
@@ -65,7 +64,7 @@ describe('undrivenBranchTransformer', () => {
     it('VALID: {a branch on line 3, no operand} => one admission spanning that line, reason omits the operand', () => {
       const result = undrivenBranchTransformer({
         entryName: 'opaqueIf',
-        undrivenBranches: [{ line: LineNumberStub({ value: 3 }), cause: UndrivenCauseStub() }],
+        undrivenBranches: [{ line: 3, cause: UndrivenCauseStub() }],
       });
 
       expect(result).toStrictEqual([
@@ -80,7 +79,7 @@ describe('undrivenBranchTransformer', () => {
         entryName: 'nonParam',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 4 }),
+            line: 4,
             cause: UndrivenCauseStub(),
             operand: 'u',
           },
@@ -99,7 +98,7 @@ describe('undrivenBranchTransformer', () => {
         entryName: 'pick',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 5 }),
+            line: 5,
             cause: 'unread-comparison',
             operand: 'm',
           },
@@ -120,7 +119,7 @@ describe('undrivenBranchTransformer', () => {
       expect(() =>
         undrivenBranchTransformer({
           entryName: 'pick',
-          undrivenBranches: [{ line: LineNumberStub({ value: 5 }), cause: 'unread-comparison' }],
+          undrivenBranches: [{ line: 5, cause: 'unread-comparison' }],
         }),
       ).toThrow(/^unreachable: an 'unread-comparison' branch on line 5 of `pick` carries no operand$/u);
     });
@@ -130,7 +129,7 @@ describe('undrivenBranchTransformer', () => {
     it('VALID: {a branch on line 3 narrowing typeof} => the reason names the typeof limit, never "make it a parameter"', () => {
       const result = undrivenBranchTransformer({
         entryName: 'checkTypeof',
-        undrivenBranches: [{ line: LineNumberStub({ value: 3 }), cause: 'unarrangeable-typeof' }],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-typeof' }],
       });
 
       expect(result).toStrictEqual([
@@ -145,7 +144,7 @@ describe('undrivenBranchTransformer', () => {
         entryName: 'choose',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 2 }),
+            line: 2,
             cause: 'unarrangeable-typeof-member',
             operand: 'target',
           },
@@ -164,7 +163,7 @@ describe('undrivenBranchTransformer', () => {
         undrivenBranchTransformer({
           entryName: 'choose',
           undrivenBranches: [
-            { line: LineNumberStub({ value: 2 }), cause: 'unarrangeable-typeof-member' },
+            { line: 2, cause: 'unarrangeable-typeof-member' },
           ],
         }),
       ).toThrow(/^unreachable: an 'unarrangeable-typeof-member' branch on line 2 of `choose` carries no operand$/u);
@@ -180,7 +179,7 @@ describe('undrivenBranchTransformer', () => {
         entryName: 'checkDeep',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 4 }),
+            line: 4,
             cause: UndrivenCauseStub(),
             operand: 'config.db.retry.backoff',
           },
@@ -212,9 +211,9 @@ describe('undrivenBranchTransformer', () => {
       const result = undrivenBranchTransformer({
         entryName: 'pick',
         undrivenBranches: [
-          { line: LineNumberStub({ value: 4 }), cause: UndrivenCauseStub(), operand: 'u' },
+          { line: 4, cause: UndrivenCauseStub(), operand: 'u' },
           {
-            line: LineNumberStub({ value: 5 }),
+            line: 5,
             cause: 'unread-comparison',
             operand: 'm',
           },

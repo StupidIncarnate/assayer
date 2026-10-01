@@ -8,7 +8,7 @@
  * caseTouchedLinesTransformer({ functionAnalysis: fn, reachesPath: ['formatGreeting/return@if-then'] });
  * // Returns [3, 2] — the exit line and its guard branch line (branded LineNumber[])
  */
-import type { FunctionAnalysis, LineNumber, Coverage } from '@assayer/shared/contracts';
+import type { FunctionAnalysis, Coverage } from '@assayer/shared/contracts';
 
 export const caseTouchedLinesTransformer = ({
   functionAnalysis,
@@ -16,7 +16,7 @@ export const caseTouchedLinesTransformer = ({
 }: {
   functionAnalysis: FunctionAnalysis;
   reachesPath: Coverage['id'][];
-}): LineNumber[] => {
+}): number[] => {
   const lines = reachesPath.flatMap((coverageId) => {
     const exit = functionAnalysis.exits.find((candidate) => candidate.coverageId === coverageId);
 

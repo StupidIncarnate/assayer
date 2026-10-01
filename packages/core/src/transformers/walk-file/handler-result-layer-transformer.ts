@@ -14,7 +14,7 @@
  */
 import type { Node } from '#gateway/npm/ts-morph';
 
-import type { BranchNode, EnvRead, ExitNode, GlobalUse, LineNumber, ModuleEdge } from '@assayer/shared/contracts';
+import type { BranchNode, EnvRead, ExitNode, GlobalUse, ModuleEdge } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { DeclaredShape } from '../../contracts/declared-shape/declared-shape-contract';
@@ -54,7 +54,7 @@ export interface HandlerResult {
   envReads: EnvRead[];
   /** Start lines of inline functions this node reached other than by a named call — a returned
    * function or an immediately-invoked one. Flat file-level facts, never scope-claimed. */
-  reachedFns: LineNumber[];
+  reachedFns: number[];
   /** Each IIFE this node invoked in place (`((n) => …)(x)`) — its start line plus the invocation
    * arguments a follower welds onto the arrow's params. A parallel channel to `reachedFns` that only
    * the invoked-in-place case populates; flat file-level facts, never scope-claimed. */
@@ -95,7 +95,7 @@ export const handlerResultLayerTransformer = ({
   declaredShapes?: DeclaredShape[];
   globalUses?: GlobalUse[];
   envReads?: EnvRead[];
-  reachedFns?: LineNumber[];
+  reachedFns?: number[];
   invokedFns?: InvokedFn[];
   descents?: Descent[];
   opensScope?: ScopeRecord;

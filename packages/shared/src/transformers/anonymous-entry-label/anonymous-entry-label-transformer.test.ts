@@ -1,5 +1,4 @@
 import { anonymousEntryLabelTransformer } from './anonymous-entry-label-transformer';
-import { LineNumberStub } from '../../contracts/line-number/line-number.stub';
 import { ParamDescriptorStub } from '../../contracts/param-descriptor/param-descriptor.stub';
 import { AnonymousReachStub } from '../../contracts/anonymous-reach/anonymous-reach.stub';
 
@@ -14,7 +13,7 @@ describe('anonymousEntryLabelTransformer', () => {
         host: 'rescale',
         reach: AnonymousReachStub({ kind: 'argument', receiver: 'items', method: 'map' }),
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 2 }),
+        line: 2,
       });
 
       expect(String(result)).toBe('rescale › items.map((n) => …) L2');
@@ -25,7 +24,7 @@ describe('anonymousEntryLabelTransformer', () => {
         host: 'boot',
         reach: AnonymousReachStub({ kind: 'argument', callee: 'register' }),
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 4 }),
+        line: 4,
       });
 
       expect(String(result)).toBe('boot › register((n) => …) L4');
@@ -38,7 +37,7 @@ describe('anonymousEntryLabelTransformer', () => {
         host: 'boot',
         reach: { kind: 'argument' },
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 4 }),
+        line: 4,
       });
 
       expect(String(result)).toBe('boot › (n) => … L4');
@@ -51,7 +50,7 @@ describe('anonymousEntryLabelTransformer', () => {
         host: 'makeClassifier',
         reach: { kind: 'return' },
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 2 }),
+        line: 2,
       });
 
       expect(String(result)).toBe('makeClassifier › return (n) => … L2');
@@ -62,7 +61,7 @@ describe('anonymousEntryLabelTransformer', () => {
         host: 'boot',
         reach: { kind: 'invocation' },
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 3 }),
+        line: 3,
       });
 
       expect(String(result)).toBe('boot › ((n) => …)(…) L3');
@@ -76,7 +75,7 @@ describe('anonymousEntryLabelTransformer', () => {
       const result = anonymousEntryLabelTransformer({
         reach: { kind: 'invocation' },
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 3 }),
+        line: 3,
       });
 
       expect(String(result)).toBe('((n) => …)(…) L3');
@@ -92,7 +91,7 @@ describe('anonymousEntryLabelTransformer', () => {
           ParamDescriptorStub({ name: 'acc', type: { kind: 'number' } }),
           ELEMENT_PARAM,
         ],
-        line: LineNumberStub({ value: 5 }),
+        line: 5,
       });
 
       expect(String(result)).toBe('total › items.reduce((acc, n) => …) L5');
@@ -102,7 +101,7 @@ describe('anonymousEntryLabelTransformer', () => {
       const result = anonymousEntryLabelTransformer({
         reach: { kind: 'invocation' },
         params: [],
-        line: LineNumberStub({ value: 1 }),
+        line: 1,
       });
 
       expect(String(result)).toBe('(() => …)(…) L1');
@@ -118,13 +117,13 @@ describe('anonymousEntryLabelTransformer', () => {
         host: 'rescale',
         reach: AnonymousReachStub({ kind: 'argument', receiver: 'items', method: 'map' }),
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 2 }),
+        line: 2,
       });
       const second = anonymousEntryLabelTransformer({
         host: 'rescale',
         reach: AnonymousReachStub({ kind: 'argument', receiver: 'items', method: 'map' }),
         params: [ELEMENT_PARAM],
-        line: LineNumberStub({ value: 9 }),
+        line: 9,
       });
 
       expect([String(first), String(second)]).toStrictEqual([

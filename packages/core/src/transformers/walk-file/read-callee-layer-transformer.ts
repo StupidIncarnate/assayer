@@ -25,7 +25,7 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { lineNumberContract, moduleSpecifierContract } from '@assayer/shared/contracts';
+import { moduleSpecifierContract } from '@assayer/shared/contracts';
 
 import type { CalleeLink } from '../../contracts/call-site/call-site-contract';
 import { calleeLinkContract } from '../../contracts/call-site/call-site-contract';
@@ -83,6 +83,6 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
   return calleeLinkContract.parse({
     target: 'local',
     name: definition.name,
-    startLine: lineNumberContract.parse(definition.node.getStartLineNumber()),
+    startLine: definition.node.getStartLineNumber(),
   });
 };

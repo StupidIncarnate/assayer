@@ -9,13 +9,12 @@
 import { z } from '#gateway/npm/zod';
 
 import { mapNodeKindContract } from '../map-node-kind/map-node-kind-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const mapNodeContract = z.object({
   kind: mapNodeKindContract,
   name: z.string().min(1).brand<'MapNodeName'>().optional(),
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
+  startLine: z.number().int().positive().brand<'MapNodeStartLine'>(),
+  endLine: z.number().int().positive().brand<'MapNodeEndLine'>(),
   meta: z.record(z.string(), z.unknown()).brand<'PluginMetaBag'>().optional(),
 });
 

@@ -9,7 +9,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '@assayer/shared/contracts';
 
 import { extractedFunctionContract } from '../extracted-function/extracted-function-contract';
 
@@ -18,7 +17,7 @@ export const analysisExtractResultContract = z.discriminatedUnion('success', [
   z.object({
     success: z.literal(false),
     error: z.object({
-      line: lineNumberContract,
+      line: z.number().int().positive().brand<'AnalysisExtractResultErrorLine'>(),
       column: z.number().int().positive().brand<'ColumnNumber'>(),
       message: z.string().min(1).brand<'ExtractErrorMessage'>(),
     }),

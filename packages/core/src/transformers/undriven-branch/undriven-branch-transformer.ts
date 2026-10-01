@@ -39,7 +39,7 @@
  * // Returns [{ name: 'opaqueIf', startLine: 3, endLine: 3, reason: '…' }]
  */
 import { undrivenEntryContract } from '@assayer/shared/contracts';
-import type { LineNumber, UndrivenEntry } from '@assayer/shared/contracts';
+import type { UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
 
@@ -48,7 +48,7 @@ export const undrivenBranchTransformer = ({
   undrivenBranches,
 }: {
   entryName: string;
-  undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: string }[];
+  undrivenBranches: { line: number; cause: UndrivenCause; operand?: string }[];
 }): UndrivenEntry[] =>
   undrivenBranches.map((branch) => {
     // `unread-comparison` and `unarrangeable-typeof-member` both fire only once EVERY leaf of the

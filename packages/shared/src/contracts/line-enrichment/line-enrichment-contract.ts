@@ -10,12 +10,11 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '../line-number/line-number-contract';
 import { typeTextContract } from '../type-text/type-text-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 export const lineEnrichmentContract = z.object({
-  line: lineNumberContract,
+  line: z.number().int().positive().brand<'LineEnrichmentLine'>(),
   symbol: z.string().min(1).brand<'LineEnrichmentSymbol'>(),
   typeText: typeTextContract,
   range: z.array(representativeValueContract).optional(),

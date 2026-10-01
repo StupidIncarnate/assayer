@@ -11,7 +11,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { branchNodeContract, envReadContract, exitNodeContract, globalUseContract, lineNumberContract, moduleEdgeContract } from '@assayer/shared/contracts';
+import { branchNodeContract, envReadContract, exitNodeContract, globalUseContract, moduleEdgeContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
 import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
@@ -54,7 +54,7 @@ export const walkFactsContract = z.object({
   // Flat like `globalUses`: the start lines of inline functions the file REACHES other than by a named
   // call — returned to a caller (`return (n) => …`) or invoked in place (`((n) => …)(x)`). A follower
   // reads these to know such a function is reached (not dead surface), even though no case can steer it.
-  reachedFns: z.array(lineNumberContract),
+  reachedFns: z.array(z.number().int().positive().brand<'WalkFactsReachedFns'>()),
   // Flat like `reachedFns`, a parallel channel only the invoked-in-place case populates: each IIFE
   // (`((n) => …)(x)`) with the invocation arguments welded onto its params, which the bare `reachedFns`
   // line cannot carry — what a follower needs to weld the arrow's params and drive it.

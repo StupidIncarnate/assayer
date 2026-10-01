@@ -10,7 +10,6 @@ import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/en
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
-import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 import { LintEntryStub } from '@assayer/shared/contracts/lint-entry/lint-entry.stub';
 import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
@@ -272,7 +271,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 1 })} />,
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={1} />,
       });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
@@ -283,7 +282,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 9 })} />,
+        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={9} />,
       });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
@@ -307,7 +306,7 @@ describe('DetailPanelWidget', () => {
       const analysis = FileAnalysisStub();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 3 })} />,
+        ui: <DetailPanelWidget analysis={analysis} hoveredLine={3} />,
       });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('true');
@@ -318,7 +317,7 @@ describe('DetailPanelWidget', () => {
       const analysis = FileAnalysisStub();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 2 })} />,
+        ui: <DetailPanelWidget analysis={analysis} hoveredLine={2} />,
       });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('true');
@@ -329,7 +328,7 @@ describe('DetailPanelWidget', () => {
       const analysis = FileAnalysisStub();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 9 })} />,
+        ui: <DetailPanelWidget analysis={analysis} hoveredLine={9} />,
       });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('false');

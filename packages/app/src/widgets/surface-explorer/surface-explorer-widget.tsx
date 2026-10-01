@@ -31,8 +31,7 @@
 import { useCallback, useState } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Center, Flex, Tabs, Text } from '#gateway/npm/mantine__core';
-import { lineNumberContract } from '@assayer/shared/contracts';
-import type { CompiledFileView, LineNumber } from '@assayer/shared/contracts';
+import type { CompiledFileView } from '@assayer/shared/contracts';
 
 import { useCompiledTreeBinding } from '../../bindings/use-compiled-tree/use-compiled-tree-binding';
 import { useFileRunBinding } from '../../bindings/use-file-run/use-file-run-binding';
@@ -59,7 +58,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   const { data: status } = useAssayerStatusBinding();
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
   const [selectedRelPath, setSelectedRelPath] = useState<string | null>(null);
-  const [hoveredLine, setHoveredLine] = useState<LineNumber | null>(null);
+  const [hoveredLine, setHoveredLine] = useState<number | null>(null);
   // Keyed on the selected path, so opening a file LOADS its last run and its report, and never starts
   // one.
   const fileRun = useFileRunBinding({ relPath: selectedRelPath });
@@ -76,7 +75,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   const consoleOpen = !dismissed && (runRequested || fileRun.running || String(fileRun.output) !== '');
 
   const handleLineHover = useCallback((line: number | null): void => {
-    setHoveredLine(line === null ? null : lineNumberContract.parse(line));
+    setHoveredLine(line === null ? null : line);
   }, []);
 
   const handleRun = useCallback((): void => {

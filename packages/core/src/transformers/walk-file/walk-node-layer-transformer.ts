@@ -68,7 +68,7 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
 
   const completed = scopeRecordContract.parse({ ...opensScope, branches, exits, calls, valueUses, exportedBindings });
 
-  return {
+  return walkFactsContract.parse({
     scopes: [completed, ...child.scopes],
     looseBranches: [],
     looseExits: [],
@@ -83,5 +83,5 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
     envReads,
     reachedFns,
     invokedFns,
-  };
+  });
 };

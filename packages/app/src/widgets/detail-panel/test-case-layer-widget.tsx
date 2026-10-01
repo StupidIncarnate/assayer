@@ -10,7 +10,7 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Group, Text } from '#gateway/npm/mantine__core';
-import type { FunctionAnalysis, LineNumber, RunResult } from '@assayer/shared/contracts';
+import type { FunctionAnalysis, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
 import { caseRunResultTransformer } from '../../transformers/case-run-result/case-run-result-transformer';
@@ -26,7 +26,7 @@ export interface TestCaseLayerWidgetProps {
   driver: string;
   entryLabel: string;
   isModule: boolean;
-  hoveredLine?: LineNumber | null | undefined;
+  hoveredLine?: number | null | undefined;
   run?: RunResult | undefined;
   runMode?: RunMode | undefined;
 }

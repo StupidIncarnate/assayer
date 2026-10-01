@@ -15,7 +15,7 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { CallArg } from '../../contracts/call-site/call-site-contract';
 import { readCalleeLayerTransformer } from './read-callee-layer-transformer';
@@ -43,7 +43,7 @@ export const readCallArgsLayerTransformer = ({ args }: { args: Node[] }): CallAr
     // start line (the key `follow-calls` matches a scope record by), so a callback the code genuinely
     // reaches is never mistaken for dead surface.
     if (Node.isArrowFunction(arg) || Node.isFunctionExpression(arg)) {
-      return { kind: 'callback', startLine: lineNumberContract.parse(arg.getStartLineNumber()) };
+      return callArgContract.parse({ kind: 'callback', startLine: arg.getStartLineNumber() });
     }
 
     if (Node.isStringLiteral(arg) || Node.isNumericLiteral(arg)) {

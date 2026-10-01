@@ -24,14 +24,13 @@ import { entryLabelContract } from '../entry-label/entry-label-contract';
 import { entryAccessContract } from '../entry-access/entry-access-contract';
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const entrySignatureContract = z.object({
   name: z.string().min(1).brand<'EntrySignatureName'>(),
   scopePath: z.array(z.string().min(1).brand<'EntrySignatureScopePath'>()),
   params: z.array(paramDescriptorContract),
   returnType: typeDescriptorContract,
-  line: lineNumberContract,
+  line: z.number().int().positive().brand<'EntrySignatureLine'>(),
   access: entryAccessContract,
   // The human label for a MODULE entry — the name of the single exported top-level binding its
   // tracked flow is attached to (`message`, `separator`). Present only when the module has exactly

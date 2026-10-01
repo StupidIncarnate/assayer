@@ -23,10 +23,10 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract, guardStepContract, lineNumberContract, moduleSpecifierContract, representativeValueContract } from '@assayer/shared/contracts';
+import { columnNumberContract, guardStepContract, moduleSpecifierContract, representativeValueContract } from '@assayer/shared/contracts';
 
 const calleeLinkContract = z.discriminatedUnion('target', [
-  z.object({ target: z.literal('local'), name: z.string().min(1).brand<'CalleeLinkName'>(), startLine: lineNumberContract }),
+  z.object({ target: z.literal('local'), name: z.string().min(1).brand<'CalleeLinkName'>(), startLine: z.number().int().positive().brand<'CalleeLinkStartLine'>() }),
   z.object({ target: z.literal('import'), specifier: moduleSpecifierContract, importedName: z.string().min(1).brand<'CalleeLinkImportedName'>() }),
   z.object({ target: z.literal('unresolved') }),
 ]);
@@ -38,7 +38,7 @@ const callArgContract = z.discriminatedUnion('kind', [
   // its own the walk opens elsewhere; this records only the LINK — the callback scope's start line,
   // the same key `follow-calls` matches a scope record by — so a reached callback is never mistaken
   // for dead surface.
-  z.object({ kind: z.literal('callback'), startLine: lineNumberContract }),
+  z.object({ kind: z.literal('callback'), startLine: z.number().int().positive().brand<'CallArgStartLine'>() }),
   // A BARE function REFERENCE passed as an argument (`items.map(bandReading)`) whose declaration the
   // walk can name — an IMPORT (its sibling definition resolved at consume time) or a same-file `local`
   // function. It carries the SAME callee LINK a call site records, so the cross-file-map overlay can
@@ -55,7 +55,7 @@ export const callSiteContract = z.object({
   guardPath: z.array(guardStepContract),
   // Where the call is written — the position that anchors an import-resolution build error at the
   // call site (P1). Carried structurally from the parse; never re-derived downstream.
-  position: z.object({ line: lineNumberContract, column: columnNumberContract }),
+  position: z.object({ line: z.number().int().positive().brand<'CallSitePositionLine'>(), column: columnNumberContract }),
   // A method call on an IDENTIFIER receiver (`items.map(...)`) records that receiver's name and the
   // method's name. Present only for a `receiver.method(...)` shape whose receiver is a plain
   // identifier; a bare call, a computed member, or a chained receiver leaves both unset. This is what

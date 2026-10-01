@@ -21,7 +21,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { ReturnStatement, ThrowStatement } from '#gateway/npm/ts-morph';
 
-import { exitNodeContract, lineNumberContract } from '@assayer/shared/contracts';
+import { exitNodeContract } from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
@@ -56,7 +56,7 @@ export const handleExitLayerTransformer = ({
   const returnedInline = expression !== undefined && Node.isParenthesizedExpression(expression) ? expression.getExpression() : expression;
   const reachedFns =
     returnedInline !== undefined && (Node.isArrowFunction(returnedInline) || Node.isFunctionExpression(returnedInline))
-      ? [lineNumberContract.parse(returnedInline.getStartLineNumber())]
+      ? [returnedInline.getStartLineNumber()]
       : [];
 
   return handlerResultLayerTransformer({

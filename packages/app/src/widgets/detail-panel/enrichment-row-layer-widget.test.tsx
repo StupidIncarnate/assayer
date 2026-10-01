@@ -2,7 +2,6 @@ import { themedRenderMiddleware } from '../../middleware/themed-render/themed-re
 import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
 import { EnrichmentRowLayerWidgetProxy } from './enrichment-row-layer-widget.proxy';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
-import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 
 describe('EnrichmentRowLayerWidget', () => {
   describe('row text', () => {
@@ -50,7 +49,7 @@ describe('EnrichmentRowLayerWidget', () => {
         ui: (
           <>
             {enrichment.map((row) => (
-              <EnrichmentRowLayerWidget key={row.symbol} row={row} hoveredLine={LineNumberStub({ value: 2 })} />
+              <EnrichmentRowLayerWidget key={row.symbol} row={row} hoveredLine={2} />
             ))}
           </>
         ),
@@ -67,7 +66,7 @@ describe('EnrichmentRowLayerWidget', () => {
         ui: (
           <>
             {enrichment.map((row) => (
-              <EnrichmentRowLayerWidget key={row.symbol} row={row} hoveredLine={LineNumberStub({ value: 9 })} />
+              <EnrichmentRowLayerWidget key={row.symbol} row={row} hoveredLine={9} />
             ))}
           </>
         ),

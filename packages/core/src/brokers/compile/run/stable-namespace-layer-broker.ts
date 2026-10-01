@@ -10,7 +10,7 @@
  * // Returns { resultEntry, manifestNamespace, errors } for the 'master' namespace
  */
 import { namespaceNameContract, branchNameContract, fileCountContract } from '@assayer/shared/contracts';
-import type { AssayerCacheManifest, NamespaceName, BranchName, CompileMode, FileCount, ContentHash, LineNumber } from '@assayer/shared/contracts';
+import type { AssayerCacheManifest, NamespaceName, BranchName, CompileMode, FileCount, ContentHash } from '@assayer/shared/contracts';
 
 import { compilePlanStableBroker } from '../plan-stable/compile-plan-stable-broker';
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
@@ -39,7 +39,7 @@ export const stableNamespaceLayerBroker = async ({
   resultEntry: { namespace: NamespaceName; branch: BranchName; mode: CompileMode; fileCount: FileCount };
   manifestNamespace: { branch: BranchName; commit?: string; files: { relPath: string; contentHash: ContentHash }[] };
   harnesses: { relPath: string; content: string }[];
-  errors: { namespace: NamespaceName; relPath: string; line: LineNumber; column: SourcePosition['column']; message: string }[];
+  errors: { namespace: NamespaceName; relPath: string; line: number; column: SourcePosition['column']; message: string }[];
 }> => {
   const previousStableCommit = previousManifest?.namespaces[branch]?.commit;
 

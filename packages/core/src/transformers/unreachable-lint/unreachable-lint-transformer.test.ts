@@ -4,7 +4,7 @@ import { unreachableLintTransformer } from './unreachable-lint-transformer';
 
 const name = 'classify';
 const label = entryLabelContract.parse('classify');
-const line = (value: number): ReturnType<typeof lineNumberContract.parse> => lineNumberContract.parse(value);
+const line = (value: number): ReturnType<typeof lineNumberContract.parse> => value;
 
 describe('unreachableLintTransformer', () => {
   describe('contradictory guards', () => {

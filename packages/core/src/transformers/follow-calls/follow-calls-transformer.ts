@@ -55,7 +55,7 @@
  */
 import { anonymousEntryLabelTransformer } from '@assayer/shared/transformers';
 import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LineNumber, LintEntry, ParamDescriptor, RepresentativeValue, TypeText, UndrivenEntry } from '@assayer/shared/contracts';
+import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LintEntry, ParamDescriptor, RepresentativeValue, TypeText, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -123,12 +123,12 @@ export const followCallsTransformer = ({
   // welds, so it carries none.
   funnels: {
     host: string;
-    hostLine: LineNumber;
+    hostLine: number;
     cases: DerivedTestCase[];
     unreachable: {
-      line: LineNumber;
-      guardLines: LineNumber[];
-      welded?: { line: LineNumber; operand?: string; value?: RepresentativeValue; length?: ConstLength };
+      line: number;
+      guardLines: number[];
+      welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: ConstLength };
       displayName: string;
     }[];
   }[];

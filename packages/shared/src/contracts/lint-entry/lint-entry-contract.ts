@@ -22,14 +22,13 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const lintEntryContract = z.object({
   rule: z.enum(['dead-surface', 'unreachable-exit']).brand<'LintRule'>(),
   name: z.string().min(1).brand<'LintEntryName'>(),
   message: z.string().min(1).brand<'LintMessage'>(),
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
+  startLine: z.number().int().positive().brand<'LintEntryStartLine'>(),
+  endLine: z.number().int().positive().brand<'LintEntryEndLine'>(),
 });
 
 export type LintEntry = z.infer<typeof lintEntryContract>;
