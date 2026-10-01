@@ -11,7 +11,7 @@ import { z } from '#gateway/npm/zod';
 
 export const gutterMarkerContract = z.object({
   line: z.number().int().positive().brand<'GutterMarkerLine'>(),
-  count: z.number().int().positive().brand<'TestCaseCount'>(),
+  count: z.number().int().positive().brand<'GutterMarkerCount'>(),
 }).brand<'GutterMarker'>();
 
 export type GutterMarker = z.infer<typeof gutterMarkerContract>;

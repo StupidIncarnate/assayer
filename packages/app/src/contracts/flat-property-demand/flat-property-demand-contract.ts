@@ -16,8 +16,8 @@ import { representativeValueContract } from '@assayer/shared/contracts';
 export const flatPropertyDemandContract = z.object({
   name: z.string().min(1).brand<'FlatPropertyDemandName'>(),
   demand: z.discriminatedUnion('kind', [
-    z.object({ kind: z.literal('unknown') }),
-    z.object({ kind: z.literal('demanded'), values: z.array(representativeValueContract) }),
+    z.object({ kind: z.literal('unknown') }).brand<'FlatPropertyDemandDemand'>(),
+    z.object({ kind: z.literal('demanded'), values: z.array(representativeValueContract) }).brand<'FlatPropertyDemandDemand'>(),
   ]),
 }).brand<'FlatPropertyDemand'>();
 
