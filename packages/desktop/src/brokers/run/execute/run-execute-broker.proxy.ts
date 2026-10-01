@@ -1,6 +1,7 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { runFindBroker } from '@assayer/core/brokers';
 import { runFindBrokerProxy } from '@assayer/core/testing';
+import { execPathProxy } from '#gateway/node/process/exec-path/exec-path.proxy';
 import { RunResultStub } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
@@ -20,6 +21,7 @@ export const runExecuteBrokerProxy = (): {
   // I/O from here, so the direct registerMock is what drives it.
   runFindBrokerProxy();
   assayerCliEntryPathAdapterProxy();
+  execPathProxy();
 
   const exec = nodeChildProcessExecAdapterProxy();
   const findHandle = registerMock({ fn: runFindBroker });

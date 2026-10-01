@@ -20,6 +20,7 @@
  */
 import { runFindBroker } from '@assayer/core/brokers';
 import type { RunResult } from '@assayer/shared/contracts';
+import { execPath } from '#gateway/node/process';
 
 import { assayerCliEntryPathAdapter } from '../../../adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter';
 import { nodeChildProcessExecAdapter } from '../../../adapters/node-child-process/exec/node-child-process-exec-adapter';
@@ -45,7 +46,7 @@ export const runExecuteBroker = async ({
   // a script path launches a second Electron APP that never exits, hanging this await forever.
   // ELECTRON_RUN_AS_NODE makes that same binary behave as plain node, which is what the CLI needs.
   const exec = await nodeChildProcessExecAdapter({
-    command: process.execPath,
+    command: execPath,
     args: [String(cliEntry), 'unit', relPath],
     cwd: repoPath,
     env: { ELECTRON_RUN_AS_NODE: '1' },

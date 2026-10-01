@@ -18,7 +18,14 @@
 import { join, dirname } from '#gateway/node/path';
 import { spawn } from '#gateway/node/child_process';
 import { tmpdir } from '#gateway/node/os';
-import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
+import {
+  mkdtempSync,
+  ensureDirSync,
+  writeFileSync,
+  existsSync,
+  readFileSync,
+  rmSync,
+} from '#gateway/node/fs';
 
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
@@ -52,12 +59,12 @@ export const assayerCliHarness = (): {
     },
     writeSource: ({ relPath, source }: { relPath: string; source: string }): void => {
       const target = join(dir, relPath);
-      mkdirSync(dirname(target), { recursive: true });
+      ensureDirSync(dirname(target));
       writeFileSync(target, source);
     },
     writeCacheFile: ({ relPath, contents }: { relPath: string; contents: string }): void => {
       const target = join(dir, relPath);
-      mkdirSync(dirname(target), { recursive: true });
+      ensureDirSync(dirname(target));
       writeFileSync(target, contents);
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
@@ -81,6 +88,6 @@ export const assayerCliHarness = (): {
       }),
     exists: ({ relPath }: { relPath: string }): boolean => existsSync(join(dir, relPath)),
     read: ({ relPath }: { relPath: string }): CliFileText =>
-      CliFileTextStub({ value: readFileSync(join(dir, relPath), 'utf8') }),
+      CliFileTextStub({ value: readFileSync(join(dir, relPath)) }),
   };
 };

@@ -15,6 +15,7 @@
     "ward": "dungeonmaster-ward"
   },
   "dependencies": {
+    "@assayer/bin": "*",
     "@assayer/core": "*",
     "@assayer/desktop": "*",
     "@assayer/node": "*",
