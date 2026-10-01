@@ -4,7 +4,8 @@ import { LaunchRunResponderProxy } from './launch-run-responder.proxy';
 describe('LaunchRunResponder', () => {
   describe('launching the desktop', () => {
     it('VALID: {repoPath} => launches and returns a confirmation message', () => {
-      LaunchRunResponderProxy();
+      const proxy = LaunchRunResponderProxy();
+      proxy.launchSpawns({ repoPath: '/tmp/target' });
 
       const result = LaunchRunResponder({ repoPath: '/tmp/target' });
 

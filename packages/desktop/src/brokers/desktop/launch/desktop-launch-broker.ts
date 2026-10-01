@@ -17,7 +17,7 @@ export const desktopLaunchBroker = ({ repoPath }: { repoPath: string }): void =>
   const electronBinary = desktopResolveBinaryBroker();
   const mainEntry = executablePathContract.parse(join(__dirname, '..', '..', '..', '..', 'bin', 'desktop-main.js'));
 
-  return nodeChildProcessSpawnAdapter({
+  nodeChildProcessSpawnAdapter({
     command: electronBinary,
     args: [mainEntry, '--repo', repoPath],
   });

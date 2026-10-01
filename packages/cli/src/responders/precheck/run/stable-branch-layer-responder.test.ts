@@ -4,6 +4,12 @@ import { FilePathStub } from '@assayer/core/contracts';
 import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
 
+const MAIN_MASTER_PROMPT =
+  "Select the stable branch for Assayer's diff baseline:\n" +
+  '  main (default)\n' +
+  '  master\n' +
+  'Enter branch name (press Enter for main): ';
+
 describe('StableBranchLayerResponder', () => {
   describe('stable branch already configured', () => {
     it('VALID: {config.stableBranch: "main"} => returns the same config unchanged without detecting or saving', async () => {
@@ -60,7 +66,7 @@ describe('StableBranchLayerResponder', () => {
       const proxy = StableBranchLayerResponderProxy();
       proxy.enableTty();
       proxy.insideWith({ branchListStdout: '* main\n  master\n' });
-      proxy.answersPicker({ input: 'master' });
+      proxy.answersPicker({ prompt: MAIN_MASTER_PROMPT, input: 'master' });
       proxy.saveSucceeds({ configPath: '/repo/assayer.config.json' });
       const config = AssayerConfigStub();
 
@@ -73,7 +79,7 @@ describe('StableBranchLayerResponder', () => {
       expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
         '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
       ]);
-      expect(proxy.promptWritten()).toBe(true);
+      expect(proxy.promptsAsked()).toStrictEqual([MAIN_MASTER_PROMPT]);
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',
@@ -103,7 +109,7 @@ describe('StableBranchLayerResponder', () => {
       expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
         '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
       ]);
-      expect(proxy.promptWritten()).toBe(false);
+      expect(proxy.promptsAsked()).toStrictEqual([]);
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',
@@ -131,7 +137,7 @@ describe('StableBranchLayerResponder', () => {
         repoRoot: '/repo',
       });
 
-      expect(proxy.promptWritten()).toBe(false);
+      expect(proxy.promptsAsked()).toStrictEqual([]);
       expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
         '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
       ]);

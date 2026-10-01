@@ -5,7 +5,7 @@
  * await packageJsonReadBroker();
  * // Returns the branded AssayerVersion parsed from the CLI's package.json "version" field
  */
-import { readFile } from 'fs/promises';
+import { readFile } from '#gateway/node/fs__promises';
 import { join } from '#gateway/node/path';
 import { z } from '#gateway/npm/zod';
 import { assayerVersionContract } from '../../../contracts/assayer-version/assayer-version-contract';
@@ -15,7 +15,7 @@ const packageJsonVersionFieldContract = z.object({ version: assayerVersionContra
 
 export const packageJsonReadBroker = async (): Promise<AssayerVersion> => {
   const packageJsonPath = join(__dirname, '../../../../package.json');
-  const contents = await readFile(packageJsonPath, 'utf8');
+  const contents = await readFile(packageJsonPath);
   const { version } = packageJsonVersionFieldContract.parse(JSON.parse(contents));
 
   return version;

@@ -1,4 +1,5 @@
 import { analyzerHashBrokerProxy, compileResolveRootBrokerProxy } from '@assayer/core/testing';
+import { join } from '#gateway/node/path';
 
 import { ConfigResolveLayerResponderProxy } from './config-resolve-layer-responder.proxy';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
@@ -17,9 +18,12 @@ export const PrecheckRunResponderProxy = (): {
   const compileProxy = CompileRunLayerResponderProxy();
   // The analyzer roots resolve from the real module location, and the walk of each root finds no
   // source files, so the analyzer fingerprint is the hash of two empty roots.
-  analyzerHashBrokerProxy();
+  const hashProxy = analyzerHashBrokerProxy();
   const rootsProxy = analyzerRootsResolveBrokerProxy();
   rootsProxy.rootAboveThisModule();
+  const monorepoRoot = join(__dirname, '..', '..', '..', '..', '..', '..');
+  hashProxy.dirHolds({ path: join(monorepoRoot, 'packages', 'core', 'src'), entries: [] });
+  hashProxy.dirHolds({ path: join(monorepoRoot, 'packages', 'shared', 'src'), entries: [] });
   compileResolveRootBrokerProxy();
 
   return {

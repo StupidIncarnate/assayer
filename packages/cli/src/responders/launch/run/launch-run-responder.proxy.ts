@@ -1,7 +1,13 @@
 import { desktopLaunchBrokerProxy } from '@assayer/desktop/testing';
 
-export const LaunchRunResponderProxy = (): Record<PropertyKey, never> => {
-  desktopLaunchBrokerProxy();
+export const LaunchRunResponderProxy = (): {
+  launchSpawns: (params: { repoPath: string }) => void;
+} => {
+  const launchProxy = desktopLaunchBrokerProxy();
 
-  return {};
+  return {
+    launchSpawns: ({ repoPath }: { repoPath: string }): void => {
+      launchProxy.launchSpawns({ repoPath });
+    },
+  };
 };

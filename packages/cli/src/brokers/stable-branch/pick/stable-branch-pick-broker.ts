@@ -1,9 +1,9 @@
 /**
- * PURPOSE: Prompts the user via readline to pick the stable branch used as Assayer's diff
- *   baseline, defaulting to the preselected candidate when the answer is empty or unmatched.
- *   Never blocks indefinitely on a non-interactive stdin: if stdin reaches EOF / the readline
- *   interface closes before a line arrives (piped, closed, or `< /dev/null`), it resolves to the
- *   preselected candidate instead of waiting forever for a line that will never come.
+ * PURPOSE: Prompts the user to pick the stable branch used as Assayer's diff baseline, defaulting
+ *   to the preselected candidate when the answer is empty or matches no candidate. The prompt goes
+ *   through the readline gateway's `question`, which resolves the fallback when stdin reaches EOF
+ *   before a line arrives (piped, closed, or `< /dev/null`), so a non-interactive run never waits
+ *   for a line that will never come.
  *
  * USAGE:
  * await stableBranchPickBroker({
@@ -12,7 +12,8 @@
  * });
  * // Prompts on stdin/stdout; returns the matched BranchName or the preselected one
  */
-import { createInterface } from 'readline';
+import { question } from '#gateway/node/readline';
+import { getStdin, stdout } from '#gateway/node/process';
 import { branchNameContract } from '@assayer/shared/contracts';
 import type { BranchName } from '@assayer/shared/contracts';
 
@@ -23,31 +24,20 @@ export const stableBranchPickBroker = async ({
   candidates: readonly BranchName[];
   preselected: BranchName;
 }): Promise<BranchName> => {
-  const promptText =
-    `Select the stable branch for Assayer's diff baseline:\n${ 
-    candidates
-      .map((candidate) => `  ${candidate}${candidate === preselected ? ' (default)' : ''}`)
-      .join('\n') 
-    }\nEnter branch name (press Enter for ${ 
-    preselected 
-    }): `;
+  const candidateLines = candidates
+    .map((candidate) => `  ${candidate}${candidate === preselected ? ' (default)' : ''}`)
+    .join('\n');
+  const prompt =
+    `Select the stable branch for Assayer's diff baseline:\n${candidateLines}\n` +
+    `Enter branch name (press Enter for ${preselected}): `;
 
-  process.stdout.write(promptText);
-
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const answer = await new Promise((resolve: (rawAnswer: string) => void) => {
-    // A closed/EOF stdin (piped, closed, `< /dev/null`) emits 'close' and NEVER fires the
-    // question callback — resolve empty so we fall through to the preselected default instead
-    // of hanging forever. A real typed line still resolves first via the question callback.
-    rl.on('close', () => {
-      resolve('');
-    });
-    rl.question('', resolve);
+  const answer = await question({
+    input: getStdin(),
+    output: stdout,
+    prompt,
+    fallback: preselected,
   });
-  rl.close();
+  const match = candidates.find((candidate) => candidate === answer);
 
-  const trimmed = answer.trim();
-  const match = candidates.find((candidate) => candidate === trimmed);
-
-  return match === undefined ? branchNameContract.parse(preselected) : branchNameContract.parse(match);
+  return branchNameContract.parse(match === undefined ? preselected : match);
 };

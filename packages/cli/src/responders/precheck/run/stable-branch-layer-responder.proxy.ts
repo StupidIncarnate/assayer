@@ -7,12 +7,12 @@ export const StableBranchLayerResponderProxy = (): {
   notGitRepo: () => void;
   insideWith: (params: { branchListStdout: string }) => void;
   insideNoMainMaster: () => void;
-  answersPicker: (params: { input: string }) => void;
+  answersPicker: (params: { prompt: string; input: string }) => void;
   saveSucceeds: (params: { configPath: string }) => void;
   getSavedConfigsFor: (params: { configPath: string }) => unknown[];
   enableTty: () => void;
   disableTty: () => void;
-  promptWritten: () => boolean;
+  promptsAsked: () => readonly string[];
 } => {
   const detectProxy = gitDetectStableBranchBrokerProxy();
   const saveProxy = configStableBranchSaveBrokerProxy();
@@ -31,9 +31,9 @@ export const StableBranchLayerResponderProxy = (): {
     insideNoMainMaster: (): void => {
       detectProxy.insideNoMainMaster();
     },
-    // The line a human types at the picker prompt.
-    answersPicker: ({ input }: { input: string }): void => {
-      pickerProxy.answersWith({ input });
+    // The line a human types at the picker prompt, addressed by the exact prompt text.
+    answersPicker: ({ prompt, input }: { prompt: string; input: string }): void => {
+      pickerProxy.answersWith({ prompt, input });
     },
     saveSucceeds: ({ configPath }: { configPath: string }): void => {
       saveProxy.succeeds({ path: configPath });
@@ -47,6 +47,6 @@ export const StableBranchLayerResponderProxy = (): {
     disableTty: (): void => {
       ttyProxy.setupIsTty({ value: false });
     },
-    promptWritten: (): boolean => pickerProxy.promptWasWritten(),
+    promptsAsked: (): readonly string[] => pickerProxy.getPromptsAsked(),
   };
 };

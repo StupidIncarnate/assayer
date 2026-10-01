@@ -1,64 +1,25 @@
-import { createInterface } from 'readline';
-import { registerMock, registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import { CliOutputStub } from '../../../contracts/cli-output/cli-output.stub';
-import { stdout } from '#gateway/node/process';
-
-type CliOutput = ReturnType<typeof CliOutputStub>;
+import { questionProxy } from '#gateway/node/readline/question/question.proxy';
+import { stdoutProxy } from '#gateway/node/process/stdout/stdout.proxy';
+import { getStdinProxy } from '#gateway/node/process/get-stdin/get-stdin.proxy';
 
 export const stableBranchPickBrokerProxy = (): {
-  answersWith: (params: { input: string }) => void;
-  answersEmpty: () => void;
-  closesAtEof: () => void;
-  getPrompt: () => CliOutput;
-  promptWasWritten: () => boolean;
+  answersWith: (params: { prompt: string; input: string }) => void;
+  answersEmpty: (params: { prompt: string }) => void;
+  getPromptsAsked: () => readonly string[];
 } => {
-  const answerState = { value: '', eof: false };
-  const closeHandlers: (() => void)[] = [];
-
-  const handle = registerMock({ fn: createInterface });
-
-  // The options hold live streams, so the address is a test of the output stream, not a deep compare.
-  handle
-    .calledWith([(options: { output?: unknown }) => options.output === stdout])
-    .returns({
-    on: (event: string, listener: () => void): void => {
-      if (event === 'close') {
-        closeHandlers.push(listener);
-      }
-    },
-    question: (_query: string, callback: (answer: string) => void): void => {
-      // eof models a non-interactive stdin: readline emits 'close' and NEVER fires the line
-      // callback, so drive the registered close handlers instead of answering with a line.
-      if (answerState.eof) {
-        closeHandlers.forEach((listener) => {
-          listener();
-        });
-        return;
-      }
-      callback(answerState.value);
-    },
-    close: (): void => undefined,
-  });
-
-  const stdoutSpy = registerSpyOn({ object: stdout, method: 'write' });
-  // `write` answers a boolean nothing here reads, but a spied call still has to be described:
-  // an undescribed call throws rather than falling through to the real stdout.
-  stdoutSpy.calledWith([]).implement(() => true);
+  const stdinGateway = getStdinProxy();
+  stdoutProxy();
+  const questionGateway = questionProxy();
 
   return {
-    answersWith: ({ input }: { input: string }): void => {
-      answerState.value = input;
-      answerState.eof = false;
+    answersWith: ({ prompt, input }: { prompt: string; input: string }): void => {
+      stdinGateway.setupStream();
+      questionGateway.answers({ prompt, answer: input });
     },
-    answersEmpty: (): void => {
-      answerState.value = '';
-      answerState.eof = false;
+    answersEmpty: ({ prompt }: { prompt: string }): void => {
+      stdinGateway.setupStream();
+      questionGateway.answers({ prompt, answer: '' });
     },
-    closesAtEof: (): void => {
-      answerState.eof = true;
-    },
-    getPrompt: (): CliOutput =>
-      CliOutputStub({ value: stdoutSpy.callsMatching([]).map((call) => String(call[0])).join('') }),
-    promptWasWritten: (): boolean => stdoutSpy.callsMatching([]).length > 0,
+    getPromptsAsked: (): readonly string[] => questionGateway.getPromptsAsked(),
   };
 };
