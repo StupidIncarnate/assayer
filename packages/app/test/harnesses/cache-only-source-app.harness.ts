@@ -21,7 +21,7 @@
  */
 import { join } from '#gateway/node/path';
 import { tmpdir } from '#gateway/node/os';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, ensureDirSync, writeFileSync, rmSync } from '#gateway/node/fs';
 import { _electron } from '#gateway/npm/playwright__test';
 import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
 import { AssayerCacheManifestStub, CompiledFileBlobStub } from '@assayer/shared/contracts';
@@ -51,13 +51,13 @@ export const cacheOnlySourceAppHarness = (): {
       // On-disk source (repoRoot=configDir): an ALTERED file whose bytes differ from the cache. If
       // the desktop ever read repoRoot source, this is what it would show — so rendering the cached
       // line instead proves the source is never read. src/ghost.ts is intentionally NOT written.
-      mkdirSync(join(configDir, 'src'), { recursive: true });
+      ensureDirSync(join(configDir, 'src'));
       writeFileSync(
         join(configDir, 'src', 'format-greeting.ts'),
         "export function formatGreeting(name: string): string {\n  return 'FROM-ON-DISK-SOURCE';\n}\n",
       );
 
-      mkdirSync(join(configDir, '.assayer', 'cache', 'blobs'), { recursive: true });
+      ensureDirSync(join(configDir, '.assayer', 'cache', 'blobs'));
 
       const manifest = AssayerCacheManifestStub({
         repoName: 'assayer',

@@ -14,7 +14,7 @@
  */
 import { join } from '#gateway/node/path';
 import { tmpdir } from '#gateway/node/os';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, ensureDirSync, writeFileSync, rmSync } from '#gateway/node/fs';
 import { _electron } from '#gateway/npm/playwright__test';
 import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
 import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
@@ -36,7 +36,7 @@ export const emptySurfaceAppHarness = (): {
     launch: async (): Promise<Page> => {
       const configDir = mkdtempSync(join(tmpdir(), 'assayer-empty-surface-'));
       cleanups.push(() => { rmSync(configDir, { recursive: true, force: true }); });
-      mkdirSync(join(configDir, '.assayer', 'cache'), { recursive: true });
+      ensureDirSync(join(configDir, '.assayer', 'cache'));
       const manifest = AssayerCacheManifestStub({ namespaces: { master: { files: [] } } });
       writeFileSync(join(configDir, '.assayer', 'cache', 'manifest.json'), JSON.stringify(manifest));
 

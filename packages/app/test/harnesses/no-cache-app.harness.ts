@@ -16,7 +16,7 @@
  */
 import { join } from '#gateway/node/path';
 import { tmpdir } from '#gateway/node/os';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync } from '#gateway/node/fs';
 import { _electron } from '#gateway/npm/playwright__test';
 import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
 

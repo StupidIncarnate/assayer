@@ -1,4 +1,4 @@
-import { execSync } from '#gateway/node/child_process';
+import { runBuild } from '#gateway/bin/npm';
 import { resolve } from '#gateway/node/path';
 
 import { compileSmokeCache } from './harnesses/smoke-cache.harness';
@@ -19,7 +19,10 @@ import { compileSmokeCache } from './harnesses/smoke-cache.harness';
  * warm Electron process (see e2e-fixtures), collapsing the suite's fixed setup from minutes to seconds.
  */
 const setupE2e = async (): Promise<void> => {
-  execSync('npm run build', { cwd: resolve(__dirname, '..', '..', '..'), stdio: 'inherit' });
+  const { exitCode, output } = await runBuild({ cwd: resolve(__dirname, '..', '..', '..') });
+  if (exitCode !== 0) {
+    throw new Error(`assayer: \`npm run build\` exited ${exitCode}, so the e2e suite has no built app to launch. Build output:\n${output}`);
+  }
   await compileSmokeCache();
 };
 

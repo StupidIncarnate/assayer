@@ -12,6 +12,7 @@
     "ward": "dungeonmaster-ward"
   },
   "dependencies": {
+    "@assayer/bin": "*",
     "@assayer/browser": "*",
     "@assayer/node": "*",
     "@assayer/npm": "*",

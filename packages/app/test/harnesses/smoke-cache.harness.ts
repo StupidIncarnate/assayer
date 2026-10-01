@@ -25,7 +25,7 @@
  */
 import { join } from '#gateway/node/path';
 import { tmpdir } from '#gateway/node/os';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { ensureDirSync, writeFileSync, rmSync } from '#gateway/node/fs';
 import { spawn } from '#gateway/node/child_process';
 import { execPath } from '#gateway/node/process';
 
@@ -58,7 +58,7 @@ const writeConfig = ({ runMode }: { runMode: 'thorough' | 'intelligent' }): void
 
 export const compileSmokeCache = async (): Promise<void> => {
   rmSync(smokeCacheParent, { recursive: true, force: true });
-  mkdirSync(smokeCacheConfigDir, { recursive: true });
+  ensureDirSync(smokeCacheConfigDir);
   writeConfig({ runMode: 'thorough' });
 
   await new Promise<void>((resolve, reject) => {

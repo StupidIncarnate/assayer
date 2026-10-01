@@ -15,8 +15,8 @@
  * expect([...fileNames].sort()).toStrictEqual(surface.fileLeaves());
  * expect([...dirNames].sort()).toStrictEqual(surface.dirNames());
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative, sep } from '#gateway/node/path';
+import { readFileSync, walkFilesSync } from '#gateway/node/fs';
+import { basename, dirname, join, relative, sep } from '#gateway/node/path';
 import { RelPathStub, FolderNameStub } from '@assayer/shared/contracts';
 
 import { typescriptHarnessGateAdapter } from '../../../core/src/adapters/typescript/harness-gate/typescript-harness-gate-adapter';
@@ -30,7 +30,14 @@ const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 // bytes. A `*.harness.ts` that never registers stays a specimen, exactly as it stays an analysed target.
 const isAnalysed = (entry: { name: string; parentPath: string }): boolean =>
   !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
-  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name), 'utf8') });
+  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name)) });
+
+// Every `.ts` and `.tsx` file under the catalogue, as the name and parent folder the inclusion rules read.
+const catalogueFiles = (): { name: string; parentPath: string }[] =>
+  [
+    ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.ts' }),
+    ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.tsx' }),
+  ].map(({ path }) => ({ name: basename(path), parentPath: dirname(path) }));
 
 // The combined `.ts`/`.tsx` inclusion rule the header's own `ts N tsx M` counts apply separately — a
 // harness is never `.tsx` (CLAUDE.md: colocated harnesses are always `.ts`, even beside a `.tsx`
@@ -49,12 +56,12 @@ export const syntaxSurfaceHarness = (): {
   // Brand/root/repo prefix is stable; the branch token is the working-tree namespace, so it stays a
   // non-space wildcard.
   surfaceHeaderPattern: (): RegExp => {
-    const entries = readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true });
+    const entries = catalogueFiles();
     const tsCount = entries.filter(
-      (entry) => entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry),
+      (entry) => entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts') && isAnalysed(entry),
     ).length;
     const tsxCount = entries.filter(
-      (entry) => entry.isFile() && entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'),
+      (entry) => entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'),
     ).length;
     return new RegExp(`^Assayer \\| smoke-repo assayer/\\S+ \\| ts ${tsCount} tsx ${tsxCount}$`, 'u');
   },
@@ -63,8 +70,8 @@ export const syntaxSurfaceHarness = (): {
   // in-class.ts ×2, pure-statement.ts ×2), sorted, matching the tree the manifest relPaths build. Both
   // `.ts` and `.tsx` specimens are leaves, exactly as both feed the header's `ts N tsx M` counts.
   fileLeaves: (): ReturnType<typeof RelPathStub>[] =>
-    readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile() && isAnalysedSourceFile(entry))
+    catalogueFiles()
+      .filter((entry) => isAnalysedSourceFile(entry))
       .map((entry) => entry.name)
       .sort()
       .map((value) => RelPathStub({ value })),
@@ -77,8 +84,8 @@ export const syntaxSurfaceHarness = (): {
   // sorted to match the asserted [...dirNames].sort().
   dirNames: (): ReturnType<typeof FolderNameStub>[] => {
     const dirPaths = new Set(
-      readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-        .filter((entry) => entry.isFile() && isAnalysedSourceFile(entry))
+      catalogueFiles()
+        .filter((entry) => isAnalysedSourceFile(entry))
         .flatMap((entry) => {
           const segments = relative(SMOKE_REPO, entry.parentPath).split(sep);
           return [...segments.keys()].map((index) => segments.slice(0, index + 1).join(sep));
