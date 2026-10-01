@@ -41,7 +41,7 @@
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 import { undrivenEntryContract } from '@assayer/shared/contracts';
-import type { SymbolName, UndrivenEntry } from '@assayer/shared/contracts';
+import type { UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
@@ -52,7 +52,7 @@ export const undrivenProjectionTransformer = ({
   relPath,
 }: {
   walked: WalkFileResult;
-  undrivenModules: { name: SymbolName; cause: UndrivenCause; operand?: SymbolName }[];
+  undrivenModules: { name: string; cause: UndrivenCause; operand?: string }[];
   relPath?: string;
 }): UndrivenEntry[] => {
   const causeByName = new Map(undrivenModules.map((module) => [String(module.name), module]));

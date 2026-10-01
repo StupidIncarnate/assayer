@@ -15,10 +15,11 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { lineNumberContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
 
 import type { CallArg } from '../../contracts/call-site/call-site-contract';
 import { readCalleeLayerTransformer } from './read-callee-layer-transformer';
+import { callArgContract } from '../../contracts/call-site/call-site-contract';
 
 export const readCallArgsLayerTransformer = ({ args }: { args: Node[] }): CallArg[] =>
   args.map((arg): CallArg => {
@@ -26,7 +27,7 @@ export const readCallArgsLayerTransformer = ({ args }: { args: Node[] }): CallAr
       const [declaration, ...rest] = arg.getSymbol()?.getDeclarations() ?? [];
 
       if (declaration !== undefined && rest.length === 0 && Node.isParameterDeclaration(declaration)) {
-        return { kind: 'param-ref', paramName: symbolNameContract.parse(declaration.getName()) };
+        return callArgContract.parse({ kind: 'param-ref', paramName: declaration.getName() });
       }
 
       // A bare identifier the checker resolves to a nameable callee — an imported binding or a same-file

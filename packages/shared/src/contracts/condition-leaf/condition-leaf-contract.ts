@@ -63,16 +63,15 @@ import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 import { coverageContract } from '../coverage/coverage-contract';
 
 export const conditionLeafContract = z.object({
   kind: z.literal('leaf'),
   id: coverageContract.shape.id,
-  operandParamName: symbolNameContract.optional(),
-  operandPropertyPath: z.array(symbolNameContract).min(1).optional(),
-  operandTypeRef: symbolNameContract.optional(),
+  operandParamName: z.string().min(1).brand<'ConditionLeafOperandParamName'>().optional(),
+  operandPropertyPath: z.array(z.string().min(1).brand<'ConditionLeafOperandPropertyPath'>()).min(1).optional(),
+  operandTypeRef: z.string().min(1).brand<'ConditionLeafOperandTypeRef'>().optional(),
   operandEnvVarName: envVarNameContract.optional(),
   operandConstValue: representativeValueContract.optional(),
   operandConstLength: constLengthContract.optional(),

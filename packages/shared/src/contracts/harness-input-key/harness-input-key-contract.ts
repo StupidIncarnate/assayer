@@ -14,11 +14,10 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const harnessInputKeyContract = z.object({
-  entry: symbolNameContract,
-  param: symbolNameContract,
+  entry: z.string().min(1).brand<'HarnessInputKeyEntry'>(),
+  param: z.string().min(1).brand<'HarnessInputKeyParam'>(),
 });
 
 export type HarnessInputKey = z.infer<typeof harnessInputKeyContract>;

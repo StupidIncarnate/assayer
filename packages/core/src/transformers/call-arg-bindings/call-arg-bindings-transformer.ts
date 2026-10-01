@@ -17,7 +17,7 @@
  * callArgBindingsTransformer({ calleeParams, args });
  * // Returns { toCallerParam: Map<calleeParam, callerParam>, weldByParam: Map<calleeParam, value> }
  */
-import type { ParamDescriptor, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { CallArg } from '../../contracts/call-site/call-site-contract';
 
@@ -27,7 +27,7 @@ export const callArgBindingsTransformer = ({
 }: {
   calleeParams: ParamDescriptor[];
   args: CallArg[];
-}): { toCallerParam: Map<SymbolName, SymbolName>; weldByParam: Map<SymbolName, RepresentativeValue> } => ({
+}): { toCallerParam: Map<string, string>; weldByParam: Map<string, RepresentativeValue> } => ({
   toCallerParam: new Map(
     calleeParams.flatMap((param, index) => {
       const arg = args[index];

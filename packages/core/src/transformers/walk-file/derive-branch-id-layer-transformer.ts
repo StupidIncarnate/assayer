@@ -12,7 +12,7 @@
  */
 import type { IfStatement } from '#gateway/npm/ts-morph';
 
-import type { SymbolName, Coverage } from '@assayer/shared/contracts';
+import type { Coverage } from '@assayer/shared/contracts';
 
 import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
 import { projectNodeLayerTransformer } from './project-node-layer-transformer';
@@ -22,7 +22,7 @@ export const deriveBranchIdLayerTransformer = ({
   scopePath,
 }: {
   node: IfStatement;
-  scopePath: SymbolName[];
+  scopePath: string[];
 }): Coverage['id'] =>
   coverageIdTransformer({
     scopePath,

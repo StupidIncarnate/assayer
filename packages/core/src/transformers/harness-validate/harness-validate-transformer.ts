@@ -47,17 +47,7 @@
  * // Returns [] when every key still names a refused parameter of a compatible type, or one record per wrong key
  */
 import { columnNumberContract, lineNumberContract } from '@assayer/shared/contracts';
-import type {
-  ColumnNumber,
-  DeclaringScope,
-  EntrySignature,
-  HarnessInputKey,
-  LineNumber,
-  ParamDescriptor,
-  RelPath,
-  SymbolName,
-  TypeDescriptor,
-} from '@assayer/shared/contracts';
+import type { ColumnNumber, DeclaringScope, EntrySignature, HarnessInputKey, LineNumber, ParamDescriptor, RelPath, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { isTypeCompatibleGuard } from '../../guards/is-type-compatible/is-type-compatible-guard';
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
@@ -80,9 +70,9 @@ export const harnessValidateTransformer = ({
   keys: readonly HarnessInputKey[];
   entries: readonly EntrySignature[];
   declaringScopes: readonly DeclaringScope[];
-  suppliedTypes: readonly { entry: SymbolName; param: SymbolName; type: TypeDescriptor }[];
+  suppliedTypes: readonly { entry: string; param: string; type: TypeDescriptor }[];
 }): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[] => {
-  const callable: readonly { name: SymbolName; params: readonly ParamDescriptor[] }[] = [
+  const callable: readonly { name: string; params: readonly ParamDescriptor[] }[] = [
     ...entries.filter((entry) => entry.access.kind !== 'module'),
     ...declaringScopes,
   ];

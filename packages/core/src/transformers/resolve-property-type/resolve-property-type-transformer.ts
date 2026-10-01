@@ -16,14 +16,14 @@
  * });
  * // Returns { kind: 'number' }
  */
-import type { SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { TypeDescriptor } from '@assayer/shared/contracts';
 
 export const resolvePropertyTypeTransformer = ({
   type,
   path,
 }: {
   type: TypeDescriptor;
-  path: readonly SymbolName[];
+  path: readonly string[];
 }): TypeDescriptor | undefined => {
   const [head, ...rest] = path;
 

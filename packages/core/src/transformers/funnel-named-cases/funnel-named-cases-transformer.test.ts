@@ -1,4 +1,3 @@
-import { symbolNameContract } from '@assayer/shared/contracts';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
@@ -139,7 +138,7 @@ describe('funnelNamedCasesTransformer', () => {
           }),
         ],
       });
-      const harness = new Map([[symbolNameContract.parse('inner'), [symbolNameContract.parse('cb')]]]);
+      const harness = new Map([['inner', ['cb']]]);
 
       const result = funnelNamedCasesTransformer({ scope: outer, scopes: [outer, SINK_INNER], welds: new Map(), harness });
 
@@ -196,8 +195,8 @@ describe('funnelNamedCasesTransformer', () => {
       // reaches `inner` and `consumed` is `[]`. Both keys must be declared to close a single call chain
       // — the same requirement `harness-validate` enforces at compile time.
       const harness = new Map([
-        [symbolNameContract.parse('passthroughOuter'), [symbolNameContract.parse('sink')]],
-        [symbolNameContract.parse('inner'), [symbolNameContract.parse('cb')]],
+        ['passthroughOuter', ['sink']],
+        ['inner', ['cb']],
       ]);
 
       const result = funnelNamedCasesTransformer({

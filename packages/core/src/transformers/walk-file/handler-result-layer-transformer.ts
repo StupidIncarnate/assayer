@@ -14,15 +14,7 @@
  */
 import type { Node } from '#gateway/npm/ts-morph';
 
-import type {
-  BranchNode,
-  EnvRead,
-  ExitNode,
-  GlobalUse,
-  LineNumber,
-  ModuleEdge,
-  SymbolName,
-} from '@assayer/shared/contracts';
+import type { BranchNode, EnvRead, ExitNode, GlobalUse, LineNumber, ModuleEdge } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { DeclaredShape } from '../../contracts/declared-shape/declared-shape-contract';
@@ -46,7 +38,7 @@ export interface HandlerResult {
   /** The value uses this node made — loose, claimed by the enclosing scope on its own channel. */
   valueUses: ValueUse[];
   /** The exported top-level binding names this node declared — loose, claimed on its own channel. */
-  exportedBindings: SymbolName[];
+  exportedBindings: string[];
   nodes: WalkNode[];
   /** Where the instrumenter must wrap, keyed by the id the analyzer already derived. */
   probeSites: ProbeSite[];
@@ -96,7 +88,7 @@ export const handlerResultLayerTransformer = ({
   exits?: ExitNode[];
   calls?: CallSite[];
   valueUses?: ValueUse[];
-  exportedBindings?: SymbolName[];
+  exportedBindings?: string[];
   nodes?: WalkNode[];
   probeSites?: ProbeSite[];
   moduleEdges?: ModuleEdge[];

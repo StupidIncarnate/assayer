@@ -14,7 +14,7 @@
  * objectArrangeTransformer({ param: 'config', declaredType, demands, requirements, corrected: ['mode'] });
  * // Returns { unreachable: false, unfillable: false, properties: [{ name: 'mode', value: 'a' }, …] } — sorted by name
  */
-import type { ArrangeValue, ConditionLeaf, DeclaredType, PropertyDemand, SymbolName } from '@assayer/shared/contracts';
+import type { ArrangeValue, ConditionLeaf, DeclaredType, PropertyDemand } from '@assayer/shared/contracts';
 
 import { arrangeObjectPropertiesTransformer } from '../arrange-object-properties/arrange-object-properties-transformer';
 
@@ -25,12 +25,12 @@ export const objectArrangeTransformer = ({
   requirements,
   corrected,
 }: {
-  param: SymbolName;
+  param: string;
   declaredType: DeclaredType;
   demands: PropertyDemand[];
   requirements: { leaf: ConditionLeaf; want: boolean }[];
-  corrected: readonly SymbolName[];
-}): { unreachable: boolean; unfillable: boolean; properties: { name: SymbolName; value: ArrangeValue }[] } => {
+  corrected: readonly string[];
+}): { unreachable: boolean; unfillable: boolean; properties: { name: string; value: ArrangeValue }[] } => {
   const own = requirements.filter(
     (requirement) =>
       requirement.leaf.operandParamName !== undefined &&

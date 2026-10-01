@@ -3,7 +3,6 @@ import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
 import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadGlobalDeclarationBroker } from './external-signature-read-global-declaration-broker';
@@ -27,7 +26,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -51,7 +50,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'env' }), called: false },
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -77,7 +76,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'hrtime' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'hrtime', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -104,7 +103,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'release' }), called: false },
+        reference: { kind: 'global', name: 'process', member: 'release', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -128,7 +127,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: SymbolNameStub({ value: 'join' }), called: true },
+        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: 'join', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -155,7 +154,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: SymbolNameStub({ value: 'sep' }), called: false },
+        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: 'sep', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -179,7 +178,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'zzzNoSuchGlobal' }), member: SymbolNameStub({ value: 'foo' }), called: true },
+        reference: { kind: 'global', name: 'zzzNoSuchGlobal', member: 'foo', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 

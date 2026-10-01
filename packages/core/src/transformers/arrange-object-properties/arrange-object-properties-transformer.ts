@@ -36,7 +36,7 @@
  * });
  * // Returns { unreachable: false, unfillable: false, properties: [{ name: 'db', value: { retry: 3 } }] }
  */
-import type { ArrangeValue, ConditionLeaf, PropertyDemand, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ArrangeValue, ConditionLeaf, PropertyDemand, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
@@ -57,11 +57,11 @@ export const arrangeObjectPropertiesTransformer = ({
   requirements,
   corrected,
 }: {
-  properties: readonly { name: SymbolName; type: TypeDescriptor }[];
+  properties: readonly { name: string; type: TypeDescriptor }[];
   demands: readonly PropertyDemand[];
   requirements: readonly { leaf: ConditionLeaf; want: boolean }[];
   corrected: ReadonlySet<string>;
-}): { unreachable: boolean; unfillable: boolean; properties: { name: SymbolName; value: ArrangeValue }[] } => {
+}): { unreachable: boolean; unfillable: boolean; properties: { name: string; value: ArrangeValue }[] } => {
   const picks = [...properties]
     .sort((a, b) => (String(a.name) < String(b.name) ? -1 : 1))
     .map((property) => {

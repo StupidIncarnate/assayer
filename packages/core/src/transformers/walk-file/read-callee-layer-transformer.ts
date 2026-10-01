@@ -25,9 +25,10 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { lineNumberContract, moduleSpecifierContract, symbolNameContract } from '@assayer/shared/contracts';
+import { lineNumberContract, moduleSpecifierContract } from '@assayer/shared/contracts';
 
 import type { CalleeLink } from '../../contracts/call-site/call-site-contract';
+import { calleeLinkContract } from '../../contracts/call-site/call-site-contract';
 
 const IMPORT_DEFAULT_NAME = 'default';
 
@@ -43,21 +44,21 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
   }
 
   if (Node.isImportSpecifier(declaration)) {
-    return {
+    return calleeLinkContract.parse({
       target: 'import',
       specifier: moduleSpecifierContract.parse(declaration.getImportDeclaration().getModuleSpecifierValue()),
-      importedName: symbolNameContract.parse(declaration.getName()),
-    };
+      importedName: declaration.getName(),
+    });
   }
 
   const importParent = declaration.getParent();
 
   if (Node.isImportClause(declaration) && Node.isImportDeclaration(importParent)) {
-    return {
+    return calleeLinkContract.parse({
       target: 'import',
       specifier: moduleSpecifierContract.parse(importParent.getModuleSpecifierValue()),
-      importedName: symbolNameContract.parse(IMPORT_DEFAULT_NAME),
-    };
+      importedName: IMPORT_DEFAULT_NAME,
+    });
   }
 
   // A `const`/`let` bound to an arrow or function expression declares a function exactly as a
@@ -79,9 +80,9 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
     return { target: 'unresolved' };
   }
 
-  return {
+  return calleeLinkContract.parse({
     target: 'local',
-    name: symbolNameContract.parse(definition.name),
+    name: definition.name,
     startLine: lineNumberContract.parse(definition.node.getStartLineNumber()),
-  };
+  });
 };

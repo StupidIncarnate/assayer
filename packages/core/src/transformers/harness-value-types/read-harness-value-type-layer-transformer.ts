@@ -22,13 +22,12 @@
  */
 import type { Type } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
+import { representativeValueContract, typeTextContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
 
-export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Type; seen?: ReadonlySet<SymbolName> }): TypeFact => {
-  const onPath = seen ?? new Set<SymbolName>();
+export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Type; seen?: ReadonlySet<string> }): TypeFact => {
+  const onPath = seen ?? new Set<string>();
 
   if (type.isString()) {
     return { flavor: 'string' };
@@ -73,7 +72,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
     // types, never a value expression). Neither is a real declared name.
     const rawName = type.getSymbol()?.getName();
     const typeName =
-      rawName === undefined || rawName === '__type' || rawName === '__object' ? undefined : symbolNameContract.parse(rawName);
+      rawName === undefined || rawName === '__type' || rawName === '__object' ? undefined : rawName;
 
     // MARKED, because only the reader knows the empty property list is where it stopped rather than
     // what the type declares.
@@ -85,11 +84,11 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
     const location = type.getSymbol()?.getDeclarations()[0];
     const properties = type
       .getProperties()
-      .map((symbol): { name: SymbolName; fact: TypeFact } => {
+      .map((symbol): { name: string; fact: TypeFact } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
 
         return {
-          name: symbolNameContract.parse(symbol.getName()),
+          name: symbol.getName(),
           fact:
             declaration === undefined
               ? { flavor: 'other', text: typeTextContract.parse('unknown') }

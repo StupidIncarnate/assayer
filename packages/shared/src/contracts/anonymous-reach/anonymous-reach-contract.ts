@@ -18,14 +18,13 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const anonymousReachContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('argument'),
-    receiver: symbolNameContract.optional(),
-    method: symbolNameContract.optional(),
-    callee: symbolNameContract.optional(),
+    receiver: z.string().min(1).brand<'AnonymousReachReceiver'>().optional(),
+    method: z.string().min(1).brand<'AnonymousReachMethod'>().optional(),
+    callee: z.string().min(1).brand<'AnonymousReachCallee'>().optional(),
   }),
   z.object({ kind: z.literal('return') }),
   z.object({ kind: z.literal('invocation') }),

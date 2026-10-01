@@ -12,7 +12,7 @@
  * // Returns { usable: true, signature: { params, returnType } } or { usable: false }
  */
 import { externalSignatureContract } from '@assayer/shared/contracts';
-import type { ExternalSignature, SymbolName } from '@assayer/shared/contracts';
+import type { ExternalSignature } from '@assayer/shared/contracts';
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
@@ -27,7 +27,7 @@ export const externalSignatureReadBroker = async ({
 }: {
   tsConfigFilePath: FilePath;
   dtsPath: FilePath;
-  exportName: SymbolName;
+  exportName: string;
   cacheDir: string;
 }): Promise<{ usable: true; signature: ExternalSignature } | { usable: false }> => {
   const dtsContent = String((await readFile(String(dtsPath))));

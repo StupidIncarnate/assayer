@@ -21,8 +21,6 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { VariableStatement } from '#gateway/npm/ts-morph';
 
-import { symbolNameContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
 
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { valueUseContract } from '../../contracts/value-use/value-use-contract';
@@ -84,13 +82,13 @@ export const handleVariableLayerTransformer = ({
   // its single export instead of the internal `*module*`. An identifier's text IS its name (§5.1); a
   // binding pattern contributes none, and a several-binding or unexported statement is left to fall
   // back to the file basename downstream.
-  const exportedBindings: SymbolName[] = node.hasExportKeyword()
+  const exportedBindings: string[] = node.hasExportKeyword()
     ? node
         .getDeclarationList()
         .getDeclarations()
-        .flatMap((declaration): SymbolName[] => {
+        .flatMap((declaration): string[] => {
           const nameNode = declaration.getNameNode();
-          return Node.isIdentifier(nameNode) ? [symbolNameContract.parse(nameNode.getText())] : [];
+          return Node.isIdentifier(nameNode) ? [nameNode.getText()] : [];
         })
     : [];
 

@@ -13,7 +13,7 @@ import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const mapNodeContract = z.object({
   kind: mapNodeKindContract,
-  name: z.string().min(1).brand<'SymbolName'>().optional(),
+  name: z.string().min(1).brand<'MapNodeName'>().optional(),
   startLine: lineNumberContract,
   endLine: lineNumberContract,
   meta: z.record(z.string(), z.unknown()).brand<'PluginMetaBag'>().optional(),

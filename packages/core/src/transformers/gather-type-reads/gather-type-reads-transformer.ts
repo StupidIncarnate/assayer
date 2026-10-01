@@ -17,14 +17,7 @@
  * gatherTypeReadsTransformer({ blobs, resolvedIndex });
  * // Returns [{ definitionRelPath, typeName, declaredType, readers: [relPath], leaves: [modeLeaf] }, …]
  */
-import type {
-  CompiledFileBlob,
-  ConditionLeaf,
-  DeclaredType,
-  RelPath,
-  ResolvedIndex,
-  SymbolName,
-} from '@assayer/shared/contracts';
+import type { CompiledFileBlob, ConditionLeaf, DeclaredType, RelPath, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
 
@@ -34,7 +27,7 @@ export const gatherTypeReadsTransformer = ({
 }: {
   blobs: CompiledFileBlob[];
   resolvedIndex: ResolvedIndex;
-}): { definitionRelPath: RelPath; typeName: SymbolName; declaredType: DeclaredType; readers: RelPath[]; leaves: ConditionLeaf[] }[] => {
+}): { definitionRelPath: RelPath; typeName: string; declaredType: DeclaredType; readers: RelPath[]; leaves: ConditionLeaf[] }[] => {
   // Every declared object type is a stubbable group, keyed by its definition site. The declaring file's
   // own descriptor is the source of the FULL property list; a type no file reads still yields a group.
   const groups = blobs.flatMap((blob) =>

@@ -18,8 +18,8 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { CaseClause, DefaultClause, SwitchStatement } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, SymbolName, Coverage } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
+import type { RepresentativeValue, Coverage } from '@assayer/shared/contracts';
 
 import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
 import { literalTokenTransformer } from '../literal-token/literal-token-transformer';
@@ -33,7 +33,7 @@ export interface SwitchCaseInfo {
 }
 
 export interface DesugaredSwitch {
-  discName?: SymbolName;
+  discName?: string;
   discNode: Node;
   caseInfos: SwitchCaseInfo[];
   defaultClause?: DefaultClause;
@@ -44,10 +44,10 @@ export const desugarSwitchLayerTransformer = ({
   scopePath,
 }: {
   switchStatement: SwitchStatement;
-  scopePath: SymbolName[];
+  scopePath: string[];
 }): DesugaredSwitch => {
   const discNode = switchStatement.getExpression();
-  const discName = Node.isIdentifier(discNode) ? symbolNameContract.parse(discNode.getText()) : undefined;
+  const discName = Node.isIdentifier(discNode) ? discNode.getText() : undefined;
   const discProjection = projectNodeLayerTransformer({ node: discNode });
   const clauses = switchStatement.getClauses();
 

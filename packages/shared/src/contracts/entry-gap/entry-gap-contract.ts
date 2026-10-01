@@ -24,10 +24,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const entryGapContract = z.object({
-  name: symbolNameContract,
+  name: z.string().min(1).brand<'EntryGapName'>(),
   reason: z.string().min(1).brand<'GapReason'>(),
 });
 

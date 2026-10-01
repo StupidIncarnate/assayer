@@ -22,7 +22,6 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { ClassDeclaration, ClassExpression } from '#gateway/npm/ts-morph';
 
-import { symbolNameContract } from '@assayer/shared/contracts';
 
 import { declaredShapeContract } from '../../contracts/declared-shape/declared-shape-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
@@ -39,7 +38,7 @@ export const handleClassLayerTransformer = ({
   node: ClassDeclaration | ClassExpression;
   context: WalkContext;
 }): ReturnType<typeof handlerResultLayerTransformer> => {
-  const name = symbolNameContract.parse(node.getName() ?? 'default');
+  const name = (node.getName() ?? 'default');
   const exported = Node.isClassDeclaration(node) ? node.isExported() : context.exported;
 
   // No constructor at all, or one every parameter of which can be omitted, means an instance costs

@@ -16,12 +16,11 @@
 import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '../line-number/line-number-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { syntaxKindNameContract } from '../syntax-kind-name/syntax-kind-name-contract';
 
 export const darkSpotContract = z.object({
   kind: syntaxKindNameContract,
-  scopePath: z.array(symbolNameContract),
+  scopePath: z.array(z.string().min(1).brand<'DarkSpotScopePath'>()),
   reason: z.enum(['unhandled-syntax']).brand<'DarkSpotReason'>(),
   startLine: lineNumberContract,
   endLine: lineNumberContract,

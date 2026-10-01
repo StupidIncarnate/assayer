@@ -20,7 +20,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { entryLabelContract } from '../entry-label/entry-label-contract';
 import { entryAccessContract } from '../entry-access/entry-access-contract';
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
@@ -28,8 +27,8 @@ import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contr
 import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const entrySignatureContract = z.object({
-  name: symbolNameContract,
-  scopePath: z.array(symbolNameContract),
+  name: z.string().min(1).brand<'EntrySignatureName'>(),
+  scopePath: z.array(z.string().min(1).brand<'EntrySignatureScopePath'>()),
   params: z.array(paramDescriptorContract),
   returnType: typeDescriptorContract,
   line: lineNumberContract,
@@ -39,7 +38,7 @@ export const entrySignatureContract = z.object({
   // one exported value binding; a side-effect-only module or one with several exports has none, and
   // the surface falls back to the file basename. Never keys identity (that stays `*module*`-rooted in
   // `scopePath`) — DISPLAY only. Absent for function/method entries, which show `name(params)`.
-  exportName: symbolNameContract.optional(),
+  exportName: z.string().min(1).brand<'EntrySignatureExportName'>().optional(),
   // The human label for an ANONYMOUS entry — the callsite that reaches it
   // (`rescale › items.map((n) => …) L2`), since `name` is its structural projection and a surface
   // that printed that would be printing a cache key. Present only for a scope with no name to

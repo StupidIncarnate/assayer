@@ -12,12 +12,12 @@
  * // Returns 'Classifier/classify/if:id:value' (branded CoverageId)
  */
 import { coverageContract } from '@assayer/shared/contracts';
-import type { SymbolName, Coverage } from '@assayer/shared/contracts';
+import type { Coverage } from '@assayer/shared/contracts';
 
 export const coverageIdTransformer = ({
   scopePath,
   segment,
 }: {
-  scopePath: SymbolName[];
+  scopePath: string[];
   segment: string;
 }): Coverage['id'] => coverageContract.shape.id.parse([...scopePath, segment].join('/'));

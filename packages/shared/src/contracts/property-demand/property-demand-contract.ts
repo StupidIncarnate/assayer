@@ -27,11 +27,9 @@ import { z } from '#gateway/npm/zod';
 import { arrayCardinalityContract } from '../array-cardinality/array-cardinality-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
-import type { SymbolName } from '../symbol-name/symbol-name-contract';
 
 export interface PropertyDemand {
-  name: SymbolName;
+  name: string;
   demand:
     | { kind: 'demanded'; values: RepresentativeValue[]; cardinality?: z.infer<typeof arrayCardinalityContract> | undefined }
     | { kind: 'unknown' }
@@ -40,7 +38,7 @@ export interface PropertyDemand {
 
 export const propertyDemandContract: z.ZodType<PropertyDemand> = z.lazy(() =>
   z.object({
-    name: symbolNameContract,
+    name: z.string().min(1).brand<'PropertyDemandName'>(),
     demand: z.discriminatedUnion('kind', [
       z.object({
         kind: z.literal('demanded'),

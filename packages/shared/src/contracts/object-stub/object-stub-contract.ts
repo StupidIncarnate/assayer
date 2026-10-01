@@ -20,13 +20,12 @@ import { z } from '#gateway/npm/zod';
 
 import { propertyDemandContract } from '../property-demand/property-demand-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
 export const objectStubContract = z.object({
   key: stubEntryContract.shape.key,
   definitionRelPath: relPathContract,
-  typeName: symbolNameContract,
+  typeName: z.string().min(1).brand<'ObjectStubTypeName'>(),
   properties: z.array(propertyDemandContract),
   readers: z.array(relPathContract),
 });

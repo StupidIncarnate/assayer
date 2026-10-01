@@ -25,7 +25,6 @@ import type { EntryLabel } from '../../contracts/entry-label/entry-label-contrac
 import type { AnonymousReach } from '../../contracts/anonymous-reach/anonymous-reach-contract';
 import type { LineNumber } from '../../contracts/line-number/line-number-contract';
 import type { ParamDescriptor } from '../../contracts/param-descriptor/param-descriptor-contract';
-import type { SymbolName } from '../../contracts/symbol-name/symbol-name-contract';
 
 export const anonymousEntryLabelTransformer = ({
   host,
@@ -33,7 +32,7 @@ export const anonymousEntryLabelTransformer = ({
   params,
   line,
 }: {
-  host?: SymbolName;
+  host?: string;
   reach: AnonymousReach;
   params: readonly ParamDescriptor[];
   line: LineNumber;

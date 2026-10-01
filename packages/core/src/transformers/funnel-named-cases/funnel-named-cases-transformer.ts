@@ -44,7 +44,7 @@
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
 import { derivedTestCaseContract, entryLabelContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumber, ParamDescriptor, RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumber, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -62,18 +62,18 @@ export const funnelNamedCasesTransformer = ({
 }: {
   scope: ScopeRecord;
   scopes: ScopeRecord[];
-  welds: Map<SymbolName, RepresentativeValue>;
-  harness?: ReadonlyMap<SymbolName, readonly SymbolName[]>;
+  welds: Map<string, RepresentativeValue>;
+  harness?: ReadonlyMap<string, readonly string[]>;
 }): {
   cases: DerivedTestCase[];
   unreachable: {
     line: LineNumber;
     guardLines: LineNumber[];
-    welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
-    displayName: SymbolName;
+    welded?: { line: LineNumber; operand?: string; value?: RepresentativeValue; length?: ConstLength };
+    displayName: string;
   }[];
-  consumed: { name: SymbolName; startLine: LineNumber; params: ParamDescriptor[] }[];
-  unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[];
+  consumed: { name: string; startLine: LineNumber; params: ParamDescriptor[] }[];
+  unfillable: { param: string; type: TypeText; owner: EntryLabel }[];
 } => {
   // A harness spec for THIS hop alone — the map is consulted by this scope's own name, never a
   // caller's, so a private's harness never leaks onto the surface's own derivation or a sibling private.
@@ -106,8 +106,8 @@ export const funnelNamedCasesTransformer = ({
       return {
         cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
         unreachable: [],
-        consumed: [] as { name: SymbolName; startLine: LineNumber; params: ParamDescriptor[] }[],
-        unfillable: [] as { param: SymbolName; type: TypeText; owner: EntryLabel }[],
+        consumed: [] as { name: string; startLine: LineNumber; params: ParamDescriptor[] }[],
+        unfillable: [] as { param: string; type: TypeText; owner: EntryLabel }[],
       };
     }
 
@@ -126,7 +126,7 @@ export const funnelNamedCasesTransformer = ({
 
     // The private params the surface STEERS: passed straight through from a surface param that is not
     // itself welded. Each maps back onto that surface param when the private's cases rebase up.
-    const calleeToScope = new Map<SymbolName, SymbolName>();
+    const calleeToScope = new Map<string, string>();
     bindings.toCallerParam.forEach((callerParam, calleeParam) => {
       if (!welds.has(callerParam)) {
         calleeToScope.set(calleeParam, callerParam);

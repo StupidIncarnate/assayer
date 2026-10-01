@@ -1,11 +1,10 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { desugarSwitchLayerTransformer } from './desugar-switch-layer-transformer';
 import { desugarSwitchLayerTransformerProxy } from './desugar-switch-layer-transformer.proxy';
 
-const CLASSIFY_SCOPE = [SymbolNameStub({ value: 'classify' })];
+const CLASSIFY_SCOPE = ['classify'];
 
 const STRING_SWITCH_SOURCE =
   "function routeLabel(method: string) {\n  switch (method) {\n    case 'get':\n      return 'Fetch';\n    case 'post':\n      return 'Create';\n    default:\n      return 'Other';\n  }\n}\n";

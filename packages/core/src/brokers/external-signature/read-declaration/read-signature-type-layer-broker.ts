@@ -45,8 +45,8 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
-import type { SymbolName, TemplateText } from '@assayer/shared/contracts';
+import { representativeValueContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
+import type { TemplateText } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../../contracts/type-fact/type-fact-contract';
 
@@ -57,9 +57,9 @@ export const readSignatureTypeLayerBroker = ({
 }: {
   type: Type;
   typeNode?: TypeNode | undefined;
-  seen?: ReadonlySet<SymbolName>;
+  seen?: ReadonlySet<string>;
 }): TypeFact => {
-  const onPath = seen ?? new Set<SymbolName>();
+  const onPath = seen ?? new Set<string>();
 
   if (type.isString()) {
     return { flavor: 'string' };
@@ -187,7 +187,7 @@ export const readSignatureTypeLayerBroker = ({
     const rawName = type.getSymbol()?.getName();
     const aliasName = type.getAliasSymbol()?.getName();
     const declaredName = rawName === undefined || rawName === '__type' ? aliasName : rawName;
-    const typeName = declaredName === undefined ? undefined : symbolNameContract.parse(declaredName);
+    const typeName = declaredName === undefined ? undefined : declaredName;
 
     // MARKED, because only the reader knows the empty property list is where it stopped rather than
     // what the type declares.
@@ -199,7 +199,7 @@ export const readSignatureTypeLayerBroker = ({
     const location = type.getSymbol()?.getDeclarations()[0];
     const properties = type
       .getProperties()
-      .map((symbol): { name: SymbolName; fact: TypeFact; optional?: boolean } => {
+      .map((symbol): { name: string; fact: TypeFact; optional?: boolean } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
         // A property with no declaration at all, and no owning type symbol to fall back to either,
         // has nowhere for the reader to look up a type. `unknown` is the honest answer, not a fallback
@@ -216,7 +216,7 @@ export const readSignatureTypeLayerBroker = ({
         const propertyNode = propertyDeclaration?.getTypeNode();
 
         return {
-          name: symbolNameContract.parse(symbol.getName()),
+          name: symbol.getName(),
           fact:
             declaration === undefined
               ? { flavor: 'other', text: typeTextContract.parse('unknown') }

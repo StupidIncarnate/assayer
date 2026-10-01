@@ -56,19 +56,8 @@
  * // Returns { cases: [{ reachesPath, arrange, salient }, …], unreachableExits: [{ line, guardLines }, …],
  * //   undrivenBranches: [{ line, operand? }, …], unfillable: [{ param, type }, …] }
  */
-import { derivedTestCaseContract, symbolNameContract } from '@assayer/shared/contracts';
-import type {
-  BranchNode,
-  ConditionNode,
-  ConstLength,
-  DerivedTestCase,
-  ExitNode,
-  LineNumber,
-  ParamDescriptor,
-  RepresentativeValue,
-  SymbolName,
-  TypeText,
-} from '@assayer/shared/contracts';
+import { derivedTestCaseContract } from '@assayer/shared/contracts';
+import type { BranchNode, ConditionNode, ConstLength, DerivedTestCase, ExitNode, LineNumber, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
 
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
@@ -94,16 +83,16 @@ export const deriveCasesTransformer = ({
   exits: ExitNode[];
   envDrivable: boolean;
   returnPredicate?: ConditionNode;
-  harness?: { entry: SymbolName; params: readonly SymbolName[] } | undefined;
+  harness?: { entry: string; params: readonly string[] } | undefined;
 }): {
   cases: DerivedTestCase[];
   unreachableExits: {
     line: LineNumber;
     guardLines: LineNumber[];
-    welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
+    welded?: { line: LineNumber; operand?: string; value?: RepresentativeValue; length?: ConstLength };
   }[];
-  undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: SymbolName }[];
-  unfillable: { param: SymbolName; type: TypeText }[];
+  undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: string }[];
+  unfillable: { param: string; type: TypeText }[];
 } => {
   const lineByBranch = new Map(branches.map((branch) => [branch.coverageId, branch.startLine]));
   // The parameters a CALL supplies — the declared list minus the trailing tail no caller owes and no
@@ -224,9 +213,7 @@ export const deriveCasesTransformer = ({
           ? undefined
           : leaf.operandPropertyPath === undefined
             ? leaf.operandParamName
-            : symbolNameContract.parse(
-                `${String(leaf.operandParamName)}.${leaf.operandPropertyPath.map((member) => String(member)).join('.')}`,
-              ),
+            : `${String(leaf.operandParamName)}.${leaf.operandPropertyPath.map((member) => String(member)).join('.')}`,
       )
       .find((name) => name !== undefined);
 

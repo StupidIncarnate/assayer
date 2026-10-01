@@ -1,5 +1,4 @@
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadBroker } from './external-signature-read-broker';
@@ -23,7 +22,7 @@ describe('externalSignatureReadBroker', () => {
       const result = await externalSignatureReadBroker({
         tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
         dtsPath: FilePathStub({ value: '/repo/node_modules/pkg/index.d.ts' }),
-        exportName: SymbolNameStub({ value: 'greet' }),
+        exportName: 'greet',
         cacheDir: '/repo/.assayer/cache',
       });
 
@@ -48,7 +47,7 @@ describe('externalSignatureReadBroker', () => {
       const result = await externalSignatureReadBroker({
         tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
         dtsPath: FilePathStub({ value: '/repo/node_modules/pkg/index.d.ts' }),
-        exportName: SymbolNameStub({ value: 'greet' }),
+        exportName: 'greet',
         cacheDir: '/repo/.assayer/cache',
       });
 
@@ -71,7 +70,7 @@ describe('externalSignatureReadBroker', () => {
       const result = await externalSignatureReadBroker({
         tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
         dtsPath: FilePathStub({ value: '/repo/node_modules/pkg/index.d.ts' }),
-        exportName: SymbolNameStub({ value: 'config' }),
+        exportName: 'config',
         cacheDir: '/repo/.assayer/cache',
       });
 

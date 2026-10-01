@@ -36,8 +36,6 @@ import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
-import type { SymbolName } from '../symbol-name/symbol-name-contract';
 import { templateTextContract } from '../template-text/template-text-contract';
 import type { TemplateText } from '../template-text/template-text-contract';
 import { typeTextContract } from '../type-text/type-text-contract';
@@ -75,9 +73,9 @@ export type TypeDescriptor =
    */
   | {
       kind: 'object';
-      typeName?: SymbolName | undefined;
+      typeName?: string | undefined;
       truncated?: boolean | undefined;
-      properties: { name: SymbolName; type: TypeDescriptor; optional?: boolean | undefined }[];
+      properties: { name: string; type: TypeDescriptor; optional?: boolean | undefined }[];
     }
   | { kind: 'callable'; text: TypeText }
   /**
@@ -90,7 +88,7 @@ export type TypeDescriptor =
    * `typeArgs` carries the reference's type ARGUMENTS in order, so `Box<string>` says what the
    * declaration's `T` stands for. A generic declaration denotes nothing constructible without them.
    */
-  | { kind: 'unknown'; text: TypeText; typeRef?: SymbolName | undefined; typeArgs?: TypeDescriptor[] | undefined };
+  | { kind: 'unknown'; text: TypeText; typeRef?: string | undefined; typeArgs?: TypeDescriptor[] | undefined };
 
 export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
   z.discriminatedUnion('kind', [
@@ -104,17 +102,17 @@ export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
     z.object({ kind: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeDescriptorContract) }),
     z.object({
       kind: z.literal('object'),
-      typeName: symbolNameContract.optional(),
+      typeName: z.string().min(1).brand<'TypeDescriptorTypeName'>().optional(),
       truncated: z.boolean().optional(),
       properties: z.array(
-        z.object({ name: symbolNameContract, type: typeDescriptorContract, optional: z.boolean().optional() }),
+        z.object({ name: z.string().min(1).brand<'TypeDescriptorPropertiesName'>(), type: typeDescriptorContract, optional: z.boolean().optional() }),
       ),
     }),
     z.object({ kind: z.literal('callable'), text: typeTextContract }),
     z.object({
       kind: z.literal('unknown'),
       text: typeTextContract,
-      typeRef: symbolNameContract.optional(),
+      typeRef: z.string().min(1).brand<'TypeDescriptorTypeRef'>().optional(),
       typeArgs: z.array(typeDescriptorContract).optional(),
     }),
   ]),

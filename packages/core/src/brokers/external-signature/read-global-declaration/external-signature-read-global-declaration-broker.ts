@@ -27,15 +27,15 @@ import { dirname, join as joinPath } from '#gateway/node/path';
 import { Node, Project } from '#gateway/npm/ts-morph';
 
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
-import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ExternalSignature, ModuleSpecifier, TypeDescriptor } from '@assayer/shared/contracts';
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { readGlobalTypeLayerBroker } from './read-global-type-layer-broker';
 
 type GlobalReference =
-  | { kind: 'global'; name: SymbolName; member?: SymbolName; called: boolean }
-  | { kind: 'builtin'; specifier: ModuleSpecifier; importedName: SymbolName; called: boolean };
+  | { kind: 'global'; name: string; member?: string; called: boolean }
+  | { kind: 'builtin'; specifier: ModuleSpecifier; importedName: string; called: boolean };
 
 // `declText` is the FULL TEXT of the `.d.ts` the type was declared in — carried out of ts-morph (which
 // holds it in memory even for the standard `lib.*.d.ts`, whose on-disk path is a virtual one no fs read

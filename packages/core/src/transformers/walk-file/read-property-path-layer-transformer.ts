@@ -15,19 +15,17 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { symbolNameContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
 
 export interface PropertyPathReadout {
   root: Node;
-  path: SymbolName[];
+  path: string[];
 }
 
 export const readPropertyPathLayerTransformer = ({ node }: { node: Node }): PropertyPathReadout => {
   if (Node.isPropertyAccessExpression(node)) {
     const inner = readPropertyPathLayerTransformer({ node: node.getExpression() });
 
-    return { root: inner.root, path: [...inner.path, symbolNameContract.parse(node.getName())] };
+    return { root: inner.root, path: [...inner.path, node.getName()] };
   }
 
   return { root: node, path: [] };

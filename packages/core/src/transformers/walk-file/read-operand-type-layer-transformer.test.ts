@@ -1,6 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { readOperandTypeLayerTransformer } from './read-operand-type-layer-transformer';
@@ -42,7 +41,7 @@ describe('readOperandTypeLayerTransformer', () => {
       const result = readOperandTypeLayerTransformer({
         node,
         context: NUMBER_PARAM_CONTEXT,
-        name: SymbolNameStub({ value: 'value' }),
+        name: 'value',
       });
 
       expect(result).toStrictEqual({ kind: 'number' });
@@ -60,7 +59,7 @@ describe('readOperandTypeLayerTransformer', () => {
       const result = readOperandTypeLayerTransformer({
         node,
         context: UNION_PARAM_CONTEXT,
-        name: SymbolNameStub({ value: 'method' }),
+        name: 'method',
       });
 
       expect(result).toStrictEqual({
@@ -83,7 +82,7 @@ describe('readOperandTypeLayerTransformer', () => {
       const result = readOperandTypeLayerTransformer({
         node,
         context: NUMBER_PARAM_CONTEXT,
-        name: SymbolNameStub({ value: 'other' }),
+        name: 'other',
       });
 
       expect(result).toStrictEqual({ kind: 'string' });
@@ -109,7 +108,7 @@ describe('readOperandTypeLayerTransformer', () => {
       const result = readOperandTypeLayerTransformer({
         node,
         context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false }),
-        name: SymbolNameStub({ value: 'value' }),
+        name: 'value',
       });
 
       expect(result).toStrictEqual({ kind: 'number' });
@@ -127,7 +126,7 @@ describe('readOperandTypeLayerTransformer', () => {
       const result = readOperandTypeLayerTransformer({
         node,
         context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false }),
-        name: SymbolNameStub({ value: 'method' }),
+        name: 'method',
       });
 
       expect(result).toStrictEqual({ kind: 'string' });

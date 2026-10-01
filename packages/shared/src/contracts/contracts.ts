@@ -85,7 +85,6 @@ export * from './type-descriptor/type-descriptor-contract';
 
 export * from './declared-type/declared-type-contract';
 
-export * from './symbol-name/symbol-name-contract';
 
 export * from './module-specifier/module-specifier-contract';
 

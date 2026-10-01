@@ -11,15 +11,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import {
-  branchNodeContract,
-  envReadContract,
-  exitNodeContract,
-  globalUseContract,
-  lineNumberContract,
-  moduleEdgeContract,
-  symbolNameContract,
-} from '@assayer/shared/contracts';
+import { branchNodeContract, envReadContract, exitNodeContract, globalUseContract, lineNumberContract, moduleEdgeContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
 import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
@@ -41,7 +33,7 @@ export const walkFactsContract = z.object({
   looseValueUses: z.array(valueUseContract),
   // Loose on its own channel: an exported top-level binding name belongs to the nearest enclosing scope
   // (the module, since exports are top-level) and is claimed on the way back up.
-  looseExportedBindings: z.array(symbolNameContract),
+  looseExportedBindings: z.array(z.string().min(1).brand<'WalkFactsLooseExportedBindings'>()),
   nodes: z.array(walkNodeContract),
   // Flat like `nodes`, not loose like branches/exits: a probe site is a position in the FILE, so no
   // scope ever claims it.

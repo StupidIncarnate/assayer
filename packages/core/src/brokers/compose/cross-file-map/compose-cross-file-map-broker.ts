@@ -21,7 +21,7 @@
  * // Returns the FileAnalysis with each cross-file map host's cases folded to the sibling callee's branches
  */
 import { fileAnalysisContract } from '@assayer/shared/contracts';
-import type { FileAnalysis, SymbolName } from '@assayer/shared/contracts';
+import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -79,7 +79,7 @@ export const composeCrossFileMapBroker = ({
   // Grouped by the host each callee maps into, in first-seen order — a host mapping SEVERAL imported
   // callees over distinct array params funnels them ALL into ONE case set (the cartesian `funnel-cases`
   // builds), never one funnel per callee colliding on the same host.
-  const groups: { host: ScopeRecord; callbacks: { callback: ScopeRecord; arrayParam: SymbolName }[] }[] = [];
+  const groups: { host: ScopeRecord; callbacks: { callback: ScopeRecord; arrayParam: string }[] }[] = [];
   resolved.forEach((entry) => {
     const existing = groups.find((group) => group.host === entry.host);
 

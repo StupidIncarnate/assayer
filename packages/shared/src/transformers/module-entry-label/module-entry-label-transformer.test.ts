@@ -1,11 +1,10 @@
 import { moduleEntryLabelTransformer } from './module-entry-label-transformer';
-import { SymbolNameStub } from '../../contracts/symbol-name/symbol-name.stub';
 
 describe('moduleEntryLabelTransformer', () => {
   describe('a module with one exported binding', () => {
     it('VALID: {exportName: message} => the export name, never the file', () => {
       const result = moduleEntryLabelTransformer({
-        exportName: SymbolNameStub({ value: 'message' }),
+        exportName: 'message',
         relPath: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts',
       });
 

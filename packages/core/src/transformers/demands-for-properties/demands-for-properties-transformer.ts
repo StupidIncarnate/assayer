@@ -25,7 +25,7 @@
  * // Returns [{ name: 'db', demand: { kind: 'nested', properties: [{ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } }] } }]
  */
 import { propertyDemandContract } from '@assayer/shared/contracts';
-import type { ConditionLeaf, PropertyDemand, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ConditionLeaf, PropertyDemand, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
 import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
@@ -35,7 +35,7 @@ export const demandsForPropertiesTransformer = ({
   properties,
   leaves,
 }: {
-  properties: readonly { name: SymbolName; type: TypeDescriptor }[];
+  properties: readonly { name: string; type: TypeDescriptor }[];
   leaves: readonly ConditionLeaf[];
 }): PropertyDemand[] =>
   [...properties]

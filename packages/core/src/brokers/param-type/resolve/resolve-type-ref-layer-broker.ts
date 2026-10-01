@@ -30,7 +30,7 @@
  * resolveTypeRefLayerBroker({ reference, walked, relPath: 'src/reader.ts', root: '/repo', options, seen: new Set() });
  * // Returns { kind: 'object', typeName: 'Config', properties: [...] } or undefined
  */
-import { symbolNameContract, typeDescriptorContract } from '@assayer/shared/contracts';
+import { typeDescriptorContract } from '@assayer/shared/contracts';
 import type { TypeDescriptor } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -121,7 +121,7 @@ export const resolveTypeRefLayerBroker = ({
 
     if (memberName.length > 0) {
       return edge.bindings.some((binding) => binding.kind === 'namespace' && String(binding.local) === namespaceRoot)
-        ? [{ specifier: String(edge.specifier), exportedName: symbolNameContract.parse(memberName) }]
+        ? [{ specifier: String(edge.specifier), exportedName: memberName }]
         : [];
     }
 
@@ -130,7 +130,7 @@ export const resolveTypeRefLayerBroker = ({
     );
 
     if (named?.kind === 'named') {
-      return [{ specifier: String(edge.specifier), exportedName: symbolNameContract.parse(named.name) }];
+      return [{ specifier: String(edge.specifier), exportedName: named.name }];
     }
 
     return edge.bindings.some((binding) => binding.kind === 'star')

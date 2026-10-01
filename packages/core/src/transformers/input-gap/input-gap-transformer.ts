@@ -39,15 +39,15 @@
  * // Returns [{ name: 'audit', reason: '`audit` derives no case, because Assayer cannot construct…' }]
  */
 import { entryGapContract } from '@assayer/shared/contracts';
-import type { EntryGap, EntryLabel, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { EntryGap, EntryLabel, TypeText } from '@assayer/shared/contracts';
 
 export const inputGapTransformer = ({
   entryName,
   unfillable,
   hasCases = false,
 }: {
-  entryName: SymbolName;
-  unfillable: readonly { param: SymbolName; type: TypeText; owner?: EntryLabel | undefined }[];
+  entryName: string;
+  unfillable: readonly { param: string; type: TypeText; owner?: EntryLabel | undefined }[];
   // Whether the entry ALSO derived at least one real case alongside this refusal. Optional so a caller
   // that has not threaded the fact through yet falls back to the prior "derives no case" wording — true
   // for every producer that has, false or absent for one that has not caught up.

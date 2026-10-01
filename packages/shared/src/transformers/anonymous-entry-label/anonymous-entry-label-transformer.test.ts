@@ -1,9 +1,9 @@
 import { anonymousEntryLabelTransformer } from './anonymous-entry-label-transformer';
 import { LineNumberStub } from '../../contracts/line-number/line-number.stub';
 import { ParamDescriptorStub } from '../../contracts/param-descriptor/param-descriptor.stub';
-import { SymbolNameStub } from '../../contracts/symbol-name/symbol-name.stub';
+import { AnonymousReachStub } from '../../contracts/anonymous-reach/anonymous-reach.stub';
 
-const ELEMENT_PARAM = ParamDescriptorStub({ name: SymbolNameStub({ value: 'n' }), type: { kind: 'number' } });
+const ELEMENT_PARAM = ParamDescriptorStub({ name: 'n', type: { kind: 'number' } });
 
 describe('anonymousEntryLabelTransformer', () => {
   describe('reached as a call argument', () => {
@@ -11,8 +11,8 @@ describe('anonymousEntryLabelTransformer', () => {
     // label is something the reader can find in the source.
     it('VALID: {receiver items, method map, held by rescale} => the whole callsite plus the line', () => {
       const result = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'rescale' }),
-        reach: { kind: 'argument', receiver: SymbolNameStub({ value: 'items' }), method: SymbolNameStub({ value: 'map' }) },
+        host: 'rescale',
+        reach: AnonymousReachStub({ kind: 'argument', receiver: 'items', method: 'map' }),
         params: [ELEMENT_PARAM],
         line: LineNumberStub({ value: 2 }),
       });
@@ -22,8 +22,8 @@ describe('anonymousEntryLabelTransformer', () => {
 
     it('VALID: {a bare callee} => the called name, since there is no receiver to show', () => {
       const result = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'boot' }),
-        reach: { kind: 'argument', callee: SymbolNameStub({ value: 'register' }) },
+        host: 'boot',
+        reach: AnonymousReachStub({ kind: 'argument', callee: 'register' }),
         params: [ELEMENT_PARAM],
         line: LineNumberStub({ value: 4 }),
       });
@@ -35,7 +35,7 @@ describe('anonymousEntryLabelTransformer', () => {
     // than inventing one — a wrong name sends the reader to the wrong line.
     it('EMPTY: {a reach naming neither receiver nor callee} => the arrow alone', () => {
       const result = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'boot' }),
+        host: 'boot',
         reach: { kind: 'argument' },
         params: [ELEMENT_PARAM],
         line: LineNumberStub({ value: 4 }),
@@ -48,7 +48,7 @@ describe('anonymousEntryLabelTransformer', () => {
   describe('reached without being passed to a call', () => {
     it('VALID: {a returned closure} => the return that hands it out', () => {
       const result = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'makeClassifier' }),
+        host: 'makeClassifier',
         reach: { kind: 'return' },
         params: [ELEMENT_PARAM],
         line: LineNumberStub({ value: 2 }),
@@ -59,7 +59,7 @@ describe('anonymousEntryLabelTransformer', () => {
 
     it('VALID: {an IIFE} => the invocation shape', () => {
       const result = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'boot' }),
+        host: 'boot',
         reach: { kind: 'invocation' },
         params: [ELEMENT_PARAM],
         line: LineNumberStub({ value: 3 }),
@@ -86,10 +86,10 @@ describe('anonymousEntryLabelTransformer', () => {
   describe('the signature it shows', () => {
     it('VALID: {two params} => both, in order', () => {
       const result = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'total' }),
-        reach: { kind: 'argument', receiver: SymbolNameStub({ value: 'items' }), method: SymbolNameStub({ value: 'reduce' }) },
+        host: 'total',
+        reach: AnonymousReachStub({ kind: 'argument', receiver: 'items', method: 'reduce' }),
         params: [
-          ParamDescriptorStub({ name: SymbolNameStub({ value: 'acc' }), type: { kind: 'number' } }),
+          ParamDescriptorStub({ name: 'acc', type: { kind: 'number' } }),
           ELEMENT_PARAM,
         ],
         line: LineNumberStub({ value: 5 }),
@@ -115,14 +115,14 @@ describe('anonymousEntryLabelTransformer', () => {
   describe('telling two identical arrows apart', () => {
     it('VALID: {the same arrow at two lines} => two distinct labels', () => {
       const first = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'rescale' }),
-        reach: { kind: 'argument', receiver: SymbolNameStub({ value: 'items' }), method: SymbolNameStub({ value: 'map' }) },
+        host: 'rescale',
+        reach: AnonymousReachStub({ kind: 'argument', receiver: 'items', method: 'map' }),
         params: [ELEMENT_PARAM],
         line: LineNumberStub({ value: 2 }),
       });
       const second = anonymousEntryLabelTransformer({
-        host: SymbolNameStub({ value: 'rescale' }),
-        reach: { kind: 'argument', receiver: SymbolNameStub({ value: 'items' }), method: SymbolNameStub({ value: 'map' }) },
+        host: 'rescale',
+        reach: AnonymousReachStub({ kind: 'argument', receiver: 'items', method: 'map' }),
         params: [ELEMENT_PARAM],
         line: LineNumberStub({ value: 9 }),
       });

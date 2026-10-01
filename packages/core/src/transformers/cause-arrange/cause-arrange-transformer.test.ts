@@ -1,4 +1,3 @@
-import { symbolNameContract } from '@assayer/shared/contracts';
 import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
@@ -626,7 +625,7 @@ describe('causeArrangeTransformer', () => {
           ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
         ],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('report')] },
+        harness: { entry: 'audit', params: ['report'] },
       });
 
       expect(result).toStrictEqual({
@@ -651,7 +650,7 @@ describe('causeArrangeTransformer', () => {
           ParamDescriptorStub({ name: 'emit', type: { kind: 'callable', text: '(n: number) => void' } }),
         ],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('report')] },
+        harness: { entry: 'audit', params: ['report'] },
       });
 
       expect(result).toStrictEqual({
@@ -668,7 +667,7 @@ describe('causeArrangeTransformer', () => {
         requirements: [],
         params: [ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } })],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('items')] },
+        harness: { entry: 'audit', params: ['items'] },
       });
 
       expect(result).toStrictEqual({
@@ -692,7 +691,7 @@ describe('causeArrangeTransformer', () => {
           }),
         ],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('collect'), params: [symbolNameContract.parse('sinks')] },
+        harness: { entry: 'collect', params: ['sinks'] },
       });
 
       expect(result).toStrictEqual({

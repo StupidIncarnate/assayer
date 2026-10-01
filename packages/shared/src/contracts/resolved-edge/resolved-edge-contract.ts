@@ -29,7 +29,6 @@ import { lineNumberContract } from '../line-number/line-number-contract';
 import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
 import { packageNameContract } from '../package-name/package-name-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 
 // A local edge is keyed by its in-repo definition path; a package/builtin edge is keyed by package
@@ -59,8 +58,8 @@ const resolvedTargetContract = z.discriminatedUnion('kind', [
   }),
   z.object({
     kind: z.literal('global'),
-    name: symbolNameContract,
-    member: symbolNameContract.optional(),
+    name: z.string().min(1).brand<'ResolvedTargetName'>(),
+    member: z.string().min(1).brand<'ResolvedTargetMember'>().optional(),
     signature: externalSignatureContract.optional(),
     type: typeDescriptorContract.optional(),
   }),
@@ -71,7 +70,7 @@ export const resolvedEdgeContract = z.object({
   // Absent only for a `global` target: an ambient identifier is USED, never imported, so it names no
   // module specifier. Every import edge carries one.
   specifier: moduleSpecifierContract.optional(),
-  importedName: symbolNameContract.optional(),
+  importedName: z.string().min(1).brand<'ResolvedEdgeImportedName'>().optional(),
   line: lineNumberContract,
   column: columnNumberContract,
   target: resolvedTargetContract,

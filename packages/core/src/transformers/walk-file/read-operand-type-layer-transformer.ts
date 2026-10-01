@@ -20,7 +20,7 @@
  */
 import type { Node } from '#gateway/npm/ts-morph';
 
-import type { SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { TypeDescriptor } from '@assayer/shared/contracts';
 
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { typeDescriptorTransformer } from '../type-descriptor/type-descriptor-transformer';
@@ -33,7 +33,7 @@ export const readOperandTypeLayerTransformer = ({
 }: {
   node: Node;
   context: WalkContext;
-  name?: SymbolName;
+  name?: string;
 }): TypeDescriptor => {
   const param = name === undefined ? undefined : context.params.find((candidate) => candidate.name === name);
 

@@ -1,10 +1,9 @@
 import { GuardStepStub } from '@assayer/shared/contracts/guard-step/guard-step.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { exitCoverageIdTransformer } from './exit-coverage-id-transformer';
 
-const CLASSIFY_SCOPE = [SymbolNameStub({ value: 'classify' })];
-const NESTED_SCOPE = [SymbolNameStub({ value: 'Classifier' }), SymbolNameStub({ value: 'classify' })];
+const CLASSIFY_SCOPE = ['classify'];
+const NESTED_SCOPE = ['Classifier', 'classify'];
 
 describe('exitCoverageIdTransformer', () => {
   describe('an exit no branch guards', () => {

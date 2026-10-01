@@ -23,10 +23,8 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { symbolNameContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
 
-export const readModuleExportLayerTransformer = ({ node }: { node: Node }): SymbolName | undefined => {
+export const readModuleExportLayerTransformer = ({ node }: { node: Node }): string | undefined => {
   const parent = node.getParent();
   // The declaration the module would export: the variable a `const f = () => …` binds, or the
   // function declaration itself. Anything else is not a module-level binding.
@@ -44,7 +42,7 @@ export const readModuleExportLayerTransformer = ({ node }: { node: Node }): Symb
     const target = exported.getAliasedSymbol() ?? exported;
 
     return target.getDeclarations().some((declared) => declared === declaration)
-      ? [symbolNameContract.parse(exported.getName())]
+      ? [exported.getName()]
       : [];
   });
 

@@ -1,6 +1,5 @@
 import { GuardStepStub } from '@assayer/shared/contracts/guard-step/guard-step.stub';
 import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { walkContextTransformer } from './walk-context-transformer';
@@ -42,7 +41,7 @@ describe('walkContextTransformer', () => {
 
       const result = walkContextTransformer({
         context,
-        scopeSegment: SymbolNameStub({ value: 'classify' }),
+        scopeSegment: 'classify',
         params: [],
         exported: true,
       });
@@ -58,7 +57,7 @@ describe('walkContextTransformer', () => {
 
       const result = walkContextTransformer({
         context,
-        scopeSegment: SymbolNameStub({ value: 'inner' }),
+        scopeSegment: 'inner',
         params: [],
         exported: false,
       });
@@ -72,7 +71,7 @@ describe('walkContextTransformer', () => {
       const context = WalkContextStub({ params: [{ name: 'value', type: { kind: 'number' } }] });
       const params = [ParamDescriptorStub({ name: 'name', type: { kind: 'string' } })];
 
-      const result = walkContextTransformer({ context, scopeSegment: SymbolNameStub({ value: 'inner' }), params });
+      const result = walkContextTransformer({ context, scopeSegment: 'inner', params });
 
       expect(result.params).toStrictEqual([{ name: 'name', type: { kind: 'string' } }]);
     });

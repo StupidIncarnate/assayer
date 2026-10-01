@@ -31,8 +31,8 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, SymbolName, TemplateText, TypeText } from '@assayer/shared/contracts';
+import { representativeValueContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
+import type { RepresentativeValue, TemplateText, TypeText } from '@assayer/shared/contracts';
 
 export type TypeFact =
   | { flavor: 'string' }
@@ -52,9 +52,9 @@ export type TypeFact =
    */
   | {
       flavor: 'object';
-      typeName?: SymbolName | undefined;
+      typeName?: string | undefined;
       truncated?: boolean | undefined;
-      properties: { name: SymbolName; fact: TypeFact; optional?: boolean | undefined }[];
+      properties: { name: string; fact: TypeFact; optional?: boolean | undefined }[];
     }
   | { flavor: 'callable'; text: TypeText }
   /**
@@ -64,7 +64,7 @@ export type TypeFact =
    * reference's type ARGUMENTS in order (`Box<string>`), which are what the declaration's type
    * parameters stand for.
    */
-  | { flavor: 'other'; text: TypeText; typeRef?: SymbolName | undefined; typeArgs?: TypeFact[] | undefined };
+  | { flavor: 'other'; text: TypeText; typeRef?: string | undefined; typeArgs?: TypeFact[] | undefined };
 
 export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
   z.discriminatedUnion('flavor', [
@@ -78,17 +78,17 @@ export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
     z.object({ flavor: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeFactContract) }),
     z.object({
       flavor: z.literal('object'),
-      typeName: symbolNameContract.optional(),
+      typeName: z.string().min(1).brand<'TypeFactTypeName'>().optional(),
       truncated: z.boolean().optional(),
       properties: z.array(
-        z.object({ name: symbolNameContract, fact: typeFactContract, optional: z.boolean().optional() }),
+        z.object({ name: z.string().min(1).brand<'TypeFactPropertiesName'>(), fact: typeFactContract, optional: z.boolean().optional() }),
       ),
     }),
     z.object({ flavor: z.literal('callable'), text: typeTextContract }),
     z.object({
       flavor: z.literal('other'),
       text: typeTextContract,
-      typeRef: symbolNameContract.optional(),
+      typeRef: z.string().min(1).brand<'TypeFactTypeRef'>().optional(),
       typeArgs: z.array(typeFactContract).optional(),
     }),
   ]),

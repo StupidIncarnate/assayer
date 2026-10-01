@@ -2,7 +2,6 @@ import { mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadDeclarationBroker } from './external-signature-read-declaration-broker';
@@ -21,7 +20,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'fnDecl' }),
+        exportName: 'fnDecl',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -48,7 +47,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'typedConst' }),
+        exportName: 'typedConst',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -72,7 +71,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'statusOf' }),
+        exportName: 'statusOf',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -102,7 +101,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'identity' }),
+        exportName: 'identity',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -129,7 +128,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'over' }),
+        exportName: 'over',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -156,7 +155,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'pairOf' }),
+        exportName: 'pairOf',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -180,7 +179,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'idOf' }),
+        exportName: 'idOf',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -205,7 +204,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'idConst' }),
+        exportName: 'idConst',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -232,7 +231,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'combine' }),
+        exportName: 'combine',
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -267,7 +266,7 @@ describe('externalSignatureReadDeclarationBroker', () => {
       const result = externalSignatureReadDeclarationBroker({
         tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
         dtsPath: FilePathStub({ value: join(dir, 'lib.d.ts') }),
-        exportName: SymbolNameStub({ value: 'config' }),
+        exportName: 'config',
       });
       rmSync(dir, { recursive: true, force: true });
 

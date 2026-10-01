@@ -23,11 +23,10 @@
 import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '../line-number/line-number-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const lintEntryContract = z.object({
   rule: z.enum(['dead-surface', 'unreachable-exit']).brand<'LintRule'>(),
-  name: symbolNameContract,
+  name: z.string().min(1).brand<'LintEntryName'>(),
   message: z.string().min(1).brand<'LintMessage'>(),
   startLine: lineNumberContract,
   endLine: lineNumberContract,

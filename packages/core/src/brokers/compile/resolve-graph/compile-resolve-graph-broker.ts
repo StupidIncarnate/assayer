@@ -26,7 +26,7 @@
  *   cacheDir: '/repo/.assayer/cache', files: [{ relPath: 'src/a.ts', contentHash }] });
  * // Returns { index: ResolvedIndex, errors: [{ relPath, line, column, message }] }
  */
-import { columnNumberContract, compiledFileBlobContract, lineNumberContract, moduleSpecifierContract, relPathContract, resolvedEdgeContract, resolvedIndexContract, symbolNameContract, packageNameContract } from '@assayer/shared/contracts';
+import { columnNumberContract, compiledFileBlobContract, lineNumberContract, moduleSpecifierContract, relPathContract, resolvedEdgeContract, resolvedIndexContract, packageNameContract } from '@assayer/shared/contracts';
 import type { ColumnNumber, ContentHash, LineNumber, RelPath, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
@@ -118,7 +118,7 @@ export const compileResolveGraphBroker = async ({
           {
             key: `${String(item.classification.dtsPath)} ${item.importedName}`,
             dtsPath: item.classification.dtsPath,
-            exportName: symbolNameContract.parse(item.importedName),
+            exportName: item.importedName,
           },
         ]
       : [],
@@ -145,7 +145,7 @@ export const compileResolveGraphBroker = async ({
               ),
             )}`,
             specifier: moduleSpecifierContract.parse(String(item.edge.specifier)),
-            importedName: symbolNameContract.parse(item.importedName),
+            importedName: item.importedName,
           },
         ]
       : [],

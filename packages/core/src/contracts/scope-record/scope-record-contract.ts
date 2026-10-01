@@ -22,23 +22,14 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import {
-  branchNodeContract,
-  conditionNodeContract,
-  entryAccessContract,
-  exitNodeContract,
-  lineNumberContract,
-  paramDescriptorContract,
-  symbolNameContract,
-  typeDescriptorContract,
-} from '@assayer/shared/contracts';
+import { branchNodeContract, conditionNodeContract, entryAccessContract, exitNodeContract, lineNumberContract, paramDescriptorContract, typeDescriptorContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
 import { valueUseContract } from '../value-use/value-use-contract';
 
 export const scopeRecordContract = z.object({
-  scopePath: z.array(symbolNameContract),
-  name: symbolNameContract,
+  scopePath: z.array(z.string().min(1).brand<'ScopeRecordScopePath'>()),
+  name: z.string().min(1).brand<'ScopeRecordName'>(),
   // Whether `name` is a structural PROJECTION rather than something the source calls this scope
   // (`items.map((n) => …)` borrows no binding). It travels because the projection is a cache key and no
   // surface may print one: a labelling consumer needs to know a scope has no name, and reading it back
@@ -66,7 +57,7 @@ export const scopeRecordContract = z.object({
   // statements (`export const message = …` ⇒ `['message']`). LOOSE and claimed on its own channel like
   // `calls`; only a module scope ever collects any, since exports are top-level. A projection reads
   // these to LABEL a module entry by its single exported binding — DISPLAY only, never identity.
-  exportedBindings: z.array(symbolNameContract).default([]),
+  exportedBindings: z.array(z.string().min(1).brand<'ScopeRecordExportedBindings'>()).default([]),
   // The decomposed condition this scope's body RETURNS, present only when the scope is a boolean
   // predicate whose whole body is `return <comparison>` (`function tooBig(n){ return n > 50 }`). It is
   // what a caller's opaque `if (tooBig(x))` leaf composes against: the callee's comparison, rebased

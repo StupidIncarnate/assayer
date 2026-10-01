@@ -23,16 +23,16 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract, guardStepContract, lineNumberContract, moduleSpecifierContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { columnNumberContract, guardStepContract, lineNumberContract, moduleSpecifierContract, representativeValueContract } from '@assayer/shared/contracts';
 
 const calleeLinkContract = z.discriminatedUnion('target', [
-  z.object({ target: z.literal('local'), name: symbolNameContract, startLine: lineNumberContract }),
-  z.object({ target: z.literal('import'), specifier: moduleSpecifierContract, importedName: symbolNameContract }),
+  z.object({ target: z.literal('local'), name: z.string().min(1).brand<'CalleeLinkName'>(), startLine: lineNumberContract }),
+  z.object({ target: z.literal('import'), specifier: moduleSpecifierContract, importedName: z.string().min(1).brand<'CalleeLinkImportedName'>() }),
   z.object({ target: z.literal('unresolved') }),
 ]);
 
 const callArgContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('param-ref'), paramName: symbolNameContract }),
+  z.object({ kind: z.literal('param-ref'), paramName: z.string().min(1).brand<'CallArgParamName'>() }),
   z.object({ kind: z.literal('literal'), value: representativeValueContract }),
   // An inline function-like argument (`items.map((n) => …)`, `apply(x, (n) => …)`). It is a scope of
   // its own the walk opens elsewhere; this records only the LINK — the callback scope's start line,
@@ -61,8 +61,8 @@ export const callSiteContract = z.object({
   // identifier; a bare call, a computed member, or a chained receiver leaves both unset. This is what
   // lets a follower see that a callback argument iterates one of the entry's ARRAY params — the
   // element the callback's parameter binds to — so its branches drive through that param.
-  receiver: symbolNameContract.optional(),
-  method: symbolNameContract.optional(),
+  receiver: z.string().min(1).brand<'CallSiteReceiver'>().optional(),
+  method: z.string().min(1).brand<'CallSiteMethod'>().optional(),
 });
 
 export type CallSite = z.infer<typeof callSiteContract>;

@@ -40,7 +40,7 @@ import {
   entryLabelContract,
   functionAnalysisContract,
 } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, EntryLabel, FunctionAnalysis, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, EntryLabel, FunctionAnalysis, TypeText } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { isValueBindingGuard } from '../../guards/is-value-binding/is-value-binding-guard';
@@ -57,9 +57,9 @@ export const throughCallbackCasesTransformer = ({
 }: {
   callback: ScopeRecord;
   entry: ScopeRecord;
-  arrayParam: SymbolName;
+  arrayParam: string;
   label?: EntryLabel;
-}): { analysis: FunctionAnalysis; unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[] } => {
+}): { analysis: FunctionAnalysis; unfillable: { param: string; type: TypeText; owner: EntryLabel }[] } => {
   // The callback's first parameter is the one bound to the array element; its steered value is the
   // array's single element. The callback's branches are derived over it exactly as a scalar param.
   const elementParamName = callback.params[0]?.name;

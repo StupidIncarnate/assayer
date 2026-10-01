@@ -33,10 +33,9 @@ import { z } from '#gateway/npm/zod';
 
 import { entryLabelContract } from '../entry-label/entry-label-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const undrivenEntryContract = z.object({
-  name: symbolNameContract,
+  name: z.string().min(1).brand<'UndrivenEntryName'>(),
   reason: z.string().min(1).brand<'UndrivenReason'>(),
   startLine: lineNumberContract,
   endLine: lineNumberContract,

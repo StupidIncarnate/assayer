@@ -30,12 +30,11 @@ import { z } from '#gateway/npm/zod';
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 const moduleBindingContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('named'), name: symbolNameContract, alias: symbolNameContract.optional() }),
-  z.object({ kind: z.literal('default'), local: symbolNameContract }),
-  z.object({ kind: z.literal('namespace'), local: symbolNameContract }),
+  z.object({ kind: z.literal('named'), name: z.string().min(1).brand<'ModuleBindingName'>(), alias: z.string().min(1).brand<'ModuleBindingAlias'>().optional() }),
+  z.object({ kind: z.literal('default'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }),
+  z.object({ kind: z.literal('namespace'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }),
   z.object({ kind: z.literal('star') }),
 ]);
 

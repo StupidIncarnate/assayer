@@ -1,6 +1,5 @@
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
 import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
@@ -17,20 +16,20 @@ describe('externalSignatureReadGlobalBroker', () => {
       const signature = ExternalSignatureStub({ params: [], returnType: { kind: 'string' } });
       const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
       proxy.cacheMiss({
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         declText: DECL_TEXT,
         cacheDir: CACHE_DIR,
       });
       proxy.readsSignature({
         tsConfigFilePath,
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         signature,
         declText: DECL_TEXT,
       });
 
       const result = await externalSignatureReadGlobalBroker({
         tsConfigFilePath,
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         cacheDir: CACHE_DIR,
       });
 
@@ -46,20 +45,20 @@ describe('externalSignatureReadGlobalBroker', () => {
       const type = TypeDescriptorStub({ kind: 'unknown', text: 'ProcessEnv' });
       const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
       proxy.cacheMiss({
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'env' }), called: false },
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
         declText: DECL_TEXT,
         cacheDir: CACHE_DIR,
       });
       proxy.readsType({
         tsConfigFilePath,
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'env' }), called: false },
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
         type,
         declText: DECL_TEXT,
       });
 
       const result = await externalSignatureReadGlobalBroker({
         tsConfigFilePath,
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'env' }), called: false },
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
         cacheDir: CACHE_DIR,
       });
 
@@ -74,20 +73,20 @@ describe('externalSignatureReadGlobalBroker', () => {
       const signature = ExternalSignatureStub({ params: [], returnType: { kind: 'string' } });
       const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
       proxy.cacheHit({
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         declText: DECL_TEXT,
         cacheDir: CACHE_DIR,
       });
       proxy.readsSignature({
         tsConfigFilePath,
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         signature,
         declText: DECL_TEXT,
       });
 
       const result = await externalSignatureReadGlobalBroker({
         tsConfigFilePath,
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
         cacheDir: CACHE_DIR,
       });
 
@@ -102,12 +101,12 @@ describe('externalSignatureReadGlobalBroker', () => {
       const tsConfigFilePath = FilePathStub({ value: '/repo/tsconfig.json' });
       proxy.readsNoUsableTypes({
         tsConfigFilePath,
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: SymbolNameStub({ value: 'x' }), called: true },
+        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: 'x', called: true },
       });
 
       const result = await externalSignatureReadGlobalBroker({
         tsConfigFilePath,
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: SymbolNameStub({ value: 'x' }), called: true },
+        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: 'x', called: true },
         cacheDir: CACHE_DIR,
       });
 

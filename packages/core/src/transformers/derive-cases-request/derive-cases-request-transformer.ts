@@ -41,7 +41,7 @@
  * // Returns the exact argument object deriveCasesTransformer takes — { params, branches, exits,
  * //   envDrivable, returnPredicate?, harness? }
  */
-import type { ParamDescriptor, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
@@ -56,9 +56,9 @@ export const deriveCasesRequestTransformer = ({
 }: {
   scope: ScopeRecord;
   params: ParamDescriptor[];
-  welds: Map<SymbolName, RepresentativeValue> | undefined;
+  welds: Map<string, RepresentativeValue> | undefined;
   envDrivable: boolean;
-  harness: { entry: SymbolName; params: readonly SymbolName[] } | undefined;
+  harness: { entry: string; params: readonly string[] } | undefined;
 }): Parameters<typeof deriveCasesTransformer>[0] => ({
   params,
   branches: welds === undefined ? scope.branches : stampBranchesTransformer({ branches: scope.branches, welds }),

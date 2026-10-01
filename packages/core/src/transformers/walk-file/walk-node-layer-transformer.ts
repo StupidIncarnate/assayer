@@ -21,6 +21,7 @@ import type { WalkContext } from '../../contracts/walk-context/walk-context-cont
 import type { WalkFacts } from '../../contracts/walk-facts/walk-facts-contract';
 import { dispatchNodeLayerTransformer } from './dispatch-node-layer-transformer';
 import { walkFactsLayerTransformer } from './walk-facts-layer-transformer';
+import { walkFactsContract } from '../../contracts/walk-facts/walk-facts-contract';
 
 export const walkNodeLayerTransformer = ({ node, context }: { node: Node; context: WalkContext }): WalkFacts => {
   const handled = dispatchNodeLayerTransformer({ node, context });
@@ -47,7 +48,7 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
   const { opensScope } = handled;
 
   if (opensScope === undefined) {
-    return {
+    return walkFactsContract.parse({
       scopes: child.scopes,
       looseBranches: branches,
       looseExits: exits,
@@ -62,7 +63,7 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
       envReads,
       reachedFns,
       invokedFns,
-    };
+    });
   }
 
   const completed = scopeRecordContract.parse({ ...opensScope, branches, exits, calls, valueUses, exportedBindings });

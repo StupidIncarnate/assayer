@@ -80,7 +80,7 @@
  * //   arrangements: [[{ kind: 'param', param: 'score', value: 6 }, …], …] }
  */
 import { arrangeValueContract, envValueContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -109,17 +109,17 @@ export const causeArrangeTransformer = ({
   requirements: ConditionCause['requirements'];
   params: ParamDescriptor[];
   envDrivable: boolean;
-  harness?: { entry: SymbolName; params: readonly SymbolName[] } | undefined;
+  harness?: { entry: string; params: readonly string[] } | undefined;
 }): {
   unreachable: boolean;
   arrangements: DerivedTestCase['arrange'][];
-  unfillable: { param: SymbolName; type: TypeText }[];
+  unfillable: { param: string; type: TypeText }[];
 } => {
   // A WELDED operand is a single-value domain to start from — `{members:[7]}` for a scalar const,
   // `{lengthMin:3, lengthMax:3}` for an array const's length. The guard arm values below intersect onto
   // it, so `{7} ∩ (>5)` stays `{7}` (the arm is reachable) while `{7} ∩ (<=5)` is empty (unreachable).
   // It is not an input a case sets; the analyzer evaluates it, so no `env`/`param` binding carries it.
-  const constSeed = requirements.reduce<Map<SymbolName, ValueDomain>>((acc, requirement) => {
+  const constSeed = requirements.reduce<Map<string, ValueDomain>>((acc, requirement) => {
     const operand = requirement.leaf.operandParamName;
 
     if (operand === undefined) {
@@ -136,9 +136,9 @@ export const causeArrangeTransformer = ({
     }
 
     return acc;
-  }, new Map<SymbolName, ValueDomain>());
+  }, new Map<string, ValueDomain>());
 
-  const domainByOperand = requirements.reduce<Map<SymbolName, ValueDomain>>((acc, requirement) => {
+  const domainByOperand = requirements.reduce<Map<string, ValueDomain>>((acc, requirement) => {
     const operand = requirement.leaf.operandParamName;
 
     if (operand === undefined) {
@@ -235,13 +235,13 @@ export const causeArrangeTransformer = ({
   // Which local bindings are environment reads, keyed by the same operand name the values above are.
   // Read off the leaves rather than passed in, because the leaf is where the walk recorded it.
   const envByOperand = envDrivable
-    ? requirements.reduce<Map<SymbolName, EnvVarName>>((acc, requirement) => {
+    ? requirements.reduce<Map<string, EnvVarName>>((acc, requirement) => {
         const operand = requirement.leaf.operandParamName;
         const envVarName = requirement.leaf.operandEnvVarName;
 
         return operand === undefined || envVarName === undefined ? acc : acc.set(operand, envVarName);
-      }, new Map<SymbolName, EnvVarName>())
-    : new Map<SymbolName, EnvVarName>();
+      }, new Map<string, EnvVarName>())
+    : new Map<string, EnvVarName>();
 
   const operandChoices = [...domainByOperand.entries()].flatMap(([operand, domain]) => {
     const values = domainValuesTransformer({ domain });
@@ -249,10 +249,10 @@ export const causeArrangeTransformer = ({
     return values.length === 0 ? [] : [{ operand, values }];
   });
 
-  const bindings = operandChoices.reduce<Map<SymbolName, RepresentativeValue>[]>(
+  const bindings = operandChoices.reduce<Map<string, RepresentativeValue>[]>(
     (combos, choice) =>
       combos.flatMap((combo) => choice.values.map((value) => new Map(combo).set(choice.operand, value))),
-    [new Map<SymbolName, RepresentativeValue>()],
+    [new Map<string, RepresentativeValue>()],
   );
 
   // Each array param is a fan-out axis over cardinality: `array-arrange` builds a real array of each
@@ -297,9 +297,9 @@ export const causeArrangeTransformer = ({
   // The cartesian across array params, the ArrangeValue[] twin of `bindings`. Seeded with one empty
   // combo, so a cause with no array param yields exactly one (empty) array combo and the arrangement
   // count is unchanged.
-  const arrayCombos = arrayChoices.reduce<Map<SymbolName, ArrangeValue[]>[]>(
+  const arrayCombos = arrayChoices.reduce<Map<string, ArrangeValue[]>[]>(
     (combos, choice) => combos.flatMap((combo) => choice.values.map((value) => new Map(combo).set(choice.param, value))),
-    [new Map<SymbolName, ArrangeValue[]>()],
+    [new Map<string, ArrangeValue[]>()],
   );
 
   // Looked up once, below, to check each built binding against the SAME descriptor it was derived

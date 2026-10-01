@@ -13,16 +13,14 @@
  * didYouMeanTransformer({ name: 'audot', candidates: ['audit', 'collect'] });
  * // Returns 'audit'
  */
-import { symbolNameContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
 
 export const didYouMeanTransformer = ({
   name,
   candidates,
 }: {
-  name: SymbolName;
-  candidates: readonly SymbolName[];
-}): SymbolName | undefined => {
+  name: string;
+  candidates: readonly string[];
+}): string | undefined => {
   const target = Array.from(String(name).toLowerCase());
 
   const scored = candidates.map((candidate) => {
@@ -45,7 +43,7 @@ export const didYouMeanTransformer = ({
     );
 
     return {
-      candidate: symbolNameContract.parse(String(candidate)),
+      candidate: String(candidate),
       distance: finalRow[target.length] ?? target.length,
     };
   });

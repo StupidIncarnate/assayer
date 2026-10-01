@@ -24,12 +24,11 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 import { typeTextContract } from '../type-text/type-text-contract';
 
 export const paramDescriptorContract = z.object({
-  name: symbolNameContract,
+  name: z.string().min(1).brand<'ParamDescriptorName'>(),
   type: typeDescriptorContract,
   // `maybe(11)` is a legal call of `maybe(size: number, report?: (m: string) => void)`, so a caller
   // owes this parameter nothing.

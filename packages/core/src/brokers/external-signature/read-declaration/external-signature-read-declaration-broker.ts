@@ -19,7 +19,7 @@
 import { Node, Project } from '#gateway/npm/ts-morph';
 
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
-import type { ExternalSignature, SymbolName } from '@assayer/shared/contracts';
+import type { ExternalSignature } from '@assayer/shared/contracts';
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
@@ -34,7 +34,7 @@ export const externalSignatureReadDeclarationBroker = ({
 }: {
   tsConfigFilePath: FilePath;
   dtsPath: FilePath;
-  exportName: SymbolName;
+  exportName: string;
 }): { usable: true; signature: ExternalSignature } | { usable: false } => {
   const existing = projectByConfig.get(tsConfigFilePath);
   const project = existing ?? new Project({ tsConfigFilePath: String(tsConfigFilePath), skipAddingFilesFromTsConfig: true });

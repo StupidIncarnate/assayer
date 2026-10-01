@@ -27,25 +27,24 @@ import { z } from '#gateway/npm/zod';
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 // The structural projection of one argument — identical in shape to a local call's arg, never the
 // value it would compute: a `param-ref` a caller passes straight through, a `literal` welded in, or
 // `opaque` for anything else.
 const globalCallArgContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('param-ref'), paramName: symbolNameContract }),
+  z.object({ kind: z.literal('param-ref'), paramName: z.string().min(1).brand<'GlobalCallArgParamName'>() }),
   z.object({ kind: z.literal('literal'), value: representativeValueContract }),
   z.object({ kind: z.literal('opaque') }),
 ]);
 
 export const globalUseContract = z.object({
-  name: symbolNameContract,
-  member: symbolNameContract.optional(),
+  name: z.string().min(1).brand<'GlobalUseName'>(),
+  member: z.string().min(1).brand<'GlobalUseMember'>().optional(),
   called: z.boolean(),
   args: z.array(globalCallArgContract),
   line: lineNumberContract,
   column: columnNumberContract,
-  scopePath: z.array(symbolNameContract),
+  scopePath: z.array(z.string().min(1).brand<'GlobalUseScopePath'>()),
 });
 
 export type GlobalUse = z.infer<typeof globalUseContract>;

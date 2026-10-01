@@ -1,8 +1,8 @@
-import { constLengthContract, entryLabelContract, lineNumberContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { constLengthContract, entryLabelContract, lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
 
 import { unreachableLintTransformer } from './unreachable-lint-transformer';
 
-const name = symbolNameContract.parse('classify');
+const name = 'classify';
 const label = entryLabelContract.parse('classify');
 const line = (value: number): ReturnType<typeof lineNumberContract.parse> => lineNumberContract.parse(value);
 
@@ -44,13 +44,13 @@ describe('unreachableLintTransformer', () => {
     // module label, so the reader never sees the internal `*module*`.
     it('VALID: {level welded to 7} => a lint naming the operand, the value, and the branch line', () => {
       const [lint] = unreachableLintTransformer({
-        name: symbolNameContract.parse('*module*'),
+        name: '*module*',
         displayName: entryLabelContract.parse('welded-const.ts'),
         unreachableExits: [
           {
             line: line(6),
             guardLines: [line(3)],
-            welded: { line: line(3), operand: symbolNameContract.parse('level'), value: representativeValueContract.parse(7) },
+            welded: { line: line(3), operand: 'level', value: representativeValueContract.parse(7) },
           },
         ],
       });
@@ -70,13 +70,13 @@ describe('unreachableLintTransformer', () => {
     // The array twin: the operand is welded to a fixed LENGTH rather than a scalar value.
     it('VALID: {items welded to a fixed length of 3} => a lint naming the operand and its length', () => {
       const [lint] = unreachableLintTransformer({
-        name: symbolNameContract.parse('*module*'),
+        name: '*module*',
         displayName: entryLabelContract.parse('const-array-branch.ts'),
         unreachableExits: [
           {
             line: line(6),
             guardLines: [line(3)],
-            welded: { line: line(3), operand: symbolNameContract.parse('items'), length: constLengthContract.parse(3) },
+            welded: { line: line(3), operand: 'items', length: constLengthContract.parse(3) },
           },
         ],
       });

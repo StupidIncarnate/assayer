@@ -46,8 +46,8 @@
  * harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
  * // Returns the FileAnalysis with harness-supplied entries driven and their input gaps paid
  */
-import { fileAnalysisContract, relPathContract } from '@assayer/shared/contracts';
-import type { EntryLabel, FileAnalysis, SymbolName, TypeText } from '@assayer/shared/contracts';
+import { fileAnalysisContract, relPathContract, entryGapContract } from '@assayer/shared/contracts';
+import type { EntryLabel, FileAnalysis, TypeText } from '@assayer/shared/contracts';
 
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessLoadBroker } from '../load/harness-load-broker';
@@ -108,8 +108,8 @@ export const harnessRealizeBroker = ({
   // The declared keys grouped by entry — the same inventory the cache records, read from the same load,
   // so the run cannot arrange a key the compile never saw.
   const declaredByEntry = harnessKeysTransformer({ declarations: loaded.declarations }).reduce(
-    (acc, key) => acc.set(key.entry, (acc.get(key.entry) ?? new Set<SymbolName>()).add(key.param)),
-    new Map<SymbolName, Set<SymbolName>>(),
+    (acc, key) => acc.set(key.entry, (acc.get(key.entry) ?? new Set<string>()).add(key.param)),
+    new Map<string, Set<string>>(),
   );
 
   const gappedNames = new Set(analysis.gaps.map((gap) => gap.name));
@@ -124,7 +124,7 @@ export const harnessRealizeBroker = ({
   // names an unrelated, ungapped scope changes nothing for it.
   const followHarness = new Map(
     [...declaredByEntry.entries()].flatMap(([entryName, params]) =>
-      gappedNames.has(entryName) || declaringScopeNames.has(String(entryName)) ? [[entryName, [...params]] as const] : [],
+      gappedNames.has(entryGapContract.shape.name.parse(entryName)) || declaringScopeNames.has(String(entryName)) ? [[entryName, [...params]] as const] : [],
     ),
   );
 
@@ -139,7 +139,7 @@ export const harnessRealizeBroker = ({
   // A folded scope's or a through-caller pseudo-entry's OWN refusal still standing after `followHarness`
   // — the axis the flat per-entry derivation below cannot see, because it belongs to a DIFFERENT scope's
   // signature.
-  const foldedRefusalsByEntry = new Map<SymbolName, { param: SymbolName; type: TypeText; owner?: EntryLabel }[]>();
+  const foldedRefusalsByEntry = new Map<string, { param: string; type: TypeText; owner?: EntryLabel }[]>();
   (followed?.refusals ?? []).forEach((refusal) => {
     const existing = foldedRefusalsByEntry.get(refusal.entryName) ?? [];
     existing.push({ param: refusal.param, type: refusal.type, ...(refusal.owner === undefined ? {} : { owner: refusal.owner }) });
@@ -240,7 +240,7 @@ export const harnessRealizeBroker = ({
         ...(paidPredicate === undefined ? {} : { predicateSignature: paidPredicate }),
       },
       touched: true as const,
-      unfillable: [] as { param: SymbolName; type: TypeText; owner?: EntryLabel }[],
+      unfillable: [] as { param: string; type: TypeText; owner?: EntryLabel }[],
       undrivenBranches: own.undrivenBranches,
     };
   });
