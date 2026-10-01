@@ -18,7 +18,7 @@ describe('traceValueTextContract', () => {
     it('EMPTY: {empty string} => throws, since a rendering must say something', () => {
       expect(() => {
         return traceValueTextContract.parse('');
-      }).toThrow(/at least 1/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

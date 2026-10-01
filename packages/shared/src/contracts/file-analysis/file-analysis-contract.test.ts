@@ -86,7 +86,7 @@ describe('fileAnalysisContract', () => {
       const full = FileAnalysisStub();
       const partial = Object.fromEntries(Object.entries(full).filter(([key]) => key !== field));
 
-      expect(() => fileAnalysisContract.parse(partial)).toThrow(/Required/u);
+      expect(() => fileAnalysisContract.parse(partial)).toThrow(/Invalid input: expected array, received undefined/u);
     });
   });
 });

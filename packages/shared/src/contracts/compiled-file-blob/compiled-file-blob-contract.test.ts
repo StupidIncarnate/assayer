@@ -32,7 +32,7 @@ describe('compiledFileBlobContract', () => {
           nodes: [],
           displayLines: [],
         });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

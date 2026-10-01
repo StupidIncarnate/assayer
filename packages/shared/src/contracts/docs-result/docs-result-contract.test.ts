@@ -24,13 +24,13 @@ describe('docsResultContract', () => {
     it('INVALID: {missing body} => throws validation error', () => {
       expect(() => {
         return docsResultContract.parse({ topic: 'overview' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('INVALID: {topic: ""} => throws validation error', () => {
       expect(() => {
         return docsResultContract.parse({ topic: '', body: '# Assayer' });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

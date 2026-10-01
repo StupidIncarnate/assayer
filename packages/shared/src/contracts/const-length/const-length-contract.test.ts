@@ -28,13 +28,13 @@ describe('constLengthContract', () => {
     it('INVALID: {value: -1} => throws validation error', () => {
       expect(() => {
         return constLengthContract.parse(-1);
-      }).toThrow(/greater than or equal to 0/u);
+      }).toThrow(/Too small: expected number to be >=0/u);
     });
 
     it('INVALID: {value: 2.5} => throws validation error', () => {
       expect(() => {
         return constLengthContract.parse(2.5);
-      }).toThrow(/integer/u);
+      }).toThrow(/Invalid input: expected int, received number/u);
     });
   });
 });

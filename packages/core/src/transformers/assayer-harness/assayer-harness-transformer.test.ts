@@ -28,7 +28,7 @@ describe('assayerHarnessTransformer', () => {
     it('INVALID: {an entry whose value is a string} => throws validation error', () => {
       expect(() => {
         return assayerHarnessTransformer({ inputs: { audit: 'report' } as never });
-      }).toThrow(/Expected object/u);
+      }).toThrow(/Invalid input: expected object, received string/u);
     });
   });
 });

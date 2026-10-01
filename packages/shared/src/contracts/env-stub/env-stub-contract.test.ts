@@ -20,13 +20,13 @@ describe('envStubContract', () => {
     it('EMPTY: {no property} => throws validation error', () => {
       expect(() => {
         return envStubContract.parse({ key: 'process.env#MODE', values: [], guessed: true, readers: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('EMPTY: {no readers} => throws validation error', () => {
       expect(() => {
         return envStubContract.parse({ key: 'process.env#MODE', property: 'MODE', values: [], guessed: true });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
   });
 });

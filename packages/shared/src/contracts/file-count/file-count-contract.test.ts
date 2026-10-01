@@ -28,7 +28,7 @@ describe('fileCountContract', () => {
     it('INVALID: {value: -1} => throws validation error', () => {
       expect(() => {
         return fileCountContract.parse(-1);
-      }).toThrow(/greater than or equal to 0/u);
+      }).toThrow(/Too small: expected number to be >=0/u);
     });
   });
 });

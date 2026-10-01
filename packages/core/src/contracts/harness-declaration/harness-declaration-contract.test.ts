@@ -36,13 +36,13 @@ describe('harnessDeclarationContract', () => {
     it('INVALID: {no inputs} => throws validation error', () => {
       expect(() => {
         return harnessDeclarationContract.parse({});
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
 
     it('INVALID: {a value under an entry that is not an object} => throws validation error', () => {
       expect(() => {
         return harnessDeclarationContract.parse({ inputs: { audit: 'report' } });
-      }).toThrow(/Expected object/u);
+      }).toThrow(/Invalid input: expected object, received string/u);
     });
   });
 });

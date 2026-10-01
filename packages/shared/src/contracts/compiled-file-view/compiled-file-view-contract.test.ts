@@ -63,7 +63,7 @@ describe('compiledFileViewContract', () => {
     it('INVALID: {relPath: ""} => throws validation error', () => {
       expect(() => {
         return compiledFileViewContract.parse({ relPath: '', displayLines: [], nodes: [] });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

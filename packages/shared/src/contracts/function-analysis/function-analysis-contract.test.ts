@@ -37,7 +37,7 @@ describe('functionAnalysisContract', () => {
     it('INVALID: {} => throws validation error for the missing entry', () => {
       expect(() => {
         return functionAnalysisContract.parse({ branches: [], exits: [], cases: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
 
     it('INVALID: {no branches} => throws validation error', () => {
@@ -45,7 +45,7 @@ describe('functionAnalysisContract', () => {
 
       expect(() => {
         return functionAnalysisContract.parse(rest);
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {no exits} => throws validation error', () => {
@@ -53,7 +53,7 @@ describe('functionAnalysisContract', () => {
 
       expect(() => {
         return functionAnalysisContract.parse(rest);
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {no cases} => throws validation error', () => {
@@ -61,7 +61,7 @@ describe('functionAnalysisContract', () => {
 
       expect(() => {
         return functionAnalysisContract.parse(rest);
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
   });
 });

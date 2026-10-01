@@ -24,7 +24,7 @@ describe('arrangeTextContract', () => {
     it('INVALID: {value: 6} => throws validation error', () => {
       expect(() => {
         return arrangeTextContract.parse(6 as never);
-      }).toThrow(/Expected string/u);
+      }).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

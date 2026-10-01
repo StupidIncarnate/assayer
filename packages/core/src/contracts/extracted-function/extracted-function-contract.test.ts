@@ -16,7 +16,7 @@ describe('extractedFunctionContract', () => {
     it('INVALID: {} => throws validation error for the missing entry', () => {
       expect(() => {
         return extractedFunctionContract.parse({ branches: [], exits: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
   });
 });

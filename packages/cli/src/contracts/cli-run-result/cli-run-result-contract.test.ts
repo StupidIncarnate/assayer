@@ -28,7 +28,7 @@ describe('cliRunResultContract', () => {
     it('INVALID: {exitCode: 1.5} => throws for a non-integer exit code', () => {
       expect(() => {
         return cliRunResultContract.parse({ stdout: '', stderr: '', exitCode: 1.5 });
-      }).toThrow(/[Ee]xpected integer/u);
+      }).toThrow(/Invalid input: expected int, received number/u);
     });
   });
 });

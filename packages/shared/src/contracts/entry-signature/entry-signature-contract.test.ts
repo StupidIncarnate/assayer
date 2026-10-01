@@ -33,7 +33,7 @@ describe('entrySignatureContract', () => {
     it('INVALID: {name: ""} => throws validation error', () => {
       expect(() => {
         return entrySignatureContract.parse({ name: '', params: [], returnType: { kind: 'string' } });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

@@ -43,7 +43,7 @@ describe('darkSpotContract', () => {
           startLine: 3,
           endLine: 5,
         });
-      }).toThrow(/Invalid option: expected one of/u);
+      }).toThrow(/Invalid input: expected \\"unhandled-syntax\\"/u);
     });
 
     it('INVALID: {startLine: 0} => throws validation error', () => {
@@ -55,7 +55,7 @@ describe('darkSpotContract', () => {
           startLine: 0,
           endLine: 5,
         });
-      }).toThrow(/greater than 0/u);
+      }).toThrow(/Too small: expected number to be >0/u);
     });
   });
 });

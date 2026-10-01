@@ -32,7 +32,7 @@ describe('walkFactsContract', () => {
     it.each(REQUIRED_FIELDS)('INVALID: {missing %s} => throws validation error', (field) => {
       const entries = Object.entries(WalkFactsStub()).filter(([key]) => key !== field);
 
-      expect(() => walkFactsContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
+      expect(() => walkFactsContract.parse(Object.fromEntries(entries))).toThrow(/Invalid input: expected array, received undefined/u);
     });
   });
 });

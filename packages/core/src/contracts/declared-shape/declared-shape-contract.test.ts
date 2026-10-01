@@ -62,7 +62,7 @@ describe('declaredShapeContract', () => {
     });
 
     it('INVALID: {no name} => throws Required', () => {
-      expect(() => declaredShapeContract.parse({ type: { kind: 'string' } })).toThrow(/Required/u);
+      expect(() => declaredShapeContract.parse({ type: { kind: 'string' } })).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('INVALID: {no type} => throws invalid_type', () => {

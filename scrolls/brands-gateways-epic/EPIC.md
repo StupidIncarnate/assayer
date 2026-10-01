@@ -422,4 +422,5 @@ One row per script run that changed files. The operator fills it in as the work 
 | Item | Script and arguments | Files changed | Leftovers | Commit |
 |---|---|---|---|---|
 | P0-6 | `node $H/scripts/p0-6/plain-brand-residue.cjs --root=$A`, then `apply` | 22 | 0 | the P0-5 and P0-6 commit |
+| P0-9 A | `node $H/scripts/p0-9-zod4-messages.cjs`, reading run `1790832052277-4919` | 94 test files, 133 assertions | 3, fixed by hand | the P0-9 A commit |
 | P0-3 | `python3 $H/scripts/p0-3/rename-scope.py`, then `apply`, then `npm install` | 11 `package.json` files and `package-lock.json` | 0 | the P0-3 commit |

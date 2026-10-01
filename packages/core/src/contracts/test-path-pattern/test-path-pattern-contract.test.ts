@@ -16,7 +16,7 @@ describe('testPathPatternContract', () => {
     // An empty pattern matches EVERY test file rather than none, so it would silently run the whole
     // cache instead of the one run asked for.
     it('EMPTY: {empty string} => throws rather than matching everything', () => {
-      expect(() => testPathPatternContract.parse('')).toThrow(/at least 1/u);
+      expect(() => testPathPatternContract.parse('')).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

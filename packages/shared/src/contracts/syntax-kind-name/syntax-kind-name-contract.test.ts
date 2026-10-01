@@ -24,13 +24,13 @@ describe('syntaxKindNameContract', () => {
     it('EMPTY: {value: ""} => throws validation error', () => {
       expect(() => {
         return syntaxKindNameContract.parse('');
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {value: 12} => throws validation error', () => {
       expect(() => {
         return syntaxKindNameContract.parse(12);
-      }).toThrow(/Expected string/u);
+      }).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

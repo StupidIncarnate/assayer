@@ -18,7 +18,7 @@ describe('harnessKeyPathContract', () => {
     });
 
     it('INVALID: {a number} => throws validation error', () => {
-      expect(() => harnessKeyPathContract.parse(7 as never)).toThrow(/Expected string/u);
+      expect(() => harnessKeyPathContract.parse(7 as never)).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

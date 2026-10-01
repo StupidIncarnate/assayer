@@ -48,7 +48,7 @@ describe('replyValueLayerAdapter', () => {
     it('EMPTY: {undefined} => throws', () => {
       replyValueLayerAdapterProxy();
 
-      expect(() => replyValueLayerAdapter({ reply: undefined })).toThrow(/Required/u);
+      expect(() => replyValueLayerAdapter({ reply: undefined })).toThrow(/Invalid input: expected object, received undefined/u);
     });
   });
 });

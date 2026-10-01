@@ -20,7 +20,7 @@ describe('predictedOutputContract', () => {
     it('INVALID: {empty string} => throws validation error', () => {
       expect(() => {
         return predictedOutputContract.parse('');
-      }).toThrow(/at least 1/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

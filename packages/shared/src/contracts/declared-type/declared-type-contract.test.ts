@@ -34,7 +34,7 @@ describe('declaredTypeContract', () => {
     it('INVALID: {no name} => throws validation error', () => {
       expect(() => {
         return declaredTypeContract.parse({ properties: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

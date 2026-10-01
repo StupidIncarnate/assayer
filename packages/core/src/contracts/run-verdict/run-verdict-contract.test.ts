@@ -19,7 +19,7 @@ describe('runVerdictContract', () => {
     it('INVALID: {no passed field} => throws validation error', () => {
       expect(() => {
         return runVerdictContract.parse({});
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected boolean, received undefined/u);
     });
   });
 });

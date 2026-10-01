@@ -26,7 +26,7 @@ describe('probePlanContract', () => {
     it('INVALID: {no contentHash} => throws, since offsets are meaningless without the bytes they index', () => {
       expect(() => {
         return probePlanContract.parse({ relPath: 'src/f.ts', sites: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

@@ -112,7 +112,7 @@ describe('conditionLeafContract', () => {
           operandType: { kind: 'boolean' },
           predicate: { kind: 'truthy' },
         });
-      }).toThrow(/at least 1/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

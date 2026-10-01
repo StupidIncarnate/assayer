@@ -66,13 +66,13 @@ describe('harnessFileContract', () => {
     it.each(REQUIRED_FIELDS)('INVALID: {missing %s} => throws validation error', (field) => {
       const entries = Object.entries(HarnessFileStub()).filter(([key]) => key !== field);
 
-      expect(() => harnessFileContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
+      expect(() => harnessFileContract.parse(Object.fromEntries(entries))).toThrow(/Invalid input: expected [a-z]+, received undefined/u);
     });
 
     it('EMPTY: {relPath: ""} => throws validation error', () => {
       expect(() => {
         return harnessFileContract.parse({ relPath: '', targetRelPath: 'src/audit.ts', keys: [] });
-      }).toThrow(/at least 1/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

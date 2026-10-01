@@ -28,7 +28,7 @@ describe('packageNameContract', () => {
     it('INVALID: {value: ""} => throws validation error', () => {
       expect(() => {
         return packageNameContract.parse('');
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

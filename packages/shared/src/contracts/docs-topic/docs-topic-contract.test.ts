@@ -22,13 +22,13 @@ describe('docsTopicContract', () => {
     it('INVALID: {value: ""} => throws validation error', () => {
       expect(() => {
         return docsTopicContract.parse('');
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {value: 123} => throws validation error', () => {
       expect(() => {
         return docsTopicContract.parse(123);
-      }).toThrow(/Expected string/u);
+      }).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

@@ -24,7 +24,7 @@ describe('lineEnrichmentContract', () => {
     it('INVALID: {line: 0} => throws validation error', () => {
       expect(() => {
         return lineEnrichmentContract.parse({ line: 0, symbol: 'name', typeText: 'string' });
-      }).toThrow(/greater than 0/u);
+      }).toThrow(/Too small: expected number to be >0/u);
     });
   });
 });

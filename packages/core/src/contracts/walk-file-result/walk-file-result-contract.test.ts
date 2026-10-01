@@ -45,7 +45,7 @@ describe('walkFileResultContract', () => {
     it.each(SUCCESS_FIELDS)('INVALID: {success: true, missing %s} => throws validation error', (field) => {
       const entries = Object.entries(WalkFileResultStub()).filter(([key]) => key !== field);
 
-      expect(() => walkFileResultContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
+      expect(() => walkFileResultContract.parse(Object.fromEntries(entries))).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {success: "yes"} => throws Invalid discriminator value', () => {
@@ -57,7 +57,7 @@ describe('walkFileResultContract', () => {
     it('INVALID: {success: false, no error} => throws validation error', () => {
       expect(() => {
         return walkFileResultContract.parse({ success: false });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
 
     it('INVALID: {success: false, error.line: 0} => throws validation error', () => {
@@ -66,7 +66,7 @@ describe('walkFileResultContract', () => {
           success: false,
           error: { line: 0, column: 7, message: "'}' expected." },
         });
-      }).toThrow(/greater than 0/u);
+      }).toThrow(/Too small: expected number to be >0/u);
     });
 
     it('INVALID: {success: false, column: 0} => throws validation error', () => {
@@ -75,7 +75,7 @@ describe('walkFileResultContract', () => {
           success: false,
           error: { line: 3, column: 0, message: "'}' expected." },
         });
-      }).toThrow(/greater than 0/u);
+      }).toThrow(/Too small: expected number to be >0/u);
     });
 
     it('INVALID: {success: false, error.message: ""} => throws validation error', () => {

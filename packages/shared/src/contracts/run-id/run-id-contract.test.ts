@@ -18,7 +18,7 @@ describe('runIdContract', () => {
     it('INVALID: {empty string} => throws, since it would address every run and none', () => {
       expect(() => {
         return runIdContract.parse('');
-      }).toThrow(/at least 1/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

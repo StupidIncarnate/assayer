@@ -43,7 +43,7 @@ describe('propertyGuardContract', () => {
           predicate: { kind: 'eq', literal: 'a' },
           operandType: { kind: 'string' },
         });
-      }).toThrow(/Expected number/u);
+      }).toThrow(/Invalid input: expected number, received string/u);
     });
   });
 });

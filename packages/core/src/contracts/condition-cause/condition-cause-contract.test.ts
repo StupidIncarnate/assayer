@@ -46,7 +46,7 @@ describe('conditionCauseContract', () => {
             },
           ],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected boolean, received undefined/u);
     });
 
     it('INVALID: {requirement whose leaf is a connective} => throws, since only leaves are required', () => {

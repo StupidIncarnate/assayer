@@ -41,7 +41,7 @@ describe('objectStubContract', () => {
           properties: [],
           readers: [],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

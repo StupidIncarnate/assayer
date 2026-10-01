@@ -24,7 +24,7 @@ describe('stringLengthContract', () => {
     it('INVALID: {-1} => throws validation error', () => {
       expect(() => {
         return stringLengthContract.parse(-1);
-      }).toThrow(/greater than or equal to 0/u);
+      }).toThrow(/Too small: expected number to be >=0/u);
     });
 
     // A bound may be fractional because the source may compare against one; a realized length may not,
@@ -32,7 +32,7 @@ describe('stringLengthContract', () => {
     it('INVALID: {1.5} => throws validation error', () => {
       expect(() => {
         return stringLengthContract.parse(1.5);
-      }).toThrow(/integer/u);
+      }).toThrow(/Invalid input: expected int, received number/u);
     });
   });
 });

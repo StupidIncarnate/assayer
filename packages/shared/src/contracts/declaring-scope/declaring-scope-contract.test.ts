@@ -24,7 +24,7 @@ describe('declaringScopeContract', () => {
     it('INVALID: {name: ""} => throws, since a scope with no name is not addressable', () => {
       expect(() => {
         return declaringScopeContract.parse({ name: '', hostEntry: 'audit', params: [] });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {no hostEntry} => throws, since a scope with nothing to call it through cannot be bound', () => {

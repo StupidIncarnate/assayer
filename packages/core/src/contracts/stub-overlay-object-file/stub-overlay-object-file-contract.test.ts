@@ -17,7 +17,7 @@ describe('stubOverlayObjectFileContract', () => {
     it('INVALID: {no type} => throws validation error', () => {
       expect(() => {
         return stubOverlayObjectFileContract.parse({ properties: {} });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

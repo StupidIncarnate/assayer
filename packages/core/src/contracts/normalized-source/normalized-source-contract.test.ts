@@ -14,11 +14,11 @@ describe('normalizedSourceContract', () => {
 
   describe('invalid input', () => {
     it('INVALID: {empty string} => throws', () => {
-      expect(() => normalizedSourceContract.parse('')).toThrow(/at least 1 character/u);
+      expect(() => normalizedSourceContract.parse('')).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {number} => throws', () => {
-      expect(() => normalizedSourceContract.parse(5 as never)).toThrow(/Expected string/u);
+      expect(() => normalizedSourceContract.parse(5 as never)).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

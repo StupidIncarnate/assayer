@@ -24,19 +24,19 @@ describe('statusResultContract', () => {
     it('INVALID: {version: ""} => throws validation error', () => {
       expect(() => {
         return statusResultContract.parse({ version: '', message: 'Assayer core online' });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {missing message} => throws validation error', () => {
       expect(() => {
         return statusResultContract.parse({ version: '1.0.0' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('INVALID: {version: 123} => throws validation error', () => {
       expect(() => {
         return statusResultContract.parse({ version: 123, message: 'Assayer core online' });
-      }).toThrow(/Expected string/u);
+      }).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

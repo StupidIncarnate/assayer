@@ -22,13 +22,13 @@ describe('lineNumberContract', () => {
     it('INVALID: {value: 0} => throws validation error', () => {
       expect(() => {
         return lineNumberContract.parse(0);
-      }).toThrow(/greater than 0/u);
+      }).toThrow(/Too small: expected number to be >0/u);
     });
 
     it('INVALID: {value: 1.5} => throws validation error', () => {
       expect(() => {
         return lineNumberContract.parse(1.5);
-      }).toThrow(/Expected integer/u);
+      }).toThrow(/Invalid input: expected int, received number/u);
     });
   });
 });

@@ -20,7 +20,7 @@ describe('envReadContract', () => {
     it('EMPTY: {no property} => throws validation error', () => {
       expect(() => {
         return envReadContract.parse({ literals: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

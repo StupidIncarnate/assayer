@@ -16,7 +16,7 @@ describe('progressBarLineContract', () => {
     it('INVALID: {value: ""} => throws validation error', () => {
       expect(() => {
         return progressBarLineContract.parse('');
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });
