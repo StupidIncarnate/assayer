@@ -15,7 +15,7 @@ export const mapNodeContract = z.object({
   name: z.string().min(1).brand<'MapNodeName'>().optional(),
   startLine: z.number().int().positive().brand<'MapNodeStartLine'>(),
   endLine: z.number().int().positive().brand<'MapNodeEndLine'>(),
-  meta: z.record(z.string(), z.unknown()).brand<'MapNodeMeta'>().optional(),
+  meta: z.record(z.string(), z.json()).brand<'MapNodeMeta'>().optional(),
 }).brand<'MapNode'>();
 
 export type MapNode = z.infer<typeof mapNodeContract>;
