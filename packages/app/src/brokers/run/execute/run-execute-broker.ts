@@ -6,12 +6,12 @@
  * await runExecuteBroker({ relPath });
  * // Returns the RunResult the CLI just produced and saved
  */
-import type { RunResult, RelPath } from '@assayer/shared/contracts';
+import type { RunResult } from '@assayer/shared/contracts';
 import { window } from '#gateway/browser/window';
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
 import { runResultContract } from '@assayer/shared/contracts';
 
-export const runExecuteBroker = async ({ relPath }: { relPath: RelPath }): Promise<RunResult> => {
+export const runExecuteBroker = async ({ relPath }: { relPath: string }): Promise<RunResult> => {
   const bridge = window.assayerBridge;
 
   if (bridge?.runFile === undefined) {

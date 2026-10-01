@@ -3,7 +3,6 @@ import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
 import { GlobalUseStub } from '@assayer/shared/contracts/global-use/global-use.stub';
 import { ModuleEdgeStub } from '@assayer/shared/contracts/module-edge/module-edge.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { compileResolveGraphBroker } from './compile-resolve-graph-broker';
@@ -51,7 +50,7 @@ describe('compileResolveGraphBroker', () => {
       const result = await compileResolveGraphBroker({
         root: '/repo',
         blobsDir: '/blobs',
-        files: [{ relPath: RelPathStub({ value: 'src/a.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/a.ts', contentHash: HASH }],
       });
 
       expect(result).toStrictEqual({
@@ -88,7 +87,7 @@ describe('compileResolveGraphBroker', () => {
       const result = await compileResolveGraphBroker({
         root: '/repo',
         blobsDir: '/blobs',
-        files: [{ relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/a/caller.ts', contentHash: HASH }],
       });
 
       expect(result).toStrictEqual({
@@ -131,7 +130,7 @@ describe('compileResolveGraphBroker', () => {
       const result = await compileResolveGraphBroker({
         root: '/repo',
         blobsDir: '/blobs',
-        files: [{ relPath: RelPathStub({ value: 'src/a.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/a.ts', contentHash: HASH }],
       });
 
       expect(result).toStrictEqual({
@@ -195,8 +194,8 @@ describe('compileResolveGraphBroker', () => {
         blobsDir: '/blobs',
         cacheDir: '/repo/.assayer/cache',
         files: [
-          { relPath: RelPathStub({ value: 'src/a.ts' }), contentHash: HASH },
-          { relPath: RelPathStub({ value: 'src/b.ts' }), contentHash: HASH },
+          { relPath: 'src/a.ts', contentHash: HASH },
+          { relPath: 'src/b.ts', contentHash: HASH },
         ],
       });
 
@@ -273,8 +272,8 @@ describe('compileResolveGraphBroker', () => {
         blobsDir: '/blobs',
         cacheDir: '/repo/.assayer/cache',
         files: [
-          { relPath: RelPathStub({ value: 'src/a.ts' }), contentHash: HASH },
-          { relPath: RelPathStub({ value: 'src/b.ts' }), contentHash: HASH },
+          { relPath: 'src/a.ts', contentHash: HASH },
+          { relPath: 'src/b.ts', contentHash: HASH },
         ],
       });
 

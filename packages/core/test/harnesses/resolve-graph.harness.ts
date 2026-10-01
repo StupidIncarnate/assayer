@@ -16,7 +16,6 @@ import { mkdtempSync, ensureDirSync, writeFileSync, realpathSync, rmSync } from 
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
@@ -79,8 +78,8 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: contentHashTransformer({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
@@ -105,8 +104,8 @@ export const resolveGraphHarness = (): {
         blobsDir,
         cacheDir: join(dir, '.assayer', 'cache'),
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: contentHashTransformer({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
@@ -130,9 +129,9 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/barrel/index.ts' }), contentHash: contentHashTransformer({ content: BARREL_SRC }) },
-          { relPath: RelPathStub({ value: 'src/c/user.ts' }), contentHash: contentHashTransformer({ content: USER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/barrel/index.ts', contentHash: contentHashTransformer({ content: BARREL_SRC }) },
+          { relPath: 'src/c/user.ts', contentHash: contentHashTransformer({ content: USER_SRC }) },
         ],
       });
     },
@@ -149,7 +148,7 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/broken.ts' }), contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
+        files: [{ relPath: 'src/broken.ts', contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
       });
     },
 
@@ -165,7 +164,7 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/dynamic.ts' }), contentHash: contentHashTransformer({ content: DYNAMIC_SRC }) }],
+        files: [{ relPath: 'src/dynamic.ts', contentHash: contentHashTransformer({ content: DYNAMIC_SRC }) }],
       });
     },
   };

@@ -17,12 +17,10 @@
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { harnessClassifyBroker } from '../../harness/classify/harness-classify-broker';
 import { isSourceFileIncludedGuard } from '../../../guards/is-source-file-included/is-source-file-included-guard';
-import type { RelPath } from '@assayer/shared/contracts';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { readFile } from '#gateway/node/fs__promises';
 import { relative } from '#gateway/node/path';
 import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
-import { relPathContract } from '@assayer/shared/contracts';
 
 export const compilePlanCurrentBroker = async ({
   root,
@@ -31,14 +29,14 @@ export const compilePlanCurrentBroker = async ({
   root: string;
   exclude?: readonly string[];
 }): Promise<{
-  targets: { relPath: RelPath; content: FileContents }[];
-  harnesses: { relPath: RelPath; content: FileContents }[];
+  targets: { relPath: string; content: FileContents }[];
+  harnesses: { relPath: string; content: FileContents }[];
 }> => {
   const absPaths = await compileWalkWorkingTreeBroker({ root });
 
   const relPathed = absPaths.map((abs) => ({
     abs,
-    relPath: relPathContract.parse(relative(root, String(abs))),
+    relPath: relative(root, String(abs)),
   }));
 
   const included = relPathed.filter((r) =>

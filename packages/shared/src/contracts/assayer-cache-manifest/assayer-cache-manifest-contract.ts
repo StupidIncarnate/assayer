@@ -17,7 +17,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { branchNameContract } from '../branch-name/branch-name-contract';
 import { repoNameContract } from '../repo-name/repo-name-contract';
@@ -35,7 +34,7 @@ export const assayerCacheManifestContract = z.object({
       z.object({
         branch: branchNameContract.optional(),
         commit: z.string().min(1).brand<'CommitSha'>().optional(),
-        files: z.array(z.object({ relPath: relPathContract, contentHash: contentHashContract })),
+        files: z.array(z.object({ relPath: z.string().min(1).brand<'AssayerCacheManifestNamespacesFilesRelPath'>(), contentHash: contentHashContract })),
       }),
     )
     .brand<'NamespaceMap'>(),

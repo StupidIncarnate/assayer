@@ -28,7 +28,6 @@ import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
 import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract } from '@assayer/shared/contracts';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
@@ -114,7 +113,7 @@ export const harnessGraphHarness = (): {
     const processed = await compileProcessFileBroker({ relPath: SOURCE_REL, content: params.source, blobsDir });
     const contentHash = contentHashTransformer({ content: params.source });
 
-    const files = [{ relPath: RelPathStub({ value: SOURCE_REL }), contentHash }];
+    const files = [{ relPath: SOURCE_REL, contentHash }];
     const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
     const result = await compileHarnessGraphBroker({
@@ -123,7 +122,7 @@ export const harnessGraphHarness = (): {
       blobsDir,
       resolvedIndex: resolved.index,
       files,
-      harnesses: [{ relPath: RelPathStub({ value: HARNESS_REL }), content: params.harness }],
+      harnesses: [{ relPath: HARNESS_REL, content: params.harness }],
     });
 
     const written = harnessIndexContract.parse(

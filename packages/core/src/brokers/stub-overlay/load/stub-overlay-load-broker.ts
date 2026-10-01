@@ -12,7 +12,7 @@
  * await stubOverlayLoadBroker({ repoRoot: '/repo/smoke-repo' });
  * // Returns a readonly StubOverlay[] sorted by key — the committed corrections found under the root
  */
-import { stubOverlayContract, relPathContract } from '@assayer/shared/contracts';
+import { stubOverlayContract } from '@assayer/shared/contracts';
 import type { StubOverlay } from '@assayer/shared/contracts';
 
 import { stubOverlayObjectFileContract } from '../../../contracts/stub-overlay-object-file/stub-overlay-object-file-contract';
@@ -40,7 +40,7 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
     objectAbs
       .filter((abs) => String(abs).endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromObjects = relPathContract.parse(relative(objectsRoot, String(abs)));
+        const relFromObjects = relative(objectsRoot, String(abs));
         const definitionRelPath = filePathContract.parse(dirname(String(relFromObjects)));
         const typeName = String(filePathContract.parse(basename(String(relFromObjects)))).slice(0, -JSON_EXT.length);
         const raw = (await readFile(String(abs)));
@@ -62,7 +62,7 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
     envAbs
       .filter((abs) => String(abs).endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromEnv = relPathContract.parse(relative(envRoot, String(abs)));
+        const relFromEnv = relative(envRoot, String(abs));
         const property = String(filePathContract.parse(basename(String(relFromEnv)))).slice(0, -JSON_EXT.length);
         const raw = (await readFile(String(abs)));
         const file = stubOverlayEnvFileContract.parse(JSON.parse(String(raw)));

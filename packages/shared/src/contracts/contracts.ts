@@ -16,7 +16,6 @@ export * from './docs-topic/docs-topic-contract';
 
 export * from './docs-result/docs-result-contract';
 
-export * from './rel-path/rel-path-contract';
 
 export * from './content-hash/content-hash-contract';
 

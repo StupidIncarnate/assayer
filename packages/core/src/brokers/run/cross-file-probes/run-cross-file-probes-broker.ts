@@ -19,7 +19,6 @@
  * await runCrossFileProbesBroker({ walked, root: '/repo', relPath: 'src/cross-file-map.ts', probeDir: '/repo/.assayer/cache/probes' });
  * // Writes '<probeDir>/<siblingContentHash>.json' for each mapped imported callee, returns ['src/band-reading.ts']
  */
-import type { RelPath } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
@@ -39,7 +38,7 @@ export const runCrossFileProbesBroker = async ({
   root: string;
   relPath: string;
   probeDir: string;
-}): Promise<RelPath[]> => {
+}): Promise<string[]> => {
   if (!walked.success) {
     return [];
   }

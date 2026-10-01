@@ -28,8 +28,8 @@
  *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files: [{ relPath, contentHash }] });
  * // Writes '/repo/.assayer/cache/stubs/feature-x.json' and returns { index: StubIndex, guards: PropertyGuard[] }
  */
-import { compiledFileBlobContract, envStubContract, objectStubContract, relPathContract, stubIndexContract, stubEntryContract } from '@assayer/shared/contracts';
-import type { ContentHash, RelPath, ResolvedIndex, StubIndex } from '@assayer/shared/contracts';
+import { compiledFileBlobContract, envStubContract, objectStubContract, stubIndexContract, stubEntryContract } from '@assayer/shared/contracts';
+import type { ContentHash, ResolvedIndex, StubIndex } from '@assayer/shared/contracts';
 
 import type { PropertyGuard } from '../../../contracts/property-guard/property-guard-contract';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
@@ -51,7 +51,7 @@ export const compileStubGraphBroker = async ({
   namespace: string;
   blobsDir: string;
   resolvedIndex: ResolvedIndex;
-  files: readonly { relPath: RelPath; contentHash: ContentHash }[];
+  files: readonly { relPath: string; contentHash: ContentHash }[];
 }): Promise<{ index: StubIndex; guards: PropertyGuard[] }> => {
   const blobs = await Promise.all(
     files.map(async (file) => {
@@ -65,7 +65,7 @@ export const compileStubGraphBroker = async ({
       const properties = collectPropertyDemandsTransformer({ declaredType: group.declaredType, leaves: group.leaves });
       const readers = [...new Set(group.readers.map((reader) => String(reader)))]
         .sort((a, b) => (a < b ? -1 : 1))
-        .map((reader) => relPathContract.parse(reader));
+        .map((reader) => reader);
 
       return objectStubContract.parse({
         key: stubEntryContract.shape.key.parse(`${String(group.definitionRelPath)}#${String(group.typeName)}`),

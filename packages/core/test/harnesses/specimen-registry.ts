@@ -16,8 +16,6 @@
  * specimenRegistry.get(relPathContract.parse('packages/syntax-repository/src/happy-path/boolean/and/and.ts'));
  * // ['access:named', 'branch:if']
  */
-import { relPathContract } from '@assayer/shared/contracts';
-import type { RelPath } from '@assayer/shared/contracts';
 
 import type { SyntaxTrait } from './syntax-traits';
 
@@ -703,9 +701,9 @@ const DECLARATIONS = {
   [`${CATALOGUE}/sad-path/length/contradictory-bounds/contradictory-bounds.ts`]: ['access:named', 'branch:if', 'lint:unreachable-exit'],
 } as const;
 
-export const specimenRegistry = new Map<RelPath, readonly SyntaxTrait[]>(
-  Object.entries(DECLARATIONS).map(([relPath, traits]): [RelPath, readonly SyntaxTrait[]] => [
-    relPathContract.parse(relPath),
+export const specimenRegistry = new Map<string, readonly SyntaxTrait[]>(
+  Object.entries(DECLARATIONS).map(([relPath, traits]): [string, readonly SyntaxTrait[]] => [
+    relPath,
     traits,
   ]),
 );

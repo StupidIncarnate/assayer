@@ -3,7 +3,6 @@ import { TestEntryLayerWidget } from './test-entry-layer-widget';
 import { TestEntryLayerWidgetProxy } from './test-entry-layer-widget.proxy';
 import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 const NAMED_FUNCTION = FunctionAnalysisStub({
   entry: EntrySignatureStub({
@@ -70,7 +69,7 @@ describe('TestEntryLayerWidget', () => {
       TestEntryLayerWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <TestEntryLayerWidget fn={MODULE_ENTRY} relPath={RelPathStub({ value: 'src/message.ts' })} />,
+        ui: <TestEntryLayerWidget fn={MODULE_ENTRY} relPath={'src/message.ts'} />,
       });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');

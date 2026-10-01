@@ -38,12 +38,11 @@ import { caseResultContract } from '../case-result/case-result-contract';
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
 import { entryGapContract } from '../entry-gap/entry-gap-contract';
 import { lintEntryContract } from '../lint-entry/lint-entry-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { undrivenEntryContract } from '../undriven-entry/undriven-entry-contract';
 
 export const runResultContract = z.object({
   runId: z.string().min(1).brand<'RunResultRunId'>(),
-  relPath: relPathContract,
+  relPath: z.string().min(1).brand<'RunResultRelPath'>(),
   cases: z.array(caseResultContract),
   gaps: z.array(entryGapContract),
   darkSpots: z.array(darkSpotContract),

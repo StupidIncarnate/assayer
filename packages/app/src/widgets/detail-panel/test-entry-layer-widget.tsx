@@ -9,7 +9,7 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Stack, Text } from '#gateway/npm/mantine__core';
-import type { FunctionAnalysis, LineNumber, RelPath, RunResult } from '@assayer/shared/contracts';
+import type { FunctionAnalysis, LineNumber, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer, moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 
 import type { RunMode } from '../../contracts/status-view/status-view-contract';
@@ -17,7 +17,7 @@ import { TestCaseLayerWidget } from './test-case-layer-widget';
 
 export interface TestEntryLayerWidgetProps {
   fn: FunctionAnalysis;
-  relPath?: RelPath | null | undefined;
+  relPath?: string | null | undefined;
   hoveredLine?: LineNumber | null | undefined;
   run?: RunResult | undefined;
   runMode?: RunMode | undefined;

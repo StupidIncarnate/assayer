@@ -49,7 +49,7 @@ const isAnalysedSourceFile = (entry: { name: string; parentPath: string }): bool
 
 export const syntaxSurfaceHarness = (): {
   surfaceHeaderPattern: () => RegExp;
-  fileLeaves: () => ReturnType<typeof RelPathStub>[];
+  fileLeaves: () => string[];
   dirNames: () => ReturnType<typeof FolderNameStub>[];
 } => ({
   // The header pins the compiled surface's file counts: `ts N tsx M`, where N/M come from the same
@@ -70,7 +70,7 @@ export const syntaxSurfaceHarness = (): {
   // The FILE_TREE_FILE leaves are the specimen basenames — duplicates included (in-function.ts ×3,
   // in-class.ts ×2, pure-statement.ts ×2), sorted, matching the tree the manifest relPaths build. Both
   // `.ts` and `.tsx` specimens are leaves, exactly as both feed the header's `ts N tsx M` counts.
-  fileLeaves: (): ReturnType<typeof RelPathStub>[] =>
+  fileLeaves: (): string[] =>
     catalogueFiles()
       .filter((entry) => isAnalysedSourceFile(entry))
       .map((entry) => entry.name)

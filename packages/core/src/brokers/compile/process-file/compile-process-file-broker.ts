@@ -22,7 +22,7 @@ import { mapProjectionTransformer } from '../../../transformers/map-projection/m
 import { moduleGraphProjectionTransformer } from '../../../transformers/module-graph-projection/module-graph-projection-transformer';
 
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
-import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
+import { compiledFileBlobContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
@@ -71,7 +71,7 @@ export const compileProcessFileBroker = async ({
   const moduleGraph = moduleGraphProjectionTransformer({ walked });
 
   const blob = compiledFileBlobContract.parse({
-    relPath: relPathContract.parse(relPath),
+    relPath: relPath,
     contentHash,
     nodes: extracted.nodes,
     displayLines,

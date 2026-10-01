@@ -17,7 +17,6 @@ import { namespaceNameContract } from '../namespace-name/namespace-name-contract
 import { branchNameContract } from '../branch-name/branch-name-contract';
 import { compileModeContract } from '../compile-mode/compile-mode-contract';
 import { fileCountContract } from '../file-count/file-count-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { columnNumberContract } from '../column-number/column-number-contract';
 
@@ -34,7 +33,7 @@ export const compileResultContract = z.object({
   errors: z.array(
     z.object({
       namespace: namespaceNameContract,
-      relPath: relPathContract,
+      relPath: z.string().min(1).brand<'CompileResultErrorsRelPath'>(),
       line: lineNumberContract,
       column: columnNumberContract,
       message: z.string().min(1).brand<'CompileErrorMessage'>(),

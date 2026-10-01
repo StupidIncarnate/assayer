@@ -35,9 +35,8 @@ import {
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
 import { BranchNameStub } from '@assayer/shared/contracts/branch-name/branch-name.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
-import type { BranchName, RelPath, ContentHash } from '@assayer/shared/contracts';
+import type { BranchName, ContentHash } from '@assayer/shared/contracts';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { execPath } from '#gateway/node/process';
@@ -69,7 +68,7 @@ export const assayerCompileHarness = (): {
   read: ({ relPath }: { relPath: string }) => string;
   exists: ({ relPath }: { relPath: string }) => boolean;
   manifestNamespaceNames: () => readonly BranchName[];
-  manifestRelPaths: ({ namespace }: { namespace: string }) => readonly RelPath[];
+  manifestRelPaths: ({ namespace }: { namespace: string }) => readonly string[];
   manifestContentHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
   manifestNamespaceHasCommit: ({ namespace }: { namespace: string }) => boolean;
   blobHashes: () => readonly ContentHash[];
@@ -180,14 +179,14 @@ export const assayerCompileHarness = (): {
         .sort((a, b) => (a < b ? -1 : 1))
         .map((name) => BranchNameStub({ value: name }));
     },
-    manifestRelPaths: ({ namespace }: { namespace: string }): readonly RelPath[] => {
+    manifestRelPaths: ({ namespace }: { namespace: string }): readonly string[] => {
       const manifest = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       return (manifest.namespaces[namespace]?.files ?? [])
         .map((file) => String(file.relPath))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-        .map((relPath) => RelPathStub({ value: relPath }));
+        .map((relPath) => relPath);
     },
     manifestContentHash: ({
       namespace,

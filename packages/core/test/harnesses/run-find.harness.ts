@@ -26,9 +26,8 @@ import { mkdtempSync, ensureDirSync, writeFileSync, realpathSync, rmSync } from 
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
-import type { RelPath, RunResult } from '@assayer/shared/contracts';
+import type { RunResult } from '@assayer/shared/contracts';
 
 import { runConsoleFindBroker } from '../../src/brokers/run/console-find/run-console-find-broker';
 import { runFindBroker } from '../../src/brokers/run/find/run-find-broker';
@@ -44,7 +43,7 @@ export const runFindHarness = (): {
   afterEach: () => void;
   seed: (params: {
     harness?: string;
-  }) => Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunResult['runId'] }>;
+  }) => Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: string; runId: RunResult['runId'] }>;
   editHarness: (params: { configDir: string; harness: string }) => void;
   findRun: (params: { configDir: string; relPath: string }) => Promise<RunResult | undefined>;
   findConsole: (params: { configDir: string; relPath: string }) => Promise<string | undefined>;
@@ -64,7 +63,7 @@ export const runFindHarness = (): {
       harness,
     }: {
       harness?: string;
-    }): Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunResult['runId'] }> => {
+    }): Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: string; runId: RunResult['runId'] }> => {
       const configDir = FilePathStub({ value: realpathSync(mkdtempSync(join(tmpdir(), 'assayer-run-find-'))) });
       dirs.push(configDir);
       ensureDirSync(join(String(configDir), 'src'));
@@ -79,11 +78,11 @@ export const runFindHarness = (): {
       ensureDirSync(runDir);
       writeFileSync(
         join(runDir, 'run.json'),
-        JSON.stringify(RunResultStub({ runId, relPath: RelPathStub({ value: SOURCE_REL }) })),
+        JSON.stringify(RunResultStub({ runId, relPath: SOURCE_REL })),
       );
       writeFileSync(join(runDir, 'console.txt'), String(`${SOURCE_REL}  1/1 passed\n`));
 
-      return { configDir, relPath: RelPathStub({ value: SOURCE_REL }), runId };
+      return { configDir, relPath: SOURCE_REL, runId };
     },
 
     editHarness: ({ configDir, harness }: { configDir: string; harness: string }): void => {

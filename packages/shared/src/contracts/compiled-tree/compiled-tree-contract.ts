@@ -30,7 +30,7 @@ export interface TreeNode {
 const treeNodeContract: z.ZodType<TreeNode> = z.lazy(() =>
   z.object({
     name: treeNodeNameContract,
-    path: relPathContract,
+    path: z.string().min(1).brand<'TreeNodePath'>(),
     kind: treeNodeKindContract,
     children: z.array(treeNodeContract).optional(),
   }),

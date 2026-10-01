@@ -29,14 +29,14 @@ import { runSubscribeOutputBroker } from '../../brokers/run/subscribe-output/run
 import { runExecuteBroker } from '../../brokers/run/execute/run-execute-broker';
 import { runFetchConsoleBroker } from '../../brokers/run/fetch-console/run-fetch-console-broker';
 import { runFetchSavedBroker } from '../../brokers/run/fetch-saved/run-fetch-saved-broker';
-import type { RunResult, RelPath } from '@assayer/shared/contracts';
+import type { RunResult } from '@assayer/shared/contracts';
 
 const EMPTY_CONSOLE = '';
 
 export const useFileRunBinding = ({
   relPath,
 }: {
-  relPath: RelPath | null;
+  relPath: string | null;
 }): {
   run: RunResult | undefined;
   loading: boolean;

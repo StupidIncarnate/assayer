@@ -37,14 +37,7 @@ import {
   harnessIndexContract,
   lineNumberContract,
 } from '@assayer/shared/contracts';
-import type {
-  ColumnNumber,
-  ContentHash,
-  HarnessIndex,
-  LineNumber,
-  RelPath,
-  ResolvedIndex,
-} from '@assayer/shared/contracts';
+import type { ColumnNumber, ContentHash, HarnessIndex, LineNumber, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { harnessValueTypesTransformer } from '../../../transformers/harness-value-types/harness-value-types-transformer';
@@ -70,11 +63,11 @@ export const compileHarnessGraphBroker = async ({
   namespace: string;
   blobsDir: string;
   resolvedIndex: ResolvedIndex;
-  files: readonly { relPath: RelPath; contentHash: ContentHash }[];
-  harnesses: readonly { relPath: RelPath; content: string }[];
+  files: readonly { relPath: string; contentHash: ContentHash }[];
+  harnesses: readonly { relPath: string; content: string }[];
 }): Promise<{
   index: HarnessIndex;
-  errors: readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[];
+  errors: readonly { relPath: string; line: LineNumber; column: ColumnNumber; message: string }[];
 }> => {
   const ordered = [...harnesses].sort((a, b) => (String(a.relPath) < String(b.relPath) ? -1 : 1));
   const sources = files.map((file) => file.relPath);

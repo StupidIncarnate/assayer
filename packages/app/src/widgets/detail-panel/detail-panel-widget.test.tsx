@@ -12,7 +12,6 @@ import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-a
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
 import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 import { LintEntryStub } from '@assayer/shared/contracts/lint-entry/lint-entry.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
@@ -184,7 +183,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts' })} />,
+        ui: <DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={'src/happy-path/import-local/uses-greeting/uses-greeting.ts'} />,
       });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');
@@ -197,7 +196,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/node-global/uses-console/uses-console.ts' })} />,
+        ui: <DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={'src/happy-path/node-global/uses-console/uses-console.ts'} />,
       });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('uses-console.ts · 1 cases');
@@ -991,7 +990,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
 
       const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/x/thing.ts' })} />,
+        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />,
       });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([

@@ -8,12 +8,12 @@
  * await runFetchSavedBroker({ relPath });
  * // Returns the saved RunResult, or undefined when the file has never been run
  */
-import type { RunResult, RelPath } from '@assayer/shared/contracts';
+import type { RunResult } from '@assayer/shared/contracts';
 import { window } from '#gateway/browser/window';
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
 import { runResultContract } from '@assayer/shared/contracts';
 
-export const runFetchSavedBroker = async ({ relPath }: { relPath: RelPath }): Promise<RunResult | undefined> => {
+export const runFetchSavedBroker = async ({ relPath }: { relPath: string }): Promise<RunResult | undefined> => {
   const bridge = window.assayerBridge;
 
   if (bridge?.getSavedRun === undefined) {

@@ -27,7 +27,7 @@
  * await runUnitBroker({ cacheDir, coreRoot, repoRoot, relPath, absPath, source, runId, analyzerContentHash });
  * // Returns { runId, relPath, cases: [{ status, observedPath, trace }], gaps, darkSpots, undriven }
  */
-import { relPathContract, runResultContract } from '@assayer/shared/contracts';
+import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
@@ -124,7 +124,7 @@ export const runUnitBroker = async ({
     modulePath: absPath,
     // Where a colocated harness WOULD be, always: the projection names it only when some case actually
     // reaches for a supplied input, so the two facts cannot drift apart.
-    harnessPath: `${repoRoot}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`,
+    harnessPath: `${repoRoot}/${String(harnessPathTransformer({ relPath: relPath }))}`,
   });
 
   await ensureDir(probeDir);

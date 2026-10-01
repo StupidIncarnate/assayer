@@ -1,6 +1,5 @@
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { useFileRunBinding } from './use-file-run-binding';
 import { useFileRunBindingProxy } from './use-file-run-binding.proxy';
@@ -16,7 +15,7 @@ describe('useFileRunBinding', () => {
       proxy.setupSavedRun({ run });
       proxy.runFails({ message: 'opening a file must never run it' });
 
-      const { result } = renderHook(() => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }));
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
       await waitFor(() => {
@@ -30,7 +29,7 @@ describe('useFileRunBinding', () => {
       const proxy = useFileRunBindingProxy();
       proxy.neverRun();
 
-      const { result } = renderHook(() => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }));
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
       await waitFor(() => {
@@ -59,7 +58,7 @@ describe('useFileRunBinding', () => {
       });
       proxy.runFails({ message: 'opening a file must never run it' });
 
-      const { result } = renderHook(() => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }));
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
       await waitFor(() => {
@@ -76,7 +75,7 @@ describe('useFileRunBinding', () => {
       const proxy = useFileRunBindingProxy();
       proxy.neverRun();
 
-      const { result } = renderHook(() => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }));
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
       await waitFor(() => {
@@ -97,7 +96,7 @@ describe('useFileRunBinding', () => {
       const fresh = RunResultStub({ runId: 'fresh' });
       proxy.setupRunResult({ run: fresh });
 
-      const { result } = renderHook(() => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }));
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
       await waitFor(() => {
@@ -120,7 +119,7 @@ describe('useFileRunBinding', () => {
       proxy.neverRun();
       proxy.runFails({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { result } = renderHook(() => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }));
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
       await waitFor(() => {

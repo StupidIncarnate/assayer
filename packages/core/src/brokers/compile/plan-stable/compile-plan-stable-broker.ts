@@ -12,7 +12,7 @@
  * // ref's commit, or { mode: 'net-new' | 'incremental', targets: [...], harnesses: [...] } otherwise
  */
 import { compileModeContract } from '@assayer/shared/contracts';
-import type { CompileMode, RelPath } from '@assayer/shared/contracts';
+import type { CompileMode } from '@assayer/shared/contracts';
 
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
 import { gitLsTreeBroker } from '../../git/ls-tree/git-ls-tree-broker';
@@ -32,8 +32,8 @@ export const compilePlanStableBroker = async ({
   exclude?: readonly string[];
 }): Promise<{
   mode: CompileMode;
-  targets: { relPath: RelPath; content: string }[];
-  harnesses: { relPath: RelPath; content: string }[];
+  targets: { relPath: string; content: string }[];
+  harnesses: { relPath: string; content: string }[];
 }> => {
   const currentCommit = await gitResolveCommitBroker({ repoRoot, ref });
 

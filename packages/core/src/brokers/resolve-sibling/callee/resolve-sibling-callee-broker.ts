@@ -16,13 +16,11 @@
  * resolveSiblingCalleeBroker({ specifier: './band-reading', containingFile: '/repo/src/a.ts', root: '/repo', options });
  * // Returns { walked, relPath: 'src/band-reading.ts', source } or undefined
  */
-import type { RelPath } from '@assayer/shared/contracts';
 
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { readFileSync } from '#gateway/node/fs';
 import { relative } from '#gateway/node/path';
-import { relPathContract } from '@assayer/shared/contracts';
 
 export const resolveSiblingCalleeBroker = ({
   specifier,
@@ -34,7 +32,7 @@ export const resolveSiblingCalleeBroker = ({
   containingFile: string;
   root: string;
   options: Parameters<typeof importSpecifierResolveBroker>[0]['options'];
-}): { walked: ReturnType<typeof walkFileTransformer>; relPath: RelPath; source: string } | undefined => {
+}): { walked: ReturnType<typeof walkFileTransformer>; relPath: string; source: string } | undefined => {
   const resolved = importSpecifierResolveBroker({ specifier, containingFile, options });
 
   if (!resolved.resolved) {
@@ -42,7 +40,7 @@ export const resolveSiblingCalleeBroker = ({
   }
 
   const fileName = String(resolved.fileName);
-  const relPath = relPathContract.parse(relative(root, fileName));
+  const relPath = relative(root, fileName);
 
   if (String(relPath).startsWith('..') || fileName.includes('/node_modules/')) {
     return undefined;

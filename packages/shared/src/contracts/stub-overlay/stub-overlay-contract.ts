@@ -20,7 +20,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
@@ -28,13 +27,13 @@ export const stubOverlayContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('object'),
     key: stubEntryContract.shape.key,
-    overlayPath: relPathContract,
+    overlayPath: z.string().min(1).brand<'StubOverlayOverlayPath'>(),
     properties: z.array(z.object({ name: z.string().min(1).brand<'StubOverlayPropertiesName'>(), values: z.array(representativeValueContract) })),
   }),
   z.object({
     kind: z.literal('env'),
     key: stubEntryContract.shape.key,
-    overlayPath: relPathContract,
+    overlayPath: z.string().min(1).brand<'StubOverlayOverlayPath'>(),
     property: envVarNameContract,
     values: z.array(representativeValueContract),
   }),

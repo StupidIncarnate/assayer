@@ -21,7 +21,6 @@ import { coreRuntimeStatics } from '../../../statics/core-runtime/core-runtime-s
 import type { ContentHash } from '@assayer/shared/contracts';
 import { readFile } from '#gateway/node/fs__promises';
 import { basename, relative } from '#gateway/node/path';
-import { relPathContract } from '@assayer/shared/contracts';
 
 export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promise<ContentHash> => {
   const rootHashes = await Promise.all(
@@ -29,7 +28,7 @@ export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promis
       const tree = basename(root) === coreRuntimeStatics.layout.distFolder ? 'dist' : 'source';
       const files = await compileWalkWorkingTreeBroker({ root });
       const codeFiles = files
-        .map((path) => ({ path: String(path), relPath: relPathContract.parse(relative(root, String(path))) }))
+        .map((path) => ({ path: String(path), relPath: relative(root, String(path)) }))
         .filter(({ relPath }) => isAnalyzerCodeFileGuard({ relPath: String(relPath), tree }));
       const entries = await Promise.all(
         codeFiles.map(async ({ path, relPath }) => {

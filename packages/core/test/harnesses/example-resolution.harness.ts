@@ -18,7 +18,6 @@ import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, 
 import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
@@ -87,7 +86,7 @@ export const exampleResolutionHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content }) };
+          return { relPath: relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 
@@ -109,7 +108,7 @@ export const exampleResolutionHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content }) };
+          return { relPath: relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 
@@ -129,7 +128,7 @@ export const exampleResolutionHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
+        files: [{ relPath: relPath, contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
       });
     },
   };

@@ -81,7 +81,7 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Tabs, Text, Stack, Button, Group } from '#gateway/npm/mantine__core';
-import type { FileAnalysis, LineNumber, RelPath, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
+import type { FileAnalysis, LineNumber, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
 
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
 import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
@@ -98,7 +98,7 @@ export interface DetailPanelWidgetProps {
   running?: boolean;
   runError?: Error | null;
   resolvedEdges?: readonly ResolvedEdge[] | undefined;
-  relPath?: RelPath | null;
+  relPath?: string | null;
   runMode?: RunMode;
   onRun?: () => void;
 }

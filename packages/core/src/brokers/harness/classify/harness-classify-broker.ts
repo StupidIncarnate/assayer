@@ -19,7 +19,6 @@
  * harnessClassifyBroker({ files: [{ relPath, content }, ...] });
  * // Returns { targets: [...], harnesses: [...] } — the same entries, partitioned
  */
-import type { RelPath } from '@assayer/shared/contracts';
 
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../statics/harness-module/harness-module-statics';
@@ -27,10 +26,10 @@ import { harnessModuleStatics } from '../../../statics/harness-module/harness-mo
 export const harnessClassifyBroker = ({
   files,
 }: {
-  files: readonly { relPath: RelPath; content: string }[];
+  files: readonly { relPath: string; content: string }[];
 }): {
-  targets: { relPath: RelPath; content: string }[];
-  harnesses: { relPath: RelPath; content: string }[];
+  targets: { relPath: string; content: string }[];
+  harnesses: { relPath: string; content: string }[];
 } => {
   const classified = files.map((file) => ({
     file: { relPath: file.relPath, content: file.content },

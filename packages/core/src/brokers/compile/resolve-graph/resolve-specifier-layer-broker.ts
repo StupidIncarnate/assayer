@@ -15,8 +15,8 @@
  *   options, blobsByRelPath, builtins, seen: new Set() });
  * // Returns { kind: 'local', relPath } | { kind: 'package', packageName } | { kind: 'builtin', packageName } | { kind: 'unresolved' }
  */
-import { packageNameContract, relPathContract } from '@assayer/shared/contracts';
-import type { CompiledFileBlob, PackageName, RelPath } from '@assayer/shared/contracts';
+import { packageNameContract } from '@assayer/shared/contracts';
+import type { CompiledFileBlob, PackageName } from '@assayer/shared/contracts';
 
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
@@ -44,7 +44,7 @@ export const resolveSpecifierLayerBroker = ({
   builtins: ReadonlySet<string>;
   seen: ReadonlySet<string>;
 }):
-  | { kind: 'local'; relPath: RelPath }
+  | { kind: 'local'; relPath: string }
   | { kind: 'package'; packageName: PackageName; dtsPath: FilePath }
   | { kind: 'builtin'; packageName: PackageName }
   | { kind: 'unresolved' } => {
@@ -61,7 +61,7 @@ export const resolveSpecifierLayerBroker = ({
   }
 
   const fileName = String(resolved.fileName);
-  const rel = String(relPathContract.parse(relative(root, fileName)));
+  const rel = String(relative(root, fileName));
   const outsideRoot = rel.startsWith('..');
   const inNodeModules = fileName.includes('/node_modules/');
 
@@ -74,7 +74,7 @@ export const resolveSpecifierLayerBroker = ({
     return { kind: 'package', packageName: packageNameContract.parse(packageName), dtsPath: filePathContract.parse(fileName) };
   }
 
-  const relPath = relPathContract.parse(rel);
+  const relPath = rel;
   const blob = blobsByRelPath.get(rel);
 
   if (importedName === undefined || seen.has(rel) || blob === undefined) {

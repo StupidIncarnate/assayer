@@ -25,7 +25,6 @@ import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, 
 import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
@@ -76,7 +75,7 @@ export const stubGraphHarness = (): {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: BRANCH_LOCAL_REL, content, blobsDir });
 
-      const files = [{ relPath: RelPathStub({ value: BRANCH_LOCAL_REL }), contentHash: contentHashTransformer({ content }) }];
+      const files = [{ relPath: BRANCH_LOCAL_REL, contentHash: contentHashTransformer({ content }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -94,7 +93,7 @@ export const stubGraphHarness = (): {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: MULTI_READ_REL, content, blobsDir });
 
-      const files = [{ relPath: RelPathStub({ value: MULTI_READ_REL }), contentHash: contentHashTransformer({ content }) }];
+      const files = [{ relPath: MULTI_READ_REL, contentHash: contentHashTransformer({ content }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -112,7 +111,7 @@ export const stubGraphHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content }) };
+          return { relPath: relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 

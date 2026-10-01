@@ -12,12 +12,12 @@
 import { useState } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Group, NavLink, Stack, Text } from '#gateway/npm/mantine__core';
-import type { RelPath, TreeNode } from '@assayer/shared/contracts';
+import type { TreeNode } from '@assayer/shared/contracts';
 
 export interface FileTreeNodeLayerWidgetProps {
   node: TreeNode;
-  onFileClick: (params: { relPath: RelPath }) => void;
-  selectedRelPath?: RelPath | null;
+  onFileClick: (params: { relPath: string }) => void;
+  selectedRelPath?: string | null;
 }
 
 export const FileTreeNodeLayerWidget = ({

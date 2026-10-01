@@ -1,7 +1,6 @@
 import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
@@ -329,7 +328,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
-        relPath: RelPathStub({ value: 'src/index.ts' }),
+        relPath: 'src/index.ts',
       });
 
       const { displayLines, nodes, contentHash } = blob;
@@ -357,7 +356,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
-        relPath: RelPathStub({ value: 'src/index.ts' }),
+        relPath: 'src/index.ts',
       });
 
       expect(result.resolvedEdges).toStrictEqual([ownEdge]);
@@ -386,7 +385,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/config' }),
-        relPath: RelPathStub({ value: 'src/classify.ts' }),
+        relPath: 'src/classify.ts',
       });
 
       expect({
@@ -427,7 +426,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
-        relPath: RelPathStub({ value: 'src/audit.ts' }),
+        relPath: 'src/audit.ts',
       });
 
       expect(result.analysis).toStrictEqual(MAP_ANALYSIS);
@@ -451,7 +450,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
-        relPath: RelPathStub({ value: 'src/classify.ts' }),
+        relPath: 'src/classify.ts',
       });
 
       expect(result.analysis).toStrictEqual(CLASSIFY_ANALYSIS);
@@ -478,7 +477,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/config' }),
-        relPath: RelPathStub({ value: 'src/reader.ts' }),
+        relPath: 'src/reader.ts',
       });
 
       expect({
@@ -530,7 +529,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/config' }),
-        relPath: RelPathStub({ value: 'src/decide.ts' }),
+        relPath: 'src/decide.ts',
       });
 
       expect({
@@ -566,7 +565,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/config' }),
-        relPath: RelPathStub({ value: 'src/cross-file-map.ts' }),
+        relPath: 'src/cross-file-map.ts',
       });
 
       expect(result.analysis?.functions.flatMap((fn) => fn.cases)).toStrictEqual([
@@ -602,7 +601,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/config' }),
-        relPath: RelPathStub({ value: 'src/audit.ts' }),
+        relPath: 'src/audit.ts',
       });
 
       expect({
@@ -639,7 +638,7 @@ describe('compiledFileResolveBroker', () => {
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
-        relPath: RelPathStub({ value: 'src/audit.ts' }),
+        relPath: 'src/audit.ts',
       });
 
       expect({
@@ -685,7 +684,7 @@ describe('compiledFileResolveBroker', () => {
       await expect(
         compiledFileResolveBroker({
           repoPath: RepoPathStub({ value: '/repo' }),
-          relPath: RelPathStub({ value: 'missing.ts' }),
+          relPath: 'missing.ts',
         }),
       ).rejects.toThrow(/missing\.ts/u);
     });

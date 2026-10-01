@@ -6,7 +6,7 @@
  * await compiledFileFetchBroker({ relPath });
  * // Returns the CompiledFileView for the requested path
  */
-import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
+import type { CompiledFileView } from '@assayer/shared/contracts';
 import { window } from '#gateway/browser/window';
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
 import { compiledFileViewContract } from '@assayer/shared/contracts';
@@ -14,7 +14,7 @@ import { compiledFileViewContract } from '@assayer/shared/contracts';
 export const compiledFileFetchBroker = async ({
   relPath,
 }: {
-  relPath: RelPath;
+  relPath: string;
 }): Promise<CompiledFileView> => {
   const bridge = window.assayerBridge;
 

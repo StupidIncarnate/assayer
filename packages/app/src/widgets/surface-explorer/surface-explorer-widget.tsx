@@ -32,7 +32,7 @@ import { useCallback, useState } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Center, Flex, Tabs, Text } from '#gateway/npm/mantine__core';
 import { lineNumberContract } from '@assayer/shared/contracts';
-import type { CompiledFileView, LineNumber, RelPath } from '@assayer/shared/contracts';
+import type { CompiledFileView, LineNumber } from '@assayer/shared/contracts';
 
 import { useCompiledTreeBinding } from '../../bindings/use-compiled-tree/use-compiled-tree-binding';
 import { useFileRunBinding } from '../../bindings/use-file-run/use-file-run-binding';
@@ -58,7 +58,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   // reads as `thorough`, so every case shows live until told otherwise.
   const { data: status } = useAssayerStatusBinding();
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
-  const [selectedRelPath, setSelectedRelPath] = useState<RelPath | null>(null);
+  const [selectedRelPath, setSelectedRelPath] = useState<string | null>(null);
   const [hoveredLine, setHoveredLine] = useState<LineNumber | null>(null);
   // Keyed on the selected path, so opening a file LOADS its last run and its report, and never starts
   // one.
@@ -138,7 +138,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 <FileTreeWidget
                   tree={tree}
                   selectedRelPath={selectedRelPath}
-                  onFileClick={({ relPath }: { relPath: RelPath }): void => {
+                  onFileClick={({ relPath }: { relPath: string }): void => {
                     setSelectedRelPath(relPath);
                     setHoveredLine(null);
                     // Both belong to the file they were made on. Carrying the dismissal across the tree

@@ -44,10 +44,10 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { darkSpotContract, derivedTestCaseContract, entryAccessContract, entryGapContract, lintEntryContract, relPathContract, undrivenEntryContract, coverageContract } from '@assayer/shared/contracts';
+import { darkSpotContract, derivedTestCaseContract, entryAccessContract, entryGapContract, lintEntryContract, undrivenEntryContract, coverageContract } from '@assayer/shared/contracts';
 
 export const caseSetContract = z.object({
-  relPath: relPathContract,
+  relPath: z.string().min(1).brand<'CaseSetRelPath'>(),
   modulePath: z.string().min(1).brand<'ModulePath'>(),
   harnessPath: z.string().min(1).brand<'HarnessPath'>().optional(),
   entries: z.array(

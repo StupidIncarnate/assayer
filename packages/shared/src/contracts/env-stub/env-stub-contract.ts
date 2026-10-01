@@ -17,7 +17,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
@@ -26,7 +25,7 @@ export const envStubContract = z.object({
   property: envVarNameContract,
   values: z.array(representativeValueContract),
   guessed: z.boolean(),
-  readers: z.array(relPathContract),
+  readers: z.array(z.string().min(1).brand<'EnvStubReaders'>()),
 });
 
 export type EnvStub = z.infer<typeof envStubContract>;

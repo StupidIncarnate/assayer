@@ -20,7 +20,7 @@
  * // Returns a validated CompiledFileView; throws if relPath is not in the current namespace.
  */
 import { compiledFileViewContract } from '@assayer/shared/contracts';
-import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
+import type { CompiledFileView } from '@assayer/shared/contracts';
 import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, harnessRealizeBroker, paramTypeResolveBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
 import { walkFileTransformer } from '@assayer/core/transformers';
 
@@ -37,7 +37,7 @@ export const compiledFileResolveBroker = async ({
   relPath,
 }: {
   repoPath: RepoPath;
-  relPath: RelPath;
+  relPath: string;
 }): Promise<CompiledFileView> => {
   const manifest = await cacheLoadManifestBroker({ repoPath });
   const { namespaceName, files } = currentNamespaceTransformer({ manifest });

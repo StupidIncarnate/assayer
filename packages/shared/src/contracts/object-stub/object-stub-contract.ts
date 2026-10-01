@@ -19,15 +19,14 @@
 import { z } from '#gateway/npm/zod';
 
 import { propertyDemandContract } from '../property-demand/property-demand-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
 export const objectStubContract = z.object({
   key: stubEntryContract.shape.key,
-  definitionRelPath: relPathContract,
+  definitionRelPath: z.string().min(1).brand<'ObjectStubDefinitionRelPath'>(),
   typeName: z.string().min(1).brand<'ObjectStubTypeName'>(),
   properties: z.array(propertyDemandContract),
-  readers: z.array(relPathContract),
+  readers: z.array(z.string().min(1).brand<'ObjectStubReaders'>()),
 });
 
 export type ObjectStub = z.infer<typeof objectStubContract>;

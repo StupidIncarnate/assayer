@@ -14,13 +14,13 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { contentHashContract, relPathContract } from '@assayer/shared/contracts';
+import { contentHashContract } from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 
 export const probePlanContract = z.object({
   contentHash: contentHashContract,
-  relPath: relPathContract,
+  relPath: z.string().min(1).brand<'ProbePlanRelPath'>(),
   sites: z.array(probeSiteContract),
 });
 

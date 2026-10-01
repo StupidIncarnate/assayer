@@ -9,14 +9,14 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Stack } from '#gateway/npm/mantine__core';
-import type { CompiledTree, RelPath } from '@assayer/shared/contracts';
+import type { CompiledTree } from '@assayer/shared/contracts';
 
 import { FileTreeNodeLayerWidget } from './file-tree-node-layer-widget';
 
 export interface FileTreeWidgetProps {
   tree: CompiledTree;
-  onFileClick: (params: { relPath: RelPath }) => void;
-  selectedRelPath?: RelPath | null;
+  onFileClick: (params: { relPath: string }) => void;
+  selectedRelPath?: string | null;
 }
 
 export const FileTreeWidget = ({

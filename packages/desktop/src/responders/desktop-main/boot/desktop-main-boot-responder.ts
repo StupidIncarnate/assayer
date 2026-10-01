@@ -12,7 +12,6 @@
  * await DesktopMainBootResponder({ repoPath });
  * // Opens the window and registers the status/tree/file/run/saved-run IPC; returns { success: true }
  */
-import { relPathContract } from '@assayer/shared/contracts';
 import { runConsoleFindBroker, runFindBroker } from '@assayer/core/brokers';
 
 import { desktopBootBroker } from '../../../brokers/desktop/boot/desktop-boot-broker';
@@ -42,25 +41,25 @@ export const DesktopMainBootResponder = async ({
     resolveStatus: async () => statusResolveBroker({ repoPath }),
     resolveCompiledTree: async () => compiledTreeResolveBroker({ repoPath }),
     resolveCompiledFile: async ({ relPath }) =>
-      compiledFileResolveBroker({ repoPath, relPath: relPathContract.parse(relPath) }),
+      compiledFileResolveBroker({ repoPath, relPath: relPath }),
     resolveStubs: async () => stubIndexResolveBroker({ repoPath }),
     resolveRun: async ({ relPath, onOutput }) =>
       runExecuteBroker({
         repoPath: String(repoPath),
         root: String(await repoSourceRootBroker({ repoPath })),
-        relPath: String(relPathContract.parse(relPath)),
+        relPath: String(relPath),
         onOutput,
       }),
     resolveSavedRun: async ({ relPath }) =>
       runFindBroker({
         configDir: String(repoPath),
         root: String(await repoSourceRootBroker({ repoPath })),
-        relPath: String(relPathContract.parse(relPath)),
+        relPath: String(relPath),
       }),
     resolveSavedConsole: async ({ relPath }) =>
       runConsoleFindBroker({
         configDir: String(repoPath),
         root: String(await repoSourceRootBroker({ repoPath })),
-        relPath: String(relPathContract.parse(relPath)),
+        relPath: String(relPath),
       }),
   });

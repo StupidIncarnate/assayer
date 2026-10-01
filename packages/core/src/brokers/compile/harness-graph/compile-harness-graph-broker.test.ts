@@ -1,7 +1,6 @@
 import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { FileContentsStub } from '../../../contracts/file-contents/file-contents.stub';
@@ -122,10 +121,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: HARNESS_SOURCE }),
           },
         ],
@@ -158,10 +157,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: HARNESS_SOURCE }),
           },
         ],
@@ -180,10 +179,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: EDITED_SOURCE }),
           },
         ],
@@ -214,12 +213,12 @@ describe('compileHarnessGraphBroker', () => {
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
         files: [
-          { relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() },
-          { relPath: RelPathStub({ value: 'src/band.ts' }), contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
+          { relPath: 'src/audit.ts', contentHash: ContentHashStub() },
+          { relPath: 'src/band.ts', contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
         ],
         harnesses: [
-          { relPath: RelPathStub({ value: 'src/band.harness.ts' }), content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
-          { relPath: RelPathStub({ value: 'src/audit.harness.ts' }), content: FileContentsStub({ value: HARNESS_SOURCE }) },
+          { relPath: 'src/band.harness.ts', content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
+          { relPath: 'src/audit.harness.ts', content: FileContentsStub({ value: HARNESS_SOURCE }) },
         ],
       });
 
@@ -234,12 +233,12 @@ describe('compileHarnessGraphBroker', () => {
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
         files: [
-          { relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() },
-          { relPath: RelPathStub({ value: 'src/band.ts' }), contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
+          { relPath: 'src/audit.ts', contentHash: ContentHashStub() },
+          { relPath: 'src/band.ts', contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
         ],
         harnesses: [
-          { relPath: RelPathStub({ value: 'src/audit.harness.ts' }), content: FileContentsStub({ value: HARNESS_SOURCE }) },
-          { relPath: RelPathStub({ value: 'src/band.harness.ts' }), content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
+          { relPath: 'src/audit.harness.ts', content: FileContentsStub({ value: HARNESS_SOURCE }) },
+          { relPath: 'src/band.harness.ts', content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
         ],
       });
 
@@ -268,7 +267,7 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [],
       });
 
@@ -295,10 +294,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/missing.harness.ts' }),
+            relPath: 'src/missing.harness.ts',
             content: FileContentsStub({ value: HARNESS_SOURCE }),
           },
         ],
@@ -331,10 +330,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: THROWING_SOURCE }),
           },
         ],
@@ -368,10 +367,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: WRONG_ENTRY_SOURCE }),
           },
         ],
@@ -400,10 +399,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: WRONG_PARAM_SOURCE }),
           },
         ],
@@ -432,10 +431,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: FILLABLE_PARAM_SOURCE }),
           },
         ],
@@ -465,10 +464,10 @@ describe('compileHarnessGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+            relPath: 'src/audit.harness.ts',
             content: FileContentsStub({ value: NOTHING_INVOICED_SOURCE }),
           },
         ],

@@ -9,12 +9,12 @@
  * await runFetchConsoleBroker({ relPath });
  * // Returns the saved RunConsole, or undefined when the file has no report for its current bytes
  */
-import type { RunConsole, RelPath } from '@assayer/shared/contracts';
+import type { RunConsole } from '@assayer/shared/contracts';
 import { window } from '#gateway/browser/window';
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
 import { runConsoleContract } from '@assayer/shared/contracts';
 
-export const runFetchConsoleBroker = async ({ relPath }: { relPath: RelPath }): Promise<RunConsole | undefined> => {
+export const runFetchConsoleBroker = async ({ relPath }: { relPath: string }): Promise<RunConsole | undefined> => {
   const bridge = window.assayerBridge;
 
   if (bridge?.getSavedConsole === undefined) {

@@ -46,7 +46,7 @@
  * harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
  * // Returns the FileAnalysis with harness-supplied entries driven and their input gaps paid
  */
-import { fileAnalysisContract, relPathContract, entryGapContract } from '@assayer/shared/contracts';
+import { fileAnalysisContract, entryGapContract } from '@assayer/shared/contracts';
 import type { EntryLabel, FileAnalysis, TypeText } from '@assayer/shared/contracts';
 
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
@@ -87,7 +87,7 @@ export const harnessRealizeBroker = ({
     return analysis;
   }
 
-  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
+  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPath }))}`;
 
   if (!existsSync(harnessPath)) {
     return analysis;

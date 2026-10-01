@@ -1,4 +1,3 @@
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { harnessTargetTransformer } from './harness-target-transformer';
 
@@ -6,8 +5,8 @@ describe('harnessTargetTransformer', () => {
   describe('pairing a harness with its source', () => {
     it('VALID: {src/audit.harness.ts beside src/audit.ts} => resolves the .ts source', () => {
       const result = harnessTargetTransformer({
-        relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-        sources: [RelPathStub({ value: 'src/audit.ts' }), RelPathStub({ value: 'src/other.ts' })],
+        relPath: 'src/audit.harness.ts',
+        sources: ['src/audit.ts', 'src/other.ts'],
       });
 
       expect(result).toBe('src/audit.ts');
@@ -15,8 +14,8 @@ describe('harnessTargetTransformer', () => {
 
     it('VALID: {src/panel.harness.ts beside src/panel.tsx} => resolves the .tsx source', () => {
       const result = harnessTargetTransformer({
-        relPath: RelPathStub({ value: 'src/panel.harness.ts' }),
-        sources: [RelPathStub({ value: 'src/panel.tsx' })],
+        relPath: 'src/panel.harness.ts',
+        sources: ['src/panel.tsx'],
       });
 
       expect(result).toBe('src/panel.tsx');
@@ -24,8 +23,8 @@ describe('harnessTargetTransformer', () => {
 
     it('EDGE: {both spellings present} => prefers the .ts source', () => {
       const result = harnessTargetTransformer({
-        relPath: RelPathStub({ value: 'src/panel.harness.ts' }),
-        sources: [RelPathStub({ value: 'src/panel.tsx' }), RelPathStub({ value: 'src/panel.ts' })],
+        relPath: 'src/panel.harness.ts',
+        sources: ['src/panel.tsx', 'src/panel.ts'],
       });
 
       expect(result).toBe('src/panel.ts');
@@ -33,8 +32,8 @@ describe('harnessTargetTransformer', () => {
 
     it('EDGE: {neither spelling among the sources} => resolves nothing', () => {
       const result = harnessTargetTransformer({
-        relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-        sources: [RelPathStub({ value: 'src/other.ts' })],
+        relPath: 'src/audit.harness.ts',
+        sources: ['src/other.ts'],
       });
 
       expect(result).toBe(undefined);
@@ -42,7 +41,7 @@ describe('harnessTargetTransformer', () => {
 
     it('EMPTY: {no sources at all} => resolves nothing', () => {
       const result = harnessTargetTransformer({
-        relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
+        relPath: 'src/audit.harness.ts',
         sources: [],
       });
 

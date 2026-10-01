@@ -9,13 +9,13 @@
  * // zero or more than one entry lacks a commit
  */
 import { namespaceNameContract } from '@assayer/shared/contracts';
-import type { AssayerCacheManifest, NamespaceName, RelPath, ContentHash } from '@assayer/shared/contracts';
+import type { AssayerCacheManifest, NamespaceName, ContentHash } from '@assayer/shared/contracts';
 
 export const currentNamespaceTransformer = ({
   manifest,
 }: {
   manifest: AssayerCacheManifest;
-}): { namespaceName: NamespaceName; files: { relPath: RelPath; contentHash: ContentHash }[] } => {
+}): { namespaceName: NamespaceName; files: { relPath: string; contentHash: ContentHash }[] } => {
   const entries = Object.entries(manifest.namespaces);
   const commitless = entries.filter(([, entry]) => entry.commit === undefined);
   const [found] = commitless;
