@@ -8,7 +8,7 @@ describe('cacheLoadBlobBroker', () => {
     it('VALID: {repoPath, contentHash} => returns the validated blob', async () => {
       const proxy = cacheLoadBlobBrokerProxy();
       const blob = CompiledFileBlobStub();
-      proxy.resolves({ blob });
+      proxy.resolves({ repoPath: '/repo', contentHash: 'abc123', blob });
 
       const result = await cacheLoadBlobBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
@@ -20,9 +20,9 @@ describe('cacheLoadBlobBroker', () => {
   });
 
   describe('read failure', () => {
-    it('ERROR: {adapter read rejects} => rejects with the underlying error', async () => {
+    it('ERROR: {blob file missing} => rejects with the underlying error', async () => {
       const proxy = cacheLoadBlobBrokerProxy();
-      proxy.rejects({ error: new Error('ENOENT') });
+      proxy.missing({ repoPath: '/repo', contentHash: 'abc123' });
 
       await expect(
         cacheLoadBlobBroker({

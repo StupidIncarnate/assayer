@@ -10,7 +10,7 @@ describe('cacheLoadManifestBroker', () => {
       const proxy = cacheLoadManifestBrokerProxy();
       const manifest = AssayerCacheManifestStub();
 
-      proxy.resolves({ manifest });
+      proxy.resolves({ repoPath: '/repo', manifest });
 
       const result = await cacheLoadManifestBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 
@@ -19,10 +19,10 @@ describe('cacheLoadManifestBroker', () => {
   });
 
   describe('error cases', () => {
-    it('ERROR: {adapter read rejects} => rejects with the underlying error', async () => {
+    it('ERROR: {manifest file missing} => rejects with the underlying error', async () => {
       const proxy = cacheLoadManifestBrokerProxy();
 
-      proxy.rejects({ error: new Error('ENOENT') });
+      proxy.missing({ repoPath: '/repo' });
 
       await expect(
         cacheLoadManifestBroker({ repoPath: RepoPathStub({ value: '/repo' }) }),

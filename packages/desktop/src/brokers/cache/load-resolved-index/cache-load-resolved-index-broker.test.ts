@@ -9,7 +9,7 @@ describe('cacheLoadResolvedIndexBroker', () => {
     it('VALID: {resolved index on disk} => returns the validated ResolvedIndex', async () => {
       const index = ResolvedIndexStub();
       const proxy = cacheLoadResolvedIndexBrokerProxy();
-      proxy.resolves({ index });
+      proxy.resolves({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await cacheLoadResolvedIndexBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
@@ -23,7 +23,7 @@ describe('cacheLoadResolvedIndexBroker', () => {
   describe('absent index', () => {
     it('EMPTY: {no resolved index for the namespace} => returns undefined', async () => {
       const proxy = cacheLoadResolvedIndexBrokerProxy();
-      proxy.absent();
+      proxy.absent({ repoPath: '/repo', namespace: 'main' });
 
       const result = await cacheLoadResolvedIndexBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
