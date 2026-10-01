@@ -50,7 +50,7 @@ const isAnalysedSourceFile = (entry: { name: string; parentPath: string }): bool
 export const syntaxSurfaceHarness = (): {
   surfaceHeaderPattern: () => RegExp;
   fileLeaves: () => string[];
-  dirNames: () => ReturnType<typeof FolderNameStub>[];
+  dirNames: () => string[];
 } => ({
   // The header pins the compiled surface's file counts: `ts N tsx M`, where N/M come from the same
   // inclusion rule the compiler uses (a `.ts`/`.tsx` that is not a colocated `.test.ts`/`.test.tsx`).
@@ -83,7 +83,7 @@ export const syntaxSurfaceHarness = (): {
   // paths that share a basename stay distinct — in-function ×3, in-class/length/pure-statement/unreachable
   // ×2 — each rendered showing that basename, exactly as the tree does. Projected to the basename and
   // sorted to match the asserted [...dirNames].sort().
-  dirNames: (): ReturnType<typeof FolderNameStub>[] => {
+  dirNames: (): string[] => {
     const dirPaths = new Set(
       catalogueFiles()
         .filter((entry) => isAnalysedSourceFile(entry))

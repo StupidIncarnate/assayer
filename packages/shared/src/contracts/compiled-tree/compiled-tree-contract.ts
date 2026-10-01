@@ -12,7 +12,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { repoNameContract } from '../repo-name/repo-name-contract';
-import { folderNameContract } from '../folder-name/folder-name-contract';
 import { treeNodeKindContract } from '../tree-node-kind/tree-node-kind-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
 
@@ -38,7 +37,7 @@ export const compiledTreeContract = z.object({
   summary: z.object({
     repoName: repoNameContract,
     branchName: z.string().min(1).brand<'CompiledTreeSummaryBranchName'>(),
-    rootFolderName: folderNameContract,
+    rootFolderName: z.string().min(1).brand<'CompiledTreeSummaryRootFolderName'>(),
     tsCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsCount'>(),
     tsxCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsxCount'>(),
   }),

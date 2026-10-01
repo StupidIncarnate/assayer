@@ -19,7 +19,6 @@ import { z } from '#gateway/npm/zod';
 
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { repoNameContract } from '../repo-name/repo-name-contract';
-import { folderNameContract } from '../folder-name/folder-name-contract';
 
 export const assayerCacheManifestContract = z.object({
   assayerVersion: z.string().min(1).brand<'AssayerVersion'>(),
@@ -38,7 +37,7 @@ export const assayerCacheManifestContract = z.object({
     )
     .brand<'NamespaceMap'>(),
   repoName: repoNameContract,
-  rootFolderName: folderNameContract,
+  rootFolderName: z.string().min(1).brand<'AssayerCacheManifestRootFolderName'>(),
 });
 
 export type AssayerCacheManifest = z.infer<typeof assayerCacheManifestContract>;

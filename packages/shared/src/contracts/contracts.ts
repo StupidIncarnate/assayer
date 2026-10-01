@@ -26,7 +26,6 @@ export * from './content-hash/content-hash-contract';
 
 export * from './repo-name/repo-name-contract';
 
-export * from './folder-name/folder-name-contract';
 
 export * from './map-node-kind/map-node-kind-contract';
 
