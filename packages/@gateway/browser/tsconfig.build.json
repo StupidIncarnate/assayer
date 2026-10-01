@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declarationMap": true,
+    "declaration": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.ward/build.tsbuildinfo",
+    "customConditions": [
+      "browser-own-source",
+      "gateway-dist",
+      "source"
+    ]
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.harness.ts",
+    "@types/**/*",
+    "dist"
+  ]
+}

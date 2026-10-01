@@ -1,0 +1,90 @@
+/**
+ * PURPOSE: Every folder directly under this package's own `src/` must name a real thing the Node
+ * runtime provides — a built-in module or a Node GLOBAL (`setTimeout`, `fetch`, …) — with exactly
+ * one reserved exception, `RESERVED_TEST_SUPPORT_FOLDER`, the one folder every gateway may hold for a
+ * shared, type-only proxy-addressing helper (`PathMatcher` here) that has no real builtin or global
+ * to be named after. ESLint's file-glob rules cannot make this check: it needs a maintained list of
+ * real platform names to compare folders against, not a source file a selector can parse.
+ * The built-in module names are Node's own `builtinModules`, read through this gateway's `module`
+ * subpath. A gateway file may import its own subpaths, and `gateway-import-boundary` (active, in the
+ * gateway ESLint config block) still refuses ANY import of `@dungeonmaster/shared` from inside one,
+ * this test included, since the gateway is the bottom layer.
+ * `nodeGlobalNamesForTest` is a SEPARATE maintained list this test owns outright (`builtinModules`
+ * carries no Node globals, only modules) — extend it here when a gateway folder
+ * wraps a Node global not already listed, per the layout standard's rule that a global keeps its own
+ * exact casing. `RESERVED_TEST_SUPPORT_FOLDER` is duplicated by hand from the same
+ * `gatewayReservedFolderNamesStatics.folders.testSupport` (`eslint-plugin`) `gateway-browser-globals`
+ * duplicates, for the same reason — change both when it changes.
+ *
+ * `.integration.test.ts`, not `.test.ts`: this file has no single implementation companion —
+ * `@dungeonmaster/enforce-test-colocation` requires one for a plain `.test.ts`, and is turned off (in
+ * `config-dungeonmaster-broker.ts`) only for `**\/src/*.integration.test.ts`.
+ *
+ * USAGE:
+ * npm run ward -- --only integration -- packages/@gateway/node/src/gateway-node-builtin-globals.integration.test.ts
+ */
+import { readdirSync } from 'fs';
+
+import { builtinModules } from './module/module';
+
+const SRC_DIR = __dirname;
+const SUBPATH_JOIN = '__';
+const RESERVED_TEST_SUPPORT_FOLDER = 'gateway-test-support';
+
+// Node globals this gateway wraps that are NOT also built-in module names. Node's built-in modules
+// (fs, path, process, …) already come from `builtinModules`; this list is only the extra surface
+// `globalThis` carries on top of that — add a name here when a new folder wraps one.
+const nodeGlobalNamesForTest = [
+  'AbortController',
+  'Date',
+  'Request',
+  'Response',
+  'atob',
+  'btoa',
+  'clearImmediate',
+  'clearInterval',
+  'clearTimeout',
+  'fetch',
+  'performance',
+  'queueMicrotask',
+  'setImmediate',
+  'setInterval',
+  'setTimeout',
+  'structuredClone',
+];
+
+const readOwnSrcFolders = (): string[] =>
+  readdirSync(SRC_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+
+const folderNamesABuiltinModule = ({ folderName }: { folderName: string }): boolean =>
+  builtinModules.some(
+    (moduleName) =>
+      folderName === moduleName || folderName.startsWith(`${moduleName}${SUBPATH_JOIN}`),
+  );
+
+const folderNamesAGlobal = ({ folderName }: { folderName: string }): boolean =>
+  nodeGlobalNamesForTest.some((globalName) => folderName === globalName);
+
+// A single named predicate, not an inline `&&`, so the conditional lives in a top-level function
+// instead of inside the `it()` body — `jest/no-conditional-in-test` flags a logical expression
+// written directly in a test.
+const folderNamesNeitherBuiltinNorGlobalNorReserved = ({
+  folderName,
+}: {
+  folderName: string;
+}): boolean =>
+  !folderNamesABuiltinModule({ folderName }) &&
+  !folderNamesAGlobal({ folderName }) &&
+  folderName !== RESERVED_TEST_SUPPORT_FOLDER;
+
+describe('gateway node builtin and global folder names', () => {
+  it('VALID: {every src/ folder} => names a real Node builtin module, a real Node global, or is the one reserved test-support folder', () => {
+    const foldersNamingNeither = readOwnSrcFolders().filter((folderName) =>
+      folderNamesNeitherBuiltinNorGlobalNorReserved({ folderName }),
+    );
+
+    expect(foldersNamingNeither).toStrictEqual([]);
+  });
+});

@@ -1,4 +1,11 @@
 {
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "crossSessionInbound": "refuse",
+  "promptCacheTtl": "1h",
+  "subagentPromptCacheTtl": "1h",
+  "promptSuggestionEnabled": false,
   "hooks": {
     "PreToolUse": [
       {
@@ -27,6 +34,24 @@
             "command": "dungeonmaster-pre-search"
           }
         ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-pre-folder-detail"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__dungeonmaster__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-pre-mcp-caller"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -36,6 +61,16 @@
           {
             "type": "command",
             "command": "dungeonmaster-post-ask-question"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-post-bash",
+            "timeout": 300
           }
         ]
       }
@@ -61,6 +96,14 @@
         "hooks": [
           {
             "type": "command",
+            "command": "dungeonmaster-session-snippet reportingFindings"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "dungeonmaster-session-snippet folderTypes"
           }
         ]
@@ -85,7 +128,71 @@
         "hooks": [
           {
             "type": "command",
+            "command": "dungeonmaster-session-snippet wardDiscipline"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "dungeonmaster-session-snippet packages"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet backgroundTasks"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet commentDiscipline"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet buildDiscipline"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet worktrees"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet generatedConfig"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet siegelense"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet consumerGatewayWrapper"
           }
         ]
       }
@@ -111,6 +218,14 @@
         "hooks": [
           {
             "type": "command",
+            "command": "dungeonmaster-session-snippet reportingFindings"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "dungeonmaster-session-snippet folderTypes"
           }
         ]
@@ -135,7 +250,71 @@
         "hooks": [
           {
             "type": "command",
+            "command": "dungeonmaster-session-snippet wardDiscipline"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "dungeonmaster-session-snippet packages"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet backgroundTasks"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet commentDiscipline"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet buildDiscipline"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet worktrees"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet generatedConfig"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet siegelense"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet consumerGatewayWrapper"
           }
         ]
       }
@@ -166,7 +345,6 @@
       "mcp__dungeonmaster__discover",
       "mcp__dungeonmaster__get-architecture",
       "mcp__dungeonmaster__get-folder-detail",
-      "mcp__dungeonmaster__get-syntax-rules",
       "mcp__dungeonmaster__get-testing-patterns",
       "mcp__dungeonmaster__get-quest",
       "mcp__dungeonmaster__modify-quest",
@@ -180,10 +358,33 @@
       "mcp__dungeonmaster__get-quest-planning-notes",
       "mcp__dungeonmaster__get-project-inventory",
       "mcp__dungeonmaster__create-quest",
-      "mcp__dungeonmaster__get-next-step",
-      "mcp__dungeonmaster__run-ward",
       "mcp__dungeonmaster__get-server-config",
-      "mcp__dungeonmaster__ask-user-question"
+      "mcp__dungeonmaster__ask-user-question",
+      "mcp__dungeonmaster__get-blight-checklist",
+      "mcp__dungeonmaster__get-quest-summary",
+      "mcp__dungeonmaster__create-worktree",
+      "mcp__dungeonmaster__quest-work",
+      "mcp__dungeonmaster__get-quest-work",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git merge-base:*)",
+      "mcp__claude-in-chrome",
+      "Bash(curl:*)",
+      "Bash(dungeonmaster siegelense:*)",
+      "Bash(kill:*)",
+      "Bash(lsof:*)",
+      "Bash(ps:*)",
+      "Bash(python3:*)"
     ]
   }
 }

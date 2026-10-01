@@ -28,3 +28,7 @@ playwright-report/
 # Everything else under .assayer/ (states, config, policies) IS committed; only cache/ is not.
 .assayer/cache/
 .claude/worktrees/
+worktrees/
+.quest-plans/
+.dungeonmaster-assets/siegelense-assets
+.ward-playwright-report*.json

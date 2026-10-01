@@ -4,7 +4,8 @@
   "description": "Test enforcement + generation for TypeScript repos, maintained by LLMs.",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/@gateway/*"
   ],
   "scripts": {
     "build": "tsc --build tsconfig.build.json && node scripts/copy-dist-package-json.mjs && npm run build -w @assayer/app",
@@ -17,7 +18,8 @@
     "test": "dungeonmaster-ward --only test",
     "test:syntax": "jest --config smoke-repo/packages/syntax-repository/jest.config.js",
     "typecheck:syntax": "npm run typecheck --prefix smoke-repo",
-    "test:eslint-rules": "jest --config eslint-rules/jest.config.js"
+    "test:eslint-rules": "jest --config eslint-rules/jest.config.js",
+    "postinstall": "if command -v dungeonmaster >/dev/null 2>&1; then dungeonmaster gateway-sync; fi"
   },
   "devDependencies": {
     "@dungeonmaster/cli": "file:../codex-of-consentient-craft/packages/cli",
@@ -29,6 +31,7 @@
     "@dungeonmaster/orchestrator": "file:../codex-of-consentient-craft/packages/orchestrator",
     "@dungeonmaster/server": "file:../codex-of-consentient-craft/packages/server",
     "@dungeonmaster/shared": "file:../codex-of-consentient-craft/packages/shared",
+    "@dungeonmaster/siegelense": "*",
     "@dungeonmaster/testing": "file:../codex-of-consentient-craft/packages/testing",
     "@dungeonmaster/tooling": "file:../codex-of-consentient-craft/packages/tooling",
     "@dungeonmaster/ward": "file:../codex-of-consentient-craft/packages/ward",
