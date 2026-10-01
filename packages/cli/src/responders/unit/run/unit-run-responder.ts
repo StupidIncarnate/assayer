@@ -28,7 +28,6 @@ import { cliUsageStatics } from '../../../statics/cli-usage/cli-usage-statics';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
 import { parseArgs } from '#gateway/node/util';
-import { cliPositionalContract } from '../../../contracts/cli-positional/cli-positional-contract';
 import { RunReportLayerResponder } from './run-report-layer-responder';
 
 export const UnitRunResponder = async ({
@@ -46,7 +45,7 @@ export const UnitRunResponder = async ({
   deadSurface: string;
   inputGaps: string;
 }): Promise<CliOutput> => {
-  const paths = parseArgs({ args: [...argv], strict: true, allowPositionals: true }).positionals.map((positional) => cliPositionalContract.parse(positional)).map(String);
+  const paths = parseArgs({ args: [...argv], strict: true, allowPositionals: true }).positionals.map((positional) => positional).map(String);
 
   if (paths.length === 0) {
     throw new CliExactOutputError({
