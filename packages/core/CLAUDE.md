@@ -1311,10 +1311,16 @@ own: the generated test file hands it core's main module, through
 
 **A relative import resolves the way TypeScript resolves it.** The root
 `ts-resolver.js` is the nested Jest's `resolver`. It asks ts-morph's
-`resolveModuleName`, with the nearest tsconfig's options, and takes the
-answer when it is TypeScript source outside `node_modules`. That is what lets
-`import { band } from './band.js'` find `band.ts` on `node16` and `nodenext`,
-in both formats. Anything else resolves through Jest's own resolver.
+`resolveModuleName`, with the options of the tsconfig that owns the importing
+file (section 5.10), and takes the answer when it is TypeScript source outside
+`node_modules`. That is what lets `import { band } from './band.js'` find
+`band.ts` on `node16` and `nodenext`, and what lets a `paths` alias resolve,
+in both formats. Anything else resolves through Jest's own resolver. The
+resolver is plain JS in a Jest worker, so it cannot call `brokers/tsconfig/owner`.
+It repeats that search over the same TypeScript calls. Jest gives a resolver
+only the importing file's folder, so it asks whether a config's parsed file
+list holds a file in that folder, where the broker asks about the file itself.
+A folder no config owns gets TypeScript's defaults.
 
 **One nested Jest run proves nothing about fifteen at once.**
 The worker runs every file of a batch, so memory stays flat only while the

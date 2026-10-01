@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Drives the REAL execution engine — analyze, assemble, the wrapped Jest in its worker, saved
- *   artifact — against three small consumer repos that differ only in module system: a CommonJS repo,
+ *   artifact — against small consumer repos that differ in module system or tsconfig layout: a CommonJS repo,
  *   a CommonJS repo on `node16` whose relative imports carry a `.js` suffix, and an ESM repo on
  *   `nodenext` with `"type": "module"`. Unlike `run-unit.harness.ts`, it needs no specimen: each
  *   fixture is the smallest repo that shows its module system, so the test proves the runner reads the
@@ -66,6 +66,20 @@ const FIXTURES = {
     'src/label.ts': LABEL,
     // The `.js` suffix names `label.ts`, which only TypeScript's own resolution knows.
     'src/grade.ts': `import { label } from './label.js';\n\n${GRADE_BODY}`,
+  },
+  // The nearest tsconfig, `src/tsconfig.json`, includes nothing, so it owns no file. The package's own
+  // `tsconfig.json` owns them and carries the `paths` alias, which only the owner's options know.
+  'owner-paths': {
+    'package.json': JSON.stringify({ name: 'fixture-owner-paths', private: true }),
+    'tsconfig.json': JSON.stringify({
+      compilerOptions: { ...COMPILER_OPTIONS, module: 'commonjs', moduleResolution: 'node', paths: { '@lib/*': ['./src/*'] } },
+    }),
+    'src/tsconfig.json': JSON.stringify({
+      compilerOptions: { ...COMPILER_OPTIONS, module: 'commonjs', moduleResolution: 'node' },
+      include: ['no-such-folder'],
+    }),
+    'src/label.ts': LABEL,
+    'src/grade.ts': `import { label } from '@lib/label';\n\n${GRADE_BODY}`,
   },
   esm: {
     'package.json': JSON.stringify({ name: 'fixture-esm', private: true, type: 'module' }),

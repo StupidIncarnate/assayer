@@ -37,6 +37,17 @@ describe('runExecuteCasesBroker (integration)', () => {
     });
   });
 
+  // The nearest tsconfig to `src/grade.ts` includes nothing, so it does not own the file. The package's own
+  // tsconfig owns it and carries the `paths` alias `@lib/*`. Resolving the alias proves the resolver reads the
+  // owner's options, never the nearest config's.
+  describe('a consumer whose nearest tsconfig does not own the importing file', () => {
+    it("VALID: {import '@lib/label' resolved only by the owner's paths} => resolves under the owner's options, and every case passes", async () => {
+      const result = await engine.run({ fixture: 'owner-paths', relPath: 'src/grade.ts', runId: 'r-owner' });
+
+      expect(result.cases.map((testCase) => testCase.status)).toStrictEqual(['passed', 'passed']);
+    });
+  });
+
   // nodenext with "type": "module" is ESM. The subject uses import.meta, top-level await, an ESM-only
   // package and a `.js` specifier, so it loads only as an ES module. Its tsconfig targets ES2022, so
   // `Promise.resolve` in the module scope is standard library, not a host global, and the module scope
