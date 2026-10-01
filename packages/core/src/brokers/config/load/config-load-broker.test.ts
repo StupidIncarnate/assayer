@@ -5,7 +5,7 @@ describe('configLoadBroker', () => {
   describe('valid config file', () => {
     it('VALID: {configPath: file with valid config JSON} => returns the parsed config', async () => {
       const proxy = configLoadBrokerProxy();
-      proxy.hasContent({ content: '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}' });
+      proxy.hasContent({ path: '/repo/assayer.config.json', content: '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn"}' });
 
       const result = await configLoadBroker({ configPath: '/repo/assayer.config.json' });
 
@@ -19,7 +19,7 @@ describe('configLoadBroker', () => {
   describe('malformed JSON', () => {
     it('ERROR: {configPath: file with a trailing comma} => returns success:false with the position from the parser message', async () => {
       const proxy = configLoadBrokerProxy();
-      proxy.hasContent({ content: '{"version": "1",}' });
+      proxy.hasContent({ path: '/repo/assayer.config.json', content: '{"version": "1",}' });
 
       const result = await configLoadBroker({ configPath: '/repo/assayer.config.json' });
 
@@ -33,7 +33,7 @@ describe('configLoadBroker', () => {
 
     it('ERROR: {configPath: file with a missing property value} => returns success:false, falling back to line 1 column 1 when the parser message has no position', async () => {
       const proxy = configLoadBrokerProxy();
-      proxy.hasContent({ content: '{"version": }' });
+      proxy.hasContent({ path: '/repo/assayer.config.json', content: '{"version": }' });
 
       const result = await configLoadBroker({ configPath: '/repo/assayer.config.json' });
 
@@ -49,7 +49,7 @@ describe('configLoadBroker', () => {
   describe('valid JSON that fails schema validation', () => {
     it('ERROR: {configPath: file with an invalid version literal} => rejects with the underlying validation error instead of a parse failure', async () => {
       const proxy = configLoadBrokerProxy();
-      proxy.hasContent({ content: '{"version":"2","repoRoot":".","exclude":[]}' });
+      proxy.hasContent({ path: '/repo/assayer.config.json', content: '{"version":"2","repoRoot":".","exclude":[]}' });
 
       await expect(configLoadBroker({ configPath: '/repo/assayer.config.json' })).rejects.toThrow(
         /Invalid input: expected/u
@@ -58,16 +58,12 @@ describe('configLoadBroker', () => {
   });
 
   describe('config file that cannot be read from disk', () => {
-    it("ERROR: {configPath: missing file, fsReadFileAdapter rejects with ENOENT} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+    it('ERROR: {configPath: missing file, the read rejects with ENOENT} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
       const proxy = configLoadBrokerProxy();
-      proxy.readThrows({
-        error: Object.assign(new Error("ENOENT: no such file or directory, open '/repo/assayer.config.json'"), {
-          code: 'ENOENT',
-        }),
-      });
+      proxy.readMissing({ path: '/repo/assayer.config.json' });
 
       await expect(configLoadBroker({ configPath: '/repo/assayer.config.json' })).rejects.toThrow(
-        "ENOENT: no such file or directory, open '/repo/assayer.config.json'",
+        /^ENOENT: op '\/repo\/assayer\.config\.json'$/u,
       );
     });
   });

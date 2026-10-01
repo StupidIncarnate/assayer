@@ -1,20 +1,18 @@
-import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
+import { writeFileProxy } from '#gateway/node/fs__promises/write-file/write-file.proxy';
 
 export const configStableBranchSaveBrokerProxy = (): {
-  succeeds: () => void;
-  // Every path the broker wrote, in call order. A test asking WHICH path the config landed at asserts
-  // this whole list, so a second write nobody expected fails it.
-  getWrittenPaths: () => unknown[];
-  getWrittenContentFor: ({ path }: { path: string }) => unknown;
+  succeeds: ({ path }: { path: string }) => void;
+  // Every write to the path, in call order. A test asking WHAT landed at a path asserts this whole
+  // list, so a second write nobody expected fails it.
+  getWrittenContentsFor: ({ path }: { path: string }) => unknown[];
 } => {
-  const writeFileProxy = fsWriteFileAdapterProxy();
+  const fileProxy = writeFileProxy();
 
   return {
-    succeeds: (): void => {
-      writeFileProxy.succeeds();
+    succeeds: ({ path }: { path: string }): void => {
+      fileProxy.succeeds({ path });
     },
-    getWrittenPaths: (): unknown[] => writeFileProxy.getWrittenPaths(),
-    getWrittenContentFor: ({ path }: { path: string }): unknown =>
-      writeFileProxy.getWrittenContentFor({ path }),
+    getWrittenContentsFor: ({ path }: { path: string }): unknown[] =>
+      fileProxy.getCallsFor({ path }).map((call) => call[1]),
   };
 };

@@ -16,11 +16,8 @@ import type { ExternalSignature, SymbolName } from '@assayer/shared/contracts';
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
-import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { ensureDir, pathExists, readFile, rename, writeFile } from '#gateway/node/fs__promises';
 import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const externalSignatureReadBroker = async ({
@@ -51,10 +48,10 @@ export const externalSignatureReadBroker = async ({
     return { usable: false };
   }
 
-  await fsMkdirAdapter({ path: dir });
+  await ensureDir(dir);
   const tmpPath = `${cachePath}.tmp`;
-  await fsWriteFileAdapter({ path: tmpPath, content: JSON.stringify(read.signature) });
-  await fsRenameAdapter({ from: tmpPath, to: cachePath });
+  await writeFile(tmpPath, JSON.stringify(read.signature));
+  await rename(tmpPath, cachePath);
 
   return { usable: true, signature: read.signature };
 };
