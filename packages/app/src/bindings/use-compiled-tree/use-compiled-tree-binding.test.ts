@@ -1,9 +1,7 @@
-import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
-
 import { useCompiledTreeBinding } from './use-compiled-tree-binding';
 import { useCompiledTreeBindingProxy } from './use-compiled-tree-binding.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts';
-import { renderHook } from '#gateway/npm/testing-library__react';
+import { renderHook, waitFor } from '#gateway/npm/testing-library__react';
 
 describe('useCompiledTreeBinding', () => {
   describe('successful fetch', () => {
@@ -15,10 +13,8 @@ describe('useCompiledTreeBinding', () => {
       const { result } = renderHook(() => useCompiledTreeBinding());
       const currentState = (): ReturnType<typeof useCompiledTreeBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().loading).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().loading).toBe(false);
       });
 
       expect(result.current).toStrictEqual({
@@ -50,10 +46,8 @@ describe('useCompiledTreeBinding', () => {
       const { result } = renderHook(() => useCompiledTreeBinding());
       const currentState = (): ReturnType<typeof useCompiledTreeBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().loading).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().loading).toBe(false);
       });
 
       expect(result.current).toStrictEqual({ loading: false, data: null, error });
