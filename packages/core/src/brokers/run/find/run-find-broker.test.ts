@@ -3,6 +3,9 @@ import { RunResultStub } from '@assayer/shared/contracts';
 import { runFindBroker } from './run-find-broker';
 import { runFindBrokerProxy } from './run-find-broker.proxy';
 
+// The REAL sha256 of `relPath\nsource` for src/a.ts, the id the runner names its directory with.
+const RUN_ID = 'c73c5a78c49441e87716db0bd78ae3b2c0f5c1fa0c00c420f8ad7f32761c6931';
+
 describe('runFindBroker', () => {
   describe('a file that has been run', () => {
     it('VALID: {a saved run for these bytes} => the run', async () => {
@@ -11,6 +14,8 @@ describe('runFindBroker', () => {
         sourcePath: '/repo/src/a.ts',
         harnessPath: '/repo/src/a.harness.ts',
         source: 'export const a = 1;\n',
+        configDir: '/repo',
+        runId: RUN_ID,
         run: RunResultStub(),
       });
 
@@ -28,6 +33,8 @@ describe('runFindBroker', () => {
         sourcePath: '/repo/src/a.ts',
         harnessPath: '/repo/src/a.harness.ts',
         source: 'export const a = 1;\n',
+        configDir: '/repo',
+        runId: RUN_ID,
       });
 
       const result = await runFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/a.ts' });

@@ -6,7 +6,7 @@ describe('runExecuteCasesBroker', () => {
   describe('the verdict it reports', () => {
     it('VALID: {every case reached its predicted exit} => success', async () => {
       const proxy = runExecuteCasesBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ runDir: '/cache/runs/r1' });
 
       const result = await runExecuteCasesBroker({
         runDir: '/cache/runs/r1',
@@ -21,7 +21,7 @@ describe('runExecuteCasesBroker', () => {
 
     it('VALID: {a case reached the wrong exit} => failure', async () => {
       const proxy = runExecuteCasesBrokerProxy();
-      proxy.fails();
+      proxy.fails({ runDir: '/cache/runs/r1' });
 
       const result = await runExecuteCasesBroker({
         runDir: '/cache/runs/r1',
@@ -40,6 +40,7 @@ describe('runExecuteCasesBroker', () => {
     // and setup file must be PATHS. That is why they exist as real files rather than live objects.
     it('VALID: {a source runtime} => an inline JSON config naming the ceremony files by path, with the source condition on', async () => {
       const proxy = runExecuteCasesBrokerProxy();
+      proxy.succeeds({ runDir: '/cache/runs/r1' });
 
       await runExecuteCasesBroker({
         runDir: '/cache/runs/r1',
@@ -114,6 +115,7 @@ describe('runExecuteCasesBroker', () => {
     // published core ships no TypeScript for `source` to resolve to.
     it('VALID: {a dist runtime} => no testEnvironmentOptions key, and dist module paths', async () => {
       const proxy = runExecuteCasesBrokerProxy();
+      proxy.succeeds({ runDir: '/cache/runs/r1' });
 
       await runExecuteCasesBroker({
         runDir: '/cache/runs/r1',
@@ -183,6 +185,8 @@ describe('runExecuteCasesBroker', () => {
     // Two files, one config: measured 3.0GB -> 0.8GB and 25s -> 8s across the catalogue.
     it('VALID: {two different runs} => the config is IDENTICAL, so ts-jest reuses one compiler', async () => {
       const proxy = runExecuteCasesBrokerProxy();
+      proxy.succeeds({ runDir: '/cache/runs/r1' });
+      proxy.succeeds({ runDir: '/cache/runs/r2' });
 
       await runExecuteCasesBroker({
         runDir: '/cache/runs/r1',
@@ -209,6 +213,7 @@ describe('runExecuteCasesBroker', () => {
     // separator anchors it, so `r1` cannot select `r10`.
     it('VALID: {a run directory} => named as an escaped, separator-anchored test-path pattern', async () => {
       const proxy = runExecuteCasesBrokerProxy();
+      proxy.succeeds({ runDir: '/cache/.assayer/runs/r1' });
 
       await runExecuteCasesBroker({
         runDir: '/cache/.assayer/runs/r1',

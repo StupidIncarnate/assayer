@@ -1,22 +1,32 @@
 import { runCLI } from '@jest/core';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
+import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';
+
 export const runExecuteCasesBrokerProxy = (): {
-  succeeds: () => void;
-  fails: () => void;
+  succeeds: ({ runDir }: { runDir: string }) => void;
+  fails: ({ runDir }: { runDir: string }) => void;
   configFor: ({ testPathPattern }: { testPathPattern: string }) => unknown;
   getTestPathPatterns: () => unknown[];
   wasInvoked: () => boolean;
 } => {
   const handle = registerMock({ fn: runCLI });
-  handle.calledWith([]).resolves({ results: { success: true } });
 
   return {
-    succeeds: (): void => { handle.onceFor([]).resolves({ results: { success: true } }); },
-    fails: (): void => { handle.onceFor([]).resolves({ results: { success: false } }); },
-    // Addressed on the argv's positionals, the one part of the call that differs between runs, so a
-    // test driving two runs reads each run's own config rather than whichever ran last. That is what
-    // makes the identical-config assertion below mean anything.
+    // A run is addressed on the argv's positionals, the one part of the call that names which run is
+    // executing. A run directory no scenario staged reaches an unstaged call, which throws.
+    succeeds: ({ runDir }: { runDir: string }): void => {
+      handle
+        .calledWith([{ _: [String(testPathPatternTransformer({ runDir }))] }])
+        .resolves({ results: { success: true } });
+    },
+    fails: ({ runDir }: { runDir: string }): void => {
+      handle
+        .calledWith([{ _: [String(testPathPatternTransformer({ runDir }))] }])
+        .resolves({ results: { success: false } });
+    },
+    // Addressed on the argv's positionals, so a test driving two runs reads each run's own config
+    // rather than whichever ran last. That is what makes the identical-config assertion mean anything.
     configFor: ({ testPathPattern }: { testPathPattern: string }): unknown => {
       const argv = handle.callsMatching([{ _: [testPathPattern] }]).at(-1)?.[0];
 
