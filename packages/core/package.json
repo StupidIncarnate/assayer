@@ -9,29 +9,35 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./brokers": {
-      "source": "./brokers.ts",
-      "import": "./dist/brokers.js",
-      "require": "./dist/brokers.js",
-      "types": "./dist/brokers.d.ts"
-    },
-    "./contracts": {
-      "source": "./contracts.ts",
-      "import": "./dist/contracts.js",
-      "require": "./dist/contracts.js",
-      "types": "./dist/contracts.d.ts"
-    },
-    "./transformers": {
-      "source": "./transformers.ts",
-      "import": "./dist/transformers.js",
-      "require": "./dist/transformers.js",
-      "types": "./dist/transformers.d.ts"
-    },
     "./testing": {
       "source": "./testing.ts",
       "import": "./dist/testing.js",
       "require": "./dist/testing.js",
       "types": "./dist/testing.d.ts"
+    },
+    "./*.proxy": {
+      "source": "./src/*.proxy.ts"
+    },
+    "./*.stub": {
+      "source": "./src/*.stub.ts"
+    },
+    "./brokers": {
+      "source": "./src/brokers/brokers.ts",
+      "types": "./dist/src/brokers/brokers.d.ts",
+      "import": "./dist/src/brokers/brokers.js",
+      "require": "./dist/src/brokers/brokers.js"
+    },
+    "./contracts": {
+      "source": "./src/contracts/contracts.ts",
+      "types": "./dist/src/contracts/contracts.d.ts",
+      "import": "./dist/src/contracts/contracts.js",
+      "require": "./dist/src/contracts/contracts.js"
+    },
+    "./transformers": {
+      "source": "./src/transformers/transformers.ts",
+      "types": "./dist/src/transformers/transformers.d.ts",
+      "import": "./dist/src/transformers/transformers.js",
+      "require": "./dist/src/transformers/transformers.js"
     }
   },
   "scripts": {
