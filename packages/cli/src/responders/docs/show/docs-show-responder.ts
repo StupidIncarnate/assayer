@@ -7,11 +7,10 @@
  * // Returns CliOutput (the doc body); throws on an unknown topic
  */
 import { docsGetBroker } from '@assayer/core/brokers';
-import { docsTopicContract } from '@assayer/shared/contracts';
 
 
 export const DocsShowResponder = ({ topic }: { topic: string }): string => {
-  const docs = docsGetBroker({ topic: docsTopicContract.parse(topic) });
+  const docs = docsGetBroker({ topic: topic });
 
   return docs.body;
 };

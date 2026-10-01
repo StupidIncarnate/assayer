@@ -8,10 +8,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { docsTopicContract } from '../docs-topic/docs-topic-contract';
 
 export const docsResultContract = z.object({
-  topic: docsTopicContract,
+  topic: z.string().min(1).brand<'DocsResultTopic'>(),
   body: z.string().min(1).brand<'DocsBody'>(),
 });
 

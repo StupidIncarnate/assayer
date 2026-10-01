@@ -12,7 +12,6 @@
 
 export * from './status-result/status-result-contract';
 
-export * from './docs-topic/docs-topic-contract';
 
 export * from './docs-result/docs-result-contract';
 
