@@ -307,7 +307,7 @@ current branch, so run it on a branch carved for it.
 | ID | What | Who | How | Status |
 |---|---|---|---|---|
 | R-1 | `JSON.parse` straight into a contract parse, at 38 sites | Script | `$E/phase34-scripts/b17-json-parse/run.cjs $FLAGS apply`, then unit tests, because the rewrite adds a runtime check | todo |
-| R-2 | Scan every gateway, test and brand rule to 0. The rules are `raw-import-ban`, `platform-globals-ban`, `bin-program-spawn-ban`, `ban-proxy-empty-called-with`, `ban-invented-failures`, `ban-test-support-in-production`, `ban-workspace-export-mocks`, `enforce-project-structure` and the brand rules. | Script, then agents | `npm run ward -- scan @dungeonmaster/<rule>` per rule. Its JSON batches are the hand queue. | todo |
+| R-2 | Scan every gateway, test and brand rule to 0. The rules are `raw-import-ban`, `platform-globals-ban`, `bin-program-spawn-ban`, `ban-proxy-empty-called-with`, `ban-invented-failures`, `ban-test-support-in-production`, `ban-workspace-export-mocks`, `enforce-project-structure` and the brand rules. | Script, then agents | `npm run ward -- scan @dungeonmaster/<rule>` per rule. Its JSON batches are the hand queue. Also find why ward's lint discovery skips `packages/app/test/e2e-global-build.ts`: ESLint does not ignore it and app's tsconfig includes it, but a ward lint run on it grades 0 files. | todo |
 
 ### Phase Z: docs and the finish
 
