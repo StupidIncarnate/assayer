@@ -1,5 +1,5 @@
+import { waitFor } from '#gateway/npm/testing-library__react';
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
-import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
 import { SurfaceExplorerWidget } from './surface-explorer-widget';
 import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
 import { CompiledTreeStub, CompiledFileViewStub, FileAnalysisStub, RunConsoleStub } from '@assayer/shared/contracts';
@@ -24,10 +24,8 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
       });
 
       expect(getByTestId('EXPLORER_HEADER').textContent).toBe(
@@ -46,10 +44,8 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('SURFACE_EMPTY')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('SURFACE_EMPTY')).toBeInTheDocument();
       });
 
       expect(getByTestId('SURFACE_EMPTY').textContent).toBe('No compiled surface — run assayer');
@@ -83,10 +79,8 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
       });
 
       expect(getByTestId('SURFACE_ERROR').textContent).toBe(
@@ -104,10 +98,8 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
       });
 
       expect(queryByTestId('EXPLORER_HEADER')).toBe(null);
@@ -159,18 +151,14 @@ describe('SurfaceExplorerWidget', () => {
         ui: <SurfaceExplorerWidget />,
       });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
       });
 
       await proxy.clickFile({ label: 'app.tsx' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByRole('textbox')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByRole('textbox')).toBeInTheDocument();
       });
 
       expect(getByRole('textbox').textContent).toBe('const appModule = 1;');
@@ -187,18 +175,14 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
 
       await proxy.clickFile({ label: 'app.tsx' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(proxy.errorLogged()).toBe(true);
-        },
+      await waitFor(() => {
+        expect(proxy.errorLogged()).toBe(true);
       });
 
       expect(getByTestId('EXPLORER_CODE').textContent).toBe('Select a file to view its compiled source');
@@ -216,10 +200,8 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
 
       expect(queryByTestId('RUN_CONSOLE')).toBe(null);
@@ -239,10 +221,8 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
 
@@ -268,17 +248,13 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
       });
 
       expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe('app.tsx  0/1 passed\n  ERROR mapEach("oops")\n');
@@ -296,19 +272,15 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
       proxy.emitRunOutput({ chunk: 'app.tsx  1/1 passed\n' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
       });
 
       expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe('app.tsx  1/1 passed\n');
@@ -332,18 +304,14 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, getByRole } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE')).toBeInTheDocument();
       });
 
       expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -365,18 +333,14 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, queryAllByText } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_ERROR')).toBeInTheDocument();
       });
 
       // Asserts WHICH surfaces carry the text, not merely that it appears: a second copy anywhere
@@ -402,18 +366,14 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Failed');
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Failed');
       });
 
       expect(getByTestId('RUN_CONSOLE_EMPTY').textContent).toBe(
@@ -433,19 +393,15 @@ describe('SurfaceExplorerWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
       await proxy.hideRunConsole();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(queryByTestId('RUN_CONSOLE')).toBe(null);
-        },
+      await waitFor(() => {
+        expect(queryByTestId('RUN_CONSOLE')).toBe(null);
       });
 
       expect(getByTestId('FILE_TREE')).toBeInTheDocument();
