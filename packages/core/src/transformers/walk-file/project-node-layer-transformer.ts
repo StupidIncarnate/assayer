@@ -22,11 +22,9 @@ import { Node } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract } from '@assayer/shared/contracts';
 
-import { astProjectionContract } from '../../contracts/ast-projection/ast-projection-contract';
-import type { AstProjection } from '../../contracts/ast-projection/ast-projection-contract';
 import { literalTokenTransformer } from '../literal-token/literal-token-transformer';
 
-export const projectNodeLayerTransformer = ({ node }: { node: Node }): AstProjection => {
+export const projectNodeLayerTransformer = ({ node }: { node: Node }): string => {
   if (Node.isParenthesizedExpression(node)) {
     return projectNodeLayerTransformer({ node: node.getExpression() });
   }
@@ -39,5 +37,5 @@ export const projectNodeLayerTransformer = ({ node }: { node: Node }): AstProjec
 
   const children = node.forEachChildAsArray().map((child) => projectNodeLayerTransformer({ node: child }));
 
-  return astProjectionContract.parse([self, ...children].join(','));
+  return [self, ...children].join(',');
 };

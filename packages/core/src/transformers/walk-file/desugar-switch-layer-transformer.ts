@@ -21,7 +21,6 @@ import type { CaseClause, DefaultClause, SwitchStatement } from '#gateway/npm/ts
 import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 import type { RepresentativeValue, SymbolName, Coverage } from '@assayer/shared/contracts';
 
-import type { AstProjection } from '../../contracts/ast-projection/ast-projection-contract';
 import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
 import { literalTokenTransformer } from '../literal-token/literal-token-transformer';
 import { projectNodeLayerTransformer } from './project-node-layer-transformer';
@@ -29,7 +28,7 @@ import { projectNodeLayerTransformer } from './project-node-layer-transformer';
 export interface SwitchCaseInfo {
   clause: CaseClause;
   literalValue?: RepresentativeValue;
-  caseToken: AstProjection;
+  caseToken: string;
   branchCoverageId: Coverage['id'];
 }
 
