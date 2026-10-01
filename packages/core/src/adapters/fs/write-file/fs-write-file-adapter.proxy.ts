@@ -1,9 +1,10 @@
 import { writeFile } from 'fs/promises';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { FsErrorStub } from '#gateway/node/fs/is-fs-error/fs-error.stub';
 
 export const fsWriteFileAdapterProxy = (): {
-  succeeds: () => void;
-  throws: ({ error }: { error: Error }) => void;
+  succeeds: ({ path }: { path: string }) => void;
+  denied: ({ path }: { path: string }) => void;
   // Every path written, in call order. A test asserting WHICH path a broker wrote cannot address the
   // read by that path without asking the question it is trying to answer, so it reads the whole list
   // and asserts it complete. That is a stronger assertion than "whatever ran last" anyway: an extra
@@ -19,14 +20,12 @@ export const fsWriteFileAdapterProxy = (): {
 } => {
   const handle = registerMock({ fn: writeFile });
 
-  handle.calledWith([]).resolves(undefined);
-
   return {
-    succeeds: (): void => {
-      handle.onceFor([]).resolves(undefined);
+    succeeds: ({ path }: { path: string }): void => {
+      handle.calledWith([path]).resolves(undefined);
     },
-    throws: ({ error }: { error: Error }): void => {
-      handle.onceFor([]).rejects(error);
+    denied: ({ path }: { path: string }): void => {
+      handle.calledWith([path]).rejects(FsErrorStub({ code: 'EACCES', path }));
     },
     getWrittenPaths: (): unknown[] => handle.callsMatching([]).map((call) => call[0]),
     getWrittenContentFor: ({ path }: { path: string }): unknown =>

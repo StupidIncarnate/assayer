@@ -7,22 +7,21 @@
  */
 import { rename } from 'fs/promises';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { FsErrorStub } from '#gateway/node/fs/is-fs-error/fs-error.stub';
 
 export const fsRenameAdapterProxy = (): {
-  succeeds: () => void;
-  throws: ({ error }: { error: Error }) => void;
+  succeeds: ({ from }: { from: string }) => void;
+  denied: ({ from }: { from: string }) => void;
   getRenameArgs: ({ from }: { from: string }) => readonly unknown[];
 } => {
   const handle = registerMock({ fn: rename });
 
-  handle.calledWith([]).resolves(undefined);
-
   return {
-    succeeds: (): void => {
-      handle.onceFor([]).resolves(undefined);
+    succeeds: ({ from }: { from: string }): void => {
+      handle.calledWith([from]).resolves(undefined);
     },
-    throws: ({ error }: { error: Error }): void => {
-      handle.onceFor([]).rejects(error);
+    denied: ({ from }: { from: string }): void => {
+      handle.calledWith([from]).rejects(FsErrorStub({ code: 'EACCES', path: from }));
     },
     // Addressed on the SOURCE path, the first argument, so the destination this returns is the one
     // the named rename actually moved the file to, never whichever rename happened to run last.

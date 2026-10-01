@@ -6,7 +6,7 @@ describe('fsRenameAdapter', () => {
     it('VALID: {from: "/repo/.tmp/x", to: "/repo/blob/x"} => renames the file to the destination and returns { success: true }', async () => {
       const proxy = fsRenameAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ from: '/repo/.tmp/x' });
 
       const result = await fsRenameAdapter({ from: '/repo/.tmp/x', to: '/repo/blob/x' });
 

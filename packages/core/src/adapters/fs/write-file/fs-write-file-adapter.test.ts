@@ -6,7 +6,7 @@ describe('fsWriteFileAdapter', () => {
     it('VALID: {path, content} => writes exactly that content to that path and returns { success: true }', async () => {
       const proxy = fsWriteFileAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/repo/out.ts' });
 
       const result = await fsWriteFileAdapter({ path: '/repo/out.ts', content: 'export const x = 1;' });
 
@@ -20,7 +20,9 @@ describe('fsWriteFileAdapter', () => {
     it('VALID: {three writes into one run directory} => the substring address answers with that file, not with the write that ran last', async () => {
       const proxy = fsWriteFileAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/runs/r1/cases.json' });
+      proxy.succeeds({ path: '/probes/abc.json' });
+      proxy.succeeds({ path: '/runs/r1/assayer.test.js' });
 
       await fsWriteFileAdapter({ path: '/runs/r1/cases.json', content: '{"cases":[]}' });
       await fsWriteFileAdapter({ path: '/probes/abc.json', content: '{"probes":[]}' });
@@ -32,7 +34,7 @@ describe('fsWriteFileAdapter', () => {
     it('EMPTY: {a substring no written path contains} => answers undefined rather than the nearest write', async () => {
       const proxy = fsWriteFileAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/runs/r1/cases.json' });
 
       await fsWriteFileAdapter({ path: '/runs/r1/cases.json', content: '{"cases":[]}' });
 
@@ -44,10 +46,10 @@ describe('fsWriteFileAdapter', () => {
     it('ERROR: {path: no permission to write} => underlying fs error propagates unmodified', async () => {
       const proxy = fsWriteFileAdapterProxy();
 
-      proxy.throws({ error: new Error('EACCES: permission denied') });
+      proxy.denied({ path: '/repo/out.ts' });
 
       await expect(fsWriteFileAdapter({ path: '/repo/out.ts', content: 'export const x = 1;' })).rejects.toThrow(
-        /^EACCES: permission denied$/u
+        /^EACCES: op '\/repo\/out\.ts'$/u
       );
     });
   });

@@ -6,7 +6,7 @@ describe('fsRmAdapter', () => {
     it('VALID: {path: "/repo/cache"} => removes the directory and everything under it, and returns { success: true }', async () => {
       const proxy = fsRmAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/repo/cache' });
 
       const result = await fsRmAdapter({ path: '/repo/cache' });
 
@@ -22,7 +22,7 @@ describe('fsRmAdapter', () => {
     it('EMPTY: {path: "/repo/missing"} => returns { success: true } without throwing', async () => {
       const proxy = fsRmAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/repo/missing' });
 
       const result = await fsRmAdapter({ path: '/repo/missing' });
 

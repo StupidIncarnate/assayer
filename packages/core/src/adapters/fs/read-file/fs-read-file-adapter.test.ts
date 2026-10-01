@@ -6,7 +6,7 @@ describe('fsReadFileAdapter', () => {
     it('VALID: {path} => returns the exact file text content', async () => {
       const proxy = fsReadFileAdapterProxy();
 
-      proxy.returns({ content: 'hello world' });
+      proxy.returns({ path: '/repo/a.ts', content: 'hello world' });
 
       await expect(fsReadFileAdapter({ path: '/repo/a.ts' })).resolves.toBe('hello world');
     });
@@ -16,10 +16,10 @@ describe('fsReadFileAdapter', () => {
     it('ERROR: {path: missing file} => underlying fs error propagates unmodified', async () => {
       const proxy = fsReadFileAdapterProxy();
 
-      proxy.throws({ error: new Error('ENOENT: no such file or directory') });
+      proxy.missing({ path: '/nope' });
 
       await expect(fsReadFileAdapter({ path: '/nope' })).rejects.toThrow(
-        /^ENOENT: no such file or directory$/u
+        /^ENOENT: op '\/nope'$/u
       );
     });
   });
