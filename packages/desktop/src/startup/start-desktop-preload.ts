@@ -5,7 +5,7 @@
  * StartDesktopPreload();
  * // Exposes the preload bridge
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { DesktopPreloadFlow } from '../flows/desktop-preload/desktop-preload-flow';
 

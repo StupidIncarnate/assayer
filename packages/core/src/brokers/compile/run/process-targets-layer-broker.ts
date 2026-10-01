@@ -14,7 +14,6 @@
  */
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath, ContentHash, LineNumber } from '@assayer/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { compileProcessFileBroker } from '../process-file/compile-process-file-broker';
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
@@ -43,11 +42,11 @@ export const processTargetsLayerBroker = async ({
   currentMax: number;
   current: number;
   index: { relPath: RelPath; contentHash: ContentHash }[];
-  errors: { relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: ErrorMessage }[];
+  errors: { relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: string }[];
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<{
   index: { relPath: RelPath; contentHash: ContentHash }[];
-  errors: { relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: ErrorMessage }[];
+  errors: { relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: string }[];
 }> => {
   const [target, ...rest] = remaining;
 

@@ -12,7 +12,7 @@
  * await DesktopMainBootResponder({ repoPath });
  * // Opens the window and registers the status/tree/file/run/saved-run IPC; returns { success: true }
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 import { relPathContract } from '@assayer/shared/contracts';
 import { runConsoleFindBroker, runFindBroker } from '@assayer/core/brokers';
 

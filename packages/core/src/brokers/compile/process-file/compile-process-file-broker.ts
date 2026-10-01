@@ -28,8 +28,6 @@ import { moduleGraphProjectionTransformer } from '../../../transformers/module-g
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 
 export const compileProcessFileBroker = async ({
@@ -43,7 +41,7 @@ export const compileProcessFileBroker = async ({
 }): Promise<
   | { reused: true; contentHash: ContentHash }
   | { reused: false; contentHash: ContentHash }
-  | { reused: false; error: { message: ErrorMessage } & SourcePosition }
+  | { reused: false; error: { message: string } & SourcePosition }
 > => {
   const contentHash = cryptoSha256Adapter({ content });
   const blobPath = `${blobsDir}/${contentHash}.json`;
@@ -61,7 +59,7 @@ export const compileProcessFileBroker = async ({
       error: {
         line: extracted.error.line,
         column: extracted.error.column,
-        message: errorMessageContract.parse(String(extracted.error.message)),
+        message: String(extracted.error.message),
       },
     };
   }

@@ -4,15 +4,13 @@
  * other bridge proxies.
  */
 import { RunResultStub } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 export const assayerBridgeRunFileAdapterProxy = (): {
   returns: (params: { run: ReturnType<typeof RunResultStub> }) => void;
   fails: (params: { message: string }) => void;
   absent: () => void;
 } => {
-  const state: { run: ReturnType<typeof RunResultStub>; error?: ErrorMessage } = { run: RunResultStub() };
+  const state: { run: ReturnType<typeof RunResultStub>; error?: string } = { run: RunResultStub() };
 
   window.assayerBridge = {
     ...window.assayerBridge,
@@ -32,7 +30,7 @@ export const assayerBridgeRunFileAdapterProxy = (): {
       state.run = run;
     },
     fails: ({ message }: { message: string }): void => {
-      state.error = errorMessageContract.parse(message);
+      state.error = message;
     },
     absent: (): void => {
       const bridge = window.assayerBridge;

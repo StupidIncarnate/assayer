@@ -8,8 +8,6 @@
  */
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { gitExecAdapter } from '../../../adapters/git/exec/git-exec-adapter';
 
@@ -19,7 +17,7 @@ export const gitLsTreeBroker = async ({
 }: {
   repoRoot: string;
   ref: string;
-}): Promise<{ relPath: RelPath; blobSha: ErrorMessage }[]> => {
+}): Promise<{ relPath: RelPath; blobSha: string }[]> => {
   const r = await gitExecAdapter({ args: ['ls-tree', '-r', ref], cwd: repoRoot });
 
   const lines = String(r.stdout)
@@ -34,8 +32,8 @@ export const gitLsTreeBroker = async ({
 
     return {
       relPath: relPathContract.parse(relPath),
-      // git object id branded as opaque ErrorMessage (no dedicated sha contract)
-      blobSha: errorMessageContract.parse(sha),
+      // The blob sha is a plain string because no sha contract exists.
+      blobSha: sha,
     };
   });
 };

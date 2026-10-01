@@ -1,5 +1,4 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
 import { configHashBroker, manifestLoadBroker, manifestTrashBroker, compileRunBroker } from '@assayer/core/brokers';
 import {
   configHashBrokerProxy,
@@ -65,7 +64,7 @@ export const CompileRunLayerResponderProxy = (): {
     manifestInvalid: (): void => {
       manifestLoadHandle.onceFor([]).resolves({
         status: 'invalid',
-        reason: errorMessageContract.parse('manifest failed schema validation'),
+        reason: 'manifest failed schema validation',
       });
     },
     manifestOk: ({ manifest }: { manifest: AssayerCacheManifest }): void => {

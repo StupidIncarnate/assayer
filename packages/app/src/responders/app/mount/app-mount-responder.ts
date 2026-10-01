@@ -6,7 +6,7 @@
  * AppMountResponder({ content: <AppFlow /> });
  * // Returns { success: true } after mounting; throws if #root is missing
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { reactDomMountAdapter } from '../../../adapters/react-dom/mount/react-dom-mount-adapter';
 

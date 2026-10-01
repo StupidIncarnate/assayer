@@ -37,8 +37,6 @@ import {
   symbolNameContract,
 } from '@assayer/shared/contracts';
 import type { ColumnNumber, ContentHash, LineNumber, RelPath, ResolvedIndex } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
@@ -60,7 +58,7 @@ export const compileResolveGraphBroker = async ({
   files: readonly { relPath: RelPath; contentHash: ContentHash }[];
 }): Promise<{
   index: ResolvedIndex;
-  errors: { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: ErrorMessage }[];
+  errors: { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[];
 }> => {
   const { options, tsconfigHash, configFilePath } = typescriptReadConfigAdapter({ searchPath: root });
   const builtins = new Set(nodeModuleBuiltinsAdapter().map(String));
@@ -281,7 +279,7 @@ export const compileResolveGraphBroker = async ({
             relPath: relPathContract.parse(String(item.blob.relPath)),
             line: lineNumberContract.parse(Number(item.edge.line)),
             column: columnNumberContract.parse(Number(item.edge.column)),
-            message: errorMessageContract.parse(`cannot resolve import '${String(item.edge.specifier)}'`),
+            message: `cannot resolve import '${String(item.edge.specifier)}'`,
           },
         ]
       : [],
@@ -311,9 +309,7 @@ export const compileResolveGraphBroker = async ({
                     relPath: relPathContract.parse(String(blob.relPath)),
                     line: lineNumberContract.parse(Number(reference.line)),
                     column: columnNumberContract.parse(Number(reference.column)),
-                    message: errorMessageContract.parse(
-                      `import '${String(reference.specifier)}' has no usable types for '${String(reference.importedName)}' (install its type declarations)`,
-                    ),
+                    message: `import '${String(reference.specifier)}' has no usable types for '${String(reference.importedName)}' (install its type declarations)`,
                   },
                 ]
               : [];
@@ -330,9 +326,7 @@ export const compileResolveGraphBroker = async ({
               relPath: relPathContract.parse(String(blob.relPath)),
               line: lineNumberContract.parse(Number(edge.line)),
               column: columnNumberContract.parse(Number(edge.column)),
-              message: errorMessageContract.parse(
-                'cannot resolve dynamic import() with a computed specifier (use a static import with a literal specifier)',
-              ),
+              message: 'cannot resolve dynamic import() with a computed specifier (use a static import with a literal specifier)',
             },
           ]
         : [],
@@ -396,9 +390,7 @@ export const compileResolveGraphBroker = async ({
             relPath: relPathContract.parse(String(blob.relPath)),
             line: lineNumberContract.parse(Number(use.line)),
             column: columnNumberContract.parse(Number(use.column)),
-            message: errorMessageContract.parse(
-              `global '${String(use.name)}${use.member === undefined ? '' : `.${String(use.member)}`}' has no usable types (install its type declarations)`,
-            ),
+            message: `global '${String(use.name)}${use.member === undefined ? '' : `.${String(use.member)}`}' has no usable types (install its type declarations)`,
           }
         : undefined;
 

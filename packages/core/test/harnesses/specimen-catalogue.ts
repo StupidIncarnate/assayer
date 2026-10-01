@@ -27,8 +27,6 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve, join, relative, sep, basename, dirname, extname } from 'node:path';
 
 import { Project, ts } from 'ts-morph';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath } from '@assayer/shared/contracts';
 
@@ -57,8 +55,8 @@ export const specimenCatalogue = (): {
   relPaths: () => RelPath[];
   roots: () => { relPath: RelPath; bucket: 'happy-path' | 'sad-path' }[];
   children: () => RelPath[];
-  structuralErrors: () => ErrorMessage[];
-  syntacticErrors: (params: { relPath: string }) => ErrorMessage[];
+  structuralErrors: () => string[];
+  syntacticErrors: (params: { relPath: string }) => string[];
 } => ({
   relPaths: (): RelPath[] =>
     readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
@@ -96,10 +94,10 @@ export const specimenCatalogue = (): {
   // root to belong to. The colocated-test and orphan-root lookups are keyed on the file's OWN
   // extension: `.replace(/\.ts$/u, …)` never matches a `.tsx` path (it ends in `x`, not `s`), so an
   // extension-blind version would silently pass a `.tsx` root with no colocated test at all.
-  structuralErrors: (): ErrorMessage[] =>
+  structuralErrors: (): string[] =>
     specimenCatalogue()
       .relPaths()
-      .flatMap((relPath): ErrorMessage[] => {
+      .flatMap((relPath): string[] => {
         const rel = String(relPath);
         const abs = join(SMOKE_REPO, rel);
         const [bucket] = relative(CATALOGUE_DIR, abs).split(sep);
@@ -118,10 +116,10 @@ export const specimenCatalogue = (): {
           existsSync(join(dirname(abs), `${rootName}.tsx`))
             ? null
             : `${rel}: orphan child — its folder has no eponymous ${rootName}.ts or ${rootName}.tsx`,
-        ].flatMap((message) => (message === null ? [] : [errorMessageContract.parse(message)]));
+        ].flatMap((message) => (message === null ? [] : [message]));
       }),
 
-  syntacticErrors: ({ relPath }: { relPath: string }): ErrorMessage[] => {
+  syntacticErrors: ({ relPath }: { relPath: string }): string[] => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(basename(relPath), readFileSync(join(SMOKE_REPO, relPath), 'utf8'));
 
@@ -132,7 +130,7 @@ export const specimenCatalogue = (): {
         // Flattened rather than stringified: a diagnostic's message is a string OR a nested chain, and
         // the chain stringifies to '[object Object]' — which would report a real syntax error as noise.
         .map((diagnostic) =>
-          errorMessageContract.parse(ts.flattenDiagnosticMessageText(diagnostic.compilerObject.messageText, '\n')),
+          ts.flattenDiagnosticMessageText(diagnostic.compilerObject.messageText, '\n'),
         )
     );
   },

@@ -45,8 +45,6 @@ import type {
   RelPath,
   ResolvedIndex,
 } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
@@ -77,7 +75,7 @@ export const compileHarnessGraphBroker = async ({
   harnesses: readonly { relPath: RelPath; content: FileContents }[];
 }): Promise<{
   index: HarnessIndex;
-  errors: readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: ErrorMessage }[];
+  errors: readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[];
 }> => {
   const ordered = [...harnesses].sort((a, b) => (String(a.relPath) < String(b.relPath) ? -1 : 1));
   const sources = files.map((file) => file.relPath);
@@ -180,7 +178,7 @@ export const compileHarnessGraphBroker = async ({
       relPath: error.relPath,
       line: lineNumberContract.parse(HARNESS_LINE),
       column: columnNumberContract.parse(HARNESS_COLUMN),
-      message: errorMessageContract.parse(error.message),
+      message: error.message,
     })),
   );
 

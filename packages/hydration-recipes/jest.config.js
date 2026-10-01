@@ -1,4 +1,4 @@
-const base = require('@dungeonmaster/testing/jest-config-base');
+const base = require('../../jest.config.base.js');
 
 module.exports = {
   ...base,

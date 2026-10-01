@@ -6,11 +6,19 @@
     "assayer": "dist/bin/assayer.js"
   },
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc -p tsconfig.build.json",
+    "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
+    "postbuild": "chmod +x dist/bin/*.js 2>/dev/null || true",
+    "test": "dungeonmaster-ward --only test",
+    "typecheck": "dungeonmaster-ward --only typecheck",
+    "lint": "dungeonmaster-ward --only lint",
+    "ward": "dungeonmaster-ward"
   },
   "dependencies": {
     "@assayer/core": "*",
     "@assayer/desktop": "*",
+    "@assayer/node": "*",
+    "@assayer/npm": "*",
     "@assayer/shared": "*",
     "zod": "^4.6.5"
   },

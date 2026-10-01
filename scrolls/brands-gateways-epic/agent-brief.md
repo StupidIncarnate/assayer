@@ -10,6 +10,11 @@ Work from the repo root, `/home/brutus-home/projects/assayer`. Never `cd` into a
 
 The operator owns these jobs. If you do one, you break another agent's work.
 
+One exception: when your item is a fix inside the dungeonmaster checkout (`/home/brutus-home/projects/codex-of-consentient-craft`),
+you work there the normal way. You run its ward, build the package you changed, and commit your own files there by
+explicit path, on its current branch. You never run `npm link`. Rules 1, 2 and 3 below still apply to the assayer
+checkout.
+
 1. Never build: no `npm run build` and no `tsc -b`. If a step needs compiled output, stop and report "build needed"
    with the package name.
 2. Never commit, branch, `git add`, `git mv`, `git stash`, `git checkout -- <file>` or `git reset`. The git index is

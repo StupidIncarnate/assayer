@@ -7,7 +7,7 @@
  * desktopLaunchBroker({ repoPath: '/home/user/project' });
  * // Returns { success: true } after spawning the window
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { electronBinaryPathAdapter } from '../../../adapters/electron/binary-path/electron-binary-path-adapter';
 import { electronMainEntryPathAdapter } from '../../../adapters/electron/main-entry-path/electron-main-entry-path-adapter';

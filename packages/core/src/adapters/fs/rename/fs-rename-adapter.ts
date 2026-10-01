@@ -6,7 +6,7 @@
  * // Renames the path from source to destination and returns { success: true }
  */
 import { rename } from 'fs/promises';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const fsRenameAdapter = async ({
   from,

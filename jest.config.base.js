@@ -1,23 +1,24 @@
 const path = require('path');
 
-// Reference the linked @dungeonmaster/testing package by direct path (bypasses its
-// exports map) for the ts-jest AST transformers (register-mock / harness-lifecycle)
-// and jest setup file. __dirname is the repo root where this base config lives.
-const testingRoot = path.join(__dirname, 'node_modules', '@dungeonmaster', 'testing');
-const dungeonmasterTransformers = require(path.join(testingRoot, 'ts-jest/transformers.js'));
+const base = require('@dungeonmaster/testing/jest-config-base');
+
+const [tsJest, tsJestOptions] = base.transform['^.+\\.tsx?$'];
 
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  // Builds packages/*/dist before any test runs, so the integration suite (whose generated shim
-  // requires core's COMPILED adapters) can never prove old code while the unit suite proves new
-  // source. Absolute via __dirname, never <rootDir>: this base is spread into every package's config,
-  // where <rootDir> is that package — a relative path would resolve to five different places.
+  ...base,
+  // `source` first, so a test resolves each workspace package through its `exports` map to TypeScript
+  // source, never to a built dist.
+  testEnvironmentOptions: { customExportConditions: ['source', 'require', 'default'] },
+  // Builds every tsc package before any test runs, then calls the published sandbox setup that moves
+  // HOME to a temporary directory. The build exists because the integration suite's generated shim
+  // requires core's COMPILED adapters, so a stale dist would let it prove old code while the unit
+  // suite proves new source. The sandbox call is load-bearing: the published globalTeardown, which
+  // this config keeps from the base, deletes HOME recursively when the run ends. The path is absolute
+  // through __dirname, never <rootDir>, because every package config spreads this base and <rootDir>
+  // is that package.
   globalSetup: path.join(__dirname, 'scripts/jest-global-setup.js'),
-  setupFilesAfterEnv: [path.join(testingRoot, 'src/jest.setup.js')],
   testMatch: ['**/src/**/*.test.ts', '**/src/**/*.test.tsx', '**/bin/**/*.test.ts'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json'],
   moduleNameMapper: {
     '^@assayer/shared/contracts$': '<rootDir>/../shared/contracts.ts',
     '^@assayer/core/brokers$': '<rootDir>/../core/brokers.ts',
@@ -28,28 +29,15 @@ module.exports = {
     '^@assayer/desktop/testing$': '<rootDir>/../desktop/testing.ts',
   },
   transform: {
+    ...base.transform,
     '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        tsconfig: {
-          allowJs: true,
-          esModuleInterop: true,
-          skipLibCheck: true,
-          jsx: 'react-jsx',
-        },
-        astTransformers: {
-          before: dungeonmasterTransformers,
-        },
-      },
+      tsJest,
+      { ...tsJestOptions, tsconfig: { ...tsJestOptions.tsconfig, jsx: 'react-jsx' } },
     ],
   },
-  coverageDirectory: 'coverage',
-  verbose: false,
-  detectOpenHandles: true,
-  forceExit: true,
-  // The ONE timeout control, global by rule. Integration tests drive a real wrapped Jest run, which
-  // jest's 5s default cannot finish — and the fix for that must never be a per-test `it(..., 120000)`
-  // knob. A per-test timeout is a tuning escape hatch: it hides a slow test from everyone but the
-  // person who wrote it, and it is precisely the anti-pattern Assayer refuses to generate.
+  // The one timeout control, global by rule. Integration tests drive a real wrapped Jest run, which
+  // Jest's 5-second default cannot finish. The fix for that is never a per-test `it(..., 120000)`.
+  // A per-test timeout hides a slow test from everyone but its author, and Assayer refuses to
+  // generate one.
   testTimeout: 120000,
 };

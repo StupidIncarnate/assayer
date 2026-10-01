@@ -20,7 +20,6 @@ import type {
   ContentHash,
   LineNumber,
 } from '@assayer/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { compilePlanStableBroker } from '../plan-stable/compile-plan-stable-broker';
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
@@ -48,9 +47,9 @@ export const stableNamespaceLayerBroker = async ({
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<{
   resultEntry: { namespace: NamespaceName; branch: BranchName; mode: CompileMode; fileCount: FileCount };
-  manifestNamespace: { branch: BranchName; commit?: ErrorMessage; files: { relPath: RelPath; contentHash: ContentHash }[] };
+  manifestNamespace: { branch: BranchName; commit?: string; files: { relPath: RelPath; contentHash: ContentHash }[] };
   harnesses: { relPath: RelPath; content: FileContents }[];
-  errors: { namespace: NamespaceName; relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: ErrorMessage }[];
+  errors: { namespace: NamespaceName; relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: string }[];
 }> => {
   const previousStableCommit = previousManifest?.namespaces[branch]?.commit;
 

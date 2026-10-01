@@ -5,7 +5,7 @@
  * StartApp();
  * // Mounts the assayer renderer into #root
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { AppMountFlow } from '../flows/app-mount/app-mount-flow';
 

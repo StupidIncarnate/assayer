@@ -6,7 +6,7 @@
  * // Removes the path recursively without throwing if it does not exist, returns { success: true }
  */
 import { rm } from 'fs/promises';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const fsRmAdapter = async ({ path }: { path: string }): Promise<AdapterResult> => {
   await rm(path, { recursive: true, force: true });

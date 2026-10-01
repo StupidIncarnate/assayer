@@ -6,14 +6,12 @@
  * USAGE:
  * const result = await configLoadBroker({ configPath: '/repo/assayer.config.json' });
  * // Returns { success: true, data: AssayerConfig } or
- * // { success: false, message: ErrorMessage, line: LineNumber, column: ColumnNumber }
+ * // { success: false, message: string, line: LineNumber, column: ColumnNumber }
  */
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { jsonParseErrorSourcePositionTransformer } from '../../../transformers/json-parse-error-source-position/json-parse-error-source-position-transformer';
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 
 export const configLoadBroker = async ({
@@ -21,7 +19,7 @@ export const configLoadBroker = async ({
 }: {
   configPath: string;
 }): Promise<
-  { success: true; data: AssayerConfig } | ({ success: false; message: ErrorMessage } & SourcePosition)
+  { success: true; data: AssayerConfig } | ({ success: false; message: string } & SourcePosition)
 > => {
   const text = await fsReadFileAdapter({ path: configPath });
 
@@ -41,7 +39,7 @@ export const configLoadBroker = async ({
 
     return {
       success: false,
-      message: errorMessageContract.parse(error.message),
+      message: error.message,
       line: position.line,
       column: position.column,
     };

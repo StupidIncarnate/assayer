@@ -4,9 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "build:clean": "rm -rf dist && npm run build",
+    "test": "dungeonmaster-ward --only test",
+    "typecheck": "dungeonmaster-ward --only typecheck",
+    "lint": "dungeonmaster-ward --only lint",
+    "ward": "dungeonmaster-ward"
   },
   "dependencies": {
+    "@assayer/browser": "*",
+    "@assayer/node": "*",
+    "@assayer/npm": "*",
     "@assayer/shared": "*",
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/view": "^6.34.1",

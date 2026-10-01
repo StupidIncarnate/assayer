@@ -15,8 +15,6 @@ import { assayerCacheManifestContract } from '@assayer/shared/contracts';
 import type { AssayerCacheManifest } from '@assayer/shared/contracts';
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 export const manifestLoadBroker = async ({
   configDir,
@@ -29,7 +27,7 @@ export const manifestLoadBroker = async ({
 }): Promise<
   | { status: 'ok'; manifest: AssayerCacheManifest }
   | { status: 'missing' }
-  | { status: 'invalid'; reason: ErrorMessage }
+  | { status: 'invalid'; reason: string }
 > => {
   const manifestPath = `${configDir}/.assayer/cache/manifest.json`;
 
@@ -46,7 +44,7 @@ export const manifestLoadBroker = async ({
     if (!parsed.success) {
       return {
         status: 'invalid',
-        reason: errorMessageContract.parse('manifest failed schema validation'),
+        reason: 'manifest failed schema validation',
       };
     }
 
@@ -56,7 +54,7 @@ export const manifestLoadBroker = async ({
     ) {
       return {
         status: 'invalid',
-        reason: errorMessageContract.parse('manifest configHash or assayerVersion mismatch'),
+        reason: 'manifest configHash or assayerVersion mismatch',
       };
     }
 
@@ -64,9 +62,7 @@ export const manifestLoadBroker = async ({
   } catch (error: unknown) {
     return {
       status: 'invalid',
-      reason: errorMessageContract.parse(
-        error instanceof Error ? error.message : 'invalid manifest JSON',
-      ),
+      reason: error instanceof Error ? error.message : 'invalid manifest JSON',
     };
   }
 };

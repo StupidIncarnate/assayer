@@ -26,7 +26,7 @@
  * // Returns { success: true } after exposing the bridge
  */
 import { contextBridge, ipcRenderer } from 'electron';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { replyValueLayerAdapter } from './reply-value-layer-adapter';
 

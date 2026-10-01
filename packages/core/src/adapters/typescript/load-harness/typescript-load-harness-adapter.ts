@@ -27,8 +27,6 @@ import { createContext, runInContext } from 'node:vm';
 
 import ts from 'typescript';
 
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import type { HarnessDeclaration } from '../../../contracts/harness-declaration/harness-declaration-contract';
 import { harnessModuleStatics } from '../../../statics/harness-module/harness-module-statics';
@@ -40,7 +38,7 @@ export const typescriptLoadHarnessAdapter = ({
 }: {
   source: string;
   fileName: string;
-}): { ok: true; declarations: HarnessDeclaration[] } | { ok: false; message: ErrorMessage } => {
+}): { ok: true; declarations: HarnessDeclaration[] } | { ok: false; message: string } => {
   const transpiled = ts.transpileModule(source, {
     fileName,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
@@ -83,7 +81,7 @@ export const typescriptLoadHarnessAdapter = ({
     // would get a stringified error where the message belongs.
     return {
       ok: false,
-      message: errorMessageContract.parse(types.isNativeError(error) ? error.message : String(error)),
+      message: types.isNativeError(error) ? error.message : String(error),
     };
   }
 

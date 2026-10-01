@@ -17,9 +17,15 @@
     }
   },
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc -p tsconfig.build.json",
+    "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
+    "test": "dungeonmaster-ward --only test",
+    "typecheck": "dungeonmaster-ward --only typecheck",
+    "lint": "dungeonmaster-ward --only lint",
+    "ward": "dungeonmaster-ward"
   },
   "dependencies": {
+    "@assayer/npm": "*",
     "zod": "^4.6.5"
   },
   "imports": {

@@ -8,10 +8,11 @@
     "packages/@gateway/*"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.build.json && node scripts/copy-dist-package-json.mjs && npm run build -w @assayer/app",
+    "build": "node scripts/build-workspaces.mjs && node scripts/copy-dist-package-json.mjs",
+    "build:clean": "rm -rf packages/*/dist packages/*/.ward/build.tsbuildinfo packages/@gateway/*/dist packages/@gateway/*/.ward/build.tsbuildinfo && npm run build",
     "dev:stop": "pkill -f '[d]esktop-main.js' || true; fuser -k 6273/tcp >/dev/null 2>&1 || true; wait-on -r -t 5000 tcp:127.0.0.1:6273",
     "predev": "npm run dev:stop",
-    "dev": "tsc --build tsconfig.build.json && node packages/cli/dist/bin/assayer.js status && concurrently -k -n tsc,app,desktop -c gray,blue,green \"tsc --build tsconfig.build.json --watch --preserveWatchOutput\" \"npm run dev -w @assayer/app\" \"wait-on tcp:127.0.0.1:6273 && npm run dev -w @assayer/desktop\"",
+    "dev": "npm run build && node packages/cli/dist/bin/assayer.js status && concurrently -k -n tsc-shared,tsc-core,tsc-desktop,tsc-cli,app,desktop -c gray,gray,gray,gray,blue,green \"tsc -p packages/shared/tsconfig.build.json --watch --preserveWatchOutput\" \"tsc -p packages/core/tsconfig.build.json --watch --preserveWatchOutput\" \"tsc -p packages/desktop/tsconfig.build.json --watch --preserveWatchOutput\" \"tsc -p packages/cli/tsconfig.build.json --watch --preserveWatchOutput\" \"npm run dev -w @assayer/app\" \"wait-on tcp:127.0.0.1:6273 && npm run dev -w @assayer/desktop\"",
     "ward": "dungeonmaster-ward",
     "lint": "dungeonmaster-ward --only lint",
     "typecheck": "dungeonmaster-ward --only typecheck",

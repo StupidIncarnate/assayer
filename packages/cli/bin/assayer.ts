@@ -12,7 +12,7 @@
  * assayer                 # (no command) opens the desktop app scoped to the current repo
  */
 
-import { processCwdAdapter } from '@dungeonmaster/shared/adapters';
+import { argv, cwd, exit, stderr, stdout } from '#gateway/node/process';
 
 import { StartAssayer } from '../src/startup/start-assayer';
 
@@ -26,14 +26,14 @@ if (require.main === module) {
   (async (): Promise<void> => {
     const output = await Promise.resolve(
       StartAssayer({
-        argv: process.argv.slice(COMMAND_ARG_START_INDEX),
-        repoPath: processCwdAdapter(),
+        argv: argv.slice(COMMAND_ARG_START_INDEX),
+        repoPath: cwd(),
       }),
     );
-    process.stdout.write(`${output}\n`);
+    stdout.write(`${output}\n`);
   })().catch((error: unknown): void => {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`${message}\n`);
-    process.exit(1);
+    stderr.write(`${message}\n`);
+    exit(1);
   });
 }

@@ -5,7 +5,7 @@
  * await DesktopMainFlow({ repoPath });
  * // Boots the Electron main process
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { DesktopMainBootResponder } from '../../responders/desktop-main/boot/desktop-main-boot-responder';
 import type { RepoPath } from '../../contracts/repo-path/repo-path-contract';

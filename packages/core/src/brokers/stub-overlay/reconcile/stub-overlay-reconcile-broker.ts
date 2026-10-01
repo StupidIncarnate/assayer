@@ -16,8 +16,6 @@
  */
 import { columnNumberContract, lineNumberContract, relPathContract } from '@assayer/shared/contracts';
 import type { ColumnNumber, LineNumber, RelPath, StubIndex, StubOverlay } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 const OVERLAY_LINE = 1;
 const OVERLAY_COLUMN = 1;
@@ -28,7 +26,7 @@ export const stubOverlayReconcileBroker = ({
 }: {
   index: StubIndex;
   overlays: readonly StubOverlay[];
-}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: ErrorMessage }[] => {
+}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[] => {
   const objectByKey = new Map(index.objectStubs.map((stub) => [String(stub.key), stub]));
   const envByKey = new Map(index.envStubs.map((stub) => [String(stub.key), stub]));
 
@@ -72,7 +70,7 @@ export const stubOverlayReconcileBroker = ({
       relPath: relPathContract.parse(String(entry.overlayPath)),
       line: lineNumberContract.parse(OVERLAY_LINE),
       column: columnNumberContract.parse(OVERLAY_COLUMN),
-      message: errorMessageContract.parse(entry.message),
+      message: entry.message,
     }))
     .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
 };

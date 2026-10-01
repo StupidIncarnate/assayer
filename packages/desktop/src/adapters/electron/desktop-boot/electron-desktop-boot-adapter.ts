@@ -27,7 +27,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 import type { CompiledTree, CompiledFileView, RunConsole, RunResult, StubView } from '@assayer/shared/contracts';
 
 import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';

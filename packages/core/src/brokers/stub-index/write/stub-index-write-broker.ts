@@ -14,7 +14,7 @@ import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import type { StubIndex } from '@assayer/shared/contracts';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const stubIndexWriteBroker = async ({
   configDir,

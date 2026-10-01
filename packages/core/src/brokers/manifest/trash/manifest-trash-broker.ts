@@ -8,7 +8,7 @@
  * // Removes '/repo/.assayer/cache' recursively and returns { success: true }
  */
 import { fsRmAdapter } from '../../../adapters/fs/rm/fs-rm-adapter';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const manifestTrashBroker = async ({
   configDir,

@@ -14,7 +14,7 @@
  * // Returns { success: true } after spawning; a spawn failure writes to stderr instead of crashing
  */
 import { spawn } from 'node:child_process';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const nodeChildProcessSpawnAdapter = ({
   command,

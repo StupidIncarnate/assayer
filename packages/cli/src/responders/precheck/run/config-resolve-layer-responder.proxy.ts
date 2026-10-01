@@ -1,5 +1,4 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
 import { configFindBroker, configGenerateBroker, configLoadBroker } from '@assayer/core/brokers';
 import { configFindBrokerProxy, configGenerateBrokerProxy, configLoadBrokerProxy } from '@assayer/core/testing';
 import { filePathContract, sourcePositionContract } from '@assayer/core/contracts';
@@ -74,7 +73,7 @@ export const ConfigResolveLayerResponderProxy = (): {
 
           return Promise.resolve({
             success: false as const,
-            message: errorMessageContract.parse(error.message),
+            message: error.message,
             line: position.line,
             column: position.column,
           });

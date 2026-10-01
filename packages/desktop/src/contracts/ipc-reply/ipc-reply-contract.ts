@@ -18,11 +18,10 @@
  * // Returns a validated IpcReply (discriminated on `success`)
  */
 import { z } from 'zod';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
 
 export const ipcReplyContract = z.discriminatedUnion('success', [
   z.object({ success: z.literal(true), valueRaw: z.unknown() }),
-  z.object({ success: z.literal(false), message: errorMessageContract }),
+  z.object({ success: z.literal(false), message: z.string().brand<'IpcReplyMessage'>() }),
 ]);
 
 export type IpcReply = z.infer<typeof ipcReplyContract>;

@@ -5,12 +5,10 @@
  * USAGE:
  * const result = configValidateBroker({ config: { version: '1', repoRoot: '.', exclude: [] } });
  * // Returns { success: true, config: AssayerConfig } or
- * // { success: false, issues: [{ path: ErrorMessage, message: ErrorMessage }] }
+ * // { success: false, issues: [{ path: string, message: string }] }
  */
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 export const configValidateBroker = ({
   config,
@@ -18,7 +16,7 @@ export const configValidateBroker = ({
   config: unknown;
 }):
   | { success: true; config: AssayerConfig }
-  | { success: false; issues: { path: ErrorMessage; message: ErrorMessage }[] } => {
+  | { success: false; issues: { path: string; message: string }[] } => {
   const result = assayerConfigContract.safeParse(config);
 
   if (result.success) {
@@ -28,8 +26,8 @@ export const configValidateBroker = ({
   return {
     success: false,
     issues: result.error.issues.map((issue) => ({
-      path: errorMessageContract.parse(issue.path.join('.')),
-      message: errorMessageContract.parse(issue.message),
+      path: issue.path.join('.'),
+      message: issue.message,
     })),
   };
 };

@@ -41,9 +41,17 @@
     }
   },
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc -p tsconfig.build.json",
+    "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
+    "test": "dungeonmaster-ward --only test",
+    "typecheck": "dungeonmaster-ward --only typecheck",
+    "lint": "dungeonmaster-ward --only lint",
+    "ward": "dungeonmaster-ward"
   },
   "dependencies": {
+    "@assayer/bin": "*",
+    "@assayer/node": "*",
+    "@assayer/npm": "*",
     "@assayer/shared": "*",
     "@jest/core": "^30.0.4",
     "jest": "^30.0.4",

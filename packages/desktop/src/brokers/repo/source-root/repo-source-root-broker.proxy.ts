@@ -2,7 +2,6 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { configLoadBroker } from '@assayer/core/brokers';
 import { configLoadBrokerProxy, compileResolveRootBrokerProxy } from '@assayer/core/testing';
 import { AssayerConfigStub } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
 
 export const repoSourceRootBrokerProxy = (): {
   configHasRepoRoot: ({ repoRoot }: { repoRoot: string }) => void;
@@ -27,7 +26,7 @@ export const repoSourceRootBrokerProxy = (): {
     configUnreadable: ({ message }: { message: string }): void => {
       handle.calledWith([]).resolves({
         success: false,
-        message: errorMessageContract.parse(message),
+        message: message,
         line: 1,
         column: 1,
       });

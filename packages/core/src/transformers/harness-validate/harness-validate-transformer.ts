@@ -58,8 +58,6 @@ import type {
   SymbolName,
   TypeDescriptor,
 } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { isTypeCompatibleGuard } from '../../guards/is-type-compatible/is-type-compatible-guard';
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
@@ -83,7 +81,7 @@ export const harnessValidateTransformer = ({
   entries: readonly EntrySignature[];
   declaringScopes: readonly DeclaringScope[];
   suppliedTypes: readonly { entry: SymbolName; param: SymbolName; type: TypeDescriptor }[];
-}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: ErrorMessage }[] => {
+}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[] => {
   const callable: readonly { name: SymbolName; params: readonly ParamDescriptor[] }[] = [
     ...entries.filter((entry) => entry.access.kind !== 'module'),
     ...declaringScopes,
@@ -164,6 +162,6 @@ export const harnessValidateTransformer = ({
     relPath,
     line: lineNumberContract.parse(HARNESS_LINE),
     column: columnNumberContract.parse(HARNESS_COLUMN),
-    message: errorMessageContract.parse(message),
+    message: message,
   }));
 };

@@ -7,7 +7,7 @@
  * // Resolves once the callback stops throwing
  */
 import { waitFor } from '@testing-library/react';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const testingLibraryWaitForAdapter = async ({
   callback,

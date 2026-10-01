@@ -163,10 +163,14 @@ examples, and every other specimen.
 
 ### `npm run dev`
 
-`npm run dev` runs three watchers at once, under `concurrently`:
+`npm run dev` first runs `npm run build`, which builds every package once,
+in dependency order. Then it runs three kinds of watcher at once, under
+`concurrently`:
 
-- `tsc --build --watch` recompiles every referenced project into its own
-  `dist/` folder.
+- One `tsc -p packages/<pkg>/tsconfig.build.json --watch` per package, for
+  `shared`, `core`, `desktop` and `cli`. Each one recompiles its package
+  into that package's own `dist/` folder. The gateway packages are built
+  once by `npm run build` and are not watched.
 - The Vite server hot-reloads the renderer (React Fast Refresh), reached
   through `ASSAYER_DEV=1`.
 - `nodemon` restarts the Electron main process whenever a watched `dist/`

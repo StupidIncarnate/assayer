@@ -29,7 +29,6 @@ import { join } from 'node:path';
 
 import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract, RelPathStub } from '@assayer/shared/contracts';
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
 import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
@@ -73,7 +72,7 @@ export const TWO_CALLBACK_SOURCE = [
 
 export const harnessGraphHarness = (): {
   afterEach: () => void;
-  stitchOnce: (params: { harness: string }) => Promise<{ written: HarnessIndex; errorMessages: ErrorMessage[] }>;
+  stitchOnce: (params: { harness: string }) => Promise<{ written: HarnessIndex; errorMessages: string[] }>;
   stitchTwice: (params: { first: string; second: string }) => Promise<{ first: HarnessIndex; second: HarnessIndex }>;
   compileTwice: (params: { source: string; first: string; second: string }) => Promise<{
     first: { index: HarnessIndex; blob: 'compiled' | 'reused'; contentHash: ContentHash; analysis: FileAnalysis };
@@ -104,7 +103,7 @@ export const harnessGraphHarness = (): {
     harness: string;
   }): Promise<{
     written: HarnessIndex;
-    errorMessages: ErrorMessage[];
+    errorMessages: string[];
     blob: 'compiled' | 'reused';
     contentHash: ContentHash;
   }> => {
@@ -179,7 +178,7 @@ export const harnessGraphHarness = (): {
       harness,
     }: {
       harness: string;
-    }): Promise<{ written: HarnessIndex; errorMessages: ErrorMessage[] }> => {
+    }): Promise<{ written: HarnessIndex; errorMessages: string[] }> => {
       const pass = await stitch({ dir: seed({ source: AUDIT_SOURCE }), source: AUDIT_SOURCE, harness });
 
       return { written: pass.written, errorMessages: pass.errorMessages };

@@ -26,8 +26,6 @@
  */
 import { columnNumberContract, lineNumberContract, relPathContract } from '@assayer/shared/contracts';
 import type { ColumnNumber, LineNumber, RelPath, StubOverlay } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
 import type { PropertyGuard } from '../../contracts/property-guard/property-guard-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -61,7 +59,7 @@ export const stubContradictionsTransformer = ({
 }: {
   guards: readonly PropertyGuard[];
   overlays: readonly StubOverlay[];
-}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: ErrorMessage }[] => {
+}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[] => {
   // The corrected values a human committed for each `(typeKey, property)`, with the overlay file they
   // live in — the authoritative domain each guard on that property must be satisfiable within.
   const correctionByKeyProperty = new Map(
@@ -112,7 +110,7 @@ export const stubContradictionsTransformer = ({
       relPath: relPathContract.parse(String(entry.overlayPath)),
       line: lineNumberContract.parse(OVERLAY_LINE),
       column: columnNumberContract.parse(OVERLAY_COLUMN),
-      message: errorMessageContract.parse(entry.message),
+      message: entry.message,
     }))
     .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
 };
