@@ -176,7 +176,6 @@ export * from './trace-event/trace-event-contract';
 
 export * from './case-result/case-result-contract';
 
-export * from './run-id/run-id-contract';
 
 export * from './run-result/run-result-contract';
 

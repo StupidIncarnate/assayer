@@ -24,8 +24,8 @@
  * await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
  * // Returns a RunId — the same one, for the same bytes and the same harness, forever
  */
-import { relPathContract, runIdContract } from '@assayer/shared/contracts';
-import type { RunId } from '@assayer/shared/contracts';
+import { relPathContract, runResultContract } from '@assayer/shared/contracts';
+import type { RunResult } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
@@ -41,7 +41,7 @@ export const runIdBroker = async ({
   root: string;
   relPath: string;
   source: string;
-}): Promise<RunId> => {
+}): Promise<RunResult['runId']> => {
   const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
   const harnessSource = (await pathExists(harnessPath))
     ? String(fileContentsContract.parse(await readFile(harnessPath)))
@@ -51,7 +51,7 @@ export const runIdBroker = async ({
       ? String(contentHashTransformer({ content: harnessSource }))
       : undefined;
 
-  return runIdContract.parse(
+  return runResultContract.shape.runId.parse(
     String(
       contentHashTransformer({
         content:

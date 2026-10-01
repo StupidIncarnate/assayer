@@ -29,7 +29,7 @@ import { join } from '#gateway/node/path';
 import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
-import type { RelPath, RunConsole, RunId, RunResult } from '@assayer/shared/contracts';
+import type { RelPath, RunConsole, RunResult } from '@assayer/shared/contracts';
 
 import { runConsoleFindBroker } from '../../src/brokers/run/console-find/run-console-find-broker';
 import { runFindBroker } from '../../src/brokers/run/find/run-find-broker';
@@ -45,7 +45,7 @@ export const runFindHarness = (): {
   afterEach: () => void;
   seed: (params: {
     harness?: string;
-  }) => Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunId }>;
+  }) => Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunResult['runId'] }>;
   editHarness: (params: { configDir: string; harness: string }) => void;
   findRun: (params: { configDir: string; relPath: string }) => Promise<RunResult | undefined>;
   findConsole: (params: { configDir: string; relPath: string }) => Promise<RunConsole | undefined>;
@@ -65,7 +65,7 @@ export const runFindHarness = (): {
       harness,
     }: {
       harness?: string;
-    }): Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunId }> => {
+    }): Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunResult['runId'] }> => {
       const configDir = FilePathStub({ value: realpathSync(mkdtempSync(join(tmpdir(), 'assayer-run-find-'))) });
       dirs.push(configDir);
       ensureDirSync(join(String(configDir), 'src'));
