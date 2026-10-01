@@ -25,5 +25,11 @@
     "@assayer/core": "*",
     "@assayer/shared": "*",
     "zod": "^4.6.5"
+  },
+  "imports": {
+    "#gateway/npm/*": "@assayer-monorepo/npm/*",
+    "#gateway/node/*": "@assayer-monorepo/node/*",
+    "#gateway/browser/*": "@assayer-monorepo/browser/*",
+    "#gateway/bin/*": "@assayer-monorepo/bin/*"
   }
 }

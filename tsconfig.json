@@ -11,7 +11,10 @@
     "allowJs": true,
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "module": "node16",
+    "moduleResolution": "node16",
+    "customConditions": ["source"]
   },
   "references": [
     {
