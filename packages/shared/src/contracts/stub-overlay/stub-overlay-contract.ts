@@ -27,15 +27,15 @@ export const stubOverlayContract = z.discriminatedUnion('kind', [
     kind: z.literal('object'),
     key: stubEntryContract.shape.key,
     overlayPath: z.string().min(1).brand<'StubOverlayOverlayPath'>(),
-    properties: z.array(z.object({ name: z.string().min(1).brand<'StubOverlayPropertiesName'>(), values: z.array(representativeValueContract) })),
-  }),
+    properties: z.array(z.object({ name: z.string().min(1).brand<'StubOverlayPropertiesName'>(), values: z.array(representativeValueContract) }).brand<'StubOverlayProperties'>()),
+  }).brand<'StubOverlay'>(),
   z.object({
     kind: z.literal('env'),
     key: stubEntryContract.shape.key,
     overlayPath: z.string().min(1).brand<'StubOverlayOverlayPath'>(),
     property: z.string().min(1).brand<'StubOverlayProperty'>(),
     values: z.array(representativeValueContract),
-  }),
+  }).brand<'StubOverlay'>(),
 ]);
 
 export type StubOverlay = z.infer<typeof stubOverlayContract>;

@@ -25,9 +25,9 @@ export const anonymousReachContract = z.discriminatedUnion('kind', [
     receiver: z.string().min(1).brand<'AnonymousReachReceiver'>().optional(),
     method: z.string().min(1).brand<'AnonymousReachMethod'>().optional(),
     callee: z.string().min(1).brand<'AnonymousReachCallee'>().optional(),
-  }),
-  z.object({ kind: z.literal('return') }),
-  z.object({ kind: z.literal('invocation') }),
+  }).brand<'AnonymousReach'>(),
+  z.object({ kind: z.literal('return') }).brand<'AnonymousReach'>(),
+  z.object({ kind: z.literal('invocation') }).brand<'AnonymousReach'>(),
 ]);
 
 export type AnonymousReach = z.infer<typeof anonymousReachContract>;

@@ -34,8 +34,8 @@ export type ConditionNode =
 export const conditionNodeContract: z.ZodType<ConditionNode> = z.lazy(() =>
   z.discriminatedUnion('kind', [
     conditionLeafContract,
-    z.object({ kind: z.literal('not'), operand: conditionNodeContract }),
-    z.object({ kind: z.literal('and'), left: conditionNodeContract, right: conditionNodeContract }),
-    z.object({ kind: z.literal('or'), left: conditionNodeContract, right: conditionNodeContract }),
+    z.object({ kind: z.literal('not'), operand: conditionNodeContract }).brand<'ConditionNode'>(),
+    z.object({ kind: z.literal('and'), left: conditionNodeContract, right: conditionNodeContract }).brand<'ConditionNode'>(),
+    z.object({ kind: z.literal('or'), left: conditionNodeContract, right: conditionNodeContract }).brand<'ConditionNode'>(),
   ]),
 );

@@ -71,7 +71,7 @@ export const conditionLeafContract = z.object({
   operandEnvVarName: z.string().min(1).brand<'ConditionLeafOperandEnvVarName'>().optional(),
   operandConstValue: representativeValueContract.optional(),
   operandConstLength: z.number().int().nonnegative().brand<'ConditionLeafOperandConstLength'>().optional(),
-  operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).optional(),
+  operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).brand<'ConditionLeafOperandCallPosition'>().optional(),
   operandIsTypeof: z.literal(true).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,

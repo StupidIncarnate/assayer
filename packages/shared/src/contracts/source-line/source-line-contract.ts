@@ -19,7 +19,7 @@ export const sourceLineContract = z.object({
   hash: z
     .string()
     .regex(/^[0-9a-f]{64}$/u)
-    .brand<'LineHash'>(),
+    .brand<'SourceLineHash'>(),
 }).brand<'SourceLine'>();
 
 export type SourceLine = z.infer<typeof sourceLineContract>;

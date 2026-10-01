@@ -29,14 +29,14 @@ import { z } from '#gateway/npm/zod';
 
 
 const moduleBindingContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('named'), name: z.string().min(1).brand<'ModuleBindingName'>(), alias: z.string().min(1).brand<'ModuleBindingAlias'>().optional() }),
-  z.object({ kind: z.literal('default'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }),
-  z.object({ kind: z.literal('namespace'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }),
-  z.object({ kind: z.literal('star') }),
+  z.object({ kind: z.literal('named'), name: z.string().min(1).brand<'ModuleBindingName'>(), alias: z.string().min(1).brand<'ModuleBindingAlias'>().optional() }).brand<'ModuleBinding'>(),
+  z.object({ kind: z.literal('default'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }).brand<'ModuleBinding'>(),
+  z.object({ kind: z.literal('namespace'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }).brand<'ModuleBinding'>(),
+  z.object({ kind: z.literal('star') }).brand<'ModuleBinding'>(),
 ]);
 
 export const moduleEdgeContract = z.object({
-  kind: z.enum(['import', 'reexport', 'dynamic']).brand<'ModuleEdgeKind'>(),
+  kind: z.enum(['import', 'reexport', 'dynamic']),
   // Absent only for a `dynamic` edge: a dynamic `import()` whose specifier is not a string literal
   // names no module the single-file parse can read.
   specifier: z.string().min(1).brand<'ModuleEdgeSpecifier'>().optional(),

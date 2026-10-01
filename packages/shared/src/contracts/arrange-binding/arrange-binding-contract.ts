@@ -51,31 +51,31 @@ export const arrangeBindingContract = z.discriminatedUnion('kind', [
     kind: z.literal('param'),
     param: z.string().min(1).brand<'ArrangeBindingParam'>(),
     value: representativeValueContract,
-  }),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('env'),
     name: z.string().min(1).brand<'ArrangeBindingName'>(),
     value: z.string().brand<'ArrangeBindingValue'>(),
-  }),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('object'),
     param: z.string().min(1).brand<'ArrangeBindingParam'>(),
     value: z.record(z.string().min(1).brand<'ArrangeBindingValue'>(), arrangeValueContract),
-  }),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('array'),
     param: z.string().min(1).brand<'ArrangeBindingParam'>(),
     value: z.array(arrangeValueContract),
     // Present only when this array realizes a REST parameter — see the PURPOSE doc above.
     rest: z.boolean().optional(),
-  }),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('harness'),
     param: z.string().min(1).brand<'ArrangeBindingParam'>(),
     key: z.string().min(1).brand<'ArrangeBindingKey'>(),
     // Present only when this key realizes a REST parameter — see the PURPOSE doc above.
     rest: z.boolean().optional(),
-  }),
+  }).brand<'ArrangeBinding'>(),
 ]);
 
 export type ArrangeBinding = z.infer<typeof arrangeBindingContract>;

@@ -30,9 +30,9 @@ import { representativeValueContract } from '../representative-value/representat
 // value it would compute: a `param-ref` a caller passes straight through, a `literal` welded in, or
 // `opaque` for anything else.
 const globalCallArgContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('param-ref'), paramName: z.string().min(1).brand<'GlobalCallArgParamName'>() }),
-  z.object({ kind: z.literal('literal'), value: representativeValueContract }),
-  z.object({ kind: z.literal('opaque') }),
+  z.object({ kind: z.literal('param-ref'), paramName: z.string().min(1).brand<'GlobalCallArgParamName'>() }).brand<'GlobalCallArg'>(),
+  z.object({ kind: z.literal('literal'), value: representativeValueContract }).brand<'GlobalCallArg'>(),
+  z.object({ kind: z.literal('opaque') }).brand<'GlobalCallArg'>(),
 ]);
 
 export const globalUseContract = z.object({

@@ -19,7 +19,7 @@ import { z } from '#gateway/npm/zod';
 export const darkSpotContract = z.object({
   kind: z.string().min(1).brand<'DarkSpotKind'>(),
   scopePath: z.array(z.string().min(1).brand<'DarkSpotScopePath'>()),
-  reason: z.enum(['unhandled-syntax']).brand<'DarkSpotReason'>(),
+  reason: z.enum(['unhandled-syntax']),
   startLine: z.number().int().positive().brand<'DarkSpotStartLine'>(),
   endLine: z.number().int().positive().brand<'DarkSpotEndLine'>(),
 }).brand<'DarkSpot'>();

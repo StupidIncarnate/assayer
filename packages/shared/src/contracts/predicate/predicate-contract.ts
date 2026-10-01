@@ -50,8 +50,7 @@ export const predicateContract = z.object({
       'typeof-eq',
       'typeof-neq',
       'unrecognized',
-    ])
-    .brand<'PredicateKind'>(),
+    ]),
   literal: representativeValueContract.optional(),
 }).brand<'Predicate'>();
 

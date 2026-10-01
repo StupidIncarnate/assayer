@@ -13,7 +13,7 @@ import { coverageContract } from '../coverage/coverage-contract';
 
 export const guardStepContract = z.object({
   branchCoverageId: coverageContract.shape.id,
-  arm: z.string().min(1).brand<'GuardArm'>(),
+  arm: z.string().min(1).brand<'GuardStepArm'>(),
 }).brand<'GuardStep'>();
 
 export type GuardStep = z.infer<typeof guardStepContract>;

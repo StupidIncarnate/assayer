@@ -88,28 +88,28 @@ export type TypeDescriptor =
 
 export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
   z.discriminatedUnion('kind', [
-    z.object({ kind: z.literal('string') }),
-    z.object({ kind: z.literal('number') }),
-    z.object({ kind: z.literal('boolean') }),
-    z.object({ kind: z.literal('literal'), value: representativeValueContract }),
-    z.object({ kind: z.literal('union'), members: z.array(typeDescriptorContract) }),
-    z.object({ kind: z.literal('array'), element: typeDescriptorContract, cardinality: arrayCardinalityContract.optional() }),
-    z.object({ kind: z.literal('tuple'), elements: z.array(typeDescriptorContract) }),
-    z.object({ kind: z.literal('template'), texts: z.array(z.string().brand<'TypeDescriptorTexts'>()), types: z.array(typeDescriptorContract) }),
+    z.object({ kind: z.literal('string') }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('number') }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('boolean') }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('literal'), value: representativeValueContract }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('union'), members: z.array(typeDescriptorContract) }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('array'), element: typeDescriptorContract, cardinality: arrayCardinalityContract.optional() }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('tuple'), elements: z.array(typeDescriptorContract) }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('template'), texts: z.array(z.string().brand<'TypeDescriptorTexts'>()), types: z.array(typeDescriptorContract) }).brand<'TypeDescriptor'>(),
     z.object({
       kind: z.literal('object'),
       typeName: z.string().min(1).brand<'TypeDescriptorTypeName'>().optional(),
       truncated: z.boolean().optional(),
       properties: z.array(
-        z.object({ name: z.string().min(1).brand<'TypeDescriptorPropertiesName'>(), type: typeDescriptorContract, optional: z.boolean().optional() }),
+        z.object({ name: z.string().min(1).brand<'TypeDescriptorPropertiesName'>(), type: typeDescriptorContract, optional: z.boolean().optional() }).brand<'TypeDescriptorProperties'>(),
       ),
-    }),
-    z.object({ kind: z.literal('callable'), text: z.string().min(1).brand<'TypeDescriptorText'>() }),
+    }).brand<'TypeDescriptor'>(),
+    z.object({ kind: z.literal('callable'), text: z.string().min(1).brand<'TypeDescriptorText'>() }).brand<'TypeDescriptor'>(),
     z.object({
       kind: z.literal('unknown'),
       text: z.string().min(1).brand<'TypeDescriptorText'>(),
       typeRef: z.string().min(1).brand<'TypeDescriptorTypeRef'>().optional(),
       typeArgs: z.array(typeDescriptorContract).optional(),
-    }),
+    }).brand<'TypeDescriptor'>(),
   ]),
 );

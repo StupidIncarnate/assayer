@@ -28,7 +28,7 @@ export const branchNodeContract = z.object({
   // Exactly the kinds the walk EMITS — a handler exists for each. Syntax the walk cannot follow is a
   // dark spot, not a branch, so naming a kind here that nothing emits would oblige every consumer to
   // handle a case that cannot occur. Add a kind when its handler lands, never before.
-  kind: z.enum(['if', 'switch', 'ternary']).brand<'BranchKind'>(),
+  kind: z.enum(['if', 'switch', 'ternary']),
   condition: conditionNodeContract,
   startLine: z.number().int().positive().brand<'BranchNodeStartLine'>(),
   endLine: z.number().int().positive().brand<'BranchNodeEndLine'>(),

@@ -38,26 +38,26 @@ import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contr
 // are absent when `@types/node` cannot type it (recorded, never invisible). It is keyed by `name`
 // (`member` is the accessed member) and has no `specifier` — it is not imported.
 const resolvedTargetContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('local'), relPath: z.string().min(1).brand<'ResolvedTargetRelPath'>(), signature: externalSignatureContract.optional() }),
+  z.object({ kind: z.literal('local'), relPath: z.string().min(1).brand<'ResolvedTargetRelPath'>(), signature: externalSignatureContract.optional() }).brand<'ResolvedTarget'>(),
   z.object({
     kind: z.literal('package'),
     packageName: z.string().min(1).brand<'ResolvedTargetPackageName'>(),
     signature: externalSignatureContract.optional(),
     type: typeDescriptorContract.optional(),
-  }),
+  }).brand<'ResolvedTarget'>(),
   z.object({
     kind: z.literal('builtin'),
     packageName: z.string().min(1).brand<'ResolvedTargetPackageName'>(),
     signature: externalSignatureContract.optional(),
     type: typeDescriptorContract.optional(),
-  }),
+  }).brand<'ResolvedTarget'>(),
   z.object({
     kind: z.literal('global'),
     name: z.string().min(1).brand<'ResolvedTargetName'>(),
     member: z.string().min(1).brand<'ResolvedTargetMember'>().optional(),
     signature: externalSignatureContract.optional(),
     type: typeDescriptorContract.optional(),
-  }),
+  }).brand<'ResolvedTarget'>(),
 ]);
 
 export const resolvedEdgeContract = z.object({

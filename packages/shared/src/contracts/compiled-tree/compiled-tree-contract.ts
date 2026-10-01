@@ -29,7 +29,7 @@ const treeNodeContract: z.ZodType<TreeNode> = z.lazy(() =>
     path: z.string().min(1).brand<'TreeNodePath'>(),
     kind: treeNodeKindContract,
     children: z.array(treeNodeContract).optional(),
-  }),
+  }).brand<'TreeNode'>(),
 );
 
 export const compiledTreeContract = z.object({
@@ -39,7 +39,7 @@ export const compiledTreeContract = z.object({
     rootFolderName: z.string().min(1).brand<'CompiledTreeSummaryRootFolderName'>(),
     tsCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsCount'>(),
     tsxCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsxCount'>(),
-  }),
+  }).brand<'CompiledTreeSummary'>(),
   nodes: z.array(treeNodeContract),
 }).brand<'CompiledTree'>();
 

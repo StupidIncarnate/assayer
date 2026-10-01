@@ -11,7 +11,7 @@ import { z } from '#gateway/npm/zod';
 
 export const docsResultContract = z.object({
   topic: z.string().min(1).brand<'DocsResultTopic'>(),
-  body: z.string().min(1).brand<'DocsBody'>(),
+  body: z.string().min(1).brand<'DocsResultBody'>(),
 }).brand<'DocsResult'>();
 
 export type DocsResult = z.infer<typeof docsResultContract>;

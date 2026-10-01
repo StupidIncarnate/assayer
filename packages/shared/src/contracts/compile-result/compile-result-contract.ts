@@ -23,7 +23,7 @@ export const compileResultContract = z.object({
       branch: z.string().min(1).brand<'CompileResultResultsBranch'>(),
       mode: compileModeContract,
       fileCount: z.number().int().nonnegative().brand<'CompileResultResultsFileCount'>(),
-    }),
+    }).brand<'CompileResultResults'>(),
   ),
   errors: z.array(
     z.object({
@@ -31,8 +31,8 @@ export const compileResultContract = z.object({
       relPath: z.string().min(1).brand<'CompileResultErrorsRelPath'>(),
       line: z.number().int().positive().brand<'CompileResultErrorsLine'>(),
       column: z.number().int().positive().brand<'CompileResultErrorsColumn'>(),
-      message: z.string().min(1).brand<'CompileErrorMessage'>(),
-    }),
+      message: z.string().min(1).brand<'CompileResultErrorsMessage'>(),
+    }).brand<'CompileResultErrors'>(),
   ),
 }).brand<'CompileResult'>();
 

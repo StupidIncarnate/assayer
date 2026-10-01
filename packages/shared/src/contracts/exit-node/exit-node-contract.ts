@@ -17,7 +17,7 @@ import { coverageContract } from '../coverage/coverage-contract';
 
 export const exitNodeContract = z.object({
   coverageId: coverageContract.shape.id,
-  kind: z.enum(['return', 'throw', 'implicit']).brand<'ExitKind'>(),
+  kind: z.enum(['return', 'throw', 'implicit']),
   guardPath: z.array(guardStepContract),
   line: z.number().int().positive().brand<'ExitNodeLine'>(),
 }).brand<'ExitNode'>();

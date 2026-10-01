@@ -34,7 +34,7 @@ import { z } from '#gateway/npm/zod';
 
 export const undrivenEntryContract = z.object({
   name: z.string().min(1).brand<'UndrivenEntryName'>(),
-  reason: z.string().min(1).brand<'UndrivenReason'>(),
+  reason: z.string().min(1).brand<'UndrivenEntryReason'>(),
   startLine: z.number().int().positive().brand<'UndrivenEntryStartLine'>(),
   endLine: z.number().int().positive().brand<'UndrivenEntryEndLine'>(),
   // The human label a surface shows instead of the internal `name`, present whenever `name` is a key

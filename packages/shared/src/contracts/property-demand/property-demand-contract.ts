@@ -44,9 +44,9 @@ export const propertyDemandContract: z.ZodType<PropertyDemand> = z.lazy(() =>
         kind: z.literal('demanded'),
         values: z.array(representativeValueContract),
         cardinality: arrayCardinalityContract.optional(),
-      }),
-      z.object({ kind: z.literal('unknown') }),
-      z.object({ kind: z.literal('nested'), properties: z.array(propertyDemandContract) }),
+      }).brand<'PropertyDemandDemand'>(),
+      z.object({ kind: z.literal('unknown') }).brand<'PropertyDemandDemand'>(),
+      z.object({ kind: z.literal('nested'), properties: z.array(propertyDemandContract) }).brand<'PropertyDemandDemand'>(),
     ]),
-  }),
+  }).brand<'PropertyDemand'>(),
 );

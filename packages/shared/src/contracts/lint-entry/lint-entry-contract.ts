@@ -24,9 +24,9 @@ import { z } from '#gateway/npm/zod';
 
 
 export const lintEntryContract = z.object({
-  rule: z.enum(['dead-surface', 'unreachable-exit']).brand<'LintRule'>(),
+  rule: z.enum(['dead-surface', 'unreachable-exit']),
   name: z.string().min(1).brand<'LintEntryName'>(),
-  message: z.string().min(1).brand<'LintMessage'>(),
+  message: z.string().min(1).brand<'LintEntryMessage'>(),
   startLine: z.number().int().positive().brand<'LintEntryStartLine'>(),
   endLine: z.number().int().positive().brand<'LintEntryEndLine'>(),
 }).brand<'LintEntry'>();

@@ -27,7 +27,7 @@ import { coverageContract } from '../coverage/coverage-contract';
 
 export const traceEventContract = z.object({
   id: coverageContract.shape.id,
-  kind: z.enum(['cond', 'exit']).brand<'TraceKind'>(),
+  kind: z.enum(['cond', 'exit']),
   outcome: z.boolean().optional(),
   valueText: z.string().min(1).brand<'TraceEventValueText'>(),
 }).brand<'TraceEvent'>();
