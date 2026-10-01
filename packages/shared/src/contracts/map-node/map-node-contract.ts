@@ -16,6 +16,6 @@ export const mapNodeContract = z.object({
   startLine: z.number().int().positive().brand<'MapNodeStartLine'>(),
   endLine: z.number().int().positive().brand<'MapNodeEndLine'>(),
   meta: z.record(z.string(), z.unknown()).brand<'PluginMetaBag'>().optional(),
-});
+}).brand<'MapNode'>();
 
 export type MapNode = z.infer<typeof mapNodeContract>;

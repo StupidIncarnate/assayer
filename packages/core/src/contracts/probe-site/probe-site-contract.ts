@@ -41,6 +41,6 @@ export const probeSiteContract = z.object({
   // Present ONLY on an `optional` site — the exit id fired when the receiver is nullish. The `id`
   // above is the non-null path's exit; both are observed from this one physical span.
   elseId: coverageContract.shape.id.optional(),
-});
+}).brand<'ProbeSite'>();
 
 export type ProbeSite = z.infer<typeof probeSiteContract>;

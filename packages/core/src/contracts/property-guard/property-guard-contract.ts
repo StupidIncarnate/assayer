@@ -27,6 +27,6 @@ export const propertyGuardContract = z.object({
   line: z.number().int().positive().brand<'PropertyGuardLine'>(),
   predicate: predicateContract,
   operandType: typeDescriptorContract,
-});
+}).brand<'PropertyGuard'>();
 
 export type PropertyGuard = z.infer<typeof propertyGuardContract>;

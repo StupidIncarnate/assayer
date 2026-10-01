@@ -20,6 +20,6 @@ export const exitNodeContract = z.object({
   kind: z.enum(['return', 'throw', 'implicit']).brand<'ExitKind'>(),
   guardPath: z.array(guardStepContract),
   line: z.number().int().positive().brand<'ExitNodeLine'>(),
-});
+}).brand<'ExitNode'>();
 
 export type ExitNode = z.infer<typeof exitNodeContract>;

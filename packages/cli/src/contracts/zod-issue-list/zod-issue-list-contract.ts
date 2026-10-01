@@ -22,6 +22,6 @@ export const zodIssueListContract = z.object({
       message: z.string().brand<'ZodIssueMessage'>(),
     }),
   ),
-});
+}).brand<'ZodIssueList'>();
 
 export type ZodIssueList = z.infer<typeof zodIssueListContract>;

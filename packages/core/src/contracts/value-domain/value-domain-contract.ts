@@ -58,6 +58,6 @@ export const valueDomainContract = z.object({
   lengthExcluded: z.array(z.number().brand<'LengthBound'>()).default([]),
   members: z.array(representativeValueContract).optional(),
   excluded: z.array(representativeValueContract).default([]),
-});
+}).brand<'ValueDomain'>();
 
 export type ValueDomain = z.infer<typeof valueDomainContract>;

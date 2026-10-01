@@ -17,6 +17,6 @@ export const orderedBoundsContract = z.object({
   minExclusive: z.boolean().default(false),
   max: z.number().brand<'OrderedBound'>().optional(),
   maxExclusive: z.boolean().default(false),
-});
+}).brand<'OrderedBounds'>();
 
 export type OrderedBounds = z.infer<typeof orderedBoundsContract>;

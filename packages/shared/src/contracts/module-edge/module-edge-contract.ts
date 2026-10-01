@@ -43,7 +43,7 @@ export const moduleEdgeContract = z.object({
   bindings: z.array(moduleBindingContract),
   line: z.number().int().positive().brand<'ModuleEdgeLine'>(),
   column: z.number().int().positive().brand<'ModuleEdgeColumn'>(),
-});
+}).brand<'ModuleEdge'>();
 
 export type ModuleEdge = z.infer<typeof moduleEdgeContract>;
 export type ModuleBinding = z.infer<typeof moduleBindingContract>;

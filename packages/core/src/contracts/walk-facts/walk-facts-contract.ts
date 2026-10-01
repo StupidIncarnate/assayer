@@ -59,6 +59,6 @@ export const walkFactsContract = z.object({
   // (`((n) => …)(x)`) with the invocation arguments welded onto its params, which the bare `reachedFns`
   // line cannot carry — what a follower needs to weld the arrow's params and drive it.
   invokedFns: z.array(invokedFnContract),
-});
+}).brand<'WalkFacts'>();
 
 export type WalkFacts = z.infer<typeof walkFactsContract>;

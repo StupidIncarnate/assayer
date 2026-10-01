@@ -21,6 +21,6 @@ import { callSiteContract } from '../call-site/call-site-contract';
 export const invokedFnContract = z.object({
   startLine: z.number().int().positive().brand<'InvokedFnStartLine'>(),
   args: callSiteContract.shape.args,
-});
+}).brand<'InvokedFn'>();
 
 export type InvokedFn = z.infer<typeof invokedFnContract>;

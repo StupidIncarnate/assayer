@@ -44,6 +44,6 @@ export const undrivenEntryContract = z.object({
   // match; `label` is DISPLAY only, so the report and the window never read a cache key. A named
   // private carries none and shows its `name`.
   label: z.string().min(1).brand<'UndrivenEntryLabel'>().optional(),
-});
+}).brand<'UndrivenEntry'>();
 
 export type UndrivenEntry = z.infer<typeof undrivenEntryContract>;

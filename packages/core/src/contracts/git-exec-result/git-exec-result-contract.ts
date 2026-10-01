@@ -12,6 +12,6 @@ export const gitExecResultContract = z.object({
   exitCode: z.number().int().brand<'GitExitCode'>(),
   stdout: z.string().brand<'GitStdout'>(),
   stderr: z.string().brand<'GitStderr'>(),
-});
+}).brand<'GitExecResult'>();
 
 export type GitExecResult = z.infer<typeof gitExecResultContract>;

@@ -25,6 +25,6 @@ export const declaredShapeContract = z.object({
   name: z.string().min(1).brand<'DeclaredShapeName'>(),
   type: typeDescriptorContract,
   typeParams: z.array(z.string().min(1).brand<'DeclaredShapeTypeParams'>()).optional(),
-});
+}).brand<'DeclaredShape'>();
 
 export type DeclaredShape = z.infer<typeof declaredShapeContract>;

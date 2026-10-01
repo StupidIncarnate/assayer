@@ -20,6 +20,6 @@ import { conditionLeafContract } from '@assayer/shared/contracts';
 
 export const conditionCauseContract = z.object({
   requirements: z.array(z.object({ leaf: conditionLeafContract, want: z.boolean() })),
-});
+}).brand<'ConditionCause'>();
 
 export type ConditionCause = z.infer<typeof conditionCauseContract>;

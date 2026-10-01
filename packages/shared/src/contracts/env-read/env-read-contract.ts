@@ -20,6 +20,6 @@ import { representativeValueContract } from '../representative-value/representat
 export const envReadContract = z.object({
   property: z.string().min(1).brand<'EnvReadProperty'>(),
   literals: z.array(representativeValueContract),
-});
+}).brand<'EnvRead'>();
 
 export type EnvRead = z.infer<typeof envReadContract>;

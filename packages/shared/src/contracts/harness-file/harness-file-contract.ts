@@ -24,6 +24,6 @@ export const harnessFileContract = z.object({
   relPath: z.string().min(1).brand<'HarnessFileRelPath'>(),
   targetRelPath: z.string().min(1).brand<'HarnessFileTargetRelPath'>(),
   keys: z.array(harnessInputKeyContract),
-});
+}).brand<'HarnessFile'>();
 
 export type HarnessFile = z.infer<typeof harnessFileContract>;

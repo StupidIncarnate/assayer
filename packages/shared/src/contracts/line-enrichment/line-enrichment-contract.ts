@@ -17,6 +17,6 @@ export const lineEnrichmentContract = z.object({
   symbol: z.string().min(1).brand<'LineEnrichmentSymbol'>(),
   typeText: z.string().min(1).brand<'LineEnrichmentTypeText'>(),
   range: z.array(representativeValueContract).optional(),
-});
+}).brand<'LineEnrichment'>();
 
 export type LineEnrichment = z.infer<typeof lineEnrichmentContract>;

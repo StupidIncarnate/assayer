@@ -30,6 +30,6 @@ export const compiledFileBlobContract = z.object({
   // calls) — the per-file input a later cross-file stitch pass resolves. Empty when the file has none.
   // `prefault` parses the fallback through the graph contract, so its own defaults fill in the rest.
   moduleGraph: fileModuleGraphContract.prefault({ edges: [], references: [] }),
-});
+}).brand<'CompiledFileBlob'>();
 
 export type CompiledFileBlob = z.infer<typeof compiledFileBlobContract>;

@@ -14,10 +14,11 @@
  * // Returns one WalkFacts with every scope, loose branch, loose exit and node concatenated in order
  */
 import type { WalkFacts } from '../../contracts/walk-facts/walk-facts-contract';
+import { walkFactsContract } from '../../contracts/walk-facts/walk-facts-contract';
 
 export const walkFactsLayerTransformer = ({ facts }: { facts: WalkFacts[] }): WalkFacts =>
   facts.reduce<WalkFacts>(
-    (merged, next) => ({
+    (merged, next) => walkFactsContract.parse({
       scopes: [...merged.scopes, ...next.scopes],
       looseBranches: [...merged.looseBranches, ...next.looseBranches],
       looseExits: [...merged.looseExits, ...next.looseExits],
@@ -33,7 +34,7 @@ export const walkFactsLayerTransformer = ({ facts }: { facts: WalkFacts[] }): Wa
       reachedFns: [...merged.reachedFns, ...next.reachedFns],
       invokedFns: [...merged.invokedFns, ...next.invokedFns],
     }),
-    {
+    walkFactsContract.parse({
       scopes: [],
       looseBranches: [],
       looseExits: [],
@@ -48,5 +49,5 @@ export const walkFactsLayerTransformer = ({ facts }: { facts: WalkFacts[] }): Wa
       envReads: [],
       reachedFns: [],
       invokedFns: [],
-    },
+    }),
   );

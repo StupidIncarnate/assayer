@@ -32,6 +32,6 @@ export const harnessIndexContract = z.object({
   tsconfigHash: contentHashContract,
   harnessHash: contentHashContract,
   harnesses: z.array(harnessFileContract),
-});
+}).brand<'HarnessIndex'>();
 
 export type HarnessIndex = z.infer<typeof harnessIndexContract>;

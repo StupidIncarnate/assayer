@@ -27,6 +27,6 @@ export const objectStubContract = z.object({
   typeName: z.string().min(1).brand<'ObjectStubTypeName'>(),
   properties: z.array(propertyDemandContract),
   readers: z.array(z.string().min(1).brand<'ObjectStubReaders'>()),
-});
+}).brand<'ObjectStub'>();
 
 export type ObjectStub = z.infer<typeof objectStubContract>;

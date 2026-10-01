@@ -20,6 +20,6 @@ export const sourceLineContract = z.object({
     .string()
     .regex(/^[0-9a-f]{64}$/u)
     .brand<'LineHash'>(),
-});
+}).brand<'SourceLine'>();
 
 export type SourceLine = z.infer<typeof sourceLineContract>;

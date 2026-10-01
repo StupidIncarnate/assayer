@@ -50,6 +50,6 @@ export const runResultContract = z.object({
   // The fourth channel — patterns the repo should change, carried so `assayer unit` can fail on them
   // when the repo asked (`deadSurface: 'error'`), exactly as it fails on a dark spot under its toggle.
   lints: z.array(lintEntryContract),
-});
+}).brand<'RunResult'>();
 
 export type RunResult = z.infer<typeof runResultContract>;

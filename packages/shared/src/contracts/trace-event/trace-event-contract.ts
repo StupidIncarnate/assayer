@@ -30,6 +30,6 @@ export const traceEventContract = z.object({
   kind: z.enum(['cond', 'exit']).brand<'TraceKind'>(),
   outcome: z.boolean().optional(),
   valueText: z.string().min(1).brand<'TraceEventValueText'>(),
-});
+}).brand<'TraceEvent'>();
 
 export type TraceEvent = z.infer<typeof traceEventContract>;

@@ -19,6 +19,6 @@ export const flatPropertyDemandContract = z.object({
     z.object({ kind: z.literal('unknown') }),
     z.object({ kind: z.literal('demanded'), values: z.array(representativeValueContract) }),
   ]),
-});
+}).brand<'FlatPropertyDemand'>();
 
 export type FlatPropertyDemand = z.infer<typeof flatPropertyDemandContract>;

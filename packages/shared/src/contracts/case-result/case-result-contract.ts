@@ -39,6 +39,6 @@ export const caseResultContract = z.object({
   observedPath: z.array(coverageContract.shape.id).default([]),
   trace: z.array(traceEventContract),
   message: z.string().brand<'CaseMessage'>().optional(),
-});
+}).brand<'CaseResult'>();
 
 export type CaseResult = z.infer<typeof caseResultContract>;

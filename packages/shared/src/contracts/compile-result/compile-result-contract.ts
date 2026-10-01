@@ -34,6 +34,6 @@ export const compileResultContract = z.object({
       message: z.string().min(1).brand<'CompileErrorMessage'>(),
     }),
   ),
-});
+}).brand<'CompileResult'>();
 
 export type CompileResult = z.infer<typeof compileResultContract>;

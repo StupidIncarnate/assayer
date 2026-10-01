@@ -75,6 +75,6 @@ export const conditionLeafContract = z.object({
   operandIsTypeof: z.literal(true).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,
-});
+}).brand<'ConditionLeaf'>();
 
 export type ConditionLeaf = z.infer<typeof conditionLeafContract>;

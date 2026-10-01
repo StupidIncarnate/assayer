@@ -32,6 +32,6 @@ export const branchNodeContract = z.object({
   condition: conditionNodeContract,
   startLine: z.number().int().positive().brand<'BranchNodeStartLine'>(),
   endLine: z.number().int().positive().brand<'BranchNodeEndLine'>(),
-});
+}).brand<'BranchNode'>();
 
 export type BranchNode = z.infer<typeof branchNodeContract>;

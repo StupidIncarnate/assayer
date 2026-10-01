@@ -18,6 +18,6 @@ import { z } from '#gateway/npm/zod';
 export const harnessInputKeyContract = z.object({
   entry: z.string().min(1).brand<'HarnessInputKeyEntry'>(),
   param: z.string().min(1).brand<'HarnessInputKeyParam'>(),
-});
+}).brand<'HarnessInputKey'>();
 
 export type HarnessInputKey = z.infer<typeof harnessInputKeyContract>;

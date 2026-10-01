@@ -12,6 +12,6 @@ import { z } from '#gateway/npm/zod';
 export const sourcePositionContract = z.object({
   line: z.number().int().positive().brand<'SourcePositionLine'>(),
   column: z.number().int().positive().brand<'SourcePositionColumn'>(),
-});
+}).brand<'SourcePosition'>();
 
 export type SourcePosition = z.infer<typeof sourcePositionContract>;

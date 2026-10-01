@@ -19,6 +19,6 @@ export const execResultContract = z.object({
   exitCode: z.number().int().brand<'ExitCode'>(),
   stdout: z.string().brand<'ExecStdout'>(),
   stderr: z.string().brand<'ExecStderr'>(),
-});
+}).brand<'ExecResult'>();
 
 export type ExecResult = z.infer<typeof execResultContract>;

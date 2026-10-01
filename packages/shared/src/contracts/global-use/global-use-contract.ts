@@ -43,7 +43,7 @@ export const globalUseContract = z.object({
   line: z.number().int().positive().brand<'GlobalUseLine'>(),
   column: z.number().int().positive().brand<'GlobalUseColumn'>(),
   scopePath: z.array(z.string().min(1).brand<'GlobalUseScopePath'>()),
-});
+}).brand<'GlobalUse'>();
 
 export type GlobalUse = z.infer<typeof globalUseContract>;
 export type GlobalCallArg = z.infer<typeof globalCallArgContract>;

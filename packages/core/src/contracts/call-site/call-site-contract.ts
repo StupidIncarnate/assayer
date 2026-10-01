@@ -63,7 +63,7 @@ export const callSiteContract = z.object({
   // element the callback's parameter binds to — so its branches drive through that param.
   receiver: z.string().min(1).brand<'CallSiteReceiver'>().optional(),
   method: z.string().min(1).brand<'CallSiteMethod'>().optional(),
-});
+}).brand<'CallSite'>();
 
 export type CallSite = z.infer<typeof callSiteContract>;
 export type CalleeLink = z.infer<typeof calleeLinkContract>;

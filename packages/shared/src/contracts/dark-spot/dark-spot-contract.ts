@@ -22,6 +22,6 @@ export const darkSpotContract = z.object({
   reason: z.enum(['unhandled-syntax']).brand<'DarkSpotReason'>(),
   startLine: z.number().int().positive().brand<'DarkSpotStartLine'>(),
   endLine: z.number().int().positive().brand<'DarkSpotEndLine'>(),
-});
+}).brand<'DarkSpot'>();
 
 export type DarkSpot = z.infer<typeof darkSpotContract>;

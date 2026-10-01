@@ -18,6 +18,6 @@ export const moduleReferenceContract = z.object({
   importedName: z.string().min(1).brand<'ModuleReferenceImportedName'>(),
   line: z.number().int().positive().brand<'ModuleReferenceLine'>(),
   column: z.number().int().positive().brand<'ModuleReferenceColumn'>(),
-});
+}).brand<'ModuleReference'>();
 
 export type ModuleReference = z.infer<typeof moduleReferenceContract>;

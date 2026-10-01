@@ -41,6 +41,6 @@ export const compiledTreeContract = z.object({
     tsxCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsxCount'>(),
   }),
   nodes: z.array(treeNodeContract),
-});
+}).brand<'CompiledTree'>();
 
 export type CompiledTree = z.infer<typeof compiledTreeContract>;

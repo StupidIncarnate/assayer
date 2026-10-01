@@ -25,6 +25,6 @@ export const envStubContract = z.object({
   values: z.array(representativeValueContract),
   guessed: z.boolean(),
   readers: z.array(z.string().min(1).brand<'EnvStubReaders'>()),
-});
+}).brand<'EnvStub'>();
 
 export type EnvStub = z.infer<typeof envStubContract>;

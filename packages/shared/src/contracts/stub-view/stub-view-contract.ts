@@ -17,6 +17,6 @@ import { objectStubContract } from '../object-stub/object-stub-contract';
 export const stubViewContract = z.object({
   objectStubs: z.array(objectStubContract),
   envStubs: z.array(envStubContract),
-});
+}).brand<'StubView'>();
 
 export type StubView = z.infer<typeof stubViewContract>;

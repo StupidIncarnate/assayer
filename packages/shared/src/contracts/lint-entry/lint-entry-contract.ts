@@ -29,6 +29,6 @@ export const lintEntryContract = z.object({
   message: z.string().min(1).brand<'LintMessage'>(),
   startLine: z.number().int().positive().brand<'LintEntryStartLine'>(),
   endLine: z.number().int().positive().brand<'LintEntryEndLine'>(),
-});
+}).brand<'LintEntry'>();
 
 export type LintEntry = z.infer<typeof lintEntryContract>;

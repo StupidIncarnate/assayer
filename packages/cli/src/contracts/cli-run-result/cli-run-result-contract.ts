@@ -13,6 +13,6 @@ export const cliRunResultContract = z.object({
   stdout: z.string().brand<'CliRunStdout'>(),
   stderr: z.string().brand<'CliRunStderr'>(),
   exitCode: z.number().int().brand<'CliRunExitCode'>(),
-});
+}).brand<'CliRunResult'>();
 
 export type CliRunResult = z.infer<typeof cliRunResultContract>;

@@ -26,6 +26,7 @@ import { compiledFileBlobContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
+import { sourcePositionContract } from '../../../contracts/source-position/source-position-contract';
 
 export const compileProcessFileBroker = async ({
   relPath,
@@ -53,11 +54,11 @@ export const compileProcessFileBroker = async ({
   if (!extracted.success) {
     return {
       reused: false,
-      error: {
+      error: sourcePositionContract.parse({
         line: extracted.error.line,
         column: extracted.error.column,
         message: String(extracted.error.message),
-      },
+      }),
     };
   }
 

@@ -13,6 +13,7 @@ import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 import { readFile } from '#gateway/node/fs__promises';
+import { sourcePositionContract } from '../../../contracts/source-position/source-position-contract';
 
 export const configLoadBroker = async ({
   configPath,
@@ -37,11 +38,11 @@ export const configLoadBroker = async ({
       text: String(text),
     });
 
-    return {
+    return sourcePositionContract.parse({
       success: false,
       message: error.message,
       line: position.line,
       column: position.column,
-    };
+    });
   }
 };

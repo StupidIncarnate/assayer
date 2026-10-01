@@ -35,6 +35,6 @@ export const compiledFileViewContract = z.object({
   // signature once read). The resolver filters the per-namespace resolved index to `from === relPath`.
   // Empty for a file that imports nothing, and defaulted so an older cache view still parses.
   resolvedEdges: z.array(resolvedEdgeContract).default([]),
-});
+}).brand<'CompiledFileView'>();
 
 export type CompiledFileView = z.infer<typeof compiledFileViewContract>;

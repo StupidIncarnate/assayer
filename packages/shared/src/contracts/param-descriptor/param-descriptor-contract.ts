@@ -37,6 +37,6 @@ export const paramDescriptorContract = z.object({
   rest: z.boolean().optional(),
   // What the SIGNATURE spelled, for the invoice — present only where the descriptor cannot say it.
   declaredText: z.string().min(1).brand<'ParamDescriptorDeclaredText'>().optional(),
-});
+}).brand<'ParamDescriptor'>();
 
 export type ParamDescriptor = z.infer<typeof paramDescriptorContract>;

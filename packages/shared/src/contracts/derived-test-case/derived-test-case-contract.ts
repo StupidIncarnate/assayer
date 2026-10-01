@@ -38,6 +38,6 @@ export const derivedTestCaseContract = z.object({
   reachesPath: z.array(coverageContract.shape.id).min(1),
   arrange: z.array(arrangeBindingContract),
   salient: z.boolean().default(true),
-});
+}).brand<'DerivedTestCase'>();
 
 export type DerivedTestCase = z.infer<typeof derivedTestCaseContract>;

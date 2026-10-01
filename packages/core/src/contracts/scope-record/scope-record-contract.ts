@@ -65,6 +65,6 @@ export const scopeRecordContract = z.object({
   // a bare `return flag`, `return "x"`, or a call — so a leaf that could not be composed anyway is
   // never offered a signature to compose from.
   predicateSignature: conditionNodeContract.optional(),
-});
+}).brand<'ScopeRecord'>();
 
 export type ScopeRecord = z.infer<typeof scopeRecordContract>;

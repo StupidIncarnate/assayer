@@ -17,6 +17,6 @@ import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contr
 export const declaredTypeContract = z.object({
   name: z.string().min(1).brand<'DeclaredTypeName'>(),
   properties: z.array(z.object({ name: z.string().min(1).brand<'DeclaredTypePropertiesName'>(), type: typeDescriptorContract })),
-});
+}).brand<'DeclaredType'>();
 
 export type DeclaredType = z.infer<typeof declaredTypeContract>;

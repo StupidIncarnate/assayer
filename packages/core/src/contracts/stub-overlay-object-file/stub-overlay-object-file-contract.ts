@@ -18,6 +18,6 @@ import { representativeValueContract, stubEntryContract } from '@assayer/shared/
 export const stubOverlayObjectFileContract = z.object({
   type: stubEntryContract.shape.key,
   properties: z.record(z.string().min(1).brand<'StubOverlayObjectFileProperties'>(), z.object({ values: z.array(representativeValueContract) })),
-});
+}).brand<'StubOverlayObjectFile'>();
 
 export type StubOverlayObjectFile = z.infer<typeof stubOverlayObjectFileContract>;

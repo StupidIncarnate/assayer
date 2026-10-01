@@ -16,6 +16,6 @@ export const stubOverlayEnvFileContract = z.object({
   source: z.literal('process.env'),
   property: z.string().min(1).brand<'StubOverlayEnvFileProperty'>(),
   values: z.array(representativeValueContract),
-});
+}).brand<'StubOverlayEnvFile'>();
 
 export type StubOverlayEnvFile = z.infer<typeof stubOverlayEnvFileContract>;

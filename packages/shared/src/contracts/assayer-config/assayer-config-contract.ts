@@ -50,6 +50,6 @@ export const assayerConfigContract = z.object({
   deadSurface: z.enum(['off', 'warn', 'error']).default('error').brand<'DeadSurfaceSeverity'>(),
   inputGaps: z.enum(['off', 'warn', 'error']).default('error').brand<'InputGapSeverity'>(),
   runMode: z.enum(['thorough', 'intelligent']).default('thorough').brand<'RunMode'>(),
-});
+}).brand<'AssayerConfig'>();
 
 export type AssayerConfig = z.infer<typeof assayerConfigContract>;

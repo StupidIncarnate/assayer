@@ -46,5 +46,5 @@ export const compileProgressEventContract = z.object({
   // reused: for an 'advanced' event, whether THAT file was already cached at its content hash — so
   // nothing was written for it. Absent on 'planned'/'done', which report a namespace, not a file.
   reused: z.boolean().optional(),
-});
+}).brand<'CompileProgressEvent'>();
 export type CompileProgressEvent = z.infer<typeof compileProgressEventContract>;

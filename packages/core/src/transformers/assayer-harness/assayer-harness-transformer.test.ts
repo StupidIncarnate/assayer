@@ -18,7 +18,7 @@ describe('assayerHarnessTransformer', () => {
     });
 
     it('EMPTY: {no entries} => returns an empty inputs map', () => {
-      const result = assayerHarnessTransformer({ inputs: {} });
+      const result = assayerHarnessTransformer(HarnessDeclarationStub({ inputs: {} }));
 
       expect(result).toStrictEqual({ inputs: {} });
     });
@@ -27,7 +27,7 @@ describe('assayerHarnessTransformer', () => {
   describe('refusing a declaration the contract does not admit', () => {
     it('INVALID: {an entry whose value is a string} => throws validation error', () => {
       expect(() => {
-        return assayerHarnessTransformer({ inputs: { audit: 'report' } as never });
+        return assayerHarnessTransformer(HarnessDeclarationStub({ inputs: { audit: 'report' } as never }));
       }).toThrow(/Invalid input: expected object, received string/u);
     });
   });

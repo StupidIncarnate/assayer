@@ -15,7 +15,7 @@ export const statusViewContract = z.object({
   message: z.string().min(1).brand<'StatusMessage'>(),
   repoPath: z.string().min(1).brand<'StatusViewRepoPath'>(),
   runMode: z.enum(['thorough', 'intelligent']).default('thorough').brand<'RunMode'>(),
-});
+}).brand<'StatusView'>();
 
 export type StatusView = z.infer<typeof statusViewContract>;
 export type RunMode = StatusView['runMode'];

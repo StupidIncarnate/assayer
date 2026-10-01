@@ -22,6 +22,6 @@ export const extractedFunctionContract = z.object({
   // this axis makes both outputs a case rather than one representative fill. Absent for any body that
   // is not a single comparison return.
   predicateSignature: conditionNodeContract.optional(),
-});
+}).brand<'ExtractedFunction'>();
 
 export type ExtractedFunction = z.infer<typeof extractedFunctionContract>;

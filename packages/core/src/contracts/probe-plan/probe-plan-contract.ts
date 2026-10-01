@@ -22,6 +22,6 @@ export const probePlanContract = z.object({
   contentHash: contentHashContract,
   relPath: z.string().min(1).brand<'ProbePlanRelPath'>(),
   sites: z.array(probeSiteContract),
-});
+}).brand<'ProbePlan'>();
 
 export type ProbePlan = z.infer<typeof probePlanContract>;

@@ -69,7 +69,7 @@ export const resolvedEdgeContract = z.object({
   line: z.number().int().positive().brand<'ResolvedEdgeLine'>(),
   column: z.number().int().positive().brand<'ResolvedEdgeColumn'>(),
   target: resolvedTargetContract,
-});
+}).brand<'ResolvedEdge'>();
 
 export type ResolvedEdge = z.infer<typeof resolvedEdgeContract>;
 export type ResolvedTarget = z.infer<typeof resolvedTargetContract>;

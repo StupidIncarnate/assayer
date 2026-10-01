@@ -18,6 +18,6 @@ import { valueDomainContract } from '../value-domain/value-domain-contract';
 export const armValuesContract = z.object({
   satisfying: valueDomainContract,
   violating: valueDomainContract,
-});
+}).brand<'ArmValues'>();
 
 export type ArmValues = z.infer<typeof armValuesContract>;

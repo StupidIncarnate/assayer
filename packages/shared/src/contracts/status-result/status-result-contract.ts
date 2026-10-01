@@ -11,6 +11,6 @@ import { z } from '#gateway/npm/zod';
 export const statusResultContract = z.object({
   version: z.string().min(1).brand<'AssayerVersion'>(),
   message: z.string().min(1).brand<'StatusMessage'>(),
-});
+}).brand<'StatusResult'>();
 
 export type StatusResult = z.infer<typeof statusResultContract>;

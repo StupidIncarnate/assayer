@@ -21,6 +21,6 @@ export const resolvedContractViewContract = z.object({
   source: z.string().min(1).brand<'ResolvedContractViewSource'>(),
   inputs: z.array(z.string().min(1).brand<'ResolvedContractViewInputs'>()),
   output: z.string().min(1).brand<'ResolvedContractViewOutput'>().optional(),
-});
+}).brand<'ResolvedContractView'>();
 
 export type ResolvedContractView = z.infer<typeof resolvedContractViewContract>;

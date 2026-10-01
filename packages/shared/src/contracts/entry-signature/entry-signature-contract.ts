@@ -42,6 +42,6 @@ export const entrySignatureContract = z.object({
   // that printed that would be printing a cache key. Present only for a scope with no name to
   // borrow; a named entry has none and shows `name(params)`. DISPLAY only, like `exportName`.
   label: z.string().min(1).brand<'EntrySignatureLabel'>().optional(),
-});
+}).brand<'EntrySignature'>();
 
 export type EntrySignature = z.infer<typeof entrySignatureContract>;

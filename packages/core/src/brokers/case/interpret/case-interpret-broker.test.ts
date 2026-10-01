@@ -5,6 +5,7 @@ import { ProbeRuntimeStub } from '../../../contracts/probe-runtime/probe-runtime
 import { caseInterpretBroker } from './case-interpret-broker';
 import { caseInterpretBrokerProxy } from './case-interpret-broker.proxy';
 import { getEnv } from '#gateway/node/process';
+import { HarnessDeclarationStub } from '../../../contracts/harness-declaration/harness-declaration.stub';
 
 const THEN = CoverageIdStub({ value: 'grade/return@then' });
 const ELSE = CoverageIdStub({ value: 'grade/return@else' });
@@ -231,7 +232,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: { grade: { report: 'the-declared-value' } } }],
+        harness: [HarnessDeclarationStub({ inputs: { grade: { report: 'the-declared-value' } } })],
       });
 
       expect(result).toStrictEqual({
@@ -264,7 +265,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: { collect: { sinks: ['sink-a', 'sink-b'] } } }],
+        harness: [HarnessDeclarationStub({ inputs: { collect: { sinks: ['sink-a', 'sink-b'] } } })],
       });
 
       expect(result).toStrictEqual({
@@ -292,7 +293,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: { grade: { emit: 'the-other-value' } } }],
+        harness: [HarnessDeclarationStub({ inputs: { grade: { emit: 'the-other-value' } } })],
       });
 
       expect(result).toStrictEqual({
@@ -356,7 +357,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: {} }],
+        harness: [HarnessDeclarationStub({ inputs: {} })],
       });
 
       expect(result).toStrictEqual({

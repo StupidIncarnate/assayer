@@ -53,7 +53,7 @@ export const predicateContract = z.object({
     ])
     .brand<'PredicateKind'>(),
   literal: representativeValueContract.optional(),
-});
+}).brand<'Predicate'>();
 
 export type Predicate = z.infer<typeof predicateContract>;
 export type PredicateKind = Predicate['kind'];

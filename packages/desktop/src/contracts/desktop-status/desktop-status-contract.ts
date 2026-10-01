@@ -16,6 +16,6 @@ export const desktopStatusContract = z.object({
   message: z.string().min(1).brand<'StatusMessage'>(),
   repoPath: z.string().min(1).brand<'DesktopStatusRepoPath'>(),
   runMode: z.enum(['thorough', 'intelligent']).default('thorough').brand<'RunMode'>(),
-});
+}).brand<'DesktopStatus'>();
 
 export type DesktopStatus = z.infer<typeof desktopStatusContract>;

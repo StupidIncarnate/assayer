@@ -21,6 +21,6 @@ import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contr
 export const externalSignatureContract = z.object({
   params: z.array(paramDescriptorContract),
   returnType: typeDescriptorContract,
-});
+}).brand<'ExternalSignature'>();
 
 export type ExternalSignature = z.infer<typeof externalSignatureContract>;

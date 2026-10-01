@@ -25,6 +25,6 @@ import { z } from '#gateway/npm/zod';
 // `{ [entry: string]: { [param: string]: unknown } }` an editor accepts.
 export const harnessDeclarationContract = z.object({
   inputs: z.object({}).catchall(z.object({}).catchall(z.unknown())),
-});
+}).brand<'HarnessDeclaration'>();
 
 export type HarnessDeclaration = z.infer<typeof harnessDeclarationContract>;

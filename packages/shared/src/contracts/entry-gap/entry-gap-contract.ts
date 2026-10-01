@@ -28,6 +28,6 @@ import { z } from '#gateway/npm/zod';
 export const entryGapContract = z.object({
   name: z.string().min(1).brand<'EntryGapName'>(),
   reason: z.string().min(1).brand<'GapReason'>(),
-});
+}).brand<'EntryGap'>();
 
 export type EntryGap = z.infer<typeof entryGapContract>;

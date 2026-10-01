@@ -1,5 +1,6 @@
 
 import { harnessValueTransformer } from './harness-value-transformer';
+import { HarnessDeclarationStub } from '../../contracts/harness-declaration/harness-declaration.stub';
 
 // Opaque sentinels. The transformer never inspects a declared value — what a real harness registers is
 // a callback or an instance — so a distinguishable marker is all a lookup assertion needs.
@@ -10,7 +11,7 @@ describe('harnessValueTransformer', () => {
   describe('a key the harness declared', () => {
     it('VALID: {inputs.audit.report} => the registered value', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { report: REPORT } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { report: REPORT } } })],
         key: 'inputs.audit.report',
       });
 
@@ -19,7 +20,7 @@ describe('harnessValueTransformer', () => {
 
     it('VALID: {a key declared as undefined} => found, since an explicit undefined is a supplied value', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { report: undefined } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { report: undefined } } })],
         key: 'inputs.audit.report',
       });
 
@@ -28,7 +29,7 @@ describe('harnessValueTransformer', () => {
 
     it('VALID: {two declarations of one key} => the LAST one, the call the author left in force', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { report: REPORT } } }, { inputs: { audit: { report: OTHER } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { report: REPORT } } }), HarnessDeclarationStub({ inputs: { audit: { report: OTHER } } })],
         key: 'inputs.audit.report',
       });
 
@@ -37,7 +38,7 @@ describe('harnessValueTransformer', () => {
 
     it('VALID: {two declarations of different entries} => each key resolves against its own declaration', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { report: REPORT } } }, { inputs: { tally: { emit: OTHER } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { report: REPORT } } }), HarnessDeclarationStub({ inputs: { tally: { emit: OTHER } } })],
         key: 'inputs.tally.emit',
       });
 
@@ -57,7 +58,7 @@ describe('harnessValueTransformer', () => {
 
     it('INVALID: {the entry is declared, the parameter is not} => not found', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { emit: REPORT } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { emit: REPORT } } })],
         key: 'inputs.audit.report',
       });
 
@@ -66,7 +67,7 @@ describe('harnessValueTransformer', () => {
 
     it('INVALID: {an entry nothing declared} => not found', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { tally: { report: REPORT } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { tally: { report: REPORT } } })],
         key: 'inputs.audit.report',
       });
 
@@ -77,7 +78,7 @@ describe('harnessValueTransformer', () => {
   describe('a key path that is not a declared-input route', () => {
     it('INVALID: {a path rooted elsewhere} => not found', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { report: REPORT } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { report: REPORT } } })],
         key: 'states.audit.report',
       });
 
@@ -86,7 +87,7 @@ describe('harnessValueTransformer', () => {
 
     it('INVALID: {a two-segment path} => not found, since it names no parameter', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { report: REPORT } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { report: REPORT } } })],
         key: 'inputs.audit',
       });
 
@@ -95,7 +96,7 @@ describe('harnessValueTransformer', () => {
 
     it('INVALID: {a four-segment path} => not found, since inputs nest exactly two deep', () => {
       const result = harnessValueTransformer({
-        declarations: [{ inputs: { audit: { report: REPORT } } }],
+        declarations: [HarnessDeclarationStub({ inputs: { audit: { report: REPORT } } })],
         key: 'inputs.audit.report.extra',
       });
 

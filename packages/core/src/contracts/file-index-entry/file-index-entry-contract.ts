@@ -11,6 +11,6 @@ import { z } from '#gateway/npm/zod';
 
 export const fileIndexEntryContract = z.object({
   relPath: z.string().min(1).brand<'FileIndexEntryRelPath'>(),
-});
+}).brand<'FileIndexEntry'>();
 
 export type FileIndexEntry = z.infer<typeof fileIndexEntryContract>;

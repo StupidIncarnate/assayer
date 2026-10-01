@@ -64,6 +64,6 @@ export const caseSetContract = z.object({
   // Carried through to the run artifact so `assayer unit` can fail on a lint when the repo asked,
   // the same way it carries dark spots and undriven entries the shim writes but the runner cannot see.
   lints: z.array(lintEntryContract),
-});
+}).brand<'CaseSet'>();
 
 export type CaseSet = z.infer<typeof caseSetContract>;

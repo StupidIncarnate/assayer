@@ -37,6 +37,6 @@ export const assayerCacheManifestContract = z.object({
     .brand<'NamespaceMap'>(),
   repoName: z.string().min(1).brand<'AssayerCacheManifestRepoName'>(),
   rootFolderName: z.string().min(1).brand<'AssayerCacheManifestRootFolderName'>(),
-});
+}).brand<'AssayerCacheManifest'>();
 
 export type AssayerCacheManifest = z.infer<typeof assayerCacheManifestContract>;

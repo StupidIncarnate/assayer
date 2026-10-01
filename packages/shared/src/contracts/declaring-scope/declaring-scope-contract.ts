@@ -32,6 +32,6 @@ export const declaringScopeContract = z.object({
   name: z.string().min(1).brand<'DeclaringScopeName'>(),
   hostEntry: z.string().min(1).brand<'DeclaringScopeHostEntry'>(),
   params: z.array(paramDescriptorContract),
-});
+}).brand<'DeclaringScope'>();
 
 export type DeclaringScope = z.infer<typeof declaringScopeContract>;
