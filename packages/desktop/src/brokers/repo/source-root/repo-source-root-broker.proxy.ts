@@ -26,7 +26,7 @@ export const repoSourceRootBrokerProxy = (): {
     configUnreadable: ({ message }: { message: string }): void => {
       handle.calledWith([]).resolves({
         success: false,
-        message: message,
+        message,
         line: 1,
         column: 1,
       });

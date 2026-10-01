@@ -162,6 +162,6 @@ export const harnessValidateTransformer = ({
     relPath,
     line: lineNumberContract.parse(HARNESS_LINE),
     column: columnNumberContract.parse(HARNESS_COLUMN),
-    message: message,
+    message,
   }));
 };
