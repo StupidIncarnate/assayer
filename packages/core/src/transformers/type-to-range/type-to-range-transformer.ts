@@ -52,8 +52,8 @@
  * typeToRangeTransformer({ type: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }, predicateKind: 'typeof-eq', literal: 'string' });
  * // Returns { satisfying: {members: ['abc123']}, violating: {members: [7]} }
  */
+import type { Predicate, RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
 import { representativeValueContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { armValuesContract } from '../../contracts/arm-values/arm-values-contract';
 import type { ArmValues } from '../../contracts/arm-values/arm-values-contract';
@@ -67,7 +67,7 @@ export const typeToRangeTransformer = ({
   literal,
 }: {
   type: TypeDescriptor;
-  predicateKind: string;
+  predicateKind: Predicate['kind'];
   literal?: string | number | boolean | null;
 }): ArmValues => {
   const rep = representativeValueTransformer({ type });
