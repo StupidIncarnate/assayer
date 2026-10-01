@@ -60,7 +60,6 @@ import { harnessPathTransformer } from '../../../transformers/harness-path/harne
 import { inputGapTransformer } from '../../../transformers/input-gap/input-gap-transformer';
 import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
 import { existsSync, readFileSync } from '#gateway/node/fs';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const harnessRealizeBroker = ({
   analysis,
@@ -94,7 +93,7 @@ export const harnessRealizeBroker = ({
     return analysis;
   }
 
-  const source = String(fileContentsContract.parse(readFileSync(harnessPath)));
+  const source = String(readFileSync(harnessPath));
 
   if (!isAssayerHarnessGuard({ source })) {
     return analysis;

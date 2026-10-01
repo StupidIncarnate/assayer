@@ -31,7 +31,6 @@ import { contentHashTransformer } from '../../../transformers/content-hash/conte
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runIdBroker = async ({
   root,
@@ -44,7 +43,7 @@ export const runIdBroker = async ({
 }): Promise<RunResult['runId']> => {
   const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
   const harnessSource = (await pathExists(harnessPath))
-    ? String(fileContentsContract.parse(await readFile(harnessPath)))
+    ? String((await readFile(harnessPath)))
     : undefined;
   const harnessDigest =
     harnessSource !== undefined && isAssayerHarnessGuard({ source: harnessSource })

@@ -36,7 +36,6 @@ import { externalSignatureReadGlobalBroker } from '../../external-signature/read
 import { resolveSpecifierLayerBroker } from './resolve-specifier-layer-broker';
 import { readFile } from '#gateway/node/fs__promises';
 import { builtinModules } from '#gateway/node/module';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const compileResolveGraphBroker = async ({
   root,
@@ -57,7 +56,7 @@ export const compileResolveGraphBroker = async ({
 
   const blobs = await Promise.all(
     files.map(async (file) => {
-      const raw = fileContentsContract.parse(await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
+      const raw = (await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
       return compiledFileBlobContract.parse(JSON.parse(String(raw)));
     }),
   );

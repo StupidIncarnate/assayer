@@ -37,7 +37,6 @@ import { compileProcessFileBroker } from '../../src/brokers/compile/process-file
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileHarnessGraphBroker } from '../../src/brokers/compile/harness-graph/compile-harness-graph-broker';
 import { harnessRealizeBroker } from '../../src/brokers/harness/realize/harness-realize-broker';
-import { FileContentsStub } from '../../src/contracts/file-contents/file-contents.stub';
 import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
@@ -124,7 +123,7 @@ export const harnessGraphHarness = (): {
       blobsDir,
       resolvedIndex: resolved.index,
       files,
-      harnesses: [{ relPath: RelPathStub({ value: HARNESS_REL }), content: FileContentsStub({ value: params.harness }) }],
+      harnesses: [{ relPath: RelPathStub({ value: HARNESS_REL }), content: params.harness }],
     });
 
     const written = harnessIndexContract.parse(

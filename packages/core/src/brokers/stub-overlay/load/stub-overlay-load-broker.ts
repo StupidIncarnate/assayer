@@ -21,7 +21,6 @@ import { stubOverlayEnvFileContract } from '../../../contracts/stub-overlay-env-
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
 import { basename, dirname, relative } from '#gateway/node/path';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 
 const JSON_EXT = '.json';
@@ -44,7 +43,7 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
         const relFromObjects = relPathContract.parse(relative(objectsRoot, String(abs)));
         const definitionRelPath = filePathContract.parse(dirname(String(relFromObjects)));
         const typeName = String(filePathContract.parse(basename(String(relFromObjects)))).slice(0, -JSON_EXT.length);
-        const raw = fileContentsContract.parse(await readFile(String(abs)));
+        const raw = (await readFile(String(abs)));
         const file = stubOverlayObjectFileContract.parse(JSON.parse(String(raw)));
         const properties = Object.entries(file.properties)
           .map(([name, spec]) => ({ name, values: spec.values }))
@@ -65,7 +64,7 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
       .map(async (abs) => {
         const relFromEnv = relPathContract.parse(relative(envRoot, String(abs)));
         const property = String(filePathContract.parse(basename(String(relFromEnv)))).slice(0, -JSON_EXT.length);
-        const raw = fileContentsContract.parse(await readFile(String(abs)));
+        const raw = (await readFile(String(abs)));
         const file = stubOverlayEnvFileContract.parse(JSON.parse(String(raw)));
 
         return stubOverlayContract.parse({

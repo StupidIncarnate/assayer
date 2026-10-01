@@ -49,13 +49,11 @@ import type {
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { harnessValueTypesTransformer } from '../../../transformers/harness-value-types/harness-value-types-transformer';
 import { harnessLoadBroker } from '../../harness/load/harness-load-broker';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { harnessKeysTransformer } from '../../../transformers/harness-keys/harness-keys-transformer';
 import { harnessTargetTransformer } from '../../../transformers/harness-target/harness-target-transformer';
 import { harnessValidateTransformer } from '../../../transformers/harness-validate/harness-validate-transformer';
 import { harnessIndexWriteBroker } from '../../harness-index/write/harness-index-write-broker';
 import { readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 const HARNESS_LINE = 1;
 const HARNESS_COLUMN = 1;
@@ -73,7 +71,7 @@ export const compileHarnessGraphBroker = async ({
   blobsDir: string;
   resolvedIndex: ResolvedIndex;
   files: readonly { relPath: RelPath; contentHash: ContentHash }[];
-  harnesses: readonly { relPath: RelPath; content: FileContents }[];
+  harnesses: readonly { relPath: RelPath; content: string }[];
 }): Promise<{
   index: HarnessIndex;
   errors: readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[];
@@ -158,7 +156,7 @@ export const compileHarnessGraphBroker = async ({
   const targets = [...new Set(recorded.map((harness) => String(harness.targetRelPath)))];
   const analysed = await Promise.all(
     targets.map(async (target) => {
-      const raw = fileContentsContract.parse(await readFile(`${blobsDir}/${String(hashByRelPath.get(target))}.json`));
+      const raw = (await readFile(`${blobsDir}/${String(hashByRelPath.get(target))}.json`));
 
       return [target, compiledFileBlobContract.parse(JSON.parse(String(raw)))] as const;
     }),

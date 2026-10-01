@@ -14,7 +14,6 @@
 import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 
 export const runLoadBroker = async ({
@@ -30,5 +29,5 @@ export const runLoadBroker = async ({
     return undefined;
   }
 
-  return runResultContract.parse(JSON.parse(String(fileContentsContract.parse(await readFile(path)))));
+  return runResultContract.parse(JSON.parse(String((await readFile(path)))));
 };

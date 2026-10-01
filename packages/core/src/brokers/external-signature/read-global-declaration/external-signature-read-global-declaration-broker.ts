@@ -29,8 +29,6 @@ import { Node, Project } from '#gateway/npm/ts-morph';
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
 import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
 
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { readGlobalTypeLayerBroker } from './read-global-type-layer-broker';
@@ -43,8 +41,8 @@ type GlobalReference =
 // holds it in memory even for the standard `lib.*.d.ts`, whose on-disk path is a virtual one no fs read
 // can open), so the cache can key on the resolving declaration's bytes without touching the filesystem.
 type GlobalSignatureResult =
-  | { usable: true; result: 'signature'; signature: ExternalSignature; declText: FileContents }
-  | { usable: true; result: 'type'; type: TypeDescriptor; declText: FileContents }
+  | { usable: true; result: 'signature'; signature: ExternalSignature; declText: string }
+  | { usable: true; result: 'type'; type: TypeDescriptor; declText: string }
   | { usable: false };
 
 const globalProjectByConfig = new Map<FilePath, Project>();
@@ -128,7 +126,7 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
       usable: true,
       result: 'signature',
       signature: externalSignatureContract.parse({ params, returnType }),
-      declText: fileContentsContract.parse(declFile.getFullText()),
+      declText: declFile.getFullText(),
     };
   }
 
@@ -155,6 +153,6 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
     usable: true,
     result: 'type',
     type: typeDescriptorTransformer({ fact: readGlobalTypeLayerBroker({ type: expression.getType(), typeNode: memberTypeNode }) }),
-    declText: fileContentsContract.parse(rootDeclaration.getSourceFile().getFullText()),
+    declText: rootDeclaration.getSourceFile().getFullText(),
   };
 };

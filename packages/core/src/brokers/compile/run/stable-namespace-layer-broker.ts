@@ -26,7 +26,6 @@ import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-com
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
 import type { CompileProgressEvent } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 
 export const stableNamespaceLayerBroker = async ({
@@ -48,7 +47,7 @@ export const stableNamespaceLayerBroker = async ({
 }): Promise<{
   resultEntry: { namespace: NamespaceName; branch: BranchName; mode: CompileMode; fileCount: FileCount };
   manifestNamespace: { branch: BranchName; commit?: string; files: { relPath: RelPath; contentHash: ContentHash }[] };
-  harnesses: { relPath: RelPath; content: FileContents }[];
+  harnesses: { relPath: RelPath; content: string }[];
   errors: { namespace: NamespaceName; relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: string }[];
 }> => {
   const previousStableCommit = previousManifest?.namespaces[branch]?.commit;

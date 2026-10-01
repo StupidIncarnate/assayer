@@ -14,7 +14,6 @@
 import { assayerCacheManifestContract } from '@assayer/shared/contracts';
 import type { AssayerCacheManifest } from '@assayer/shared/contracts';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const manifestLoadBroker = async ({
   configDir,
@@ -35,7 +34,7 @@ export const manifestLoadBroker = async ({
     return { status: 'missing' };
   }
 
-  const text = fileContentsContract.parse(await readFile(manifestPath));
+  const text = (await readFile(manifestPath));
 
   try {
     const json: unknown = JSON.parse(String(text));

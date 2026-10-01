@@ -21,7 +21,6 @@ import type { RunConsole } from '@assayer/shared/contracts';
 
 import { runIdBroker } from '../id/run-id-broker';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runConsoleFindBroker = async ({
   configDir,
@@ -38,7 +37,7 @@ export const runConsoleFindBroker = async ({
     return undefined;
   }
 
-  const source = String(fileContentsContract.parse(await readFile(absPath)));
+  const source = String((await readFile(absPath)));
   const runId = String(await runIdBroker({ root, relPath, source }));
   const path = `${configDir}/.assayer/cache/runs/${runId}/console.txt`;
 
@@ -46,5 +45,5 @@ export const runConsoleFindBroker = async ({
     return undefined;
   }
 
-  return runConsoleContract.parse(String(fileContentsContract.parse(await readFile(path))));
+  return runConsoleContract.parse(String((await readFile(path))));
 };

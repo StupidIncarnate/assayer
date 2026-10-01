@@ -7,8 +7,6 @@
  * // Returns the blob's exact FileContents, unmodified, or empty contents when the blob cannot be read
  * // or git is not installed
  */
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { catFileBlob, GitNotInstalledError } from '#gateway/bin/git';
 
 export const gitCatFileBroker = async ({
@@ -17,14 +15,14 @@ export const gitCatFileBroker = async ({
 }: {
   repoRoot: string;
   blobSha: string;
-}): Promise<FileContents> => {
+}): Promise<string> => {
   try {
     const contents = await catFileBlob({ cwd: repoRoot, sha: blobSha });
 
-    return fileContentsContract.parse(contents ?? '');
+    return (contents ?? '');
   } catch (error: unknown) {
     if (error instanceof GitNotInstalledError) {
-      return fileContentsContract.parse('');
+      return '';
     }
 
     throw error;

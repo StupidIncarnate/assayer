@@ -47,7 +47,6 @@ import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
 import { ensureDir, pathExists, readFile, writeFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runUnitBroker = async ({
   cacheDir,
@@ -197,5 +196,5 @@ export const runUnitBroker = async ({
 
   // Read back the ARTIFACT, not Jest's reporting: the verdict is already in it, and raw runner output
   // is never what a human sees.
-  return runResultContract.parse(JSON.parse(fileContentsContract.parse(await readFile(resultPath))));
+  return runResultContract.parse(JSON.parse((await readFile(resultPath))));
 };

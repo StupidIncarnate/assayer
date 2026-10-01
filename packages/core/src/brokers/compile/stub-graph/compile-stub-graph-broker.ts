@@ -39,7 +39,6 @@ import { gatherPropertyGuardsTransformer } from '../../../transformers/gather-pr
 import { gatherTypeReadsTransformer } from '../../../transformers/gather-type-reads/gather-type-reads-transformer';
 import { stubIndexWriteBroker } from '../../stub-index/write/stub-index-write-broker';
 import { readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const compileStubGraphBroker = async ({
   configDir,
@@ -56,7 +55,7 @@ export const compileStubGraphBroker = async ({
 }): Promise<{ index: StubIndex; guards: PropertyGuard[] }> => {
   const blobs = await Promise.all(
     files.map(async (file) => {
-      const raw = fileContentsContract.parse(await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
+      const raw = (await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
       return compiledFileBlobContract.parse(JSON.parse(String(raw)));
     }),
   );

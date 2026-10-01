@@ -22,16 +22,15 @@
 import type { RelPath } from '@assayer/shared/contracts';
 
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { harnessModuleStatics } from '../../../statics/harness-module/harness-module-statics';
 
 export const harnessClassifyBroker = ({
   files,
 }: {
-  files: readonly { relPath: RelPath; content: FileContents }[];
+  files: readonly { relPath: RelPath; content: string }[];
 }): {
-  targets: { relPath: RelPath; content: FileContents }[];
-  harnesses: { relPath: RelPath; content: FileContents }[];
+  targets: { relPath: RelPath; content: string }[];
+  harnesses: { relPath: RelPath; content: string }[];
 } => {
   const classified = files.map((file) => ({
     file: { relPath: file.relPath, content: file.content },

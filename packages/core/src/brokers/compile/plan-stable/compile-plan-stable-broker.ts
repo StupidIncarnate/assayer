@@ -13,7 +13,6 @@
  */
 import { compileModeContract } from '@assayer/shared/contracts';
 import type { CompileMode, RelPath } from '@assayer/shared/contracts';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
 import { gitLsTreeBroker } from '../../git/ls-tree/git-ls-tree-broker';
@@ -33,8 +32,8 @@ export const compilePlanStableBroker = async ({
   exclude?: readonly string[];
 }): Promise<{
   mode: CompileMode;
-  targets: { relPath: RelPath; content: FileContents }[];
-  harnesses: { relPath: RelPath; content: FileContents }[];
+  targets: { relPath: RelPath; content: string }[];
+  harnesses: { relPath: RelPath; content: string }[];
 }> => {
   const currentCommit = await gitResolveCommitBroker({ repoRoot, ref });
 
