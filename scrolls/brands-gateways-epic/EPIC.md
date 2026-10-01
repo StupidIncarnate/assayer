@@ -453,7 +453,8 @@ Dungeonmaster problems found while planning. The user takes these to dungeonmast
     consumer to add names, or to detect a spawn wrapper by what it calls.
 18. `@dungeonmaster/testing`'s `proxy-mock-transformer.js` builds its cache version only from dungeonmaster's own proxy
     files. When a consumer's proxy moves, a test file whose own text did not change keeps a cached transform that
-    mocks the old path, and fails with "Cannot find module".
+    mocks the old path, and fails with "Cannot find module". Fixed in dungeonmaster `7f10db1`: a wrapper around ts-jest
+    adds a hash of the test's merged mock calls (resolved paths, factories, source proxies) to its cache key.
 
 ## Follow-ups after the epic
 
