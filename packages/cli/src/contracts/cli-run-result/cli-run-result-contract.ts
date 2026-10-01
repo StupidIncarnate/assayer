@@ -10,9 +10,9 @@
 import { z } from '#gateway/npm/zod';
 
 export const cliRunResultContract = z.object({
-  stdout: z.string().brand<'CliRunStdout'>(),
-  stderr: z.string().brand<'CliRunStderr'>(),
-  exitCode: z.number().int().brand<'CliRunExitCode'>(),
+  stdout: z.string().brand<'CliRunResultStdout'>(),
+  stderr: z.string().brand<'CliRunResultStderr'>(),
+  exitCode: z.number().int().brand<'CliRunResultExitCode'>(),
 }).brand<'CliRunResult'>();
 
 export type CliRunResult = z.infer<typeof cliRunResultContract>;
