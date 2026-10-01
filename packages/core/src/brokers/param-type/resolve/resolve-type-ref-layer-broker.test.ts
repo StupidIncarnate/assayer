@@ -1,6 +1,6 @@
 import { TypeDescriptorStub } from '@assayer/shared/contracts';
 
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 
 import { resolveTypeRefLayerBroker } from './resolve-type-ref-layer-broker';
 import { resolveTypeRefLayerBrokerProxy } from './resolve-type-ref-layer-broker.proxy';
@@ -49,7 +49,7 @@ describe('resolveTypeRefLayerBroker', () => {
   describe('a name the file declares itself', () => {
     it('VALID: {interface Config} => the declared object shape', () => {
       resolveTypeRefLayerBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),
@@ -69,7 +69,7 @@ describe('resolveTypeRefLayerBroker', () => {
 
     it('VALID: {type Id = string} => the scalar the alias denotes, which its descriptor could not name', () => {
       resolveTypeRefLayerBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Id', typeRef: 'Id' }),
@@ -88,7 +88,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('VALID: {import type Config from ./types} => the sibling declaration', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),
@@ -111,7 +111,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('VALID: {import type Config as Cfg} => the sibling is asked for Config', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: ALIASING_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: ALIASING_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Cfg', typeRef: 'Cfg' }),
@@ -133,7 +133,7 @@ describe('resolveTypeRefLayerBroker', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: BARREL_SOURCE });
       proxy.setupDefinition({ fileName: '/repo/src/config.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),
@@ -157,7 +157,7 @@ describe('resolveTypeRefLayerBroker', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: NESTING_SOURCE });
       proxy.setupDefinition({ fileName: '/repo/src/db.ts', source: DB_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),
@@ -182,7 +182,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('VALID: {Box<string> where Box<T> = { value: T }} => the shape with T filled in', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/box.ts', source: BOX_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: GENERIC_SOURCE, relPath: 'src/open.ts' });
+      const walked = walkFileTransformer({ source: GENERIC_SOURCE, relPath: 'src/open.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Box<string>', typeRef: 'Box', typeArgs: [{ kind: 'string' }] }),
@@ -205,7 +205,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('EDGE: {Box with no type argument} => the placeholder property stays opaque', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/box.ts', source: BOX_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: GENERIC_SOURCE, relPath: 'src/open.ts' });
+      const walked = walkFileTransformer({ source: GENERIC_SOURCE, relPath: 'src/open.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Box', typeRef: 'Box' }),
@@ -228,7 +228,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('VALID: {import * as T then T.Leaf} => the member off the namespace, resolved in the sibling', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/leaf.ts', source: LEAF_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: NAMESPACE_SOURCE, relPath: 'src/weigh.ts' });
+      const walked = walkFileTransformer({ source: NAMESPACE_SOURCE, relPath: 'src/weigh.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'T.Leaf', typeRef: 'T.Leaf' }),
@@ -251,7 +251,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('VALID: {an imported enum} => the union of its members, which is what a reader of it demands', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: ENUM_SOURCE });
-      const walked = tsMorphWalkFileAdapter({
+      const walked = walkFileTransformer({
         source: "import type { Level } from './types';\n\nexport function name(l: Level): string {\n  return String(l);\n}\n",
         relPath: 'src/name.ts',
       });
@@ -277,7 +277,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('VALID: {an imported class} => its instance shape, the same answer an interface gives', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: CLASS_SOURCE });
-      const walked = tsMorphWalkFileAdapter({
+      const walked = walkFileTransformer({
         source: "import { Point } from './types';\n\nexport function readX(p: Point): number {\n  return p.x;\n}\n",
         relPath: 'src/read-x.ts',
       });
@@ -307,7 +307,7 @@ describe('resolveTypeRefLayerBroker', () => {
       proxy.setupDefinition({ fileName: '/repo/src/c.ts', source: CHAIN_C_SOURCE });
       proxy.setupDefinition({ fileName: '/repo/src/b.ts', source: CHAIN_B_SOURCE });
       proxy.setupDefinition({ fileName: '/repo/src/a.ts', source: CHAIN_A_SOURCE });
-      const walked = tsMorphWalkFileAdapter({
+      const walked = walkFileTransformer({
         source: "import type { CeeT } from './c';\n\nexport function read(v: CeeT): boolean {\n  return v.flag;\n}\n",
         relPath: 'src/read.ts',
       });
@@ -332,7 +332,7 @@ describe('resolveTypeRefLayerBroker', () => {
   describe('a name nothing in the repo declares', () => {
     it('EMPTY: {no module edge binds it} => undefined, the reference stays opaque', () => {
       resolveTypeRefLayerBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Missing', typeRef: 'Missing' }),
@@ -349,7 +349,7 @@ describe('resolveTypeRefLayerBroker', () => {
     it('EMPTY: {the specifier lands under node_modules} => undefined', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.resolvesOutsideRepo({ fileName: '/repo/node_modules/types/index.d.ts' });
-      const walked = tsMorphWalkFileAdapter({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),
@@ -367,7 +367,7 @@ describe('resolveTypeRefLayerBroker', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/cycle.ts', source: CYCLIC_SOURCE });
       proxy.setupDefinition({ fileName: '/repo/src/cycle.ts', source: CYCLIC_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: CYCLIC_SOURCE, relPath: 'src/cycle.ts' });
+      const walked = walkFileTransformer({ source: CYCLIC_SOURCE, relPath: 'src/cycle.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),
@@ -385,7 +385,7 @@ describe('resolveTypeRefLayerBroker', () => {
   describe('a source that failed to parse', () => {
     it('EMPTY: {a walk that did not succeed} => undefined', () => {
       resolveTypeRefLayerBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: 'export function broken(: {', relPath: 'src/broken.ts' });
+      const walked = walkFileTransformer({ source: 'export function broken(: {', relPath: 'src/broken.ts' });
 
       const result = resolveTypeRefLayerBroker({
         reference: TypeDescriptorStub({ kind: 'unknown', text: 'Config', typeRef: 'Config' }),

@@ -1,4 +1,4 @@
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 
 import { composeCrossFilePredicatesBroker } from './compose-cross-file-predicates-broker';
@@ -34,7 +34,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     it('VALID: {if (big(n)), big returns n > 50} => the truthy leaf becomes n > 50 and both arms derive sound values', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: BIG_PREDICATE });
-      const walked = tsMorphWalkFileAdapter({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
+      const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/classify.ts' });
@@ -83,7 +83,7 @@ describe('composeCrossFilePredicatesBroker', () => {
       // actually answers rather than to the order the compose happens to resolve them in.
       proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE, specifier: './over' });
       proxy.setupSibling({ fileName: '/repo/src/under.ts', source: UNDER_PREDICATE, specifier: './under' });
-      const walked = tsMorphWalkFileAdapter({ source: PICK_CALLER, relPath: 'src/pick.ts' });
+      const walked = walkFileTransformer({ source: PICK_CALLER, relPath: 'src/pick.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/pick.ts' });
@@ -136,7 +136,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     it('VALID: {LEVEL welded to 7 beside exceedsLimit(size) > 50} => the dead exit reads the welded sentence, not the contradictory-guards one', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.setupSibling({ fileName: '/repo/src/limit.ts', source: EXCEEDS_LIMIT_PREDICATE });
-      const walked = tsMorphWalkFileAdapter({ source: WELDED_CALLER, relPath: 'src/report.ts' });
+      const walked = walkFileTransformer({ source: WELDED_CALLER, relPath: 'src/report.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/report.ts' });
 
       expect(analysis.lints).toStrictEqual([]);
@@ -167,7 +167,7 @@ describe('composeCrossFilePredicatesBroker', () => {
       // actually answers rather than to the order the compose happens to resolve them in.
       proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE, specifier: './over' });
       proxy.setupSibling({ fileName: '/repo/src/under.ts', source: UNDER_PREDICATE, specifier: './under' });
-      const walked = tsMorphWalkFileAdapter({ source: PICK_CALLER, relPath: 'src/pick.ts' });
+      const walked = walkFileTransformer({ source: PICK_CALLER, relPath: 'src/pick.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/pick.ts' });
@@ -186,7 +186,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('a caller with no imported-predicate guard', () => {
     it('EMPTY: {if (n > 5)} => the analysis passes through unchanged, no disk read', () => {
       composeCrossFilePredicatesBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: PLAIN_CALLER, relPath: 'src/grade.ts' });
+      const walked = walkFileTransformer({ source: PLAIN_CALLER, relPath: 'src/grade.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/grade.ts' });
@@ -199,7 +199,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     it('VALID: {big resolves under node_modules} => the leaf stays opaque and no lint is raised', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.resolvesTo({ fileName: '/repo/node_modules/big/index.d.ts' });
-      const walked = tsMorphWalkFileAdapter({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
+      const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/classify.ts' });
@@ -226,7 +226,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     it('VALID: {big returns Boolean(n), not a comparison} => the leaf stays opaque and no lint is raised', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: BIG_NO_PREDICATE });
-      const walked = tsMorphWalkFileAdapter({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
+      const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/classify.ts' });
@@ -252,7 +252,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('a file that fails to parse', () => {
     it('EMPTY: {invalid syntax} => the analysis passes through unchanged, no disk read', () => {
       composeCrossFilePredicatesBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: 'const x = ;;;{{{', relPath: 'src/broken.ts' });
+      const walked = walkFileTransformer({ source: 'const x = ;;;{{{', relPath: 'src/broken.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/broken.ts' });
@@ -265,7 +265,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     it('VALID: {big is imported, but the sibling exports notBig instead} => the leaf stays opaque and no lint is raised', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: 'export function notBig(n: number): boolean {\n  return n > 50;\n}\n' });
-      const walked = tsMorphWalkFileAdapter({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
+      const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/classify.ts' });
@@ -297,7 +297,7 @@ describe('composeCrossFilePredicatesBroker', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: BIG_PREDICATE });
       const source = "import { big } from './big';\n\nexport function classify(): string {\n  if (big(5)) {\n    return 'B';\n  }\n\n  return 'S';\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/classify.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/classify.ts' });

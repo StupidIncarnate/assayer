@@ -1,4 +1,4 @@
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 
 import { paramTypeResolveBroker } from './param-type-resolve-broker';
@@ -44,7 +44,7 @@ describe('paramTypeResolveBroker', () => {
     it('VALID: {return config.mode} => the declared shape is filled and the false gap is gone', () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: OBJECT_READER_SOURCE, relPath: 'src/reader.ts' });
+      const walked = walkFileTransformer({ source: OBJECT_READER_SOURCE, relPath: 'src/reader.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/reader.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/reader.ts' });
@@ -83,7 +83,7 @@ describe('paramTypeResolveBroker', () => {
     it('VALID: {a resolved sibling shape} => the reader still declares no type of its own', () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: OBJECT_READER_SOURCE, relPath: 'src/reader.ts' });
+      const walked = walkFileTransformer({ source: OBJECT_READER_SOURCE, relPath: 'src/reader.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/reader.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/reader.ts' });
@@ -96,7 +96,7 @@ describe('paramTypeResolveBroker', () => {
     it('VALID: {configs: Config[]} => the element shape resolves and the cardinality fan-out runs', () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: ARRAY_READER_SOURCE, relPath: 'src/total.ts' });
+      const walked = walkFileTransformer({ source: ARRAY_READER_SOURCE, relPath: 'src/total.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/total.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/total.ts' });
@@ -140,7 +140,7 @@ describe('paramTypeResolveBroker', () => {
     it('VALID: {type Id = string} => the parameter is a string and derives its case', () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: SCALAR_ALIAS_SOURCE, relPath: 'src/echo.ts' });
+      const walked = walkFileTransformer({ source: SCALAR_ALIAS_SOURCE, relPath: 'src/echo.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/echo.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/echo.ts' });
@@ -170,7 +170,7 @@ describe('paramTypeResolveBroker', () => {
     it("VALID: {type Level = 'low' | 'high'} => the else arm enumerates 'high', not the guard's own literal", () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: UNION_ALIAS_SOURCE, relPath: 'src/shout.ts' });
+      const walked = walkFileTransformer({ source: UNION_ALIAS_SOURCE, relPath: 'src/shout.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/shout.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/shout.ts' });
@@ -198,7 +198,7 @@ describe('paramTypeResolveBroker', () => {
     it("VALID: {isHigh = (level: Level): boolean => level === 'high'} => both return values derive, the gap is gone", () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({
+      const walked = walkFileTransformer({
         source: "import type { Level } from './types';\n\nexport const isHigh = (level: Level): boolean => level === 'high';\n",
         relPath: 'src/is-high.ts',
       });
@@ -244,7 +244,7 @@ describe('paramTypeResolveBroker', () => {
     it("VALID: {if (config.mode === 'a') on an imported Config} => the leaf's operandType becomes mode's real type, string — not any", () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: OBJECT_MEMBER_READER_SOURCE, relPath: 'src/decide-a.ts' });
+      const walked = walkFileTransformer({ source: OBJECT_MEMBER_READER_SOURCE, relPath: 'src/decide-a.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide-a.ts' });
 
       const before = analysis.functions
@@ -290,7 +290,7 @@ describe('paramTypeResolveBroker', () => {
     it('VALID: {an import that resolves outside the repo} => the refusal stands and the analysis is unchanged', () => {
       const proxy = paramTypeResolveBrokerProxy();
       proxy.resolvesOutsideRepo({ fileName: '/repo/node_modules/some-package/index.d.ts' });
-      const walked = tsMorphWalkFileAdapter({ source: PACKAGE_READER_SOURCE, relPath: 'src/render.ts' });
+      const walked = walkFileTransformer({ source: PACKAGE_READER_SOURCE, relPath: 'src/render.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/render.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/render.ts' });
@@ -303,7 +303,7 @@ describe('paramTypeResolveBroker', () => {
   describe('a file whose parameters name no type reference', () => {
     it('EMPTY: {only primitive params} => the same analysis reference, no disk touched', () => {
       paramTypeResolveBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
+      const walked = walkFileTransformer({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/grade.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/grade.ts' });
@@ -315,7 +315,7 @@ describe('paramTypeResolveBroker', () => {
   describe('a source that failed to parse', () => {
     it('EMPTY: {a walk that did not succeed} => the same analysis reference', () => {
       paramTypeResolveBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: 'export function broken(: {', relPath: 'src/broken.ts' });
+      const walked = walkFileTransformer({ source: 'export function broken(: {', relPath: 'src/broken.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/broken.ts' });
 
       const result = paramTypeResolveBroker({ analysis, walked, root: '/repo', relPath: 'src/broken.ts' });

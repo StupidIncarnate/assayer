@@ -36,7 +36,7 @@ import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { jestRunCliAdapter } from '../../../adapters/jest/run-cli/jest-run-cli-adapter';
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { assembleShimTransformer } from '../../../transformers/assemble-shim/assemble-shim-transformer';
 import { coreRuntimeTransformer } from '../../../transformers/core-runtime/core-runtime-transformer';
 import { caseSetProjectionTransformer } from '../../../transformers/case-set-projection/case-set-projection-transformer';
@@ -71,7 +71,7 @@ export const runUnitBroker = async ({
   analyzerContentHash: string;
 }): Promise<RunResult> => {
   const runtime = coreRuntimeTransformer({ coreRoot, loadedFrom: __dirname });
-  const walked = tsMorphWalkFileAdapter({ source, relPath });
+  const walked = walkFileTransformer({ source, relPath });
   // First, the types: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // fill seam refuses it and the entry is invoiced for an input Assayer can build perfectly well. This
   // resolves the declaration against the sibling on disk and re-projects the file from it, so every

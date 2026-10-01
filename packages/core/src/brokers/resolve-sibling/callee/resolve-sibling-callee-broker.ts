@@ -21,7 +21,7 @@ import type { RelPath } from '@assayer/shared/contracts';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
 import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
 
 export const resolveSiblingCalleeBroker = ({
@@ -34,7 +34,7 @@ export const resolveSiblingCalleeBroker = ({
   containingFile: string;
   root: string;
   options: Parameters<typeof typescriptResolveModuleAdapter>[0]['options'];
-}): { walked: ReturnType<typeof tsMorphWalkFileAdapter>; relPath: RelPath; source: FileContents } | undefined => {
+}): { walked: ReturnType<typeof walkFileTransformer>; relPath: RelPath; source: FileContents } | undefined => {
   const resolved = typescriptResolveModuleAdapter({ specifier, containingFile, options });
 
   if (!resolved.resolved) {
@@ -50,5 +50,5 @@ export const resolveSiblingCalleeBroker = ({
 
   const source = fsReadFileSyncAdapter({ path: fileName });
 
-  return { walked: tsMorphWalkFileAdapter({ source: String(source), relPath: String(relPath) }), relPath, source };
+  return { walked: walkFileTransformer({ source: String(source), relPath: String(relPath) }), relPath, source };
 };

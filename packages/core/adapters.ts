@@ -15,4 +15,4 @@ export * from './src/adapters/jest/probe-runtime/jest-probe-runtime-adapter';
 export * from './src/adapters/jest/interpret-case/jest-interpret-case-adapter';
 export * from './src/adapters/jest/resolve-entry/jest-resolve-entry-adapter';
 
-export * from './src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+export * from './src/transformers/walk-file/walk-file-transformer';

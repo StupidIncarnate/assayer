@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'const-literal.ts'), 'utf8');
 const relPath = 'src/happy-path/array/const-literal/const-literal.ts';
@@ -14,7 +14,7 @@ describe('array / const-literal — a branchless function over a LOCAL const arr
   // exit, and its `arrange` is EMPTY — the function takes no arguments. The return reads as `number`
   // (`items.length`). Branchless and DRIVEN with that single case.
   it('VALID: {export function three(): number { const items = [1, 2, 3]; return items.length }} => no params, one derived case with empty arrange', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -43,7 +43,7 @@ describe('array / const-literal — a branchless function over a LOCAL const arr
   // resolver's reportable callees, so nothing is admitted: no declared types, no dark spot, no
   // undriven, no lint.
   it('VALID: {a local const array literal, a builtin `.length` read} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'callback-param.ts'), 'utf8');
 const relPath = 'src/sad-path/input-gap/callback-param/callback-param.ts';
@@ -32,7 +32,7 @@ describe('input-gap / callback-param — a CALLBACK parameter is UNFILLABLE, so 
   // A RATCHET on the caller's side: a harness supplying the callback is what closes this, and the day
   // one can the entry becomes drivable and this file MOVES to happy-path.
   it('VALID: {an unsteered callback param} => the entry derives no case at all', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
       { name: 'audit', access: { kind: 'named' }, cases: [] },
@@ -43,7 +43,7 @@ describe('input-gap / callback-param — a CALLBACK parameter is UNFILLABLE, so 
   // moment it is opened — before any run — and the invoice names the parameter, its declared type, and
   // the harness that closes it.
   it('VALID: {a refused parameter} => a GAP on the analysis, invoicing the parameter and its remedy', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.gaps).toStrictEqual([{ name: 'audit', reason: GAP_REASON }]);
   });
@@ -52,7 +52,7 @@ describe('input-gap / callback-param — a CALLBACK parameter is UNFILLABLE, so 
   // ordinary, and the code is correct — so nothing is undriven, nothing is dark, and nothing is linted.
   // Merging any of them here would tell the reader to fix code that has nothing wrong with it.
   it('VALID: {a refused parameter} => the debt is the caller\'s alone, on no other channel', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       undriven: analysis.undriven,

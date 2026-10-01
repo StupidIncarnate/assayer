@@ -43,4 +43,4 @@ export * from './src/brokers/compose/cross-file-map/compose-cross-file-map-broke
 export * from './src/brokers/stub/realize/stub-realize-broker.proxy';
 export * from './src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy';
 export * from './src/brokers/harness/realize/harness-realize-broker.proxy';
-export * from './src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
+export * from './src/transformers/walk-file/walk-file-transformer.proxy';

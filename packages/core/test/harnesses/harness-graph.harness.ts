@@ -31,7 +31,7 @@ import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract, R
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';
 
 import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
-import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileHarnessGraphBroker } from '../../src/brokers/compile/harness-graph/compile-harness-graph-broker';
@@ -153,7 +153,7 @@ export const harnessGraphHarness = (): {
     const blob = compiledFileBlobContract.parse(
       JSON.parse(readFileSync(join(String(blobsDirOf({ dir })), `${String(contentHash)}.json`))),
     );
-    const walked = tsMorphWalkFileAdapter({
+    const walked = walkFileTransformer({
       source: readFileSync(join(String(dir), SOURCE_REL)),
       relPath: SOURCE_REL,
     });

@@ -22,7 +22,7 @@
 import { compiledFileViewContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
 import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, harnessRealizeBroker, paramTypeResolveBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
-import { tsMorphWalkFileAdapter } from '@assayer/core/adapters';
+import { walkFileTransformer } from '@assayer/core/adapters';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
 import { cacheLoadBlobBroker } from '../../cache/load-blob/cache-load-blob-broker';
@@ -60,7 +60,7 @@ export const compiledFileResolveBroker = async ({
   const source =
     root === undefined ? undefined : await nodeFsReadSourceAdapter({ absPath: `${String(root)}/${String(relPath)}` });
   const walked =
-    source === undefined ? undefined : tsMorphWalkFileAdapter({ source: String(source), relPath: String(relPath) });
+    source === undefined ? undefined : walkFileTransformer({ source: String(source), relPath: String(relPath) });
   // The types first: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // per-file blob refuses it and invoices an input Assayer can build. Resolving the declaration against
   // the sibling on disk is what lets every overlay below read real parameter types.

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'uncalled-nested.ts'), 'utf8');
 const relPath = 'src/sad-path/dead-surface/uncalled-nested/uncalled-nested.ts';
@@ -23,7 +23,7 @@ describe('dead-surface / uncalled-nested — a nested function nothing reaches',
   // dark spot: the walk read `unused` and its `if` perfectly, and no caller or callback reference
   // reaches it.
   it('VALID: {a nested function reached by nobody} => emitted as a dead-surface lint', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.lints).toStrictEqual([
       { rule: 'dead-surface', name: 'unused', message: DEAD_SURFACE_MESSAGE, startLine: 2, endLine: 8 },
@@ -31,7 +31,7 @@ describe('dead-surface / uncalled-nested — a nested function nothing reaches',
   });
 
   it('VALID: {dead nested code beside real code} => nothing undriven, nothing dark, only outer driven', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       functions: analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases })),

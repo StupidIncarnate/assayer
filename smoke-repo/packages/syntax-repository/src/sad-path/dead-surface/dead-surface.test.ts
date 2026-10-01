@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'dead-surface.ts'), 'utf8');
 const relPath = 'src/sad-path/dead-surface/dead-surface.ts';
@@ -21,7 +21,7 @@ describe('dead-surface — an unexported helper nothing consumes', () => {
   // reach the private by welding a literal argument — so that one is EVALUATED (a driven case plus an
   // unreachable-exit), while this one is reachable from nowhere and is the repo's to delete.
   it('VALID: {an unexported helper reached by nobody} => emitted as a dead-surface lint', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.lints).toStrictEqual([
       { rule: 'dead-surface', name: 'unused', message: DEAD_SURFACE_MESSAGE, startLine: 1, endLine: 7 },
@@ -31,7 +31,7 @@ describe('dead-surface — an unexported helper nothing consumes', () => {
   // The lint is not an undriven admission and not a dark spot: the walk read `unused` fine, and no
   // caller reaches it, so neither of those channels may hold it. Only the exported `greet` is driven.
   it('VALID: {dead surface beside real code} => nothing undriven, nothing dark, greet still driven', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       entries: analysis.functions.map((fn) => String(fn.entry.name)),

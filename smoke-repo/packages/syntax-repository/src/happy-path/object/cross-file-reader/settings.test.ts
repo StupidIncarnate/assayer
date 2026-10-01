@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'settings.ts'), 'utf8');
 const relPath = 'src/happy-path/object/cross-file-reader/settings.ts';
@@ -11,7 +11,7 @@ describe('object / cross-file-reader — settings.ts, the CHILD that declares th
   // The definition side of the rung: the shape is declared here and enumerated here, which is what the
   // reader's consume-time resolution reads. Driven on its own too, since a local object param fills.
   it('VALID: {interface Settings + a branchless reader of it} => the full shape is declared and filled', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,

@@ -6,7 +6,7 @@ import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
 import { jestRunCliAdapterProxy } from '../../../adapters/jest/run-cli/jest-run-cli-adapter.proxy';
-import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
+import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import { composeCrossFileMapBrokerProxy } from '../../compose/cross-file-map/compose-cross-file-map-broker.proxy';
 import { composeCrossFilePredicatesBrokerProxy } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
@@ -41,7 +41,7 @@ export const runUnitBrokerProxy = (): {
 } => {
   cryptoSha256AdapterProxy();
   fsMkdirAdapterProxy();
-  tsMorphWalkFileAdapterProxy();
+  walkFileTransformerProxy();
   analyzeFileBrokerProxy();
   // The imported-type resolution runs REAL with its sibling resolve staged to "no sibling", so it is a
   // same-reference no-op for a target whose parameters name no resolvable reference.

@@ -2,11 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'contradictory-bounds.ts'), 'utf8');
 const relPath = 'src/sad-path/length/contradictory-bounds/contradictory-bounds.ts';
-const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 const tag = analysis.functions[0];
 
 describe('length / contradictory-bounds — a length guard nested inside one that already excludes it', () => {

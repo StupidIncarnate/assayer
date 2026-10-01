@@ -3,7 +3,7 @@ import { join, resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { paramTypeResolveBroker } from '@assayer/core/param-type-resolve';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'generic-alias.ts'), 'utf8');
 const relPath = 'src/happy-path/object/generic-alias/generic-alias.ts';
@@ -16,7 +16,7 @@ describe('object / generic-alias — generic-alias.ts, a reader of an imported G
   // without them, `value` stays the opaque placeholder `T` and the reader is invoiced for a shape the
   // sibling describes in full.
   it('VALID: {box: Box<string> imported from ./box} => the parameter typed as the instantiated shape', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = paramTypeResolveBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.entry.params)).toStrictEqual([
@@ -30,7 +30,7 @@ describe('object / generic-alias — generic-alias.ts, a reader of an imported G
   });
 
   it('VALID: {an instantiated generic parameter} => one case built from it, and nothing invoiced', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = paramTypeResolveBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath });
 
     expect({

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'expression.ts'), 'utf8');
 const relPath = 'src/happy-path/function/expression/expression.ts';
@@ -14,7 +14,7 @@ describe('function / expression — a branching function EXPRESSION assigned to 
   // exactly as a function declaration would. Nothing about being an expression rather than a declaration
   // changes the analysis.
   it('VALID: {export const classify = function (n) { if (n > 5) … }} => a named, driven entry with both arms', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
       {
@@ -37,7 +37,7 @@ describe('function / expression — a branching function EXPRESSION assigned to 
   });
 
   it('VALID: {a driven function expression} => admits nothing', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots, lints: analysis.lints }).toStrictEqual({
       undriven: [],

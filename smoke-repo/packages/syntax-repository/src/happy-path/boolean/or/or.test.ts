@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'or.ts'), 'utf8');
 const relPath = 'src/happy-path/boolean/or/or.ts';
@@ -44,7 +44,7 @@ describe('boolean / or — a disjunction inside an exported function', () => {
   // A disjunction MIRRORS a conjunction: it holds two ways and fails one. So the fan-out lands on
   // `then` here, where `and` put it on `else`.
   it('VALID: {|| condition} => TWO cases for then (one per reason it holds), ONE for else', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       // 51 > 50 holds, so `smoke` NEVER EVALUATES and falls to fill.

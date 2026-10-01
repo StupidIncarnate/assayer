@@ -7,7 +7,7 @@ import {
   paramTypeResolveBrokerProxy,
   stubRealizeBrokerProxy,
   stubOverlayLoadBrokerProxy,
-  tsMorphWalkFileAdapterProxy,
+  walkFileTransformerProxy,
 } from '@assayer/core/testing';
 
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
@@ -60,7 +60,7 @@ export const compiledFileResolveBrokerProxy = (): {
   // `calledWith([])`/`onceFor([])` are a blanket match on purpose, not a stand-in for a real argument.
   paramTypeHandle.calledWith([]).implement(({ analysis }) => analysis);
   composeCrossFilePredicatesBrokerProxy();
-  tsMorphWalkFileAdapterProxy();
+  walkFileTransformerProxy();
   const composeHandle = registerMock({ fn: composeCrossFilePredicatesBroker });
   // Default: a same-reference pass-through, so a file with no imported-predicate guard serves its
   // persisted analysis untouched.

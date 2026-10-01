@@ -21,7 +21,7 @@ import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { mapProjectionTransformer } from '../../../transformers/map-projection/map-projection-transformer';
 import { moduleGraphProjectionTransformer } from '../../../transformers/module-graph-projection/module-graph-projection-transformer';
 
@@ -50,7 +50,7 @@ export const compileProcessFileBroker = async ({
     return { reused: true, contentHash };
   }
 
-  const walked = tsMorphWalkFileAdapter({ source: content, relPath });
+  const walked = walkFileTransformer({ source: content, relPath });
   const extracted = mapProjectionTransformer({ walked });
 
   if (!extracted.success) {

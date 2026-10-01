@@ -2,11 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'exceeds-limit.ts'), 'utf8');
 const relPath = 'src/sad-path/unreachable/cross-file-guards/exceeds-limit.ts';
-const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
 describe('unreachable / exceeds-limit — a predicate function, the shape a caller has to see through', () => {
   // Branchless: the comparison is the RETURNED EXPRESSION, not a guard, so the file owes one exit — but

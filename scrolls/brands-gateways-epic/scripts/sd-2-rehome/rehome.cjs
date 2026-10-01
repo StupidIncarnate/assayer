@@ -238,6 +238,8 @@ const projectDirs = () => {
 // ---------- fences ----------
 
 const isTestFile = (r) => /\.test\.tsx?$/u.test(r);
+// tsconfig files whose only edits were `paths` entries this script was allowed to rewrite.
+const pathsCleared = new Set();
 // Answers null when the edit may land, or the reason it may not.
 const fenceOf = (file, { pathsKey } = {}) => {
   const r = rel(file);
@@ -383,6 +385,7 @@ const moveFile = (projects, oldFile, newFile) => {
     const why = fenceOf(e.file, { pathsKey: e.pathsKey });
     if (why) return { refused: why };
   }
+  for (const e of edits) if (e.pathsKey !== undefined) pathsCleared.add(e.file);
   const folded = foldEdits(edits);
   if (folded.conflict) return { refused: folded.conflict };
   commit(folded.perFile);
@@ -688,6 +691,12 @@ const main = () => {
   fs.writeFileSync(path.join(OUT, 'moves.json'), `${JSON.stringify(moves, null, 2)}\n`);
   fs.writeFileSync(path.join(OUT, 'plan.json'), `${JSON.stringify({ root: ROOT, rows: ROW_FILTERS, results, changedFiles: changed.map((c) => rel(c.file)) }, null, 2)}\n`);
 
+  // Every write passes the fence a second time, so no edit path can skip it.
+  for (const c of changed) {
+    const why = pathsCleared.has(c.file) ? fenceOf(c.file, { pathsKey: [...SMOKE_PATH_KEYS][0] }) : fenceOf(c.file);
+    if (why) throw new Error(`refusing to write: ${why}`);
+  }
+
   for (const r of results) {
     if (r.status === 'refused') console.log(`REFUSED ${r.adapter}\n  ${r.refused.join('\n  ')}`);
     else console.log(`moved ${r.adapter} -> ${r.target}: ${r.moves.length} files; ${r.renames.map((x) => `${x.from} -> ${x.to} (${x.locations} sites, ${x.files} files)`).join('; ')}`);
@@ -706,10 +715,6 @@ const main = () => {
   }
 
   if (APPLY) {
-    for (const c of changed) {
-      const why = fenceOf(c.file);
-      if (why) throw new Error(`refusing to write: ${why}`);
-    }
     for (const m of moves) {
       fs.mkdirSync(path.dirname(abs(m.to)), { recursive: true });
       fs.renameSync(abs(m.from), abs(m.to));

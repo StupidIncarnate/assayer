@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'arg-position.ts'), 'utf8');
 const relPath = 'src/sad-path/ternary/arg-position/arg-position.ts';
@@ -13,7 +13,7 @@ describe('ternary / arg-position — a ternary in a CALL ARGUMENT', () => {
   // call argument has no exit to split, so it stays an ADMITTED dark spot rather than a fabricated fill.
   // This is the boundary ratchet: the day the reverse-map rung lands, the split reaches here too.
   it('VALID: {`return label(n > 5 ? a : b)`} => the ternary is a DARK SPOT, not split', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = analyzeFileBroker({ walked });
 
     expect(analysis.darkSpots).toStrictEqual([

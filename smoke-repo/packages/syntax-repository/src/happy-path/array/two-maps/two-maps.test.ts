@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'two-maps.ts'), 'utf8');
 const relPath = 'src/happy-path/array/two-maps/two-maps.ts';
@@ -45,7 +45,7 @@ describe('array / two-maps — `pipeline` maps TWO branching callbacks over TWO 
   // case runs both callbacks zero times, so its path is pipeline's exit alone. Each value is an INPUT
   // (P4); the case asserts only the reached PATH. This is map-conditional's twin one array wider.
   it('VALID: {pipeline mapping two branching callbacks over xs and ys} => FUNNELLED as the 16-case cartesian of both callbacks', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(
       analysis.functions.map((fn) => ({ name: fn.entry.name, label: fn.entry.label, access: fn.entry.access, cases: fn.cases })),
@@ -88,7 +88,7 @@ describe('array / two-maps — `pipeline` maps TWO branching callbacks over TWO 
   // through pipeline's funnel. Nothing is admitted — the walk read every arm of both callbacks and the
   // cartesian drives them all through the one entry.
   it('VALID: {two reached, funnelled callbacks} => no dead-surface lint, nothing undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       lints: analysis.lints,

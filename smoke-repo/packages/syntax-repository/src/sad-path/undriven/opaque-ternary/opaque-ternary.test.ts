@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'opaque-ternary.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/opaque-ternary/opaque-ternary.ts';
@@ -22,7 +22,7 @@ describe('undriven / opaque-ternary — a ternary whose condition is a same-file
   // A ternary's condition is a branch exactly as an `if`'s is, so an opaque call in it is un-steerable
   // exactly the same way — same admission, same reason shape, one rung of the derivation, not two.
   it('VALID: {a ternary over an opaque same-file call} => the branch admitted undriven, named at its line', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.undriven).toStrictEqual([
       { name: 'opaqueTernary', reason: BRANCH_REASON, startLine: 6, endLine: 6 },
@@ -30,13 +30,13 @@ describe('undriven / opaque-ternary — a ternary whose condition is a same-file
   });
 
   it('VALID: {an un-steerable ternary} => no case is derived, since nothing can choose an arm', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
   });
 
   it('VALID: {a fully-understood ternary} => admits nothing as a dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.darkSpots).toStrictEqual([]);
   });

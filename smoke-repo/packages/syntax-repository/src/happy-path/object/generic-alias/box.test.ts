@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'box.ts'), 'utf8');
 const relPath = 'src/happy-path/object/generic-alias/box.ts';
@@ -12,7 +12,7 @@ describe('object / generic-alias — box.ts, the DEFINITION file declaring the g
   // `rewrap` is here to give the file a runnable entry, and it exercises the SAME-FILE half: the
   // checker instantiates `Box<number>` itself, so the parameter is already the enumerated shape.
   it('VALID: {type Box<T> + rewrap(box: Box<number>)} => the parameter typed as the instantiated shape, one case', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       params: analysis.functions.flatMap((fn) => fn.entry.params),

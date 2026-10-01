@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'iife.ts'), 'utf8');
 const relPath = 'src/happy-path/function/iife/iife.ts';
@@ -23,7 +23,7 @@ describe('function / iife — an immediately-invoked function expression driven 
   // entry's ACCESS is `module` (the surface renders it by the file's label, never the arrow's name); its
   // cases set the env var the inverse of the source's own coercion (P4), never a recorded output.
   it('VALID: {(() => { const n = Number(process.env.SIZE); if (n > 5) … })()} => a module-driven entry with one case per arm', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.map((fn) => ({ access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
       {
@@ -40,7 +40,7 @@ describe('function / iife — an immediately-invoked function expression driven 
   // cannot. The sad twin `sad-path/unreachable/iife` holds the other side: its arrow is invoked with a
   // welded literal, so one arm is a case and the other an unreachable-exit lint.
   it('VALID: {a driven IIFE} => admits nothing', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots, lints: analysis.lints }).toStrictEqual({
       undriven: [],

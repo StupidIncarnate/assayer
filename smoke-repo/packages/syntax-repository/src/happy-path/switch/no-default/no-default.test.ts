@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'no-default.ts'), 'utf8');
 const relPath = 'src/happy-path/switch/no-default/no-default.ts';
@@ -95,7 +95,7 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
   // predict a different exit than the one actually observed and fail a real run — pinned end to end
   // by `run-unit-broker.integration.test.ts`'s `SWITCH_NO_DEFAULT_SPECIMEN`.
   it('VALID: {tail switch with no default} => both cases converge on the one exit, second grayed', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [TOP_EXIT], arrange: [{ kind: 'param', param: 'method', value: 'get' }], salient: true },
@@ -104,7 +104,7 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
   });
 
   it('VALID: {tail switch with no default} => nothing admitted as undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots }).toStrictEqual({ undriven: [], darkSpots: [] });
   });

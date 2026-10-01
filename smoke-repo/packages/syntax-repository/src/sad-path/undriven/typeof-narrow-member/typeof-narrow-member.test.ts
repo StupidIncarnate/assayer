@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'typeof-narrow-member.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/typeof-narrow-member/typeof-narrow-member.ts';
@@ -28,7 +28,7 @@ describe(
     // from — only the union's first fillable member, which is what an UNCONSTRAINED parameter gets, not
     // what one particular arm of one particular branch needs.
     it('VALID: {a typeof narrowing a union with a non-scalar member} => the branch admitted undriven, naming the shape limit', () => {
-      const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
       expect(analysis.undriven).toStrictEqual([{ name: 'choose', reason: BRANCH_REASON, startLine: 5, endLine: 5 }]);
     });
@@ -36,7 +36,7 @@ describe(
     // No case is derived, so nothing fails against correct code — the same safety property every
     // undriven admission carries.
     it('VALID: {a typeof-narrowed comparison Assayer cannot fully realize} => no case is derived', () => {
-      const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
       expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
     });
@@ -45,7 +45,7 @@ describe(
     // string beside Plain, neither collapsed to unknown. Only the per-arm VALUE for the shape side is
     // beyond it.
     it('VALID: {a fully-read ternary} => admits nothing as a dark spot', () => {
-      const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
       expect(analysis.darkSpots).toStrictEqual([]);
     });
@@ -54,7 +54,7 @@ describe(
     // whole parameter for the half nothing can build, and there is nothing here that cannot be built,
     // only a per-arm CHOICE that cannot yet be made.
     it('VALID: {target: Plain | string} => a union descriptor carrying the object beside the string', () => {
-      const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
       expect(analysis.functions.flatMap((fn) => fn.entry.params)).toStrictEqual([
         {

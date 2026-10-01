@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { harnessRealizeBroker } from '@assayer/core/harness-realize';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'partial-harness.ts'), 'utf8');
 const relPath = 'src/sad-path/input-gap/partial-harness/partial-harness.ts';
@@ -44,7 +44,7 @@ const SINK_ONLY =
 describe('input-gap / partial-harness — supplying SOME of what was refused keeps the gap, re-worded', () => {
   // Where the reader starts: two callables, both refused, both named.
   it('VALID: {the per-file analysis alone} => the invoice names BOTH refused parameters', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.gaps).toStrictEqual([{ name: 'record', reason: BOTH_REFUSED }]);
   });
@@ -54,7 +54,7 @@ describe('input-gap / partial-harness — supplying SOME of what was refused kee
   // remain. Reprinting the original would bill the reader for the input they just handed over, which is
   // the one thing a partial payment must not do.
   it('VALID: {a harness declaring only `log`} => still no case, and the invoice names only `sink`', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = harnessRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), root, relPath });
 
     expect({
@@ -66,7 +66,7 @@ describe('input-gap / partial-harness — supplying SOME of what was refused kee
   // Still a GAP, still the caller's, still on no other channel. A partial payment moves the wording and
   // nothing else — it must not degrade into an undriven admission or a lint about correct code.
   it("VALID: {a harness declaring only `log`} => the debt stays the caller's, on no other channel", () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = harnessRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), root, relPath });
 
     expect({

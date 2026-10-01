@@ -1,7 +1,7 @@
-import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
+import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
 
 export const analyzeExtractBrokerProxy = (): Record<PropertyKey, never> => {
-  tsMorphWalkFileAdapterProxy();
+  walkFileTransformerProxy();
 
   return {};
 };

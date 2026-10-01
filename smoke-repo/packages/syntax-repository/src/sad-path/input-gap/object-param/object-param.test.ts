@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'object-param.ts'), 'utf8');
 const relPath = 'src/sad-path/input-gap/object-param/object-param.ts';
@@ -33,7 +33,7 @@ describe('input-gap / object-param — an object whose only member is a CALLABLE
   // A RATCHET on the caller's side: a harness supplying the sink is what closes this, and the day one
   // can the entry becomes drivable and this file MOVES to happy-path.
   it('VALID: {an unsteered object param with a callable member} => the entry derives no case at all', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
       { name: 'emit', access: { kind: 'named' }, cases: [] },
@@ -45,7 +45,7 @@ describe('input-gap / object-param — an object whose only member is a CALLABLE
   // exactly which property it cannot build, and the GAP it raises invoices the parameter rather than
   // leaving the reader to work out why `emit` derived nothing.
   it('VALID: {a same-file interface param} => its full shape is declared, and the refusal is invoiced as a GAP', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({ declaredTypes: analysis.declaredTypes, gaps: analysis.gaps }).toStrictEqual({
       declaredTypes: [
@@ -59,7 +59,7 @@ describe('input-gap / object-param — an object whose only member is a CALLABLE
   // `size` is steerable, and nothing in the file is dead. Only the value is missing, and only the caller
   // can supply it.
   it('VALID: {a same-file interface param} => the debt is the caller\'s alone, on no other channel', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       undriven: analysis.undriven,
