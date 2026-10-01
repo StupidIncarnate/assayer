@@ -18,9 +18,9 @@
  * await compile.run({ argv: ['status'] });
  * compile.manifestRelPaths({ namespace: 'default' }); // => ['src/a.ts']
  */
-import { join, dirname } from 'node:path';
-import { spawn } from 'node:child_process';
-import { tmpdir } from 'node:os';
+import { join, dirname } from '#gateway/node/path';
+import { spawn } from '#gateway/node/child_process';
+import { tmpdir } from '#gateway/node/os';
 import {
   mkdtempSync,
   mkdirSync,
@@ -43,6 +43,7 @@ import {
 import type { BranchName, RelPath, ContentHash ,
   AssayerCacheManifestStub,
   CompiledFileBlobStub} from '@assayer/shared/contracts';
+import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
 
@@ -101,7 +102,7 @@ export const assayerCompileHarness = (): {
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
       new Promise((resolve: (result: CliRunResult) => void, reject: (error: Error) => void) => {
-        const child = spawn(process.execPath, [cliEntry, ...argv], {
+        const child = spawn(execPath, [cliEntry, ...argv], {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
         });

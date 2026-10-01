@@ -1,13 +1,15 @@
+import { stdout } from '#gateway/node/process';
+
 export const processStdoutIsTtyAdapterProxy = (): {
   enableTty: () => void;
   disableTty: () => void;
 } => {
   return {
     enableTty: (): void => {
-      process.stdout.isTTY = true;
+      stdout.isTTY = true;
     },
     disableTty: (): void => {
-      process.stdout.isTTY = false;
+      stdout.isTTY = false;
     },
   };
 };

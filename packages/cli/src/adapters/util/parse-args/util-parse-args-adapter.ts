@@ -15,7 +15,7 @@
  * utilParseArgsAdapter({ argv: ['src/a.ts', 'src/b.ts'] });
  * // Returns the positionals — or throws on an unrecognized flag
  */
-import { parseArgs } from 'node:util';
+import { parseArgs } from '#gateway/node/util';
 
 import { cliPositionalContract } from '../../../contracts/cli-positional/cli-positional-contract';
 import type { CliPositional } from '../../../contracts/cli-positional/cli-positional-contract';

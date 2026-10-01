@@ -14,7 +14,7 @@
  * // Returns [<root>/packages/core/src, <root>/packages/shared/src] as branded FilePath[]
  */
 import { existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname } from '#gateway/node/path';
 import { filePathContract } from '@assayer/core/contracts';
 import type { FilePath } from '@assayer/core/contracts';
 

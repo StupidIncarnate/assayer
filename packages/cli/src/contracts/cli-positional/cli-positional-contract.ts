@@ -7,7 +7,7 @@
  * const positional = cliPositionalContract.parse('src/format-greeting.ts');
  * // Returns a validated CliPositional (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const cliPositionalContract = z.string().min(1).brand<'CliPositional'>();
 

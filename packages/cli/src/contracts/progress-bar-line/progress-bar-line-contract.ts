@@ -6,7 +6,7 @@
  * progressBarLineContract.parse('main: ##########---------- 5/10');
  * // Returns a branded ProgressBarLine
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const progressBarLineContract = z.string().min(1).brand<'ProgressBarLine'>();
 

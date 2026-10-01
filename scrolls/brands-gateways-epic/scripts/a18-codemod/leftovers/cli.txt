@@ -1,0 +1,84 @@
+== packages/cli/src/adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter.ts  census=2 after=1
+   CHANGE L17: 'path' -> '#gateway/node/path'
+   SKIP L16: import 'fs' -> #gateway/node/fs: 'existsSync' is a gateway wrapper, not the raw function [fs]
+== packages/cli/src/adapters/package-json/read/package-json-read-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'fs/promises' is mocked/spied in the staging set [packages/cli/src/adapters/package-json/read/package-json-read-adapter.proxy.ts]
+== packages/cli/src/adapters/package-json/read/package-json-read-adapter.ts  census=3 after=1
+   CHANGE L9: 'path' -> '#gateway/node/path'
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/cli/src/adapters/package-json/read/package-json-read-adapter.proxy.ts]
+== packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy.ts  census=3 after=0
+   CHANGE L7: process.stdout -> stdout
+   CHANGE L9: process.stdout -> stdout
+   CHANGE L15: process.stdout -> stdout
+   CHANGE IMPORT { stdout } from '#gateway/node/process'
+== packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.ts  census=4
+   SKIP L54: 'stdout' is a gateway wrapper; packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy.ts must then compose stdoutProxy (proxy work)
+   SKIP L58: 'stdout' is a gateway wrapper; packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy.ts must then compose stdoutProxy (proxy work)
+   SKIP L60: 'stdout' is a gateway wrapper; packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy.ts must then compose stdoutProxy (proxy work)
+   SKIP L73: 'stdout' is a gateway wrapper; packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy.ts must then compose stdoutProxy (proxy work)
+== packages/cli/src/adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.proxy.ts  census=2 after=0
+   CHANGE L7: process.stdout -> stdout
+   CHANGE L10: process.stdout -> stdout
+   CHANGE IMPORT { stdout } from '#gateway/node/process'
+== packages/cli/src/adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.ts  census=1
+   SKIP L8: 'stdout' is a gateway wrapper; packages/cli/src/adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.proxy.ts must then compose stdoutProxy (proxy work)
+== packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts  census=2 after=1
+   CHANGE L39: process.stdout -> stdout
+   CHANGE IMPORT { stdout } from '#gateway/node/process'
+   SKIP L1: raw module 'readline' is mocked/spied in the staging set [packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts]
+== packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.ts  census=4
+   SKIP L15: raw module 'readline' is mocked/spied in the staging set [packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts]
+   SKIP L35: 'stdout' is a gateway wrapper; packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts must then compose stdoutProxy (proxy work)
+   SKIP L37: 'getStdin' is a gateway wrapper; packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts must then compose getStdinProxy (proxy work)
+   SKIP L37: 'stdout' is a gateway wrapper; packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts must then compose stdoutProxy (proxy work)
+== packages/cli/src/adapters/util/parse-args/util-parse-args-adapter.ts  census=1 after=0
+   CHANGE L18: 'node:util' -> '#gateway/node/util'
+== packages/cli/src/contracts/admission-line/admission-line-contract.ts  census=1 after=0
+   CHANGE L11: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/assayer-version/assayer-version-contract.ts  census=1 after=0
+   CHANGE L8: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/cli-command/cli-command-contract.ts  census=1 after=0
+   CHANGE L14: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/cli-error-message/cli-error-message-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/cli-file-text/cli-file-text-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/cli-output/cli-output-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/cli-positional/cli-positional-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/cli-run-result/cli-run-result-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/progress-bar-line/progress-bar-line-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/cli/src/contracts/zod-issue-list/zod-issue-list-contract.ts  census=1 after=0
+   CHANGE L14: 'zod' -> '#gateway/npm/zod'
+== packages/cli/test/harnesses/assayer-cli.harness.ts  census=5 after=1
+   CHANGE L18: 'node:path' -> '#gateway/node/path'
+   CHANGE L19: 'node:child_process' -> '#gateway/node/child_process'
+   CHANGE L20: 'node:os' -> '#gateway/node/os'
+   CHANGE L64: process.execPath -> execPath
+   CHANGE IMPORT { execPath } from '#gateway/node/process'
+   SKIP L21: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'existsSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/cli/test/harnesses/assayer-compile.harness.ts  census=10 after=6
+   CHANGE L21: 'node:path' -> '#gateway/node/path'
+   CHANGE L22: 'node:child_process' -> '#gateway/node/child_process'
+   CHANGE L23: 'node:os' -> '#gateway/node/os'
+   CHANGE L104: process.execPath -> execPath
+   CHANGE IMPORT { execPath } from '#gateway/node/process'
+   SKIP L24: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'existsSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'readdirSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+
+SUMMARY cli: census messages=48 (parse errors 0) in 22 files; files changed=18 (rejected 0); messages cleared=28; left=20; files fully cleared=13; census 3s
+SKIPS by reason:
+  4  'stdout' is a gateway wrapper; packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy.ts must then compose stdoutProxy (proxy work)  e.g. packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.ts:54, packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.ts:58, packages/cli/src/adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.ts:60
+  2  raw module 'fs/promises' is mocked/spied in the staging set  e.g. packages/cli/src/adapters/package-json/read/package-json-read-adapter.proxy.ts:1, packages/cli/src/adapters/package-json/read/package-json-read-adapter.ts:8
+  2  raw module 'readline' is mocked/spied in the staging set  e.g. packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts:1, packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.ts:15
+  2  'stdout' is a gateway wrapper; packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts must then compose stdoutProxy (proxy work)  e.g. packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.ts:35, packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.ts:37
+  1  import 'fs' -> #gateway/node/fs: 'existsSync' is a gateway wrapper, not the raw function  e.g. packages/cli/src/adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter.ts:16
+  1  'stdout' is a gateway wrapper; packages/cli/src/adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.proxy.ts must then compose stdoutProxy (proxy work)  e.g. packages/cli/src/adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.ts:8
+  1  'getStdin' is a gateway wrapper; packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.proxy.ts must then compose getStdinProxy (proxy work)  e.g. packages/cli/src/adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter.ts:37
+  1  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'existsSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/cli/test/harnesses/assayer-cli.harness.ts:21
+  1  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'existsSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'readdirSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/cli/test/harnesses/assayer-compile.harness.ts:24
+GAPS:
+REJECTED (file left untouched) by first new problem:

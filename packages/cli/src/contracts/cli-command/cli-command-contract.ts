@@ -11,7 +11,7 @@
  * const command = cliCommandContract.parse('help');
  * // Returns a validated CliCommand (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const cliCommandContract = z
   .enum(['help', 'version', 'docs', 'status', 'unit', 'detail', 'bare', 'unknown'])

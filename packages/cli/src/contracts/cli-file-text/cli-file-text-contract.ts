@@ -7,7 +7,7 @@
  * cliFileTextContract.parse('{"version":"1","repoRoot":".","exclude":[]}');
  * // Returns a branded CliFileText
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const cliFileTextContract = z.string().brand<'CliFileText'>();
 

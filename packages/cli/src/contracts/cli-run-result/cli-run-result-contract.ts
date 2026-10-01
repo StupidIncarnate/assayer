@@ -7,7 +7,7 @@
  * cliRunResultContract.parse({ stdout: 'assayer 1.0.0\n', stderr: '', exitCode: 0 });
  * // Returns a validated CliRunResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const cliRunResultContract = z.object({
   stdout: z.string().brand<'CliRunStdout'>(),

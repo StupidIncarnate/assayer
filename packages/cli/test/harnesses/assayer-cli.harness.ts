@@ -15,15 +15,16 @@
  * const result = await cli.run({ argv: ['status'] });
  * // result.exitCode === 0; result.stdout ends with the status block
  */
-import { join, dirname } from 'node:path';
-import { spawn } from 'node:child_process';
-import { tmpdir } from 'node:os';
+import { join, dirname } from '#gateway/node/path';
+import { spawn } from '#gateway/node/child_process';
+import { tmpdir } from '#gateway/node/os';
 import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
 
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
 import { CliFileTextStub } from '../../src/contracts/cli-file-text/cli-file-text.stub';
 import type { CliFileText } from '../../src/contracts/cli-file-text/cli-file-text-contract';
+import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
 
@@ -61,7 +62,7 @@ export const assayerCliHarness = (): {
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
       new Promise((resolve: (result: CliRunResult) => void, reject: (error: Error) => void) => {
-        const child = spawn(process.execPath, [cliEntry, ...argv], {
+        const child = spawn(execPath, [cliEntry, ...argv], {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
         });

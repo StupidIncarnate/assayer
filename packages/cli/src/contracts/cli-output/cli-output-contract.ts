@@ -6,7 +6,7 @@
  * cliOutputContract.parse('assayer 1.0.0');
  * // Returns a branded CliOutput
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const cliOutputContract = z.string().min(1).brand<'CliOutput'>();
 

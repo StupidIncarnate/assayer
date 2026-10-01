@@ -8,7 +8,7 @@
  * admissionLineContract.parse('  GAP find — needs a harness');
  * // Returns a branded AdmissionLine
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const admissionLineContract = z.string().min(1).brand<'AdmissionLine'>();
 

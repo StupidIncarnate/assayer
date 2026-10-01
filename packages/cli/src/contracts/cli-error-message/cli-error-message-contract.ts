@@ -7,7 +7,7 @@
  * cliErrorMessageContract.parse('assayer.config.json: invalid JSON at line 3 column 12: ...');
  * // Returns a branded CliErrorMessage
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const cliErrorMessageContract = z.string().min(1).brand<'CliErrorMessage'>();
 

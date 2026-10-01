@@ -11,7 +11,7 @@
  *   // issues: [{ path: ['repoRoot'], message: 'Invalid input: expected string, received number' }, ...]
  * }
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const zodIssueListContract = z.object({
   issues: z.array(

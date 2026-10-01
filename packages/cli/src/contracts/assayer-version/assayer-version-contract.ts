@@ -5,7 +5,7 @@
  * assayerVersionContract.parse('1.0.0');
  * // Returns a branded AssayerVersion
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const assayerVersionContract = z.string().min(1).brand<'AssayerVersion'>();
 

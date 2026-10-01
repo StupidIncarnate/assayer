@@ -6,8 +6,8 @@
  * // Returns the branded AssayerVersion parsed from the CLI's package.json "version" field
  */
 import { readFile } from 'fs/promises';
-import { join } from 'path';
-import { z } from 'zod';
+import { join } from '#gateway/node/path';
+import { z } from '#gateway/npm/zod';
 import { assayerVersionContract } from '../../../contracts/assayer-version/assayer-version-contract';
 import type { AssayerVersion } from '../../../contracts/assayer-version/assayer-version-contract';
 

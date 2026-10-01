@@ -1,6 +1,7 @@
 import { createInterface } from 'readline';
 import { registerMock, registerSpyOn } from '@dungeonmaster/testing/register-mock';
 import { CliOutputStub } from '../../../contracts/cli-output/cli-output.stub';
+import { stdout } from '#gateway/node/process';
 
 type CliOutput = ReturnType<typeof CliOutputStub>;
 
@@ -36,7 +37,7 @@ export const readlineStableBranchPickAdapterProxy = (): {
     close: (): void => undefined,
   });
 
-  const stdoutSpy = registerSpyOn({ object: process.stdout, method: 'write' });
+  const stdoutSpy = registerSpyOn({ object: stdout, method: 'write' });
   // `write` answers a boolean nothing here reads, but a spied call still has to be described:
   // an undescribed call throws rather than falling through to the real stdout.
   stdoutSpy.calledWith([]).implement(() => true);
