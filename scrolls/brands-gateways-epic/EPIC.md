@@ -396,11 +396,11 @@ whenever execution forces another. A departure with no row is not allowed.
 | 2 | Gateway rules arrive off and are switched on after a scan | The gateway rules are already at `error` in the plugin. This epic scans them to 0 in R-2 and never sets them to `off`. | The installed plugin version ships them at `error`. |
 | 3 | Adapters dissolve into callers or become brokers by hand | Logic adapters move by script (SD-2), with bodies unchanged, to the folder type A-1's table names for each one. | 110 adapters, and the analyzer's walk must stay byte-identical (D3). |
 | 4 | Runs its epic in a worktree from `create-worktree` | Runs on branch `brands-gateways` in the main checkout. | `create-worktree` refuses every `node_modules` link that lands outside the worktree. Assayer's `file:` links to `../codex-of-consentient-craft` all do (upstream report 6). The user chose the branch. |
-| 5 | Lets `raw-import-ban` and `bin-program-spawn-ban` find the repo scope on their own | `eslint.config.js` passes `scope: '@assayer'` to both, in one repo-wide entry. P0-5(d) passes the same option to `gateway-import-boundary` when it adds the gateway block. | Both rules walk up from the plugin's own folder to find the scope. The plugin is a `file:` link into the dungeonmaster checkout, so the walk finds `@dungeonmaster` (upstream report 8). |
+| 5 | Lets `raw-import-ban` and `bin-program-spawn-ban` find the repo scope on their own | Resolved: assayer passes no `scope` option. | Dungeonmaster `e80c3adf0`: the three rules walk up from the linted file, not from the plugin's own folder. Full assayer lint PASS without the option (`1790880611698-bf3c`). |
 | 6 | Fixes its own bugs inside its own repo | Assayer's epic fixes dungeonmaster bugs in the dungeonmaster checkout and commits there (D11). The first is `StubArgument` (upstream report 9). | The user allowed it. The bug broke assayer's build and crashed `tsc` in app. A workaround would retype many assayer stubs, and those edits would come out again. |
 | 7 | Its repo-root Jest base takes the published `globalSetup` | Until P0-5b, `scripts/jest-global-setup.js` builds, then calls the published sandbox setup, then throws if HOME did not move. | Assayer's tests need a build until P0-5b lands. The published teardown deletes HOME unless the published setup ran (upstream report 12). |
 | 8 | Its gateway packages read each other from source in tests, through its repo-root Jest base | Assayer's gateway Jest configs stay exactly as `init` writes them. Gateway tests read each other's source through the `gateway-source` export condition, which only the generated gateway packages carry (dungeonmaster `fe4da94`, item G-10). | A consumer's gateways spread the published Jest base, whose MSW setup loads `@dungeonmaster/testing`'s `dist`. The plain `source` condition would load its `src` too and start a second MSW server. |
-| 9 | `eslint.config.js` imports the plugin's config brokers by package name | Assayer requires `configGatewayLintConfigBroker` and `configWorkspacePackageNamesBroker` from the plugin's `dist` by path, and passes assayer's own root as `startDir`. | The plugin's `exports` has no key for them, and on their own they find dungeonmaster's root (upstream reports 8 and 13). |
+| 9 | `eslint.config.js` imports the plugin's config brokers by package name | Resolved: assayer takes both brokers from the plugin's main entry. | Dungeonmaster `7469542ee` exports them. |
 | 10 | No build before any test | The CLI integration tests spawn the built CLI, so the operator builds before running them. Running the CLI from source through `tsx` is a follow-up. | P0-5b's planner found both CLI test harnesses spawn `packages/cli/dist/bin/assayer.js`. |
 | 11 | P0-5b's row puts the source-or-`dist` choice in the two path brokers | `runUnitBroker` makes the choice. | The run-unit test harness calls `runUnitBroker` directly, so a choice made higher up would have to be repeated there. |
 | 12 | P0-5b's row checks `npm run test:syntax` output stays byte-identical | The byte-identical check hashes the run artifacts from `assayer unit` over every specimen. `test:syntax` stays a regression check. | `test:syntax` maps every core import to source through tsconfig `paths`, and writes no run artifacts. |
@@ -434,11 +434,10 @@ Dungeonmaster problems found while planning. The user takes these to dungeonmast
 7. `create-worktree`'s seed step demands compiled output from `@gateway/bin`. A fresh `bin` gateway holds only the
    placeholder `src/index.d.ts`, so its build emits nothing and the step can never pass. An empty `dist/` folder
    satisfies it.
-8. `raw-import-ban`, `bin-program-spawn-ban`, `gateway-import-boundary` and `configGatewayLintConfigBroker` find the
-   repo root by walking up from the plugin's own `__dirname`. A consumer that installs the plugin by `file:` link gets
-   the plugin checkout's root instead of its own. For assayer that root is dungeonmaster, so the scope reads
-   `@dungeonmaster` and `.dungeonmaster.json` is read from the wrong repo. Root cause of the "712 false hits" in the
-   census, together with upstream report 1.
+8. `raw-import-ban`, `bin-program-spawn-ban` and `gateway-import-boundary` found the repo scope by walking up from the
+   plugin's own folder, so a `file:`-linked consumer read `@dungeonmaster`. Fixed in dungeonmaster `e80c3adf0`. The
+   same sweep fixed the ts-jest transform cache (`a89ae0d1b`), and the local rule `ban-self-located-repo-lookup`
+   (`7fe707b1f`) refuses the pattern in new dungeonmaster code.
 9. `StubArgument`'s `UnbrandRecord` arms, `Record<string, StubArgument<T[keyof T]>>` and the `number` form
    (`packages/shared/src/@types/stub-argument.type.ts` lines 82 and 88), recurse until TypeScript gives up whenever
    the type is recursive through a branded-key index signature, such as `type V = string | { [k: Brand]: V }`. The
@@ -450,7 +449,8 @@ Dungeonmaster problems found while planning. The user takes these to dungeonmast
 12. The published `jest.setup-global-teardown.js` deletes `process.env.HOME` recursively in a `finally`, even when its
     own setup never ran. A consumer config that keeps its own `globalSetup` and spreads the published base loses the
     real home directory on its first Jest run.
-13. `configGatewayLintConfigBroker` and `configWorkspacePackageNamesBroker` are not in the eslint plugin's `exports`.
+13. The plugin's main entry did not export `configGatewayLintConfigBroker` or `configWorkspacePackageNamesBroker`, so a
+    consumer loaded them from `dist` by path. Fixed in dungeonmaster `7469542ee`.
 14. `init`'s gateway Jest templates named no export conditions. Under jsdom, MSW then loaded its ES-module browser
     build, and one gateway's tests read another gateway's `dist`. Fixed in dungeonmaster `957dc5f` (the conditions)
     and `fe4da94` (the gateway-only `gateway-source` condition).

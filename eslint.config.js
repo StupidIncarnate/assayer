@@ -1,20 +1,9 @@
-const path = require('path');
 const dungeonmasterPluginModule = require('@dungeonmaster/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
 const { gatewayLocationsStatics } = require('@dungeonmaster/shared/statics');
 
 const dungeonmaster = dungeonmasterPluginModule.default;
-// The plugin's `exports` map has no key for these two brokers, so they are required from its `dist`
-// by path. Both get `startDir: __dirname`, assayer's root. Left to find the root on their own, they
-// would walk up from the plugin's folder, which is a `file:` link into the dungeonmaster checkout,
-// and read that repo's `.dungeonmaster.json` and workspaces.
-const pluginDist = path.join(__dirname, 'node_modules/@dungeonmaster/eslint-plugin/dist');
-const { configGatewayLintConfigBroker } = require(
-    path.join(pluginDist, 'brokers/config/gateway-lint-config/config-gateway-lint-config-broker.js'),
-);
-const { configWorkspacePackageNamesBroker } = require(
-    path.join(pluginDist, 'brokers/config/workspace-package-names/config-workspace-package-names-broker.js'),
-);
+const { configGatewayLintConfigBroker, configWorkspacePackageNamesBroker } = dungeonmasterPluginModule;
 const gatewayLintConfig = configGatewayLintConfigBroker({ startDir: __dirname });
 const workspacePackageNames = configWorkspacePackageNamesBroker({ startDir: __dirname });
 // The plugin's prebuilt `configs.dungeonmaster` has an empty gateway config and an empty workspace
@@ -125,30 +114,4 @@ module.exports = [
         },
     },
     ...dungeonmasterTestConfigs.fileOverrides,
-    {
-        // Without a `scope` option these rules find the repo scope by walking up from the plugin's own
-        // folder. The plugin is a `file:` link into the dungeonmaster checkout, so that walk finds
-        // `@dungeonmaster` and every `@assayer/*` workspace import reads as a raw npm import.
-        files: ['**/*.ts', '**/*.tsx'],
-        rules: {
-            '@dungeonmaster/raw-import-ban': ['error', { scope: '@assayer' }],
-            '@dungeonmaster/bin-program-spawn-ban': ['error', { scope: '@assayer' }],
-        },
-    },
-    {
-        // `gateway-import-boundary` needs the same `scope` option for the same reason. Only the
-        // gateway block turns this rule on, so this entry uses the gateway globs. On `**/*.ts` it
-        // would switch the rule on in every package. The parser options repeat the gateway block's,
-        // because the test block above sets the root tsconfig, which never includes gateway files.
-        files: dungeonmasterConfigs.gateway.files,
-        languageOptions: {
-            parserOptions: {
-                project: true,
-                tsconfigRootDir: __dirname,
-            },
-        },
-        rules: {
-            '@dungeonmaster/gateway-import-boundary': ['error', { scope: '@assayer' }],
-        },
-    },
 ];
