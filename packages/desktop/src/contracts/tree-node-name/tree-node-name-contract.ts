@@ -6,7 +6,7 @@
  * treeNodeNameContract.parse('index.ts');
  * // Returns a validated TreeNodeName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const treeNodeNameContract = z.string().min(1).brand<'TreeNodeName'>();
 

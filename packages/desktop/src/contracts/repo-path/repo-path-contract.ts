@@ -6,7 +6,7 @@
  * repoPathContract.parse('/home/user/project');
  * // Returns a branded RepoPath
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const repoPathContract = z.string().min(1).brand<'RepoPath'>();
 

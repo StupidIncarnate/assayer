@@ -6,7 +6,7 @@
  * executablePathContract.parse('/path/to/electron');
  * // Returns a branded ExecutablePath
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const executablePathContract = z.string().min(1).brand<'ExecutablePath'>();
 

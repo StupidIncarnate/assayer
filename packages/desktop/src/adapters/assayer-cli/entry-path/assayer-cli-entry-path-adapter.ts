@@ -18,7 +18,7 @@
  * // Returns the ExecutablePath to packages/cli/dist/bin/assayer.js, or undefined
  */
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname } from '#gateway/node/path';
 
 import { filePathContract } from '@assayer/core/contracts';
 import type { FilePath } from '@assayer/core/contracts';

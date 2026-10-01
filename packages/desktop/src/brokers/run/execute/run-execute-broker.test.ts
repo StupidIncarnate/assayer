@@ -2,6 +2,7 @@ import { RunResultStub } from '@assayer/shared/contracts';
 
 import { runExecuteBroker } from './run-execute-broker';
 import { runExecuteBrokerProxy } from './run-execute-broker.proxy';
+import { envSnapshot, execPath } from '#gateway/node/process';
 
 describe('runExecuteBroker', () => {
   describe('a run from the UI', () => {
@@ -27,11 +28,11 @@ describe('runExecuteBroker', () => {
 
       expect(proxy.getSpawnCalls()).toStrictEqual([
         [
-          process.execPath,
+          execPath,
           ['/repo/packages/cli/dist/bin/assayer.js', 'unit', 'src/a.ts'],
           {
             cwd: '/repo',
-            env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+            env: { ...envSnapshot(), ELECTRON_RUN_AS_NODE: '1' },
             stdio: ['ignore', 'pipe', 'pipe'],
           },
         ],

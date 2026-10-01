@@ -23,8 +23,8 @@
  * });
  * // Returns { success: true } once the window has loaded
  */
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join } from '#gateway/node/path';
+import { pathToFileURL } from '#gateway/node/url';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
 import type { AdapterResult } from '@assayer/shared/contracts';

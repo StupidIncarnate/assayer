@@ -1,5 +1,6 @@
 import { nodeChildProcessExecAdapter } from './node-child-process-exec-adapter';
 import { nodeChildProcessExecAdapterProxy } from './node-child-process-exec-adapter.proxy';
+import { envSnapshot } from '#gateway/node/process';
 
 describe('nodeChildProcessExecAdapter', () => {
   describe('a command that succeeds', () => {
@@ -34,7 +35,7 @@ describe('nodeChildProcessExecAdapter', () => {
       await nodeChildProcessExecAdapter({ command: 'node', args: ['x.js', 'unit'], cwd: '/repo' });
 
       expect(proxy.getCalls()).toStrictEqual([
-        ['node', ['x.js', 'unit'], { cwd: '/repo', env: { ...process.env }, stdio: ['ignore', 'pipe', 'pipe'] }],
+        ['node', ['x.js', 'unit'], { cwd: '/repo', env: { ...envSnapshot() }, stdio: ['ignore', 'pipe', 'pipe'] }],
       ]);
     });
 
@@ -56,7 +57,7 @@ describe('nodeChildProcessExecAdapter', () => {
           ['x.js'],
           {
             cwd: '/repo',
-            env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+            env: { ...envSnapshot(), ELECTRON_RUN_AS_NODE: '1' },
             stdio: ['ignore', 'pipe', 'pipe'],
           },
         ],

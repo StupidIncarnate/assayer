@@ -1,0 +1,99 @@
+== packages/desktop/bin/desktop-main.ts  census=2 after=0
+   CHANGE L12: process.argv -> argv
+   CHANGE L14: process.stderr -> stderr
+   CHANGE IMPORT { argv, stderr } from '#gateway/node/process'
+== packages/desktop/src/adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter.ts  census=2 after=1
+   CHANGE L21: 'node:path' -> '#gateway/node/path'
+   SKIP L20: import 'node:fs' -> #gateway/node/fs: 'existsSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/desktop/src/adapters/electron/binary-path/electron-binary-path-adapter.ts  census=1
+   SKIP L9: raw module 'electron' is mocked/spied in the staging set [packages/desktop/src/adapters/electron/binary-path/electron-binary-path-adapter.proxy.ts]
+== packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'electron' is mocked/spied in the staging set [packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts]
+== packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.ts  census=7 after=5
+   CHANGE L26: 'node:path' -> '#gateway/node/path'
+   CHANGE L27: 'node:url' -> '#gateway/node/url'
+   SKIP L28: raw module 'electron' is mocked/spied in the staging set [packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts]
+   SKIP L29: raw module 'electron' is mocked/spied in the staging set [packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts]
+   SKIP L74: 'getEnv' is a gateway wrapper; packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts must then compose getEnvProxy (proxy work)
+   SKIP L129: 'getEnv' is a gateway wrapper; packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts must then compose getEnvProxy (proxy work)
+   SKIP L142: 'platform' is a gateway wrapper; packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts must then compose platformProxy (proxy work)
+== packages/desktop/src/adapters/electron/main-entry-path/electron-main-entry-path-adapter.ts  census=1 after=0
+   CHANGE L9: 'node:path' -> '#gateway/node/path'
+== packages/desktop/src/adapters/electron/preload-bridge/electron-preload-bridge-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'electron' is mocked/spied in the staging set [packages/desktop/src/adapters/electron/preload-bridge/electron-preload-bridge-adapter.proxy.ts]
+== packages/desktop/src/adapters/electron/preload-bridge/electron-preload-bridge-adapter.ts  census=1
+   SKIP L28: raw module 'electron' is mocked/spied in the staging set [packages/desktop/src/adapters/electron/preload-bridge/electron-preload-bridge-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.proxy.ts  census=4 after=1
+   CHANGE IMPORT { queueMicrotask } from '#gateway/node/queueMicrotask'
+   CHANGE IMPORT { Buffer } from '#gateway/node/buffer'
+   SKIP L1: raw module 'node:child_process' is mocked/spied in the staging set [packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.test.ts  census=2 after=0
+   CHANGE L37: ...process.env -> ...envSnapshot()
+   CHANGE L59: ...process.env -> ...envSnapshot()
+   CHANGE IMPORT { envSnapshot } from '#gateway/node/process'
+== packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.ts  census=2
+   SKIP L26: raw module 'node:child_process' is mocked/spied in the staging set [packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.proxy.ts]
+   SKIP L47: 'envSnapshot' is a gateway wrapper; packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.proxy.ts must then compose envSnapshotProxy (proxy work)
+== packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.proxy.ts  census=2 after=1
+   CHANGE L9: process.stderr -> stderr
+   CHANGE IMPORT { stderr } from '#gateway/node/process'
+   SKIP L1: raw module 'node:child_process' is mocked/spied in the staging set [packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.ts  census=2
+   SKIP L16: raw module 'node:child_process' is mocked/spied in the staging set [packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.proxy.ts]
+   SKIP L29: 'stderr' is a gateway wrapper; packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.proxy.ts must then compose stderrProxy (proxy work)
+== packages/desktop/src/adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.ts  census=1
+   SKIP L10: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.ts  census=1
+   SKIP L12: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter.ts  census=1
+   SKIP L9: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-resolved-index/node-fs-read-resolved-index-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-resolved-index/node-fs-read-resolved-index-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-resolved-index/node-fs-read-resolved-index-adapter.ts  census=1
+   SKIP L12: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-resolved-index/node-fs-read-resolved-index-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-source/node-fs-read-source-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-source/node-fs-read-source-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-source/node-fs-read-source-adapter.ts  census=1
+   SKIP L11: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-source/node-fs-read-source-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-stub-index/node-fs-read-stub-index-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-stub-index/node-fs-read-stub-index-adapter.proxy.ts]
+== packages/desktop/src/adapters/node-fs/read-stub-index/node-fs-read-stub-index-adapter.ts  census=1
+   SKIP L12: raw module 'node:fs/promises' is mocked/spied in the staging set [packages/desktop/src/adapters/node-fs/read-stub-index/node-fs-read-stub-index-adapter.proxy.ts]
+== packages/desktop/src/brokers/run/execute/run-execute-broker.test.ts  census=2 after=0
+   CHANGE L30: process.execPath -> execPath
+   CHANGE L34: ...process.env -> ...envSnapshot()
+   CHANGE IMPORT { envSnapshot, execPath } from '#gateway/node/process'
+== packages/desktop/src/brokers/run/execute/run-execute-broker.ts  census=1
+   SKIP L48: 'execPath' is a gateway wrapper; packages/desktop/src/brokers/run/execute/run-execute-broker.proxy.ts must then compose execPathProxy (proxy work)
+== packages/desktop/src/contracts/desktop-status/desktop-status-contract.ts  census=1 after=0
+   CHANGE L11: 'zod' -> '#gateway/npm/zod'
+== packages/desktop/src/contracts/exec-result/exec-result-contract.ts  census=1 after=0
+   CHANGE L16: 'zod' -> '#gateway/npm/zod'
+== packages/desktop/src/contracts/executable-path/executable-path-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/desktop/src/contracts/ipc-reply/ipc-reply-contract.ts  census=1 after=0
+   CHANGE L20: 'zod' -> '#gateway/npm/zod'
+== packages/desktop/src/contracts/repo-path/repo-path-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/desktop/src/contracts/tree-node-name/tree-node-name-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+
+SUMMARY desktop: census messages=49 (parse errors 0) in 33 files; files changed=14 (rejected 0); messages cleared=20; left=29; files fully cleared=10; census 3s
+SKIPS by reason:
+  12  raw module 'node:fs/promises' is mocked/spied in the staging set  e.g. packages/desktop/src/adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.proxy.ts:1, packages/desktop/src/adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.ts:10, packages/desktop/src/adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.proxy.ts:1
+  6  raw module 'electron' is mocked/spied in the staging set  e.g. packages/desktop/src/adapters/electron/binary-path/electron-binary-path-adapter.ts:9, packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts:1, packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.ts:28
+  4  raw module 'node:child_process' is mocked/spied in the staging set  e.g. packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.proxy.ts:1, packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.ts:26, packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.proxy.ts:1
+  2  'getEnv' is a gateway wrapper; packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts must then compose getEnvProxy (proxy work)  e.g. packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.ts:74, packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.ts:129
+  1  import 'node:fs' -> #gateway/node/fs: 'existsSync' is a gateway wrapper, not the raw function  e.g. packages/desktop/src/adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter.ts:20
+  1  'platform' is a gateway wrapper; packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy.ts must then compose platformProxy (proxy work)  e.g. packages/desktop/src/adapters/electron/desktop-boot/electron-desktop-boot-adapter.ts:142
+  1  'envSnapshot' is a gateway wrapper; packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.proxy.ts must then compose envSnapshotProxy (proxy work)  e.g. packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.ts:47
+  1  'stderr' is a gateway wrapper; packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.proxy.ts must then compose stderrProxy (proxy work)  e.g. packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.ts:29
+  1  'execPath' is a gateway wrapper; packages/desktop/src/brokers/run/execute/run-execute-broker.proxy.ts must then compose execPathProxy (proxy work)  e.g. packages/desktop/src/brokers/run/execute/run-execute-broker.ts:48
+GAPS:
+REJECTED (file left untouched) by first new problem:

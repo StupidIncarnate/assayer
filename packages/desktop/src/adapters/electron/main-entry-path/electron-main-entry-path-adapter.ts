@@ -6,7 +6,7 @@
  * electronMainEntryPathAdapter();
  * // Returns the ExecutablePath to dist/bin/desktop-main.js
  */
-import { join } from 'node:path';
+import { join } from '#gateway/node/path';
 
 import { executablePathContract } from '../../../contracts/executable-path/executable-path-contract';
 import type { ExecutablePath } from '../../../contracts/executable-path/executable-path-contract';

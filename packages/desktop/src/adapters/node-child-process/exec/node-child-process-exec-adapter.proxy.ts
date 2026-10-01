@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { queueMicrotask } from '#gateway/node/queueMicrotask';
+import { Buffer } from '#gateway/node/buffer';
 
 export const nodeChildProcessExecAdapterProxy = (): {
   exitsWith: ({ exitCode, stdout, stderr }: { exitCode: number; stdout: string; stderr: string }) => void;

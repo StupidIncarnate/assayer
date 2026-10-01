@@ -8,7 +8,7 @@
  * desktopStatusContract.parse({ version: '1.0.0', message: 'Assayer core online', repoPath: '/repo' });
  * // Returns a validated DesktopStatus (branded fields; runMode defaults to 'thorough')
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { repoPathContract } from '../repo-path/repo-path-contract';
 

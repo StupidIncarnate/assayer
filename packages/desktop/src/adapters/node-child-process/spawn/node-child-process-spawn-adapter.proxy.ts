@@ -1,12 +1,13 @@
 import { spawn } from 'node:child_process';
 import { registerMock, registerSpyOn } from '@dungeonmaster/testing/register-mock';
+import { stderr } from '#gateway/node/process';
 
 export const nodeChildProcessSpawnAdapterProxy = (): {
   getStderrWrites: () => unknown[];
   failsToSpawn: ({ error }: { error: Error }) => void;
 } => {
   const handle = registerMock({ fn: spawn });
-  const stderrSpy = registerSpyOn({ object: process.stderr, method: 'write' });
+  const stderrSpy = registerSpyOn({ object: stderr, method: 'write' });
   stderrSpy.calledWith([]).implement(() => true);
   const state: { error: Error | undefined } = { error: undefined };
 

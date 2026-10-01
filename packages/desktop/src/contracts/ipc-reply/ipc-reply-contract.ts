@@ -17,7 +17,7 @@
  * ipcReplyContract.parse({ success: true, valueRaw: { verdicts: [] } });
  * // Returns a validated IpcReply (discriminated on `success`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const ipcReplyContract = z.discriminatedUnion('success', [
   z.object({ success: z.literal(true), valueRaw: z.unknown() }),
