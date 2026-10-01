@@ -6,7 +6,8 @@ import { runPathsBrokerProxy } from './run-paths-broker.proxy';
 describe('runPathsBroker', () => {
   describe('running a set of paths', () => {
     it('VALID: {one path} => one saved result', async () => {
-      runPathsBrokerProxy();
+      const proxy = runPathsBrokerProxy();
+      proxy.coreRootFound();
 
       const result = await runPathsBroker({
         configDir: '/repo',
@@ -19,7 +20,8 @@ describe('runPathsBroker', () => {
     });
 
     it('VALID: {three paths} => one result each', async () => {
-      runPathsBrokerProxy();
+      const proxy = runPathsBrokerProxy();
+      proxy.coreRootFound();
 
       const result = await runPathsBroker({
         configDir: '/repo',
@@ -32,7 +34,8 @@ describe('runPathsBroker', () => {
     });
 
     it('EMPTY: {no paths} => no results', async () => {
-      runPathsBrokerProxy();
+      const proxy = runPathsBrokerProxy();
+      proxy.coreRootFound();
 
       const result = await runPathsBroker({
         configDir: '/repo',

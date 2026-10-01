@@ -41,13 +41,20 @@ const FUNNELLED_THEN = '*module*/build/return@if:BinaryExpression,id:size,Greate
 const FUNNELLED_ELSE = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
 const FUNNELLED_AUDIT_TOP = '*module*/audit/return@top';
 
+const SOURCE_HASH = String(contentHashTransformer({ content: SOURCE }));
+const TWO_ENTRY_HASH = String(contentHashTransformer({ content: TWO_ENTRY_SOURCE }));
+const MODULE_HASH = String(contentHashTransformer({ content: MODULE_SOURCE }));
+const FUNNELLED_HASH = String(contentHashTransformer({ content: FUNNELLED_SOURCE }));
+
 describe('runUnitBroker', () => {
   describe('the artifact it returns', () => {
     // Read back from the FILE the shim wrote, not from Jest's reporting — which is what lets the CLI
     // and the desktop render the same run without either one recomputing it.
     it('VALID: {a file with derived cases} => the saved run artifact', async () => {
       const proxy = runUnitBrokerProxy();
-      proxy.setupSavedRun({ run: RunResultStub() });
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: SOURCE_HASH });
+      proxy.setupNoHarness({ path: '/repo/src/grade.harness.ts' });
+      proxy.setupSavedRun({ cacheDir: '/cache', runId: 'r1', run: RunResultStub() });
 
       const result = await runUnitBroker({
         cacheDir: '/cache',
@@ -75,7 +82,9 @@ describe('runUnitBroker', () => {
     // "this file is not part of the analyzed surface" and the run would observe nothing.
     it('VALID: {a run from source} => the case set, then the probe plan, then the shim wired to this run\'s own paths and the source tree', async () => {
       const proxy = runUnitBrokerProxy();
-      proxy.setupSavedRun({ run: RunResultStub() });
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: SOURCE_HASH });
+      proxy.setupNoHarness({ path: '/repo/src/grade.harness.ts' });
+      proxy.setupSavedRun({ cacheDir: '/cache', runId: 'r1', run: RunResultStub() });
 
       await runUnitBroker({
         cacheDir: '/cache',
@@ -89,7 +98,7 @@ describe('runUnitBroker', () => {
       });
 
       expect({
-        paths: proxy.writtenPaths(),
+        paths: proxy.writtenPaths({ cacheDir: '/cache' }),
         content: String(proxy.writtenContentAt({ path: '/cache/runs/r1/assayer.test.js' })),
       }).toStrictEqual({
         paths: [
@@ -152,6 +161,8 @@ describe('runUnitBroker', () => {
     // Routing this file to the runner could only fail, and the honest answer needs no runner at all.
     it('EDGE: {a file whose only logic is module scope} => the honest artifact, without starting Jest', async () => {
       const proxy = runUnitBrokerProxy();
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: MODULE_HASH });
+      proxy.setupNoHarness({ path: '/repo/src/opaque-module.harness.ts' });
 
       const result = await runUnitBroker({
         cacheDir: '/cache',
@@ -184,6 +195,8 @@ describe('runUnitBroker', () => {
     // because nothing is going to be compiled or discovered.
     it('EDGE: {a file whose only logic is module scope} => the artifact lands on disk, and nothing a runner would need does', async () => {
       const proxy = runUnitBrokerProxy();
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: MODULE_HASH });
+      proxy.setupNoHarness({ path: '/repo/src/opaque-module.harness.ts' });
 
       await runUnitBroker({
         cacheDir: '/cache',
@@ -196,7 +209,7 @@ describe('runUnitBroker', () => {
         analyzerContentHash: 'abc',
       });
 
-      expect(proxy.writtenPaths()).toStrictEqual(['/cache/runs/r1/cases.json', '/cache/runs/r1/run.json']);
+      expect(proxy.writtenPaths({ cacheDir: '/cache' })).toStrictEqual(['/cache/runs/r1/cases.json', '/cache/runs/r1/run.json']);
     });
   });
 
@@ -206,7 +219,9 @@ describe('runUnitBroker', () => {
     // reader's file for a fault in Assayer.
     it('ERROR: {jest ran and left no artifact} => says the runner crashed, and where to look', async () => {
       const proxy = runUnitBrokerProxy();
-      proxy.runnerWroteNothing();
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: SOURCE_HASH });
+      proxy.setupNoHarness({ path: '/repo/src/grade.harness.ts' });
+      proxy.runnerWroteNothing({ cacheDir: '/cache', runId: 'r1' });
 
       await expect(
         runUnitBroker({
@@ -232,7 +247,9 @@ describe('runUnitBroker', () => {
     // was" — the count reads naturally either way rather than always defaulting to one grammar.
     it('ERROR: {two drivable entries, jest crashed} => pluralizes "entries were"', async () => {
       const proxy = runUnitBrokerProxy();
-      proxy.runnerWroteNothing();
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: TWO_ENTRY_HASH });
+      proxy.setupNoHarness({ path: '/repo/src/grade.harness.ts' });
+      proxy.runnerWroteNothing({ cacheDir: '/cache', runId: 'r1' });
 
       await expect(
         runUnitBroker({
@@ -256,9 +273,11 @@ describe('runUnitBroker', () => {
   });
 
   describe('the saved artifact cannot be read back', () => {
-    it('ERROR: {jest ran and wrote run.json, but fsReadFileAdapter rejects reading it back} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+    it('ERROR: {jest ran and wrote run.json, but the read back is denied with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
       const proxy = runUnitBrokerProxy();
-      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: SOURCE_HASH });
+      proxy.setupNoHarness({ path: '/repo/src/grade.harness.ts' });
+      proxy.readDenied({ cacheDir: '/cache', runId: 'r1' });
 
       await expect(
         runUnitBroker({
@@ -271,7 +290,7 @@ describe('runUnitBroker', () => {
           runId: 'r1',
           analyzerContentHash: 'abc',
         }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: op '\/cache\/runs\/r1\/run\.json'$/u);
     });
   });
 
@@ -285,8 +304,9 @@ describe('runUnitBroker', () => {
   describe('a funnelled private\'s refusal, closed via the colocated harness', () => {
     it('VALID: {a harness naming the funnelled private} => walked reaches the overlay, so the written case set pays the gap and carries both arms', async () => {
       const proxy = runUnitBrokerProxy();
-      proxy.setupHarness({ source: FUNNELLED_HARNESS });
-      proxy.setupSavedRun({ run: RunResultStub() });
+      proxy.setupWrites({ cacheDir: '/cache', runId: 'r1', contentHash: FUNNELLED_HASH });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: FUNNELLED_HARNESS });
+      proxy.setupSavedRun({ cacheDir: '/cache', runId: 'r1', run: RunResultStub() });
 
       await runUnitBroker({
         cacheDir: '/cache',
@@ -299,7 +319,7 @@ describe('runUnitBroker', () => {
         analyzerContentHash: 'abc',
       });
 
-      const written = JSON.parse(String(proxy.writtenContentFor({ pathIncludes: 'cases.json' }))) as unknown;
+      const written = JSON.parse(String(proxy.writtenContentFor({ cacheDir: '/cache', pathIncludes: 'cases.json' }))) as unknown;
 
       expect(written).toStrictEqual({
         relPath: 'src/audit.ts',

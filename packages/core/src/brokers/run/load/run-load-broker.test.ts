@@ -7,7 +7,7 @@ describe('runLoadBroker', () => {
   describe('a saved run', () => {
     it('VALID: {a run on disk} => the parsed run', async () => {
       const proxy = runLoadBrokerProxy();
-      proxy.savedRun({ run: RunResultStub({ runId: 'abc123' }) });
+      proxy.savedRun({ configDir: '/repo', runId: 'abc123', run: RunResultStub({ runId: 'abc123' }) });
 
       const result = await runLoadBroker({ configDir: '/repo', runId: 'abc123' });
 
@@ -20,7 +20,7 @@ describe('runLoadBroker', () => {
     // the CLI owes a message naming the id, the UI owes an empty state.
     it('EMPTY: {no run with that id} => undefined', async () => {
       const proxy = runLoadBrokerProxy();
-      proxy.noSuchRun();
+      proxy.noSuchRun({ configDir: '/repo', runId: 'nope' });
 
       const result = await runLoadBroker({ configDir: '/repo', runId: 'nope' });
 
@@ -29,12 +29,12 @@ describe('runLoadBroker', () => {
   });
 
   describe('a saved run that cannot be read', () => {
-    it('ERROR: {runId: run.json exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+    it('ERROR: {runId: run.json exists but the read is denied with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
       const proxy = runLoadBrokerProxy();
-      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+      proxy.readDenied({ configDir: '/repo', runId: 'abc123' });
 
       await expect(runLoadBroker({ configDir: '/repo', runId: 'abc123' })).rejects.toThrow(
-        /^EACCES: permission denied$/u,
+        /^EACCES: op '\/repo\/\.assayer\/cache\/runs\/abc123\/run\.json'$/u,
       );
     });
   });

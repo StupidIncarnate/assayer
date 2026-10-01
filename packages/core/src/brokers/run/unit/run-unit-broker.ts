@@ -31,8 +31,6 @@ import { relPathContract, runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { runExecuteCasesBroker } from '../execute-cases/run-execute-cases-broker';
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { assembleShimTransformer } from '../../../transformers/assemble-shim/assemble-shim-transformer';
@@ -48,7 +46,7 @@ import { paramTypeResolveBroker } from '../../param-type/resolve/param-type-reso
 import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
-import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { ensureDir, pathExists, readFile, writeFile } from '#gateway/node/fs__promises';
 import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runUnitBroker = async ({
@@ -130,10 +128,10 @@ export const runUnitBroker = async ({
     harnessPath: `${repoRoot}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`,
   });
 
-  await fsMkdirAdapter({ path: probeDir });
-  await fsMkdirAdapter({ path: runDir });
+  await ensureDir(probeDir);
+  await ensureDir(runDir);
 
-  await fsWriteFileAdapter({ path: caseSetPath, content: JSON.stringify(caseSet) });
+  await writeFile(caseSetPath, JSON.stringify(caseSet));
 
   // Nothing to discover means nothing to run: Jest refuses a suite with no `it()`, so handing it this
   // file could only fail. The artifact is written here instead — with every admission intact, because
@@ -149,17 +147,17 @@ export const runUnitBroker = async ({
       lints: caseSet.lints,
     });
 
-    await fsWriteFileAdapter({ path: resultPath, content: JSON.stringify(result) });
+    await writeFile(resultPath, JSON.stringify(result));
 
     return result;
   }
 
   // Written FIRST and keyed by content hash: the transformer looks the plan up while compiling, so a
   // stale read is unrepresentable rather than merely unlikely.
-  await fsWriteFileAdapter({
-    path: `${probeDir}/${contentHash}.json`,
-    content: JSON.stringify(probePlanProjectionTransformer({ walked, relPath, contentHash })),
-  });
+  await writeFile(
+    `${probeDir}/${contentHash}.json`,
+    JSON.stringify(probePlanProjectionTransformer({ walked, relPath, contentHash })),
+  );
 
   // Every SIBLING a cross-file-map fold reaches gets its plan written too, keyed on ITS content hash:
   // jest compiles the imported callee when this target requires it, and the transformer only
@@ -168,9 +166,9 @@ export const runUnitBroker = async ({
   // no such reach.
   await runCrossFileProbesBroker({ walked, root: repoRoot, relPath, probeDir });
 
-  await fsWriteFileAdapter({
-    path: `${runDir}/assayer.test.js`,
-    content: assembleShimTransformer({
+  await writeFile(
+    `${runDir}/assayer.test.js`,
+    assembleShimTransformer({
       caseSetPath,
       interpretCaseModule: runtime.interpretCaseModule,
       resolveEntryModule: runtime.resolveEntryModule,
@@ -178,7 +176,7 @@ export const runUnitBroker = async ({
       resultPath,
       runId,
     }),
-  });
+  );
 
   await runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
 

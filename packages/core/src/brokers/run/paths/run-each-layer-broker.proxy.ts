@@ -2,40 +2,55 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { RunResultStub, fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 import { runUnitBroker } from '../unit/run-unit-broker';
 import { runUnitBrokerProxy } from '../unit/run-unit-broker.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
+// Each scenario names the source file it stages and its colocated harness path, because the run id
+// looks for the harness after the file is read. A file no scenario staged reaches an unstaged call,
+// which throws.
 export const runEachLayerBrokerProxy = (): {
-  setupSource: ({ source }: { source: string }) => void;
+  setupSource: ({
+    sourcePath,
+    harnessPath,
+    source,
+  }: {
+    sourcePath: string;
+    harnessPath: string;
+    source: string;
+  }) => void;
   runCount: () => FileCount;
-  readThrows: ({ error }: { error: Error }) => void;
+  readDenied: ({ sourcePath }: { sourcePath: string }) => void;
 } => {
-  // Bare-called to satisfy enforce-proxy-child-creation. runUnitBroker is REPLACED wholesale below
-  // rather than driven through its own proxy: both it and this broker read through
-  // fsReadFileAdapter, so one shared read mock cannot serve a source file and a run.json at once —
-  // the source would come back where JSON was expected.
-  runIdBrokerProxy();
+  // runUnitBroker is REPLACED wholesale below rather than driven through its own proxy: the run it
+  // answers with is a staged result, so no run.json has to be written and read back at a staged path.
   runUnitBrokerProxy();
-  readFileProxy();
+  const idProxy = runIdBrokerProxy();
+  const fileProxy = readFileProxy();
 
   const runHandle = registerMock({ fn: runUnitBroker });
-  const readHandle = registerMock({ fn: fsReadFileAdapter });
 
   runHandle.calledWith([]).resolves(RunResultStub());
-  readHandle.calledWith([]).resolves('');
 
   return {
-    setupSource: ({ source }: { source: string }): void => {
-      readHandle.calledWith([]).resolves(source);
+    setupSource: ({
+      sourcePath,
+      harnessPath,
+      source,
+    }: {
+      sourcePath: string;
+      harnessPath: string;
+      source: string;
+    }): void => {
+      fileProxy.returns({ path: sourcePath, contents: source });
+      idProxy.noHarness({ harnessPath });
     },
     runCount: (): FileCount => fileCountContract.parse(runHandle.callsMatching([]).length),
-    // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and the
+    // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES and the
     // like) propagates to the caller unmodified. This stages that rejection.
-    readThrows: ({ error }: { error: Error }): void => {
-      readHandle.onceFor([]).rejects(error);
+    readDenied: ({ sourcePath }: { sourcePath: string }): void => {
+      fileProxy.denied({ path: sourcePath });
     },
   };
 };

@@ -3,11 +3,13 @@ import { RunResultStub } from '@assayer/shared/contracts';
 import { runEachLayerBroker } from './run-each-layer-broker';
 import { runEachLayerBrokerProxy } from './run-each-layer-broker.proxy';
 
+const SOURCE = 'export const a = (): number => 1;\n';
+
 describe('runEachLayerBroker', () => {
   describe('running each remaining file', () => {
     it('VALID: {one file} => one saved result', async () => {
       const proxy = runEachLayerBrokerProxy();
-      proxy.setupSource({ source: 'export const a = (): number => 1;\n' });
+      proxy.setupSource({ sourcePath: '/repo/src/a.ts', harnessPath: '/repo/src/a.harness.ts', source: SOURCE });
 
       const result = await runEachLayerBroker({
         remaining: ['src/a.ts'],
@@ -23,7 +25,9 @@ describe('runEachLayerBroker', () => {
 
     it('VALID: {three files} => one result each, in the order given', async () => {
       const proxy = runEachLayerBrokerProxy();
-      proxy.setupSource({ source: 'export const a = (): number => 1;\n' });
+      proxy.setupSource({ sourcePath: '/repo/src/a.ts', harnessPath: '/repo/src/a.harness.ts', source: SOURCE });
+      proxy.setupSource({ sourcePath: '/repo/src/b.ts', harnessPath: '/repo/src/b.harness.ts', source: SOURCE });
+      proxy.setupSource({ sourcePath: '/repo/src/c.ts', harnessPath: '/repo/src/c.harness.ts', source: SOURCE });
 
       const result = await runEachLayerBroker({
         remaining: ['src/a.ts', 'src/b.ts', 'src/c.ts'],
@@ -57,9 +61,9 @@ describe('runEachLayerBroker', () => {
   });
 
   describe('a file that cannot be read', () => {
-    it('ERROR: {relPath: file exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+    it('ERROR: {relPath: the read is denied with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
       const proxy = runEachLayerBrokerProxy();
-      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+      proxy.readDenied({ sourcePath: '/repo/src/a.ts' });
 
       await expect(
         runEachLayerBroker({
@@ -70,7 +74,7 @@ describe('runEachLayerBroker', () => {
           analyzerContentHash: 'abc',
           results: [],
         }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: op '\/repo\/src\/a\.ts'$/u);
     });
   });
 });

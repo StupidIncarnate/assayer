@@ -13,7 +13,8 @@
  */
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { fsFindUpAdapter } from '../../../adapters/fs/find-up/fs-find-up-adapter';
+import { findUpSync } from '#gateway/node/fs';
+import { dirname } from '#gateway/node/path';
 import { analyzerHashBroker } from '../../analyzer/hash/analyzer-hash-broker';
 import { runEachLayerBroker } from './run-each-layer-broker';
 
@@ -30,9 +31,9 @@ export const runPathsBroker = async ({
 }): Promise<RunResult[]> => {
   // `probe-runtime.js` sits at core's package root and is never compiled into dist, so finding it
   // finds the package whether this module runs from src (ts-jest, tsx) or from dist.
-  const coreRoot = fsFindUpAdapter({ from: __dirname, marker: 'probe-runtime.js' });
+  const runtimeFile = findUpSync({ startDir: __dirname, fileName: 'probe-runtime.js' });
 
-  if (coreRoot === undefined) {
+  if (runtimeFile === null) {
     throw new Error(
       `assayer: cannot locate the @assayer/core package root — no probe-runtime.js in any ancestor of ${__dirname}. ` +
         'The install is incomplete; reinstall @assayer/core.',
@@ -45,7 +46,7 @@ export const runPathsBroker = async ({
     remaining: relPaths,
     root,
     cacheDir: `${configDir}/.assayer/cache`,
-    coreRoot: String(coreRoot),
+    coreRoot: dirname(runtimeFile),
     analyzerContentHash: String(analyzerContentHash),
     results: [],
   });
