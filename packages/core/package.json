@@ -34,7 +34,15 @@
       "require": "./dist/src/transformers/transformers.js"
     }
   },
+  "files": [
+    "dist",
+    "!dist/package.json",
+    "probe-runtime.js",
+    "probe-transformer.js",
+    "harness-registrar.js"
+  ],
   "scripts": {
+    "prepack": "node ../../scripts/build-workspaces.mjs --tsc-only",
     "build": "tsc -p tsconfig.build.json",
     "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
     "test": "dungeonmaster-ward --only test",

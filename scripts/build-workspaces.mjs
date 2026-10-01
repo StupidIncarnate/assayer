@@ -16,8 +16,8 @@
  * a package added later.
  *
  * Flags:
- *   --tsc-only  build only the packages that have a `tsconfig.build.json`. Jest's globalSetup
- *               passes it, because no unit or integration test reads app's Vite bundle.
+ *   --tsc-only  build only the packages that have a `tsconfig.build.json`. Each package's
+ *               `prepack` passes it, because a packed tarball never holds app's Vite bundle.
  */
 
 import { spawnSync } from 'node:child_process';

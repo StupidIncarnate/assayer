@@ -204,26 +204,26 @@ details inside `dev:stop` matter and are not incidental:
 
 ## Known defect: core is not ready to publish
 
-Fix both of these before publishing `@assayer/core`:
+`@assayer/core` is marked `"private": true` on purpose, so `npm publish`
+refuses it. Nothing publishes it yet. Fix these problems before that flag
+comes off:
 
-- Core's `package.json` marks the package `private`, so `npm publish`
-  refuses it. Removing that flag is not enough on its own. The `exports`
-  entries for `.`, `./brokers`, `./contracts`, and `./transformers` point
-  at files under `./dist/`. `dist/` is gitignored, `package.json` has no
-  `files` allowlist, and there is no prepublish build step. A tarball
-  packed from a fresh checkout therefore holds no `dist/`, and every one of
-  those exports resolves to a missing file. The tarball also ships every
-  `.test.ts`, `.proxy.ts`, and `.stub.ts` file. The `./*.proxy` and
-  `./*.stub` exports carry only the `source` condition, so a consumer that
-  does not set that condition cannot resolve them at all.
-- Core declares `typescript` and `ts-jest` as regular `dependencies`. So
-  does the npm gateway package `@assayer/npm`, which core depends on, and
-  the two must agree. A package installed into an arbitrary consumer's
-  TypeScript repo conventionally declares `typescript` as a
-  `peerDependency` instead. Otherwise the consumer ends up with a second
-  copy of TypeScript, and that copy can disagree with the consumer's own
-  `tsc`, and with Assayer's own `ts-morph`, about what the code means.
-  This one is still undecided.
+- Assayer runs on two copies of TypeScript. ts-morph bundles its own copy,
+  and the walk and the coverage IDs use it. Core's module resolution, its
+  tsconfig read and its harness loading call the separate `typescript`
+  package, and ts-jest compiles the code under test with that package too.
+  In a consumer repo the two copies can be different versions. They can
+  then disagree about one file: a probe site can miss its node, and the
+  resolved imports can depend on the consumer's installed TypeScript
+  without any cache key changing. The fix is decided. Every analysis-side
+  call goes through ts-morph's own `ts` export. ts-jest's `compiler`
+  option points at that same export. `typescript` becomes a
+  `peerDependency` of core and of `@assayer/npm`, kept only because ts-jest
+  requires it. Both packages still declare it as a regular dependency.
+- Core depends on `@assayer/shared`, which is also private.
+- Outside this monorepo, `analyzer-roots-resolve-broker` finds no analyzer
+  roots, so the analyzer hash is a constant. A cache written by one
+  Assayer version would then be reused by the next.
 
 ## Constraints that shape every implementation decision
 
