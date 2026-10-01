@@ -24,7 +24,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract } from '../column-number/column-number-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 // The structural projection of one argument — identical in shape to a local call's arg, never the
@@ -42,7 +41,7 @@ export const globalUseContract = z.object({
   called: z.boolean(),
   args: z.array(globalCallArgContract),
   line: z.number().int().positive().brand<'GlobalUseLine'>(),
-  column: columnNumberContract,
+  column: z.number().int().positive().brand<'GlobalUseColumn'>(),
   scopePath: z.array(z.string().min(1).brand<'GlobalUseScopePath'>()),
 });
 

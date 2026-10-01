@@ -20,7 +20,6 @@ export * from './docs-result/docs-result-contract';
 export * from './content-hash/content-hash-contract';
 
 
-export * from './column-number/column-number-contract';
 
 
 

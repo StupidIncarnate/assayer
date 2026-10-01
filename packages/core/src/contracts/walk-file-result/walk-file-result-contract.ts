@@ -11,7 +11,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract, envReadContract, globalUseContract, moduleEdgeContract } from '@assayer/shared/contracts';
+import { envReadContract, globalUseContract, moduleEdgeContract } from '@assayer/shared/contracts';
 
 import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
 import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
@@ -51,7 +51,7 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     success: z.literal(false),
     error: z.object({
       line: z.number().int().positive().brand<'WalkFileResultErrorLine'>(),
-      column: columnNumberContract,
+      column: z.number().int().positive().brand<'WalkFileResultErrorColumn'>(),
       message: z.string().min(1).brand<'ExtractErrorMessage'>(),
     }),
   }),

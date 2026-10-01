@@ -31,8 +31,8 @@
  *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files, harnesses });
  * // Writes '/repo/.assayer/cache/harness/feature-x.json' and returns { index, errors }
  */
-import { columnNumberContract, compiledFileBlobContract, harnessIndexContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, ContentHash, HarnessIndex, ResolvedIndex } from '@assayer/shared/contracts';
+import { compiledFileBlobContract, harnessIndexContract } from '@assayer/shared/contracts';
+import type { ContentHash, HarnessIndex, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { harnessValueTypesTransformer } from '../../../transformers/harness-value-types/harness-value-types-transformer';
@@ -62,7 +62,7 @@ export const compileHarnessGraphBroker = async ({
   harnesses: readonly { relPath: string; content: string }[];
 }): Promise<{
   index: HarnessIndex;
-  errors: readonly { relPath: string; line: number; column: ColumnNumber; message: string }[];
+  errors: readonly { relPath: string; line: number; column: number; message: string }[];
 }> => {
   const ordered = [...harnesses].sort((a, b) => (String(a.relPath) < String(b.relPath) ? -1 : 1));
   const sources = files.map((file) => file.relPath);
@@ -164,7 +164,7 @@ export const compileHarnessGraphBroker = async ({
     entry.errors.map((error) => ({
       relPath: error.relPath,
       line: HARNESS_LINE,
-      column: columnNumberContract.parse(HARNESS_COLUMN),
+      column: HARNESS_COLUMN,
       message: error.message,
     })),
   );

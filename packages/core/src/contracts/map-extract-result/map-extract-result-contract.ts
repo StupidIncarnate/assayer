@@ -17,7 +17,7 @@ export const mapExtractResultContract = z.discriminatedUnion('success', [
     success: z.literal(false),
     error: z.object({
       line: z.number().int().positive().brand<'MapExtractResultErrorLine'>(),
-      column: z.number().int().positive().brand<'ColumnNumber'>(),
+      column: z.number().int().positive().brand<'MapExtractResultErrorColumn'>(),
       message: z.string().min(1).brand<'ExtractErrorMessage'>(),
     }),
   }),

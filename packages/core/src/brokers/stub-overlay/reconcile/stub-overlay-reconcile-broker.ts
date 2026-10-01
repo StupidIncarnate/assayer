@@ -14,8 +14,7 @@
  * // [{ relPath: 'assayer/stubs/objects/src/config/config.ts/Config.json', line: 1, column: 1,
  * //    message: "type 'src/config/config.ts#Config' no longer exists (renamed, moved, or deleted) — rectify this stub" }]
  */
-import { columnNumberContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, StubIndex, StubOverlay } from '@assayer/shared/contracts';
+import type { StubIndex, StubOverlay } from '@assayer/shared/contracts';
 
 const OVERLAY_LINE = 1;
 const OVERLAY_COLUMN = 1;
@@ -26,7 +25,7 @@ export const stubOverlayReconcileBroker = ({
 }: {
   index: StubIndex;
   overlays: readonly StubOverlay[];
-}): readonly { relPath: string; line: number; column: ColumnNumber; message: string }[] => {
+}): readonly { relPath: string; line: number; column: number; message: string }[] => {
   const objectByKey = new Map(index.objectStubs.map((stub) => [String(stub.key), stub]));
   const envByKey = new Map(index.envStubs.map((stub) => [String(stub.key), stub]));
 
@@ -69,7 +68,7 @@ export const stubOverlayReconcileBroker = ({
     .map((entry) => ({
       relPath: String(entry.overlayPath),
       line: OVERLAY_LINE,
-      column: columnNumberContract.parse(OVERLAY_COLUMN),
+      column: OVERLAY_COLUMN,
       message: entry.message,
     }))
     .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));

@@ -26,8 +26,8 @@
  *   cacheDir: '/repo/.assayer/cache', files: [{ relPath: 'src/a.ts', contentHash }] });
  * // Returns { index: ResolvedIndex, errors: [{ relPath, line, column, message }] }
  */
-import { columnNumberContract, compiledFileBlobContract, moduleSpecifierContract, resolvedEdgeContract, resolvedIndexContract, packageNameContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, ContentHash, ResolvedIndex } from '@assayer/shared/contracts';
+import { compiledFileBlobContract, moduleSpecifierContract, resolvedEdgeContract, resolvedIndexContract, packageNameContract } from '@assayer/shared/contracts';
+import type { ContentHash, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
@@ -49,7 +49,7 @@ export const compileResolveGraphBroker = async ({
   files: readonly { relPath: string; contentHash: ContentHash }[];
 }): Promise<{
   index: ResolvedIndex;
-  errors: { relPath: string; line: number; column: ColumnNumber; message: string }[];
+  errors: { relPath: string; line: number; column: number; message: string }[];
 }> => {
   const { options, tsconfigHash, configFilePath } = tsconfigReadBroker({ searchPath: root });
   const builtins = new Set(builtinModules.map((name) => packageNameContract.parse(name)).map(String));
@@ -269,7 +269,7 @@ export const compileResolveGraphBroker = async ({
           {
             relPath: String(item.blob.relPath),
             line: Number(item.edge.line),
-            column: columnNumberContract.parse(Number(item.edge.column)),
+            column: Number(item.edge.column),
             message: `cannot resolve import '${String(item.edge.specifier)}'`,
           },
         ]
@@ -299,7 +299,7 @@ export const compileResolveGraphBroker = async ({
                   {
                     relPath: String(blob.relPath),
                     line: Number(reference.line),
-                    column: columnNumberContract.parse(Number(reference.column)),
+                    column: Number(reference.column),
                     message: `import '${String(reference.specifier)}' has no usable types for '${String(reference.importedName)}' (install its type declarations)`,
                   },
                 ]
@@ -316,7 +316,7 @@ export const compileResolveGraphBroker = async ({
             {
               relPath: String(blob.relPath),
               line: Number(edge.line),
-              column: columnNumberContract.parse(Number(edge.column)),
+              column: Number(edge.column),
               message: 'cannot resolve dynamic import() with a computed specifier (use a static import with a literal specifier)',
             },
           ]
@@ -380,7 +380,7 @@ export const compileResolveGraphBroker = async ({
         ? {
             relPath: String(blob.relPath),
             line: Number(use.line),
-            column: columnNumberContract.parse(Number(use.column)),
+            column: Number(use.column),
             message: `global '${String(use.name)}${use.member === undefined ? '' : `.${String(use.member)}`}' has no usable types (install its type declarations)`,
           }
         : undefined;

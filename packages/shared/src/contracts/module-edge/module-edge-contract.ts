@@ -27,7 +27,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract } from '../column-number/column-number-contract';
 import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
 
 const moduleBindingContract = z.discriminatedUnion('kind', [
@@ -44,7 +43,7 @@ export const moduleEdgeContract = z.object({
   specifier: moduleSpecifierContract.optional(),
   bindings: z.array(moduleBindingContract),
   line: z.number().int().positive().brand<'ModuleEdgeLine'>(),
-  column: columnNumberContract,
+  column: z.number().int().positive().brand<'ModuleEdgeColumn'>(),
 });
 
 export type ModuleEdge = z.infer<typeof moduleEdgeContract>;

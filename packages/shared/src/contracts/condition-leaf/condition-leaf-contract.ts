@@ -57,7 +57,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract } from '../column-number/column-number-contract';
 import { constLengthContract } from '../const-length/const-length-contract';
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { predicateContract } from '../predicate/predicate-contract';
@@ -74,7 +73,7 @@ export const conditionLeafContract = z.object({
   operandEnvVarName: envVarNameContract.optional(),
   operandConstValue: representativeValueContract.optional(),
   operandConstLength: constLengthContract.optional(),
-  operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: columnNumberContract }).optional(),
+  operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).optional(),
   operandIsTypeof: z.literal(true).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,

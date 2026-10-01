@@ -23,7 +23,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract, guardStepContract, moduleSpecifierContract, representativeValueContract } from '@assayer/shared/contracts';
+import { guardStepContract, moduleSpecifierContract, representativeValueContract } from '@assayer/shared/contracts';
 
 const calleeLinkContract = z.discriminatedUnion('target', [
   z.object({ target: z.literal('local'), name: z.string().min(1).brand<'CalleeLinkName'>(), startLine: z.number().int().positive().brand<'CalleeLinkStartLine'>() }),
@@ -55,7 +55,7 @@ export const callSiteContract = z.object({
   guardPath: z.array(guardStepContract),
   // Where the call is written — the position that anchors an import-resolution build error at the
   // call site (P1). Carried structurally from the parse; never re-derived downstream.
-  position: z.object({ line: z.number().int().positive().brand<'CallSitePositionLine'>(), column: columnNumberContract }),
+  position: z.object({ line: z.number().int().positive().brand<'CallSitePositionLine'>(), column: z.number().int().positive().brand<'CallSitePositionColumn'>() }),
   // A method call on an IDENTIFIER receiver (`items.map(...)`) records that receiver's name and the
   // method's name. Present only for a `receiver.method(...)` shape whose receiver is a plain
   // identifier; a bare call, a computed member, or a chained receiver leaves both unset. This is what

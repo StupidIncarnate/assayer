@@ -18,7 +18,7 @@ export const analysisExtractResultContract = z.discriminatedUnion('success', [
     success: z.literal(false),
     error: z.object({
       line: z.number().int().positive().brand<'AnalysisExtractResultErrorLine'>(),
-      column: z.number().int().positive().brand<'ColumnNumber'>(),
+      column: z.number().int().positive().brand<'AnalysisExtractResultErrorColumn'>(),
       message: z.string().min(1).brand<'ExtractErrorMessage'>(),
     }),
   }),
