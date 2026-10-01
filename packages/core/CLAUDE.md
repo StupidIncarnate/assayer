@@ -735,8 +735,20 @@ analyzing a `switch` over that union worth anything at all.
 
 `walk-file-transformer` parses using `useInMemoryFileSystem: true`
 and a single source string. Call this the hermetic walk: it resolves
-TypeScript's standard library, but nothing from `node_modules`. Two
-consequences follow, and both are load-bearing:
+TypeScript's standard library, but nothing from `node_modules`.
+
+The walk parses through `transformers/hermetic-source-file`, and so does
+the harness type reader (`transformers/harness-value-types`). That
+transformer keeps one in-memory ts-morph project per compiler-options set
+for the life of the process. Each call adds its one file, reads it, and
+removes it again in a `finally`. So a walk's program holds only its own
+file plus TypeScript's lib files, and nothing an earlier walk declared is
+visible to it. The lib files are parsed once per process and reused by
+every walk. The checker is new for every walk. A walk must copy out
+everything it needs as plain data before it returns, because its file's
+nodes and types stop being valid once the file is removed.
+
+Two consequences of the hermetic walk follow, and both are load-bearing:
 
 - This is what lets `read-env-operand` prove that an access is really
   `process.env`, rather than merely pattern-matching the text

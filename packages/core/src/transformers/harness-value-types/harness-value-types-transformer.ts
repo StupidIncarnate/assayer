@@ -6,7 +6,7 @@
  *   `string[]` and a `number[]` alike, so only the declaration's checker-inferred type says what a
  *   supplied expression actually IS.
  *
- *   Parses with a fresh, hermetic ts-morph project (`useInMemoryFileSystem: true`, no `node_modules`) —
+ *   Parses through `hermetic-source-file` (in memory, default compiler options, no `node_modules`) —
  *   the harness's own boundary read, kept separate from the target file's walk and from the eval-based
  *   `typescript/load-harness` adapter, which answers a different question (what did the sandbox collect)
  *   with a different tool (the plain `typescript` compiler, transpile-only, no checker). Reading types
@@ -26,10 +26,11 @@
  * harnessValueTypesTransformer({ source, fileName: 'src/audit.harness.ts' });
  * // Returns [{ entry: 'audit', param: 'report', type: { kind: 'unknown', text: 'undefined' } }]
  */
-import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import type { TypeDescriptor } from '@assayer/shared/contracts';
 
+import { hermeticSourceFileTransformer } from '../hermetic-source-file/hermetic-source-file-transformer';
 import { typeDescriptorTransformer } from '../type-descriptor/type-descriptor-transformer';
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
 import { readHarnessValueTypeLayerTransformer } from './read-harness-value-type-layer-transformer';
@@ -40,85 +41,88 @@ export const harnessValueTypesTransformer = ({
 }: {
   source: string;
   fileName: string;
-}): { entry: string; param: string; type: TypeDescriptor }[] => {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile(fileName, source);
+}): { entry: string; param: string; type: TypeDescriptor }[] =>
+  hermeticSourceFileTransformer({
+    compilerOptions: {},
+    relPath: fileName,
+    source,
+    read: ({ sourceFile }) => {
+      const calls = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
+        const callee = call.getExpression();
 
-  const calls = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
-    const callee = call.getExpression();
+        // Both ordinary spellings of the one import count, the same conjunction the symbol gate reads: a
+        // direct call (`assayerHarness(...)`, renamed or not — the LOCAL name is what a call site can ever
+        // spell) or a namespace member call (`core.assayerHarness(...)`).
+        return (
+          (Node.isIdentifier(callee) && callee.getText() === harnessModuleStatics.registrar) ||
+          (Node.isPropertyAccessExpression(callee) && callee.getName() === harnessModuleStatics.registrar)
+        );
+      });
 
-    // Both ordinary spellings of the one import count, the same conjunction the symbol gate reads: a
-    // direct call (`assayerHarness(...)`, renamed or not — the LOCAL name is what a call site can ever
-    // spell) or a namespace member call (`core.assayerHarness(...)`).
-    return (
-      (Node.isIdentifier(callee) && callee.getText() === harnessModuleStatics.registrar) ||
-      (Node.isPropertyAccessExpression(callee) && callee.getName() === harnessModuleStatics.registrar)
-    );
-  });
+      const found: { entry: string; param: string; type: TypeDescriptor }[] = [];
 
-  const found: { entry: string; param: string; type: TypeDescriptor }[] = [];
+      calls.forEach((call) => {
+        const [arg] = call.getArguments();
 
-  calls.forEach((call) => {
-    const [arg] = call.getArguments();
-
-    if (arg === undefined || !Node.isObjectLiteralExpression(arg)) {
-      return;
-    }
-
-    const inputsProp = arg.getProperty(harnessModuleStatics.inputsRoot);
-
-    if (inputsProp === undefined || !Node.isPropertyAssignment(inputsProp)) {
-      return;
-    }
-
-    const inputsValue = inputsProp.getInitializer();
-
-    if (inputsValue === undefined || !Node.isObjectLiteralExpression(inputsValue)) {
-      return;
-    }
-
-    inputsValue.getProperties().forEach((entryProp) => {
-      if (!Node.isPropertyAssignment(entryProp)) {
-        return;
-      }
-
-      const entryValue = entryProp.getInitializer();
-
-      if (entryValue === undefined || !Node.isObjectLiteralExpression(entryValue)) {
-        return;
-      }
-
-      const entry = entryProp.getName();
-
-      entryValue.getProperties().forEach((paramProp) => {
-        // A plain value (`report: cb`) reads its initializer's type. A computed key or a spread names no
-        // static (entry, param) pair, so it is silently skipped — the same shape `harness-keys` cannot
-        // enumerate either.
-        if (Node.isPropertyAssignment(paramProp)) {
-          const initializer = paramProp.getInitializer();
-
-          if (initializer === undefined) {
-            return;
-          }
-
-          const param = paramProp.getName();
-          const type = typeDescriptorTransformer({ fact: readHarnessValueTypeLayerTransformer({ type: initializer.getType() }) });
-
-          found.push({ entry, param, type });
+        if (arg === undefined || !Node.isObjectLiteralExpression(arg)) {
           return;
         }
 
-        // A shorthand (`{ report }`) and a method shorthand (`{ report(m) {...} }`) read the property
-        // node's own type directly — ts-morph types either kind of node through the same checker.
-        if (Node.isShorthandPropertyAssignment(paramProp) || Node.isMethodDeclaration(paramProp)) {
-          const param = paramProp.getName();
-          const type = typeDescriptorTransformer({ fact: readHarnessValueTypeLayerTransformer({ type: paramProp.getType() }) });
+        const inputsProp = arg.getProperty(harnessModuleStatics.inputsRoot);
 
-          found.push({ entry, param, type });
+        if (inputsProp === undefined || !Node.isPropertyAssignment(inputsProp)) {
+          return;
         }
-      });
-    });
-  });
 
-  return found;
-};
+        const inputsValue = inputsProp.getInitializer();
+
+        if (inputsValue === undefined || !Node.isObjectLiteralExpression(inputsValue)) {
+          return;
+        }
+
+        inputsValue.getProperties().forEach((entryProp) => {
+          if (!Node.isPropertyAssignment(entryProp)) {
+            return;
+          }
+
+          const entryValue = entryProp.getInitializer();
+
+          if (entryValue === undefined || !Node.isObjectLiteralExpression(entryValue)) {
+            return;
+          }
+
+          const entry = entryProp.getName();
+
+          entryValue.getProperties().forEach((paramProp) => {
+            // A plain value (`report: cb`) reads its initializer's type. A computed key or a spread names no
+            // static (entry, param) pair, so it is silently skipped — the same shape `harness-keys` cannot
+            // enumerate either.
+            if (Node.isPropertyAssignment(paramProp)) {
+              const initializer = paramProp.getInitializer();
+
+              if (initializer === undefined) {
+                return;
+              }
+
+              const param = paramProp.getName();
+              const type = typeDescriptorTransformer({ fact: readHarnessValueTypeLayerTransformer({ type: initializer.getType() }) });
+
+              found.push({ entry, param, type });
+              return;
+            }
+
+            // A shorthand (`{ report }`) and a method shorthand (`{ report(m) {...} }`) read the property
+            // node's own type directly — ts-morph types either kind of node through the same checker.
+            if (Node.isShorthandPropertyAssignment(paramProp) || Node.isMethodDeclaration(paramProp)) {
+              const param = paramProp.getName();
+              const type = typeDescriptorTransformer({ fact: readHarnessValueTypeLayerTransformer({ type: paramProp.getType() }) });
+
+              found.push({ entry, param, type });
+            }
+          });
+        });
+      });
+
+      return found;
+    },
+  });

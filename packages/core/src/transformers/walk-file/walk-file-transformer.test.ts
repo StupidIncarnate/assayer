@@ -816,5 +816,113 @@ describe('walkFileTransformer', () => {
         error: { line: 1, column: 26, message: "'}' expected." },
       });
     });
+
+    it('VALID: {a walk that fails to parse, then a clean walk at the same path} => the clean walk sees only its own source', () => {
+      walkFileTransformerProxy();
+
+      walkFileTransformer({ source: 'export function broken( {', relPath: 'src/reused.ts' });
+      const result = walkFileTransformer({ source: '', relPath: 'src/reused.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        globalUses: [],
+        envReads: [],
+        moduleEdges: [],
+        declaredShapes: [],
+        reachedFns: [],
+        invokedFns: [],
+        probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 0 }],
+        nodes: [],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            startLine: 1,
+            endLine: 1,
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 1 }],
+          }),
+        ],
+      });
+    });
+  });
+
+  describe('walk independence', () => {
+    it('VALID: {walk a file declaring a global type, then walk a file naming it} => the second walk equals walking it alone, with the name unresolved', () => {
+      walkFileTransformerProxy();
+      const declaresMode = "declare global {\n  type Mode = 'a' | 'b';\n}\nexport {};\n";
+      const namesMode = 'export type Picked = Mode;\n';
+
+      const alone = walkFileTransformer({ source: namesMode, relPath: 'src/picked.ts' });
+      walkFileTransformer({ source: declaresMode, relPath: 'src/mode.ts' });
+      const afterDeclaration = walkFileTransformer({ source: namesMode, relPath: 'src/picked.ts' });
+
+      expect(afterDeclaration).toStrictEqual(alone);
+      expect(alone).toStrictEqual({
+        success: true,
+        globalUses: [],
+        envReads: [],
+        moduleEdges: [],
+        declaredShapes: [{ name: 'Picked', type: { kind: 'unknown', text: 'Mode', typeRef: 'Mode' } }],
+        reachedFns: [],
+        invokedFns: [],
+        probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 27 }],
+        nodes: [],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            startLine: 1,
+            endLine: 2,
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 2 }],
+          }),
+        ],
+      });
+    });
+
+    it('VALID: {the declaring source and the naming source in ONE walk} => the name resolves, which is what a leak between walks would look like', () => {
+      walkFileTransformerProxy();
+      const source = "type Mode = 'a' | 'b';\nexport type Picked = Mode;\n";
+
+      const result = walkFileTransformer({ source, relPath: 'src/both.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        globalUses: [],
+        envReads: [],
+        moduleEdges: [],
+        declaredShapes: [
+          { name: 'Mode', type: { kind: 'union', members: [{ kind: 'literal', value: 'a' }, { kind: 'literal', value: 'b' }] } },
+          { name: 'Picked', type: { kind: 'union', members: [{ kind: 'literal', value: 'a' }, { kind: 'literal', value: 'b' }] } },
+        ],
+        reachedFns: [],
+        invokedFns: [],
+        probeSites: [{ id: '*module*/exit@top', kind: 'complete', start: 0, end: 50 }],
+        nodes: [],
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            startLine: 1,
+            endLine: 3,
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 3 }],
+          }),
+        ],
+      });
+    });
   });
 });
