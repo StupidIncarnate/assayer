@@ -1,46 +1,80 @@
-import { existsSyncProxy } from '#gateway/node/fs/exists-sync/exists-sync.proxy';
+import { findUpSyncProxy } from '#gateway/node/fs/find-up-sync/find-up-sync.proxy';
+import { realpathSyncProxy } from '#gateway/node/fs/realpath-sync/realpath-sync.proxy';
 import { join } from '#gateway/node/path';
 
-// The broker probes `<dir>/packages/core/src` for each directory from its start upward. A scenario
-// stages that probe by the exact path of each directory it reaches, so a directory no scenario
-// staged reaches an unstaged call, which throws.
+// The broker looks for `<dir>/node_modules/<package>/package.json` in each directory from its start
+// upward, then follows the hit through realpath. A scenario stages each probe by its exact path, so
+// a directory or package no scenario staged reaches an unstaged call, which throws.
 export const analyzerRootsResolveBrokerProxy = (): {
-  rootAt: ({ from, root }: { from: string; root: string }) => void;
-  noRootAbove: ({ from }: { from: string }) => void;
-  rootAboveThisModule: () => void;
+  installedAt: ({
+    from,
+    installDir,
+    packageDirs,
+  }: {
+    from: string;
+    installDir: string;
+    packageDirs: Readonly<Record<string, string>>;
+  }) => void;
+  notInstalledAbove: ({ from, packageName }: { from: string; packageName: string }) => void;
+  monorepoAboveThisModule: () => void;
 } => {
-  const existsProxy = existsSyncProxy();
+  const findUpProxy = findUpSyncProxy();
+  const realpathProxy = realpathSyncProxy();
 
-  // Every directory from `from` up to `root`, inclusive, lacks core's source except `root` itself.
-  const rootAt = ({ from, root }: { from: string; root: string }): void => {
+  // Every directory from `from` up to `top`, inclusive, deepest first.
+  const directoriesUpTo = ({ from, top }: { from: string; top: string }): string[] => {
     const segments = from.split('/');
-    segments
+    return segments
       .map((_segment, index) => segments.slice(0, index + 1).join('/'))
       .map((directory) => (directory === '' ? '/' : directory))
-      .filter((directory) => directory.length >= root.length)
-      .forEach((directory) => {
-        existsProxy.returns({ path: join(directory, 'packages', 'core', 'src'), exists: directory === root });
+      .filter((directory) => directory.length >= top.length)
+      .reverse();
+  };
+
+  // Each package's manifest is missing from every directory below `installDir` and present in
+  // `installDir/node_modules`. Its `node_modules` entry resolves through realpath to the directory
+  // the scenario names: a workspace folder in the monorepo, or the same path in a plain install.
+  const installedAt = ({
+    from,
+    installDir,
+    packageDirs,
+  }: {
+    from: string;
+    installDir: string;
+    packageDirs: Readonly<Record<string, string>>;
+  }): void => {
+    Object.entries(packageDirs).forEach(([packageName, realDir]) => {
+      directoriesUpTo({ from, top: installDir }).forEach((directory) => {
+        (directory === installDir ? findUpProxy.foundAt : findUpProxy.notFound)({
+          path: join(directory, 'node_modules', packageName, 'package.json'),
+        });
       });
+      realpathProxy.returns({ path: join(installDir, 'node_modules', packageName), resolved: realDir });
+    });
   };
 
   return {
-    rootAt,
-    // Every directory from `from` up to the filesystem root lacks core's source.
-    noRootAbove: ({ from }: { from: string }): void => {
-      const segments = from.split('/');
-      segments
-        .map((_segment, index) => segments.slice(0, index + 1).join('/'))
-        .forEach((directory) => {
-          existsProxy.returns({
-            path: join(directory === '' ? '/' : directory, 'packages', 'core', 'src'),
-            exists: false,
-          });
-        });
+    installedAt,
+    // No directory from `from` up to the filesystem root holds the package.
+    notInstalledAbove: ({ from, packageName }: { from: string; packageName: string }): void => {
+      directoriesUpTo({ from, top: '/' }).forEach((directory) => {
+        findUpProxy.notFound({ path: join(directory, 'node_modules', packageName, 'package.json') });
+      });
     },
     // The broker's default start is its own directory, which is this proxy's directory too. The
     // monorepo root sits six levels above it: resolve, analyzer-roots, brokers, src, cli, packages.
-    rootAboveThisModule: (): void => {
-      rootAt({ from: __dirname, root: join(__dirname, '..', '..', '..', '..', '..', '..') });
+    // Its `node_modules` links each package to its workspace folder.
+    monorepoAboveThisModule: (): void => {
+      const monorepoRoot = join(__dirname, '..', '..', '..', '..', '..', '..');
+      installedAt({
+        from: __dirname,
+        installDir: monorepoRoot,
+        packageDirs: {
+          '@assayer/core': join(monorepoRoot, 'packages', 'core'),
+          '@assayer/npm': join(monorepoRoot, 'packages', '@gateway', 'npm'),
+          '@assayer/shared': join(monorepoRoot, 'packages', 'shared'),
+        },
+      });
     },
   };
 };

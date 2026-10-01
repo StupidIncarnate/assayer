@@ -4,9 +4,9 @@ import { PrecheckRunResponder } from './precheck-run-responder';
 import { PrecheckRunResponderProxy } from './precheck-run-responder.proxy';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 
-// The hash of two analyzer source roots that each hold no files: sha256 of two empty-input hashes
-// joined by a newline.
-const ANALYZER_HASH = 'af60ab5be9ad4965eaa1059028902dc21b4b010385fbd5bfd03807f26e68aaf3';
+// The hash of ts-morph 26.0.0 and three analyzer source roots that each hold no files: sha256 of the
+// line `ts-morph@26.0.0` and three empty-input hashes, joined by newlines.
+const ANALYZER_HASH = 'df851e1a631747e30517db62a2c4812ba64f71e4ddd08374957f64b5139e08fe';
 // The hash of AssayerConfigStub's version, repoRoot and sorted exclude list.
 const CONFIG_HASH = 'd8e6b6f238b6443622268e3a540f0aaeb5fa5432b0a14345182c7724ad901ac2';
 

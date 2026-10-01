@@ -37,12 +37,13 @@ export const UnitRunResponderProxy = (): {
       runs: readonly { relPath: string; result: ReturnType<typeof RunResultStub> }[];
     }): void => {
       pathsProxy.coreRootFound();
-      rootsProxy.rootAboveThisModule();
+      rootsProxy.monorepoAboveThisModule();
       pathsProxy.runsEachPath({
         configDir,
         root,
         analyzerRoots: [
           join(monorepoRoot, 'packages', 'core', 'src'),
+          join(monorepoRoot, 'packages', '@gateway', 'npm', 'src'),
           join(monorepoRoot, 'packages', 'shared', 'src'),
         ],
         runs,

@@ -221,9 +221,6 @@ comes off:
   `peerDependency` of core and of `@assayer/npm`, kept only because ts-jest
   requires it. Both packages still declare it as a regular dependency.
 - Core depends on `@assayer/shared`, which is also private.
-- Outside this monorepo, `analyzer-roots-resolve-broker` finds no analyzer
-  roots, so the analyzer hash is a constant. A cache written by one
-  Assayer version would then be reused by the next.
 
 ## Constraints that shape every implementation decision
 
