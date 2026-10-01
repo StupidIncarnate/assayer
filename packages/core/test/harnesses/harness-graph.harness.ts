@@ -23,7 +23,7 @@
  * const both = await stitch.stitchTwice({ first: sourceA, second: sourceB });
  * const passes = await stitch.compileTwice({ source: TWO_CALLBACK_SOURCE, first: harnessA, second: harnessB });
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, rmSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
@@ -88,7 +88,7 @@ export const harnessGraphHarness = (): {
     const dir = FilePathStub({ value: realpathSync(mkdtempSync(join(tmpdir(), 'assayer-harness-'))) });
     dirs.push(dir);
     writeFileSync(join(String(dir), 'tsconfig.json'), NODE_TSCONFIG);
-    mkdirSync(join(String(dir), 'src'), { recursive: true });
+    ensureDirSync(join(String(dir), 'src'));
     writeFileSync(join(String(dir), SOURCE_REL), source);
 
     return dir;
@@ -127,7 +127,7 @@ export const harnessGraphHarness = (): {
     });
 
     const written = harnessIndexContract.parse(
-      JSON.parse(readFileSync(join(dir, '.assayer', 'cache', 'harness', `${NAMESPACE}.json`), 'utf8')),
+      JSON.parse(readFileSync(join(dir, '.assayer', 'cache', 'harness', `${NAMESPACE}.json`))),
     );
 
     return {
@@ -151,10 +151,10 @@ export const harnessGraphHarness = (): {
     contentHash: ContentHash;
   }): FileAnalysis => {
     const blob = compiledFileBlobContract.parse(
-      JSON.parse(readFileSync(join(String(blobsDirOf({ dir })), `${String(contentHash)}.json`), 'utf8')),
+      JSON.parse(readFileSync(join(String(blobsDirOf({ dir })), `${String(contentHash)}.json`))),
     );
     const walked = tsMorphWalkFileAdapter({
-      source: readFileSync(join(String(dir), SOURCE_REL), 'utf8'),
+      source: readFileSync(join(String(dir), SOURCE_REL)),
       relPath: SOURCE_REL,
     });
 

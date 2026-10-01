@@ -12,7 +12,7 @@
  * const barrel = await stitch.resolveBarrelRepo();  // an import chased through a re-export barrel
  * const broken = await stitch.resolveBrokenRepo();  // an import that resolves to nothing
  */
-import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, rmSync } from 'node:fs';
+import { mkdtempSync, ensureDirSync, writeFileSync, realpathSync, rmSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
@@ -64,11 +64,11 @@ export const resolveGraphHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stitch-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', 'vendored-pkg'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'index.d.ts'), VENDORED_DTS);
-      mkdirSync(join(dir, 'src', 'a'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'b'), { recursive: true });
+      ensureDirSync(join(dir, 'src', 'a'));
+      ensureDirSync(join(dir, 'src', 'b'));
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'a', 'caller.ts'), CALLER_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
@@ -89,11 +89,11 @@ export const resolveGraphHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-typed-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', 'vendored-pkg'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'index.d.ts'), VENDORED_DTS);
-      mkdirSync(join(dir, 'src', 'a'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'b'), { recursive: true });
+      ensureDirSync(join(dir, 'src', 'a'));
+      ensureDirSync(join(dir, 'src', 'b'));
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'a', 'caller.ts'), CALLER_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
@@ -115,9 +115,9 @@ export const resolveGraphHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-barrel-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src', 'b'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'barrel'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'c'), { recursive: true });
+      ensureDirSync(join(dir, 'src', 'b'));
+      ensureDirSync(join(dir, 'src', 'barrel'));
+      ensureDirSync(join(dir, 'src', 'c'));
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'barrel', 'index.ts'), BARREL_SRC);
       writeFileSync(join(dir, 'src', 'c', 'user.ts'), USER_SRC);
@@ -141,7 +141,7 @@ export const resolveGraphHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-broken-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src'), { recursive: true });
+      ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'broken.ts'), BROKEN_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: 'src/broken.ts', content: BROKEN_SRC, blobsDir });
@@ -157,7 +157,7 @@ export const resolveGraphHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-dynamic-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src'), { recursive: true });
+      ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'dynamic.ts'), DYNAMIC_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: 'src/dynamic.ts', content: DYNAMIC_SRC, blobsDir });

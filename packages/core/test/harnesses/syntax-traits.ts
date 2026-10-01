@@ -19,7 +19,7 @@
  * syntaxTraits().observed({ relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts' });
  * // ['access:named', 'branch:if'] — sorted, deduped
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync } from '#gateway/node/fs';
 import { resolve, join } from '#gateway/node/path';
 
 import { entryAccessContract, branchNodeContract } from '@assayer/shared/contracts';
@@ -143,7 +143,7 @@ export const syntaxTraits = (): {
   // run. The harness overlay is not stubbed at all: a specimen's harness is a committed file beside it, so
   // it is read off disk exactly as a run reads it.
   const analyze = ({ relPath }: { relPath: string }): FileAnalysis => {
-    const walked = tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath });
+    const walked = tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath });
 
     const typed = paramTypeResolveBroker({
       analysis: analyzeFileBroker({ walked, relPath }),
@@ -280,7 +280,7 @@ export const syntaxTraits = (): {
       // ambient types are absent must not be CALLED in the compiled surface, so its specimen imports a
       // value, and the trait still has to name it.
       const graph = moduleGraphProjectionTransformer({
-        walked: tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath }),
+        walked: tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath }),
       });
       const callees = graph.edges.flatMap((edge): SyntaxTrait[] => {
         const specifier = edge.specifier === undefined ? undefined : String(edge.specifier);

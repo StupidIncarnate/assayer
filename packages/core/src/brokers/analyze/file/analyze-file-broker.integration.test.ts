@@ -47,7 +47,7 @@ describe('analyzeFileBroker (integration)', () => {
     // no orphan child in a folder with no root. A misfiled or misnamed specimen names itself here
     // rather than silently escaping the bucket driver that keys on the layout.
     it('VALID: {every specimen on disk} => sits at <bucket>/…/<name>/<name>.ts with its colocated test', () => {
-      expect(specimenCatalogue().structuralErrors().map((message) => String(message))).toStrictEqual([]);
+      expect(specimenCatalogue().structuralErrors()).toStrictEqual([]);
     });
   });
 

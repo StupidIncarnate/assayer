@@ -14,7 +14,7 @@
  * const result = await stitch.resolveExamples();  // the real committed example specimens
  * const broken = await stitch.resolveBroken();    // an import that resolves to nothing
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, rmSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
@@ -75,7 +75,7 @@ export const exampleResolutionHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-node-example-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), NODE_TYPES_PKG_JSON);
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES_DTS);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
@@ -83,8 +83,8 @@ export const exampleResolutionHarness = (): {
 
       const files = await Promise.all(
         [USES_CONSOLE, USES_PROCESS, CALLS_JOIN].map(async (relPath) => {
-          const content = readFileSync(join(SMOKE_REPO, relPath), 'utf8');
-          mkdirSync(join(dir, dirname(relPath)), { recursive: true });
+          const content = readFileSync(join(SMOKE_REPO, relPath));
+          ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
           return { relPath: RelPathStub({ value: relPath }), contentHash: cryptoSha256Adapter({ content }) };
@@ -98,15 +98,15 @@ export const exampleResolutionHarness = (): {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-example-')));
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', 'vendored-fixture'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', 'vendored-fixture'));
       writeFileSync(join(dir, 'node_modules', 'vendored-fixture', 'package.json'), VENDORED_PKG_JSON);
       writeFileSync(join(dir, 'node_modules', 'vendored-fixture', 'index.d.ts'), VENDORED_DTS);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
 
       const files = await Promise.all(
         [GREETING, USES_GREETING, USES_PACKAGE, USES_BUILTIN].map(async (relPath) => {
-          const content = readFileSync(join(SMOKE_REPO, relPath), 'utf8');
-          mkdirSync(join(dir, dirname(relPath)), { recursive: true });
+          const content = readFileSync(join(SMOKE_REPO, relPath));
+          ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
           return { relPath: RelPathStub({ value: relPath }), contentHash: cryptoSha256Adapter({ content }) };
@@ -121,7 +121,7 @@ export const exampleResolutionHarness = (): {
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       const relPath = `${CATALOGUE}/happy-path/import-local/broken.ts`;
-      mkdirSync(join(dir, dirname(relPath)), { recursive: true });
+      ensureDirSync(join(dir, dirname(relPath)));
       writeFileSync(join(dir, relPath), BROKEN_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath, content: BROKEN_SRC, blobsDir });

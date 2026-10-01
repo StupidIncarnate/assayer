@@ -23,7 +23,7 @@
  * specimenCatalogue().relPaths();
  * // ['packages/syntax-repository/src/happy-path/boolean/and/and.ts', ...] — sorted, smoke-repo-relative
  */
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, walkFilesSync } from '#gateway/node/fs';
 import { resolve, join, relative, sep, basename, dirname, extname } from '#gateway/node/path';
 
 import { Project, ts } from '#gateway/npm/ts-morph';
@@ -41,7 +41,7 @@ const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 // applies, off the same bytes, so the catalogue and the compiled surface can never disagree.
 const isAnalysed = (entry: { name: string; parentPath: string }): boolean =>
   !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
-  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name), 'utf8') });
+  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name)) });
 
 // The combined `.ts`/`.tsx` inclusion rule the compiled surface applies — a harness is never `.tsx`
 // (CLAUDE.md: a colocated harness is always `.ts`, even beside a `.tsx` source), so the symbol gate
@@ -59,8 +59,12 @@ export const specimenCatalogue = (): {
   syntacticErrors: (params: { relPath: string }) => string[];
 } => ({
   relPaths: (): RelPath[] =>
-    readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile() && isAnalysedSourceFile(entry))
+    [
+      ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.ts' }),
+      ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.tsx' }),
+    ]
+      .map((file) => ({ name: basename(file.path), parentPath: dirname(file.path) }))
+      .filter((entry) => isAnalysedSourceFile(entry))
       // Posix-joined rather than platform-joined: the relPath is a cache and manifest key, so it must
       // not change shape with the OS that produced it.
       .map((entry) => relative(SMOKE_REPO, join(entry.parentPath, entry.name)).split(sep).join('/'))
@@ -121,7 +125,7 @@ export const specimenCatalogue = (): {
 
   syntacticErrors: ({ relPath }: { relPath: string }): string[] => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile(basename(relPath), readFileSync(join(SMOKE_REPO, relPath), 'utf8'));
+    const sourceFile = project.createSourceFile(basename(relPath), readFileSync(join(SMOKE_REPO, relPath)));
 
     return (
       project

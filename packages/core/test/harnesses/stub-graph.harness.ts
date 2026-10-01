@@ -21,7 +21,7 @@
  * const result = await stitch.stubBranchLocal();     // { index: StubIndex } — same-file
  * const crossFile = await stitch.stubCrossFileShape(); // { index: StubIndex } — cross-file union
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, rmSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
@@ -69,8 +69,8 @@ export const stubGraphHarness = (): {
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
 
-      const content = readFileSync(join(SMOKE_REPO, BRANCH_LOCAL_REL), 'utf8');
-      mkdirSync(join(dir, dirname(BRANCH_LOCAL_REL)), { recursive: true });
+      const content = readFileSync(join(SMOKE_REPO, BRANCH_LOCAL_REL));
+      ensureDirSync(join(dir, dirname(BRANCH_LOCAL_REL)));
       writeFileSync(join(dir, BRANCH_LOCAL_REL), content);
 
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
@@ -87,8 +87,8 @@ export const stubGraphHarness = (): {
       dirs.push(FilePathStub({ value: dir }));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
 
-      const content = readFileSync(join(SMOKE_REPO, MULTI_READ_REL), 'utf8');
-      mkdirSync(join(dir, dirname(MULTI_READ_REL)), { recursive: true });
+      const content = readFileSync(join(SMOKE_REPO, MULTI_READ_REL));
+      ensureDirSync(join(dir, dirname(MULTI_READ_REL)));
       writeFileSync(join(dir, MULTI_READ_REL), content);
 
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
@@ -108,8 +108,8 @@ export const stubGraphHarness = (): {
 
       const files = await Promise.all(
         [CROSS_FILE_SHAPE_ROOT_REL, CROSS_FILE_SHAPE_READER_B_REL, CROSS_FILE_SHAPE_TYPES_REL].map(async (relPath) => {
-          const content = readFileSync(join(SMOKE_REPO, relPath), 'utf8');
-          mkdirSync(join(dir, dirname(relPath)), { recursive: true });
+          const content = readFileSync(join(SMOKE_REPO, relPath));
+          ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
           return { relPath: RelPathStub({ value: relPath }), contentHash: cryptoSha256Adapter({ content }) };

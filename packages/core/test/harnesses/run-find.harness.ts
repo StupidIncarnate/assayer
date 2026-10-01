@@ -22,7 +22,7 @@
  * readers.editHarness({ configDir, harness: EDITED_HARNESS });
  * await readers.findRun({ configDir, relPath });        // => undefined, the id moved
  */
-import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, rmSync } from 'node:fs';
+import { mkdtempSync, ensureDirSync, writeFileSync, realpathSync, rmSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
@@ -66,7 +66,7 @@ export const runFindHarness = (): {
     }): Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunId }> => {
       const configDir = FilePathStub({ value: realpathSync(mkdtempSync(join(tmpdir(), 'assayer-run-find-'))) });
       dirs.push(configDir);
-      mkdirSync(join(String(configDir), 'src'), { recursive: true });
+      ensureDirSync(join(String(configDir), 'src'));
       writeFileSync(join(String(configDir), SOURCE_REL), AUDIT_SOURCE);
 
       if (harness !== undefined) {
@@ -75,7 +75,7 @@ export const runFindHarness = (): {
 
       const runId = await runIdBroker({ root: String(configDir), relPath: SOURCE_REL, source: AUDIT_SOURCE });
       const runDir = join(String(configDir), '.assayer', 'cache', 'runs', String(runId));
-      mkdirSync(runDir, { recursive: true });
+      ensureDirSync(runDir);
       writeFileSync(
         join(runDir, 'run.json'),
         JSON.stringify(RunResultStub({ runId, relPath: RelPathStub({ value: SOURCE_REL }) })),
