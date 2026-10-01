@@ -17,7 +17,10 @@ export const stableBranchPickBrokerProxy = (): {
 
   const handle = registerMock({ fn: createInterface });
 
-  handle.calledWith([]).returns({
+  // The options hold live streams, so the address is a test of the output stream, not a deep compare.
+  handle
+    .calledWith([(options: { output?: unknown }) => options.output === stdout])
+    .returns({
     on: (event: string, listener: () => void): void => {
       if (event === 'close') {
         closeHandlers.push(listener);
