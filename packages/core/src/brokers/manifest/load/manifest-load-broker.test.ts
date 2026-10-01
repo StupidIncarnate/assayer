@@ -7,7 +7,7 @@ describe('manifestLoadBroker', () => {
     it('VALID: {configDir: manifest.json present, matches expected version and hash} => returns status ok with the parsed manifest', async () => {
       const proxy = manifestLoadBrokerProxy();
       const manifest = AssayerCacheManifestStub();
-      proxy.present({ manifestJson: JSON.stringify(manifest) });
+      proxy.present({ configDir: '/repo', manifestJson: JSON.stringify(manifest) });
 
       const result = await manifestLoadBroker({
         configDir: '/repo',
@@ -22,7 +22,7 @@ describe('manifestLoadBroker', () => {
   describe('manifest missing', () => {
     it('EMPTY: {configDir: no manifest.json on disk} => returns status missing', async () => {
       const proxy = manifestLoadBrokerProxy();
-      proxy.absent();
+      proxy.absent({ configDir: '/repo' });
 
       const result = await manifestLoadBroker({
         configDir: '/repo',
@@ -37,7 +37,7 @@ describe('manifestLoadBroker', () => {
   describe('manifest malformed', () => {
     it('ERROR: {configDir: manifest.json contains malformed JSON} => returns status invalid with the parser reason', async () => {
       const proxy = manifestLoadBrokerProxy();
-      proxy.malformed();
+      proxy.malformed({ configDir: '/repo' });
 
       const result = await manifestLoadBroker({
         configDir: '/repo',
@@ -55,7 +55,7 @@ describe('manifestLoadBroker', () => {
   describe('manifest fails schema validation', () => {
     it('ERROR: {configDir: manifest.json is valid JSON but does not match the manifest schema} => returns status invalid with a schema validation reason', async () => {
       const proxy = manifestLoadBrokerProxy();
-      proxy.present({ manifestJson: '{}' });
+      proxy.present({ configDir: '/repo', manifestJson: '{}' });
 
       const result = await manifestLoadBroker({
         configDir: '/repo',
@@ -74,7 +74,7 @@ describe('manifestLoadBroker', () => {
     it('EDGE: {configDir: manifest.json structurally valid but configHash differs from expected} => returns status invalid', async () => {
       const proxy = manifestLoadBrokerProxy();
       const manifest = AssayerCacheManifestStub();
-      proxy.present({ manifestJson: JSON.stringify(manifest) });
+      proxy.present({ configDir: '/repo', manifestJson: JSON.stringify(manifest) });
 
       const result = await manifestLoadBroker({
         configDir: '/repo',
@@ -90,9 +90,9 @@ describe('manifestLoadBroker', () => {
   });
 
   describe('manifest.json cannot be read from disk', () => {
-    it("ERROR: {configDir: manifest.json exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+    it("ERROR: {configDir: manifest.json exists but the read is denied with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
       const proxy = manifestLoadBrokerProxy();
-      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+      proxy.readDenied({ configDir: '/repo' });
 
       await expect(
         manifestLoadBroker({
@@ -100,7 +100,7 @@ describe('manifestLoadBroker', () => {
           expectedAssayerVersion: '1.0.0',
           expectedConfigHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: op '\/repo\/\.assayer\/cache\/manifest\.json'$/u);
     });
   });
 });

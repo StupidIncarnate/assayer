@@ -2,31 +2,34 @@ import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exi
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const manifestLoadBrokerProxy = (): {
-  present: ({ manifestJson }: { manifestJson: string }) => void;
-  absent: () => void;
-  malformed: () => void;
-  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
+  present: ({ configDir, manifestJson }: { configDir: string; manifestJson: string }) => void;
+  absent: ({ configDir }: { configDir: string }) => void;
+  malformed: ({ configDir }: { configDir: string }) => void;
+  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES and
   // the like) propagates to the caller unmodified. This stages that rejection.
-  readThrows: ({ error }: { error: Error }) => void;
+  readDenied: ({ configDir }: { configDir: string }) => void;
 } => {
   const existsProxy = pathExistsProxy();
   const readProxy = readFileProxy();
 
   return {
-    present: ({ manifestJson }: { manifestJson: string }): void => {
-      existsProxy.succeeds();
-      readProxy.returns({ content: manifestJson });
+    present: ({ configDir, manifestJson }: { configDir: string; manifestJson: string }): void => {
+      const path = `${configDir}/.assayer/cache/manifest.json`;
+      existsProxy.present({ path });
+      readProxy.returns({ path, contents: manifestJson });
     },
-    absent: (): void => {
-      existsProxy.fails();
+    absent: ({ configDir }: { configDir: string }): void => {
+      existsProxy.missing({ path: `${configDir}/.assayer/cache/manifest.json` });
     },
-    malformed: (): void => {
-      existsProxy.succeeds();
-      readProxy.returns({ content: '{bad json' });
+    malformed: ({ configDir }: { configDir: string }): void => {
+      const path = `${configDir}/.assayer/cache/manifest.json`;
+      existsProxy.present({ path });
+      readProxy.returns({ path, contents: '{bad json' });
     },
-    readThrows: ({ error }: { error: Error }): void => {
-      existsProxy.succeeds();
-      readProxy.throws({ error });
+    readDenied: ({ configDir }: { configDir: string }): void => {
+      const path = `${configDir}/.assayer/cache/manifest.json`;
+      existsProxy.present({ path });
+      readProxy.denied({ path });
     },
   };
 };
