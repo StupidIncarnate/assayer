@@ -3,20 +3,20 @@ import { replyValueLayerBrokerProxy } from './reply-value-layer-broker.proxy';
 
 describe('replyValueLayerBroker', () => {
   describe('successful replies', () => {
-    it('VALID: {success reply carrying a payload} => returns the payload', () => {
+    it('VALID: {success reply carrying a payload} => returns the reply holding the payload', () => {
       replyValueLayerBrokerProxy();
 
       const result = replyValueLayerBroker({ reply: { success: true, valueRaw: { verdicts: [] } } });
 
-      expect(result).toStrictEqual({ verdicts: [] });
+      expect(result.valueRaw).toStrictEqual({ verdicts: [] });
     });
 
-    it('EMPTY: {success reply carrying undefined} => returns undefined rather than throwing', () => {
+    it('EMPTY: {success reply carrying undefined} => returns a reply whose payload is undefined rather than throwing', () => {
       replyValueLayerBrokerProxy();
 
       const result = replyValueLayerBroker({ reply: { success: true, valueRaw: undefined } });
 
-      expect(result).toBe(undefined);
+      expect(result.valueRaw).toBe(undefined);
     });
   });
 

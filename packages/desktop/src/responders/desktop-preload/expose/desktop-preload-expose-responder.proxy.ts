@@ -4,7 +4,7 @@ export const DesktopPreloadExposeResponderProxy = (): {
   exposedBridgeKeys: () => unknown[];
   triggerGetCompiledTree: () => Promise<void>;
   triggerGetCompiledFile: (params: { relPath: string }) => Promise<void>;
-  invokedArgs: () => unknown[][];
+  invokedArgsFor: (params: { channel: string }) => unknown[][];
 } => {
   const adapterProxy = desktopBridgeExposeBrokerProxy();
 
@@ -13,6 +13,7 @@ export const DesktopPreloadExposeResponderProxy = (): {
     triggerGetCompiledTree: async (): Promise<void> => adapterProxy.triggerGetCompiledTree(),
     triggerGetCompiledFile: async ({ relPath }: { relPath: string }): Promise<void> =>
       adapterProxy.triggerGetCompiledFile({ relPath }),
-    invokedArgs: (): unknown[][] => adapterProxy.invokedArgs(),
+    invokedArgsFor: ({ channel }: { channel: string }): unknown[][] =>
+      adapterProxy.invokedArgsFor({ channel }),
   };
 };

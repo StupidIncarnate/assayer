@@ -8,7 +8,7 @@ export const desktopLaunchBrokerProxy = (): {
   launchFailsToStart: (params: { repoPath: string }) => void;
   getStderrText: () => string;
 } => {
-  desktopResolveBinaryBrokerProxy();
+  const binaryProxy = desktopResolveBinaryBrokerProxy();
   const spawnProxy = spawnFireAndForgetProxy();
   const stderrGateway = stderrProxy();
 
@@ -16,12 +16,14 @@ export const desktopLaunchBrokerProxy = (): {
     // The resolve-binary proxy fixes the electron binary path; the main entry is the compiled
     // desktop-main.js four levels above this folder's brokers/desktop/launch location.
     launchSpawns: ({ repoPath }: { repoPath: string }): void => {
+      binaryProxy.setupBinaryPath({ path: '/usr/bin/electron' });
       spawnProxy.setupLaunch({
         command: '/usr/bin/electron',
         args: [join(__dirname, '..', '..', '..', '..', 'bin', 'desktop-main.js'), '--repo', repoPath],
       });
     },
     launchFailsToStart: ({ repoPath }: { repoPath: string }): void => {
+      binaryProxy.setupBinaryPath({ path: '/usr/bin/electron' });
       spawnProxy.setupNotFound({
         command: '/usr/bin/electron',
         args: [join(__dirname, '..', '..', '..', '..', 'bin', 'desktop-main.js'), '--repo', repoPath],

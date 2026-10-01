@@ -1,10 +1,18 @@
-import { registerModuleMock } from '@dungeonmaster/testing/register-mock';
+import { electronProxy } from '#gateway/npm/electron/electron.proxy';
 
-// Electron's module export is the binary path STRING in a Node context. Expose it as an
-// esModule default so `import electron from 'electron'` resolves to the string.
-registerModuleMock({
-  module: 'electron',
-  factory: () => ({ __esModule: true, default: '/usr/bin/electron' }),
-});
+// Electron's default export is the binary path STRING in a Node context.
+export const desktopResolveBinaryBrokerProxy = (): {
+  setupBinaryPath: (params: { path: string }) => void;
+  setupInsideElectron: () => void;
+} => {
+  const electronGateway = electronProxy();
 
-export const desktopResolveBinaryBrokerProxy = (): Record<PropertyKey, never> => ({});
+  return {
+    setupBinaryPath: ({ path }: { path: string }): void => {
+      electronGateway.executablePathIs({ path });
+    },
+    setupInsideElectron: (): void => {
+      electronGateway.runningInsideElectron();
+    },
+  };
+};

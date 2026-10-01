@@ -1,7 +1,7 @@
 /**
  * PURPOSE: Boots the Electron main process — hands the boot adapter every channel plus resolvers
- *   bound to the target repo path. Validates each IPC's raw relPath argument through relPathContract
- *   before calling a broker.
+ *   bound to the target repo path. Validates each IPC's raw relPath argument through the compiled-file view's relPath
+ *   contract before calling a broker, on the compiled-file, run, saved-run and saved-console channels.
  *
  *   `savedRun` and `savedConsole` never execute anything. Opening a file must not start a Jest run, so
  *   asking what a file's last run said and asking to run it are separate channels, not one lazy
@@ -10,7 +10,7 @@
  *
  * USAGE:
  * await DesktopMainBootResponder({ repoPath });
- * // Opens the window and registers the status/tree/file/run/saved-run IPC; returns { success: true }
+ * // Opens the window and registers the status, tree, file, stubs, run, saved-run and saved-console IPC
  */
 import { runConsoleFindBroker, runFindBroker } from '@assayer/core/brokers';
 import { compiledFileViewContract } from '@assayer/shared/contracts';
@@ -46,23 +46,32 @@ export const DesktopMainBootResponder = async ({
         relPath: compiledFileViewContract.shape.relPath.parse(relPath),
       }),
     resolveStubs: async () => stubIndexResolveBroker({ repoPath }),
-    resolveRun: async ({ relPath, onOutput }) =>
-      runExecuteBroker({
+    resolveRun: async ({ relPath, onOutput }) => {
+      const validRelPath = compiledFileViewContract.shape.relPath.parse(relPath);
+
+      return runExecuteBroker({
         repoPath,
-        root: (await repoSourceRootBroker({ repoPath })),
-        relPath: String(relPath),
+        root: await repoSourceRootBroker({ repoPath }),
+        relPath: validRelPath,
         onOutput,
-      }),
-    resolveSavedRun: async ({ relPath }) =>
-      runFindBroker({
+      });
+    },
+    resolveSavedRun: async ({ relPath }) => {
+      const validRelPath = compiledFileViewContract.shape.relPath.parse(relPath);
+
+      return runFindBroker({
         configDir: repoPath,
-        root: (await repoSourceRootBroker({ repoPath })),
-        relPath: String(relPath),
-      }),
-    resolveSavedConsole: async ({ relPath }) =>
-      runConsoleFindBroker({
+        root: await repoSourceRootBroker({ repoPath }),
+        relPath: validRelPath,
+      });
+    },
+    resolveSavedConsole: async ({ relPath }) => {
+      const validRelPath = compiledFileViewContract.shape.relPath.parse(relPath);
+
+      return runConsoleFindBroker({
         configDir: repoPath,
-        root: (await repoSourceRootBroker({ repoPath })),
-        relPath: String(relPath),
-      }),
+        root: await repoSourceRootBroker({ repoPath }),
+        relPath: validRelPath,
+      });
+    },
   });

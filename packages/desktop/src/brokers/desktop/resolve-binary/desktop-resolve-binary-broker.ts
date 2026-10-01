@@ -6,8 +6,7 @@
  * desktopResolveBinaryBroker();
  * // Returns the ExecutablePath to the Electron binary
  */
-import electron from 'electron';
-
+import electron from '#gateway/npm/electron';
 
 export const desktopResolveBinaryBroker = (): string => {
   const binaryPath: unknown = electron;

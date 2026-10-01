@@ -18,12 +18,12 @@ const RELPATH_NOT_A_STRING_MESSAGE = [
 
 describe('DesktopMainBootResponder', () => {
   describe('booting the main process', () => {
-    it('VALID: {repoPath} => boots the window, registers all IPC channels, and returns success', async () => {
+    it('VALID: {repoPath} => boots the window and registers all IPC channels', async () => {
       const proxy = DesktopMainBootResponderProxy();
+      proxy.setupBoot();
 
-      const result = await DesktopMainBootResponder({ repoPath: '/repo' });
+      await DesktopMainBootResponder({ repoPath: '/repo' });
 
-      expect(result).toBeUndefined();
       expect(proxy.handledChannels()).toStrictEqual([
         desktopBridgeStatics.channels.status,
         desktopBridgeStatics.channels.compiledTree,
@@ -36,16 +36,25 @@ describe('DesktopMainBootResponder', () => {
     });
   });
 
-  describe('compiled-file IPC validation', () => {
-    // The broker is bare-invoked in the proxy, so had validation not caught this the handler would
+  describe('relPath IPC validation', () => {
+    // The brokers are bare-invoked in the proxy, so had validation not caught this the handler would
     // have answered a success instead — the failure reply is the proof it never got that far.
-    it('INVALID: {relPath: 42} => answers with the validation failure, never reaching the compiled-file broker', async () => {
-      const proxy = DesktopMainBootResponderProxy();
-      await DesktopMainBootResponder({ repoPath: '/repo' });
+    it.each([
+      desktopBridgeStatics.channels.compiledFile,
+      desktopBridgeStatics.channels.run,
+      desktopBridgeStatics.channels.savedRun,
+      desktopBridgeStatics.channels.savedConsole,
+    ])(
+      'INVALID: {channel: %s, relPath: 42} => answers with the validation failure, never reaching a broker',
+      async (channel) => {
+        const proxy = DesktopMainBootResponderProxy();
+      proxy.setupBoot();
+        await DesktopMainBootResponder({ repoPath: '/repo' });
 
-      const result = await proxy.invokeCompiledFileHandler({ relPath: 42 });
+        const result = await proxy.invokeHandler({ channel, relPath: 42 });
 
-      expect(result).toStrictEqual({ success: false, message: RELPATH_NOT_A_STRING_MESSAGE });
-    });
+        expect(result).toStrictEqual({ success: false, message: RELPATH_NOT_A_STRING_MESSAGE });
+      },
+    );
   });
 });
