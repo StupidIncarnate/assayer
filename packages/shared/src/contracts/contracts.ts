@@ -62,7 +62,6 @@ export * from './arrange-binding/arrange-binding-contract';
 export * from './array-cardinality/array-cardinality-contract';
 
 
-export * from './env-value/env-value-contract';
 
 export * from './env-read/env-read-contract';
 

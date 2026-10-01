@@ -44,7 +44,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
-import { envValueContract } from '../env-value/env-value-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 export const arrangeBindingContract = z.discriminatedUnion('kind', [
@@ -56,7 +55,7 @@ export const arrangeBindingContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('env'),
     name: z.string().min(1).brand<'ArrangeBindingName'>(),
-    value: envValueContract,
+    value: z.string().brand<'ArrangeBindingValue'>(),
   }),
   z.object({
     kind: z.literal('object'),

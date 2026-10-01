@@ -79,7 +79,7 @@
  * // Returns { unreachable: false, unfillable: [],
  * //   arrangements: [[{ kind: 'param', param: 'score', value: 6 }, …], …] }
  */
-import { arrangeValueContract, envValueContract } from '@assayer/shared/contracts';
+import { arrangeValueContract } from '@assayer/shared/contracts';
 import type { ArrangeBinding, ArrangeValue, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
@@ -347,7 +347,7 @@ export const causeArrangeTransformer = ({
 
           return value === undefined
             ? []
-            : [{ kind: 'env' as const, name: envVarName, value: envValueContract.parse(String(value)) }];
+            : [{ kind: 'env' as const, name: envVarName, value: String(value) }];
         }),
       ];
 
