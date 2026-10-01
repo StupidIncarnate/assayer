@@ -14,7 +14,6 @@
  * // Returns { success: true } after spawning; a spawn failure writes to stderr instead of crashing
  */
 import { spawn } from 'node:child_process';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const nodeChildProcessSpawnAdapter = ({
   command,
@@ -22,7 +21,7 @@ export const nodeChildProcessSpawnAdapter = ({
 }: {
   command: string;
   args: readonly string[];
-}): AdapterResult => {
+}): void => {
   const child = spawn(command, [...args], { detached: true, stdio: 'ignore' });
 
   child.on('error', (error: Error) => {
@@ -33,5 +32,4 @@ export const nodeChildProcessSpawnAdapter = ({
 
   child.unref();
 
-  return { success: true as const };
 };

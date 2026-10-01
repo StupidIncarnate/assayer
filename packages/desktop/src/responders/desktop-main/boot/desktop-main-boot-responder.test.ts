@@ -24,7 +24,7 @@ describe('DesktopMainBootResponder', () => {
 
       const result = await DesktopMainBootResponder({ repoPath: RepoPathStub({ value: '/repo' }) });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.handledChannels()).toStrictEqual([
         desktopBridgeStatics.channels.status,
         desktopBridgeStatics.channels.compiledTree,

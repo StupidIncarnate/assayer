@@ -10,7 +10,7 @@ describe('fsRenameAdapter', () => {
 
       const result = await fsRenameAdapter({ from: '/repo/.tmp/x', to: '/repo/blob/x' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.getRenameArgs({ from: '/repo/.tmp/x' })).toStrictEqual([
         '/repo/.tmp/x',
         '/repo/blob/x',

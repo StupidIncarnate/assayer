@@ -7,14 +7,12 @@
  * // Resolves once the callback stops throwing
  */
 import { waitFor } from '#gateway/npm/testing-library__react';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const testingLibraryWaitForAdapter = async ({
   callback,
 }: {
   callback: () => void;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   await waitFor(callback);
 
-  return { success: true as const };
 };

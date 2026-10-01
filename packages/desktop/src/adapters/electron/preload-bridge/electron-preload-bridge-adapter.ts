@@ -26,7 +26,6 @@
  * // Returns { success: true } after exposing the bridge
  */
 import { contextBridge, ipcRenderer } from 'electron';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { replyValueLayerAdapter } from './reply-value-layer-adapter';
 
@@ -50,7 +49,7 @@ export const electronPreloadBridgeAdapter = ({
   savedRunChannel: string;
   savedConsoleChannel: string;
   runOutputChannel: string;
-}): AdapterResult => {
+}): void => {
   contextBridge.exposeInMainWorld(bridgeKey, {
     getStatus: async (): Promise<unknown> =>
       replyValueLayerAdapter({ reply: await ipcRenderer.invoke(statusChannel) }),
@@ -77,5 +76,4 @@ export const electronPreloadBridgeAdapter = ({
     },
   });
 
-  return { success: true as const };
 };

@@ -13,7 +13,6 @@ import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import type { ResolvedIndex } from '@assayer/shared/contracts';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const resolvedIndexWriteBroker = async ({
   configDir,
@@ -23,7 +22,7 @@ export const resolvedIndexWriteBroker = async ({
   configDir: string;
   namespace: string;
   index: ResolvedIndex;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   const dir = `${configDir}/.assayer/cache/resolved`;
   await fsMkdirAdapter({ path: dir });
 
@@ -39,5 +38,4 @@ export const resolvedIndexWriteBroker = async ({
   await fsWriteFileAdapter({ path: tmpPath, content });
   await fsRenameAdapter({ from: tmpPath, to: `${dir}/${namespace}.json` });
 
-  return { success: true as const };
 };

@@ -27,7 +27,6 @@ import { join } from '#gateway/node/path';
 import { pathToFileURL } from '#gateway/node/url';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
-import type { AdapterResult } from '@assayer/shared/contracts';
 import type { CompiledTree, CompiledFileView, RunConsole, RunResult, StubView } from '@assayer/shared/contracts';
 
 import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';
@@ -68,7 +67,7 @@ export const electronDesktopBootAdapter = async ({
   }) => Promise<RunResult>;
   resolveSavedRun: (params: { relPath: unknown }) => Promise<RunResult | undefined>;
   resolveSavedConsole: (params: { relPath: unknown }) => Promise<RunConsole | undefined>;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   const preloadPath = join(__dirname, '../../../../bin/desktop-preload.js');
   const rendererUrl =
     process.env.ASSAYER_DEV === '1'
@@ -144,5 +143,4 @@ export const electronDesktopBootAdapter = async ({
     }
   });
 
-  return { success: true as const };
 };

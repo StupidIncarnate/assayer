@@ -8,10 +8,9 @@
  * // Removes '/repo/.assayer/cache' recursively and returns { success: true }
  */
 import { fsRmAdapter } from '../../../adapters/fs/rm/fs-rm-adapter';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const manifestTrashBroker = async ({
   configDir,
 }: {
   configDir: string;
-}): Promise<AdapterResult> => fsRmAdapter({ path: `${configDir}/.assayer/cache` });
+}): Promise<void> => fsRmAdapter({ path: `${configDir}/.assayer/cache` });

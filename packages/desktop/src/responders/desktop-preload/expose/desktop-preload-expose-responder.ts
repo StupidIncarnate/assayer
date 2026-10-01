@@ -6,12 +6,11 @@
  * DesktopPreloadExposeResponder();
  * // Exposes window.assayerBridge; returns { success: true }
  */
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { electronPreloadBridgeAdapter } from '../../../adapters/electron/preload-bridge/electron-preload-bridge-adapter';
 import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
 
-export const DesktopPreloadExposeResponder = (): AdapterResult =>
+export const DesktopPreloadExposeResponder = (): void =>
   electronPreloadBridgeAdapter({
     bridgeKey: desktopBridgeStatics.bridge.key,
     statusChannel: desktopBridgeStatics.channels.status,

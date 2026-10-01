@@ -18,7 +18,7 @@ describe('electronPreloadBridgeAdapter', () => {
         runOutputChannel: 'assayer:run-output',
       });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
   });
 

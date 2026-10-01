@@ -7,13 +7,12 @@
  * desktopLaunchBroker({ repoPath: '/home/user/project' });
  * // Returns { success: true } after spawning the window
  */
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { electronBinaryPathAdapter } from '../../../adapters/electron/binary-path/electron-binary-path-adapter';
 import { electronMainEntryPathAdapter } from '../../../adapters/electron/main-entry-path/electron-main-entry-path-adapter';
 import { nodeChildProcessSpawnAdapter } from '../../../adapters/node-child-process/spawn/node-child-process-spawn-adapter';
 
-export const desktopLaunchBroker = ({ repoPath }: { repoPath: string }): AdapterResult => {
+export const desktopLaunchBroker = ({ repoPath }: { repoPath: string }): void => {
   const electronBinary = electronBinaryPathAdapter();
   const mainEntry = electronMainEntryPathAdapter();
 

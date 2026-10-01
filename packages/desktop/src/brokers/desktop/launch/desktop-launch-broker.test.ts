@@ -8,7 +8,7 @@ describe('desktopLaunchBroker', () => {
 
       const result = desktopLaunchBroker({ repoPath: '/tmp/target' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
   });
 });

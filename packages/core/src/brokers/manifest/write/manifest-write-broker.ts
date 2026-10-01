@@ -12,7 +12,6 @@ import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import type { AssayerCacheManifest } from '@assayer/shared/contracts';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const manifestWriteBroker = async ({
   configDir,
@@ -20,7 +19,7 @@ export const manifestWriteBroker = async ({
 }: {
   configDir: string;
   manifest: AssayerCacheManifest;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   const cacheDir = `${configDir}/.assayer/cache`;
   await fsMkdirAdapter({ path: cacheDir });
 
@@ -61,5 +60,4 @@ export const manifestWriteBroker = async ({
   await fsWriteFileAdapter({ path: tmpPath, content });
   await fsRenameAdapter({ from: tmpPath, to: `${cacheDir}/manifest.json` });
 
-  return { success: true as const };
 };

@@ -9,7 +9,7 @@ describe('manifestTrashBroker', () => {
 
       const result = await manifestTrashBroker({ configDir: '/repo' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.getRmArgs({ path: '/repo/.assayer/cache' })).toStrictEqual([
         '/repo/.assayer/cache',
         { recursive: true, force: true },

@@ -10,7 +10,6 @@ import { StrictMode, createElement } from '#gateway/npm/react';
 import type { ReactNode } from '#gateway/npm/react';
 import { createRoot } from '#gateway/npm/react-dom__client';
 import { MantineProvider } from '#gateway/npm/mantine__core';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { appThemeStatics } from '../../../statics/app-theme/app-theme-statics';
 
@@ -20,7 +19,7 @@ export const reactDomMountAdapter = ({
 }: {
   container: HTMLElement;
   content: ReactNode;
-}): AdapterResult => {
+}): void => {
   createRoot(container).render(
     createElement(
       StrictMode,
@@ -29,5 +28,4 @@ export const reactDomMountAdapter = ({
     ),
   );
 
-  return { success: true as const };
 };

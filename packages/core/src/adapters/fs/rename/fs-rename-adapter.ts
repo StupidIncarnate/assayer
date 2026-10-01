@@ -6,7 +6,6 @@
  * // Renames the path from source to destination and returns { success: true }
  */
 import { rename } from 'fs/promises';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const fsRenameAdapter = async ({
   from,
@@ -14,8 +13,7 @@ export const fsRenameAdapter = async ({
 }: {
   from: string;
   to: string;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   await rename(from, to);
 
-  return { success: true as const };
 };

@@ -271,4 +271,3 @@ export * from './src/contracts/run-result/run-result.stub';
 export * from './src/contracts/run-console/run-console-contract';
 export * from './src/contracts/run-console/run-console.stub';
 
-export type * from './src/contracts/adapter-result/adapter-result-contract';

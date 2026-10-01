@@ -27,7 +27,7 @@ describe('electronDesktopBootAdapter', () => {
         resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
       });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.handledChannels()).toStrictEqual([
         'assayer:status',
         'assayer:compiled-tree',

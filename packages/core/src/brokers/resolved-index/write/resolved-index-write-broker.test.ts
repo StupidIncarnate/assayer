@@ -17,7 +17,7 @@ describe('resolvedIndexWriteBroker', () => {
         index: ResolvedIndexStub(),
       });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(
         proxy.getWrittenIndex({ path: '/repo/.assayer/cache/resolved/feature-x.json.tmp' }),
       ).toStrictEqual({

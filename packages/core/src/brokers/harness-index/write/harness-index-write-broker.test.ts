@@ -17,7 +17,7 @@ describe('harnessIndexWriteBroker', () => {
         index: HarnessIndexStub(),
       });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(
         proxy.getWrittenIndex({ path: '/repo/.assayer/cache/harness/feature-x.json.tmp' }),
       ).toStrictEqual({

@@ -8,7 +8,7 @@ describe('testingLibraryWaitForAdapter', () => {
 
       const result = await testingLibraryWaitForAdapter({ callback: () => undefined });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
   });
 });

@@ -41,7 +41,7 @@ describe('manifestWriteBroker', () => {
 
       const result = await manifestWriteBroker({ configDir: '/repo', manifest });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/.assayer/cache/manifest.json.tmp']);
       expect(
         proxy.getWrittenContentFor({ path: '/repo/.assayer/cache/manifest.json.tmp' }),
@@ -78,7 +78,7 @@ describe('manifestWriteBroker', () => {
 
       const result = await manifestWriteBroker({ configDir: '/repo', manifest });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(
         proxy.getWrittenContentFor({ path: '/repo/.assayer/cache/manifest.json.tmp' }),
       ).toBe(

@@ -9,7 +9,7 @@ describe('DesktopPreloadExposeResponder', () => {
 
       const result = DesktopPreloadExposeResponder();
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
 
     it('VALID: {} => delegates bridge key and all channels to the preload adapter', async () => {
@@ -17,7 +17,7 @@ describe('DesktopPreloadExposeResponder', () => {
 
       const result = DesktopPreloadExposeResponder();
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.exposedBridgeKeys()).toStrictEqual([desktopBridgeStatics.bridge.key]);
 
       await proxy.triggerGetCompiledTree();

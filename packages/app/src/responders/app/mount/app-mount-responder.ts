@@ -6,12 +6,11 @@
  * AppMountResponder({ content: <AppFlow /> });
  * // Returns { success: true } after mounting; throws if #root is missing
  */
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { reactDomMountAdapter } from '../../../adapters/react-dom/mount/react-dom-mount-adapter';
 import { document } from '#gateway/browser/document';
 
-export const AppMountResponder = ({ content }: { content: React.JSX.Element }): AdapterResult => {
+export const AppMountResponder = ({ content }: { content: React.JSX.Element }): void => {
   const container = document.getElementById('root');
 
   if (container === null) {

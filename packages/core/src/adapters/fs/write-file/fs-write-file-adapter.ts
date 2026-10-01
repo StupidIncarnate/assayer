@@ -6,7 +6,6 @@
  * // Writes the content to disk and returns { success: true }
  */
 import { writeFile } from 'fs/promises';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const fsWriteFileAdapter = async ({
   path,
@@ -14,8 +13,7 @@ export const fsWriteFileAdapter = async ({
 }: {
   path: string;
   content: string;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   await writeFile(path, content);
 
-  return { success: true as const };
 };

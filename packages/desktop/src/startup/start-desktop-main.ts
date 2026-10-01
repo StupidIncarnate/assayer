@@ -5,10 +5,9 @@
  * await StartDesktopMain({ repoPath });
  * // Boots the Electron main process
  */
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { DesktopMainFlow } from '../flows/desktop-main/desktop-main-flow';
 import type { RepoPath } from '../contracts/repo-path/repo-path-contract';
 
-export const StartDesktopMain = async ({ repoPath }: { repoPath: RepoPath }): Promise<AdapterResult> =>
+export const StartDesktopMain = async ({ repoPath }: { repoPath: RepoPath }): Promise<void> =>
   DesktopMainFlow({ repoPath });

@@ -45,7 +45,7 @@ describe('runConsoleSaveBroker', () => {
 
       const result = await runConsoleSaveBroker({ configDir: '/repo', runId: 'abc123', console: 'x' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
 
     // An empty report is a real value — a run that wrote nothing — and it must overwrite whatever the

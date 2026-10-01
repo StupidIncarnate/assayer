@@ -10,7 +10,7 @@ describe('fsWriteFileAdapter', () => {
 
       const result = await fsWriteFileAdapter({ path: '/repo/out.ts', content: 'export const x = 1;' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/out.ts']);
       expect(proxy.getWrittenContentFor({ path: '/repo/out.ts' })).toBe('export const x = 1;');
     });

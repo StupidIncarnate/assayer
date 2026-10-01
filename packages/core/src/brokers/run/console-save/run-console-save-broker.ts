@@ -21,7 +21,6 @@
  */
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const runConsoleSaveBroker = async ({
   configDir,
@@ -31,7 +30,7 @@ export const runConsoleSaveBroker = async ({
   configDir: string;
   runId: string;
   console: string;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   const runDir = `${configDir}/.assayer/cache/runs/${runId}`;
 
   // Created rather than assumed: a file whose cases were ALL admitted never reaches the runner, so its
@@ -40,5 +39,4 @@ export const runConsoleSaveBroker = async ({
   await fsMkdirAdapter({ path: runDir });
   await fsWriteFileAdapter({ path: `${runDir}/console.txt`, content: consoleText });
 
-  return { success: true as const };
 };

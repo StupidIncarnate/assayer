@@ -6,10 +6,8 @@
  * // Creates every missing directory in the path and returns { success: true }
  */
 import { mkdir } from 'fs/promises';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
-export const fsMkdirAdapter = async ({ path }: { path: string }): Promise<AdapterResult> => {
+export const fsMkdirAdapter = async ({ path }: { path: string }): Promise<void> => {
   await mkdir(path, { recursive: true });
 
-  return { success: true as const };
 };

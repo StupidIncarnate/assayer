@@ -10,7 +10,7 @@ describe('fsMkdirAdapter', () => {
 
       const result = await fsMkdirAdapter({ path: '/repo/a/b/c' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.getMkdirArgs({ path: '/repo/a/b/c' })).toStrictEqual([
         '/repo/a/b/c',
         { recursive: true },
@@ -26,7 +26,7 @@ describe('fsMkdirAdapter', () => {
 
       const result = await fsMkdirAdapter({ path: '/repo/existing' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
   });
 });

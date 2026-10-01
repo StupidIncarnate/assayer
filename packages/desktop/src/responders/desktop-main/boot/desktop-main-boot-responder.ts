@@ -12,7 +12,6 @@
  * await DesktopMainBootResponder({ repoPath });
  * // Opens the window and registers the status/tree/file/run/saved-run IPC; returns { success: true }
  */
-import type { AdapterResult } from '@assayer/shared/contracts';
 import { relPathContract } from '@assayer/shared/contracts';
 import { runConsoleFindBroker, runFindBroker } from '@assayer/core/brokers';
 
@@ -30,7 +29,7 @@ export const DesktopMainBootResponder = async ({
   repoPath,
 }: {
   repoPath: RepoPath;
-}): Promise<AdapterResult> =>
+}): Promise<void> =>
   electronDesktopBootAdapter({
     statusChannel: desktopBridgeStatics.channels.status,
     compiledTreeChannel: desktopBridgeStatics.channels.compiledTree,

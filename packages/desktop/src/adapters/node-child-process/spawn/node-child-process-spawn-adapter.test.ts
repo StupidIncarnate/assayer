@@ -11,7 +11,7 @@ describe('nodeChildProcessSpawnAdapter', () => {
         args: ['main.js', '--repo', '/repo'],
       });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
 
     it('VALID: {command, args} => writes nothing to stderr when the spawn succeeds', () => {
@@ -36,7 +36,7 @@ describe('nodeChildProcessSpawnAdapter', () => {
         args: ['main.js', '--repo', '/repo'],
       });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.getStderrWrites()).toStrictEqual([
         'assayer: failed to launch /usr/bin/electron (spawn /usr/bin/electron ENOENT). Verify the executable exists and is runnable, then try again.\n',
       ]);

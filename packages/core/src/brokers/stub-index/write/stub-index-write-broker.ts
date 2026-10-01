@@ -14,7 +14,6 @@ import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import type { StubIndex } from '@assayer/shared/contracts';
-import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const stubIndexWriteBroker = async ({
   configDir,
@@ -24,7 +23,7 @@ export const stubIndexWriteBroker = async ({
   configDir: string;
   namespace: string;
   index: StubIndex;
-}): Promise<AdapterResult> => {
+}): Promise<void> => {
   const dir = `${configDir}/.assayer/cache/stubs`;
   await fsMkdirAdapter({ path: dir });
 
@@ -41,5 +40,4 @@ export const stubIndexWriteBroker = async ({
   await fsWriteFileAdapter({ path: tmpPath, content });
   await fsRenameAdapter({ from: tmpPath, to: `${dir}/${namespace}.json` });
 
-  return { success: true as const };
 };

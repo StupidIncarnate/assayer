@@ -10,7 +10,7 @@ describe('fsRmAdapter', () => {
 
       const result = await fsRmAdapter({ path: '/repo/cache' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(proxy.getRmArgs({ path: '/repo/cache' })).toStrictEqual([
         '/repo/cache',
         { recursive: true, force: true },
@@ -26,7 +26,7 @@ describe('fsRmAdapter', () => {
 
       const result = await fsRmAdapter({ path: '/repo/missing' });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(result).toBeUndefined();
     });
   });
 });
