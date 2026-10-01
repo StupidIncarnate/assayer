@@ -1,4 +1,4 @@
-import { AssayerCacheManifestStub, StubIndexStub, StubOverlayStub, ObjectStubStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub, StubIndexStub, ObjectStubStub } from '@assayer/shared/contracts';
 
 import { stubIndexResolveBroker } from './stub-index-resolve-broker';
 import { stubIndexResolveBrokerProxy } from './stub-index-resolve-broker.proxy';
@@ -28,7 +28,12 @@ describe('stubIndexResolveBroker', () => {
       manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
       index: StubIndexStub(),
     });
-    proxy.withOverlays({ overlays: [StubOverlayStub()] });
+    proxy.withObjectOverlay({
+      repoPath: '/repo',
+      definitionRelPath: 'src/config/config.ts',
+      typeName: 'Config',
+      properties: { mode: ['dev', 'prod', 'staging'] },
+    });
 
     const result = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 

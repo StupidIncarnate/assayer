@@ -5,7 +5,8 @@ import { repoSourceRootBrokerProxy } from './repo-source-root-broker.proxy';
 describe('repoSourceRootBroker', () => {
   describe('a config with no repoRoot of its own', () => {
     it('VALID: {repoRoot: "."} => the config dir itself', async () => {
-      repoSourceRootBrokerProxy();
+      const proxy = repoSourceRootBrokerProxy();
+      proxy.configHasRepoRoot({ repoPath: '/repo', repoRoot: '.' });
 
       const result = await repoSourceRootBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 
@@ -18,7 +19,7 @@ describe('repoSourceRootBroker', () => {
     // while the code lives a level down, and reading source from /repo finds nothing.
     it('VALID: {repoRoot: "./smoke-repo"} => resolved under the config dir', async () => {
       const proxy = repoSourceRootBrokerProxy();
-      proxy.configHasRepoRoot({ repoRoot: './smoke-repo' });
+      proxy.configHasRepoRoot({ repoPath: '/repo', repoRoot: './smoke-repo' });
 
       const result = await repoSourceRootBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 
@@ -29,7 +30,7 @@ describe('repoSourceRootBroker', () => {
   describe('a repo with no usable config', () => {
     it('ERROR: {unreadable config} => throws naming the file and how to make one', async () => {
       const proxy = repoSourceRootBrokerProxy();
-      proxy.configUnreadable({ message: 'Unexpected end of JSON input' });
+      proxy.configUnreadable({ repoPath: '/repo' });
 
       await expect(repoSourceRootBroker({ repoPath: RepoPathStub({ value: '/repo' }) })).rejects.toThrow(
         /assayer status/u,
