@@ -1,4 +1,3 @@
-import { entryLabelContract } from '@assayer/shared/contracts';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
@@ -112,7 +111,7 @@ describe('throughCallbackCasesTransformer', () => {
         callback: SINK_CALLBACK,
         entry: ENTRY,
         arrayParam: 'items',
-        label: entryLabelContract.parse('run › items.map((sink) => …) L2'),
+        label: 'run › items.map((sink) => …) L2',
       });
 
       expect({ cases: result.analysis.cases, unfillable: result.unfillable }).toStrictEqual({

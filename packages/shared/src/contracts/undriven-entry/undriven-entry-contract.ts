@@ -31,7 +31,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { entryLabelContract } from '../entry-label/entry-label-contract';
 
 export const undrivenEntryContract = z.object({
   name: z.string().min(1).brand<'UndrivenEntryName'>(),
@@ -44,7 +43,7 @@ export const undrivenEntryContract = z.object({
   // L2`). `name` stays `*module*` / the structural projection because it keys the driven/undriven
   // match; `label` is DISPLAY only, so the report and the window never read a cache key. A named
   // private carries none and shows its `name`.
-  label: entryLabelContract.optional(),
+  label: z.string().min(1).brand<'UndrivenEntryLabel'>().optional(),
 });
 
 export type UndrivenEntry = z.infer<typeof undrivenEntryContract>;

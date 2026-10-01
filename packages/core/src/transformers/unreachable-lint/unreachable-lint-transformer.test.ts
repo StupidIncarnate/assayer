@@ -1,9 +1,9 @@
-import { constLengthContract, entryLabelContract, lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
+import { constLengthContract, lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
 
 import { unreachableLintTransformer } from './unreachable-lint-transformer';
 
 const name = 'classify';
-const label = entryLabelContract.parse('classify');
+const label = 'classify';
 const line = (value: number): ReturnType<typeof lineNumberContract.parse> => value;
 
 describe('unreachableLintTransformer', () => {
@@ -45,7 +45,7 @@ describe('unreachableLintTransformer', () => {
     it('VALID: {level welded to 7} => a lint naming the operand, the value, and the branch line', () => {
       const [lint] = unreachableLintTransformer({
         name: '*module*',
-        displayName: entryLabelContract.parse('welded-const.ts'),
+        displayName: 'welded-const.ts',
         unreachableExits: [
           {
             line: line(6),
@@ -71,7 +71,7 @@ describe('unreachableLintTransformer', () => {
     it('VALID: {items welded to a fixed length of 3} => a lint naming the operand and its length', () => {
       const [lint] = unreachableLintTransformer({
         name: '*module*',
-        displayName: entryLabelContract.parse('const-array-branch.ts'),
+        displayName: 'const-array-branch.ts',
         unreachableExits: [
           {
             line: line(6),

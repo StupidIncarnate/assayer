@@ -47,7 +47,7 @@
  * // Returns the FileAnalysis with harness-supplied entries driven and their input gaps paid
  */
 import { fileAnalysisContract, entryGapContract } from '@assayer/shared/contracts';
-import type { EntryLabel, FileAnalysis } from '@assayer/shared/contracts';
+import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessLoadBroker } from '../load/harness-load-broker';
@@ -139,7 +139,7 @@ export const harnessRealizeBroker = ({
   // A folded scope's or a through-caller pseudo-entry's OWN refusal still standing after `followHarness`
   // — the axis the flat per-entry derivation below cannot see, because it belongs to a DIFFERENT scope's
   // signature.
-  const foldedRefusalsByEntry = new Map<string, { param: string; type: string; owner?: EntryLabel }[]>();
+  const foldedRefusalsByEntry = new Map<string, { param: string; type: string; owner?: string }[]>();
   (followed?.refusals ?? []).forEach((refusal) => {
     const existing = foldedRefusalsByEntry.get(refusal.entryName) ?? [];
     existing.push({ param: refusal.param, type: refusal.type, ...(refusal.owner === undefined ? {} : { owner: refusal.owner }) });
@@ -240,7 +240,7 @@ export const harnessRealizeBroker = ({
         ...(paidPredicate === undefined ? {} : { predicateSignature: paidPredicate }),
       },
       touched: true as const,
-      unfillable: [] as { param: string; type: string; owner?: EntryLabel }[],
+      unfillable: [] as { param: string; type: string; owner?: string }[],
       undrivenBranches: own.undrivenBranches,
     };
   });

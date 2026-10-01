@@ -1,4 +1,3 @@
-import { entryLabelContract } from '@assayer/shared/contracts';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
@@ -147,7 +146,7 @@ describe('funnelCasesTransformer', () => {
           {
             callback: SINK_CALLBACK,
             arrayParam: 'items',
-            label: entryLabelContract.parse('run › items.map((sink) => …) L2'),
+            label: 'run › items.map((sink) => …) L2',
           },
         ],
       });

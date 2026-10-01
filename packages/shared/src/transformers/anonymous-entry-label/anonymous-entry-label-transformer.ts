@@ -20,8 +20,6 @@
  * anonymousEntryLabelTransformer({ host: 'rescale', reach: { kind: 'argument', receiver: 'items', method: 'map' }, params: [{ name: 'n', … }], line: 2 });
  * // Returns 'rescale › items.map((n) => …) L2'
  */
-import { entryLabelContract } from '../../contracts/entry-label/entry-label-contract';
-import type { EntryLabel } from '../../contracts/entry-label/entry-label-contract';
 import type { AnonymousReach } from '../../contracts/anonymous-reach/anonymous-reach-contract';
 import type { ParamDescriptor } from '../../contracts/param-descriptor/param-descriptor-contract';
 
@@ -35,7 +33,7 @@ export const anonymousEntryLabelTransformer = ({
   reach: AnonymousReach;
   params: readonly ParamDescriptor[];
   line: number;
-}): EntryLabel => {
+}): string => {
   // The arrow as the reader wrote it, minus its body: the signature is what distinguishes two
   // callbacks at a glance, and the body is on screen beside the label anyway.
   const arrow = `(${params.map((param) => String(param.name)).join(', ')}) => …`;
@@ -43,11 +41,11 @@ export const anonymousEntryLabelTransformer = ({
   const suffix = ` L${String(line)}`;
 
   if (reach.kind === 'return') {
-    return entryLabelContract.parse(`${prefix}return ${arrow}${suffix}`);
+    return `${prefix}return ${arrow}${suffix}`;
   }
 
   if (reach.kind === 'invocation') {
-    return entryLabelContract.parse(`${prefix}(${arrow})(…)${suffix}`);
+    return `${prefix}(${arrow})(…)${suffix}`;
   }
 
   // A `receiver.method(…)` shape names both; a bare call names its callee; a computed or chained
@@ -57,5 +55,5 @@ export const anonymousEntryLabelTransformer = ({
       ? `${String(reach.receiver)}.${String(reach.method)}`
       : reach.callee;
 
-  return entryLabelContract.parse(called === undefined ? `${prefix}${arrow}${suffix}` : `${prefix}${called}(${arrow})${suffix}`);
+  return (called === undefined ? `${prefix}${arrow}${suffix}` : `${prefix}${called}(${arrow})${suffix}`);
 };

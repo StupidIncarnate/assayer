@@ -1,4 +1,3 @@
-import { EntryLabelStub } from '@assayer/shared/contracts/entry-label/entry-label.stub';
 
 import { inputGapTransformer } from './input-gap-transformer';
 
@@ -133,7 +132,7 @@ describe('inputGapTransformer', () => {
           {
             param: 'cb',
             type: '(n: number) => void',
-            owner: EntryLabelStub({ value: 'helper' }),
+            owner: 'helper',
           },
         ],
       });
@@ -149,7 +148,7 @@ describe('inputGapTransformer', () => {
           {
             param: 'cb',
             type: '(n: number) => void',
-            owner: EntryLabelStub({ value: 'helper' }),
+            owner: 'helper',
           },
         ],
       });
@@ -166,7 +165,7 @@ describe('inputGapTransformer', () => {
           {
             param: 'report',
             type: '(message: string) => string',
-            owner: EntryLabelStub({ value: 'audit' }),
+            owner: 'audit',
           },
           { param: 'report', type: '(message: string) => string' },
         ],

@@ -20,7 +20,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { entryLabelContract } from '../entry-label/entry-label-contract';
 import { entryAccessContract } from '../entry-access/entry-access-contract';
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
@@ -42,7 +41,7 @@ export const entrySignatureContract = z.object({
   // (`rescale › items.map((n) => …) L2`), since `name` is its structural projection and a surface
   // that printed that would be printing a cache key. Present only for a scope with no name to
   // borrow; a named entry has none and shows `name(params)`. DISPLAY only, like `exportName`.
-  label: entryLabelContract.optional(),
+  label: z.string().min(1).brand<'EntrySignatureLabel'>().optional(),
 });
 
 export type EntrySignature = z.infer<typeof entrySignatureContract>;

@@ -43,8 +43,8 @@
  * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }],
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
-import { derivedTestCaseContract, entryLabelContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
+import { derivedTestCaseContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ConstLength, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -73,7 +73,7 @@ export const funnelNamedCasesTransformer = ({
     displayName: string;
   }[];
   consumed: { name: string; startLine: number; params: ParamDescriptor[] }[];
-  unfillable: { param: string; type: string; owner: EntryLabel }[];
+  unfillable: { param: string; type: string; owner: string }[];
 } => {
   // A harness spec for THIS hop alone — the map is consulted by this scope's own name, never a
   // caller's, so a private's harness never leaks onto the surface's own derivation or a sibling private.
@@ -107,7 +107,7 @@ export const funnelNamedCasesTransformer = ({
         cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
         unreachable: [],
         consumed: [] as { name: string; startLine: number; params: ParamDescriptor[] }[],
-        unfillable: [] as { param: string; type: string; owner: EntryLabel }[],
+        unfillable: [] as { param: string; type: string; owner: string }[],
       };
     }
 
@@ -205,7 +205,7 @@ export const funnelNamedCasesTransformer = ({
     // already tagged with theirs. The top hop is the surface, whose own derivation invoices the same
     // refusals — the gap channel de-duplicates on (scope, parameter), so it is stated once.
     unfillable: [
-      ...derived.unfillable.map((refusal) => ({ ...refusal, owner: entryLabelContract.parse(String(scope.name)) })),
+      ...derived.unfillable.map((refusal) => ({ ...refusal, owner: String(scope.name) })),
       ...perBase.flatMap((entry) => entry.unfillable),
     ],
   };
