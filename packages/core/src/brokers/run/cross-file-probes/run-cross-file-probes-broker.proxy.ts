@@ -23,10 +23,12 @@ export const runCrossFileProbesBrokerProxy = (): {
   // whole list and asserts it complete — a plan written for an unrelated import fails it, which is the
   // exact mistake this broker exists to avoid.
   getWrittenPaths: ({ probeDir }: { probeDir: string }) => unknown[];
+  // The tsconfig search starts at `root` and finds nothing, so the compiler options are empty.
+  noTsconfigAt: ({ root }: { root: string }) => void;
 } => {
-  // The hash and the tsconfig read run REAL (deterministic); the sibling resolve is staged and the file
-  // write is captured rather than performed, so a unit test asserts the plan without touching disk.
-  tsconfigReadBrokerProxy();
+  // The hash runs REAL (deterministic). The tsconfig read and the sibling resolve are staged, and the
+  // file write is captured rather than performed, so a unit test asserts the plan without touching disk.
+  const tsconfigProxy = tsconfigReadBrokerProxy();
   const writes = writeFileProxy();
   const sibling = resolveSiblingCalleeBrokerProxy();
 
@@ -49,5 +51,8 @@ export const runCrossFileProbesBrokerProxy = (): {
       writes
         .getCallsFor({ path: (value: unknown): boolean => String(value).startsWith(`${probeDir}/`) })
         .map((call) => call[0]),
+    noTsconfigAt: ({ root }: { root: string }): void => {
+      tsconfigProxy.noTsconfigAt({ searchPath: root });
+    },
   };
 };

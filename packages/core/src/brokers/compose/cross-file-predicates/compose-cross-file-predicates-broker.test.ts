@@ -33,6 +33,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('a caller guarding on one imported predicate', () => {
     it('VALID: {if (big(n)), big returns n > 50} => the truthy leaf becomes n > 50 and both arms derive sound values', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: BIG_PREDICATE, specifier: './big' });
       const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
@@ -79,6 +80,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('a caller whose two imported guards contradict', () => {
     it('VALID: {over(n) > 50 then under(n) > 100} => the first exit takes two buckets, the middle is unreachable', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
       // actually answers rather than to the order the compose happens to resolve them in.
       proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE, specifier: './over' });
@@ -135,6 +137,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     // one — no two guards are in tension here.
     it('VALID: {LEVEL welded to 7 beside exceedsLimit(size) > 50} => the dead exit reads the welded sentence, not the contradictory-guards one', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/limit.ts', source: EXCEEDS_LIMIT_PREDICATE, specifier: './limit' });
       const walked = walkFileTransformer({ source: WELDED_CALLER, relPath: 'src/report.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/report.ts' });
@@ -163,6 +166,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     // its operand's range — never the stale entry-only rows the input carried.
     it('VALID: {over(n) > 50 then under(n) > 100} => enrichment re-derives both branch-line ranges, not the input row', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
       // actually answers rather than to the order the compose happens to resolve them in.
       proxy.setupSibling({ fileName: '/repo/src/over.ts', source: OVER_PREDICATE, specifier: './over' });
@@ -198,6 +202,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('an imported callee that resolves outside the repo', () => {
     it('VALID: {big resolves under node_modules} => the leaf stays opaque and no lint is raised', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.resolvesTo({ fileName: '/repo/node_modules/big/index.d.ts', specifier: './big' });
       const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
@@ -225,6 +230,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('an imported callee that publishes no predicate signature', () => {
     it('VALID: {big returns Boolean(n), not a comparison} => the leaf stays opaque and no lint is raised', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: BIG_NO_PREDICATE, specifier: './big' });
       const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
@@ -264,6 +270,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   describe('an imported callee whose sibling exports no function by that name', () => {
     it('VALID: {big is imported, but the sibling exports notBig instead} => the leaf stays opaque and no lint is raised', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: 'export function notBig(n: number): boolean {\n  return n > 50;\n}\n', specifier: './big' });
       const walked = walkFileTransformer({ source: CLASSIFY_CALLER, relPath: 'src/classify.ts' });
       const analysis = analyzeFileBroker({ walked });
@@ -295,6 +302,7 @@ describe('composeCrossFilePredicatesBroker', () => {
     // reaches, and the leaf stays exactly the opaque `truthy` call-leaf the walk read.
     it('VALID: {classify() calls big(5) with a literal, big compares its own param} => the leaf stays opaque and no lint is raised', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/big.ts', source: BIG_PREDICATE, specifier: './big' });
       const source = "import { big } from './big';\n\nexport function classify(): string {\n  if (big(5)) {\n    return 'B';\n  }\n\n  return 'S';\n}\n";
       const walked = walkFileTransformer({ source, relPath: 'src/classify.ts' });

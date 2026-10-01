@@ -369,6 +369,7 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupManifest({ repoPath: '/config', manifest });
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({
@@ -463,6 +464,7 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupManifest({ repoPath: '/config', manifest });
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({
@@ -551,6 +553,7 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupManifest({ repoPath: '/config', manifest });
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({

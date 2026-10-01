@@ -147,6 +147,7 @@ describe('stubRealizeBroker', () => {
   describe('a cross-file object type resolved through the import', () => {
     it("VALID: {config: Config from './types', if (config.mode === 'a')} => both arms driven, region filled", () => {
       const proxy = stubRealizeBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
@@ -179,6 +180,7 @@ describe('stubRealizeBroker', () => {
     // beside two cases that plainly drive the entry.
     it("VALID: {config: Config from './types'} => the input gap the per-file analysis invoiced is cleared", () => {
       const proxy = stubRealizeBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
@@ -198,6 +200,7 @@ describe('stubRealizeBroker', () => {
   describe('a cross-file object type whose import cannot resolve', () => {
     it("VALID: {config: Config from './types', nothing resolves it} => the analysis passes through unchanged", () => {
       const proxy = stubRealizeBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.importResolvesToNothing({ specifier: './types' });
       const walked = walkFileTransformer({ source: UNRESOLVABLE_CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });

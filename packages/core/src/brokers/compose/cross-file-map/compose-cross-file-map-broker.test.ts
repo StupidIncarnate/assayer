@@ -41,6 +41,7 @@ describe('composeCrossFileMapBroker', () => {
   describe('a surface mapping an imported branching function over its array param', () => {
     it('VALID: {items.map(bandReading), bandReading branches on n} => the callee`s branches funnel into the host`s cases', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE, specifier: './band-reading' });
       const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
@@ -62,6 +63,7 @@ describe('composeCrossFileMapBroker', () => {
 
     it('VALID: {the folded host} => its own exit unioned with the sibling callee`s three band exits', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE, specifier: './band-reading' });
       const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
@@ -86,6 +88,7 @@ describe('composeCrossFileMapBroker', () => {
 
     it('VALID: {the sibling also takes a callback} => a GAP on the host, naming the sibling that declares it', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SINK_CHILD_SOURCE, specifier: './band-reading' });
       const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
@@ -127,6 +130,7 @@ describe('composeCrossFileMapBroker', () => {
   describe('a specifier that resolves to a sibling that fails to parse', () => {
     it('EDGE: {items.map(bandReading), the sibling has invalid syntax} => the analysis passes through unchanged', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: 'const x = ;;;{{{', specifier: './band-reading' });
       const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' });
@@ -140,6 +144,7 @@ describe('composeCrossFileMapBroker', () => {
   describe('a specifier that resolves to a sibling exporting no function by the imported name', () => {
     it('EDGE: {items.map(bandReading), the sibling exports a differently-named function} => the analysis passes through unchanged', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({
         fileName: '/repo/src/band-reading.ts',
         source: 'export function notBandReading(n: number): string {\n  return String(n);\n}\n',
@@ -157,6 +162,7 @@ describe('composeCrossFileMapBroker', () => {
   describe('a file with a second function unrelated to any cross-file map', () => {
     it('VALID: {bandReadings maps bandReading, grade is a separate plain function} => grade`s function record is untouched by the fold', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE, specifier: './band-reading' });
       const source = PARENT_SOURCE + PLAIN_SOURCE;
       const walked = walkFileTransformer({ source, relPath: 'src/cross-file-map.ts' });
@@ -186,6 +192,7 @@ describe('composeCrossFileMapBroker', () => {
 
     it('VALID: {items.map(bandReading), others.map(otherReading), same host} => the cartesian of both callbacks funnels into ONE case set', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
       // actually answers rather than to the order the fold happens to resolve them in.
       proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SIMPLE_CHILD_A, specifier: './band-reading' });

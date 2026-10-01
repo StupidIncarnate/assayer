@@ -14,6 +14,7 @@ describe('runCrossFileProbesBroker', () => {
   describe('a target that maps an imported callee', () => {
     it('VALID: {items.map(bandReading)} => writes the sibling probe plan keyed on its content hash, returns its relPath', async () => {
       const proxy = runCrossFileProbesBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({
         fileName: '/repo/src/band-reading.ts',
         source: CHILD_SOURCE,
