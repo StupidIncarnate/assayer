@@ -17,10 +17,8 @@
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { harnessClassifyBroker } from '../../harness/classify/harness-classify-broker';
 import { isSourceFileIncludedGuard } from '../../../guards/is-source-file-included/is-source-file-included-guard';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { readFile } from '#gateway/node/fs__promises';
 import { relative } from '#gateway/node/path';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const compilePlanCurrentBroker = async ({
   root,
@@ -29,8 +27,8 @@ export const compilePlanCurrentBroker = async ({
   root: string;
   exclude?: readonly string[];
 }): Promise<{
-  targets: { relPath: string; content: FileContents }[];
-  harnesses: { relPath: string; content: FileContents }[];
+  targets: { relPath: string; content: string }[];
+  harnesses: { relPath: string; content: string }[];
 }> => {
   const absPaths = await compileWalkWorkingTreeBroker({ root });
 
@@ -49,7 +47,7 @@ export const compilePlanCurrentBroker = async ({
   const planned = await Promise.all(
     included.map(async (r) => ({
       relPath: r.relPath,
-      content: fileContentsContract.parse(await readFile(String(r.abs))),
+      content: await readFile(String(r.abs)),
     }))
   );
 

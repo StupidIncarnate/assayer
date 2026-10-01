@@ -12,13 +12,12 @@
 import { z } from '#gateway/npm/zod';
 
 import { treeNodeKindContract } from '../tree-node-kind/tree-node-kind-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 
 const treeNodeNameContract = z.string().min(1).brand<'TreeNodeName'>();
 
 export interface TreeNode {
   name: z.infer<typeof treeNodeNameContract>;
-  path: z.infer<typeof relPathContract>;
+  path: string;
   kind: z.infer<typeof treeNodeKindContract>;
   children?: TreeNode[] | undefined;
 }

@@ -1,5 +1,4 @@
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 import { useFileRunBinding } from './use-file-run-binding';
 import { useFileRunBindingProxy } from './use-file-run-binding.proxy';
@@ -54,7 +53,7 @@ describe('useFileRunBinding', () => {
       const proxy = useFileRunBindingProxy();
       proxy.setupSavedRun({ run: RunResultStub() });
       proxy.setupSavedConsole({
-        console: RunConsoleStub({ value: 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n' }),
+        console: 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n',
       });
       proxy.runFails({ message: 'opening a file must never run it' });
 

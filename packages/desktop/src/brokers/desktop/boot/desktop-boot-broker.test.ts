@@ -1,6 +1,5 @@
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 
@@ -28,7 +27,7 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       expect(result).toBeUndefined();
@@ -66,7 +65,7 @@ describe('desktopBootBroker', () => {
         },
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:compiled-file', arg: 'src/foo.ts' });
@@ -97,7 +96,7 @@ describe('desktopBootBroker', () => {
           return Promise.resolve(run);
         },
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/boolean/and/and.ts' });
@@ -131,7 +130,7 @@ describe('desktopBootBroker', () => {
           return Promise.resolve(RunResultStub());
         },
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/boolean/and/and.ts' });
@@ -163,7 +162,7 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.reject(new Error('savedRun must never execute a run')),
         resolveSavedRun: async () => Promise.resolve(run),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:saved-run', arg: 'src/happy-path/boolean/and/and.ts' });
@@ -176,7 +175,7 @@ describe('desktopBootBroker', () => {
     // a terminal, since the CLI saves the same bytes.
     it('VALID: {invokeHandler on savedConsoleChannel} => answers with the saved report, running nothing', async () => {
       const proxy = desktopBootBrokerProxy();
-      const report = RunConsoleStub({ value: 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n' });
+      const report = 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n';
 
       await desktopBootBroker({
         statusChannel: 'assayer:status',
@@ -222,7 +221,7 @@ describe('desktopBootBroker', () => {
         resolveStubs: async () => Promise.resolve(view),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:stubs' });
@@ -256,7 +255,7 @@ describe('desktopBootBroker', () => {
         resolveRun: async () =>
           Promise.reject(new Error('assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.')),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/switch/pure-statement/pure-statement.ts' });
@@ -287,7 +286,7 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:status' });
@@ -317,7 +316,7 @@ describe('desktopBootBroker', () => {
           Promise.reject(new Error('assayer: cannot read /repo/assayer.config.json. Run `assayer status` in that repo to generate one.')),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:stubs' });
@@ -346,7 +345,7 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.reject(new Error('assayer: src/foo.ts is not in the compiled cache.')),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:compiled-file', arg: 'src/foo.ts' });

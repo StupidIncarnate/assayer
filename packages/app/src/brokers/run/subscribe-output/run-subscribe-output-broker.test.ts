@@ -1,4 +1,3 @@
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 import { runSubscribeOutputBroker } from './run-subscribe-output-broker';
 import { runSubscribeOutputBrokerProxy } from './run-subscribe-output-broker.proxy';
@@ -7,11 +6,11 @@ describe('runSubscribeOutputBroker', () => {
   describe('a subscription over the bridge', () => {
     it('VALID: {the CLI writes a chunk} => the chunk reaches the subscriber', () => {
       const proxy = runSubscribeOutputBrokerProxy();
-      const seen: ReturnType<typeof RunConsoleStub>[] = [];
+      const seen: string[] = [];
 
       runSubscribeOutputBroker({
         onChunk: ({ chunk }: { chunk: string }): void => {
-          seen.push(RunConsoleStub({ value: chunk }));
+          seen.push(chunk);
         },
       });
       proxy.emit({ chunk: 'Assayer is updating caches\n' });
@@ -23,11 +22,11 @@ describe('runSubscribeOutputBroker', () => {
     // child wrote it — a subscriber that saw only the last would show a report missing its start.
     it('VALID: {several chunks} => each arrives in write order', () => {
       const proxy = runSubscribeOutputBrokerProxy();
-      const seen: ReturnType<typeof RunConsoleStub>[] = [];
+      const seen: string[] = [];
 
       runSubscribeOutputBroker({
         onChunk: ({ chunk }: { chunk: string }): void => {
-          seen.push(RunConsoleStub({ value: chunk }));
+          seen.push(chunk);
         },
       });
       proxy.emit({ chunk: 'compiling 1/2\n' });

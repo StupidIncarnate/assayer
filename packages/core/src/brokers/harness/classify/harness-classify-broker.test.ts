@@ -1,5 +1,4 @@
 
-import { FileContentsStub } from '../../../contracts/file-contents/file-contents.stub';
 import { harnessClassifyBroker } from './harness-classify-broker';
 import { harnessClassifyBrokerProxy } from './harness-classify-broker.proxy';
 
@@ -24,10 +23,10 @@ describe('harnessClassifyBroker', () => {
 
       const result = harnessClassifyBroker({
         files: [
-          { relPath: 'src/audit.ts', content: FileContentsStub({ value: ORDINARY_SOURCE }) },
+          { relPath: 'src/audit.ts', content: ORDINARY_SOURCE },
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: ASSAYER_HARNESS }),
+            content: ASSAYER_HARNESS,
           },
         ],
       });
@@ -45,7 +44,7 @@ describe('harnessClassifyBroker', () => {
         files: [
           {
             relPath: 'test/harnesses/smoke-repo-app.harness.ts',
-            content: FileContentsStub({ value: PLAYWRIGHT_HARNESS }),
+            content: PLAYWRIGHT_HARNESS,
           },
         ],
       });
@@ -61,7 +60,7 @@ describe('harnessClassifyBroker', () => {
 
       const result = harnessClassifyBroker({
         files: [
-          { relPath: 'src/audit.ts', content: FileContentsStub({ value: ASSAYER_HARNESS }) },
+          { relPath: 'src/audit.ts', content: ASSAYER_HARNESS },
         ],
       });
 

@@ -17,8 +17,6 @@
  */
 import { readFileSync, walkFilesSync } from '#gateway/node/fs';
 import { basename, dirname, join, relative, sep } from '#gateway/node/path';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
-import { FolderNameStub } from '@assayer/shared/contracts/folder-name/folder-name.stub';
 
 import { isAssayerHarnessGuard } from '../../../core/src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../core/src/statics/harness-module/harness-module-statics';
@@ -75,7 +73,7 @@ export const syntaxSurfaceHarness = (): {
       .filter((entry) => isAnalysedSourceFile(entry))
       .map((entry) => entry.name)
       .sort()
-      .map((value) => RelPathStub({ value })),
+      .map((value) => value),
 
   // The FILE_TREE_DIR nodes are the directory nodes the tree renders — one per DISTINCT directory PATH on
   // the way to a specimen. Deduping the full smoke-repo-relative paths collapses a shared prefix
@@ -95,6 +93,6 @@ export const syntaxSurfaceHarness = (): {
     return [...dirPaths]
       .map((dirPath) => dirPath.slice(dirPath.lastIndexOf(sep) + 1))
       .sort()
-      .map((value) => FolderNameStub({ value }));
+      .map((value) => value);
   },
 });

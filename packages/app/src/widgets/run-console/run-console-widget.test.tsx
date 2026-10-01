@@ -1,4 +1,3 @@
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { RunConsoleWidget } from './run-console-widget';
@@ -14,7 +13,7 @@ describe('RunConsoleWidget', () => {
       const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget
-            output={RunConsoleStub({ value: 'Assayer is updating caches\na.ts  3/3 passed\n' })}
+            output={'Assayer is updating caches\na.ts  3/3 passed\n'}
             running={false}
             onHide={(): void => undefined}
           />
@@ -30,7 +29,7 @@ describe('RunConsoleWidget', () => {
       RunConsoleWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <RunConsoleWidget output={RunConsoleStub()} running={false} onHide={(): void => undefined} />,
+        ui: <RunConsoleWidget output={'src/a.ts  1/1 passed\n'} running={false} onHide={(): void => undefined} />,
       });
 
       expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Finished');
@@ -42,7 +41,7 @@ describe('RunConsoleWidget', () => {
       RunConsoleWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <RunConsoleWidget output={RunConsoleStub()} running onHide={(): void => undefined} />,
+        ui: <RunConsoleWidget output={'src/a.ts  1/1 passed\n'} running onHide={(): void => undefined} />,
       });
 
       expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Running…');
@@ -54,7 +53,7 @@ describe('RunConsoleWidget', () => {
       RunConsoleWidgetProxy();
 
       const { getByTestId } = themedRenderMiddleware({
-        ui: <RunConsoleWidget output={RunConsoleStub({ value: '' })} running onHide={(): void => undefined} />,
+        ui: <RunConsoleWidget output={''} running onHide={(): void => undefined} />,
       });
 
       expect(getByTestId('RUN_CONSOLE_EMPTY').textContent).toBe('Waiting for the CLI…');
@@ -69,7 +68,7 @@ describe('RunConsoleWidget', () => {
 
       const { getByTestId } = themedRenderMiddleware({
         ui: (
-          <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
+          <RunConsoleWidget output={''} running={false} failed onHide={(): void => undefined} />
         ),
       });
 
@@ -83,7 +82,7 @@ describe('RunConsoleWidget', () => {
 
       const { getByTestId } = themedRenderMiddleware({
         ui: (
-          <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
+          <RunConsoleWidget output={''} running={false} failed onHide={(): void => undefined} />
         ),
       });
 
@@ -99,7 +98,7 @@ describe('RunConsoleWidget', () => {
       const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget
-            output={RunConsoleStub({ value: 'Assayer is updating caches\n' })}
+            output={'Assayer is updating caches\n'}
             running={false}
             failed
             onHide={(): void => undefined}
@@ -114,15 +113,15 @@ describe('RunConsoleWidget', () => {
   describe('hiding the panel', () => {
     it('VALID: {click the hide control} => asks the caller to hide it', () => {
       RunConsoleWidgetProxy();
-      const hidden: ReturnType<typeof RunConsoleStub>[] = [];
+      const hidden: string[] = [];
 
       const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget
-            output={RunConsoleStub()}
+            output={'src/a.ts  1/1 passed\n'}
             running={false}
             onHide={(): void => {
-              hidden.push(RunConsoleStub({ value: 'hidden' }));
+              hidden.push('hidden');
             }}
           />
         ),

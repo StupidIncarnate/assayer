@@ -1,4 +1,3 @@
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 import { runFetchConsoleBroker } from './run-fetch-console-broker';
 import { runFetchConsoleBrokerProxy } from './run-fetch-console-broker.proxy';
@@ -7,7 +6,7 @@ describe('runFetchConsoleBroker', () => {
   describe('a file whose last run left a report', () => {
     it('VALID: {a saved report} => the report', async () => {
       const proxy = runFetchConsoleBrokerProxy();
-      proxy.setupConsole({ console: RunConsoleStub({ value: 'src/a.ts  0/1 passed\n' }) });
+      proxy.setupConsole({ console: 'src/a.ts  0/1 passed\n' });
 
       const result = await runFetchConsoleBroker({ relPath: 'src/a.ts' });
 

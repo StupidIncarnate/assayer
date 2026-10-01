@@ -1,10 +1,10 @@
-import { lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 import { unreachableLintTransformer } from './unreachable-lint-transformer';
 
 const name = 'classify';
 const label = 'classify';
-const line = (value: number): ReturnType<typeof lineNumberContract.parse> => value;
+const line = (value: number): number => value;
 
 describe('unreachableLintTransformer', () => {
   describe('contradictory guards', () => {

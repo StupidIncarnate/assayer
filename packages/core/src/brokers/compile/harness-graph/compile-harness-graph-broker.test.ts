@@ -3,7 +3,6 @@ import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
-import { FileContentsStub } from '../../../contracts/file-contents/file-contents.stub';
 import { compileHarnessGraphBroker } from './compile-harness-graph-broker';
 import { compileHarnessGraphBrokerProxy } from './compile-harness-graph-broker.proxy';
 
@@ -125,7 +124,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: HARNESS_SOURCE }),
+            content: HARNESS_SOURCE,
           },
         ],
       });
@@ -161,7 +160,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: HARNESS_SOURCE }),
+            content: HARNESS_SOURCE,
           },
         ],
       });
@@ -183,7 +182,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: EDITED_SOURCE }),
+            content: EDITED_SOURCE,
           },
         ],
       });
@@ -217,8 +216,8 @@ describe('compileHarnessGraphBroker', () => {
           { relPath: 'src/band.ts', contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
         ],
         harnesses: [
-          { relPath: 'src/band.harness.ts', content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
-          { relPath: 'src/audit.harness.ts', content: FileContentsStub({ value: HARNESS_SOURCE }) },
+          { relPath: 'src/band.harness.ts', content: BAND_HARNESS_SOURCE },
+          { relPath: 'src/audit.harness.ts', content: HARNESS_SOURCE },
         ],
       });
 
@@ -237,8 +236,8 @@ describe('compileHarnessGraphBroker', () => {
           { relPath: 'src/band.ts', contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
         ],
         harnesses: [
-          { relPath: 'src/audit.harness.ts', content: FileContentsStub({ value: HARNESS_SOURCE }) },
-          { relPath: 'src/band.harness.ts', content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
+          { relPath: 'src/audit.harness.ts', content: HARNESS_SOURCE },
+          { relPath: 'src/band.harness.ts', content: BAND_HARNESS_SOURCE },
         ],
       });
 
@@ -298,7 +297,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/missing.harness.ts',
-            content: FileContentsStub({ value: HARNESS_SOURCE }),
+            content: HARNESS_SOURCE,
           },
         ],
       });
@@ -334,7 +333,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: THROWING_SOURCE }),
+            content: THROWING_SOURCE,
           },
         ],
       });
@@ -371,7 +370,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: WRONG_ENTRY_SOURCE }),
+            content: WRONG_ENTRY_SOURCE,
           },
         ],
       });
@@ -403,7 +402,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: WRONG_PARAM_SOURCE }),
+            content: WRONG_PARAM_SOURCE,
           },
         ],
       });
@@ -435,7 +434,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: FILLABLE_PARAM_SOURCE }),
+            content: FILLABLE_PARAM_SOURCE,
           },
         ],
       });
@@ -468,7 +467,7 @@ describe('compileHarnessGraphBroker', () => {
         harnesses: [
           {
             relPath: 'src/audit.harness.ts',
-            content: FileContentsStub({ value: NOTHING_INVOICED_SOURCE }),
+            content: NOTHING_INVOICED_SOURCE,
           },
         ],
       });

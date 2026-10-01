@@ -5,7 +5,6 @@ import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 const STUB_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
@@ -245,7 +244,7 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
       proxy.setupSavedConsole({
-        console: RunConsoleStub({ value: 'app.tsx  0/1 passed\n  ERROR mapEach("oops")\n' }),
+        console: 'app.tsx  0/1 passed\n  ERROR mapEach("oops")\n',
       });
       proxy.failRun({ message: 'opening a file must never run it' });
 
