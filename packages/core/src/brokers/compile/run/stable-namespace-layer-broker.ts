@@ -9,8 +9,7 @@
  * });
  * // Returns { resultEntry, manifestNamespace, errors } for the 'master' namespace
  */
-import { fileCountContract } from '@assayer/shared/contracts';
-import type { AssayerCacheManifest, CompileMode, FileCount, ContentHash } from '@assayer/shared/contracts';
+import type { AssayerCacheManifest, CompileMode, ContentHash } from '@assayer/shared/contracts';
 
 import { compilePlanStableBroker } from '../plan-stable/compile-plan-stable-broker';
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
@@ -36,7 +35,7 @@ export const stableNamespaceLayerBroker = async ({
   blobsDir: string;
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<{
-  resultEntry: { namespace: string; branch: string; mode: CompileMode; fileCount: FileCount };
+  resultEntry: { namespace: string; branch: string; mode: CompileMode; fileCount: number };
   manifestNamespace: { branch: string; commit?: string; files: { relPath: string; contentHash: ContentHash }[] };
   harnesses: { relPath: string; content: string }[];
   errors: { namespace: string; relPath: string; line: number; column: SourcePosition['column']; message: string }[];
@@ -82,7 +81,7 @@ export const stableNamespaceLayerBroker = async ({
       namespace: branch,
       branch: branch,
       mode: plan.mode,
-      fileCount: fileCountContract.parse(max),
+      fileCount: max,
     },
     manifestNamespace: {
       branch: branch,

@@ -1,6 +1,5 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { contentHashContract } from '@assayer/shared/contracts';
-import type { FileCount } from '@assayer/shared/contracts';
 
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
@@ -36,7 +35,7 @@ export const compileResolveGraphBrokerProxy = (): {
   }) => void;
   // How many times the declaration reader ran. Each distinct export is read exactly once, however many
   // files import it.
-  packageSignatureReadCount: () => FileCount;
+  packageSignatureReadCount: () => number;
   // A global reference (`process.env`, `console.log`) has no usable types.
   globalReadsNothing: (params: {
     tsConfigFilePath: string;
@@ -108,7 +107,7 @@ export const compileResolveGraphBrokerProxy = (): {
       packageSignatureProxy.cacheMiss({ dtsPath, dtsContent, exportName, cacheDir });
       packageSignatureProxy.readsSignature({ exportName, signature });
     },
-    packageSignatureReadCount: (): FileCount => packageSignatureProxy.signatureReadCount(),
+    packageSignatureReadCount: (): number => packageSignatureProxy.signatureReadCount(),
     globalReadsNothing: ({
       tsConfigFilePath,
       cacheDir,

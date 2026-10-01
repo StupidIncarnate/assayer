@@ -14,7 +14,6 @@ import { z } from '#gateway/npm/zod';
 
 import { compileStatusContract } from '../compile-status/compile-status-contract';
 import { compileModeContract } from '../compile-mode/compile-mode-contract';
-import { fileCountContract } from '../file-count/file-count-contract';
 
 export const compileResultContract = z.object({
   status: compileStatusContract,
@@ -23,7 +22,7 @@ export const compileResultContract = z.object({
       namespace: z.string().min(1).brand<'CompileResultResultsNamespace'>(),
       branch: z.string().min(1).brand<'CompileResultResultsBranch'>(),
       mode: compileModeContract,
-      fileCount: fileCountContract,
+      fileCount: z.number().int().nonnegative().brand<'CompileResultResultsFileCount'>(),
     }),
   ),
   errors: z.array(

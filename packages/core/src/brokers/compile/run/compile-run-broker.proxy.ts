@@ -3,7 +3,6 @@ import { HarnessIndexStub } from '@assayer/shared/contracts/harness-index/harnes
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
 import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
-import type { FileCount } from '@assayer/shared/contracts';
 
 import { PropertyGuardStub } from '../../../contracts/property-guard/property-guard.stub';
 
@@ -54,7 +53,7 @@ export const compileRunBrokerProxy = (): {
   // Takes the same configDir the caller hands the broker; the manifest path derives from it.
   getWrittenManifest: ({ configDir }: { configDir: string }) => unknown;
   wasManifestWritten: (params: { configDir: string }) => boolean;
-  getProcessedFileCount: () => FileCount;
+  getProcessedFileCount: () => number;
   getResolvedIndexWriteOrder: () => readonly string[];
   getPropertyIndexWriteOrder: () => readonly string[];
   getHarnessGraphWriteOrder: () => readonly string[];
@@ -218,7 +217,7 @@ export const compileRunBrokerProxy = (): {
       manifestProxy.getWrittenManifest({ configDir }),
     wasManifestWritten: ({ configDir }: { configDir: string }): boolean =>
       manifestProxy.wasWritten({ configDir }),
-    getProcessedFileCount: (): FileCount => processCurrentProxy.processedCount(),
+    getProcessedFileCount: (): number => processCurrentProxy.processedCount(),
     getResolvedIndexWriteOrder: (): readonly string[] => resolvedIndexWriteOrder,
     getPropertyIndexWriteOrder: (): readonly string[] => stubGraphWriteOrder,
     getHarnessGraphWriteOrder: (): readonly string[] => harnessGraphWriteOrder,

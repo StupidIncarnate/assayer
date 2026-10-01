@@ -1,7 +1,5 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { fileCountContract } from '@assayer/shared/contracts';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
-import type { FileCount } from '@assayer/shared/contracts';
 
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 import { runUnitBroker } from '../unit/run-unit-broker';
@@ -22,7 +20,7 @@ export const runEachLayerBrokerProxy = (): {
     harnessPath: string;
     source: string;
   }) => void;
-  runCount: () => FileCount;
+  runCount: () => number;
   readDenied: ({ sourcePath }: { sourcePath: string }) => void;
 } => {
   // runUnitBroker is REPLACED wholesale below rather than driven through its own proxy: the run it
@@ -47,7 +45,7 @@ export const runEachLayerBrokerProxy = (): {
       fileProxy.returns({ path: sourcePath, contents: source });
       idProxy.noHarness({ harnessPath });
     },
-    runCount: (): FileCount => fileCountContract.parse(runHandle.callsMatching([]).length),
+    runCount: (): number => runHandle.callsMatching([]).length,
     // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES and the
     // like) propagates to the caller unmodified. This stages that rejection.
     readDenied: ({ sourcePath }: { sourcePath: string }): void => {

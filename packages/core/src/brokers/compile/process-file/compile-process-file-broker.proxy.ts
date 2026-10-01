@@ -1,6 +1,4 @@
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
-import { fileCountContract } from '@assayer/shared/contracts';
-import type { FileCount } from '@assayer/shared/contracts';
 import { ensureDirProxy } from '#gateway/node/fs__promises/ensure-dir/ensure-dir.proxy';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 import { renameProxy } from '#gateway/node/fs__promises/rename/rename.proxy';
@@ -15,7 +13,7 @@ export const compileProcessFileBrokerProxy = (): {
   blobMissing: ({ blobsDir, contentHash }: { blobsDir: string; contentHash: string }) => void;
   getWrittenBlobFor: ({ path }: { path: string }) => unknown;
   wasWriteCalled: ({ path }: { path: string }) => boolean;
-  processedCount: () => FileCount;
+  processedCount: () => number;
 } => {
   const existsGateway = pathExistsProxy();
   const ensureDirGateway = ensureDirProxy();
@@ -39,11 +37,9 @@ export const compileProcessFileBrokerProxy = (): {
     wasWriteCalled: ({ path }: { path: string }): boolean =>
       writeFileGateway.getCallsFor({ path }).length > 0,
     // Counts the existence checks made on blob files, which are the only paths this broker checks.
-    processedCount: (): FileCount =>
-      fileCountContract.parse(
-        existsGateway.getCallsFor({
+    processedCount: (): number =>
+      existsGateway.getCallsFor({
           path: (value: unknown): boolean => typeof value === 'string' && value.endsWith('.json'),
         }).length,
-      ),
   };
 };
