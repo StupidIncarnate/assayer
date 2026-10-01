@@ -60,7 +60,6 @@ export * from './compile-result/compile-result-contract';
 
 export * from './compiled-tree/compiled-tree-contract';
 
-export * from './coverage-id/coverage-id-contract';
 
 export * from './representative-value/representative-value-contract';
 
@@ -182,4 +181,4 @@ export * from './run-id/run-id-contract';
 export * from './run-result/run-result-contract';
 
 export * from './run-console/run-console-contract';
-
+export * from './coverage/coverage-contract';

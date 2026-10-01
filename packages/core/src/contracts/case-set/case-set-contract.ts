@@ -44,17 +44,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import {
-  coverageIdContract,
-  darkSpotContract,
-  derivedTestCaseContract,
-  entryAccessContract,
-  entryGapContract,
-  lintEntryContract,
-  relPathContract,
-  symbolNameContract,
-  undrivenEntryContract,
-} from '@assayer/shared/contracts';
+import { darkSpotContract, derivedTestCaseContract, entryAccessContract, entryGapContract, lintEntryContract, relPathContract, symbolNameContract, undrivenEntryContract, coverageContract } from '@assayer/shared/contracts';
 
 export const caseSetContract = z.object({
   relPath: relPathContract,
@@ -64,7 +54,7 @@ export const caseSetContract = z.object({
     z.object({
       name: symbolNameContract,
       access: entryAccessContract,
-      exitIds: z.array(coverageIdContract),
+      exitIds: z.array(coverageContract.shape.id),
       cases: z.array(derivedTestCaseContract),
     }),
   ),

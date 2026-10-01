@@ -31,16 +31,16 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { coverageIdContract } from '@assayer/shared/contracts';
+import { coverageContract } from '@assayer/shared/contracts';
 
 export const probeSiteContract = z.object({
-  id: coverageIdContract,
+  id: coverageContract.shape.id,
   kind: z.enum(['cond', 'exit', 'complete', 'optional']).brand<'ProbeKind'>(),
   start: z.number().int().min(0).brand<'SourceOffset'>(),
   end: z.number().int().min(0).brand<'SourceOffset'>(),
   // Present ONLY on an `optional` site — the exit id fired when the receiver is nullish. The `id`
   // above is the non-null path's exit; both are observed from this one physical span.
-  elseId: coverageIdContract.optional(),
+  elseId: coverageContract.shape.id.optional(),
 });
 
 export type ProbeSite = z.infer<typeof probeSiteContract>;

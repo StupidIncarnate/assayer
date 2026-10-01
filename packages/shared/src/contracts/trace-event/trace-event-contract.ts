@@ -23,11 +23,11 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { traceValueTextContract } from '../trace-value-text/trace-value-text-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const traceEventContract = z.object({
-  id: coverageIdContract,
+  id: coverageContract.shape.id,
   kind: z.enum(['cond', 'exit']).brand<'TraceKind'>(),
   outcome: z.boolean().optional(),
   valueText: traceValueTextContract,

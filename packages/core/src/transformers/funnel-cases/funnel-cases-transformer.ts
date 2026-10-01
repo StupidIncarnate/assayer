@@ -39,7 +39,7 @@
  * // Returns { cases, unfillable } — the cartesian of each callback's empty/single/pair shapes, plus what they refused.
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, CoverageId, DerivedTestCase, EntryLabel, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EntryLabel, SymbolName, TypeText, Coverage } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -77,7 +77,7 @@ export const funnelCasesTransformer = ({
     throughCallbackCasesTransformer({ callback, entry: surface, arrayParam, ...(label === undefined ? {} : { label }) }),
   );
 
-  const contributionLists: { arrayParam: SymbolName; value: ArrangeValue[]; subPath: CoverageId[] }[][] = ordered.map(
+  const contributionLists: { arrayParam: SymbolName; value: ArrangeValue[]; subPath: Coverage['id'][] }[][] = ordered.map(
     ({ arrayParam }, callbackIndex) => {
       // The callback's own per-element cases — each lays ONE steered element into the array param and
       // predicts the single callback exit that element reaches.
@@ -119,7 +119,7 @@ export const funnelCasesTransformer = ({
   // that callback's own funnel; for N it is every combination of the callbacks' array shapes, because the
   // callbacks fire over INDEPENDENT arrays and every pairing is a distinct input to the surface. The seed
   // carries the empty combination so the reduce folds each callback's list onto it in order.
-  const seed: { arrayParam: SymbolName; value: ArrangeValue[]; subPath: CoverageId[] }[][] = [[]];
+  const seed: { arrayParam: SymbolName; value: ArrangeValue[]; subPath: Coverage['id'][] }[][] = [[]];
   const combinations = contributionLists.reduce(
     (acc, list) => acc.flatMap((combo) => list.map((item) => [...combo, item])),
     seed,

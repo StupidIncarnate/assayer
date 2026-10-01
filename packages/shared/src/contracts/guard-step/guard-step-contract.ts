@@ -9,10 +9,10 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const guardStepContract = z.object({
-  branchCoverageId: coverageIdContract,
+  branchCoverageId: coverageContract.shape.id,
   arm: z.string().min(1).brand<'GuardArm'>(),
 });
 

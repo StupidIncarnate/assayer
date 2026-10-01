@@ -59,17 +59,17 @@ import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { constLengthContract } from '../const-length/const-length-contract';
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const conditionLeafContract = z.object({
   kind: z.literal('leaf'),
-  id: coverageIdContract,
+  id: coverageContract.shape.id,
   operandParamName: symbolNameContract.optional(),
   operandPropertyPath: z.array(symbolNameContract).min(1).optional(),
   operandTypeRef: symbolNameContract.optional(),

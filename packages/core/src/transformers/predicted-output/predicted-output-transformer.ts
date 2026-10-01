@@ -17,14 +17,14 @@
  * predictedOutputTransformer({ reachesPath: [exitId], predWant: true });
  * // Returns `${exitId}|pred:true`
  */
-import type { CoverageId } from '@assayer/shared/contracts';
+import type { Coverage } from '@assayer/shared/contracts';
 
 
 export const predictedOutputTransformer = ({
   reachesPath,
   predWant,
 }: {
-  reachesPath: CoverageId[];
+  reachesPath: Coverage['id'][];
   predWant?: boolean;
 }): string => {
   const key = reachesPath.map(String).join('>');

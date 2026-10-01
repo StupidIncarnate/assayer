@@ -59,7 +59,7 @@
  * // Returns { entryName, testCase, status: 'passed', observedPath, trace }
  */
 import { caseResultContract } from '@assayer/shared/contracts';
-import type { CaseResult, CoverageId, DerivedTestCase } from '@assayer/shared/contracts';
+import type { CaseResult, DerivedTestCase, Coverage } from '@assayer/shared/contracts';
 
 import type { HarnessDeclaration } from '../../../contracts/harness-declaration/harness-declaration-contract';
 import type { ProbeRuntime } from '../../../contracts/probe-runtime/probe-runtime-contract';
@@ -75,7 +75,7 @@ export const caseInterpretBroker = ({
 }: {
   entry: unknown;
   entryName: string;
-  exitIds: CoverageId[];
+  exitIds: Coverage['id'][];
   testCase: DerivedTestCase;
   probe: ProbeRuntime;
   harness?: readonly HarnessDeclaration[] | undefined;

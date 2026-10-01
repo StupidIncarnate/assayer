@@ -24,9 +24,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { derivedTestCaseContract } from '../derived-test-case/derived-test-case-contract';
 import { traceEventContract } from '../trace-event/trace-event-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const caseResultContract = z.object({
   entryName: z.string().min(1).brand<'CaseEntryName'>(),
@@ -36,7 +36,7 @@ export const caseResultContract = z.object({
   // entry's own exits. Compared against the case's predicted `reachesPath`. Empty on every `errored`
   // outcome, since none of them reached an exit in the entry's scope — which is why a reader must not
   // read it as "came out here instead".
-  observedPath: z.array(coverageIdContract).default([]),
+  observedPath: z.array(coverageContract.shape.id).default([]),
   trace: z.array(traceEventContract),
   message: z.string().brand<'CaseMessage'>().optional(),
 });

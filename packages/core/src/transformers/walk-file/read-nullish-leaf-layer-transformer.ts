@@ -20,8 +20,8 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { conditionNodeContract, coverageIdContract, predicateContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { ConditionNode, CoverageId } from '@assayer/shared/contracts';
+import { conditionNodeContract, predicateContract, symbolNameContract, coverageContract } from '@assayer/shared/contracts';
+import type { ConditionNode, Coverage } from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { ProbeSite } from '../../contracts/probe-site/probe-site-contract';
@@ -40,9 +40,9 @@ export const readNullishLeafLayerTransformer = ({
 }: {
   operand: Node;
   context: WalkContext;
-  branchCoverageId: CoverageId;
+  branchCoverageId: Coverage['id'];
 }): NullishLeafReadout => {
-  const id = coverageIdContract.parse(`${branchCoverageId}#leaf`);
+  const id = coverageContract.shape.id.parse(`${branchCoverageId}#leaf`);
   const operandName = Node.isIdentifier(operand) ? symbolNameContract.parse(operand.getText()) : undefined;
 
   return {

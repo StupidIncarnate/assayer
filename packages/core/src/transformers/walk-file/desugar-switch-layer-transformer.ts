@@ -19,7 +19,7 @@ import { Node } from '#gateway/npm/ts-morph';
 import type { CaseClause, DefaultClause, SwitchStatement } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { CoverageId, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { RepresentativeValue, SymbolName, Coverage } from '@assayer/shared/contracts';
 
 import type { AstProjection } from '../../contracts/ast-projection/ast-projection-contract';
 import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
@@ -30,7 +30,7 @@ export interface SwitchCaseInfo {
   clause: CaseClause;
   literalValue?: RepresentativeValue;
   caseToken: AstProjection;
-  branchCoverageId: CoverageId;
+  branchCoverageId: Coverage['id'];
 }
 
 export interface DesugaredSwitch {

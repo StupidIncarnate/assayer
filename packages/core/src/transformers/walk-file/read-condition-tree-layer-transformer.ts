@@ -25,8 +25,8 @@
  */
 import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { conditionNodeContract, coverageIdContract } from '@assayer/shared/contracts';
-import type { ConditionNode, CoverageId } from '@assayer/shared/contracts';
+import { conditionNodeContract, coverageContract } from '@assayer/shared/contracts';
+import type { ConditionNode, Coverage } from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { ProbeSite } from '../../contracts/probe-site/probe-site-contract';
@@ -49,7 +49,7 @@ export const readConditionTreeLayerTransformer = ({
 }: {
   condition: Node;
   context: WalkContext;
-  branchCoverageId: CoverageId;
+  branchCoverageId: Coverage['id'];
   path: number[];
 }): ConditionTreeReadout => {
   // Parens are formatting, so they must be invisible to identity: unwrap WITHOUT consuming a path
@@ -107,7 +107,7 @@ export const readConditionTreeLayerTransformer = ({
   }
 
   const readout = readConditionLayerTransformer({ condition });
-  const id = coverageIdContract.parse(`${branchCoverageId}#leaf${path.map((index) => `.${index}`).join('')}`);
+  const id = coverageContract.shape.id.parse(`${branchCoverageId}#leaf${path.map((index) => `.${index}`).join('')}`);
   // WHERE the operand's value came from — a different question from what its type is, asked of a
   // different reader. Recorded wherever it is true; whether an entry can be driven through it is
   // policy, and policy lives in the projections.
