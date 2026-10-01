@@ -1,58 +1,71 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { RunResultStub } from '@assayer/shared/contracts';
 
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 import { runLoadBroker } from '../load/run-load-broker';
 import { runLoadBrokerProxy } from '../load/run-load-broker.proxy';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
+// Every scenario names the source file's path and its colocated harness path, because the broker
+// checks and reads the source and then derives the run id, which looks for the harness. A path no
+// scenario staged throws.
 export const runFindBrokerProxy = (): {
-  savedRun: ({ run }: { run: unknown }) => void;
-  neverRun: () => void;
-  fileMissing: () => void;
-  readThrows: ({ error }: { error: Error }) => void;
+  savedRun: ({
+    sourcePath,
+    harnessPath,
+    source,
+    run,
+  }: {
+    sourcePath: string;
+    harnessPath: string;
+    source: string;
+    run: unknown;
+  }) => void;
+  neverRun: ({
+    sourcePath,
+    harnessPath,
+    source,
+  }: {
+    sourcePath: string;
+    harnessPath: string;
+    source: string;
+  }) => void;
+  fileMissing: ({ sourcePath }: { sourcePath: string }) => void;
+  readDenied: ({ sourcePath }: { sourcePath: string }) => void;
 } => {
-  // runLoadBroker is REPLACED wholesale rather than driven through its own proxy: it and this broker
-  // both read through fsExistsAdapter/fsReadFileAdapter, so one shared mock cannot serve a source
-  // file and a run.json at once.
-  pathExistsProxy();
-  readFileProxy();
-  runIdBrokerProxy();
+  // runLoadBroker is REPLACED wholesale rather than driven through its own proxy, so each scenario
+  // picks the run the lookup answers with instead of writing a run.json on a staged path.
+  const existsProxy = pathExistsProxy();
+  const fileProxy = readFileProxy();
+  const idProxy = runIdBrokerProxy();
   runLoadBrokerProxy();
 
-  const existsHandle = registerMock({ fn: fsExistsAdapter });
-  // Registered directly against the WRAPPER (mirroring existsHandle above), not via
-  // fsReadFileAdapterProxy()'s own handle: runIdBrokerProxy/runLoadBrokerProxy also mock
-  // fsReadFileAdapter directly, which auto-mocks it as a bare jest.fn() with no real
-  // implementation -- so a rejection staged one level down, on the raw `readFile` the adapter
-  // proxy controls, is never reached from this broker's own direct call.
-  const readHandle = registerMock({ fn: fsReadFileAdapter });
   const loadHandle = registerMock({ fn: runLoadBroker });
 
-  existsHandle.calledWith([]).resolves(true);
-  readHandle.calledWith([]).resolves('');
   loadHandle.calledWith([]).resolves(RunResultStub());
 
   return {
-    savedRun: ({ run }: { run: unknown }): void => {
-      existsHandle.calledWith([]).resolves(true);
+    savedRun: ({ sourcePath, harnessPath, source, run }): void => {
+      existsProxy.present({ path: sourcePath });
+      fileProxy.returns({ path: sourcePath, contents: source });
+      idProxy.noHarness({ harnessPath });
       loadHandle.calledWith([]).resolves(run);
     },
-    neverRun: (): void => {
-      existsHandle.calledWith([]).resolves(true);
+    neverRun: ({ sourcePath, harnessPath, source }): void => {
+      existsProxy.present({ path: sourcePath });
+      fileProxy.returns({ path: sourcePath, contents: source });
+      idProxy.noHarness({ harnessPath });
       loadHandle.calledWith([]).resolves(undefined);
     },
-    fileMissing: (): void => {
-      existsHandle.calledWith([]).resolves(false);
+    fileMissing: ({ sourcePath }: { sourcePath: string }): void => {
+      existsProxy.missing({ path: sourcePath });
     },
-    // The source read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT
+    // The source read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES
     // and the like) propagates to the caller unmodified. This stages that rejection.
-    readThrows: ({ error }: { error: Error }): void => {
-      existsHandle.calledWith([]).resolves(true);
-      readHandle.onceFor([]).rejects(error);
+    readDenied: ({ sourcePath }: { sourcePath: string }): void => {
+      existsProxy.present({ path: sourcePath });
+      fileProxy.denied({ path: sourcePath });
     },
   };
 };

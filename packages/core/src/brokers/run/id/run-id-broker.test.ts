@@ -10,7 +10,8 @@ describe('runIdBroker', () => {
     // Content-keyed, never a timestamp: the same bytes must name the same run or a detail link goes
     // stale the moment it is printed, and no reader could ever find what the runner wrote.
     it('VALID: {a file} => a deterministic id', async () => {
-      runIdBrokerProxy();
+      const proxy = runIdBrokerProxy();
+      proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
 
       const result = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -18,7 +19,8 @@ describe('runIdBroker', () => {
     });
 
     it('VALID: {the same file twice} => the same id', async () => {
-      runIdBrokerProxy();
+      const proxy = runIdBrokerProxy();
+      proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
 
       const second = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -27,7 +29,8 @@ describe('runIdBroker', () => {
 
     // Path alone would collide across edits, so a stale run would answer for new code.
     it('VALID: {same path, changed content} => a different id', async () => {
-      runIdBrokerProxy();
+      const proxy = runIdBrokerProxy();
+      proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
 
       const after = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 2;\n' });
 
@@ -36,7 +39,8 @@ describe('runIdBroker', () => {
 
     // Content alone would collide across files that happen to read the same.
     it('VALID: {same content, different path} => a different id', async () => {
-      runIdBrokerProxy();
+      const proxy = runIdBrokerProxy();
+      proxy.noHarness({ harnessPath: '/repo/src/b.harness.ts' });
 
       const other = await runIdBroker({ root: '/repo', relPath: 'src/b.ts', source: 'export const a = 1;\n' });
 
@@ -50,7 +54,7 @@ describe('runIdBroker', () => {
     // harness is edited to throw.
     it('VALID: {a colocated harness} => an id that differs from the same source with none', async () => {
       const proxy = runIdBrokerProxy();
-      proxy.harness({ source: HARNESS });
+      proxy.harness({ harnessPath: '/repo/src/a.harness.ts', source: HARNESS });
 
       const withHarness = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -59,7 +63,7 @@ describe('runIdBroker', () => {
 
     it('VALID: {an edited harness, unchanged source} => a different id', async () => {
       const proxy = runIdBrokerProxy();
-      proxy.harness({ source: EDITED_HARNESS });
+      proxy.harness({ harnessPath: '/repo/src/a.harness.ts', source: EDITED_HARNESS });
 
       const edited = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -70,7 +74,7 @@ describe('runIdBroker', () => {
     // and an absent ingredient contributes nothing rather than a constant.
     it('VALID: {no colocated harness} => the id the file has always had', async () => {
       const proxy = runIdBrokerProxy();
-      proxy.noHarness();
+      proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
 
       const plain = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -81,7 +85,7 @@ describe('runIdBroker', () => {
     // suffix, and editing one of those must move no run id.
     it('VALID: {a *.harness.ts that is some other tool\'s} => the id the file has always had', async () => {
       const proxy = runIdBrokerProxy();
-      proxy.harness({ source: OTHER_TOOLS_HARNESS });
+      proxy.harness({ harnessPath: '/repo/src/a.harness.ts', source: OTHER_TOOLS_HARNESS });
 
       const plain = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -90,13 +94,13 @@ describe('runIdBroker', () => {
   });
 
   describe('the colocated harness cannot be read', () => {
-    it('ERROR: {a harness file exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+    it('ERROR: {a harness file exists but reading it is denied with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
       const proxy = runIdBrokerProxy();
-      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+      proxy.readThrows({ harnessPath: '/repo/src/a.harness.ts' });
 
       await expect(
         runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: op '\/repo\/src\/a\.harness\.ts'$/u);
     });
   });
 });

@@ -14,7 +14,11 @@ describe('runCrossFileProbesBroker', () => {
   describe('a target that maps an imported callee', () => {
     it('VALID: {items.map(bandReading)} => writes the sibling probe plan keyed on its content hash, returns its relPath', async () => {
       const proxy = runCrossFileProbesBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE });
+      proxy.setupSibling({
+        fileName: '/repo/src/band-reading.ts',
+        source: CHILD_SOURCE,
+        probeDir: '/repo/.assayer/cache/probes',
+      });
       const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
       const result = await runCrossFileProbesBroker({ walked, root: '/repo', relPath: 'src/cross-file-map.ts', probeDir: '/repo/.assayer/cache/probes' });
@@ -23,7 +27,7 @@ describe('runCrossFileProbesBroker', () => {
 
       expect({
         instrumented: result.map((relPath) => String(relPath)),
-        written: proxy.getWrittenPaths(),
+        written: proxy.getWrittenPaths({ probeDir: '/repo/.assayer/cache/probes' }),
       }).toStrictEqual({
         instrumented: ['src/band-reading.ts'],
         written: [`/repo/.assayer/cache/probes/${String(hash)}.json`],
@@ -38,7 +42,7 @@ describe('runCrossFileProbesBroker', () => {
 
       const result = await runCrossFileProbesBroker({ walked, root: '/repo', relPath: 'src/scale.ts', probeDir: '/repo/.assayer/cache/probes' });
 
-      expect({ instrumented: result.map((relPath) => String(relPath)), written: proxy.getWrittenPaths() }).toStrictEqual({
+      expect({ instrumented: result.map((relPath) => String(relPath)), written: proxy.getWrittenPaths({ probeDir: '/repo/.assayer/cache/probes' }) }).toStrictEqual({
         instrumented: [],
         written: [],
       });

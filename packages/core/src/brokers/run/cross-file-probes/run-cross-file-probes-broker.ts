@@ -22,12 +22,12 @@
 import type { RelPath } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { crossFileMapReachesTransformer } from '../../../transformers/cross-file-map-reaches/cross-file-map-reaches-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
 import { resolveSiblingCalleeBroker } from '../../resolve-sibling/callee/resolve-sibling-callee-broker';
+import { writeFile } from '#gateway/node/fs__promises';
 
 export const runCrossFileProbesBroker = async ({
   walked,
@@ -75,7 +75,7 @@ export const runCrossFileProbesBroker = async ({
     ];
   });
 
-  await Promise.all(plans.map(async (plan) => fsWriteFileAdapter({ path: plan.path, content: plan.content })));
+  await Promise.all(plans.map(async (plan) => writeFile(plan.path, plan.content)));
 
   return plans.map((plan) => plan.relPath);
 };

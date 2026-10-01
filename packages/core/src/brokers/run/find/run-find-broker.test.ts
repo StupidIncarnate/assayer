@@ -7,7 +7,12 @@ describe('runFindBroker', () => {
   describe('a file that has been run', () => {
     it('VALID: {a saved run for these bytes} => the run', async () => {
       const proxy = runFindBrokerProxy();
-      proxy.savedRun({ run: RunResultStub() });
+      proxy.savedRun({
+        sourcePath: '/repo/src/a.ts',
+        harnessPath: '/repo/src/a.harness.ts',
+        source: 'export const a = 1;\n',
+        run: RunResultStub(),
+      });
 
       const result = await runFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/a.ts' });
 
@@ -19,7 +24,11 @@ describe('runFindBroker', () => {
     // "Not run" is an answer, not an error — the UI owes an empty state, not a failure.
     it('EMPTY: {no run for these bytes} => undefined', async () => {
       const proxy = runFindBrokerProxy();
-      proxy.neverRun();
+      proxy.neverRun({
+        sourcePath: '/repo/src/a.ts',
+        harnessPath: '/repo/src/a.harness.ts',
+        source: 'export const a = 1;\n',
+      });
 
       const result = await runFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/a.ts' });
 
@@ -30,7 +39,7 @@ describe('runFindBroker', () => {
   describe('a file that is not there', () => {
     it('EMPTY: {no such file} => undefined rather than a read error', async () => {
       const proxy = runFindBrokerProxy();
-      proxy.fileMissing();
+      proxy.fileMissing({ sourcePath: '/repo/src/gone.ts' });
 
       const result = await runFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/gone.ts' });
 
@@ -39,13 +48,13 @@ describe('runFindBroker', () => {
   });
 
   describe('the source cannot be read', () => {
-    it('ERROR: {relPath: file exists but fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
+    it('ERROR: {relPath: file exists but reading it is denied with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
       const proxy = runFindBrokerProxy();
-      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+      proxy.readDenied({ sourcePath: '/repo/src/a.ts' });
 
       await expect(
         runFindBroker({ configDir: '/repo', root: '/repo', relPath: 'src/a.ts' }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: op '\/repo\/src\/a\.ts'$/u);
     });
   });
 });
