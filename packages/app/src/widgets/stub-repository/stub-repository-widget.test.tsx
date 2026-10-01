@@ -1,8 +1,8 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
-import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
 import { StubRepositoryWidget } from './stub-repository-widget';
 import { StubRepositoryWidgetProxy } from './stub-repository-widget.proxy';
 import { StubViewStub, ObjectStubStub, EnvStubStub } from '@assayer/shared/contracts';
+import { waitFor } from '#gateway/npm/testing-library__react';
 
 const CROSS_FILE_TYPES = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/types.ts';
 const READER_A = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/cross-file-shape.ts';
@@ -34,10 +34,8 @@ describe('StubRepositoryWidget', () => {
 
       const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_UNKNOWN').textContent).toBe('unknown');
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_UNKNOWN').textContent).toBe('unknown');
       });
 
       expect(getByTestId('STUB_KEY').textContent).toBe(`${CROSS_FILE_TYPES}#Config`);
@@ -82,10 +80,8 @@ describe('StubRepositoryWidget', () => {
 
       const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_CARD')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_CARD')).toBeInTheDocument();
       });
 
       expect(getAllByTestId('STUB_PROPERTY').map((element) => element.getAttribute('data-propname'))).toStrictEqual([
@@ -107,10 +103,8 @@ describe('StubRepositoryWidget', () => {
 
       const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_GUESSED').textContent).toBe('guessed');
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_GUESSED').textContent).toBe('guessed');
       });
 
       expect(getByTestId('STUB_KEY').textContent).toBe('process.env#CODE');
@@ -129,10 +123,8 @@ describe('StubRepositoryWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_CARD')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_CARD')).toBeInTheDocument();
       });
 
       expect(getByTestId('STUB_CORRECTED').textContent).toBe('corrected');
@@ -148,10 +140,8 @@ describe('StubRepositoryWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_EMPTY')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_EMPTY')).toBeInTheDocument();
       });
 
       expect(getByTestId('STUB_EMPTY').textContent).toBe('No stubs — run assayer');
@@ -180,10 +170,8 @@ describe('StubRepositoryWidget', () => {
 
       const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_ERROR')).toBeInTheDocument();
       });
 
       expect(getByTestId('STUB_ERROR').textContent).toBe(
