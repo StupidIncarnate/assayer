@@ -11,7 +11,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json'],
   moduleNameMapper: {
     '^@assayer/core/testing$': '<rootDir>/../core/testing.ts',
-    '^@assayer/desktop/brokers$': '<rootDir>/../desktop/brokers.ts',
     '^@assayer/desktop/testing$': '<rootDir>/../desktop/testing.ts',
   },
   transform: {

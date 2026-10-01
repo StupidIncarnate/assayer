@@ -3,17 +3,23 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./brokers": {
-      "source": "./brokers.ts",
-      "import": "./dist/brokers.js",
-      "require": "./dist/brokers.js",
-      "types": "./dist/brokers.d.ts"
-    },
     "./testing": {
       "source": "./testing.ts",
       "import": "./dist/testing.js",
       "require": "./dist/testing.js",
       "types": "./dist/testing.d.ts"
+    },
+    "./*.proxy": {
+      "source": "./src/*.proxy.ts"
+    },
+    "./*.stub": {
+      "source": "./src/*.stub.ts"
+    },
+    "./brokers": {
+      "source": "./src/brokers/brokers.ts",
+      "types": "./dist/src/brokers/brokers.d.ts",
+      "import": "./dist/src/brokers/brokers.js",
+      "require": "./dist/src/brokers/brokers.js"
     }
   },
   "scripts": {

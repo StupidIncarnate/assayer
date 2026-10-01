@@ -28,5 +28,14 @@
     "#gateway/node/*": "@assayer/node/*",
     "#gateway/browser/*": "@assayer/browser/*",
     "#gateway/bin/*": "@assayer/bin/*"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    "./*.proxy": {
+      "source": "./src/*.proxy.ts"
+    },
+    "./*.stub": {
+      "source": "./src/*.stub.ts"
+    }
   }
 }

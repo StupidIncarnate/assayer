@@ -7,4 +7,4 @@
 
 // Subpath export entry for @assayer/desktop/brokers
 
-export * from './src/brokers/desktop/launch/desktop-launch-broker';
+export * from './desktop/launch/desktop-launch-broker';
