@@ -43,7 +43,7 @@ export const didYouMeanTransformer = ({
     );
 
     return {
-      candidate: candidate,
+      candidate,
       distance: finalRow[target.length] ?? target.length,
     };
   });

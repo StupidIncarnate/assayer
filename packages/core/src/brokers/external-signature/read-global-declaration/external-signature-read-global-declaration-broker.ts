@@ -55,7 +55,7 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
   reference: GlobalReference;
 }): GlobalSignatureResult => {
   const existing = globalProjectByConfig.get(tsConfigFilePath);
-  const project = existing ?? new Project({ tsConfigFilePath: tsConfigFilePath, skipAddingFilesFromTsConfig: true });
+  const project = existing ?? new Project({ tsConfigFilePath, skipAddingFilesFromTsConfig: true });
   if (existing === undefined) {
     globalProjectByConfig.set(tsConfigFilePath, project);
   }

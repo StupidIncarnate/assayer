@@ -20,7 +20,7 @@ export const runFetchSavedBroker = async ({ relPath }: { relPath: string }): Pro
     throw new Error(preloadBridgeStatics.unavailableMessage);
   }
 
-  const raw: unknown = await bridge.getSavedRun({ relPath: relPath });
+  const raw: unknown = await bridge.getSavedRun({ relPath });
 
   return raw === undefined || raw === null ? undefined : runResultContract.parse(raw);
 };

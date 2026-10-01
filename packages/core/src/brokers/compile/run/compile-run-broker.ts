@@ -65,7 +65,7 @@ export const compileRunBroker = async ({
   const blobsDir = `${configDir}/.assayer/cache/blobs`;
 
   const currentBranch = await gitCurrentBranchBroker({ repoRoot: root });
-  const currentPlan = await compilePlanCurrentBroker({ root: root, exclude: config.exclude });
+  const currentPlan = await compilePlanCurrentBroker({ root, exclude: config.exclude });
   const currentMax = currentPlan.targets.length;
 
   const {stableBranch} = config;
@@ -74,7 +74,7 @@ export const compileRunBroker = async ({
     stableBranch === undefined
       ? undefined
       : await stableNamespaceLayerBroker({
-          root: root,
+          root,
           branch: String(stableBranch),
           exclude: config.exclude,
           currentMax,
@@ -131,7 +131,7 @@ export const compileRunBroker = async ({
   // SKIPPED stable is unchanged, so its resolved index already sits on disk from the compile that made
   // it.
   const resolved = await compileResolveGraphBroker({
-    root: root,
+    root,
     blobsDir,
     cacheDir: `${configDir}/.assayer/cache`,
     files: currentProcessed.index,
@@ -141,7 +141,7 @@ export const compileRunBroker = async ({
     stable === undefined || stable.resultEntry.mode === 'skipped'
       ? undefined
       : await compileResolveGraphBroker({
-          root: root,
+          root,
           blobsDir,
           cacheDir: `${configDir}/.assayer/cache`,
           files: stable.manifestNamespace.files,
@@ -193,8 +193,8 @@ export const compileRunBroker = async ({
     assayerVersion,
     configHash,
     namespaces,
-    repoName: repoName,
-    rootFolderName: rootFolderName,
+    repoName,
+    rootFolderName,
   };
 
   await manifestWriteBroker({ configDir, manifest: assayerCacheManifestContract.parse(manifest) });

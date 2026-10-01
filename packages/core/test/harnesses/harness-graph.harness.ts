@@ -105,7 +105,7 @@ export const harnessGraphHarness = (): {
     blob: 'compiled' | 'reused';
     contentHash: ContentHash;
   }> => {
-    const dir = params.dir;
+    const {dir} = params;
     writeFileSync(join(dir, HARNESS_REL), params.harness);
 
     const blobsDir = blobsDirOf({ dir: params.dir });

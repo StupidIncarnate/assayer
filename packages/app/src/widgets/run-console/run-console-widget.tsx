@@ -64,9 +64,9 @@ export const RunConsoleWidget = ({
           data-testid="RUN_CONSOLE_STATUS"
           fz="xs"
           fw={600}
-          c={runConsoleStatics.statusColour[status as keyof typeof runConsoleStatics.statusColour]}
+          c={runConsoleStatics.statusColour[status]}
         >
-          {runConsoleStatics.status[status as keyof typeof runConsoleStatics.status]}
+          {runConsoleStatics.status[status]}
         </Text>
         <CloseButton data-testid="RUN_CONSOLE_HIDE" size="sm" onClick={onHide} aria-label="Hide the run console" />
       </Group>

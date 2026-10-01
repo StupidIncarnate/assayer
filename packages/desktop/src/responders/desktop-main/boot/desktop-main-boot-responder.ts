@@ -48,7 +48,7 @@ export const DesktopMainBootResponder = async ({
     resolveStubs: async () => stubIndexResolveBroker({ repoPath }),
     resolveRun: async ({ relPath, onOutput }) =>
       runExecuteBroker({
-        repoPath: repoPath,
+        repoPath,
         root: (await repoSourceRootBroker({ repoPath })),
         relPath: String(relPath),
         onOutput,

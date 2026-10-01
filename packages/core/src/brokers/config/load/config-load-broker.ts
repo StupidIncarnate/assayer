@@ -34,7 +34,7 @@ export const configLoadBroker = async ({
 
     const position = jsonParseErrorSourcePositionTransformer({
       message: error.message,
-      text: text,
+      text,
     });
 
     return { success: false, message: error.message, ...position };

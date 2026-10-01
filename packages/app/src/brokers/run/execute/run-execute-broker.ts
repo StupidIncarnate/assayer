@@ -18,7 +18,7 @@ export const runExecuteBroker = async ({ relPath }: { relPath: string }): Promis
     throw new Error(preloadBridgeStatics.unavailableMessage);
   }
 
-  const raw: unknown = await bridge.runFile({ relPath: relPath });
+  const raw: unknown = await bridge.runFile({ relPath });
 
   return runResultContract.parse(raw);
 };

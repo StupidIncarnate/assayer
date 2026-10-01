@@ -37,7 +37,7 @@ export const externalSignatureReadDeclarationBroker = ({
   exportName: string;
 }): ExternalSignatureReadDeclarationResult => {
   const existing = projectByConfig.get(tsConfigFilePath);
-  const project = existing ?? new Project({ tsConfigFilePath: tsConfigFilePath, skipAddingFilesFromTsConfig: true });
+  const project = existing ?? new Project({ tsConfigFilePath, skipAddingFilesFromTsConfig: true });
   if (existing === undefined) {
     projectByConfig.set(tsConfigFilePath, project);
   }

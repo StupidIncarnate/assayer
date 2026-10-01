@@ -43,5 +43,5 @@ export const runConsoleFindBroker = async ({
     return undefined;
   }
 
-  return (await readFile(path));
+  return (readFile(path));
 };

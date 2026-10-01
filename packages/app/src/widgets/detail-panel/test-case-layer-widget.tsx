@@ -90,9 +90,9 @@ export const TestCaseLayerWidget = ({
             data-testid="CASE_STATUS"
             fz="xs"
             fw={600}
-            c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
+            c={runStatusStatics.colour[status]}
           >
-            {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
+            {`${runStatusStatics.marker[status]} `}
           </Text>
           {isModule
             ? `${entryLabel} → ${reach}`

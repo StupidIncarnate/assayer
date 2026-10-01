@@ -48,5 +48,5 @@ export const resolveSiblingCalleeBroker = ({
 
   const source = readFileSync(fileName);
 
-  return { walked: walkFileTransformer({ source: source, relPath: relPath }), relPath, source };
+  return { walked: walkFileTransformer({ source, relPath }), relPath, source };
 };

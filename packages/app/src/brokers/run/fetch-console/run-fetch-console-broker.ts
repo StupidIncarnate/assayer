@@ -19,7 +19,7 @@ export const runFetchConsoleBroker = async ({ relPath }: { relPath: string }): P
     throw new Error(preloadBridgeStatics.unavailableMessage);
   }
 
-  const raw: unknown = await bridge.getSavedConsole({ relPath: relPath });
+  const raw: unknown = await bridge.getSavedConsole({ relPath });
 
   if (raw === undefined || raw === null) {
     return undefined;

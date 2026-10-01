@@ -40,7 +40,7 @@ export const TestEntryLayerWidget = ({
     isModule && relPath !== undefined && relPath !== null
       ? moduleEntryLabelTransformer({
             ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }),
-            relPath: relPath,
+            relPath,
           })
       : String(fn.entry.label ?? fn.entry.exportName ?? fn.entry.name);
   // Only a name needs its parameter list appended; a label already carries the whole
