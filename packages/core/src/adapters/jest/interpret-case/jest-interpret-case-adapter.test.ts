@@ -3,6 +3,7 @@ import { CoverageIdStub, DerivedTestCaseStub } from '@assayer/shared/contracts';
 import { ProbeRuntimeStub } from '../../../contracts/probe-runtime/probe-runtime.stub';
 import { jestInterpretCaseAdapter } from './jest-interpret-case-adapter';
 import { jestInterpretCaseAdapterProxy } from './jest-interpret-case-adapter.proxy';
+import { getEnv } from '#gateway/node/process';
 
 const THEN = CoverageIdStub({ value: 'grade/return@then' });
 const ELSE = CoverageIdStub({ value: 'grade/return@else' });
@@ -382,7 +383,7 @@ describe('jestInterpretCaseAdapter', () => {
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
       const result = jestInterpretCaseAdapter({
-        entry: () => probe.x(THEN, process.env[NAME]),
+        entry: () => probe.x(THEN, getEnv(NAME)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
         testCase,
@@ -396,7 +397,7 @@ describe('jestInterpretCaseAdapter', () => {
         observedPath: [THEN],
         trace: [{ id: THEN, kind: 'exit', valueText: '6' }],
       });
-      expect(process.env[NAME]).toBe(undefined);
+      expect(getEnv(NAME)).toBe(undefined);
     });
 
     it('VALID: {an env binding, a prior value} => visible to the entry, then restored to the prior value', () => {
@@ -407,13 +408,13 @@ describe('jestInterpretCaseAdapter', () => {
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
       const result = jestInterpretCaseAdapter({
-        entry: () => probe.x(THEN, process.env[NAME]),
+        entry: () => probe.x(THEN, getEnv(NAME)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
         testCase,
         probe,
       });
-      const restoredValue = process.env[NAME];
+      const restoredValue = getEnv(NAME);
       Reflect.deleteProperty(process.env, NAME);
 
       expect(result).toStrictEqual({
@@ -444,7 +445,7 @@ describe('jestInterpretCaseAdapter', () => {
         testCase,
         probe,
       });
-      const restoredValue = process.env[NAME];
+      const restoredValue = getEnv(NAME);
       Reflect.deleteProperty(process.env, NAME);
 
       expect(result).toStrictEqual({

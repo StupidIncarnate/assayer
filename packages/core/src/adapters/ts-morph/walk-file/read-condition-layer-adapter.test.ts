@@ -1,4 +1,4 @@
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { readConditionLayerAdapter } from './read-condition-layer-adapter';
 import { readConditionLayerAdapterProxy } from './read-condition-layer-adapter.proxy';

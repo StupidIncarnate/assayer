@@ -24,8 +24,8 @@
  * handleBlockLayerAdapter({ statements, context });
  * // Returns a HandlerResult descending each statement with its own guard and tail flag
  */
-import { Node } from 'ts-morph';
-import type { Node as TsNode, Statement } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { Node as TsNode, Statement } from '#gateway/npm/ts-morph';
 
 import { guardStepContract } from '@assayer/shared/contracts';
 import type { GuardStep } from '@assayer/shared/contracts';

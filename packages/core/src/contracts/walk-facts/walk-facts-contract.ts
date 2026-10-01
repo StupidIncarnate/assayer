@@ -9,7 +9,7 @@
  * walkFactsContract.parse({ scopes: [], looseBranches: [], looseExits: [], nodes: [] });
  * // Returns a validated WalkFacts (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import {
   branchNodeContract,

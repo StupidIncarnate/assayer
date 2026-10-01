@@ -11,10 +11,10 @@
  * typescriptReadConfigAdapter({ searchPath: '/repo' });
  * // Returns { options: ts.CompilerOptions, tsconfigHash: ContentHash, configFilePath?: FilePath }
  */
-import { createHash } from 'node:crypto';
-import { dirname } from 'node:path';
+import { createHash } from '#gateway/node/crypto';
+import { dirname } from '#gateway/node/path';
 
-import ts from 'typescript';
+import ts from '#gateway/npm/typescript';
 
 import { contentHashContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';

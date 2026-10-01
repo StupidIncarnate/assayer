@@ -1,5 +1,5 @@
-import { Project, SyntaxKind } from 'ts-morph';
-import type { ExportDeclaration } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import type { ExportDeclaration } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../../contracts/walk-context/walk-context.stub';
 import { handleExportLayerAdapter } from './handle-export-layer-adapter';

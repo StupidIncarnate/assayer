@@ -18,7 +18,7 @@
  * projectNodeLayerAdapter({ node: ifStatement.getExpression() });
  * // Returns 'BinaryExpression,id:name,EqualsEqualsEqualsToken,str:blah' (branded AstProjection)
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract } from '@assayer/shared/contracts';
 

@@ -14,7 +14,7 @@
  * });
  * // Returns a validated ConditionCause
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { conditionLeafContract } from '@assayer/shared/contracts';
 

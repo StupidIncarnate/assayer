@@ -18,7 +18,7 @@
  * readOperandTypeLayerAdapter({ node: operandNode, context, name: 'value' });
  * // Returns the operand's TypeDescriptor, or an unknown descriptor when it cannot be read
  */
-import type { Node } from 'ts-morph';
+import type { Node } from '#gateway/npm/ts-morph';
 
 import type { SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
 

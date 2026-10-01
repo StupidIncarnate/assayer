@@ -42,7 +42,7 @@
  * caseSetContract.parse({ relPath: 'src/happy-path/boolean/and/and.ts', modulePath: '/abs/and.ts', entries: [...], gaps: [], darkSpots: [], undriven: [] });
  * // Returns a validated CaseSet (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import {
   coverageIdContract,

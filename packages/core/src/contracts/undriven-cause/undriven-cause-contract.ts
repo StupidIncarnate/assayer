@@ -30,7 +30,7 @@
  * undrivenCauseContract.parse('unread-comparison');
  * // Returns a validated UndrivenCause (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const undrivenCauseContract = z
   .enum(['unarrangeable-operand', 'unarrangeable-typeof', 'unarrangeable-typeof-member', 'unread-comparison'])

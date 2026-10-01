@@ -20,7 +20,7 @@
  * readHarnessValueTypeLayerAdapter({ type: expression.getType() });
  * // Returns { flavor: 'callable', text: '(message: string) => string' }
  */
-import type { Type } from 'ts-morph';
+import type { Type } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
 import type { SymbolName } from '@assayer/shared/contracts';

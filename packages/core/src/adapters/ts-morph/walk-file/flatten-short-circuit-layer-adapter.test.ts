@@ -1,4 +1,4 @@
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { flattenShortCircuitLayerAdapter } from './flatten-short-circuit-layer-adapter';
 import { flattenShortCircuitLayerAdapterProxy } from './flatten-short-circuit-layer-adapter.proxy';

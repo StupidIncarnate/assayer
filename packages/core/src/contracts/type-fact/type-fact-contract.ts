@@ -29,7 +29,7 @@
  * typeFactContract.parse({ flavor: 'callable', text: '(message: string) => string' });
  * // Returns a validated TypeFact (recursive discriminated union)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
 import type { RepresentativeValue, SymbolName, TemplateText, TypeText } from '@assayer/shared/contracts';

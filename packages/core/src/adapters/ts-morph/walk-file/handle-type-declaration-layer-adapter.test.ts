@@ -1,5 +1,5 @@
-import { Project, SyntaxKind } from 'ts-morph';
-import type { EnumDeclaration, InterfaceDeclaration, TypeAliasDeclaration } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import type { EnumDeclaration, InterfaceDeclaration, TypeAliasDeclaration } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../../contracts/walk-context/walk-context.stub';
 import { handleTypeDeclarationLayerAdapter } from './handle-type-declaration-layer-adapter';

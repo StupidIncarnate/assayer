@@ -35,7 +35,7 @@
  * // Returns { passed: true } when every generated case reached the exit derivation predicted
  */
 import { runCLI } from '@jest/core';
-import { dirname } from 'node:path';
+import { dirname } from '#gateway/node/path';
 
 import { coreRuntimeStatics } from '../../../statics/core-runtime/core-runtime-statics';
 import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';

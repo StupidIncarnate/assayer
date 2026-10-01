@@ -12,7 +12,7 @@
  * });
  * // Returns a validated StubOverlayObjectFile
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 import { representativeValueContract, stubKeyContract, symbolNameContract } from '@assayer/shared/contracts';
 
 export const stubOverlayObjectFileContract = z.object({

@@ -1,4 +1,4 @@
-import { Project } from 'ts-morph';
+import { Project } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../../contracts/walk-context/walk-context.stub';
 import { handleBlockLayerAdapter } from './handle-block-layer-adapter';

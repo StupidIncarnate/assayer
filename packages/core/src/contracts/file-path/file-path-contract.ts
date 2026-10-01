@@ -5,7 +5,7 @@
  * const path = filePathContract.parse('/repo/src/index.ts');
  * // Returns a validated FilePath (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const filePathContract = z.string().min(1).brand<'FilePath'>();
 

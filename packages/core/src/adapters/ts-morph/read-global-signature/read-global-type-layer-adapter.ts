@@ -34,8 +34,8 @@
  * readGlobalTypeLayerAdapter({ type: propertyAccess.getType() });
  * // Returns { flavor: 'other', text: 'NodeJS.ProcessEnv' } or a union/array/tuple/template/primitive/callable fact
  */
-import { Node } from 'ts-morph';
-import type { Type, TypeNode } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
 import type { TemplateText } from '@assayer/shared/contracts';

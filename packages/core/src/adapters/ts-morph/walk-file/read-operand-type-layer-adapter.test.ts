@@ -1,4 +1,4 @@
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { SymbolNameStub } from '@assayer/shared/contracts';
 

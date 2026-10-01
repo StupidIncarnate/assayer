@@ -21,8 +21,8 @@
  * readDeclaredTypeTextLayerAdapter({ node: param.getTypeNodeOrThrow() });
  * // Returns 'Db | string' for `db: Db | string` — where the checker alone answers 'any'
  */
-import { Node } from 'ts-morph';
-import type { TypeNode } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { TypeNode } from '#gateway/npm/ts-morph';
 
 import { typeTextContract } from '@assayer/shared/contracts';
 import type { TypeText } from '@assayer/shared/contracts';

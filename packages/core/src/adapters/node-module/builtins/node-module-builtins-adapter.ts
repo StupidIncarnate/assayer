@@ -8,7 +8,7 @@
  * nodeModuleBuiltinsAdapter();
  * // Returns readonly PackageName[]: ['fs', 'path', 'crypto', ...]
  */
-import { builtinModules } from 'node:module';
+import { builtinModules } from '#gateway/node/module';
 
 import { packageNameContract } from '@assayer/shared/contracts';
 import type { PackageName } from '@assayer/shared/contracts';

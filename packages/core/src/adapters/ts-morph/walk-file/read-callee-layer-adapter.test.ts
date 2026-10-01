@@ -1,5 +1,5 @@
-import type { Node} from 'ts-morph';
-import { Project, SyntaxKind } from 'ts-morph';
+import type { Node} from '#gateway/npm/ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { readCalleeLayerAdapter } from './read-callee-layer-adapter';
 import { readCalleeLayerAdapterProxy } from './read-callee-layer-adapter.proxy';

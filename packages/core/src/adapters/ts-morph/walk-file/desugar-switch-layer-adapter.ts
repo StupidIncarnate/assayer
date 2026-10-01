@@ -15,8 +15,8 @@
  * desugarSwitchLayerAdapter({ switchStatement, scopePath: ['*module*', 'routeLabel'] });
  * // Returns { discName: 'method', caseInfos: [{ clause, literalValue: 'get', caseToken: 'str:get', branchCoverageId }], defaultClause }
  */
-import { Node } from 'ts-morph';
-import type { CaseClause, DefaultClause, SwitchStatement } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { CaseClause, DefaultClause, SwitchStatement } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 import type { CoverageId, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';

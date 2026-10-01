@@ -1,5 +1,5 @@
-import { Project, SyntaxKind } from 'ts-morph';
-import type { Type, TypeNode } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
 import { readGlobalTypeLayerAdapter } from './read-global-type-layer-adapter';
 import { readGlobalTypeLayerAdapterProxy } from './read-global-type-layer-adapter.proxy';

@@ -18,8 +18,8 @@
  * handleVariableLayerAdapter({ node: variableStatement, context });
  * // Returns a HandlerResult with the value uses it found and the child descents
  */
-import { Node } from 'ts-morph';
-import type { VariableStatement } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { VariableStatement } from '#gateway/npm/ts-morph';
 
 import { symbolNameContract } from '@assayer/shared/contracts';
 import type { SymbolName } from '@assayer/shared/contracts';

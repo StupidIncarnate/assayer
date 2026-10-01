@@ -23,7 +23,7 @@
  * // Returns { target: 'local', name: 'inner', startLine: 2 },
  * //         { target: 'import', specifier: './other', importedName: 'foo' }, or { target: 'unresolved' }
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { lineNumberContract, moduleSpecifierContract, symbolNameContract } from '@assayer/shared/contracts';
 

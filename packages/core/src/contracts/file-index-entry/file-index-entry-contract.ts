@@ -6,7 +6,7 @@
  * fileIndexEntryContract.parse({ relPath: 'packages/core/src/index.ts' });
  * // Returns a validated FileIndexEntry (branded relPath field)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { relPathContract } from '@assayer/shared/contracts';
 

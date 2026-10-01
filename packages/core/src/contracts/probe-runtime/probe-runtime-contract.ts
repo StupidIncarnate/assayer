@@ -15,7 +15,7 @@
  * const probe: ProbeRuntime = jestProbeRuntimeAdapter();
  * // probe.c(id, value) records and returns value
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import type { CoverageId, TraceEvent } from '@assayer/shared/contracts';
 

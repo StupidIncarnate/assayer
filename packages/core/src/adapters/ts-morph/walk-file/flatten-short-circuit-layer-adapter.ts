@@ -15,8 +15,8 @@
  * flattenShortCircuitLayerAdapter({ expression: orChain, operator: SyntaxKind.BarBarToken });
  * // Returns [a, b, c] — the operands in source order
  */
-import type { SyntaxKind } from 'ts-morph';
-import { Node } from 'ts-morph';
+import type { SyntaxKind } from '#gateway/npm/ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 export const flattenShortCircuitLayerAdapter = ({
   expression,

@@ -1,4 +1,4 @@
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../../contracts/walk-context/walk-context.stub';
 import { WalkNodeStub } from '../../../contracts/walk-node/walk-node.stub';

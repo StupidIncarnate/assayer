@@ -17,7 +17,7 @@
  * readAmbientRootLayerAdapter({ node: identifier });
  * // Returns true for `process`/`console`, false for `Number`/a local binding/a non-identifier
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 const ECMASCRIPT_LIB_MARKER = '/lib.es';
 

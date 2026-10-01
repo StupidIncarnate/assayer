@@ -1,5 +1,5 @@
-import { Project, SyntaxKind } from 'ts-morph';
-import type { CallExpression } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import type { CallExpression } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../../contracts/walk-context/walk-context.stub';
 import { handleDynamicImportLayerAdapter } from './handle-dynamic-import-layer-adapter';

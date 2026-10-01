@@ -21,7 +21,7 @@
  * });
  * // Returns a validated CallSite (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract, guardStepContract, lineNumberContract, moduleSpecifierContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 

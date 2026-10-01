@@ -24,8 +24,8 @@
  * handleTypeDeclarationLayerAdapter({ node: interfaceDeclaration, context });
  * // Returns a HandlerResult with one declaredShape and its children as descents
  */
-import { Node } from 'ts-morph';
-import type { EnumDeclaration, InterfaceDeclaration, TypeAliasDeclaration } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { EnumDeclaration, InterfaceDeclaration, TypeAliasDeclaration } from '#gateway/npm/ts-morph';
 
 import { declaredShapeContract } from '../../../contracts/declared-shape/declared-shape-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';

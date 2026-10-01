@@ -25,8 +25,8 @@
  * handleIfLayerAdapter({ node: ifStatement, context });
  * // Returns a HandlerResult with the branch, per-arm descents, and any completion exits
  */
-import { Node } from 'ts-morph';
-import type { IfStatement } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { IfStatement } from '#gateway/npm/ts-morph';
 
 import { branchNodeContract, exitNodeContract, guardStepContract } from '@assayer/shared/contracts';
 

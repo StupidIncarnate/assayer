@@ -15,7 +15,7 @@
  * harnessDeclarationContract.parse({ inputs: { audit: { report: (m: string): string => m } } });
  * // Returns a validated HarnessDeclaration — values pass through by reference
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 // Two open shapes rather than `z.record`: a record keyed by a BRANDED name infers
 // `Record<SymbolName, …>`, and an author's `{ audit: { report } }` literal cannot satisfy it, because the

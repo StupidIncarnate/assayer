@@ -10,7 +10,7 @@
  * orderedBoundsContract.parse({ min: 10, minExclusive: true });
  * // Returns { min: 10, minExclusive: true, maxExclusive: false } — 10 < x
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const orderedBoundsContract = z.object({
   min: z.number().brand<'OrderedBound'>().optional(),

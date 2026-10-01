@@ -1,7 +1,7 @@
-import { createHash } from 'node:crypto';
+import { createHash } from '#gateway/node/crypto';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
 import { typescriptReadConfigAdapter } from './typescript-read-config-adapter';
 import { typescriptReadConfigAdapterProxy } from './typescript-read-config-adapter.proxy';

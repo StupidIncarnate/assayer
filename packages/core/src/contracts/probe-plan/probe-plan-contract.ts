@@ -12,7 +12,7 @@
  * probePlanContract.parse({ contentHash: 'a3f…', relPath: 'src/happy-path/boolean/and/and.ts', sites: [...] });
  * // Returns a validated ProbePlan
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { contentHashContract, relPathContract } from '@assayer/shared/contracts';
 

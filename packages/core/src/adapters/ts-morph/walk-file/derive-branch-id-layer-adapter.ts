@@ -10,7 +10,7 @@
  * deriveBranchIdLayerAdapter({ node: ifStatement, scopePath: ['Classifier', 'classify'] });
  * // Returns 'Classifier/classify/if:BinaryExpression,id:value,GreaterThanToken,num:5'
  */
-import type { IfStatement } from 'ts-morph';
+import type { IfStatement } from '#gateway/npm/ts-morph';
 
 import type { CoverageId, SymbolName } from '@assayer/shared/contracts';
 

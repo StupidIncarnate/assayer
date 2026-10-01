@@ -13,7 +13,7 @@
  * readPropertyPathLayerAdapter({ node: propertyAccessExpression });
  * // Returns { root, path: ['mode'] } — path left-to-right from the root outward
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { symbolNameContract } from '@assayer/shared/contracts';
 import type { SymbolName } from '@assayer/shared/contracts';

@@ -20,7 +20,7 @@
  * walkContextContract.parse({ scopePath: ['classify'], guardPath: [], params: [], exported: true, tail: true });
  * // Returns a validated WalkContext (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { guardStepContract, paramDescriptorContract, symbolNameContract } from '@assayer/shared/contracts';
 

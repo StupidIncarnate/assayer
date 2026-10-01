@@ -6,7 +6,7 @@
  * pathRelativeAdapter({ from: '/repo', to: '/repo/packages/web/index.tsx' });
  * // Returns a validated RelPath: 'packages/web/index.tsx'
  */
-import { relative } from 'node:path';
+import { relative } from '#gateway/node/path';
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath } from '@assayer/shared/contracts';
 

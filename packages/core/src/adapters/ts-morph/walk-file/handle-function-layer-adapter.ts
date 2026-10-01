@@ -22,9 +22,9 @@ import type {
   GetAccessorDeclaration,
   MethodDeclaration,
   SetAccessorDeclaration,
-} from 'ts-morph';
+} from '#gateway/npm/ts-morph';
 
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { exitNodeContract, paramDescriptorContract } from '@assayer/shared/contracts';
 

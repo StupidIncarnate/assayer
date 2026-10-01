@@ -21,7 +21,7 @@
  * typescriptHarnessGateAdapter({ source: "import { assayerHarness } from '@assayer/core';\nassayerHarness({ inputs: {} });" });
  * // Returns true — imported and called, so this file is Assayer's
  */
-import ts from 'typescript';
+import ts from '#gateway/npm/typescript';
 
 import { symbolNameContract } from '@assayer/shared/contracts';
 

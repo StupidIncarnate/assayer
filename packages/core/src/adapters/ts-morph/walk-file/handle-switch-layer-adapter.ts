@@ -24,7 +24,7 @@
  * handleSwitchLayerAdapter({ node: switchStatement, context });
  * // Returns a HandlerResult with one branch per literal case and per-clause descents
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { branchNodeContract, exitNodeContract, guardStepContract } from '@assayer/shared/contracts';
 
@@ -40,7 +40,7 @@ import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
 import { readConstOperandLayerAdapter } from './read-const-operand-layer-adapter';
 import { readEnvOperandLayerAdapter } from './read-env-operand-layer-adapter';
 import { readOperandTypeLayerAdapter } from './read-operand-type-layer-adapter';
-import type { SwitchStatement } from 'ts-morph';
+import type { SwitchStatement } from '#gateway/npm/ts-morph';
 
 export const handleSwitchLayerAdapter = ({
   node,

@@ -42,8 +42,8 @@
  * readSignatureTypeLayerAdapter({ type: signature.getReturnType() });
  * // Returns { flavor: 'union', members: [{ flavor: 'literal', value: 'get' }, ...], text: '"get" | "post"' }
  */
-import { Node } from 'ts-morph';
-import type { Type, TypeNode } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
 import type { SymbolName, TemplateText } from '@assayer/shared/contracts';

@@ -16,7 +16,7 @@
  * tsMorphReadExternalSignatureAdapter({ tsConfigFilePath, dtsPath, exportName });
  * // Returns { usable: true, signature: { params: [...], returnType: {...} } } or { usable: false }
  */
-import { Node, Project } from 'ts-morph';
+import { Node, Project } from '#gateway/npm/ts-morph';
 
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
 import type { ExternalSignature, SymbolName } from '@assayer/shared/contracts';

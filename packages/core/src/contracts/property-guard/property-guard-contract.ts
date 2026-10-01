@@ -16,7 +16,7 @@
  * });
  * // Returns a validated PropertyGuard (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import {
   lineNumberContract,

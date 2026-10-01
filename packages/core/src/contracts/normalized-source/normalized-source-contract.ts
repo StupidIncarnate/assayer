@@ -8,7 +8,7 @@
  * normalizedSourceContract.parse('name.length === 0');
  * // Returns a validated NormalizedSource (branded string)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const normalizedSourceContract = z.string().min(1).brand<'NormalizedSource'>();
 

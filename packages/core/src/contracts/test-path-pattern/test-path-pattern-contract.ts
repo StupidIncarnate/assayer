@@ -10,7 +10,7 @@
  * testPathPatternContract.parse('/cache/\\.assayer/runs/r1/');
  * // Returns a branded TestPathPattern
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const testPathPatternContract = z.string().min(1).brand<'TestPathPattern'>();
 

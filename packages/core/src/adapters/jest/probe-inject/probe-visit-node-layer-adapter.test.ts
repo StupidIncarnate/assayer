@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import ts from '#gateway/npm/typescript';
 
 import { ProbeSiteStub } from '../../../contracts/probe-site/probe-site.stub';
 import { probeVisitNodeLayerAdapter } from './probe-visit-node-layer-adapter';

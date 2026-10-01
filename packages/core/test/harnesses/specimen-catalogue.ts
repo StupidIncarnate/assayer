@@ -24,9 +24,9 @@
  * // ['packages/syntax-repository/src/happy-path/boolean/and/and.ts', ...] — sorted, smoke-repo-relative
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { resolve, join, relative, sep, basename, dirname, extname } from 'node:path';
+import { resolve, join, relative, sep, basename, dirname, extname } from '#gateway/node/path';
 
-import { Project, ts } from 'ts-morph';
+import { Project, ts } from '#gateway/npm/ts-morph';
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath } from '@assayer/shared/contracts';
 

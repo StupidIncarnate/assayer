@@ -37,7 +37,7 @@
  * // { conditional: true, result: <the split's branches/exits/probeSites/nodes/descents> } for a ternary
  * //   or a `&&`/`||` chain; { conditional: false, result: <empty> } otherwise
  */
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { branchNodeContract, exitNodeContract, guardStepContract } from '@assayer/shared/contracts';
 

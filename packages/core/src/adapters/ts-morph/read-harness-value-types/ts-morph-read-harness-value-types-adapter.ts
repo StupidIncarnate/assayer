@@ -26,7 +26,7 @@
  * tsMorphReadHarnessValueTypesAdapter({ source, fileName: 'src/audit.harness.ts' });
  * // Returns [{ entry: 'audit', param: 'report', type: { kind: 'unknown', text: 'undefined' } }]
  */
-import { Node, Project, SyntaxKind } from 'ts-morph';
+import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { symbolNameContract } from '@assayer/shared/contracts';
 import type { SymbolName, TypeDescriptor } from '@assayer/shared/contracts';

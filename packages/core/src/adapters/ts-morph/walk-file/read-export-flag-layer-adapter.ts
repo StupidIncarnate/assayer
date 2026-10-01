@@ -17,7 +17,7 @@
  * readExportFlagLayerAdapter({ node: arrowFunction, context });
  * // Returns true for `export const classify = () => …`, false for a nested helper
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { readModuleExportLayerAdapter } from './read-module-export-layer-adapter';

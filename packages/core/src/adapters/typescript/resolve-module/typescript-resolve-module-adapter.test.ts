@@ -1,8 +1,8 @@
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
-import ts from 'typescript';
+import ts from '#gateway/npm/typescript';
 
 import { typescriptResolveModuleAdapter } from './typescript-resolve-module-adapter';
 import { typescriptResolveModuleAdapterProxy } from './typescript-resolve-module-adapter.proxy';

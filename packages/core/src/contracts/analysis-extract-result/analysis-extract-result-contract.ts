@@ -7,7 +7,7 @@
  * analysisExtractResultContract.parse({ success: true, functions: [] });
  * // Returns a validated AnalysisExtractResult (discriminated on `success`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '@assayer/shared/contracts';
 

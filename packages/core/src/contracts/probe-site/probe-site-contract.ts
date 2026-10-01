@@ -29,7 +29,7 @@
  * probeSiteContract.parse({ id: 'grade/if:…#leaf.0', kind: 'cond', start: 64, end: 73 });
  * // Returns a validated ProbeSite (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { coverageIdContract } from '@assayer/shared/contracts';
 

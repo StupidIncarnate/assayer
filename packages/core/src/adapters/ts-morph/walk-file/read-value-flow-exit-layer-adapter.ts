@@ -24,8 +24,8 @@
  * // { matched: true, result: <split facts>, consumed: [decl, exit] } when the tail pattern + gate hold,
  * //   { matched: false, result: <empty>, consumed: [] } otherwise
  */
-import { Node, VariableDeclarationKind } from 'ts-morph';
-import type { Statement } from 'ts-morph';
+import { Node, VariableDeclarationKind } from '#gateway/npm/ts-morph';
+import type { Statement } from '#gateway/npm/ts-morph';
 
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { handlerResultLayerAdapter } from './handler-result-layer-adapter';

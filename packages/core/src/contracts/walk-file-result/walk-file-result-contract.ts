@@ -9,7 +9,7 @@
  * walkFileResultContract.parse({ success: true, scopes: [], nodes: [] });
  * // Returns a validated WalkFileResult (discriminated on `success`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import {
   columnNumberContract,

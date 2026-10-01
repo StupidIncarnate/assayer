@@ -22,19 +22,20 @@
  * engine.savedRun({ runId: 'r1' }); // => the RunResult parsed back off disk
  */
 import { mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { join, resolve } from '#gateway/node/path';
 
 import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
 import { runUnitBroker } from '../../src/brokers/run/unit/run-unit-broker';
+import { pid } from '#gateway/node/process';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
 const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
 // Stable for the whole worker, unique across parallel ones — see the note above on why the path must
 // not change between tests.
-const CACHE_DIR = join(tmpdir(), `assayer-engine-${String(process.pid)}`);
+const CACHE_DIR = join(tmpdir(), `assayer-engine-${String(pid)}`);
 
 export const runUnitHarness = (): {
   beforeEach: () => void;

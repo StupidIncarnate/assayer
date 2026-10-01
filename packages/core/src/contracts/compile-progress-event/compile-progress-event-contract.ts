@@ -21,7 +21,7 @@
  * });
  * // Returns a validated CompileProgressEvent (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { namespaceNameContract, branchNameContract, fileCountContract } from '@assayer/shared/contracts';
 

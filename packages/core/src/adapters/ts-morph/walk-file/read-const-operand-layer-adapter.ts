@@ -22,7 +22,7 @@
  * readConstOperandLayerAdapter({ node: operandIdentifier });
  * // Returns { value: 7 } for `const level = 7`, { length: 3 } for `const items = [1, 2, 3]`, or undefined
  */
-import { Node, VariableDeclarationKind } from 'ts-morph';
+import { Node, VariableDeclarationKind } from '#gateway/npm/ts-morph';
 
 import { constLengthContract, representativeValueContract } from '@assayer/shared/contracts';
 import type { ConstLength, RepresentativeValue } from '@assayer/shared/contracts';

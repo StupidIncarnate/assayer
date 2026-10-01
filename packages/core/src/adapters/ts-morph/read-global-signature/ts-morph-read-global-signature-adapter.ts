@@ -22,9 +22,9 @@
  * tsMorphReadGlobalSignatureAdapter({ tsConfigFilePath, reference: { kind: 'global', name: 'console', member: 'log', called: true } });
  * // Returns { usable: true, result: 'signature', signature, declPath } | { usable: true, result: 'type', type, declPath } | { usable: false }
  */
-import { dirname, join as joinPath } from 'node:path';
+import { dirname, join as joinPath } from '#gateway/node/path';
 
-import { Node, Project } from 'ts-morph';
+import { Node, Project } from '#gateway/npm/ts-morph';
 
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
 import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';

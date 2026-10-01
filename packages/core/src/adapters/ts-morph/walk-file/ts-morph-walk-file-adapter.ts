@@ -12,7 +12,7 @@
  * tsMorphWalkFileAdapter({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
  * // Returns a validated WalkFileResult: { success: true, scopes: [...], nodes: [...] }
  */
-import { Project } from 'ts-morph';
+import { Project } from '#gateway/npm/ts-morph';
 
 import { walkContextContract } from '../../../contracts/walk-context/walk-context-contract';
 import { walkFileResultContract } from '../../../contracts/walk-file-result/walk-file-result-contract';

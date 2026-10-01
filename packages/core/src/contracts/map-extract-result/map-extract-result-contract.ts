@@ -7,7 +7,7 @@
  * mapExtractResultContract.parse({ success: true, nodes: [] });
  * // Returns a validated MapExtractResult (discriminated on `success`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { mapNodeContract, lineNumberContract } from '@assayer/shared/contracts';
 

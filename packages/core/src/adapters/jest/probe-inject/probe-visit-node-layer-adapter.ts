@@ -22,7 +22,7 @@
  * probeVisitNodeLayerAdapter({ ts, context, sourceFile, sites, node });
  * // Returns the node, with `score > 5` rewritten to `__P.c('…#leaf.0', score > 5)`
  */
-import type TS from 'typescript';
+import type TS from '#gateway/npm/typescript';
 
 import type { ProbeSite } from '../../../contracts/probe-site/probe-site-contract';
 

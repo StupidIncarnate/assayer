@@ -38,7 +38,7 @@
  * readConditionLayerAdapter({ condition: ifStatement.getExpression() });
  * // Returns { operandNode, operandName: 'name', predicate: { kind: 'length-eq', literal: 0 } }
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 import type { Predicate, SymbolName } from '@assayer/shared/contracts';

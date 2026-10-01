@@ -13,7 +13,7 @@
  * });
  * // Returns a validated WalkNode (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract, symbolNameContract, syntaxKindNameContract } from '@assayer/shared/contracts';
 

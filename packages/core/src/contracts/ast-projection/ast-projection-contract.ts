@@ -9,7 +9,7 @@
  * astProjectionContract.parse('BinaryExpression,id:name,EqualsEqualsEqualsToken,str:blah');
  * // Returns a validated AstProjection (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const astProjectionContract = z.string().min(1).brand<'AstProjection'>();
 

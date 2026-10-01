@@ -1,4 +1,4 @@
-import { Project } from 'ts-morph';
+import { Project } from '#gateway/npm/ts-morph';
 
 import { TypeFactStub } from '../../../contracts/type-fact/type-fact.stub';
 import { readTypeFactLayerAdapter } from './read-type-fact-layer-adapter';

@@ -6,7 +6,7 @@
  * cryptoSha256Adapter({ content: 'abc' });
  * // Returns a validated ContentHash (lowercase 64-hex sha256 digest)
  */
-import { createHash } from 'node:crypto';
+import { createHash } from '#gateway/node/crypto';
 import { contentHashContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
 

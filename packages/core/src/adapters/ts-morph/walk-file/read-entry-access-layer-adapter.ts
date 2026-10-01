@@ -22,7 +22,7 @@
  * readEntryAccessLayerAdapter({ node: methodDeclaration, context });
  * // Returns { kind: 'method', className: 'Classifier', constructable: true }
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { entryAccessContract } from '@assayer/shared/contracts';
 import type { EntryAccess } from '@assayer/shared/contracts';

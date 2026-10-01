@@ -18,7 +18,7 @@
  * readNullishLeafLayerAdapter({ operand: nullishChain.getLeft(), context, branchCoverageId });
  * // Returns { condition: { kind: 'leaf', predicate: { kind: 'non-nullish' }, … }, sites: [{ id, kind: 'cond', … }] }
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { conditionNodeContract, coverageIdContract, predicateContract, symbolNameContract } from '@assayer/shared/contracts';
 import type { ConditionNode, CoverageId } from '@assayer/shared/contracts';

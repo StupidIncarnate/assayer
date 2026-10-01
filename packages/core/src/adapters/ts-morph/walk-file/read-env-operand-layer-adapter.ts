@@ -30,7 +30,7 @@
  * readEnvOperandLayerAdapter({ node: operandIdentifier });
  * // Returns 'VALUE' for `const value = Number(process.env.VALUE)`, or undefined
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { envVarNameContract } from '@assayer/shared/contracts';
 import type { EnvVarName } from '@assayer/shared/contracts';

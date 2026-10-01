@@ -15,8 +15,8 @@
  * handleDynamicImportLayerAdapter({ node: dynamicImportCall, context });
  * // Returns a HandlerResult with one moduleEdge and the argument's child descents
  */
-import { Node } from 'ts-morph';
-import type { CallExpression } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { CallExpression } from '#gateway/npm/ts-morph';
 
 import { moduleEdgeContract } from '@assayer/shared/contracts';
 

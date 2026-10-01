@@ -6,7 +6,7 @@
  * shimSourceContract.parse("const caseSet = require('./x.cases.json');");
  * // Returns a validated ShimSource (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const shimSourceContract = z.string().min(1).brand<'ShimSource'>();
 

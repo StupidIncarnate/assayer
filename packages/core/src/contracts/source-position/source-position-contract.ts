@@ -6,7 +6,7 @@
  * sourcePositionContract.parse({ line: 1, column: 1 });
  * // Returns a validated SourcePosition (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '@assayer/shared/contracts';
 

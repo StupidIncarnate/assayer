@@ -18,8 +18,8 @@
  * handleExitLayerAdapter({ node: returnStatement, context });
  * // Returns a HandlerResult with one exit carrying the guard path that reached it
  */
-import { Node } from 'ts-morph';
-import type { ReturnStatement, ThrowStatement } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { ReturnStatement, ThrowStatement } from '#gateway/npm/ts-morph';
 
 import { exitNodeContract, lineNumberContract } from '@assayer/shared/contracts';
 

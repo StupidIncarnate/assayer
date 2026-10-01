@@ -22,10 +22,10 @@
  * // Returns { ok: true, declarations: [{ inputs: { audit: { report: [Function] } } }] }
  * // or { ok: false, message: "cannot find module 'fs'" }
  */
-import { types } from 'node:util';
-import { createContext, runInContext } from 'node:vm';
+import { types } from '#gateway/node/util';
+import { createContext, runInContext } from '#gateway/node/vm';
 
-import ts from 'typescript';
+import ts from '#gateway/npm/typescript';
 
 
 import type { HarnessDeclaration } from '../../../contracts/harness-declaration/harness-declaration-contract';

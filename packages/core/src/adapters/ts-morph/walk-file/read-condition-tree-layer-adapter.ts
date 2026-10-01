@@ -23,7 +23,7 @@
  * readConditionTreeLayerAdapter({ condition: ifStatement.getExpression(), context, branchCoverageId, path: [] });
  * // Returns { condition: { kind: 'and', left: …, right: … }, sites: [{ id, kind: 'cond', start, end }] }
  */
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { conditionNodeContract, coverageIdContract } from '@assayer/shared/contracts';
 import type { ConditionNode, CoverageId } from '@assayer/shared/contracts';

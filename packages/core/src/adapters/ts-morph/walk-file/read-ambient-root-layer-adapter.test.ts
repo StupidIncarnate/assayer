@@ -1,5 +1,5 @@
-import { Project, SyntaxKind } from 'ts-morph';
-import type { Node } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import type { Node } from '#gateway/npm/ts-morph';
 
 import { readAmbientRootLayerAdapter } from './read-ambient-root-layer-adapter';
 import { readAmbientRootLayerAdapterProxy } from './read-ambient-root-layer-adapter.proxy';

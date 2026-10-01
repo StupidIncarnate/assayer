@@ -12,7 +12,7 @@
  * handlerResultLayerAdapter({ descents, opensScope });
  * // Returns { branches: [], exits: [], nodes: [], descents, opensScope }
  */
-import type { Node } from 'ts-morph';
+import type { Node } from '#gateway/npm/ts-morph';
 
 import type {
   BranchNode,

@@ -13,7 +13,7 @@
  * handleImportLayerAdapter({ node: importDeclaration, context });
  * // Returns a HandlerResult with one moduleEdge and no descents
  */
-import type { ImportDeclaration } from 'ts-morph';
+import type { ImportDeclaration } from '#gateway/npm/ts-morph';
 
 import { moduleEdgeContract } from '@assayer/shared/contracts';
 

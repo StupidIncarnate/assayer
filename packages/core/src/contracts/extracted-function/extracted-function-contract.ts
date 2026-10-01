@@ -7,7 +7,7 @@
  * extractedFunctionContract.parse({ entry, branches, exits });
  * // Returns a validated ExtractedFunction (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { entrySignatureContract, branchNodeContract, conditionNodeContract, exitNodeContract } from '@assayer/shared/contracts';
 

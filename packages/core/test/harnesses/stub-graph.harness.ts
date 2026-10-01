@@ -22,8 +22,8 @@
  * const crossFile = await stitch.stubCrossFileShape(); // { index: StubIndex } — cross-file union
  */
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { resolve, join, dirname } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { resolve, join, dirname } from '#gateway/node/path';
 
 import { RelPathStub } from '@assayer/shared/contracts';
 

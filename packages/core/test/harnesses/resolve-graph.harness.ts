@@ -13,8 +13,8 @@
  * const broken = await stitch.resolveBrokenRepo();  // an import that resolves to nothing
  */
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
 import { RelPathStub } from '@assayer/shared/contracts';
 

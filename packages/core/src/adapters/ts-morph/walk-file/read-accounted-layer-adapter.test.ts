@@ -1,4 +1,4 @@
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { readAccountedLayerAdapter } from './read-accounted-layer-adapter';
 import { readAccountedLayerAdapterProxy } from './read-accounted-layer-adapter.proxy';

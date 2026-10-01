@@ -14,7 +14,7 @@
  * walkNodeLayerAdapter({ node: sourceFile, context });
  * // Returns { scopes, looseBranches, looseExits, nodes } for the whole subtree
  */
-import type { Node } from 'ts-morph';
+import type { Node } from '#gateway/npm/ts-morph';
 
 import { scopeRecordContract } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';

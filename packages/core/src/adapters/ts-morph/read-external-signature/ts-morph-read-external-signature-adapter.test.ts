@@ -1,6 +1,6 @@
 import { mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
 import { SymbolNameStub } from '@assayer/shared/contracts';
 

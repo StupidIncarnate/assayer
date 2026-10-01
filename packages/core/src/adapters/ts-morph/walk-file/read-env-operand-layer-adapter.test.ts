@@ -1,4 +1,4 @@
-import { Node, Project, SyntaxKind } from 'ts-morph';
+import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { readEnvOperandLayerAdapter } from './read-env-operand-layer-adapter';
 import { readEnvOperandLayerAdapterProxy } from './read-env-operand-layer-adapter.proxy';

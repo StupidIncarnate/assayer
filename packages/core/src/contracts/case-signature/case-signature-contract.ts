@@ -7,7 +7,7 @@
  * caseSignatureContract.parse('f/return@top::[{"kind":"param","param":"size","value":51}]');
  * // Returns a validated CaseSignature (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const caseSignatureContract = z.string().min(1).brand<'CaseSignature'>();
 

@@ -8,7 +8,7 @@
  * predictedOutputContract.parse('f/return@top|pred:true');
  * // Returns a validated PredictedOutput (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const predictedOutputContract = z.string().min(1).brand<'PredictedOutput'>();
 

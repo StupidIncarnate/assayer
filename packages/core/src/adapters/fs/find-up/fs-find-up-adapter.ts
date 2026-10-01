@@ -12,7 +12,7 @@
  * // Returns the directory holding probe-runtime.js, or undefined
  */
 import { existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname } from '#gateway/node/path';
 
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';

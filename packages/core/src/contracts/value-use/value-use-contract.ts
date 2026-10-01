@@ -15,7 +15,7 @@
  * valueUseContract.parse({ target: 'import', specifier: 'node:path', importedName: 'sep' });
  * // Returns a validated ValueUse (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract, moduleSpecifierContract, symbolNameContract } from '@assayer/shared/contracts';
 

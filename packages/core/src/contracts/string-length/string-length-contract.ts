@@ -9,7 +9,7 @@
  * stringLengthContract.parse(3);
  * // Returns a validated StringLength (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const stringLengthContract = z.number().int().nonnegative().brand<'StringLength'>();
 

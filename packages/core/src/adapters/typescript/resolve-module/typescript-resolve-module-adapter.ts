@@ -10,7 +10,7 @@
  * typescriptResolveModuleAdapter({ specifier: '../b/foo', containingFile: '/repo/src/a/x.ts', options });
  * // Returns { resolved: true, fileName: '/repo/src/b/foo.ts' } or { resolved: false }
  */
-import ts from 'typescript';
+import ts from '#gateway/npm/typescript';
 
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';

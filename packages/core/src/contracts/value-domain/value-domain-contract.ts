@@ -42,7 +42,7 @@
  * valueDomainContract.parse({ excluded: [0] });                      // anything but 0
  * // Returns a validated ValueDomain (branded values)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '@assayer/shared/contracts';
 

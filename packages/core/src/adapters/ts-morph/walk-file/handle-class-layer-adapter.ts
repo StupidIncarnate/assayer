@@ -19,8 +19,8 @@
  * handleClassLayerAdapter({ node: classDeclaration, context });
  * // Returns a HandlerResult descending the class's members under its name
  */
-import { Node } from 'ts-morph';
-import type { ClassDeclaration, ClassExpression } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { ClassDeclaration, ClassExpression } from '#gateway/npm/ts-morph';
 
 import { symbolNameContract } from '@assayer/shared/contracts';
 

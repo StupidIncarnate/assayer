@@ -1,7 +1,7 @@
 // The REAL `typescript`, not ts-morph's bundled copy: nodes from two TypeScript instances are not
 // interchangeable, and the host compiler always hands us its own module. Passing `ts` in is what
 // makes that testable rather than a latent runtime surprise.
-import ts from 'typescript';
+import ts from '#gateway/npm/typescript';
 
 import { ProbeSiteStub } from '../../../contracts/probe-site/probe-site.stub';
 import { jestProbeInjectAdapter } from './jest-probe-inject-adapter';

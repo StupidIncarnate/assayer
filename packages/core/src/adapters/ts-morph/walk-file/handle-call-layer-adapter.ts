@@ -17,8 +17,8 @@
  * handleCallLayerAdapter({ node: callExpression, context });
  * // Returns a HandlerResult with one call and the child descents
  */
-import { Node } from 'ts-morph';
-import type { CallExpression } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
+import type { CallExpression } from '#gateway/npm/ts-morph';
 
 import { globalUseContract, lineNumberContract, symbolNameContract } from '@assayer/shared/contracts';
 

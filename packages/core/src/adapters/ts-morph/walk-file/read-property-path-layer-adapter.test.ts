@@ -1,4 +1,4 @@
-import { Project, SyntaxKind } from 'ts-morph';
+import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { readPropertyPathLayerAdapter } from './read-property-path-layer-adapter';
 import { readPropertyPathLayerAdapterProxy } from './read-property-path-layer-adapter.proxy';

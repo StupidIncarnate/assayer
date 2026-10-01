@@ -6,7 +6,7 @@
  * pathDirnameAdapter({ path: '/repo/packages/core' });
  * // Returns a validated FilePath: '/repo/packages'
  */
-import { dirname } from 'node:path';
+import { dirname } from '#gateway/node/path';
 
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';

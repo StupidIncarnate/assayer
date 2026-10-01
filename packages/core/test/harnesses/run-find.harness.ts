@@ -23,8 +23,8 @@
  * await readers.findRun({ configDir, relPath });        // => undefined, the id moved
  */
 import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
 import { RelPathStub, RunConsoleStub, RunResultStub } from '@assayer/shared/contracts';
 import type { RelPath, RunConsole, RunId, RunResult } from '@assayer/shared/contracts';

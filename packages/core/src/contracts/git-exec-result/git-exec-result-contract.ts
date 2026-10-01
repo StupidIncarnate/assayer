@@ -6,7 +6,7 @@
  * gitExecResultContract.parse({ exitCode: 0, stdout: 'abc123\n', stderr: '' });
  * // Returns a validated GitExecResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const gitExecResultContract = z.object({
   exitCode: z.number().int().brand<'GitExitCode'>(),

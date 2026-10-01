@@ -9,7 +9,7 @@
  * handleSourceFileLayerAdapter({ node: sourceFile, context });
  * // Returns a HandlerResult opening the `*module*` scope and descending the file's statements
  */
-import type { SourceFile } from 'ts-morph';
+import type { SourceFile } from '#gateway/npm/ts-morph';
 
 import { exitNodeContract, symbolNameContract } from '@assayer/shared/contracts';
 

@@ -24,8 +24,8 @@
  * const passes = await stitch.compileTwice({ source: TWO_CALLBACK_SOURCE, first: harnessA, second: harnessB });
  */
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
 import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract, RelPathStub } from '@assayer/shared/contracts';
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';

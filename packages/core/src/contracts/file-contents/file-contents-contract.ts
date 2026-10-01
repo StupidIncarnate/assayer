@@ -5,7 +5,7 @@
  * const contents = fileContentsContract.parse('export const x = 1;\n');
  * // Returns a validated FileContents (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const fileContentsContract = z.string().brand<'FileContents'>();
 

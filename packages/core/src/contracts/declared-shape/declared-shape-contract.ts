@@ -17,7 +17,7 @@
  * declaredShapeContract.parse({ name: 'Id', type: { kind: 'string' } });
  * // Returns a validated DeclaredShape (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { symbolNameContract, typeDescriptorContract } from '@assayer/shared/contracts';
 

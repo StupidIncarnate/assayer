@@ -13,7 +13,7 @@
  * readTerminalLayerAdapter({ node: block.getStatements().at(-1) });
  * // Returns true only when nothing after this statement can possibly run
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 export const readTerminalLayerAdapter = ({ node }: { node: Node | undefined }): boolean => {
   if (node === undefined) {

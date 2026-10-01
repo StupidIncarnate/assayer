@@ -6,7 +6,7 @@
  * dirEntryContract.parse({ name: 'index.ts', isDirectory: false });
  * // Returns a validated DirEntry (branded name field)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const dirEntryContract = z.object({
   name: z.string().min(1).brand<'DirEntryName'>(),

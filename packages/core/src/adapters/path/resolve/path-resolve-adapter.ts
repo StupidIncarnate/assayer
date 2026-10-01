@@ -6,7 +6,7 @@
  * pathResolveAdapter({ segments: ['/repo', 'smoke-repo'] });
  * // Returns a validated FilePath: '/repo/smoke-repo'
  */
-import { resolve } from 'node:path';
+import { resolve } from '#gateway/node/path';
 
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';

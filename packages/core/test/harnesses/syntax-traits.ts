@@ -20,7 +20,7 @@
  * // ['access:named', 'branch:if'] — sorted, deduped
  */
 import { readFileSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join } from '#gateway/node/path';
 
 import { entryAccessContract, branchNodeContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';

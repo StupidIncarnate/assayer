@@ -13,7 +13,7 @@
  * invokedFnContract.parse({ startLine: 1, args: [{ kind: 'literal', value: 7 }] });
  * // Returns a validated InvokedFn (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '@assayer/shared/contracts';
 

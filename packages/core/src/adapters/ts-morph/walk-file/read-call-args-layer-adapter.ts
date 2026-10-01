@@ -13,7 +13,7 @@
  * readCallArgsLayerAdapter({ args: callExpression.getArguments() });
  * // Returns [{ kind: 'param-ref', paramName: 'value' }, { kind: 'literal', value: 3 }, { kind: 'opaque' }]
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { lineNumberContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 

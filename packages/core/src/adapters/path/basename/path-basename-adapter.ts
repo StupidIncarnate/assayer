@@ -6,7 +6,7 @@
  * pathBasenameAdapter({ path: '/repo/smoke-repo' });
  * // Returns a validated FilePath: 'smoke-repo'
  */
-import { basename } from 'node:path';
+import { basename } from '#gateway/node/path';
 
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';

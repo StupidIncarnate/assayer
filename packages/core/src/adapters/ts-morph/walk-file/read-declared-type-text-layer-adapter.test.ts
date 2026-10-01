@@ -1,4 +1,4 @@
-import { Project } from 'ts-morph';
+import { Project } from '#gateway/npm/ts-morph';
 
 import { readDeclaredTypeTextLayerAdapter } from './read-declared-type-text-layer-adapter';
 import { readDeclaredTypeTextLayerAdapterProxy } from './read-declared-type-text-layer-adapter.proxy';

@@ -18,7 +18,7 @@
  * readFunctionNameLayerAdapter({ node: arrowFunction });
  * // Returns { name: 'classify', anonymous: false }, or a structural projection with anonymous: true
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import { symbolNameContract } from '@assayer/shared/contracts';
 import type { SymbolName } from '@assayer/shared/contracts';

@@ -13,7 +13,7 @@
  * dispatchNodeLayerAdapter({ node, context });
  * // Returns { branches, exits, nodes, descents, opensScope? } — never recurses itself
  */
-import { Node } from 'ts-morph';
+import { Node } from '#gateway/npm/ts-morph';
 
 import type { WalkContext } from '../../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../../contracts/walk-node/walk-node-contract';
