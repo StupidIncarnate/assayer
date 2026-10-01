@@ -24,7 +24,7 @@ import { z } from '#gateway/npm/zod';
 // property-less object with a catchall carries the same runtime validation and infers the open
 // `{ [entry: string]: { [param: string]: unknown } }` an editor accepts.
 export const harnessDeclarationContract = z.object({
-  inputs: z.object({}).catchall(z.object({}).catchall(z.unknown())),
+  inputs: z.object({}).catchall(z.object({}).catchall(z.unknown()).brand<'HarnessDeclarationInputs'>()).brand<'HarnessDeclarationInputs'>(),
 }).brand<'HarnessDeclaration'>();
 
 export type HarnessDeclaration = z.infer<typeof harnessDeclarationContract>;

@@ -30,7 +30,7 @@ export const walkContextContract = z.object({
   params: z.array(paramDescriptorContract),
   exported: z.boolean(),
   tail: z.boolean(),
-  enclosingClass: z.object({ name: z.string().min(1).brand<'WalkContextEnclosingClassName'>(), constructable: z.boolean() }).optional(),
+  enclosingClass: z.object({ name: z.string().min(1).brand<'WalkContextEnclosingClassName'>(), constructable: z.boolean() }).brand<'WalkContextEnclosingClass'>().optional(),
 }).brand<'WalkContext'>();
 
 export type WalkContext = z.infer<typeof walkContextContract>;

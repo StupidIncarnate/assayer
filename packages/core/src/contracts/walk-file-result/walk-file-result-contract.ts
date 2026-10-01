@@ -46,15 +46,15 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     // The parallel channel only IIFEs populate: each invoked-in-place function (`((n) => …)(x)`) with
     // the invocation arguments welded onto its params — what a follower welds to drive the arrow.
     invokedFns: z.array(invokedFnContract),
-  }),
+  }).brand<'WalkFileResult'>(),
   z.object({
     success: z.literal(false),
     error: z.object({
       line: z.number().int().positive().brand<'WalkFileResultErrorLine'>(),
       column: z.number().int().positive().brand<'WalkFileResultErrorColumn'>(),
-      message: z.string().min(1).brand<'ExtractErrorMessage'>(),
-    }),
-  }),
+      message: z.string().min(1).brand<'WalkFileResultErrorMessage'>(),
+    }).brand<'WalkFileResultError'>(),
+  }).brand<'WalkFileResult'>(),
 ]);
 
 export type WalkFileResult = z.infer<typeof walkFileResultContract>;

@@ -36,7 +36,7 @@ export const scopeRecordContract = z.object({
   // off the `fn:` prefix would derive a fact from the spelling of an identity string. Defaults to false
   // so the module scope and every named form say nothing.
   anonymous: z.boolean().default(false),
-  kind: z.enum(['module', 'function']).brand<'ScopeKind'>(),
+  kind: z.enum(['module', 'function']),
   exported: z.boolean(),
   access: entryAccessContract,
   params: z.array(paramDescriptorContract),

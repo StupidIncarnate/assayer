@@ -19,9 +19,9 @@ import { z } from '#gateway/npm/zod';
 
 
 export const valueUseContract = z.discriminatedUnion('target', [
-  z.object({ target: z.literal('import'), specifier: z.string().min(1).brand<'ValueUseSpecifier'>(), importedName: z.string().min(1).brand<'ValueUseImportedName'>() }),
-  z.object({ target: z.literal('local'), name: z.string().min(1).brand<'ValueUseName'>(), startLine: z.number().int().positive().brand<'ValueUseStartLine'>() }),
-  z.object({ target: z.literal('global'), name: z.string().min(1).brand<'ValueUseName'>(), member: z.string().min(1).brand<'ValueUseMember'>().optional() }),
+  z.object({ target: z.literal('import'), specifier: z.string().min(1).brand<'ValueUseSpecifier'>(), importedName: z.string().min(1).brand<'ValueUseImportedName'>() }).brand<'ValueUse'>(),
+  z.object({ target: z.literal('local'), name: z.string().min(1).brand<'ValueUseName'>(), startLine: z.number().int().positive().brand<'ValueUseStartLine'>() }).brand<'ValueUse'>(),
+  z.object({ target: z.literal('global'), name: z.string().min(1).brand<'ValueUseName'>(), member: z.string().min(1).brand<'ValueUseMember'>().optional() }).brand<'ValueUse'>(),
 ]);
 
 export type ValueUse = z.infer<typeof valueUseContract>;

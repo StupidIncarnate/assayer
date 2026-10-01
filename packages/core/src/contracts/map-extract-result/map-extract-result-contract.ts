@@ -12,15 +12,15 @@ import { z } from '#gateway/npm/zod';
 import { mapNodeContract } from '@assayer/shared/contracts';
 
 export const mapExtractResultContract = z.discriminatedUnion('success', [
-  z.object({ success: z.literal(true), nodes: z.array(mapNodeContract) }),
+  z.object({ success: z.literal(true), nodes: z.array(mapNodeContract) }).brand<'MapExtractResult'>(),
   z.object({
     success: z.literal(false),
     error: z.object({
       line: z.number().int().positive().brand<'MapExtractResultErrorLine'>(),
       column: z.number().int().positive().brand<'MapExtractResultErrorColumn'>(),
-      message: z.string().min(1).brand<'ExtractErrorMessage'>(),
-    }),
-  }),
+      message: z.string().min(1).brand<'MapExtractResultErrorMessage'>(),
+    }).brand<'MapExtractResultError'>(),
+  }).brand<'MapExtractResult'>(),
 ]);
 
 export type MapExtractResult = z.infer<typeof mapExtractResultContract>;

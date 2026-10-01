@@ -48,15 +48,15 @@ import { darkSpotContract, derivedTestCaseContract, entryAccessContract, entryGa
 
 export const caseSetContract = z.object({
   relPath: z.string().min(1).brand<'CaseSetRelPath'>(),
-  modulePath: z.string().min(1).brand<'ModulePath'>(),
-  harnessPath: z.string().min(1).brand<'HarnessPath'>().optional(),
+  modulePath: z.string().min(1).brand<'CaseSetModulePath'>(),
+  harnessPath: z.string().min(1).brand<'CaseSetHarnessPath'>().optional(),
   entries: z.array(
     z.object({
       name: z.string().min(1).brand<'CaseSetEntriesName'>(),
       access: entryAccessContract,
       exitIds: z.array(coverageContract.shape.id),
       cases: z.array(derivedTestCaseContract),
-    }),
+    }).brand<'CaseSetEntries'>(),
   ),
   gaps: z.array(entryGapContract),
   darkSpots: z.array(darkSpotContract),

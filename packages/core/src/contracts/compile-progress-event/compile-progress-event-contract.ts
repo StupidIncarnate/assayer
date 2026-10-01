@@ -25,7 +25,7 @@ import { z } from '#gateway/npm/zod';
 
 
 // Supporting phase schema (kept local, non-exported const; export only the type)
-const compileProgressPhaseContract = z.enum(['planned', 'advanced', 'done']).brand<'CompileProgressPhase'>();
+const compileProgressPhaseContract = z.enum(['planned', 'advanced', 'done']);
 export type CompileProgressPhase = z.infer<typeof compileProgressPhaseContract>;
 
 export const compileProgressEventContract = z.object({

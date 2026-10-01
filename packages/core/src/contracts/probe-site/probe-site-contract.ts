@@ -35,9 +35,9 @@ import { coverageContract } from '@assayer/shared/contracts';
 
 export const probeSiteContract = z.object({
   id: coverageContract.shape.id,
-  kind: z.enum(['cond', 'exit', 'complete', 'optional']).brand<'ProbeKind'>(),
-  start: z.number().int().min(0).brand<'SourceOffset'>(),
-  end: z.number().int().min(0).brand<'SourceOffset'>(),
+  kind: z.enum(['cond', 'exit', 'complete', 'optional']),
+  start: z.number().int().min(0).brand<'ProbeSiteStart'>(),
+  end: z.number().int().min(0).brand<'ProbeSiteEnd'>(),
   // Present ONLY on an `optional` site — the exit id fired when the receiver is nullish. The `id`
   // above is the non-null path's exit; both are observed from this one physical span.
   elseId: coverageContract.shape.id.optional(),
