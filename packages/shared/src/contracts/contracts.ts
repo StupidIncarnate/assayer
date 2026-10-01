@@ -159,7 +159,6 @@ export * from './function-analysis/function-analysis-contract';
 
 export * from './file-analysis/file-analysis-contract';
 
-export * from './trace-value-text/trace-value-text-contract';
 
 export * from './trace-event/trace-event-contract';
 

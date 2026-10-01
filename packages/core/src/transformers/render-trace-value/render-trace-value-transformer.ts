@@ -13,37 +13,35 @@
  * renderTraceValueTransformer({ value: 'pass' });
  * // Returns "'pass'" (branded TraceValueText)
  */
-import { traceValueTextContract } from '@assayer/shared/contracts';
-import type { TraceValueText } from '@assayer/shared/contracts';
 
-export const renderTraceValueTransformer = ({ value }: { value: unknown }): TraceValueText => {
+export const renderTraceValueTransformer = ({ value }: { value: unknown }): string => {
   if (typeof value === 'string') {
-    return traceValueTextContract.parse(`'${value}'`);
+    return `'${value}'`;
   }
 
   if (typeof value === 'bigint') {
-    return traceValueTextContract.parse(`${value.toString()}n`);
+    return `${value.toString()}n`;
   }
 
   if (typeof value === 'function') {
-    return traceValueTextContract.parse('[Function]');
+    return '[Function]';
   }
 
   if (typeof value === 'symbol') {
-    return traceValueTextContract.parse(value.toString());
+    return value.toString();
   }
 
   // JSON.stringify(undefined) is undefined, not a string — so undefined needs its own arm or the
   // contract's min-length parse would reject the event.
   if (value === undefined) {
-    return traceValueTextContract.parse('undefined');
+    return 'undefined';
   }
 
   try {
-    return traceValueTextContract.parse(JSON.stringify(value));
+    return JSON.stringify(value);
   } catch {
     // A cyclic or otherwise unserializable value must not take the run down: the trace is a display
     // surface, so it degrades to a label rather than throwing.
-    return traceValueTextContract.parse('[Unserializable]');
+    return '[Unserializable]';
   }
 };
