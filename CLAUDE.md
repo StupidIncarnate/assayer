@@ -204,11 +204,13 @@ details inside `dev:stop` matter and are not incidental:
 
 ## Known defect: core is not ready to publish
 
-`@assayer/core` is marked `"private": true` on purpose, so `npm publish`
-refuses it. Nothing publishes it yet. Fix this problem before that flag
-comes off:
+`@assayer/core`, `@assayer/shared`, `@assayer/desktop` and `assayer` (the
+CLI) are marked `"private": true` on purpose, so `npm publish` refuses them.
+Nothing publishes them yet. Fix this problem before those flags come off:
 
-- Core depends on `@assayer/shared`, which is also private.
+- The desktop window loads its page from `packages/app/dist/index.html`,
+  which is outside the `@assayer/desktop` tarball. A published desktop
+  package cannot show its window until that file ships with it.
 
 ## Constraints that shape every implementation decision
 

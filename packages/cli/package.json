@@ -5,7 +5,12 @@
   "bin": {
     "assayer": "dist/bin/assayer.js"
   },
+  "files": [
+    "dist",
+    "!dist/package.json"
+  ],
   "scripts": {
+    "prepack": "node ../../scripts/build-workspaces.mjs --tsc-only",
     "build": "tsc -p tsconfig.build.json",
     "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
     "postbuild": "chmod +x dist/bin/*.js 2>/dev/null || true",
