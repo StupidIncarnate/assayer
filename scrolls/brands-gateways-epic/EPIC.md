@@ -516,14 +516,13 @@ item in its subject.
 | PE-18 | After the user merges dungeonmaster's TypeScript 6 upgrade (`DEF-271` step 1): run assayer's full ward and `test:syntax` on the new tooling, and fix anything it changes | planned, waits on the user | |
 | PE-19 | `DEF-271` step 2: assayer moves to ts-morph 28 (TypeScript 6), bumps ts-jest and widens the `typescript` peer to `>=4.3 <7`, gated on the specimen hash check | planned, after PE-18 | |
 | PE-20 | The walk reader reads a mapped type's property through its original declaration, so `Partial<{ mode: string }>` reads `mode` as `string` with no `\| undefined`. A partial property is optional, so the reader must include `undefined`. Found by PE-9b; it predates PE-9. | active, with an agent | |
+| PE-21 | When git is not installed, Assayer stops with a P1 build error naming the problem and the fix, instead of a silent fallback. Removes concession 16. User decision, 2026-10-01. | active, with an agent | |
+| PE-22 | Every package is ready to publish except the `"private": true` flags, which stay as the one release-day switch: complete metadata, real version ranges for workspace dependencies, and an end-to-end test that installs the packed tarballs into a scratch repo and runs Assayer from them. User decision, 2026-10-01. | planned, after PE-16 | |
+| PE-23 | Dungeonmaster bounty board: every open upstream report becomes a bounty; the board gains a priority column, with P0 and P1 at the top of the index. Done in a dungeonmaster worktree, merged after the user's TypeScript 6 work settles. User decision, 2026-10-01. | active, with an agent | |
 
 **Upstream finding:** dungeonmaster's published Jest global teardown fails a run when any other process, such as another Claude session, creates a folder under `~/.claude/projects` during it (seen in PE-10's run `1790897042784-6bda`). Concurrent sessions can fail each other's tests.
 
-**Waiting on the user, not scheduled:**
-
-- What happens when git is not installed: today a silent fallback (concession 16); the operator recommends a clear build error.
-- When and which packages to publish (every package is private).
-- Which upstream reports in dungeonmaster to fix (the operator suggests 4, 11, 12 and 17), and confirming `DEF-234` by running it.
+**Waiting on the user:** nothing. The user decided git (PE-21), publishing (PE-22) and the upstream reports (PE-23) on 2026-10-01.
 
 ## Scripts used
 
