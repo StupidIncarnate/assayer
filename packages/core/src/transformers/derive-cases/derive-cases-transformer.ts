@@ -57,7 +57,7 @@
  * //   undrivenBranches: [{ line, operand? }, …], unfillable: [{ param, type }, …] }
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { BranchNode, ConditionNode, ConstLength, DerivedTestCase, ExitNode, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
+import type { BranchNode, ConditionNode, DerivedTestCase, ExitNode, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
@@ -89,7 +89,7 @@ export const deriveCasesTransformer = ({
   unreachableExits: {
     line: number;
     guardLines: number[];
-    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: ConstLength };
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
   }[];
   undrivenBranches: { line: number; cause: UndrivenCause; operand?: string }[];
   unfillable: { param: string; type: string }[];

@@ -57,7 +57,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { constLengthContract } from '../const-length/const-length-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
@@ -71,7 +70,7 @@ export const conditionLeafContract = z.object({
   operandTypeRef: z.string().min(1).brand<'ConditionLeafOperandTypeRef'>().optional(),
   operandEnvVarName: z.string().min(1).brand<'ConditionLeafOperandEnvVarName'>().optional(),
   operandConstValue: representativeValueContract.optional(),
-  operandConstLength: constLengthContract.optional(),
+  operandConstLength: z.number().int().nonnegative().brand<'ConditionLeafOperandConstLength'>().optional(),
   operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).optional(),
   operandIsTypeof: z.literal(true).optional(),
   operandType: typeDescriptorContract,

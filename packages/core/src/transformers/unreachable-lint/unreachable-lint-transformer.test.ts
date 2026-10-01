@@ -1,4 +1,4 @@
-import { constLengthContract, lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
+import { lineNumberContract, representativeValueContract } from '@assayer/shared/contracts';
 
 import { unreachableLintTransformer } from './unreachable-lint-transformer';
 
@@ -76,7 +76,7 @@ describe('unreachableLintTransformer', () => {
           {
             line: line(6),
             guardLines: [line(3)],
-            welded: { line: line(3), operand: 'items', length: constLengthContract.parse(3) },
+            welded: { line: line(3), operand: 'items', length: 3 },
           },
         ],
       });

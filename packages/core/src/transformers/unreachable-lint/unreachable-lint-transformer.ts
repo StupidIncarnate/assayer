@@ -21,7 +21,7 @@
  * // Returns [{ rule: 'unreachable-exit', name: 'classify', message: '…', startLine: 10, endLine: 10 }]
  */
 import { lintEntryContract } from '@assayer/shared/contracts';
-import type { ConstLength, LintEntry, RepresentativeValue } from '@assayer/shared/contracts';
+import type { LintEntry, RepresentativeValue } from '@assayer/shared/contracts';
 
 export const unreachableLintTransformer = ({
   name,
@@ -33,7 +33,7 @@ export const unreachableLintTransformer = ({
   unreachableExits: {
     line: number;
     guardLines: number[];
-    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: ConstLength };
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
   }[];
 }): LintEntry[] =>
   unreachableExits.map((unreachable) => {

@@ -44,7 +44,7 @@
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ConstLength, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
+import type { ArrangeBinding, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -69,7 +69,7 @@ export const funnelNamedCasesTransformer = ({
   unreachable: {
     line: number;
     guardLines: number[];
-    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: ConstLength };
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
     displayName: string;
   }[];
   consumed: { name: string; startLine: number; params: ParamDescriptor[] }[];

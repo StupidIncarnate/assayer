@@ -25,7 +25,6 @@ export * from './content-hash/content-hash-contract';
 
 export * from './file-count/file-count-contract';
 
-export * from './const-length/const-length-contract';
 
 export * from './repo-name/repo-name-contract';
 

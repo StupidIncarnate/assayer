@@ -24,12 +24,12 @@
  */
 import { Node, VariableDeclarationKind } from '#gateway/npm/ts-morph';
 
-import { constLengthContract, representativeValueContract } from '@assayer/shared/contracts';
-import type { ConstLength, RepresentativeValue } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
+import type { RepresentativeValue } from '@assayer/shared/contracts';
 
 export interface ConstOperandReadout {
   value?: RepresentativeValue;
-  length?: ConstLength;
+  length?: number;
 }
 
 export const readConstOperandLayerTransformer = ({ node }: { node: Node }): ConstOperandReadout | undefined => {
@@ -67,7 +67,7 @@ export const readConstOperandLayerTransformer = ({ node }: { node: Node }): Cons
 
   // An array literal welds its LENGTH — the count a `.length` comparison is decided against.
   if (Node.isArrayLiteralExpression(initializer)) {
-    return { length: constLengthContract.parse(initializer.getElements().length) };
+    return { length: initializer.getElements().length };
   }
 
   // A scalar literal welds its VALUE. A computed initializer is not a literal and yields nothing —
