@@ -73,7 +73,6 @@ export * from './env-read/env-read-contract';
 export * from './predicate/predicate-contract';
 
 
-export * from './template-text/template-text-contract';
 
 export * from './type-descriptor/type-descriptor-contract';
 

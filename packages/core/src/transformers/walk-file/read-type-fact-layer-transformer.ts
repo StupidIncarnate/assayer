@@ -52,8 +52,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, templateTextContract } from '@assayer/shared/contracts';
-import type { TemplateText } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
 import { readDeclaredTypeTextLayerTransformer } from './read-declared-type-text-layer-transformer';
@@ -107,7 +106,7 @@ export const readTypeFactLayerTransformer = ({
   // does not thread one per member, so a template literal type reached that way stays opaque instead of
   // guessing at its structure.
   if (readType.isTemplateLiteral() && typeNode !== undefined && Node.isTemplateLiteralTypeNode(typeNode)) {
-    const spans = typeNode.getTemplateSpans().map((span): { text: TemplateText; fact: TypeFact } => {
+    const spans = typeNode.getTemplateSpans().map((span): { text: string; fact: TypeFact } => {
       const [substitutionNode, literalNode] = span.getChildren();
       // The literal segment AFTER this substitution — the checker's own cooked text, read off the
       // TemplateMiddle/TemplateTail node the same way `getLiteralValue()` reads an ordinary literal's
@@ -119,7 +118,7 @@ export const readTypeFactLayerTransformer = ({
       // literal) — `getChildren()`'s array type just cannot say so. The opaque fallback below is
       // unreached in practice; it exists only so this stays total if that ever stopped holding.
       return {
-        text: templateTextContract.parse(text),
+        text: text,
         fact:
           substitutionNode === undefined
             ? { flavor: 'other', text: 'unknown' }
@@ -135,7 +134,7 @@ export const readTypeFactLayerTransformer = ({
       flavor: 'template',
       // The head segment (before the first substitution) plus each span's trailing segment, in source
       // order — always one more text than there are substitutions, even when a segment is empty.
-      texts: [templateTextContract.parse(typeNode.getHead().getLiteralText()), ...spans.map((span) => span.text)],
+      texts: [typeNode.getHead().getLiteralText(), ...spans.map((span) => span.text)],
       types: spans.map((span) => span.fact),
     };
   }

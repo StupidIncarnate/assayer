@@ -36,8 +36,6 @@ import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
-import { templateTextContract } from '../template-text/template-text-contract';
-import type { TemplateText } from '../template-text/template-text-contract';
 
 // A known element COUNT, carried for a future fixed-length rung — optional and unused for now, so a
 // descriptor omits it rather than inventing a length it cannot know.
@@ -57,7 +55,7 @@ export type TypeDescriptor =
   // The checker's own `texts`/`types` split for a template literal type: `texts` is the literal
   // segments in source order, `types` is one descriptor per substitution between them, and
   // `texts.length` is always `types.length + 1`.
-  | { kind: 'template'; texts: TemplateText[]; types: TypeDescriptor[] }
+  | { kind: 'template'; texts: string[]; types: TypeDescriptor[] }
   /**
    * `truncated` is true when the reader STOPPED enumerating because the type re-entered its own path
    * (`interface Tree { label: string; next: Tree }` — the inner `Tree`), so the empty property list is
@@ -97,7 +95,7 @@ export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
     z.object({ kind: z.literal('union'), members: z.array(typeDescriptorContract) }),
     z.object({ kind: z.literal('array'), element: typeDescriptorContract, cardinality: arrayCardinalityContract.optional() }),
     z.object({ kind: z.literal('tuple'), elements: z.array(typeDescriptorContract) }),
-    z.object({ kind: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeDescriptorContract) }),
+    z.object({ kind: z.literal('template'), texts: z.array(z.string().brand<'TypeDescriptorTexts'>()), types: z.array(typeDescriptorContract) }),
     z.object({
       kind: z.literal('object'),
       typeName: z.string().min(1).brand<'TypeDescriptorTypeName'>().optional(),

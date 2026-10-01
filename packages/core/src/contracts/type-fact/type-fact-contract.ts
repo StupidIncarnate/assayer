@@ -31,8 +31,8 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { representativeValueContract, templateTextContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, TemplateText } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
+import type { RepresentativeValue } from '@assayer/shared/contracts';
 
 export type TypeFact =
   | { flavor: 'string' }
@@ -44,7 +44,7 @@ export type TypeFact =
   // Fixed-length and HETEROGENEOUS, unlike `array` — see the PURPOSE doc.
   | { flavor: 'tuple'; elements: TypeFact[] }
   // The checker's own `texts`/`types` split for a template literal type — see the PURPOSE doc.
-  | { flavor: 'template'; texts: TemplateText[]; types: TypeFact[] }
+  | { flavor: 'template'; texts: string[]; types: TypeFact[] }
   /**
    * `truncated` is true when the reader re-entered a type already on its own path
    * (`interface Tree { next: Tree }`) and stopped, so the empty property list is where the read ended
@@ -75,7 +75,7 @@ export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
     z.object({ flavor: z.literal('union'), members: z.array(typeFactContract), text: z.string().min(1).brand<'TypeFactText'>() }),
     z.object({ flavor: z.literal('array'), element: typeFactContract }),
     z.object({ flavor: z.literal('tuple'), elements: z.array(typeFactContract) }),
-    z.object({ flavor: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeFactContract) }),
+    z.object({ flavor: z.literal('template'), texts: z.array(z.string().brand<'TypeFactTexts'>()), types: z.array(typeFactContract) }),
     z.object({
       flavor: z.literal('object'),
       typeName: z.string().min(1).brand<'TypeFactTypeName'>().optional(),
