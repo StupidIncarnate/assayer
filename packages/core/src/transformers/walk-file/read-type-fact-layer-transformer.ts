@@ -193,8 +193,9 @@ export const readTypeFactLayerTransformer = ({
   // An INTERSECTION reads through this SAME branch as a plain object — see the PURPOSE doc for why
   // `getProperties()`/`getSymbol()`/`getAliasSymbol()` already answer correctly with no merge logic
   // of our own.
-  // A named type only the default library declares (`Map`, `Date`) falls through to the opaque arm below, so
-  // its descriptor carries the reference and its arguments, whichever `lib` the owning tsconfig loads.
+  // A named type only the default library declares, with a callable member (`Map`, `Date`), falls through to the
+  // opaque arm below, so its descriptor carries the reference and its arguments, whichever `lib` the owning
+  // tsconfig loads. A library type made only of data (`Error`) expands here like any other object.
   if ((readType.isObject() || readType.isIntersection()) && !isDefaultLibraryTypeGuard({ type: readType })) {
     // Two ways a shape carries a name, and the checker answers them on different symbols. An
     // `interface Config` names its own symbol; a `type Config = { … }` names an ANONYMOUS object

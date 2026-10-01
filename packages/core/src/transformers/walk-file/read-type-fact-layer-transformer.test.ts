@@ -652,6 +652,51 @@ describe('readTypeFactLayerTransformer', () => {
       }).toStrictEqual({ es2022: opaque, defaults: opaque });
     });
 
+    it('VALID: {failure: Error, read under the defaults and under ES2022} => an object of its data properties, which ES2022 extends with cause', () => {
+      readTypeFactLayerTransformerProxy();
+      const defaultProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true }),
+      });
+      const es2022Project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const source = 'export function fail(failure: Error) { return failure; }\n';
+      const defaultParam = defaultProject.createSourceFile('src/f.ts', source).getFunctionOrThrow('fail').getParameterOrThrow('failure');
+      const es2022Param = es2022Project.createSourceFile('src/f.ts', source).getFunctionOrThrow('fail').getParameterOrThrow('failure');
+      const stack = TypeFactStub({
+        flavor: 'union',
+        members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+        text: 'string | undefined',
+      });
+
+      expect({
+        defaults: readTypeFactLayerTransformer({ type: defaultParam.getType(), typeNode: defaultParam.getTypeNodeOrThrow() }),
+        es2022: readTypeFactLayerTransformer({ type: es2022Param.getType(), typeNode: es2022Param.getTypeNodeOrThrow() }),
+      }).toStrictEqual({
+        defaults: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack, optional: true },
+          ],
+        }),
+        es2022: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'cause', fact: TypeFactStub({ flavor: 'other', text: 'unknown' }), optional: true },
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack, optional: true },
+          ],
+        }),
+      });
+    });
+
     it('VALID: {config: Partial<Config>, a library mapped type over a local interface} => enumerates the local properties', () => {
       readTypeFactLayerTransformerProxy();
       const project = new Project({

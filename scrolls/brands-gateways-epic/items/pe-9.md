@@ -490,3 +490,30 @@ derives no case at all". It expects `counts` to read as `{ kind: 'unknown', text
 and `values`. Its other two tests, the gap text and the empty admission channels, pass. This is the move "Which
 specimen walks move" predicts. Whether the specimen's expected parameter type changes is the operator's call, as that
 section says, and never something to fit to the analyzer's output.
+
+## Default library types
+
+The run above was taken before `guards/is-default-library-type` existed. With the guard in place, `counts` reads as
+the opaque reference the specimen expects, and `map-param.test.ts` passes.
+
+Both type readers, `read-type-fact-layer-transformer.ts` (the walk) and `read-harness-value-type-layer-transformer.ts`
+(the harness reader), keep a type opaque when `isDefaultLibraryTypeGuard` says yes. Opaque means the reader records
+the reference and its type arguments, never the type's members. The guard says yes only when all three hold:
+
+1. The type has a named symbol. An anonymous type, such as the mapped type `Partial<Config>`, makes the guard answer
+   no, so the readers enumerate its members, which come from the local type it maps over.
+2. Every declaration of that symbol is in one of TypeScript's default library files. The program answers this through
+   `isSourceFileDefaultLibrary`. A type the file augments, such as a local `interface Date { extra: number }`, has a
+   declaration outside the library, so the guard answers no.
+3. At least one member is callable: its type, with `undefined` removed, has a call signature. This is a method, or a
+   property typed as a function. The reason is the one the `map-param` gap text gives: Assayer cannot build a value
+   that bottoms out in a function, and expanding every library method would bury the one fact a reader can act on.
+
+So `Map`, `Set`, `Date`, `RegExp` and `Promise` stay opaque, and a parameter of those types is an input gap. `Error`
+has only data properties (`name`, `message`, `stack?`, plus `cause?` under ES2022), so the readers expand it like any
+other object, and an `Error` parameter derives its cases. The guard reads callability from the type graph, never from
+a type name.
+
+`tmp/pe10/error-param-cases.ts` checks this end to end, under the defaults (ES5 plus DOM) and under ES2022 with
+`strict`. A function taking `e: Error` and a `size` it branches on derives 2 cases, and the `Date`, `RegExp`,
+`Promise` and `Map` versions derive none and report an input gap.

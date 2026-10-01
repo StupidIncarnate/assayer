@@ -9,6 +9,8 @@ const SOURCE = [
   'declare const counts: Map<string, number>;',
   'declare const when: Date;',
   'declare const failure: Error;',
+  'declare const pattern: RegExp;',
+  'declare const pending: Promise<number>;',
   'declare const config: Config;',
   'declare const partial: Partial<Config>;',
   'declare const both: Config & { extra: number };',
@@ -17,8 +19,10 @@ const SOURCE = [
 
 describe('isDefaultLibraryTypeGuard', () => {
   it.each([
-    ['counts', 'a library generic, Map<string, number>', true],
-    ['failure', 'a library interface, Error', true],
+    ['counts', 'a library generic with methods, Map<string, number>', true],
+    ['pattern', 'a library interface with methods, RegExp', true],
+    ['pending', 'a library generic with a callable then, Promise<number>', true],
+    ['failure', 'a library interface made only of data properties, Error', false],
     ['when', 'Date, which the source file augments', false],
     ['config', 'an interface the source file declares', false],
     ['partial', 'a library mapped type over a local interface, Partial<Config>', false],

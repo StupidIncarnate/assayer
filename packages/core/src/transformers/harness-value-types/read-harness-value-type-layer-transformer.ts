@@ -67,7 +67,8 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
   if (type.getCallSignatures().length > 0) {
     return { flavor: 'callable', text: type.getText() };
   }
-  // A named type only the default library declares (`Map`, `Date`) stays opaque, as in the walk reader.
+  // A named type only the default library declares, with a callable member (`Map`, `Date`), stays opaque, as in
+  // the walk reader. A library type made only of data (`Error`) expands here like any other object.
   if (type.isObject() && !isDefaultLibraryTypeGuard({ type })) {
     // `__type` is the anonymous symbol a `type X = { … }` alias produces; `__object` is its OBJECT
     // LITERAL EXPRESSION twin — the synthesized symbol the checker hands back for `{ host: 'x' }` read

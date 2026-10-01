@@ -183,5 +183,50 @@ describe('readHarnessValueTypeLayerTransformer', () => {
         TypeFactStub({ flavor: 'other', text: 'Map<string, number>' }),
       );
     });
+
+    it('VALID: {a new Error() expression, read under the defaults and under ES2022} => an object of its data properties, which ES2022 extends with cause', () => {
+      readHarnessValueTypeLayerTransformerProxy();
+      const defaultProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true }),
+      });
+      const es2022Project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const source = "const e = new Error('x');\n";
+      const defaultType = defaultProject.createSourceFile('src/f.ts', source).getVariableDeclarationOrThrow('e').getInitializerOrThrow().getType();
+      const es2022Type = es2022Project.createSourceFile('src/f.ts', source).getVariableDeclarationOrThrow('e').getInitializerOrThrow().getType();
+      const stack = TypeFactStub({
+        flavor: 'union',
+        members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+        text: 'string | undefined',
+      });
+
+      expect({
+        defaults: readHarnessValueTypeLayerTransformer({ type: defaultType }),
+        es2022: readHarnessValueTypeLayerTransformer({ type: es2022Type }),
+      }).toStrictEqual({
+        defaults: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack },
+          ],
+        }),
+        es2022: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'cause', fact: TypeFactStub({ flavor: 'other', text: 'unknown' }) },
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack },
+          ],
+        }),
+      });
+    });
   });
 });
