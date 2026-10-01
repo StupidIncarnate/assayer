@@ -45,7 +45,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
+import { representativeValueContract, templateTextContract } from '@assayer/shared/contracts';
 import type { TemplateText } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../../contracts/type-fact/type-fact-contract';
@@ -86,7 +86,7 @@ export const readSignatureTypeLayerBroker = ({
     return {
       flavor: 'union',
       members: type.getUnionTypes().map((member) => readSignatureTypeLayerBroker({ type: member, seen: onPath })),
-      text: typeTextContract.parse(type.getText()),
+      text: type.getText(),
     };
   }
   // A template literal type whose every substitution is a closed set of literals already collapsed into
@@ -109,7 +109,7 @@ export const readSignatureTypeLayerBroker = ({
         text: templateTextContract.parse(text),
         fact:
           substitutionNode === undefined
-            ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+            ? { flavor: 'other', text: 'unknown' }
             : readSignatureTypeLayerBroker({
                 type: substitutionNode.getType(),
                 ...(Node.isTypeNode(substitutionNode) ? { typeNode: substitutionNode } : {}),
@@ -173,7 +173,7 @@ export const readSignatureTypeLayerBroker = ({
   // property list, indistinguishable from an empty interface, and a METHOD comes back as an object
   // named after itself, which then keys a stub on a type that does not exist.
   if (type.getCallSignatures().length > 0) {
-    return { flavor: 'callable', text: typeTextContract.parse(type.getText()) };
+    return { flavor: 'callable', text: type.getText() };
   }
   // An INTERSECTION reads through this SAME branch as a plain object — see the PURPOSE doc for why
   // `getProperties()`/`getSymbol()`/`getAliasSymbol()` already answer correctly with no merge logic of
@@ -219,7 +219,7 @@ export const readSignatureTypeLayerBroker = ({
           name: symbol.getName(),
           fact:
             declaration === undefined
-              ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+              ? { flavor: 'other', text: 'unknown' }
               : readSignatureTypeLayerBroker({
                   type: symbol.getTypeAtLocation(declaration),
                   ...(propertyNode === undefined ? {} : { typeNode: propertyNode }),
@@ -232,5 +232,5 @@ export const readSignatureTypeLayerBroker = ({
 
     return { flavor: 'object', ...(typeName === undefined ? {} : { typeName }), properties };
   }
-  return { flavor: 'other', text: typeTextContract.parse(type.getText()) };
+  return { flavor: 'other', text: type.getText() };
 };

@@ -39,7 +39,7 @@
  * // Returns { cases, unfillable } — the cartesian of each callback's empty/single/pair shapes, plus what they refused.
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EntryLabel, TypeText, Coverage } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EntryLabel, Coverage } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -52,7 +52,7 @@ export const funnelCasesTransformer = ({
 }: {
   surface: ScopeRecord;
   callbacks: { callback: ScopeRecord; arrayParam: string; label?: EntryLabel | undefined }[];
-}): { cases: DerivedTestCase[]; unfillable: { param: string; type: TypeText; owner: EntryLabel }[] } => {
+}): { cases: DerivedTestCase[]; unfillable: { param: string; type: string; owner: EntryLabel }[] } => {
   // The surface is branchless with a single exit (the caller gates on that); its one exit is the tail
   // every funnel path returns through.
   const surfaceExit = surface.exits[0]?.coverageId;

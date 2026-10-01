@@ -1,5 +1,4 @@
 import { EntryLabelStub } from '@assayer/shared/contracts/entry-label/entry-label.stub';
-import { TypeTextStub } from '@assayer/shared/contracts/type-text/type-text.stub';
 
 import { inputGapTransformer } from './input-gap-transformer';
 
@@ -89,7 +88,7 @@ describe('inputGapTransformer', () => {
       const result = inputGapTransformer({
         entryName: 'audit',
         unfillable: [
-          { param: 'report', type: TypeTextStub({ value: '(message: string) => string' }) },
+          { param: 'report', type: '(message: string) => string' },
         ],
       });
 
@@ -101,7 +100,7 @@ describe('inputGapTransformer', () => {
     it('VALID: {an object param with a callable member} => the invoice names the type and the harness that closes it', () => {
       const result = inputGapTransformer({
         entryName: 'emit',
-        unfillable: [{ param: 'sink', type: TypeTextStub({ value: 'Sink' }) }],
+        unfillable: [{ param: 'sink', type: 'Sink' }],
       });
 
       expect(result).toStrictEqual([{ name: 'emit', reason: OBJECT_INVOICE }]);
@@ -115,8 +114,8 @@ describe('inputGapTransformer', () => {
       const result = inputGapTransformer({
         entryName: 'wire',
         unfillable: [
-          { param: 'sink', type: TypeTextStub({ value: 'Sink' }) },
-          { param: 'payload', type: TypeTextStub({ value: 'Map<string, number>' }) },
+          { param: 'sink', type: 'Sink' },
+          { param: 'payload', type: 'Map<string, number>' },
         ],
       });
 
@@ -133,7 +132,7 @@ describe('inputGapTransformer', () => {
         unfillable: [
           {
             param: 'cb',
-            type: TypeTextStub({ value: '(n: number) => void' }),
+            type: '(n: number) => void',
             owner: EntryLabelStub({ value: 'helper' }),
           },
         ],
@@ -146,10 +145,10 @@ describe('inputGapTransformer', () => {
       const result = inputGapTransformer({
         entryName: 'surface',
         unfillable: [
-          { param: 'size', type: TypeTextStub({ value: 'Sink' }) },
+          { param: 'size', type: 'Sink' },
           {
             param: 'cb',
-            type: TypeTextStub({ value: '(n: number) => void' }),
+            type: '(n: number) => void',
             owner: EntryLabelStub({ value: 'helper' }),
           },
         ],
@@ -166,10 +165,10 @@ describe('inputGapTransformer', () => {
         unfillable: [
           {
             param: 'report',
-            type: TypeTextStub({ value: '(message: string) => string' }),
+            type: '(message: string) => string',
             owner: EntryLabelStub({ value: 'audit' }),
           },
-          { param: 'report', type: TypeTextStub({ value: '(message: string) => string' }) },
+          { param: 'report', type: '(message: string) => string' },
         ],
       });
 
@@ -184,7 +183,7 @@ describe('inputGapTransformer', () => {
     it('VALID: {hasCases: true} => the opening clause says a case exists, never "derives no case"', () => {
       const result = inputGapTransformer({
         entryName: 'checkConfigObj',
-        unfillable: [{ param: 'config', type: TypeTextStub({ value: 'Config' }) }],
+        unfillable: [{ param: 'config', type: 'Config' }],
         hasCases: true,
       });
 
@@ -194,7 +193,7 @@ describe('inputGapTransformer', () => {
     it('VALID: {hasCases: false} => the opening clause reverts to "derives no case"', () => {
       const result = inputGapTransformer({
         entryName: 'emit',
-        unfillable: [{ param: 'sink', type: TypeTextStub({ value: 'Sink' }) }],
+        unfillable: [{ param: 'sink', type: 'Sink' }],
         hasCases: false,
       });
 

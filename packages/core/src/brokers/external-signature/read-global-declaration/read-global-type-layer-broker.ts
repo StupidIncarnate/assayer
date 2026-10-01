@@ -37,7 +37,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
+import { representativeValueContract, templateTextContract } from '@assayer/shared/contracts';
 import type { TemplateText } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../../contracts/type-fact/type-fact-contract';
@@ -68,7 +68,7 @@ export const readGlobalTypeLayerBroker = ({ type, typeNode }: { type: Type; type
     return {
       flavor: 'union',
       members: type.getUnionTypes().map((member) => readGlobalTypeLayerBroker({ type: member })),
-      text: typeTextContract.parse(type.getText()),
+      text: type.getText(),
     };
   }
   // A template literal type whose every substitution is a closed set of literals already collapsed into
@@ -91,7 +91,7 @@ export const readGlobalTypeLayerBroker = ({ type, typeNode }: { type: Type; type
         text: templateTextContract.parse(text),
         fact:
           substitutionNode === undefined
-            ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+            ? { flavor: 'other', text: 'unknown' }
             : readGlobalTypeLayerBroker({
                 type: substitutionNode.getType(),
                 ...(Node.isTypeNode(substitutionNode) ? { typeNode: substitutionNode } : {}),
@@ -152,7 +152,7 @@ export const readGlobalTypeLayerBroker = ({ type, typeNode }: { type: Type; type
   // A function type is an object to the checker too, so a callable is claimed before anything can read
   // it as an opaque shape — the same ordering the sibling readers give it ahead of their object branch.
   if (type.getCallSignatures().length > 0) {
-    return { flavor: 'callable', text: typeTextContract.parse(type.getText()) };
+    return { flavor: 'callable', text: type.getText() };
   }
-  return { flavor: 'other', text: typeTextContract.parse(type.getText()) };
+  return { flavor: 'other', text: type.getText() };
 };

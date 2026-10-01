@@ -57,7 +57,7 @@
  * //   undrivenBranches: [{ line, operand? }, …], unfillable: [{ param, type }, …] }
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { BranchNode, ConditionNode, ConstLength, DerivedTestCase, ExitNode, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
+import type { BranchNode, ConditionNode, ConstLength, DerivedTestCase, ExitNode, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
@@ -92,7 +92,7 @@ export const deriveCasesTransformer = ({
     welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: ConstLength };
   }[];
   undrivenBranches: { line: number; cause: UndrivenCause; operand?: string }[];
-  unfillable: { param: string; type: TypeText }[];
+  unfillable: { param: string; type: string }[];
 } => {
   const lineByBranch = new Map(branches.map((branch) => [branch.coverageId, branch.startLine]));
   // The parameters a CALL supplies — the declared list minus the trailing tail no caller owes and no

@@ -1,4 +1,3 @@
-import { typeTextContract } from '@assayer/shared/contracts';
 import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 import { PropertyDemandStub } from '@assayer/shared/contracts/property-demand/property-demand.stub';
 
@@ -224,7 +223,7 @@ describe('arrangeObjectPropertiesTransformer', () => {
               kind: 'object',
               properties: [
                 { name: 'retry', type: { kind: 'number' } },
-                { name: 'write', type: { kind: 'callable', text: typeTextContract.parse('() => void') } },
+                { name: 'write', type: { kind: 'callable', text: '() => void' } },
               ],
             },
           },

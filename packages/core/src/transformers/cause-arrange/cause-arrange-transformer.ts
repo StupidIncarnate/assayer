@@ -80,7 +80,7 @@
  * //   arrangements: [[{ kind: 'param', param: 'score', value: 6 }, …], …] }
  */
 import { arrangeValueContract, envValueContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -113,7 +113,7 @@ export const causeArrangeTransformer = ({
 }): {
   unreachable: boolean;
   arrangements: DerivedTestCase['arrange'][];
-  unfillable: { param: string; type: TypeText }[];
+  unfillable: { param: string; type: string }[];
 } => {
   // A WELDED operand is a single-value domain to start from — `{members:[7]}` for a scalar const,
   // `{lengthMin:3, lengthMax:3}` for an array const's length. The guard arm values below intersect onto

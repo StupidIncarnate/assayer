@@ -31,15 +31,15 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { representativeValueContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, TemplateText, TypeText } from '@assayer/shared/contracts';
+import { representativeValueContract, templateTextContract } from '@assayer/shared/contracts';
+import type { RepresentativeValue, TemplateText } from '@assayer/shared/contracts';
 
 export type TypeFact =
   | { flavor: 'string' }
   | { flavor: 'number' }
   | { flavor: 'boolean' }
   | { flavor: 'literal'; value: RepresentativeValue }
-  | { flavor: 'union'; members: TypeFact[]; text: TypeText }
+  | { flavor: 'union'; members: TypeFact[]; text: string }
   | { flavor: 'array'; element: TypeFact }
   // Fixed-length and HETEROGENEOUS, unlike `array` — see the PURPOSE doc.
   | { flavor: 'tuple'; elements: TypeFact[] }
@@ -56,7 +56,7 @@ export type TypeFact =
       truncated?: boolean | undefined;
       properties: { name: string; fact: TypeFact; optional?: boolean | undefined }[];
     }
-  | { flavor: 'callable'; text: TypeText }
+  | { flavor: 'callable'; text: string }
   /**
    * `typeRef` is the type-reference NAME the declaration spelled, present only when the opaque type was
    * written as a plain reference (`config: Config`). It is the FOREIGN KEY a consume-time overlay
@@ -64,7 +64,7 @@ export type TypeFact =
    * reference's type ARGUMENTS in order (`Box<string>`), which are what the declaration's type
    * parameters stand for.
    */
-  | { flavor: 'other'; text: TypeText; typeRef?: string | undefined; typeArgs?: TypeFact[] | undefined };
+  | { flavor: 'other'; text: string; typeRef?: string | undefined; typeArgs?: TypeFact[] | undefined };
 
 export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
   z.discriminatedUnion('flavor', [
@@ -72,7 +72,7 @@ export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
     z.object({ flavor: z.literal('number') }),
     z.object({ flavor: z.literal('boolean') }),
     z.object({ flavor: z.literal('literal'), value: representativeValueContract }),
-    z.object({ flavor: z.literal('union'), members: z.array(typeFactContract), text: typeTextContract }),
+    z.object({ flavor: z.literal('union'), members: z.array(typeFactContract), text: z.string().min(1).brand<'TypeFactText'>() }),
     z.object({ flavor: z.literal('array'), element: typeFactContract }),
     z.object({ flavor: z.literal('tuple'), elements: z.array(typeFactContract) }),
     z.object({ flavor: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeFactContract) }),
@@ -84,10 +84,10 @@ export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
         z.object({ name: z.string().min(1).brand<'TypeFactPropertiesName'>(), fact: typeFactContract, optional: z.boolean().optional() }),
       ),
     }),
-    z.object({ flavor: z.literal('callable'), text: typeTextContract }),
+    z.object({ flavor: z.literal('callable'), text: z.string().min(1).brand<'TypeFactText'>() }),
     z.object({
       flavor: z.literal('other'),
-      text: typeTextContract,
+      text: z.string().min(1).brand<'TypeFactText'>(),
       typeRef: z.string().min(1).brand<'TypeFactTypeRef'>().optional(),
       typeArgs: z.array(typeFactContract).optional(),
     }),

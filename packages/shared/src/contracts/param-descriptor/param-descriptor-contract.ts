@@ -25,7 +25,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
-import { typeTextContract } from '../type-text/type-text-contract';
 
 export const paramDescriptorContract = z.object({
   name: z.string().min(1).brand<'ParamDescriptorName'>(),
@@ -37,7 +36,7 @@ export const paramDescriptorContract = z.object({
   // ...sinks: ((m: string) => void)[])`, which binds `sinks` to the empty array.
   rest: z.boolean().optional(),
   // What the SIGNATURE spelled, for the invoice — present only where the descriptor cannot say it.
-  declaredText: typeTextContract.optional(),
+  declaredText: z.string().min(1).brand<'ParamDescriptorDeclaredText'>().optional(),
 });
 
 export type ParamDescriptor = z.infer<typeof paramDescriptorContract>;

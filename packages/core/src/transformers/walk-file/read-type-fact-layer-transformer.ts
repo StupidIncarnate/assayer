@@ -52,7 +52,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
+import { representativeValueContract, templateTextContract } from '@assayer/shared/contracts';
 import type { TemplateText } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
@@ -97,7 +97,7 @@ export const readTypeFactLayerTransformer = ({
     return {
       flavor: 'union',
       members: readType.getUnionTypes().map((member) => readTypeFactLayerTransformer({ type: member, seen: onPath })),
-      text: typeTextContract.parse(readType.getText()),
+      text: readType.getText(),
     };
   }
   // A template literal type whose every substitution is a closed set of literals (`` `${'a'|'b'}-x` ``)
@@ -122,7 +122,7 @@ export const readTypeFactLayerTransformer = ({
         text: templateTextContract.parse(text),
         fact:
           substitutionNode === undefined
-            ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+            ? { flavor: 'other', text: 'unknown' }
             : readTypeFactLayerTransformer({
                 type: substitutionNode.getType(),
                 ...(Node.isTypeNode(substitutionNode) ? { typeNode: substitutionNode } : {}),
@@ -187,7 +187,7 @@ export const readTypeFactLayerTransformer = ({
   // same ordering reason the array check does. Enumerated as an object a callback comes back with an
   // empty property list, indistinguishable from an empty interface.
   if (readType.getCallSignatures().length > 0) {
-    return { flavor: 'callable', text: typeTextContract.parse(readType.getText()) };
+    return { flavor: 'callable', text: readType.getText() };
   }
   // An INTERSECTION reads through this SAME branch as a plain object — see the PURPOSE doc for why
   // `getProperties()`/`getSymbol()`/`getAliasSymbol()` already answer correctly with no merge logic
@@ -240,7 +240,7 @@ export const readTypeFactLayerTransformer = ({
           name: symbol.getName(),
           fact:
             declaration === undefined
-              ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+              ? { flavor: 'other', text: 'unknown' }
               : readTypeFactLayerTransformer({
                   type: symbol.getTypeAtLocation(declaration),
                   ...(propertyNode === undefined ? {} : { typeNode: propertyNode }),
@@ -279,7 +279,7 @@ export const readTypeFactLayerTransformer = ({
     flavor: 'other',
     text:
       typeNode === undefined
-        ? typeTextContract.parse(readType.getText())
+        ? readType.getText()
         : readDeclaredTypeTextLayerTransformer({ node: typeNode }),
     ...(typeRef === undefined ? {} : { typeRef }),
     ...(typeArgs === undefined || typeArgs.length === 0 ? {} : { typeArgs }),

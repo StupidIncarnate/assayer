@@ -10,25 +10,24 @@
  * typeTextTransformer({ type: { kind: 'string' } });
  * // Returns 'string' (branded TypeText)
  */
-import { typeTextContract } from '@assayer/shared/contracts';
-import type { TypeText, TypeDescriptor } from '@assayer/shared/contracts';
+import type { TypeDescriptor } from '@assayer/shared/contracts';
 
-export const typeTextTransformer = ({ type }: { type: TypeDescriptor }): TypeText => {
+export const typeTextTransformer = ({ type }: { type: TypeDescriptor }): string => {
   switch (type.kind) {
     case 'string':
-      return typeTextContract.parse('string');
+      return 'string';
     case 'number':
-      return typeTextContract.parse('number');
+      return 'number';
     case 'boolean':
-      return typeTextContract.parse('boolean');
+      return 'boolean';
     case 'literal':
-      return typeTextContract.parse(JSON.stringify(type.value));
+      return JSON.stringify(type.value);
     case 'union':
-      return typeTextContract.parse(type.members.map((member) => typeTextTransformer({ type: member })).join(' | '));
+      return type.members.map((member) => typeTextTransformer({ type: member })).join(' | ');
     case 'array':
-      return typeTextContract.parse(`${String(typeTextTransformer({ type: type.element }))}[]`);
+      return `${String(typeTextTransformer({ type: type.element }))}[]`;
     case 'tuple':
-      return typeTextContract.parse(`[${type.elements.map((element) => String(typeTextTransformer({ type: element }))).join(', ')}]`);
+      return `[${type.elements.map((element) => String(typeTextTransformer({ type: element }))).join(', ')}]`;
     case 'template': {
       const substitutions = type.types.map((substitution) => String(typeTextTransformer({ type: substitution })));
       const body = type.texts.reduce((rendered, text, index) => {
@@ -37,19 +36,17 @@ export const typeTextTransformer = ({ type }: { type: TypeDescriptor }): TypeTex
         return substitution === undefined ? `${rendered}${String(text)}` : `${rendered}${String(text)}\${${substitution}}`;
       }, '');
 
-      return typeTextContract.parse(`\`${body}\``);
+      return `\`${body}\``;
     }
     case 'object':
-      return typeTextContract.parse(
-        type.typeName === undefined
+      return (type.typeName === undefined
           ? `{ ${type.properties.map((property) => `${String(property.name)}: ${String(typeTextTransformer({ type: property.type }))}`).join('; ')} }`
-          : String(type.typeName),
-      );
+          : String(type.typeName));
     case 'callable':
-      return typeTextContract.parse(type.text);
+      return type.text;
     case 'unknown':
-      return typeTextContract.parse(type.text);
+      return type.text;
     default:
-      return typeTextContract.parse('string');
+      return 'string';
   }
 };

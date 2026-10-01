@@ -38,8 +38,6 @@ import { representativeValueContract } from '../representative-value/representat
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
 import { templateTextContract } from '../template-text/template-text-contract';
 import type { TemplateText } from '../template-text/template-text-contract';
-import { typeTextContract } from '../type-text/type-text-contract';
-import type { TypeText } from '../type-text/type-text-contract';
 
 // A known element COUNT, carried for a future fixed-length rung — optional and unused for now, so a
 // descriptor omits it rather than inventing a length it cannot know.
@@ -77,7 +75,7 @@ export type TypeDescriptor =
       truncated?: boolean | undefined;
       properties: { name: string; type: TypeDescriptor; optional?: boolean | undefined }[];
     }
-  | { kind: 'callable'; text: TypeText }
+  | { kind: 'callable'; text: string }
   /**
    * `typeRef` is the type-reference NAME the declaration spelled (`Config` for `config: Config`), kept
    * only when the opaque type was written as a plain reference. It is the identifier's resolved
@@ -88,7 +86,7 @@ export type TypeDescriptor =
    * `typeArgs` carries the reference's type ARGUMENTS in order, so `Box<string>` says what the
    * declaration's `T` stands for. A generic declaration denotes nothing constructible without them.
    */
-  | { kind: 'unknown'; text: TypeText; typeRef?: string | undefined; typeArgs?: TypeDescriptor[] | undefined };
+  | { kind: 'unknown'; text: string; typeRef?: string | undefined; typeArgs?: TypeDescriptor[] | undefined };
 
 export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
   z.discriminatedUnion('kind', [
@@ -108,10 +106,10 @@ export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
         z.object({ name: z.string().min(1).brand<'TypeDescriptorPropertiesName'>(), type: typeDescriptorContract, optional: z.boolean().optional() }),
       ),
     }),
-    z.object({ kind: z.literal('callable'), text: typeTextContract }),
+    z.object({ kind: z.literal('callable'), text: z.string().min(1).brand<'TypeDescriptorText'>() }),
     z.object({
       kind: z.literal('unknown'),
-      text: typeTextContract,
+      text: z.string().min(1).brand<'TypeDescriptorText'>(),
       typeRef: z.string().min(1).brand<'TypeDescriptorTypeRef'>().optional(),
       typeArgs: z.array(typeDescriptorContract).optional(),
     }),

@@ -44,7 +44,7 @@
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
 import { derivedTestCaseContract, entryLabelContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, ParamDescriptor, RepresentativeValue, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -73,7 +73,7 @@ export const funnelNamedCasesTransformer = ({
     displayName: string;
   }[];
   consumed: { name: string; startLine: number; params: ParamDescriptor[] }[];
-  unfillable: { param: string; type: TypeText; owner: EntryLabel }[];
+  unfillable: { param: string; type: string; owner: EntryLabel }[];
 } => {
   // A harness spec for THIS hop alone — the map is consulted by this scope's own name, never a
   // caller's, so a private's harness never leaks onto the surface's own derivation or a sibling private.
@@ -107,7 +107,7 @@ export const funnelNamedCasesTransformer = ({
         cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
         unreachable: [],
         consumed: [] as { name: string; startLine: number; params: ParamDescriptor[] }[],
-        unfillable: [] as { param: string; type: TypeText; owner: EntryLabel }[],
+        unfillable: [] as { param: string; type: string; owner: EntryLabel }[],
       };
     }
 

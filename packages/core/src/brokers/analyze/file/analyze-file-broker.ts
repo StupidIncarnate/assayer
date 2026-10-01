@@ -33,7 +33,7 @@
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 import { entryLabelContract, fileAnalysisContract } from '@assayer/shared/contracts';
-import type { EntryLabel, FileAnalysis, TypeText } from '@assayer/shared/contracts';
+import type { EntryLabel, FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
@@ -98,7 +98,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // The fill seam's refusals from every DRIVING route, grouped by the entry that owes the invoice. A
   // funnelled private or callback is no entry of its own, so its refusal is filed against the host a
   // reader can drive and carries `owner` naming where the parameter is actually declared.
-  const followedRefusals = new Map<string, { param: string; type: TypeText; owner?: EntryLabel }[]>();
+  const followedRefusals = new Map<string, { param: string; type: string; owner?: EntryLabel }[]>();
   followed.refusals.forEach((refusal) => {
     const existing = followedRefusals.get(refusal.entryName) ?? [];
 

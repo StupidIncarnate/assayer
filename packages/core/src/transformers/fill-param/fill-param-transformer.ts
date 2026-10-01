@@ -35,7 +35,7 @@
  * // { kind: 'unfillable', param: 'report', type: '(m: string) => void' }
  */
 import { arrangeBindingContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ParamDescriptor, TypeText } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ParamDescriptor } from '@assayer/shared/contracts';
 
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
 import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
@@ -45,7 +45,7 @@ import { typeTextTransformer } from '../type-text/type-text-transformer';
 
 export type FillParamResult =
   | { kind: 'filled'; binding: ArrangeBinding }
-  | { kind: 'unfillable'; param: string; type: TypeText };
+  | { kind: 'unfillable'; param: string; type: string };
 
 export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): FillParamResult => {
   const { type } = param;

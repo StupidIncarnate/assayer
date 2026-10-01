@@ -22,7 +22,7 @@
  */
 import type { Type } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, typeTextContract } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
 
@@ -53,7 +53,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
     return {
       flavor: 'union',
       members: type.getUnionTypes().map((member) => readHarnessValueTypeLayerTransformer({ type: member, seen: onPath })),
-      text: typeTextContract.parse(type.getText()),
+      text: type.getText(),
     };
   }
   // Arrays are objects too, so this MUST precede the object branch.
@@ -63,7 +63,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
   // A function type is an object to the checker too, so this MUST precede the object branch — a supplied
   // callback comes back with an empty property list otherwise, indistinguishable from an empty interface.
   if (type.getCallSignatures().length > 0) {
-    return { flavor: 'callable', text: typeTextContract.parse(type.getText()) };
+    return { flavor: 'callable', text: type.getText() };
   }
   if (type.isObject()) {
     // `__type` is the anonymous symbol a `type X = { … }` alias produces; `__object` is its OBJECT
@@ -91,7 +91,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
           name: symbol.getName(),
           fact:
             declaration === undefined
-              ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+              ? { flavor: 'other', text: 'unknown' }
               : readHarnessValueTypeLayerTransformer({ type: symbol.getTypeAtLocation(declaration), seen: nextSeen }),
         };
       })
@@ -100,5 +100,5 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
     return { flavor: 'object', ...(typeName === undefined ? {} : { typeName }), properties };
   }
 
-  return { flavor: 'other', text: typeTextContract.parse(type.getText()) };
+  return { flavor: 'other', text: type.getText() };
 };

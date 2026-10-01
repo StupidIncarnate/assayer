@@ -55,7 +55,7 @@
  */
 import { anonymousEntryLabelTransformer } from '@assayer/shared/transformers';
 import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LintEntry, ParamDescriptor, RepresentativeValue, TypeText, UndrivenEntry } from '@assayer/shared/contracts';
+import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LintEntry, ParamDescriptor, RepresentativeValue, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -135,7 +135,7 @@ export const followCallsTransformer = ({
   // Every parameter a driving route asked the fill seam for and was REFUSED, keyed to the entry a
   // reader can drive. `owner` names the scope that DECLARES it when that is not the entry — a private
   // or callback the entry folds in, which is no entry of its own and so has nowhere else to be said.
-  refusals: { entryName: string; param: string; type: TypeText; owner?: EntryLabel }[];
+  refusals: { entryName: string; param: string; type: string; owner?: EntryLabel }[];
   // Every same-file PRIVATE a named-call funnel folded into a host — the ONE source `harness-validate`
   // and this same overlay both read for a scope an `owner` names but `followedEntries` does not carry a
   // signature for, so the two can never disagree about what a driving route folded in. A funnelled
@@ -370,7 +370,7 @@ export const followCallsTransformer = ({
       // The refusals this route hit, already keyed to the entry that owes the invoice. A through-caller
       // private files under its OWN name (it is a named entry a reader sees); a callback over a branching
       // host files under the HOST, since its own `name` is a structural projection no surface may print.
-      refusals: { entryName: string; param: string; type: TypeText; owner?: EntryLabel }[];
+      refusals: { entryName: string; param: string; type: string; owner?: EntryLabel }[];
     }[] => {
       if (callbackReach === undefined) {
         // An IIFE that drives: its arrow becomes a module-access entry driven by importing the file. Its
