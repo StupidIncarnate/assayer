@@ -10,7 +10,6 @@ module.exports = {
   testMatch: ['**/src/**/*.test.ts', '**/src/**/*.test.tsx', '**/bin/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json'],
   moduleNameMapper: {
-    '^@assayer/shared/contracts$': '<rootDir>/../shared/contracts.ts',
     '^@assayer/core/brokers$': '<rootDir>/../core/brokers.ts',
     '^@assayer/core/contracts$': '<rootDir>/../core/contracts.ts',
     '^@assayer/core/testing$': '<rootDir>/../core/testing.ts',

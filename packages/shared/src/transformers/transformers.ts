@@ -8,6 +8,6 @@
 
 // Subpath export entry for @assayer/shared/transformers
 
-export * from './src/transformers/arrange-text/arrange-text-transformer';
-export * from './src/transformers/anonymous-entry-label/anonymous-entry-label-transformer';
-export * from './src/transformers/module-entry-label/module-entry-label-transformer';
+export * from './arrange-text/arrange-text-transformer';
+export * from './anonymous-entry-label/anonymous-entry-label-transformer';
+export * from './module-entry-label/module-entry-label-transformer';

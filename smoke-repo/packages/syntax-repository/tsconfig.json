@@ -67,7 +67,7 @@
       // `<basename>.harness.ts` imports `assayerHarness` from it, exactly as the input-gap invoice
       // instructs. It resolves to core's MAIN barrel, which publishes that seam and nothing else.
       "@assayer/core": ["../../../packages/core/index.ts"],
-      "@assayer/shared/contracts": ["../../../packages/shared/contracts"]
+      "@assayer/shared/contracts": ["../../../packages/shared/src/contracts/contracts"]
     }
   },
   "include": ["src/**/*"]
