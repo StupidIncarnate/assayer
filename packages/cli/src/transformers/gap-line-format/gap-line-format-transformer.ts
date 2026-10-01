@@ -8,8 +8,6 @@
  */
 import type { EntryGap } from '@assayer/shared/contracts';
 
-import { admissionLineContract } from '../../contracts/admission-line/admission-line-contract';
-import type { AdmissionLine } from '../../contracts/admission-line/admission-line-contract';
 
-export const gapLineFormatTransformer = ({ gap }: { gap: EntryGap }): AdmissionLine =>
-  admissionLineContract.parse(`  GAP ${String(gap.name)} — ${String(gap.reason)}`);
+export const gapLineFormatTransformer = ({ gap }: { gap: EntryGap }): string =>
+  `  GAP ${String(gap.name)} — ${String(gap.reason)}`;
