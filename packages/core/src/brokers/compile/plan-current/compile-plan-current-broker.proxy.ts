@@ -3,25 +3,37 @@ import { harnessClassifyBrokerProxy } from '../../harness/classify/harness-class
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const compilePlanCurrentBrokerProxy = (): {
-  queueDir: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }) => void;
-  queueFileContent: ({ content }: { content: string }) => void;
-  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
-  // the like) propagates to the caller unmodified. This stages that rejection.
-  readThrows: ({ error }: { error: Error }) => void;
+  queueDir: ({
+    path,
+    entries,
+  }: {
+    path: string;
+    entries: readonly { name: string; kind: 'file' | 'directory' }[];
+  }) => void;
+  queueFileContent: ({ path, content }: { path: string; content: string }) => void;
+  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES and
+  // the like) propagates to the caller unmodified. This stages that rejection for one file.
+  readDenied: ({ path }: { path: string }) => void;
 } => {
   const walkProxy = compileWalkWorkingTreeBrokerProxy();
   const readFileGateway = readFileProxy();
   harnessClassifyBrokerProxy();
 
   return {
-    queueDir: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }): void => {
-      walkProxy.queueDir({ entries });
+    queueDir: ({
+      path,
+      entries,
+    }: {
+      path: string;
+      entries: readonly { name: string; kind: 'file' | 'directory' }[];
+    }): void => {
+      walkProxy.queueDir({ path, entries });
     },
-    queueFileContent: ({ content }: { content: string }): void => {
-      readFileGateway.returns({ content });
+    queueFileContent: ({ path, content }: { path: string; content: string }): void => {
+      readFileGateway.returns({ path, contents: content });
     },
-    readThrows: ({ error }: { error: Error }): void => {
-      readFileGateway.throws({ error });
+    readDenied: ({ path }: { path: string }): void => {
+      readFileGateway.denied({ path });
     },
   };
 };

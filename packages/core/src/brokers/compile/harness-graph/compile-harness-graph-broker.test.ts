@@ -37,6 +37,9 @@ const AUDIT_BLOB = CompiledFileBlobStub({
   }),
 });
 
+const AUDIT_BLOB_PATH = `/blobs/${EMPTY_HASH}.json`;
+const BAND_BLOB_PATH = `/blobs/${'a'.repeat(64)}.json`;
+
 const HARNESS_SOURCE = [
   "import { assayerHarness } from '@assayer/core';",
   '',
@@ -113,7 +116,7 @@ describe('compileHarnessGraphBroker', () => {
   describe('a harness that closes an invoiced gap', () => {
     it('VALID: {src/audit.harness.ts declaring audit.report} => records the (entry, param) key against its target', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -148,7 +151,7 @@ describe('compileHarnessGraphBroker', () => {
 
     it('VALID: {a config-dir + namespace} => writes the index to the tmp path under .assayer/cache/harness', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -169,7 +172,7 @@ describe('compileHarnessGraphBroker', () => {
 
     it('VALID: {the same layout, an edited harness} => the harness hash moves while layout and tsconfig hashes stay', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -201,8 +204,8 @@ describe('compileHarnessGraphBroker', () => {
 
     it('VALID: {two harness files supplied out of alphabetical order} => the written index sorts by relPath and the harness hash is order-independent', async () => {
       const reversedProxy = compileHarnessGraphBrokerProxy();
-      reversedProxy.queueBlob({ blob: AUDIT_BLOB });
-      reversedProxy.queueBlob({ blob: BAND_BLOB });
+      reversedProxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
+      reversedProxy.queueBlob({ path: BAND_BLOB_PATH, blob: BAND_BLOB });
       const reversedResult = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
@@ -219,8 +222,8 @@ describe('compileHarnessGraphBroker', () => {
       });
 
       const forwardProxy = compileHarnessGraphBrokerProxy();
-      forwardProxy.queueBlob({ blob: AUDIT_BLOB });
-      forwardProxy.queueBlob({ blob: BAND_BLOB });
+      forwardProxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
+      forwardProxy.queueBlob({ path: BAND_BLOB_PATH, blob: BAND_BLOB });
       const forwardResult = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
@@ -253,7 +256,7 @@ describe('compileHarnessGraphBroker', () => {
 
     it('EMPTY: {no harness files} => an empty inventory keyed on the empty digest', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -279,7 +282,7 @@ describe('compileHarnessGraphBroker', () => {
   describe('a harness the stitch cannot read', () => {
     it('ERROR: {a harness with no source file at its basename} => a P1 naming the file, and no index entry', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -314,7 +317,7 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a harness whose module body throws} => a P1 naming the file and the thrown message', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -350,7 +353,7 @@ describe('compileHarnessGraphBroker', () => {
   describe('a harness whose keys are wrong', () => {
     it('ERROR: {a key naming an entry the file does not offer} => a P1 with did-you-mean', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -381,7 +384,7 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a key naming a parameter the entry does not take} => a P1 with did-you-mean', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -412,7 +415,7 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a key naming a parameter Assayer can build} => a P1 saying the harness does not own it', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
@@ -444,7 +447,7 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a harness with nothing invoiced in it} => a P1 saying it closes nothing', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',

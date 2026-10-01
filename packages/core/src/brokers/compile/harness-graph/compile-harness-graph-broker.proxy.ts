@@ -5,7 +5,7 @@ import { harnessIndexWriteBrokerProxy } from '../../harness-index/write/harness-
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const compileHarnessGraphBrokerProxy = (): {
-  queueBlob: ({ blob }: { blob: unknown }) => void;
+  queueBlob: ({ path, blob }: { path: string; blob: unknown }) => void;
   // The index write is atomic: the bytes go to `<namespace>.json.tmp` first and a rename moves them
   // into place, so the address a caller asks with is that tmp path.
   getWrittenIndex: ({ path }: { path: string }) => unknown;
@@ -24,8 +24,8 @@ export const compileHarnessGraphBrokerProxy = (): {
   writeProxy.succeeds();
 
   return {
-    queueBlob: ({ blob }: { blob: unknown }): void => {
-      readFileGateway.returns({ content: JSON.stringify(blob) });
+    queueBlob: ({ path, blob }: { path: string; blob: unknown }): void => {
+      readFileGateway.returns({ path, contents: JSON.stringify(blob) });
     },
     getWrittenIndex: ({ path }: { path: string }): unknown => writeProxy.getWrittenIndex({ path }),
     getWrittenPaths: (): unknown[] => writeProxy.getWrittenPaths(),
