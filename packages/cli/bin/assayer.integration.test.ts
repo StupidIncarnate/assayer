@@ -14,7 +14,7 @@ const COMPILED_STATUS_STDOUT = /^Assayer is updating caches\n[\s\S]*\nassayer 1\
 // otherwise announced an update on every run of an untouched repo.
 const QUIET_STATUS_STDOUT = /^assayer 1\.0\.0\nAssayer core online\n$/u;
 
-describe('assayer CLI precheck flow (real built binary)', () => {
+describe('assayer CLI precheck flow (real CLI run from source)', () => {
   const cli = assayerCliHarness();
 
   describe('exempt commands — precheck fully skipped (obs-exempt-skips-precheck)', () => {
@@ -202,7 +202,7 @@ const SRC_FN = 'export function pick(x: number): number {\n  if (x > 0) {\n    r
 const GIT_COMMITTED = 'export const app = (): number => 1;\n';
 const GIT_UNCOMMITTED = 'export const app = (): number => 2;\n';
 
-describe('assayer compile flow (real built binary)', () => {
+describe('assayer compile flow (real CLI run from source)', () => {
   const compile = assayerCompileHarness();
 
   describe('obs-manifest-excludes — node_modules + test-named files never enter the manifest', () => {

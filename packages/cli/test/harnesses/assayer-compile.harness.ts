@@ -1,8 +1,9 @@
 /**
- * PURPOSE: Drives the compile pipeline end-to-end through the REAL built assayer CLI
- *   (packages/cli/dist/bin/assayer.js) against a fresh, hermetic temp working directory OUTSIDE
- *   the repo per test (created in beforeEach, removed in afterEach) so config-lookup walks up to
- *   nothing. Beyond spawning the CLI, it can turn the temp dir into a real (hermetic) git repo —
+ * PURPOSE: Drives the compile pipeline end-to-end through the REAL assayer CLI entry, run from
+ *   source (packages/cli/bin/assayer.ts through tsx, with every workspace package resolved to its
+ *   TypeScript source through the `source` export condition), so no build is needed first. It runs
+ *   against a fresh, hermetic temp working directory OUTSIDE the repo per test (created in
+ *   beforeEach, removed in afterEach) so config-lookup walks up to nothing. Beyond spawning the CLI, it can turn the temp dir into a real (hermetic) git repo —
  *   committing a baseline on a work branch and creating a `master` branch pointer WITHOUT ever
  *   checking out — so the stable-namespace (git blobs) and current-namespace (working tree) caches
  *   are both exercised. It reads back the written .assayer/cache manifest + content-addressed blobs
@@ -39,8 +40,17 @@ import type { ContentHash } from '@assayer/shared/contracts';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { execPath } from '#gateway/node/process';
+import { tsxLoaderUrl } from '#gateway/npm/tsx';
 
-const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
+// `--conditions=source` resolves every workspace package to its TypeScript source, the way ward's own
+// checks do. It goes on node itself, beside `--import`, because tsx's CLI would start a second
+// process that does not inherit it.
+const cliArgs = [
+  '--conditions=source',
+  '--import',
+  tsxLoaderUrl(),
+  join(__dirname, '..', '..', 'bin', 'assayer.ts'),
+];
 
 type Manifest = ReturnType<typeof AssayerCacheManifestStub>;
 type Blob = ReturnType<typeof CompiledFileBlobStub>;
@@ -97,7 +107,7 @@ export const assayerCompileHarness = (): {
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
       new Promise((resolve: (result: CliRunResult) => void, reject: (error: Error) => void) => {
-        const child = spawn(execPath, [cliEntry, ...argv], {
+        const child = spawn(execPath, [...cliArgs, ...argv], {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
         });

@@ -151,8 +151,8 @@ These rules come from the dungeonmaster epic. Its section "Lessons worth keeping
     long run `timeout: 600000` and wait for it in the same turn. Never `sleep` on a ward run, never `tail` its output
     file, and never re-run it unchanged. An agent never runs a bare ward.
 14. **Only the operator builds, and only when the next thing it runs is compiled output.** Ward's lint, typecheck
-    and unit checks read source. After P0-5b, core's in-process integration test reads source too. The CLI
-    integration tests spawn the built `packages/cli/dist/bin/assayer.js`, so the operator builds before running them. Build one package with
+    and unit checks read source. After P0-5b, core's in-process integration test reads source too, and after PE-2 so
+    do the CLI integration tests. The app e2e suite still runs the built CLI and app. Build one package with
     `npm run build --workspace=<name>`. A stale tree needs a clean build, because an incremental build can decide
     it is current and emit nothing.
 15. **Never fork an agent, and never let an agent dispatch one.** A fork carries its parent's whole task and redoes it
@@ -401,7 +401,7 @@ whenever execution forces another. A departure with no row is not allowed.
 | 7 | Its repo-root Jest base takes the published `globalSetup` | Until P0-5b, `scripts/jest-global-setup.js` builds, then calls the published sandbox setup, then throws if HOME did not move. | Assayer's tests need a build until P0-5b lands. The published teardown deletes HOME unless the published setup ran (upstream report 12). |
 | 8 | Its gateway packages read each other from source in tests, through its repo-root Jest base | Assayer's gateway Jest configs stay exactly as `init` writes them. Gateway tests read each other's source through the `gateway-source` export condition, which only the generated gateway packages carry (dungeonmaster `fe4da94`, item G-10). | A consumer's gateways spread the published Jest base, whose MSW setup loads `@dungeonmaster/testing`'s `dist`. The plain `source` condition would load its `src` too and start a second MSW server. |
 | 9 | `eslint.config.js` imports the plugin's config brokers by package name | Resolved: assayer takes both brokers from the plugin's main entry. | Dungeonmaster `7469542ee` exports them. |
-| 10 | No build before any test | The CLI integration tests spawn the built CLI, so the operator builds before running them. Running the CLI from source through `tsx` is a follow-up. | P0-5b's planner found both CLI test harnesses spawn `packages/cli/dist/bin/assayer.js`. |
+| 10 | No build before any test | Resolved in PE-2: both CLI test harnesses spawn `node --conditions=source --import <tsx loader> packages/cli/bin/assayer.ts`, with the loader URL from `#gateway/npm/tsx`. No test needs a build. | P0-5b's planner found both CLI test harnesses spawned `packages/cli/dist/bin/assayer.js`. |
 | 11 | P0-5b's row puts the source-or-`dist` choice in the two path brokers | `runUnitBroker` makes the choice. | The run-unit test harness calls `runUnitBroker` directly, so a choice made higher up would have to be repeated there. |
 | 12 | P0-5b's row checks `npm run test:syntax` output stays byte-identical | The byte-identical check hashes the run artifacts from `assayer unit` over every specimen. `test:syntax` stays a regression check. | `test:syntax` maps every core import to source through tsconfig `paths`, and writes no run artifacts. |
 | 13 | Lets `AdapterResult` go with the adapters | Assayer's shared package owned `AdapterResult` from P0-7 until A-5, which ran ahead of A-2 and removed it. | The build is fail-fast, and Jest builds first. With `AdapterResult` missing, core, desktop and cli cannot build, so no test runs before Phase A, not even the P0-8 baseline. |
@@ -484,7 +484,8 @@ Dungeonmaster problems found while planning. The user takes these to dungeonmast
 1. Ward's content-hashed build cache (`bundleBuildBroker`, under `.ward/bundle/<hash>/`) serves only e2e. Extend it
    to integration runs in dungeonmaster, so a repo whose integration tests need compiled output gets a build that
    is safe to run at once. D10 removes assayer's need for it; other consumer repos may still have one.
-2. Run the CLI integration tests from source through `tsx`, so they need no build (concession 10).
+2. Done in PE-2: the CLI integration tests run the CLI from source through `tsx`, so they need no build
+   (concession 10).
 
 ## Scripts used
 

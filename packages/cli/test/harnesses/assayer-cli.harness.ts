@@ -1,8 +1,9 @@
 /**
- * PURPOSE: Drives the CLI precheck flow end-to-end against the REAL built binary
- *   (packages/cli/dist/bin/assayer.js). Owns a fresh, hermetic temp working directory OUTSIDE the
- *   repo per test (created in beforeEach, removed in afterEach) so config-lookup walks up to
- *   nothing. A test seeds an assayer.config.json / source files / a corrupt cache, then spawns the
+ * PURPOSE: Drives the CLI precheck flow end-to-end against the REAL CLI entry, run from source
+ *   (packages/cli/bin/assayer.ts through tsx, with every workspace package resolved to its TypeScript
+ *   source through the `source` export condition), so no build is needed first. Owns a fresh,
+ *   hermetic temp working directory OUTSIDE the repo per test (created in beforeEach, removed in
+ *   afterEach) so config-lookup walks up to nothing. A test seeds an assayer.config.json / source files / a corrupt cache, then spawns the
  *   CLI as a child process with that dir as cwd and captures its stdout, stderr, and exit code.
  *   Owns all node:fs / node:child_process access so the colocated .integration.test.ts imports only
  *   this harness + stubs.
@@ -30,8 +31,17 @@ import {
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
 import { execPath } from '#gateway/node/process';
+import { tsxLoaderUrl } from '#gateway/npm/tsx';
 
-const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
+// `--conditions=source` resolves every workspace package to its TypeScript source, the way ward's own
+// checks do. It goes on node itself, beside `--import`, because tsx's CLI would start a second
+// process that does not inherit it.
+const cliArgs = [
+  '--conditions=source',
+  '--import',
+  tsxLoaderUrl(),
+  join(__dirname, '..', '..', 'bin', 'assayer.ts'),
+];
 
 export const assayerCliHarness = (): {
   beforeEach: () => void;
@@ -67,7 +77,7 @@ export const assayerCliHarness = (): {
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
       new Promise((resolve: (result: CliRunResult) => void, reject: (error: Error) => void) => {
-        const child = spawn(execPath, [cliEntry, ...argv], {
+        const child = spawn(execPath, [...cliArgs, ...argv], {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
         });
