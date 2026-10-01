@@ -1,5 +1,5 @@
 import { document } from '#gateway/browser/document';
-import { act, createElement } from 'react';
+import { act, createElement } from '#gateway/npm/react';
 
 import { reactDomMountAdapter } from './react-dom-mount-adapter';
 import { reactDomMountAdapterProxy } from './react-dom-mount-adapter.proxy';

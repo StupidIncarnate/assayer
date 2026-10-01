@@ -1,5 +1,5 @@
 import { document } from '#gateway/browser/document';
-import { act } from 'react';
+import { act } from '#gateway/npm/react';
 
 import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
 import { AppMountResponder } from './app-mount-responder';
