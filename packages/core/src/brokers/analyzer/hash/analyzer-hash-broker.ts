@@ -1,34 +1,40 @@
 /**
- * PURPOSE: Computes a deterministic content hash of the ANALYZER's own source — the code whose
- *   behavior a cached blob depends on — so the cache invalidates automatically whenever Assayer's
- *   analysis logic changes, with NO hand-maintained version to bump. Walks each given source root
- *   (skipping node_modules), hashes every included TypeScript source file (test-named files
- *   excluded — see isSourceFileIncludedGuard) by its root-relative path plus content, sorts, and
- *   folds the per-root digests into one hash. Root-RELATIVE paths keep the result identical across
- *   machines / checkout locations; sorting keeps it independent of walk order.
+ * PURPOSE: Computes a deterministic content hash of the code Assayer itself runs, the code a cached
+ *   blob depends on, so the cache invalidates whenever Assayer's analysis logic changes, with no
+ *   hand-maintained version to bump. Each root is one tree: a root whose last folder is `dist` is a
+ *   compiled tree and hashes its emitted `.js`; any other root is a source tree and hashes only its
+ *   implementation files, never a proxy, stub, test or harness (see isAnalyzerCodeFileGuard). So an
+ *   edit to code that does not run never moves the hash.
+ *
+ *   Each file contributes its root-relative path plus its content hash, sorted, then the per-root
+ *   digests fold into one hash. Root-relative paths keep the result identical across machines and
+ *   checkout locations. Sorting keeps it independent of walk order.
  *
  * USAGE:
- * await analyzerHashBroker({ roots: ['/repo/packages/core/src', '/repo/packages/shared/src'] });
- * // Returns a ContentHash that changes iff a hashed source file's path or content changes
+ * await analyzerHashBroker({ roots: ['/repo/packages/core/dist', '/repo/packages/shared/dist'] });
+ * // Returns a ContentHash that changes when a hashed file's path or content changes
  */
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { isSourceFileIncludedGuard } from '../../../guards/is-source-file-included/is-source-file-included-guard';
+import { isAnalyzerCodeFileGuard } from '../../../guards/is-analyzer-code-file/is-analyzer-code-file-guard';
+import { coreRuntimeStatics } from '../../../statics/core-runtime/core-runtime-statics';
 import type { ContentHash } from '@assayer/shared/contracts';
 import { readFile } from '#gateway/node/fs__promises';
-import { relative } from '#gateway/node/path';
+import { basename, relative } from '#gateway/node/path';
 import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 import { relPathContract } from '@assayer/shared/contracts';
 
 export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promise<ContentHash> => {
   const rootHashes = await Promise.all(
     roots.map(async (root) => {
+      const tree = basename(root) === coreRuntimeStatics.layout.distFolder ? 'dist' : 'source';
       const files = await compileWalkWorkingTreeBroker({ root });
-      const sources = files.map(String).filter((path) => isSourceFileIncludedGuard({ relPath: path }));
+      const codeFiles = files
+        .map((path) => ({ path: String(path), relPath: relPathContract.parse(relative(root, String(path))) }))
+        .filter(({ relPath }) => isAnalyzerCodeFileGuard({ relPath: String(relPath), tree }));
       const entries = await Promise.all(
-        sources.map(async (path) => {
+        codeFiles.map(async ({ path, relPath }) => {
           const content = fileContentsContract.parse(await readFile(path));
-          const relPath = relPathContract.parse(relative(root, path));
           return `${String(relPath)}:${String(contentHashTransformer({ content: String(content) }))}`;
         }),
       );

@@ -1,30 +1,40 @@
 /**
- * PURPOSE: Resolves the on-disk roots of Assayer's OWN analyzer source — the code whose behavior a
- *   cached blob depends on — by walking UP from this module's location to the monorepo root (the
- *   nearest ancestor that contains packages/core/src). Find-up (rather than a fixed relative depth)
- *   keeps it correct whether the CLI runs from src (ts-jest / tsx) or from the built dist binary,
- *   whose extra `dist/` level would break a hardcoded `../..` count. Returns the @assayer/core and
- *   @assayer/shared source roots so the cache-invalidation fingerprint (analyzerHashBroker) is a
- *   content hash of real code instead of a hand-maintained version string. Returns [] when run
- *   outside a monorepo (the fingerprint then degrades to a constant — safe: over-caches, never
- *   mis-caches).
+ * PURPOSE: Resolves the on-disk roots of the @assayer/core and @assayer/shared code this CLI runs, the
+ *   code a cached blob depends on, so the cache fingerprint (analyzerHashBroker) hashes exactly that
+ *   code. It walks UP from this module's location to the monorepo root, the nearest ancestor that
+ *   contains packages/core/src. Find-up keeps it correct at any depth, including the extra `dist/`
+ *   level of the built binary.
+ *
+ *   The tree follows where this module was loaded from, the same test `coreRuntimeTransformer` makes.
+ *   Loaded from `packages/cli/dist`, the CLI is the built binary, Node resolves core and shared to
+ *   their `dist`, and the roots are `packages/{core,shared}/dist`. Loaded from anywhere else, the CLI
+ *   runs from source and the roots are `packages/{core,shared}/src`. Returns [] when run outside a
+ *   monorepo, where the fingerprint degrades to a constant: it over-caches, never mis-caches.
  *
  * USAGE:
  * analyzerRootsResolveBroker();
- * // Returns [<root>/packages/core/src, <root>/packages/shared/src] as branded FilePath[]
+ * // Returns [<root>/packages/core/dist, <root>/packages/shared/dist] from the built CLI, or the two
+ * // src roots from source, as branded FilePath[]
  */
 import { existsSync } from '#gateway/node/fs';
 import { join, dirname } from '#gateway/node/path';
 import { filePathContract } from '@assayer/core/contracts';
 import type { FilePath } from '@assayer/core/contracts';
 
-export const analyzerRootsResolveBroker = ({ from }: { from?: FilePath } = {}): FilePath[] => {
+export const analyzerRootsResolveBroker = ({
+  from,
+  loadedFrom,
+}: { from?: FilePath; loadedFrom?: FilePath } = {}): FilePath[] => {
   const dir = from === undefined ? __dirname : String(from);
+  const origin = loadedFrom === undefined ? dir : String(loadedFrom);
 
   if (existsSync(join(dir, 'packages', 'core', 'src'))) {
+    const cliDist = join(dir, 'packages', 'cli', 'dist');
+    // The `/` after the folder name keeps a sibling such as `distant` from counting as `dist`.
+    const tree = origin === cliDist || origin.startsWith(`${cliDist}/`) ? 'dist' : 'src';
     return [
-      filePathContract.parse(join(dir, 'packages', 'core', 'src')),
-      filePathContract.parse(join(dir, 'packages', 'shared', 'src')),
+      filePathContract.parse(join(dir, 'packages', 'core', tree)),
+      filePathContract.parse(join(dir, 'packages', 'shared', tree)),
     ];
   }
 
@@ -33,5 +43,5 @@ export const analyzerRootsResolveBroker = ({ from }: { from?: FilePath } = {}): 
     return [];
   }
 
-  return analyzerRootsResolveBroker({ from: filePathContract.parse(parent) });
+  return analyzerRootsResolveBroker({ from: filePathContract.parse(parent), loadedFrom: filePathContract.parse(origin) });
 };
