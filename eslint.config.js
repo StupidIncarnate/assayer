@@ -63,7 +63,10 @@ module.exports = [
             parserOptions: {
                 ecmaVersion: 2020,
                 sourceType: 'module',
-                project: './tsconfig.json',
+                // Each file is typed against its nearest tsconfig.json, its own package's, so files under
+                // a package's test/ and bin/ folders are linted too.
+                project: true,
+                tsconfigRootDir: __dirname,
             },
         },
         plugins: {
@@ -105,7 +108,10 @@ module.exports = [
             parserOptions: {
                 ecmaVersion: 2020,
                 sourceType: 'module',
-                project: './tsconfig.json',
+                // Each file is typed against its nearest tsconfig.json, its own package's, so files under
+                // a package's test/ and bin/ folders are linted too.
+                project: true,
+                tsconfigRootDir: __dirname,
             },
         },
         plugins: {
