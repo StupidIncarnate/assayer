@@ -1,8 +1,6 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { runExecuteCasesBrokerProxy } from '../execute-cases/run-execute-cases-broker.proxy';
-import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import { composeCrossFileMapBrokerProxy } from '../../compose/cross-file-map/compose-cross-file-map-broker.proxy';
 import { composeCrossFilePredicatesBrokerProxy } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
@@ -54,8 +52,6 @@ export const runUnitBrokerProxy = (): {
   setupHarness: ({ path, source }: { path: string; source: string }) => void;
   setupNoHarness: ({ path }: { path: string }) => void;
 } => {
-  contentHashTransformerProxy();
-  walkFileTransformerProxy();
   analyzeFileBrokerProxy();
   // The imported-type resolution runs REAL with its sibling resolve staged to "no sibling", so it is a
   // same-reference no-op for a target whose parameters name no resolvable reference.

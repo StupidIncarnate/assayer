@@ -2,7 +2,6 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { contentHashContract } from '@assayer/shared/contracts';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
-import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { externalSignatureReadBroker } from '../../external-signature/read/external-signature-read-broker';
@@ -38,7 +37,6 @@ export const compileResolveGraphBrokerProxy = (): {
   // list and the sha256 hasher run REAL.
   const readFileGateway = readFileProxy();
   tsconfigReadBrokerProxy();
-  contentHashTransformerProxy();
   const layerProxy = resolveSpecifierLayerBrokerProxy();
 
   const readConfigHandle = registerMock({ fn: tsconfigReadBroker });

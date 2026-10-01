@@ -1,5 +1,3 @@
-import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
-import { harnessValueTypesTransformerProxy } from '../../../transformers/harness-value-types/harness-value-types-transformer.proxy';
 import { harnessLoadBrokerProxy } from '../../harness/load/harness-load-broker.proxy';
 import { harnessIndexWriteBrokerProxy } from '../../harness-index/write/harness-index-write-broker.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
@@ -20,9 +18,7 @@ export const compileHarnessGraphBrokerProxy = (): {
   // Hashing and harness loading run REAL — the digest IS the rebuild key under test, and a stubbed load
   // would prove a declaration nobody registered. Only the blob read and the index write are mocked, at
   // their fs boundary, so the written content and tmp path can be read back.
-  contentHashTransformerProxy();
   harnessLoadBrokerProxy();
-  harnessValueTypesTransformerProxy();
   const readFileGateway = readFileProxy();
   const writeProxy = harnessIndexWriteBrokerProxy();
 

@@ -1,5 +1,4 @@
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
-import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/resolve-sibling-callee-broker.proxy';
 
@@ -11,7 +10,6 @@ export const stubRealizeBrokerProxy = (): {
   // what a unit test cannot do; the caller says where a specifier lands and what the definition's
   // source is instead.
   analyzeFileBrokerProxy();
-  contentHashTransformerProxy();
   tsconfigReadBrokerProxy();
   const sibling = resolveSiblingCalleeBrokerProxy();
 

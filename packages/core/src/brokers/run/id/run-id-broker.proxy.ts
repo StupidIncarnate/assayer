@@ -1,5 +1,3 @@
-import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
-import { isAssayerHarnessGuardProxy } from '../../../guards/is-assayer-harness/is-assayer-harness-guard.proxy';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
@@ -11,10 +9,8 @@ export const runIdBrokerProxy = (): {
   harness: ({ harnessPath, source }: { harnessPath: string; source: string }) => void;
   readThrows: ({ harnessPath }: { harnessPath: string }) => void;
 } => {
-  contentHashTransformerProxy();
   const existsProxy = pathExistsProxy();
   const fileProxy = readFileProxy();
-  isAssayerHarnessGuardProxy();
 
   return {
     noHarness: ({ harnessPath }: { harnessPath: string }): void => {

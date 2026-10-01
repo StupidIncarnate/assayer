@@ -1,5 +1,3 @@
-import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
-import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import { fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
@@ -23,8 +21,6 @@ export const compileProcessFileBrokerProxy = (): {
   const ensureDirGateway = ensureDirProxy();
   const writeFileGateway = writeFileProxy();
   const renameGateway = renameProxy();
-  walkFileTransformerProxy();
-  contentHashTransformerProxy();
   analyzeFileBrokerProxy();
 
   return {

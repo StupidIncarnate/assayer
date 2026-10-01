@@ -1,6 +1,5 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
@@ -19,7 +18,6 @@ export const resolveSiblingCalleeBrokerProxy = (): {
   // module resolver is REPLACED wholesale because resolution against a real filesystem is exactly what
   // a unit test cannot stage — the caller says where a specifier lands and what its source is instead.
   // Nothing is staged for the sibling read until resolvesToSibling names the exact resolved file.
-  walkFileTransformerProxy();
   const reads = readFileSyncProxy();
   importSpecifierResolveBrokerProxy();
 

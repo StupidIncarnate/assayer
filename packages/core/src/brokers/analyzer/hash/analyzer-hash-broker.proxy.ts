@@ -1,7 +1,6 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { compileWalkWorkingTreeBrokerProxy } from '../../compile/walk-working-tree/compile-walk-working-tree-broker.proxy';
-import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
@@ -14,7 +13,6 @@ export const analyzerHashBrokerProxy = (): {
 } => {
   compileWalkWorkingTreeBrokerProxy();
   const readFileGateway = readFileProxy();
-  contentHashTransformerProxy();
 
   const walkHandle = registerMock({ fn: compileWalkWorkingTreeBroker });
 
