@@ -136,7 +136,7 @@ describe('compileRunBroker', () => {
       proxy.onCurrentBranch({ name: 'feature-x' });
       proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n'] });
       proxy.manifestWriteSucceeds({ configDir: '/repo' });
-      proxy.overlayStale();
+      proxy.overlayStale({ configDir: '/repo' });
       const config = AssayerConfigStub();
 
       const result = await compileRunBroker({
@@ -169,7 +169,7 @@ describe('compileRunBroker', () => {
       proxy.onCurrentBranch({ name: 'feature-x' });
       proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n'] });
       proxy.manifestWriteSucceeds({ configDir: '/repo' });
-      proxy.overlayContradicts();
+      proxy.overlayContradicts({ configDir: '/repo' });
       const config = AssayerConfigStub();
 
       const result = await compileRunBroker({
@@ -203,6 +203,7 @@ describe('compileRunBroker', () => {
       proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n'] });
       proxy.manifestWriteSucceeds({ configDir: '/repo' });
       proxy.harnessInvalid({
+        configDir: '/repo',
         relPath: 'src/audit.harness.ts',
         message: '`src/audit.harness.ts` declares no inputs, so it closes nothing.',
       });

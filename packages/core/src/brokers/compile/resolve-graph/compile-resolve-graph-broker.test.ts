@@ -1,6 +1,7 @@
 import {
   CompiledFileBlobStub,
   ContentHashStub,
+  ExternalSignatureStub,
   GlobalUseStub,
   ModuleEdgeStub,
   RelPathStub,
@@ -17,7 +18,8 @@ const BLOB_PATH = `/blobs/${String(HASH)}.json`;
 describe('compileResolveGraphBroker', () => {
   describe('an empty file set', () => {
     it('EMPTY: {no files} => an index with no edges and no errors', async () => {
-      compileResolveGraphBrokerProxy();
+      const proxy = compileResolveGraphBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
 
       const result = await compileResolveGraphBroker({ root: '/repo', blobsDir: '/blobs', files: [] });
 
@@ -45,7 +47,8 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
-      proxy.resolvesUnresolved();
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.resolvesUnresolved({ specifier: './missing' });
 
       const result = await compileResolveGraphBroker({
         root: '/repo',
@@ -81,7 +84,8 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
-      proxy.resolvesLocal({ fileName: '/repo/src/b/foo.ts' });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.resolvesLocal({ specifier: '../b/foo', fileName: '/repo/src/b/foo.ts' });
 
       const result = await compileResolveGraphBroker({
         root: '/repo',
@@ -124,6 +128,7 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
+      proxy.noTsconfigAt({ root: '/repo' });
 
       const result = await compileResolveGraphBroker({
         root: '/repo',
@@ -156,7 +161,7 @@ describe('compileResolveGraphBroker', () => {
   describe('two files importing the same package export', () => {
     it("VALID: {src/a.ts and src/b.ts both import { foo } from 'left-pad'} => reads the external signature exactly once, keyed by the shared dtsPath and export name", async () => {
       const proxy = compileResolveGraphBrokerProxy();
-      proxy.configFilePath({ path: '/repo/tsconfig.json' });
+      proxy.configFilePath({ root: '/repo', path: '/repo/tsconfig.json' });
       proxy.queueBlob({
         path: BLOB_PATH,
         blob: CompiledFileBlobStub({
@@ -177,9 +182,17 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
-      proxy.resolvesLocal({ fileName: '/repo/node_modules/left-pad/index.d.ts' });
+      proxy.resolvesLocal({ specifier: 'left-pad', fileName: '/repo/node_modules/left-pad/index.d.ts' });
+      const signature = ExternalSignatureStub();
+      proxy.packageSignatureCacheMiss({
+        dtsPath: '/repo/node_modules/left-pad/index.d.ts',
+        dtsContent: 'export declare const foo: (value: string) => string;',
+        exportName: 'foo',
+        cacheDir: '/repo/.assayer/cache',
+        signature,
+      });
 
-      await compileResolveGraphBroker({
+      const result = await compileResolveGraphBroker({
         root: '/repo',
         blobsDir: '/blobs',
         cacheDir: '/repo/.assayer/cache',
@@ -189,21 +202,44 @@ describe('compileResolveGraphBroker', () => {
         ],
       });
 
-      expect(proxy.getExternalSignatureReadCalls()).toStrictEqual([
-        {
-          tsConfigFilePath: '/repo/tsconfig.json',
-          dtsPath: '/repo/node_modules/left-pad/index.d.ts',
-          exportName: 'foo',
-          cacheDir: '/repo/.assayer/cache',
+      expect(result).toStrictEqual({
+        index: {
+          layoutHash: contentHashTransformer({
+            content: JSON.stringify([
+              { relPath: 'src/a.ts', contentHash: String(HASH) },
+              { relPath: 'src/b.ts', contentHash: String(HASH) },
+            ]),
+          }),
+          tsconfigHash: EMPTY_HASH,
+          edges: [
+            {
+              from: 'src/a.ts',
+              specifier: 'left-pad',
+              importedName: 'foo',
+              line: 1,
+              column: 1,
+              target: { kind: 'package', packageName: 'left-pad', signature },
+            },
+            {
+              from: 'src/b.ts',
+              specifier: 'left-pad',
+              importedName: 'foo',
+              line: 1,
+              column: 1,
+              target: { kind: 'package', packageName: 'left-pad', signature },
+            },
+          ],
         },
-      ]);
+        errors: [],
+      });
+      expect(proxy.packageSignatureReadCount()).toBe(1);
     });
   });
 
   describe('two files reading the same ambient global', () => {
     it("VALID: {src/a.ts and src/b.ts both read process.env, uncalled} => reads the global signature exactly once, keyed by the shared reference", async () => {
       const proxy = compileResolveGraphBrokerProxy();
-      proxy.configFilePath({ path: '/repo/tsconfig.json' });
+      proxy.configFilePath({ root: '/repo', path: '/repo/tsconfig.json' });
       proxy.queueBlob({
         path: BLOB_PATH,
         blob: CompiledFileBlobStub({
@@ -226,6 +262,13 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
+      proxy.globalReadsNothing({
+        tsConfigFilePath: '/repo/tsconfig.json',
+        cacheDir: '/repo/.assayer/cache',
+        name: 'process',
+        member: 'env',
+        called: false,
+      });
 
       await compileResolveGraphBroker({
         root: '/repo',
@@ -237,7 +280,7 @@ describe('compileResolveGraphBroker', () => {
         ],
       });
 
-      expect(proxy.getExternalSignatureReadGlobalCalls()).toStrictEqual([
+      expect(proxy.getExternalSignatureReadGlobalCalls({ cacheDir: '/repo/.assayer/cache' })).toStrictEqual([
         {
           tsConfigFilePath: '/repo/tsconfig.json',
           reference: { kind: 'global', name: 'process', member: 'env', called: false },

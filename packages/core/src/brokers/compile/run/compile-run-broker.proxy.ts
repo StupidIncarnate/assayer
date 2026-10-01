@@ -47,11 +47,13 @@ export const compileRunBrokerProxy = (): {
     lsTreeStdout: string;
     blobs: readonly { blobSha: string; content: string }[];
   }) => void;
+  // Stages every write a clean run makes under `configDir`: the manifest, and the three derived indexes.
   manifestWriteSucceeds: (params: { configDir: string }) => void;
+  // The stitch reports this error for every walk root `queueCurrentFiles` staged, under every namespace.
   resolvesWithError: (params: { relPath: string; line: number; column: number; message: string }) => void;
-  overlayStale: () => void;
-  overlayContradicts: () => void;
-  harnessInvalid: (params: { relPath: string; message: string }) => void;
+  overlayStale: (params: { configDir: string }) => void;
+  overlayContradicts: (params: { configDir: string }) => void;
+  harnessInvalid: (params: { configDir: string; relPath: string; message: string }) => void;
   // Takes the same configDir the caller hands the broker; the manifest path derives from it.
   getWrittenManifest: ({ configDir }: { configDir: string }) => unknown;
   wasManifestWritten: (params: { configDir: string }) => boolean;
@@ -67,9 +69,10 @@ export const compileRunBrokerProxy = (): {
   const stableProxy = stableNamespaceLayerBrokerProxy();
   const manifestProxy = manifestWriteBrokerProxy();
 
-  // The stitch and its index write are REPLACED wholesale: this broker's own tests drive planning,
-  // processing, and the manifest; the resolver reads blobs back from disk (its own tests cover that),
-  // so here it returns a clean resolution unless a test asks for a build error.
+  // The three stitches and the resolved-index write stay replaced. Each stitch reads back the blobs
+  // this run's own processing wrote, and those bytes are the analyzer's real output, which no proxy
+  // method can stage. Each stitch's own tests cover it. Every one is staged by an argument the broker
+  // really passes: the walk root, or the config directory.
   compileResolveGraphBrokerProxy();
   resolvedIndexWriteBrokerProxy();
   compileStubGraphBrokerProxy();
@@ -78,39 +81,25 @@ export const compileRunBrokerProxy = (): {
   const resolvedWriteHandle = registerMock({ fn: resolvedIndexWriteBroker });
   const stubGraphHandle = registerMock({ fn: compileStubGraphBroker });
   const harnessGraphHandle = registerMock({ fn: compileHarnessGraphBroker });
-  resolveHandle.calledWith([]).resolves({ index: ResolvedIndexStub(), errors: [] });
+  // Every walk root `queueCurrentFiles` staged, so a later resolver error is staged for the same roots.
+  const walkRoots: string[] = [];
 
-  // The overlay LOAD is replaced wholesale (its own tests cover reading `assayer/stubs/`); it defaults
-  // to no committed overlay. The overlay RECONCILE runs REAL against the mocked current stub index, so
-  // a staged stale overlay drives its own P1 error through the errors[] gate.
+  // The overlay LOAD stays replaced (its own tests cover reading `assayer/stubs/`), staged by the repo
+  // root it reads under. The overlay RECONCILE runs REAL against the staged current stub index, so a
+  // staged stale overlay drives its own P1 error through the errors[] gate.
   stubOverlayLoadBrokerProxy();
   stubOverlayReconcileBrokerProxy();
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
-  overlayLoadHandle.calledWith([]).resolves([]);
 
   // Captures the NAMESPACE each call reached, in call order -- the only way to pin the "write STABLE
   // before CURRENT" collision-handling invariant the broker's own comments claim, since these three
   // callees are replaced wholesale and their real implementations (covered by their own tests) never
   // run here to produce an observable side effect.
   const resolvedIndexWriteOrder: NamespaceName[] = [];
-  resolvedWriteHandle.calledWith([]).implement(({ namespace }: { namespace: string }) => {
-    resolvedIndexWriteOrder.push(namespaceNameContract.parse(namespace));
-    return { success: true };
-  });
-
   const stubGraphIndex = StubIndexStub();
   const stubGraphWriteOrder: NamespaceName[] = [];
-  stubGraphHandle.calledWith([]).implement(({ namespace }: { namespace: string }) => {
-    stubGraphWriteOrder.push(namespaceNameContract.parse(namespace));
-    return { index: stubGraphIndex, guards: [] };
-  });
-
   const harnessGraphIndex = HarnessIndexStub({ harnesses: [] });
   const harnessGraphWriteOrder: NamespaceName[] = [];
-  harnessGraphHandle.calledWith([]).implement(({ namespace }: { namespace: string }) => {
-    harnessGraphWriteOrder.push(namespaceNameContract.parse(namespace));
-    return { index: harnessGraphIndex, errors: [] };
-  });
 
   return {
     onCurrentBranch: ({ name }: { name: string }): void => {
@@ -126,6 +115,10 @@ export const compileRunBrokerProxy = (): {
         planCurrentProxy.queueFileContent({ path: `${configDir}/current-${index}.ts`, content });
         processCurrentProxy.queueCleanWrite({ blobsDir, content });
       });
+      // The stitch resolves every import cleanly, and no stub overlay is committed under the root.
+      walkRoots.push(configDir);
+      resolveHandle.calledWith([{ root: configDir }]).resolves({ index: ResolvedIndexStub(), errors: [] });
+      overlayLoadHandle.calledWith([{ repoRoot: configDir }]).resolves([]);
     },
     stableUnchanged: ({ ref, sha }: { ref: string; sha: string }): void => {
       stableProxy.unchanged({ ref, sha });
@@ -171,6 +164,20 @@ export const compileRunBrokerProxy = (): {
     },
     manifestWriteSucceeds: ({ configDir }: { configDir: string }): void => {
       manifestProxy.succeeds({ configDir });
+      // Each write records the namespace it reached, in call order, so a test can read back the
+      // "write STABLE before CURRENT" order the broker's own comments claim.
+      resolvedWriteHandle.calledWith([{ configDir }]).implement(({ namespace }: { namespace: string }) => {
+        resolvedIndexWriteOrder.push(namespaceNameContract.parse(namespace));
+        return { success: true };
+      });
+      stubGraphHandle.calledWith([{ configDir }]).implement(({ namespace }: { namespace: string }) => {
+        stubGraphWriteOrder.push(namespaceNameContract.parse(namespace));
+        return { index: stubGraphIndex, guards: [] };
+      });
+      harnessGraphHandle.calledWith([{ configDir }]).implement(({ namespace }: { namespace: string }) => {
+        harnessGraphWriteOrder.push(namespaceNameContract.parse(namespace));
+        return { index: harnessGraphIndex, errors: [] };
+      });
     },
     resolvesWithError: ({
       relPath,
@@ -183,24 +190,29 @@ export const compileRunBrokerProxy = (): {
       column: number;
       message: string;
     }): void => {
-      resolveHandle.calledWith([]).resolves({ index: ResolvedIndexStub(), errors: [{ relPath, line, column, message }] });
+      walkRoots.forEach((root) => {
+        resolveHandle
+          .calledWith([{ root }])
+          .resolves({ index: ResolvedIndexStub(), errors: [{ relPath, line, column, message }] });
+      });
     },
-    overlayStale: (): void => {
-      overlayLoadHandle.calledWith([]).resolves([
+    // The walk root is `configDir` in these scenarios, so the overlay load reads under it.
+    overlayStale: ({ configDir }: { configDir: string }): void => {
+      overlayLoadHandle.calledWith([{ repoRoot: configDir }]).resolves([
         StubOverlayStub({ key: 'src/gone.ts#Gone', overlayPath: 'assayer/stubs/objects/src/gone.ts/Gone.json' }),
       ]);
     },
     // A committed correction that RESOLVES (its type + property are in the derived index, so reconcile is
     // silent) but whose authoritative values (`dev`, `prod`, `staging`) can never satisfy the `mode === 'a'`
     // guard the stub stitch gathered — a pre-run contradiction on the same errors[] channel.
-    overlayContradicts: (): void => {
-      stubGraphHandle.calledWith([]).resolves({ index: StubIndexStub(), guards: [PropertyGuardStub()] });
-      overlayLoadHandle.calledWith([]).resolves([StubOverlayStub()]);
+    overlayContradicts: ({ configDir }: { configDir: string }): void => {
+      stubGraphHandle.calledWith([{ configDir }]).resolves({ index: StubIndexStub(), guards: [PropertyGuardStub()] });
+      overlayLoadHandle.calledWith([{ repoRoot: configDir }]).resolves([StubOverlayStub()]);
     },
     // A committed harness whose declaration the stitch rejected — the third producer on the same
     // errors[] channel as a broken import and a stale overlay.
-    harnessInvalid: ({ relPath, message }: { relPath: string; message: string }): void => {
-      harnessGraphHandle.calledWith([]).resolves({
+    harnessInvalid: ({ configDir, relPath, message }: { configDir: string; relPath: string; message: string }): void => {
+      harnessGraphHandle.calledWith([{ configDir }]).resolves({
         index: HarnessIndexStub({ harnesses: [] }),
         errors: [{ relPath, line: 1, column: 1, message }],
       });

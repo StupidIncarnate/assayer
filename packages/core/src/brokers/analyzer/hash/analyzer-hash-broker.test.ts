@@ -5,7 +5,14 @@ describe('analyzerHashBroker', () => {
   describe('determinism', () => {
     it('VALID: {same files + content} => identical hash across runs', async () => {
       const proxy = analyzerHashBrokerProxy();
-      proxy.walkReturns({ paths: ['/root/a.ts', '/root/sub/b.ts'] });
+      proxy.dirHolds({
+        path: '/root',
+        entries: [
+          { name: 'a.ts', kind: 'file' },
+          { name: 'sub', kind: 'directory' },
+        ],
+      });
+      proxy.dirHolds({ path: '/root/sub', entries: [{ name: 'b.ts', kind: 'file' }] });
       proxy.fileContent({ path: '/root/a.ts', content: 'export const a = 1;' });
       proxy.fileContent({ path: '/root/sub/b.ts', content: 'export const a = 1;' });
 
@@ -19,7 +26,7 @@ describe('analyzerHashBroker', () => {
   describe('sensitivity to source content', () => {
     it('VALID: {a source file changes} => the hash changes', async () => {
       const proxy = analyzerHashBrokerProxy();
-      proxy.walkReturns({ paths: ['/root/a.ts'] });
+      proxy.dirHolds({ path: '/root', entries: [{ name: 'a.ts', kind: 'file' }] });
       proxy.fileContent({ path: '/root/a.ts', content: 'export const a = 1;' });
       const before = await analyzerHashBroker({ roots: ['/root'] });
 
@@ -35,10 +42,16 @@ describe('analyzerHashBroker', () => {
       const proxy = analyzerHashBrokerProxy();
       proxy.fileContent({ path: '/root/a.ts', content: 'x' });
 
-      proxy.walkReturns({ paths: ['/root/a.ts', '/root/a.test.ts'] });
+      proxy.dirHolds({
+        path: '/root',
+        entries: [
+          { name: 'a.ts', kind: 'file' },
+          { name: 'a.test.ts', kind: 'file' },
+        ],
+      });
       const withTest = await analyzerHashBroker({ roots: ['/root'] });
 
-      proxy.walkReturns({ paths: ['/root/a.ts'] });
+      proxy.dirHolds({ path: '/root', entries: [{ name: 'a.ts', kind: 'file' }] });
       const withoutTest = await analyzerHashBroker({ roots: ['/root'] });
 
       expect(withTest).toBe(withoutTest);
@@ -48,7 +61,7 @@ describe('analyzerHashBroker', () => {
   describe('a source file that cannot be read from disk', () => {
     it("ERROR: {roots: one file, reading it rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
       const proxy = analyzerHashBrokerProxy();
-      proxy.walkReturns({ paths: ['/root/a.ts'] });
+      proxy.dirHolds({ path: '/root', entries: [{ name: 'a.ts', kind: 'file' }] });
       proxy.readDenied({ path: '/root/a.ts' });
 
       await expect(analyzerHashBroker({ roots: ['/root'] })).rejects.toThrow(/^EACCES: op '\/root\/a\.ts'$/u);
