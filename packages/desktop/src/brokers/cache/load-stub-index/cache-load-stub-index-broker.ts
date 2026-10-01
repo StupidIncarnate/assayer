@@ -12,14 +12,13 @@
 import { stubIndexContract } from '@assayer/shared/contracts';
 import type { NamespaceName, StubIndex } from '@assayer/shared/contracts';
 
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 import { readJsonFileIfExists } from '#gateway/node/fs__promises';
 
 export const cacheLoadStubIndexBroker = async ({
   repoPath,
   namespace,
 }: {
-  repoPath: RepoPath;
+  repoPath: string;
   namespace: NamespaceName;
 }): Promise<StubIndex | undefined> => {
   const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/stubs/${String(namespace)}.json`)) ?? undefined;

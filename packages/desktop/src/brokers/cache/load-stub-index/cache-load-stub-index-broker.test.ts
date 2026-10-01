@@ -3,7 +3,6 @@ import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.s
 
 import { cacheLoadStubIndexBroker } from './cache-load-stub-index-broker';
 import { cacheLoadStubIndexBrokerProxy } from './cache-load-stub-index-broker.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 describe('cacheLoadStubIndexBroker', () => {
   describe('present index', () => {
@@ -13,7 +12,7 @@ describe('cacheLoadStubIndexBroker', () => {
       proxy.resolves({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await cacheLoadStubIndexBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         namespace: NamespaceNameStub({ value: 'main' }),
       });
 
@@ -27,7 +26,7 @@ describe('cacheLoadStubIndexBroker', () => {
       proxy.absent({ repoPath: '/repo', namespace: 'main' });
 
       const result = await cacheLoadStubIndexBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         namespace: NamespaceNameStub({ value: 'main' }),
       });
 

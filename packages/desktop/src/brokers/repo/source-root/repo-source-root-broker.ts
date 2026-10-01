@@ -13,9 +13,8 @@
  */
 import { configLoadBroker, compileResolveRootBroker } from '@assayer/core/brokers';
 
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 
-export const repoSourceRootBroker = async ({ repoPath }: { repoPath: RepoPath }): Promise<string> => {
+export const repoSourceRootBroker = async ({ repoPath }: { repoPath: string }): Promise<string> => {
   const loaded = await configLoadBroker({ configPath: `${String(repoPath)}/assayer.config.json` });
 
   if (!loaded.success) {

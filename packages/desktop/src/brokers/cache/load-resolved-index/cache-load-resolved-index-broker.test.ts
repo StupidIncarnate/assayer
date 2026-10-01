@@ -3,7 +3,6 @@ import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/reso
 
 import { cacheLoadResolvedIndexBroker } from './cache-load-resolved-index-broker';
 import { cacheLoadResolvedIndexBrokerProxy } from './cache-load-resolved-index-broker.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 describe('cacheLoadResolvedIndexBroker', () => {
   describe('present index', () => {
@@ -13,7 +12,7 @@ describe('cacheLoadResolvedIndexBroker', () => {
       proxy.resolves({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await cacheLoadResolvedIndexBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         namespace: NamespaceNameStub({ value: 'main' }),
       });
 
@@ -27,7 +26,7 @@ describe('cacheLoadResolvedIndexBroker', () => {
       proxy.absent({ repoPath: '/repo', namespace: 'main' });
 
       const result = await cacheLoadResolvedIndexBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         namespace: NamespaceNameStub({ value: 'main' }),
       });
 

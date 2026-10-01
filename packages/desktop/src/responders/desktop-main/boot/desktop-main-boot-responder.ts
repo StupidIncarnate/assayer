@@ -22,12 +22,11 @@ import { stubIndexResolveBroker } from '../../../brokers/stub-index/resolve/stub
 import { repoSourceRootBroker } from '../../../brokers/repo/source-root/repo-source-root-broker';
 import { runExecuteBroker } from '../../../brokers/run/execute/run-execute-broker';
 import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 
 export const DesktopMainBootResponder = async ({
   repoPath,
 }: {
-  repoPath: RepoPath;
+  repoPath: string;
 }): Promise<void> =>
   desktopBootBroker({
     statusChannel: desktopBridgeStatics.channels.status,

@@ -1,6 +1,5 @@
 import { DesktopMainBootResponder } from './desktop-main-boot-responder';
 import { DesktopMainBootResponderProxy } from './desktop-main-boot-responder.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
 
 // Zod's own rendering of a relPath that is not a string, asserted whole because it is what the UI
@@ -22,7 +21,7 @@ describe('DesktopMainBootResponder', () => {
     it('VALID: {repoPath} => boots the window, registers all IPC channels, and returns success', async () => {
       const proxy = DesktopMainBootResponderProxy();
 
-      const result = await DesktopMainBootResponder({ repoPath: RepoPathStub({ value: '/repo' }) });
+      const result = await DesktopMainBootResponder({ repoPath: '/repo' });
 
       expect(result).toBeUndefined();
       expect(proxy.handledChannels()).toStrictEqual([
@@ -42,7 +41,7 @@ describe('DesktopMainBootResponder', () => {
     // have answered a success instead — the failure reply is the proof it never got that far.
     it('INVALID: {relPath: 42} => answers with the validation failure, never reaching the compiled-file broker', async () => {
       const proxy = DesktopMainBootResponderProxy();
-      await DesktopMainBootResponder({ repoPath: RepoPathStub({ value: '/repo' }) });
+      await DesktopMainBootResponder({ repoPath: '/repo' });
 
       const result = await proxy.invokeCompiledFileHandler({ relPath: 42 });
 

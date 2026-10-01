@@ -2,7 +2,6 @@ import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cach
 
 import { cacheLoadManifestBroker } from './cache-load-manifest-broker';
 import { cacheLoadManifestBrokerProxy } from './cache-load-manifest-broker.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 describe('cacheLoadManifestBroker', () => {
   describe('successful load', () => {
@@ -12,7 +11,7 @@ describe('cacheLoadManifestBroker', () => {
 
       proxy.resolves({ repoPath: '/repo', manifest });
 
-      const result = await cacheLoadManifestBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+      const result = await cacheLoadManifestBroker({ repoPath: '/repo' });
 
       expect(result).toStrictEqual(manifest);
     });
@@ -25,7 +24,7 @@ describe('cacheLoadManifestBroker', () => {
       proxy.missing({ repoPath: '/repo' });
 
       await expect(
-        cacheLoadManifestBroker({ repoPath: RepoPathStub({ value: '/repo' }) }),
+        cacheLoadManifestBroker({ repoPath: '/repo' }),
       ).rejects.toThrow(/ENOENT/u);
     });
   });

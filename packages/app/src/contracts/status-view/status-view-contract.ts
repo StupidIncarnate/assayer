@@ -13,7 +13,7 @@ import { z } from '#gateway/npm/zod';
 export const statusViewContract = z.object({
   version: z.string().min(1).brand<'AssayerVersion'>(),
   message: z.string().min(1).brand<'StatusMessage'>(),
-  repoPath: z.string().min(1).brand<'RepoPath'>(),
+  repoPath: z.string().min(1).brand<'StatusViewRepoPath'>(),
   runMode: z.enum(['thorough', 'intelligent']).default('thorough').brand<'RunMode'>(),
 });
 

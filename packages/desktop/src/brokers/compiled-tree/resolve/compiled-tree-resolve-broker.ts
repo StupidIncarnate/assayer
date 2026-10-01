@@ -17,13 +17,12 @@ import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-ma
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
 import { treeNodesTransformer } from '../../../transformers/tree-nodes/tree-nodes-transformer';
 import { emptyCompiledTreeStatics } from '../../../statics/empty-compiled-tree/empty-compiled-tree-statics';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 import { pathExists } from '#gateway/node/fs__promises';
 
 export const compiledTreeResolveBroker = async ({
   repoPath,
 }: {
-  repoPath: RepoPath;
+  repoPath: string;
 }): Promise<CompiledTree> => {
   const manifestExists = await pathExists(`${repoPath}/.assayer/cache/manifest.json`);
 

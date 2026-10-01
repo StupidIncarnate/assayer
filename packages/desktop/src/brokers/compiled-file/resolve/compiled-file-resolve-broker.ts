@@ -29,14 +29,13 @@ import { cacheLoadBlobBroker } from '../../cache/load-blob/cache-load-blob-broke
 import { cacheLoadResolvedIndexBroker } from '../../cache/load-resolved-index/cache-load-resolved-index-broker';
 import { repoSourceRootBroker } from '../../repo/source-root/repo-source-root-broker';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 import { readFileIfExists } from '#gateway/node/fs__promises';
 
 export const compiledFileResolveBroker = async ({
   repoPath,
   relPath,
 }: {
-  repoPath: RepoPath;
+  repoPath: string;
   relPath: string;
 }): Promise<CompiledFileView> => {
   const manifest = await cacheLoadManifestBroker({ repoPath });

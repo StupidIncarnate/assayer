@@ -6,7 +6,6 @@ import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/reso
 
 import { compiledFileResolveBroker } from './compiled-file-resolve-broker';
 import { compiledFileResolveBrokerProxy } from './compiled-file-resolve-broker.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 // Each source below is the file the served view is about. Its persisted analysis is the per-file result
 // compile writes into the blob: the branches and exits the walk found, the cases it could derive with
@@ -327,7 +326,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         relPath: 'src/index.ts',
       });
 
@@ -355,7 +354,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.setupResolvedIndex({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         relPath: 'src/index.ts',
       });
 
@@ -384,7 +383,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.siblingResolvesTo({ fileName: '/repo/src/big.ts', source: BIG_PREDICATE, specifier: './big' });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/config' }),
+        repoPath: '/config',
         relPath: 'src/classify.ts',
       });
 
@@ -425,7 +424,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.sourceReads({ root: '/repo', relPath: 'src/audit.ts', content: 'export const x = 1;\n' });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         relPath: 'src/audit.ts',
       });
 
@@ -449,7 +448,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.sourceMissing({ root: '/repo', relPath: 'src/classify.ts' });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         relPath: 'src/classify.ts',
       });
 
@@ -476,7 +475,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.siblingResolvesTo({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/config' }),
+        repoPath: '/config',
         relPath: 'src/reader.ts',
       });
 
@@ -528,7 +527,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.sourceReads({ root: '/repo', relPath: 'src/decide.ts', content: DECIDE_SOURCE });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/config' }),
+        repoPath: '/config',
         relPath: 'src/decide.ts',
       });
 
@@ -564,7 +563,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.siblingResolvesTo({ fileName: '/repo/src/band-reading.ts', source: MAP_CHILD_SOURCE, specifier: './band-reading' });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/config' }),
+        repoPath: '/config',
         relPath: 'src/cross-file-map.ts',
       });
 
@@ -600,7 +599,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.harnessReads({ path: '/repo/src/audit.harness.ts', source: FUNNELLED_HARNESS });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/config' }),
+        repoPath: '/config',
         relPath: 'src/audit.ts',
       });
 
@@ -637,7 +636,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.harnessReads({ path: '/repo/src/audit.harness.ts', source: AUDIT_HARNESS });
 
       const result = await compiledFileResolveBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         relPath: 'src/audit.ts',
       });
 
@@ -683,7 +682,7 @@ describe('compiledFileResolveBroker', () => {
 
       await expect(
         compiledFileResolveBroker({
-          repoPath: RepoPathStub({ value: '/repo' }),
+          repoPath: '/repo',
           relPath: 'missing.ts',
         }),
       ).rejects.toThrow(/missing\.ts/u);

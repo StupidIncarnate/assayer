@@ -25,10 +25,9 @@ import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-ma
 import { cacheLoadStubIndexBroker } from '../../cache/load-stub-index/cache-load-stub-index-broker';
 import { repoSourceRootBroker } from '../../repo/source-root/repo-source-root-broker';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 import { pathExists } from '#gateway/node/fs__promises';
 
-export const stubIndexResolveBroker = async ({ repoPath }: { repoPath: RepoPath }): Promise<StubView> => {
+export const stubIndexResolveBroker = async ({ repoPath }: { repoPath: string }): Promise<StubView> => {
   const manifestExists = await pathExists(`${repoPath}/.assayer/cache/manifest.json`);
 
   if (!manifestExists) {

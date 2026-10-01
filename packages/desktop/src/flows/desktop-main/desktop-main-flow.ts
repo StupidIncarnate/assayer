@@ -7,7 +7,6 @@
  */
 
 import { DesktopMainBootResponder } from '../../responders/desktop-main/boot/desktop-main-boot-responder';
-import type { RepoPath } from '../../contracts/repo-path/repo-path-contract';
 
-export const DesktopMainFlow = async ({ repoPath }: { repoPath: RepoPath }): Promise<void> =>
+export const DesktopMainFlow = async ({ repoPath }: { repoPath: string }): Promise<void> =>
   DesktopMainBootResponder({ repoPath });
