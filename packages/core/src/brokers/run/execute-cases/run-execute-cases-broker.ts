@@ -1,16 +1,29 @@
 /**
- * PURPOSE: Runs Jest programmatically over an assembled run directory — the ONE place Assayer's
- *   wrapped runner is actually invoked. Consumers never touch Jest; the runner is an implementation
- *   detail behind this boundary, which is what keeps it swappable.
+ * PURPOSE: Runs Jest over an assembled run directory — the ONE place Assayer's wrapped runner is
+ *   actually invoked. Consumers never touch Jest; the runner is an implementation detail behind this
+ *   boundary, which is what keeps it swappable.
+ *
+ *   Jest runs in a worker process, the one `forkWorker` keeps alive per batch, started with
+ *   `coreRuntimeStatics.workerExecArgv`. The worker needs `--experimental-vm-modules` so an ESM consumer's
+ *   code runs as ES modules, and only a process's own command line can turn that flag on. Every run, ESM
+ *   and CommonJS alike, goes through the same worker, so there is one execution path. The worker's entry
+ *   is the root `run-jest.js`, and it replies `{ passed }`, or `{ crashed }` when Jest itself throws.
  *
  *   The config is INLINE JSON, which constrains the shape: Jest parses it as JSON, so the transformer,
- *   setup file, environment and compiler must be file PATHS, never live objects. The ceremony files at
- *   core's package root (`probe-runtime.js`, `probe-transformer.js`, `harness-registrar.js`,
- *   `bundled-typescript.js`) are those paths. The first three are plain JS that loads one typed module and
- *   hands the work to it. `bundled-typescript.js` is ts-jest's `compiler`: the TypeScript ts-morph bundles.
+ *   setup file, resolver, environment and compiler must be file PATHS, never live objects. The ceremony
+ *   files at core's package root are those paths. `bundled-typescript.js` is ts-jest's `compiler`: the
+ *   TypeScript ts-morph bundles. `ts-resolver.js` resolves an import the way TypeScript does, so a
+ *   `./band.js` import finds `band.ts`.
  *
- *   `runtime` says which tree those typed modules come from. The `__assayerCoreRuntime` Jest global
- *   carries the whole object to the setup file and the registrar, and the transformer's `options` carry
+ *   `format` is the consumer file's module format, from `moduleFormatReadBroker`. It picks the generated
+ *   test file's extension, the ts-jest `module` override, and for ESM, `useESM` with the extensions Jest
+ *   loads as ES modules. Neither override is a node module kind, so ts-jest always compiles with
+ *   `compiler`. A CommonJS run keeps `probe-runtime.js` as its setup file. An ESM run has none: a setup
+ *   file is CommonJS, and in an ESM run of core's source it cannot `require` core's TypeScript, so the ESM
+ *   test file installs the probe runtime itself before it loads the subject.
+ *
+ *   `runtime` says which tree core's typed modules come from. The `__assayerCoreRuntime` Jest global
+ *   carries the whole object to the setup file, and the transformer's `options` carry
  *   `probeInjectModule`. A source-tree run also sets the `source` export condition, so a workspace
  *   package that core source imports resolves to its TypeScript too.
  *
@@ -24,19 +37,20 @@
  *   nobody collected and every supplied input reported missing; one mapped path is one instance. The
  *   mapping is exact — a subpath (`@assayer/core/contracts`) is Assayer's own plumbing and is left alone.
  *
- *   The config is IDENTICAL for every file, and the run's own directory is named as a test-path
- *   PATTERN instead. That is load-bearing, not tidiness. ts-jest keeps one TypeScript compiler per
- *   distinct config and never releases it, so pointing `roots`/`testMatch` at each run's own
+ *   The config is IDENTICAL for every file of one format, and the run's own directory is named as a
+ *   test-path PATTERN instead. That is load-bearing, not tidiness. ts-jest keeps one TypeScript compiler
+ *   per distinct config and never releases it, so pointing `roots`/`testMatch` at each run's own
  *   directory made every file look like a new project and left a whole compiler behind — measured at
  *   ~370MB per file, which took `assayer unit` over 13 files to 3GB and would OOM a real repo. One
- *   config means one compiler, reused: the same 13 files then cost what one does.
+ *   config per format means at most two compilers in the worker, each reused.
  *
  * USAGE:
- * runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
+ * runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash, format: 'esm' });
  * // Returns { passed: true } when every generated case reached the exit derivation predicted
  */
-import { runCLI } from '#gateway/npm/jest__core';
+import { forkWorker } from '#gateway/node/child_process';
 import { dirname } from '#gateway/node/path';
+import { z } from '#gateway/npm/zod';
 
 import { coreRuntimeStatics } from '../../../statics/core-runtime/core-runtime-statics';
 import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';
@@ -44,21 +58,29 @@ import { runVerdictContract } from '../../../contracts/run-verdict/run-verdict-c
 import type { RunVerdict } from '../../../contracts/run-verdict/run-verdict-contract';
 import type { CoreRuntime } from '../../../contracts/core-runtime/core-runtime-contract';
 
+const workerReplyContract = z.union([
+  z.object({ passed: z.boolean() }),
+  z.object({ crashed: z.string().brand<'WorkerReplyCrashed'>() }),
+]);
+
 export const runExecuteCasesBroker = async ({
   runDir,
   repoRoot,
   probeDir,
   runtime,
   analyzerContentHash,
+  format,
 }: {
   runDir: string;
   repoRoot: string;
   probeDir: string;
   runtime: CoreRuntime;
   analyzerContentHash: string;
+  format: (typeof coreRuntimeStatics.moduleFormats)[number];
 }): Promise<RunVerdict> => {
   // The runs PARENT, shared by every file, so the config below never varies between them.
   const runsRoot = dirname(runDir);
+  const esm = format === 'esm';
   const config = {
     rootDir: repoRoot,
     roots: [runsRoot],
@@ -69,8 +91,10 @@ export const runExecuteCasesBroker = async ({
       ? { testEnvironmentOptions: { customExportConditions: [...coreRuntimeStatics.sourceExportConditions] } }
       : {}),
     globals: { [coreRuntimeStatics.jestGlobal.name]: runtime },
-    setupFiles: [runtime.setupFile],
-    testMatch: [`${runsRoot}/**/*.test.js`],
+    setupFiles: esm ? [] : [runtime.setupFile],
+    testMatch: [`${runsRoot}/**/${coreRuntimeStatics.shimFile[format]}`],
+    ...(esm ? { extensionsToTreatAsEsm: [...coreRuntimeStatics.esmExtensions] } : {}),
+    resolver: runtime.resolver,
     moduleNameMapper: { '^@assayer/core$': runtime.registrar },
     // No reporters at all: the runner is an implementation detail, and its pass/fail summary reaching
     // a human is a leak of exactly the surface this boundary exists to hide. The verdict is read back
@@ -86,9 +110,10 @@ export const runExecuteCasesBroker = async ({
           // The copy ts-morph bundles, so the compiler that places each probe parses with the same
           // TypeScript that recorded the probe offsets.
           compiler: runtime.compiler,
-          // Merged over the consumer's tsconfig. It keeps ts-jest off its transpile path for an
-          // `isolatedModules` tsconfig with a node16 or nodenext module, which ignores `compiler`.
-          tsconfig: coreRuntimeStatics.tsJestCompilerOptions,
+          // Merged over the consumer's tsconfig. Never a node module kind, which with `isolatedModules`
+          // sends ts-jest to a transpile path that ignores `compiler`.
+          tsconfig: coreRuntimeStatics.tsJestCompilerOptions[format],
+          ...(esm ? { useESM: true } : {}),
           diagnostics: false,
           astTransformers: {
             before: [
@@ -103,20 +128,21 @@ export const runExecuteCasesBroker = async ({
     },
   };
 
-  const { results } = await runCLI(
-    // `_` and `$0` are yargs' required positionals; Jest's Argv extends them even though nothing here
-    // came from a command line. `_` carries the test-path pattern — the one place THIS run is named,
-    // which is what lets the config above stay identical between runs.
-    {
-      _: [testPathPatternTransformer({ runDir })],
-      $0: '',
-      config: JSON.stringify(config),
-      runInBand: true,
-      silent: true,
-      ci: true,
-    },
-    [repoRoot],
+  const reply = workerReplyContract.parse(
+    await forkWorker({ modulePath: runtime.runner, execArgv: [...coreRuntimeStatics.workerExecArgv] }).request({
+      message: {
+        config: JSON.stringify(config),
+        // The one place THIS run is named, which is what lets the config above stay identical between runs.
+        testPathPattern: testPathPatternTransformer({ runDir }),
+        rootDir: repoRoot,
+        tree: runtime.tree,
+      },
+    }),
   );
 
-  return runVerdictContract.parse({ passed: results.success });
+  if ('crashed' in reply) {
+    throw new Error(`assayer: the nested Jest threw before it reported a verdict.\n${String(reply.crashed)}`);
+  }
+
+  return runVerdictContract.parse({ passed: reply.passed });
 };

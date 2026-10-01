@@ -10,6 +10,8 @@ export const CoreRuntimeStub = ({ ...props }: StubArgument<CoreRuntime> = {}): C
     astTransformer: '/core/probe-transformer.js',
     registrar: '/core/harness-registrar.js',
     compiler: '/core/bundled-typescript.js',
+    resolver: '/core/ts-resolver.js',
+    runner: '/core/run-jest.js',
     interpretCaseModule: '/core/src/brokers/case/interpret/case-interpret-broker',
     resolveEntryModule: '/core/src/brokers/case/resolve-entry/case-resolve-entry-broker',
     probeRuntimeModule: '/core/src/brokers/probe-runtime/create/probe-runtime-create-broker',

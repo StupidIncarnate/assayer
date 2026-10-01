@@ -9,7 +9,7 @@ import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-
 // (sha256 of the sorted `<path from core's root>:<sha256 of 'runtime'>` lines, one per file in
 // coreRuntimeStatics' `ceremony` and `modules`, each module as `.ts`), and three empty-input hashes,
 // joined by newlines.
-const ANALYZER_HASH = '336a5c1d4160f7211937ce015e8a45936502cb3913d23eedd9255b41be945b21';
+const ANALYZER_HASH = '88f37765e29c098a84df3446dcdfd78f8fe15ab3d18899677c20396829366c93';
 // The hash of AssayerConfigStub's version, repoRoot and sorted exclude list.
 const CONFIG_HASH = 'd8e6b6f238b6443622268e3a540f0aaeb5fa5432b0a14345182c7724ad901ac2';
 

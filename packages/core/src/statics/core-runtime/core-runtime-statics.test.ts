@@ -2,7 +2,7 @@ import { coreRuntimeStatics } from './core-runtime-statics';
 
 describe('coreRuntimeStatics', () => {
   describe('the file names of core\'s run-time modules', () => {
-    it('VALID: {the statics} => names the trees, the dist folder, the Jest global, the ceremony files, the modules, the source conditions and the ts-jest compiler options', () => {
+    it('VALID: {the statics} => names the trees, the dist folder, the Jest global, the ceremony files, the modules, the source conditions, the module formats and the runner settings', () => {
       expect(coreRuntimeStatics).toStrictEqual({
         trees: ['source', 'dist'],
         layout: {
@@ -16,6 +16,8 @@ describe('coreRuntimeStatics', () => {
           astTransformer: 'probe-transformer.js',
           registrar: 'harness-registrar.js',
           compiler: 'bundled-typescript.js',
+          resolver: 'ts-resolver.js',
+          runner: 'run-jest.js',
         },
         modules: {
           interpretCase: 'src/brokers/case/interpret/case-interpret-broker',
@@ -25,9 +27,22 @@ describe('coreRuntimeStatics', () => {
           harness: 'index',
         },
         sourceExportConditions: ['source', 'node', 'node-addons'],
-        tsJestCompilerOptions: {
-          module: 'commonjs',
+        moduleFormats: ['commonjs', 'esm'],
+        shimFile: {
+          commonjs: 'assayer.test.cjs',
+          esm: 'assayer.test.mjs',
         },
+        esmExtensions: ['.ts', '.tsx'],
+        tsJestCompilerOptions: {
+          commonjs: {
+            module: 'commonjs',
+          },
+          esm: {
+            module: 'esnext',
+            esModuleInterop: true,
+          },
+        },
+        workerExecArgv: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
       });
     });
   });

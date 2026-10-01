@@ -34,6 +34,8 @@ export const coreRuntimeTransformer = ({
     astTransformer: `${coreRoot}/${ceremony.astTransformer}`,
     registrar: `${coreRoot}/${ceremony.registrar}`,
     compiler: `${coreRoot}/${ceremony.compiler}`,
+    resolver: `${coreRoot}/${ceremony.resolver}`,
+    runner: `${coreRoot}/${ceremony.runner}`,
     interpretCaseModule: `${moduleRoot}/${modules.interpretCase}`,
     resolveEntryModule: `${moduleRoot}/${modules.resolveEntry}`,
     probeRuntimeModule: `${moduleRoot}/${modules.probeRuntime}`,

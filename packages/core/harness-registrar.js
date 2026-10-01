@@ -10,29 +10,32 @@
  *
  *   It validates through the PUBLISHED `assayerHarness` and nothing else, so the declaration a compile
  *   recorded keys for and the declaration a run resolves values from cannot disagree about what the file
- *   said. This file is plain JS at the package root because Jest maps to a path on disk. The behaviour
- *   lives in the typed, unit-tested `assayerHarness`. Its module path arrives in the
- *   `__assayerCoreRuntime` Jest global, which `run-execute-cases-broker` sets, and it points into the same
- *   tree, source or dist, that the run's broker was loaded from.
+ *   said. The generated test file loads that typed, unit-tested `assayerHarness` itself and hands it over
+ *   through `bindValidator` before it loads the harness. This file loads nothing on its own, because it is
+ *   CommonJS and an ESM run loads core's TypeScript source as ES modules, which a `require` cannot load.
+ *   This file is plain JS at the package root because Jest maps to a path on disk.
  *
  * USAGE:
  * // jest config: moduleNameMapper: { '^@assayer/core$': '<core>/harness-registrar.js' }
- * // shim: require(harnessPath); harnessRegistrar.declarations // what its body registered
+ * // shim: harnessRegistrar.bindValidator(require('<core>/index')); load the harness; harnessRegistrar.declarations
  */
-const runtime = globalThis.__assayerCoreRuntime;
-
-if (runtime === undefined) {
-  throw new Error(
-    "assayer: harness-registrar.js ran without the __assayerCoreRuntime Jest global. run-execute-cases-broker sets it; this file is only loaded by Assayer's own runner.",
-  );
-}
-
-const { assayerHarness } = require(runtime.harnessModule);
+const bound = { validate: undefined };
 
 const declarations = [];
 
+// Takes core's main module, or any object carrying its `assayerHarness`.
+exports.bindValidator = ({ assayerHarness }) => {
+  bound.validate = assayerHarness;
+};
+
 exports.assayerHarness = (declaration) => {
-  const validated = assayerHarness(declaration);
+  if (bound.validate === undefined) {
+    throw new Error(
+      "assayer: harness-registrar.js received a harness registration before the generated test file bound the validator. Only Assayer's own runner loads this file, and its generated test file binds it before loading any harness.",
+    );
+  }
+
+  const validated = bound.validate(declaration);
 
   declarations.push(validated);
 

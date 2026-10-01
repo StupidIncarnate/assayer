@@ -554,7 +554,7 @@ never a second derivation path: a supplied entry's cases differ from a
 derived entry's cases in exactly the one binding a harness supplied.
 
 **Resolve a harness-supplied value at run time.** Touch the generated test
-file (`transformers/assemble-shim`), which requires the harness file
+file (`transformers/assemble-shim`), which loads the harness file
 through ts-jest, and note that Jest maps `@assayer/core` to the root
 `harness-registrar.js` (`brokers/run/execute-cases`) so the harness's
 registration lands where the generated test file can read it. This
@@ -1180,16 +1180,19 @@ A move that changes a specimen's VERDICT (for example, a construct
 flipping from an admission to a fully driven case) also moves its bucket,
 and that is exactly what those other files assert on.
 
-**The runner's Jest config must be IDENTICAL for every file it runs.**
-ts-jest keeps one TypeScript compiler alive per distinct config, and never
-releases it. Anything that varies the config per file strands a whole
-extra compiler in memory, roughly 370MB each, which shows up as `assayer
-unit` running out of memory partway through a real repo, not merely
-running slowly. Which run to execute travels through the test-path
-pattern instead, never through `roots` or `testMatch`. The
-`__assayerCoreRuntime` global and the source-tree export condition are
-fixed for the life of one process, so they keep the config identical. There are two ways
-to break this rule, and the second looks harmless:
+**The runner's Jest config must be IDENTICAL for every file of one module
+format.** ts-jest keeps one TypeScript compiler alive per distinct config,
+and never releases it. Anything that varies the config per file strands a
+whole extra compiler in memory, roughly 370MB each, which shows up as
+`assayer unit` running out of memory partway through a real repo, not merely
+running slowly. Which run to execute travels through the test-path pattern
+instead, never through `roots` or `testMatch`. The `__assayerCoreRuntime`
+global and the source-tree export condition are fixed for the life of one
+process, so they keep the config identical. There are two configs, one per
+module format (CommonJS and ESM), because Jest's `extensionsToTreatAsEsm` is
+one list per config: a config loads every `.ts` file as ESM or none of them.
+So a batch costs at most two compilers. There are two ways to break this
+rule, and the second looks harmless:
 
 - naming the run's own directory directly inside the config, and
 - minting a fresh temporary directory per test run. A new path is a new
@@ -1198,14 +1201,52 @@ to break this rule, and the second looks harmless:
   generating a new one per run.
 
 The test `run-execute-cases-broker.test.ts` checks this rule directly, with
-the assertion "{two different runs} => the config is IDENTICAL, so ts-jest
-reuses one compiler." If you are
-about to make the config depend on which file is running, that test is
-exactly why not to.
+the assertion "{two different %s runs} => the config is IDENTICAL, so
+ts-jest reuses one compiler", once per format. If you are about to make the
+config depend on which file is running, that test is exactly why not to.
+
+**A run executes in the module format the consumer's own code runs in.**
+`moduleFormatReadBroker` decides it per target file. It asks TypeScript's
+`getImpliedNodeFormatForFile`, through the typescript gateway, with the
+nearest tsconfig's options. TypeScript answers only for a node module kind
+(`node16`, `node18`, `nodenext`). For any other module kind it makes no
+claim, and the broker applies Node's own rule instead: the file extension,
+else the nearest `package.json` `type`. The format picks the generated test
+file's extension (`assayer.test.cjs` or `assayer.test.mjs`, so Jest never
+reads the format off a consumer's `package.json`), the ts-jest `module`
+override (`commonjs` or `esnext`), and for ESM, `useESM` plus
+`extensionsToTreatAsEsm`. Neither override is a node module kind, because a
+node kind with `isolatedModules` sends ts-jest to a transpile path that
+compiles with the installed `typescript` package instead of ts-morph's copy.
+
+**The nested Jest runs in a worker process, never in the caller's own.**
+Jest runs an ES module only through `vm.SourceTextModule`, which Node puts
+behind `--experimental-vm-modules`, and only a process's own command line can
+turn that flag on. `runExecuteCasesBroker` sends every run, CommonJS and ESM,
+to one worker that the node gateway's `forkWorker` keeps alive for the life
+of the calling process, so Jest, ts-jest and each compiler start once per
+batch. The worker's entry is the root `run-jest.js`. It forks with
+`process.execPath`, so under Electron with `ELECTRON_RUN_AS_NODE` the worker
+is Electron's Node, and the flag works there too. The worker never keeps the
+caller alive while it is idle, and it exits when the caller's process ends.
+
+**An ESM run has no setup file.** A Jest setup file is CommonJS, and in an
+ESM run of core's TypeScript source, core's `.ts` modules load as ES modules,
+which a `require` cannot load. So the ESM test file installs `__P` itself
+before it imports the subject. A CommonJS run keeps `probe-runtime.js` as its
+setup file. The same reason makes `harness-registrar.js` load nothing on its
+own: the generated test file hands it core's main module, through
+`bindValidator`, before it loads a harness.
+
+**A relative import resolves the way TypeScript resolves it.** The root
+`ts-resolver.js` is the nested Jest's `resolver`. It asks ts-morph's
+`resolveModuleName`, with the nearest tsconfig's options, and takes the
+answer when it is TypeScript source outside `node_modules`. That is what lets
+`import { band } from './band.js'` find `band.ts` on `node16` and `nodenext`,
+in both formats. Anything else resolves through Jest's own resolver.
 
 **One nested Jest run proves nothing about fifteen at once.**
-`run-unit-broker` calls `runCLI` in-process, so this integration runs Jest
-inside Jest. That stays fine, and stays flat in memory, only while the
+The worker runs every file of a batch, so memory stays flat only while the
 rule above holds. The memory cost is per CONFIG, not per run, and it does
 not show up until something drives the whole specimen catalogue through
 this path at once.
@@ -1218,19 +1259,21 @@ runtime, the probe injector, and `assayerHarness`.
 When the broker runs from `src`, under ts-jest or `tsx`, the nested
 ts-jest compiles core's TypeScript source. That run also sets the `source`
 export condition, so a workspace package core imports resolves to its
-source too. When the broker runs from `dist`, as in the built CLI or a
-published install, the nested Jest loads `dist`. One run therefore reads
-one tree, so `src` and `dist` cannot disagree inside it.
+source too, and the worker registers tsx, because ts-jest loads the probe
+injector with Node's own `require`. When the broker runs from `dist`, as in
+the built CLI or a published install, the nested Jest loads `dist`. One run
+therefore reads one tree, so `src` and `dist` cannot disagree inside it.
 
 No Jest run builds anything. Core's unit and integration tests read
 source. The CLI integration tests are the exception: they spawn the built
 CLI binary, so they need a current build.
 
-The ceremony files are the three plain-JS files at core's package root
-that Jest loads by path: `probe-runtime.js`, `probe-transformer.js` and
-`harness-registrar.js`. Each one reads its module path from the runner's
-config and loads it. The file paths of the run-time modules and the
-ceremony files live in `statics/core-runtime`. Moving a run-time module means editing that file.
+The ceremony files are the plain-JS files at core's package root that Node
+or Jest loads by path: `probe-runtime.js`, `probe-transformer.js`,
+`harness-registrar.js`, `bundled-typescript.js`, `ts-resolver.js` and
+`run-jest.js`. The file paths of the run-time modules and the ceremony files
+live in `statics/core-runtime`. Moving a run-time module means editing that
+file.
 
 **Coverage IDs are cache-internal by design.** Changing how they are
 computed only costs a fixture rewrite, never a migration for anyone
@@ -1558,7 +1601,7 @@ does supply it; `syntax-traits` is the one that does.
 registrar.** Because only KEYS are cached, the generated test file loads
 the harness file itself: `case-set-projection` carries `harnessPath` (an
 absolute path, exactly like `modulePath`) whenever some case names a
-harness binding. The generated file REQUIRES that path through the same
+harness binding. The generated file LOADS that path through the same
 ts-jest transform the subject under test goes through, and
 `run-execute-cases-broker` maps `@assayer/core` to the root
 `harness-registrar.js`, so the harness's registration lands where the

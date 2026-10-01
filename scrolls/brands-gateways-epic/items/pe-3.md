@@ -2,14 +2,12 @@
 
 ## Result
 
-Phase 1 is done. Phase 2 is not started, for two reasons.
+Phase 1 and Phase 2 are done. An ESM consumer's code now runs as ESM, and a CommonJS consumer's code runs as
+CommonJS, each decided from the consumer's own config. Section 8 records what Phase 2 built and measured.
 
-- Running ESM as ESM under Jest needs Node's `--experimental-vm-modules` flag in the process that runs the test
-  file. Node v22.17.0 has no `vm.SourceTextModule` without it. Who supplies that flag is a product decision.
-- The fix reaches files outside PE-3's list: the generated test file, the entry resolver, `run-unit-broker`, a new
-  Jest resolver file at core's root, core's `package.json` `files` list, and `packages/core/CLAUDE.md` section 8.
-
-Section 6 is the recommendation. Section 7 is the file list the operator would need to approve for Phase 2.
+The operator decided Phase 2's open questions: option D, one worker for both formats; TypeScript's answer where it
+gives one, else Node's own `package.json` `type` rule; and measure Electron first. Sections 1 to 7 are the Phase 1
+research as written before those decisions.
 
 Every measurement below was taken on 2026-10-01 with the scripts in `tmp/pe-3/`. `tmp/pe-3/run.cjs` builds a nested
 Jest config shaped like `run-execute-cases-broker`'s and runs it with `runCLI`. Its fixtures are `tmp/pe-3/cjs`,
@@ -267,3 +265,84 @@ Files Phase 2 would touch. The ones marked "outside" are not on PE-3's list:
 | `packages/core/CLAUDE.md` section 8 | one config per format, not one config | outside |
 | `scrolls/brands-gateways-epic/EPIC.md` concession 19 | state the per-format override | yes |
 | CommonJS and ESM integration fixtures beside `run-unit-broker.integration.test.ts` | new | yes |
+
+## 8. Phase 2: what was built and measured
+
+### Electron, measured first
+
+The desktop runs the CLI as `process.execPath` with `ELECTRON_RUN_AS_NODE=1`
+(`packages/desktop/src/brokers/run/execute/run-execute-broker.ts`). Electron here is 32.3.3, with Node 20.18.1.
+
+| Host | Child | `typeof vm.SourceTextModule` in the child |
+|---|---|---|
+| plain Node 22.17.0 | `spawn(process.execPath, ['--experimental-vm-modules', ...])` | `function` |
+| Electron 32.3.3 as Node | the same, inheriting `ELECTRON_RUN_AS_NODE` | `function` |
+| Electron as Node, no flag | — | `undefined` |
+
+`tmp/pe-3/run.cjs` then ran a real ESM run (harness mapping included) and a real CommonJS run under
+`ELECTRON_RUN_AS_NODE=1 electron --experimental-vm-modules`. Both passed, on ts-morph's TypeScript.
+
+### What runs now
+
+- `moduleFormatReadBroker` decides each target file's format. It asks TypeScript's `getImpliedNodeFormatForFile`,
+  through the new gateway wrapper `impliedNodeFormat`, with the nearest tsconfig's options. When TypeScript makes no
+  claim, it asks again under `nodenext`, which is Node's own extension and `package.json` `type` rule.
+- `runExecuteCasesBroker` sends every run to one worker, the root `run-jest.js`, forked through the new node gateway
+  wrapper `forkWorker` with `--experimental-vm-modules --no-warnings=ExperimentalWarning`. The worker lives for the
+  calling process and never holds it open while idle.
+- The config is identical per format. CommonJS: `assayer.test.cjs`, `module: commonjs`, the `probe-runtime.js` setup
+  file. ESM: `assayer.test.mjs`, `module: esnext` with `esModuleInterop`, `useESM`, `extensionsToTreatAsEsm` of `.ts`
+  and `.tsx`, and no setup file; the ESM test file installs `__P` itself.
+- The root `ts-resolver.js` is the nested Jest's resolver. It resolves an import through ts-morph's
+  `resolveModuleName` and keeps a TypeScript source answer, so `./label.js` finds `label.ts` in both formats.
+- `harness-registrar.js` loads nothing itself. The generated test file binds it to core's main module before it loads
+  a harness, because a CommonJS `require` cannot load core's source as ESM.
+- `caseInterpretBroker` is async. It awaits a `module` entry's load, so an ESM module scope runs inside the arranged
+  environment. It never awaits any other entry's result.
+
+### Timing, before and after
+
+Two measurements. The machine's load average was between 6 and 19 during them, from other agents' runs, so read the
+whole-catalogue numbers as rough.
+
+Whole catalogue (`assayer unit` over the 117 specimens, from source, `.assayer` wiped each time, warm ts-jest cache):
+
+| Run | Before (HEAD, in-process Jest) | After (worker) |
+|---|---|---|
+| 1 | 20.2 s, peak 2.20 GB | 65.7 s, peak 0.62 GB |
+| 2 | 26.2 s, peak 2.22 GB | 35.2 s, peak 0.66 GB |
+
+Per run, one specimen (`happy-path/boolean/and/and.ts`) twelve times in one process (`tmp/pe-3/bench.ts`):
+
+| Runner | First run | Each later run |
+|---|---|---|
+| Before: in-process Jest | 10.7 s | 87 to 100 ms |
+| Before, with `--experimental-vm-modules` on the same process | 6.4 s | 191 to 234 ms |
+| After: worker, resolver with no answer cache | 10.8 s | 271 to 394 ms |
+| After: worker, resolver answers kept per worker | 4.8 to 5.0 s | 166 to 288 ms |
+
+What the numbers say:
+
+- The worker's own start-up is paid once per batch, inside the first run.
+- The `--experimental-vm-modules` flag itself adds about 100 ms to every later run, CommonJS runs included. The
+  "before, with the flag" row shows that cost with no worker at all. Jest gives every script a dynamic-import hook
+  once the flag is on, and that is the likely cause; it was not profiled further.
+- Asking TypeScript for every import of every run cost about another 100 ms per run. Keeping the resolver's answers
+  for the life of the worker removed it.
+- Peak memory of the largest process fell from about 2.2 GB to about 0.65 GB, because Jest and its compilers now
+  live in the worker, not in the CLI process.
+
+### Checks
+
+- `bash tmp/p0-5b-hash/run.sh pe3 source`: byte-identical to `before.sha256` (351 lines), on every run above.
+- `npm run test:syntax`: 117 suites, 259 tests, all passed.
+- The new integration test `run-execute-cases-broker.integration.test.ts` drives three fixture repos through the real
+  worker: CommonJS, CommonJS on `node16` with `.js`-suffixed imports, and ESM on `nodenext` with `import.meta`,
+  top-level `await`, an ESM-only package and an environment-driven module scope. Every case passes.
+
+### Open after Phase 2
+
+- CommonJS consumers pay the flag's cost of about 100 ms per run. A CommonJS-only worker without the flag would
+  remove it, at the price of two workers. That reverses decision 1, so it is the operator's call.
+- An ESM run from core's `dist` tree is not yet exercised: no build ran in this item. In that tree the ESM test file
+  imports core's compiled CommonJS modules, which Jest loads through its CommonJS interop.

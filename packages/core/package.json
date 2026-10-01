@@ -40,7 +40,9 @@
     "probe-runtime.js",
     "probe-transformer.js",
     "harness-registrar.js",
-    "bundled-typescript.js"
+    "bundled-typescript.js",
+    "ts-resolver.js",
+    "run-jest.js"
   ],
   "scripts": {
     "prepack": "node ../../scripts/build-workspaces.mjs --tsc-only",

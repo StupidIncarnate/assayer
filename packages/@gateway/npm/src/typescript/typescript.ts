@@ -9,9 +9,10 @@
  * A caller that reaches for a member missing here fails typecheck (TS2305 or TS2339). Add the name to
  * both lists.
  *
- * Two jobs are wrappers, not pass-throughs, because each reads the real disk through `ts.sys`:
- * `resolveModuleFile` resolves a module specifier, and `readNearestTsconfig` finds and reads a
- * tsconfig. Each has a proxy a test can stage.
+ * Three jobs are wrappers, not pass-throughs, because each reads the real disk through `ts.sys`:
+ * `resolveModuleFile` resolves a module specifier, `readNearestTsconfig` finds and reads a tsconfig,
+ * and `impliedNodeFormat` reads the module format TypeScript gives a file. Each has a proxy a test can
+ * stage.
  *
  * USAGE:
  * import ts from '#gateway/npm/typescript';
@@ -19,6 +20,7 @@
  */
 
 export { ts as default } from 'ts-morph';
+export { impliedNodeFormat } from './implied-node-format/implied-node-format';
 export { readNearestTsconfig } from './read-nearest-tsconfig/read-nearest-tsconfig';
 export { resolveModuleFile } from './resolve-module-file/resolve-module-file';
 export {
@@ -39,6 +41,7 @@ export {
   findConfigFile,
   flattenDiagnosticMessageText,
   forEachChild,
+  getImpliedNodeFormatForFile,
   getModifiers,
   getParsedCommandLineOfConfigFile,
   isArrayLiteralExpression,

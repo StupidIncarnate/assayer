@@ -1,47 +1,61 @@
-import { runCLI } from '#gateway/npm/jest__core';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { forkWorkerProxy } from '#gateway/node/child_process/fork-worker/fork-worker.proxy';
+import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
 
 import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';
 
+// The worker is addressed by the runner path every core runtime stub names. Each run is answered by its
+// test-path pattern, the one part of the request that names which run is executing. A run directory no
+// scenario staged gets no answer, and the broker's reply parse throws.
 export const runExecuteCasesBrokerProxy = (): {
   succeeds: ({ runDir }: { runDir: string }) => void;
   fails: ({ runDir }: { runDir: string }) => void;
+  crashes: ({ runDir, stack }: { runDir: string; stack: string }) => void;
+  requestFor: ({ testPathPattern }: { testPathPattern: string }) => unknown;
   configFor: ({ testPathPattern }: { testPathPattern: string }) => unknown;
   getTestPathPatterns: () => unknown[];
-  wasInvoked: () => boolean;
+  getForkCalls: ({ runner }: { runner: string }) => RecordedCalls;
 } => {
-  const handle = registerMock({ fn: runCLI });
+  const workerProxy = forkWorkerProxy();
+  const replies = new Map<string, unknown>();
+  const requests: { testPathPattern: unknown; message: unknown }[] = [];
+  const runner = '/core/run-jest.js';
+
+  workerProxy.answersThenExits({
+    modulePath: runner,
+    answer: (message: unknown): unknown => {
+      const testPathPattern =
+        typeof message === 'object' && message !== null && 'testPathPattern' in message
+          ? message.testPathPattern
+          : undefined;
+      requests.push({ testPathPattern, message });
+      return replies.get(String(testPathPattern));
+    },
+  });
 
   return {
-    // A run is addressed on the argv's positionals, the one part of the call that names which run is
-    // executing. A run directory no scenario staged reaches an unstaged call, which throws.
-    succeeds: ({ runDir }: { runDir: string }): void => {
-      handle
-        .calledWith([{ _: [testPathPatternTransformer({ runDir })] }])
-        .resolves({ results: { success: true } });
+    succeeds: ({ runDir }): void => {
+      replies.set(testPathPatternTransformer({ runDir }), { passed: true });
     },
-    fails: ({ runDir }: { runDir: string }): void => {
-      handle
-        .calledWith([{ _: [testPathPatternTransformer({ runDir })] }])
-        .resolves({ results: { success: false } });
+    fails: ({ runDir }): void => {
+      replies.set(testPathPatternTransformer({ runDir }), { passed: false });
     },
-    // Addressed on the argv's positionals, so a test driving two runs reads each run's own config
-    // rather than whichever ran last. That is what makes the identical-config assertion mean anything.
-    configFor: ({ testPathPattern }: { testPathPattern: string }): unknown => {
-      const argv = handle.callsMatching([{ _: [testPathPattern] }]).at(-1)?.[0];
+    crashes: ({ runDir, stack }): void => {
+      replies.set(testPathPatternTransformer({ runDir }), { crashed: stack });
+    },
+    // The whole request the worker received for one run, so a test driving two runs reads each run's
+    // own config rather than whichever ran last. That is what makes the identical-config assertion mean
+    // anything.
+    requestFor: ({ testPathPattern }): unknown =>
+      requests.filter((request) => request.testPathPattern === testPathPattern).at(-1)?.message,
+    // Only the inline config JSON of that request.
+    configFor: ({ testPathPattern }): unknown => {
+      const message = requests.filter((request) => request.testPathPattern === testPathPattern).at(-1)?.message;
 
-      return typeof argv === 'object' && argv !== null && 'config' in argv ? argv.config : undefined;
+      return typeof message === 'object' && message !== null && 'config' in message ? message.config : undefined;
     },
-    // yargs' positionals, which is where Jest reads its test-path patterns from — the one place the
-    // run being executed is named, so that the config above can stay identical between runs. One
-    // entry per runCLI call, in call order: a test asserting WHICH pattern was used cannot address
+    // One entry per request, in request order: a test asserting WHICH pattern was used cannot address
     // the read by that pattern without asking the question it is trying to answer.
-    getTestPathPatterns: (): unknown[] =>
-      handle.callsMatching([]).map((call) => {
-        const [argv] = call;
-
-        return typeof argv === 'object' && argv !== null && '_' in argv ? argv._ : undefined;
-      }),
-    wasInvoked: (): boolean => handle.callsMatching([]).length > 0,
+    getTestPathPatterns: (): unknown[] => requests.map((request) => request.testPathPattern),
+    getForkCalls: ({ runner: modulePath }): RecordedCalls => workerProxy.getForkCalls({ modulePath }),
   };
 };

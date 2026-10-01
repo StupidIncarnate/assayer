@@ -1,4 +1,5 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { z } from '#gateway/npm/zod';
 
 import { runExecuteCasesBrokerProxy } from '../execute-cases/run-execute-cases-broker.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
@@ -10,6 +11,8 @@ import { stubRealizeBrokerProxy } from '../../stub/realize/stub-realize-broker.p
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
 import { runCrossFileProbesBrokerProxy } from '../cross-file-probes/run-cross-file-probes-broker.proxy';
+import { moduleFormatReadBrokerProxy } from '../../module-format/read/module-format-read-broker.proxy';
+import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';
 import { ensureDirProxy } from '#gateway/node/fs__promises/ensure-dir/ensure-dir.proxy';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
@@ -21,20 +24,29 @@ export const runUnitBrokerProxy = (): {
   // The run directory, the case set, the target's probe plan, the shim and the run artifact a run may
   // write, each staged to succeed at its exact path. `contentHash` names the probe plan, which is keyed
   // on the source's content hash. `repoRoot` is the root whose committed stub overlay loads empty.
+  // `absPath` is the target, whose module format TypeScript answers as `format` (CommonJS when omitted),
+  // with no tsconfig above it; the format picks the shim's file name.
   setupWrites: ({
     cacheDir,
     runId,
     contentHash,
     repoRoot,
+    absPath,
+    format,
   }: {
     cacheDir: string;
     runId: string;
     contentHash: string;
     repoRoot: string;
+    absPath: string;
+    format?: 'commonjs' | 'esm';
   }) => void;
   setupSavedRun: ({ cacheDir, runId, run }: { cacheDir: string; runId: string; run: unknown }) => void;
   runnerWroteNothing: ({ cacheDir, runId }: { cacheDir: string; runId: string }) => void;
   runnerWasInvoked: () => boolean;
+  // The `testMatch` of the config the runner received for this run directory, which names the shim's
+  // extension and so the run's module format.
+  runnerTestMatchFor: ({ runDir }: { runDir: string }) => unknown;
   // Every path this run wrote under the cache directory, in call order — the case set, the target's
   // probe plan, each mapped sibling's plan, then the shim. A test asking WHICH files a run leaves behind
   // names the whole list. That also pins what a run does NOT write: a file with nothing drivable skips
@@ -74,6 +86,7 @@ export const runUnitBrokerProxy = (): {
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
 
   const runner = runExecuteCasesBrokerProxy();
+  const moduleFormat = moduleFormatReadBrokerProxy();
   const dirs = ensureDirProxy();
   const exists = pathExistsProxy();
   const writes = writeFileProxy();
@@ -85,19 +98,29 @@ export const runUnitBrokerProxy = (): {
       runId,
       contentHash,
       repoRoot,
+      absPath,
+      format,
     }: {
       cacheDir: string;
       runId: string;
       contentHash: string;
       repoRoot: string;
+      absPath: string;
+      format?: 'commonjs' | 'esm';
     }): void => {
       overlayLoadHandle.calledWith([{ repoRoot }]).resolves([]);
       const runDir = `${cacheDir}/runs/${runId}`;
+      const shimFile = format === 'esm' ? 'assayer.test.mjs' : 'assayer.test.cjs';
+      moduleFormat.fileWithoutTsconfigIs({
+        absPath,
+        directory: absPath.slice(0, absPath.lastIndexOf('/')),
+        format: format ?? 'commonjs',
+      });
       dirs.succeeds({ path: `${cacheDir}/probes` });
       dirs.succeeds({ path: runDir });
       writes.succeeds({ path: `${runDir}/cases.json` });
       writes.succeeds({ path: `${cacheDir}/probes/${contentHash}.json` });
-      writes.succeeds({ path: `${runDir}/assayer.test.js` });
+      writes.succeeds({ path: `${runDir}/${shimFile}` });
       writes.succeeds({ path: `${runDir}/run.json` });
       runner.succeeds({ runDir });
     },
@@ -111,7 +134,12 @@ export const runUnitBrokerProxy = (): {
     runnerWroteNothing: ({ cacheDir, runId }: { cacheDir: string; runId: string }): void => {
       exists.missing({ path: `${cacheDir}/runs/${runId}/run.json` });
     },
-    runnerWasInvoked: (): boolean => runner.wasInvoked(),
+    runnerWasInvoked: (): boolean => runner.getTestPathPatterns().length > 0,
+    runnerTestMatchFor: ({ runDir }: { runDir: string }): unknown =>
+      z
+        .object({ testMatch: z.array(z.string()) })
+        .parse(JSON.parse(String(runner.configFor({ testPathPattern: testPathPatternTransformer({ runDir }) }))))
+        .testMatch,
     writtenPaths: ({ cacheDir }: { cacheDir: string }): unknown[] =>
       writes
         .getCallsFor({

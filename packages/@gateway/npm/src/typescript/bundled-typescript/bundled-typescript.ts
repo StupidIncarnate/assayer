@@ -35,6 +35,7 @@ export const {
   findConfigFile,
   flattenDiagnosticMessageText,
   forEachChild,
+  getImpliedNodeFormatForFile,
   getModifiers,
   getParsedCommandLineOfConfigFile,
   isArrayLiteralExpression,
