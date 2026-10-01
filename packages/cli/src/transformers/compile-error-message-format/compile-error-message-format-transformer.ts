@@ -8,15 +8,11 @@
  * });
  * // Returns 'src/foo.ts:10:4 Unexpected token'
  */
-import { cliErrorMessageContract } from '../../contracts/cli-error-message/cli-error-message-contract';
-import type { CliErrorMessage } from '../../contracts/cli-error-message/cli-error-message-contract';
 
 export const compileErrorMessageFormatTransformer = ({
   errors,
 }: {
   errors: readonly { relPath: string; line: number; column: number; message: string }[];
-}): CliErrorMessage => {
-  return cliErrorMessageContract.parse(
-    errors.map((error) => `${error.relPath}:${error.line}:${error.column} ${error.message}`).join('\n'),
-  );
+}): string => {
+  return errors.map((error) => `${error.relPath}:${error.line}:${error.column} ${error.message}`).join('\n');
 };

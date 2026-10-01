@@ -12,8 +12,6 @@
  * });
  * // Returns 'assayer.config.json: invalid JSON at line 3 column 12: Unexpected token }'
  */
-import { cliErrorMessageContract } from '../../contracts/cli-error-message/cli-error-message-contract';
-import type { CliErrorMessage } from '../../contracts/cli-error-message/cli-error-message-contract';
 
 export const jsonErrorMessageFormatTransformer = ({
   fileName,
@@ -25,8 +23,8 @@ export const jsonErrorMessageFormatTransformer = ({
   message: string;
   line: number;
   column: number;
-}): CliErrorMessage => {
+}): string => {
   const reason = message.replace(/ in JSON at position .*$/su, '').trim();
 
-  return cliErrorMessageContract.parse(`${fileName}: invalid JSON at line ${line} column ${column}: ${reason}`);
+  return `${fileName}: invalid JSON at line ${line} column ${column}: ${reason}`;
 };
