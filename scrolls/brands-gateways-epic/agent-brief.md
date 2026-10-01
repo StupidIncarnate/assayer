@@ -35,9 +35,7 @@ The operator owns these jobs. If you do one, you break another agent's work.
 ## Before you write code
 
 1. Call `get-architecture` and `get-testing-patterns` once. Call `get-folder-detail` once per folder type you write
-   into. If you write a gateway wrapper, read the `consumerGatewayWrapper` session snippet too. Until a re-run of `dungeonmaster init` writes it into
-   `AGENTS.md`, read it at its source: the `consumerGatewayWrapper` key in
-   `../codex-of-consentient-craft/packages/shared/src/statics/session-snippet/session-snippet-statics.ts`. These
+   into. If you write a gateway wrapper, read its section "Adding a Gateway npm or bin Wrapper" in `.agents/plugins/dungeonmaster/rules/AGENTS.md` too. These
    docs outrank your item file. When they disagree with it, follow the docs and report the disagreement under
    DECISIONS.
 2. Read `CLAUDE.md`. Read `packages/core/CLAUDE.md` too if you touch `packages/core`.
