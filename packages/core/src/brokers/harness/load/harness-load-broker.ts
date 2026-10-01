@@ -22,6 +22,8 @@
  * // Returns { ok: true, declarations: [{ inputs: { audit: { report: [Function] } } }] }
  * // or { ok: false, message: "cannot find module 'fs'" }
  */
+import { harnessLoadResultContract } from '../../../contracts/harness-load-result/harness-load-result-contract';
+import type { HarnessLoadResult } from '../../../contracts/harness-load-result/harness-load-result-contract';
 import { types } from '#gateway/node/util';
 import { createContext, runInContext } from '#gateway/node/vm';
 
@@ -38,7 +40,7 @@ export const harnessLoadBroker = ({
 }: {
   source: string;
   fileName: string;
-}): { ok: true; declarations: HarnessDeclaration[] } | { ok: false; message: string } => {
+}): HarnessLoadResult => {
   const transpiled = ts.transpileModule(source, {
     fileName,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
@@ -79,11 +81,11 @@ export const harnessLoadBroker = ({
     // `isNativeError`, never `instanceof Error`: an error thrown INSIDE the sandbox is an instance of
     // that context's own Error constructor, so the host's `instanceof` answers false and the reader
     // would get a stringified error where the message belongs.
-    return {
+    return harnessLoadResultContract.parse({
       ok: false,
       message: types.isNativeError(error) ? error.message : String(error),
-    };
+    });
   }
 
-  return { ok: true, declarations };
+  return harnessLoadResultContract.parse({ ok: true, declarations });
 };

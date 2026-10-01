@@ -33,8 +33,10 @@
  * // Returns { analysis: FunctionAnalysis (entry.access { kind: 'through-caller', callerName }),
  * //   unfillable: [{ param, type, owner }, …] }
  */
+import { throughCallbackCasesContract } from '../../contracts/through-callback-cases/through-callback-cases-contract';
+import type { ThroughCallbackCases } from '../../contracts/through-callback-cases/through-callback-cases-contract';
 import { arrangeValueContract, derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, FunctionAnalysis } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { isValueBindingGuard } from '../../guards/is-value-binding/is-value-binding-guard';
@@ -53,7 +55,7 @@ export const throughCallbackCasesTransformer = ({
   entry: ScopeRecord;
   arrayParam: string;
   label?: string;
-}): { analysis: FunctionAnalysis; unfillable: { param: string; type: string; owner: string }[] } => {
+}): ThroughCallbackCases => {
   // The callback's first parameter is the one bound to the array element; its steered value is the
   // array's single element. The callback's branches are derived over it exactly as a scalar param.
   const elementParamName = callback.params[0]?.name;
@@ -123,7 +125,7 @@ export const throughCallbackCasesTransformer = ({
       : [];
   });
 
-  return {
+  return throughCallbackCasesContract.parse({
     analysis: functionAnalysisContract.parse({
       entry: {
         name: callback.name,
@@ -147,5 +149,5 @@ export const throughCallbackCasesTransformer = ({
       ...refusal,
       owner: label ?? String(callback.name),
     })),
-  };
+  });
 };

@@ -7,6 +7,8 @@
  * // Returns [{ relPath, blobSha }, ...] for every file tracked at that ref
  */
 
+import { gitLsTreeResultContract } from '../../../contracts/git-ls-tree-result/git-ls-tree-result-contract';
+import type { GitLsTreeResult } from '../../../contracts/git-ls-tree-result/git-ls-tree-result-contract';
 import { GitNotInstalledError, lsTree } from '#gateway/bin/git';
 
 export const gitLsTreeBroker = async ({
@@ -15,7 +17,7 @@ export const gitLsTreeBroker = async ({
 }: {
   repoRoot: string;
   ref: string;
-}): Promise<{ relPath: string; blobSha: string }[]> => {
+}): Promise<GitLsTreeResult> => {
   const entries = await lsTree({ cwd: repoRoot, ref }).catch((error: unknown) => {
     if (error instanceof GitNotInstalledError) {
       return null;
@@ -23,9 +25,9 @@ export const gitLsTreeBroker = async ({
     throw error;
   });
 
-  return (entries ?? []).map((entry) => ({
+  return gitLsTreeResultContract.parse((entries ?? []).map((entry) => ({
     relPath: entry.path,
     // The blob sha is a plain string because no sha contract exists.
     blobSha: entry.sha,
-  }));
+  })));
 };

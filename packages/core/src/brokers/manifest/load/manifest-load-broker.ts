@@ -11,8 +11,9 @@
  * });
  * // Returns { status: 'ok', manifest } | { status: 'missing' } | { status: 'invalid', reason }
  */
+import { manifestLoadResultContract } from '../../../contracts/manifest-load-result/manifest-load-result-contract';
+import type { ManifestLoadResult } from '../../../contracts/manifest-load-result/manifest-load-result-contract';
 import { assayerCacheManifestContract } from '@assayer/shared/contracts';
-import type { AssayerCacheManifest } from '@assayer/shared/contracts';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
 
 export const manifestLoadBroker = async ({
@@ -24,14 +25,12 @@ export const manifestLoadBroker = async ({
   expectedAssayerVersion: string;
   expectedConfigHash: string;
 }): Promise<
-  | { status: 'ok'; manifest: AssayerCacheManifest }
-  | { status: 'missing' }
-  | { status: 'invalid'; reason: string }
+  ManifestLoadResult
 > => {
   const manifestPath = `${configDir}/.assayer/cache/manifest.json`;
 
   if (!(await pathExists(manifestPath))) {
-    return { status: 'missing' };
+    return manifestLoadResultContract.parse({ status: 'missing' });
   }
 
   const text = (await readFile(manifestPath));
@@ -41,27 +40,27 @@ export const manifestLoadBroker = async ({
     const parsed = assayerCacheManifestContract.safeParse(json);
 
     if (!parsed.success) {
-      return {
+      return manifestLoadResultContract.parse({
         status: 'invalid',
         reason: 'manifest failed schema validation',
-      };
+      });
     }
 
     if (
       String(parsed.data.assayerVersion) !== expectedAssayerVersion ||
       String(parsed.data.configHash) !== expectedConfigHash
     ) {
-      return {
+      return manifestLoadResultContract.parse({
         status: 'invalid',
         reason: 'manifest configHash or assayerVersion mismatch',
-      };
+      });
     }
 
-    return { status: 'ok', manifest: parsed.data };
+    return manifestLoadResultContract.parse({ status: 'ok', manifest: parsed.data });
   } catch (error: unknown) {
-    return {
+    return manifestLoadResultContract.parse({
       status: 'invalid',
       reason: error instanceof Error ? error.message : 'invalid manifest JSON',
-    };
+    });
   }
 };

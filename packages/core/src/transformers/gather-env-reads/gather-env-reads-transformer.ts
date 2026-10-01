@@ -17,7 +17,9 @@
  * gatherEnvReadsTransformer({ blobs });
  * // Returns [{ property: 'CODE', literals: [1, 2], readers: ['src/multi-read.ts'] }, …]
  */
-import type { CompiledFileBlob, RepresentativeValue } from '@assayer/shared/contracts';
+import { gatherEnvReadsContract } from '../../contracts/gather-env-reads/gather-env-reads-contract';
+import type { GatherEnvReads } from '../../contracts/gather-env-reads/gather-env-reads-contract';
+import type { CompiledFileBlob } from '@assayer/shared/contracts';
 
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
 
@@ -25,7 +27,7 @@ export const gatherEnvReadsTransformer = ({
   blobs,
 }: {
   blobs: CompiledFileBlob[];
-}): { property: string; literals: RepresentativeValue[]; readers: string[] }[] => {
+}): GatherEnvReads => {
   const reads = [...blobs]
     .sort((a, b) => (String(a.relPath) < String(b.relPath) ? -1 : 1))
     .flatMap((blob) => {
@@ -54,7 +56,7 @@ export const gatherEnvReadsTransformer = ({
 
   const properties = [...new Set(reads.map((read) => read.property))].sort((a, b) => (a < b ? -1 : 1));
 
-  return properties.map((property) => {
+  return gatherEnvReadsContract.parse(properties.map((property) => {
     const matching = reads.filter((read) => read.property === property);
     const literals = [
       ...new Map(matching.flatMap((read) => read.literals).map((value) => [JSON.stringify(value), value])).values(),
@@ -64,5 +66,5 @@ export const gatherEnvReadsTransformer = ({
       .map((reader) => reader);
 
     return { property: property, literals, readers };
-  });
+  }));
 };

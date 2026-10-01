@@ -10,6 +10,8 @@
  * // { hasGitRepo: false } when repoRoot isn't a git working tree
  */
 
+import { gitDetectStableBranchResultContract } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
+import type { GitDetectStableBranchResult } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
 import { GitNotInstalledError, branchList, isInsideWorkTree } from '#gateway/bin/git';
 
 export const gitDetectStableBranchBroker = async ({
@@ -17,7 +19,7 @@ export const gitDetectStableBranchBroker = async ({
 }: {
   repoRoot: string;
 }): Promise<
-  { hasGitRepo: false } | { hasGitRepo: true; candidates: string[]; preselected?: string }
+  GitDetectStableBranchResult
 > => {
   const inside = await isInsideWorkTree({ cwd: repoRoot }).catch((error: unknown) => {
     if (error instanceof GitNotInstalledError) {
@@ -27,7 +29,7 @@ export const gitDetectStableBranchBroker = async ({
   });
 
   if (!inside) {
-    return { hasGitRepo: false };
+    return gitDetectStableBranchResultContract.parse({ hasGitRepo: false });
   }
 
   const branches = await branchList({ cwd: repoRoot, patterns: ['main', 'master'] });
@@ -40,8 +42,8 @@ export const gitDetectStableBranchBroker = async ({
   const [preselected] = candidates;
 
   if (preselected === undefined) {
-    return { hasGitRepo: true, candidates: [] };
+    return gitDetectStableBranchResultContract.parse({ hasGitRepo: true, candidates: [] });
   }
 
-  return { hasGitRepo: true, candidates, preselected };
+  return gitDetectStableBranchResultContract.parse({ hasGitRepo: true, candidates, preselected });
 };

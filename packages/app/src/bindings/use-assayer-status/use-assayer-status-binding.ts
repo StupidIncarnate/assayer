@@ -6,16 +6,14 @@
  * const { data, loading, error } = useAssayerStatusBinding();
  * // Returns { data: StatusView | null, loading: boolean, error: Error | null }
  */
+import { useAssayerStatusResultContract } from '../../contracts/use-assayer-status-result/use-assayer-status-result-contract';
+import type { UseAssayerStatusResult } from '../../contracts/use-assayer-status-result/use-assayer-status-result-contract';
 import { useEffect, useState } from '#gateway/npm/react';
 
 import { statusFetchBroker } from '../../brokers/status/fetch/status-fetch-broker';
 import type { StatusView } from '../../contracts/status-view/status-view-contract';
 
-export const useAssayerStatusBinding = (): {
-  data: StatusView | null;
-  loading: boolean;
-  error: Error | null;
-} => {
+export const useAssayerStatusBinding = (): UseAssayerStatusResult => {
   const [data, setData] = useState<StatusView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -27,5 +25,5 @@ export const useAssayerStatusBinding = (): {
       .finally(() => { setLoading(false); });
   }, []);
 
-  return { data, loading, error };
+  return useAssayerStatusResultContract.parse({ data, loading, error });
 };

@@ -7,27 +7,27 @@
  * // Returns { success: true, config: AssayerConfig } or
  * // { success: false, issues: [{ path: string, message: string }] }
  */
+import { configValidateResultContract } from '../../../contracts/config-validate-result/config-validate-result-contract';
+import type { ConfigValidateResult } from '../../../contracts/config-validate-result/config-validate-result-contract';
 import { assayerConfigContract } from '@assayer/shared/contracts';
-import type { AssayerConfig } from '@assayer/shared/contracts';
 
 export const configValidateBroker = ({
   config,
 }: {
   config: unknown;
 }):
-  | { success: true; config: AssayerConfig }
-  | { success: false; issues: { path: string; message: string }[] } => {
+  ConfigValidateResult => {
   const result = assayerConfigContract.safeParse(config);
 
   if (result.success) {
-    return { success: true, config: result.data };
+    return configValidateResultContract.parse({ success: true, config: result.data });
   }
 
-  return {
+  return configValidateResultContract.parse({
     success: false,
     issues: result.error.issues.map((issue) => ({
       path: issue.path.join('.'),
       message: issue.message,
     })),
-  };
+  });
 };

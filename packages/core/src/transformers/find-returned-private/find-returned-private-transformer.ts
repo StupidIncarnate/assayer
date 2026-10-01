@@ -13,9 +13,10 @@
  * findReturnedPrivateTransformer({ scope: outer, exit: outerReturn, scopes });
  * // Returns { privateScope: innerRecord, call: innerCallSite } or undefined
  */
+import { findReturnedPrivateContract } from '../../contracts/find-returned-private/find-returned-private-contract';
+import type { FindReturnedPrivate } from '../../contracts/find-returned-private/find-returned-private-contract';
 import type { ExitNode } from '@assayer/shared/contracts';
 
-import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 
 export const findReturnedPrivateTransformer = ({
@@ -26,7 +27,7 @@ export const findReturnedPrivateTransformer = ({
   scope: ScopeRecord;
   exit: ExitNode;
   scopes: ScopeRecord[];
-}): { privateScope: ScopeRecord; call: CallSite } | undefined => {
+}): FindReturnedPrivate | undefined => {
   if (exit.kind !== 'return') {
     return undefined;
   }
@@ -66,5 +67,5 @@ export const findReturnedPrivateTransformer = ({
       candidate.branches.length > 0,
   );
 
-  return privateScope === undefined ? undefined : { privateScope, call };
+  return privateScope === undefined ? undefined : findReturnedPrivateContract.parse({ privateScope, call });
 };

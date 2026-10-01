@@ -16,10 +16,11 @@
  * externalSignatureReadDeclarationBroker({ tsConfigFilePath, dtsPath, exportName });
  * // Returns { usable: true, signature: { params: [...], returnType: {...} } } or { usable: false }
  */
+import { externalSignatureReadDeclarationResultContract } from '../../../contracts/external-signature-read-declaration-result/external-signature-read-declaration-result-contract';
+import type { ExternalSignatureReadDeclarationResult } from '../../../contracts/external-signature-read-declaration-result/external-signature-read-declaration-result-contract';
 import { Node, Project } from '#gateway/npm/ts-morph';
 
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
-import type { ExternalSignature } from '@assayer/shared/contracts';
 
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { readSignatureTypeLayerBroker } from './read-signature-type-layer-broker';
@@ -34,7 +35,7 @@ export const externalSignatureReadDeclarationBroker = ({
   tsConfigFilePath: string;
   dtsPath: string;
   exportName: string;
-}): { usable: true; signature: ExternalSignature } | { usable: false } => {
+}): ExternalSignatureReadDeclarationResult => {
   const existing = projectByConfig.get(tsConfigFilePath);
   const project = existing ?? new Project({ tsConfigFilePath: String(tsConfigFilePath), skipAddingFilesFromTsConfig: true });
   if (existing === undefined) {
@@ -45,7 +46,7 @@ export const externalSignatureReadDeclarationBroker = ({
   const [declaration] = sourceFile.getExportedDeclarations().get(String(exportName)) ?? [];
 
   if (declaration === undefined) {
-    return { usable: false };
+    return externalSignatureReadDeclarationResultContract.parse({ usable: false });
   }
 
   if (Node.isFunctionDeclaration(declaration)) {
@@ -61,13 +62,13 @@ export const externalSignatureReadDeclarationBroker = ({
       fact: readSignatureTypeLayerBroker({ type: declaration.getReturnType(), typeNode: declaration.getReturnTypeNode() }),
     });
 
-    return { usable: true, signature: externalSignatureContract.parse({ params, returnType }) };
+    return externalSignatureReadDeclarationResultContract.parse({ usable: true, signature: externalSignatureContract.parse({ params, returnType }) });
   }
 
   const [signature] = declaration.getType().getCallSignatures();
 
   if (signature === undefined) {
-    return { usable: false };
+    return externalSignatureReadDeclarationResultContract.parse({ usable: false });
   }
 
   // The signature's own declaration (a typed const's `(t: string) => string`, for example) carries a
@@ -94,5 +95,5 @@ export const externalSignatureReadDeclarationBroker = ({
     fact: readSignatureTypeLayerBroker({ type: signature.getReturnType(), typeNode: sigReturnNode }),
   });
 
-  return { usable: true, signature: externalSignatureContract.parse({ params, returnType }) };
+  return externalSignatureReadDeclarationResultContract.parse({ usable: true, signature: externalSignatureContract.parse({ params, returnType }) });
 };

@@ -28,10 +28,11 @@
  *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files: [{ relPath, contentHash }] });
  * // Writes '/repo/.assayer/cache/stubs/feature-x.json' and returns { index: StubIndex, guards: PropertyGuard[] }
  */
+import { compileStubGraphResultContract } from '../../../contracts/compile-stub-graph-result/compile-stub-graph-result-contract';
+import type { CompileStubGraphResult } from '../../../contracts/compile-stub-graph-result/compile-stub-graph-result-contract';
 import { compiledFileBlobContract, envStubContract, objectStubContract, stubIndexContract, stubEntryContract } from '@assayer/shared/contracts';
-import type { ContentHash, ResolvedIndex, StubIndex } from '@assayer/shared/contracts';
+import type { ContentHash, ResolvedIndex } from '@assayer/shared/contracts';
 
-import type { PropertyGuard } from '../../../contracts/property-guard/property-guard-contract';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
 import { envGuessedValuesTransformer } from '../../../transformers/env-guessed-values/env-guessed-values-transformer';
 import { gatherEnvReadsTransformer } from '../../../transformers/gather-env-reads/gather-env-reads-transformer';
@@ -52,7 +53,7 @@ export const compileStubGraphBroker = async ({
   blobsDir: string;
   resolvedIndex: ResolvedIndex;
   files: readonly { relPath: string; contentHash: ContentHash }[];
-}): Promise<{ index: StubIndex; guards: PropertyGuard[] }> => {
+}): Promise<CompileStubGraphResult> => {
   const blobs = await Promise.all(
     files.map(async (file) => {
       const raw = (await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
@@ -98,5 +99,5 @@ export const compileStubGraphBroker = async ({
 
   await stubIndexWriteBroker({ configDir, namespace, index });
 
-  return { index, guards: gatherPropertyGuardsTransformer({ blobs, resolvedIndex }) };
+  return compileStubGraphResultContract.parse({ index, guards: gatherPropertyGuardsTransformer({ blobs, resolvedIndex }) });
 };

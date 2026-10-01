@@ -20,6 +20,8 @@
  * // Returns { targets: [...], harnesses: [...] } — the same entries, partitioned
  */
 
+import { harnessClassifyResultContract } from '../../../contracts/harness-classify-result/harness-classify-result-contract';
+import type { HarnessClassifyResult } from '../../../contracts/harness-classify-result/harness-classify-result-contract';
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../statics/harness-module/harness-module-statics';
 
@@ -27,10 +29,7 @@ export const harnessClassifyBroker = ({
   files,
 }: {
   files: readonly { relPath: string; content: string }[];
-}): {
-  targets: { relPath: string; content: string }[];
-  harnesses: { relPath: string; content: string }[];
-} => {
+}): HarnessClassifyResult => {
   const classified = files.map((file) => ({
     file: { relPath: file.relPath, content: file.content },
     isHarness:
@@ -38,8 +37,8 @@ export const harnessClassifyBroker = ({
       isAssayerHarnessGuard({ source: String(file.content) }),
   }));
 
-  return {
+  return harnessClassifyResultContract.parse({
     targets: classified.filter((entry) => !entry.isHarness).map((entry) => entry.file),
     harnesses: classified.filter((entry) => entry.isHarness).map((entry) => entry.file),
-  };
+  });
 };

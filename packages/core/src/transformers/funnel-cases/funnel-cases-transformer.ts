@@ -38,8 +38,10 @@
  * funnelCasesTransformer({ surface: pipeline, callbacks: [{ callback: cbA, arrayParam: 'xs' }, { callback: cbB, arrayParam: 'ys' }] });
  * // Returns { cases, unfillable } — the cartesian of each callback's empty/single/pair shapes, plus what they refused.
  */
+import { funnelCasesContract } from '../../contracts/funnel-cases/funnel-cases-contract';
+import type { FunnelCases } from '../../contracts/funnel-cases/funnel-cases-contract';
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, DerivedTestCase, Coverage } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, Coverage } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -52,12 +54,12 @@ export const funnelCasesTransformer = ({
 }: {
   surface: ScopeRecord;
   callbacks: { callback: ScopeRecord; arrayParam: string; label?: string | undefined }[];
-}): { cases: DerivedTestCase[]; unfillable: { param: string; type: string; owner: string }[] } => {
+}): FunnelCases => {
   // The surface is branchless with a single exit (the caller gates on that); its one exit is the tail
   // every funnel path returns through.
   const surfaceExit = surface.exits[0]?.coverageId;
   if (surfaceExit === undefined || callbacks.length === 0) {
-    return { cases: [], unfillable: [] };
+    return funnelCasesContract.parse({ cases: [], unfillable: [] });
   }
 
   // The callbacks fire in source order — each `const scaled = xs.map(…)` evaluates top-to-bottom, so the
@@ -160,5 +162,5 @@ export const funnelCasesTransformer = ({
       : [];
   });
 
-  return { cases, unfillable: built.flatMap((entry) => entry.unfillable) };
+  return funnelCasesContract.parse({ cases, unfillable: built.flatMap((entry) => entry.unfillable) });
 };

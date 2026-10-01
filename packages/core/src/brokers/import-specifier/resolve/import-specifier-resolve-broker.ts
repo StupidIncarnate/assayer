@@ -10,6 +10,8 @@
  * importSpecifierResolveBroker({ specifier: '../b/foo', containingFile: '/repo/src/a/x.ts', options });
  * // Returns { resolved: true, fileName: '/repo/src/b/foo.ts' } or { resolved: false }
  */
+import { importSpecifierResolveResultContract } from '../../../contracts/import-specifier-resolve-result/import-specifier-resolve-result-contract';
+import type { ImportSpecifierResolveResult } from '../../../contracts/import-specifier-resolve-result/import-specifier-resolve-result-contract';
 import ts from '#gateway/npm/typescript';
 
 
@@ -21,13 +23,13 @@ export const importSpecifierResolveBroker = ({
   specifier: string;
   containingFile: string;
   options: ts.CompilerOptions;
-}): { resolved: false } | { resolved: true; fileName: string } => {
+}): ImportSpecifierResolveResult => {
   const result = ts.resolveModuleName(specifier, containingFile, options, ts.sys);
   const {resolvedModule} = result;
 
   if (resolvedModule === undefined) {
-    return { resolved: false };
+    return importSpecifierResolveResultContract.parse({ resolved: false });
   }
 
-  return { resolved: true, fileName: resolvedModule.resolvedFileName };
+  return importSpecifierResolveResultContract.parse({ resolved: true, fileName: resolvedModule.resolvedFileName });
 };

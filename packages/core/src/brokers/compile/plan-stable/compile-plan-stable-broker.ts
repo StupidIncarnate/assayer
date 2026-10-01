@@ -11,8 +11,9 @@
  * // Returns { mode: 'skipped', targets: [], harnesses: [] } when previousCommit still matches the
  * // ref's commit, or { mode: 'net-new' | 'incremental', targets: [...], harnesses: [...] } otherwise
  */
+import { compilePlanStableResultContract } from '../../../contracts/compile-plan-stable-result/compile-plan-stable-result-contract';
+import type { CompilePlanStableResult } from '../../../contracts/compile-plan-stable-result/compile-plan-stable-result-contract';
 import { compileModeContract } from '@assayer/shared/contracts';
-import type { CompileMode } from '@assayer/shared/contracts';
 
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
 import { gitLsTreeBroker } from '../../git/ls-tree/git-ls-tree-broker';
@@ -30,15 +31,11 @@ export const compilePlanStableBroker = async ({
   ref: string;
   previousCommit?: string;
   exclude?: readonly string[];
-}): Promise<{
-  mode: CompileMode;
-  targets: { relPath: string; content: string }[];
-  harnesses: { relPath: string; content: string }[];
-}> => {
+}): Promise<CompilePlanStableResult> => {
   const currentCommit = await gitResolveCommitBroker({ repoRoot, ref });
 
   if (previousCommit !== undefined && currentCommit !== undefined && previousCommit === currentCommit) {
-    return { mode: compileModeContract.parse('skipped'), targets: [], harnesses: [] };
+    return compilePlanStableResultContract.parse({ mode: compileModeContract.parse('skipped'), targets: [], harnesses: [] });
   }
 
   const entries = await gitLsTreeBroker({ repoRoot, ref });
@@ -51,5 +48,5 @@ export const compilePlanStableBroker = async ({
   );
   const mode = compileModeContract.parse(previousCommit === undefined ? 'net-new' : 'incremental');
 
-  return { mode, ...harnessClassifyBroker({ files: planned }) };
+  return compilePlanStableResultContract.parse({ mode, ...harnessClassifyBroker({ files: planned }) });
 };

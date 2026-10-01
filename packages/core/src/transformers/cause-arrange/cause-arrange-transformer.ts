@@ -79,8 +79,10 @@
  * // Returns { unreachable: false, unfillable: [],
  * //   arrangements: [[{ kind: 'param', param: 'score', value: 6 }, …], …] }
  */
+import { causeArrangeContract } from '../../contracts/cause-arrange/cause-arrange-contract';
+import type { CauseArrange } from '../../contracts/cause-arrange/cause-arrange-contract';
 import { arrangeValueContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -110,11 +112,7 @@ export const causeArrangeTransformer = ({
   params: ParamDescriptor[];
   envDrivable: boolean;
   harness?: { entry: string; params: readonly string[] } | undefined;
-}): {
-  unreachable: boolean;
-  arrangements: DerivedTestCase['arrange'][];
-  unfillable: { param: string; type: string }[];
-} => {
+}): CauseArrange => {
   // A WELDED operand is a single-value domain to start from — `{members:[7]}` for a scalar const,
   // `{lengthMin:3, lengthMax:3}` for an array const's length. The guard arm values below intersect onto
   // it, so `{7} ∩ (>5)` stays `{7}` (the arm is reachable) while `{7} ∩ (<=5)` is empty (unreachable).
@@ -162,7 +160,7 @@ export const causeArrangeTransformer = ({
   const unreachable = [...domainByOperand.values()].some((domain) => isDomainEmptyGuard({ domain }));
 
   if (unreachable) {
-    return { unreachable: true, arrangements: [], unfillable: [] };
+    return causeArrangeContract.parse({ unreachable: true, arrangements: [], unfillable: [] });
   }
 
   // The parameters a harness SUPPLIES, keyed by name — each one already answered, so it never reaches
@@ -225,7 +223,7 @@ export const causeArrangeTransformer = ({
   );
 
   if (unfillable.length > 0) {
-    return { unreachable: false, arrangements: [], unfillable };
+    return causeArrangeContract.parse({ unreachable: false, arrangements: [], unfillable });
   }
 
   const fillByParam = new Map(
@@ -387,5 +385,5 @@ export const causeArrangeTransformer = ({
     }),
   );
 
-  return { unreachable: false, unfillable: [], arrangements };
+  return causeArrangeContract.parse({ unreachable: false, unfillable: [], arrangements });
 };

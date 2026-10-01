@@ -46,6 +46,8 @@
  * harnessValidateTransformer({ relPath, targetRelPath, keys, entries, declaringScopes, suppliedTypes });
  * // Returns [] when every key still names a refused parameter of a compatible type, or one record per wrong key
  */
+import { harnessValidateContract } from '../../contracts/harness-validate/harness-validate-contract';
+import type { HarnessValidate } from '../../contracts/harness-validate/harness-validate-contract';
 import type { DeclaringScope, EntrySignature, HarnessInputKey, ParamDescriptor, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { isTypeCompatibleGuard } from '../../guards/is-type-compatible/is-type-compatible-guard';
@@ -70,7 +72,7 @@ export const harnessValidateTransformer = ({
   entries: readonly EntrySignature[];
   declaringScopes: readonly DeclaringScope[];
   suppliedTypes: readonly { entry: string; param: string; type: TypeDescriptor }[];
-}): readonly { relPath: string; line: number; column: number; message: string }[] => {
+}): HarnessValidate => {
   const callable: readonly { name: string; params: readonly ParamDescriptor[] }[] = [
     ...entries.filter((entry) => entry.access.kind !== 'module'),
     ...declaringScopes,
@@ -147,10 +149,10 @@ export const harnessValidateTransformer = ({
     ];
   });
 
-  return [...emptyFile, ...keyErrors].map((message) => ({
+  return harnessValidateContract.parse([...emptyFile, ...keyErrors].map((message) => ({
     relPath,
     line: HARNESS_LINE,
     column: HARNESS_COLUMN,
     message,
-  }));
+  })));
 };

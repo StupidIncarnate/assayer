@@ -8,8 +8,9 @@
  * // Returns the resolved AssayerConfig plus the dir/path it lives in (generating a default
  * // config when none is found); throws CliExactOutputError on malformed JSON or an invalid schema
  */
+import { configResolveLayerResultContract } from '../../../contracts/config-resolve-layer-result/config-resolve-layer-result-contract';
+import type { ConfigResolveLayerResult } from '../../../contracts/config-resolve-layer-result/config-resolve-layer-result-contract';
 import { configFindBroker, configGenerateBroker, configLoadBroker } from '@assayer/core/brokers';
-import type { AssayerConfig } from '@assayer/shared/contracts';
 
 import { zodIssueListContract } from '../../../contracts/zod-issue-list/zod-issue-list-contract';
 import { jsonErrorMessageFormatTransformer } from '../../../transformers/json-error-message-format/json-error-message-format-transformer';
@@ -20,17 +21,17 @@ export const ConfigResolveLayerResponder = async ({
   repoPath,
 }: {
   repoPath: string;
-}): Promise<{ config: AssayerConfig; configDir: string; configPath: string }> => {
+}): Promise<ConfigResolveLayerResult> => {
   const found = await configFindBroker({ startDir: repoPath });
 
   if (!found.found) {
     const config = await configGenerateBroker({ configDir: repoPath });
 
-    return {
+    return configResolveLayerResultContract.parse({
       config,
       configDir: repoPath,
       configPath: `${repoPath}/assayer.config.json`,
-    };
+    });
   }
 
   const loaded = await configLoadBroker({ configPath: found.configPath }).catch((error: unknown) => {
@@ -54,5 +55,5 @@ export const ConfigResolveLayerResponder = async ({
     });
   }
 
-  return { config: loaded.data, configDir: found.configDir, configPath: found.configPath };
+  return configResolveLayerResultContract.parse({ config: loaded.data, configDir: found.configDir, configPath: found.configPath });
 };
