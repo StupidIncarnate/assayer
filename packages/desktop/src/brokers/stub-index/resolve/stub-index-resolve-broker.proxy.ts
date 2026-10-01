@@ -10,11 +10,17 @@ import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exi
 
 export const stubIndexResolveBrokerProxy = (): {
   setup: (params: {
+    repoPath: string;
+    namespace: string;
     manifest: ReturnType<typeof AssayerCacheManifestStub>;
     index: ReturnType<typeof StubIndexStub>;
   }) => void;
-  setupNoIndex: (params: { manifest: ReturnType<typeof AssayerCacheManifestStub> }) => void;
-  setupMissingManifest: () => void;
+  setupNoIndex: (params: {
+    repoPath: string;
+    namespace: string;
+    manifest: ReturnType<typeof AssayerCacheManifestStub>;
+  }) => void;
+  setupMissingManifest: (params: { repoPath: string }) => void;
   withOverlays: (params: { overlays: readonly ReturnType<typeof StubOverlayStub>[] }) => void;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
@@ -33,18 +39,18 @@ export const stubIndexResolveBrokerProxy = (): {
   overlayHandle.calledWith([]).resolves([]);
 
   return {
-    setup: ({ manifest, index }): void => {
-      existsProxy.exists();
-      manifestProxy.resolves({ manifest });
-      indexProxy.resolves({ index });
+    setup: ({ repoPath, namespace, manifest, index }): void => {
+      existsProxy.present({ path: `${repoPath}/.assayer/cache/manifest.json` });
+      manifestProxy.resolves({ repoPath, manifest });
+      indexProxy.resolves({ repoPath, namespace, index });
     },
-    setupNoIndex: ({ manifest }): void => {
-      existsProxy.exists();
-      manifestProxy.resolves({ manifest });
-      indexProxy.absent();
+    setupNoIndex: ({ repoPath, namespace, manifest }): void => {
+      existsProxy.present({ path: `${repoPath}/.assayer/cache/manifest.json` });
+      manifestProxy.resolves({ repoPath, manifest });
+      indexProxy.absent({ repoPath, namespace });
     },
-    setupMissingManifest: (): void => {
-      existsProxy.missing();
+    setupMissingManifest: ({ repoPath }): void => {
+      existsProxy.missing({ path: `${repoPath}/.assayer/cache/manifest.json` });
     },
     withOverlays: ({ overlays }): void => {
       overlayHandle.calledWith([]).resolves([...overlays]);

@@ -20,10 +20,12 @@
  */
 import { runFindBroker } from '@assayer/core/brokers';
 import type { RunResult } from '@assayer/shared/contracts';
+import { run } from '#gateway/node/child_process';
+import { findUpSync } from '#gateway/node/fs';
+import { join } from '#gateway/node/path';
 import { execPath } from '#gateway/node/process';
 
-import { assayerCliEntryPathAdapter } from '../../../adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter';
-import { nodeChildProcessExecAdapter } from '../../../adapters/node-child-process/exec/node-child-process-exec-adapter';
+import { execResultContract } from '../../../contracts/exec-result/exec-result-contract';
 
 export const runExecuteBroker = async ({
   repoPath,
@@ -36,32 +38,44 @@ export const runExecuteBroker = async ({
   relPath: string;
   onOutput?: (params: { chunk: string }) => void;
 }): Promise<RunResult> => {
-  const cliEntry = assayerCliEntryPathAdapter();
+  // Walks up from this module to the nearest ancestor holding the built CLI, because this module runs
+  // from both src and dist and a counted `../..` would shift between them. The CLI is found by path:
+  // desktop cannot import it, since the CLI already depends on desktop.
+  const cliEntry = findUpSync({
+    startDir: __dirname,
+    fileName: join('packages', 'cli', 'dist', 'bin', 'assayer.js'),
+  });
 
-  if (cliEntry === undefined) {
+  if (cliEntry === null) {
     throw new Error('assayer: the CLI is not built, so nothing can be run. Build it and try again.');
   }
 
   // In the Electron main process `process.execPath` is the ELECTRON binary, not node — so handing it
   // a script path launches a second Electron APP that never exits, hanging this await forever.
   // ELECTRON_RUN_AS_NODE makes that same binary behave as plain node, which is what the CLI needs.
-  const exec = await nodeChildProcessExecAdapter({
-    command: execPath,
-    args: [String(cliEntry), 'unit', relPath],
-    cwd: repoPath,
-    env: { ELECTRON_RUN_AS_NODE: '1' },
-    ...(onOutput === undefined ? {} : { onOutput }),
-  });
+  // stdout and stderr share one callback: the CLI writes progress to stdout and its report to stderr,
+  // and a reader watching one stream would miss half the run.
+  const exec = execResultContract.parse(
+    await run({
+      command: execPath,
+      args: [cliEntry, 'unit', relPath],
+      cwd: repoPath,
+      env: { ELECTRON_RUN_AS_NODE: '1' },
+      stdin: 'ignore',
+      onStdout: (chunk) => onOutput?.({ chunk }),
+      onStderr: (chunk) => onOutput?.({ chunk }),
+    }),
+  );
 
-  const run = await runFindBroker({ configDir: repoPath, root, relPath });
+  const savedRun = await runFindBroker({ configDir: repoPath, root, relPath });
 
   // No artifact means the run never got far enough to write one — a real failure, unlike a failing
   // CASE. The CLI already said why on stderr, so that text is the message rather than a paraphrase.
-  if (run === undefined) {
+  if (savedRun === undefined) {
     throw new Error(
       `assayer: the run produced no result for ${relPath}.\n\n${String(exec.stderr)}${String(exec.stdout)}`.trim(),
     );
   }
 
-  return run;
+  return savedRun;
 };

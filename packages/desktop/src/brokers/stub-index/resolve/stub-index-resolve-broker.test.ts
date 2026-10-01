@@ -9,6 +9,8 @@ describe('stubIndexResolveBroker', () => {
     const proxy = stubIndexResolveBrokerProxy();
     const index = StubIndexStub();
     proxy.setup({
+      repoPath: '/repo',
+      namespace: 'main',
       manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
       index,
     });
@@ -21,6 +23,8 @@ describe('stubIndexResolveBroker', () => {
   it('VALID: {stub index + committed overlay correcting mode} => the corrected values REPLACE the derived demand', async () => {
     const proxy = stubIndexResolveBrokerProxy();
     proxy.setup({
+      repoPath: '/repo',
+      namespace: 'main',
       manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
       index: StubIndexStub(),
     });
@@ -38,7 +42,7 @@ describe('stubIndexResolveBroker', () => {
 
   it('EMPTY: {no cache manifest on disk} => returns an empty StubView', async () => {
     const proxy = stubIndexResolveBrokerProxy();
-    proxy.setupMissingManifest();
+    proxy.setupMissingManifest({ repoPath: '/repo' });
 
     const result = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 
@@ -48,6 +52,8 @@ describe('stubIndexResolveBroker', () => {
   it('EMPTY: {manifest present but no stub index for the namespace} => returns an empty StubView', async () => {
     const proxy = stubIndexResolveBrokerProxy();
     proxy.setupNoIndex({
+      repoPath: '/repo',
+      namespace: 'main',
       manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
     });
 
