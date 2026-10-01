@@ -17,7 +17,8 @@
  */
 import { readFileSync, walkFilesSync } from '#gateway/node/fs';
 import { basename, dirname, join, relative, sep } from '#gateway/node/path';
-import { RelPathStub, FolderNameStub } from '@assayer/shared/contracts';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
+import { FolderNameStub } from '@assayer/shared/contracts/folder-name/folder-name.stub';
 
 import { isAssayerHarnessGuard } from '../../../core/src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../core/src/statics/harness-module/harness-module-statics';

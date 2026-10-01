@@ -1,4 +1,5 @@
-import { NamespaceNameStub, StubIndexStub } from '@assayer/shared/contracts';
+import { NamespaceNameStub } from '@assayer/shared/contracts/namespace-name/namespace-name.stub';
+import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
 
 import { cacheLoadStubIndexBroker } from './cache-load-stub-index-broker';
 import { cacheLoadStubIndexBrokerProxy } from './cache-load-stub-index-broker.proxy';

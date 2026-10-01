@@ -1,4 +1,6 @@
-import { BranchNodeStub, entryLabelContract, ExitNodeStub, symbolNameContract } from '@assayer/shared/contracts';
+import { entryLabelContract, symbolNameContract } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { funnelCasesTransformer } from './funnel-cases-transformer';

@@ -1,4 +1,4 @@
-import { UndrivenEntryStub } from '@assayer/shared/contracts';
+import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
 
 import { undrivenLineFormatTransformer } from './undriven-line-format-transformer';
 

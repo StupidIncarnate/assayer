@@ -1,7 +1,7 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubReadersLayerWidget } from './stub-readers-layer-widget';
 import { StubReadersLayerWidgetProxy } from './stub-readers-layer-widget.proxy';
-import { ObjectStubStub } from '@assayer/shared/contracts';
+import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
 
 describe('StubReadersLayerWidget', () => {
   describe('with readers', () => {

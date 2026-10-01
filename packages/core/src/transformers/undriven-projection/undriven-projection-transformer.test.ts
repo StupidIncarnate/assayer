@@ -1,4 +1,5 @@
-import { BranchNodeStub, SymbolNameStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { UndrivenCauseStub } from '../../contracts/undriven-cause/undriven-cause.stub';

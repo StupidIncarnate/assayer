@@ -1,4 +1,7 @@
-import { ExternalSignatureStub, ModuleSpecifierStub, SymbolNameStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
+import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadGlobalBroker } from './external-signature-read-global-broker';

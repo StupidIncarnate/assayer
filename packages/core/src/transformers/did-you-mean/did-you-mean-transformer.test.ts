@@ -1,4 +1,4 @@
-import { SymbolNameStub } from '@assayer/shared/contracts';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { didYouMeanTransformer } from './did-you-mean-transformer';
 

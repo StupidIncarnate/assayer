@@ -1,7 +1,7 @@
 import { cacheLoadBlobBroker } from './cache-load-blob-broker';
 import { cacheLoadBlobBrokerProxy } from './cache-load-blob-broker.proxy';
 import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
-import { CompiledFileBlobStub } from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 
 describe('cacheLoadBlobBroker', () => {
   describe('successful load', () => {

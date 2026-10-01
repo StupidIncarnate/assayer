@@ -1,5 +1,5 @@
 import { window } from '#gateway/browser/window';
-import { RunConsoleStub } from '@assayer/shared/contracts';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 export const runFetchConsoleBrokerProxy = (): {
   setupConsole: (params: { console: ReturnType<typeof RunConsoleStub> }) => void;

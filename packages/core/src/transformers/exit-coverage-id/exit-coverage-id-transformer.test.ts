@@ -1,4 +1,5 @@
-import { GuardStepStub, SymbolNameStub } from '@assayer/shared/contracts';
+import { GuardStepStub } from '@assayer/shared/contracts/guard-step/guard-step.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { exitCoverageIdTransformer } from './exit-coverage-id-transformer';
 

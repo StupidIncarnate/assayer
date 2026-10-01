@@ -1,6 +1,6 @@
 import { compiledTreeResolveBroker } from './compiled-tree-resolve-broker';
 import { compiledTreeResolveBrokerProxy } from './compiled-tree-resolve-broker.proxy';
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 describe('compiledTreeResolveBroker', () => {

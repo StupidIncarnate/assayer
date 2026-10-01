@@ -1,4 +1,6 @@
-import { RunResultStub, RunConsoleStub, RelPathStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { useFileRunBinding } from './use-file-run-binding';
 import { useFileRunBindingProxy } from './use-file-run-binding.proxy';

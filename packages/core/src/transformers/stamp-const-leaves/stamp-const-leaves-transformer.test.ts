@@ -1,4 +1,5 @@
-import { ConditionLeafStub, conditionLeafContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { conditionLeafContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { stampConstLeavesTransformer } from './stamp-const-leaves-transformer';
 

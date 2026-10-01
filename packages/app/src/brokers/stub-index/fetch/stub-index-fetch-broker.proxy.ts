@@ -1,5 +1,5 @@
 import { window } from '#gateway/browser/window';
-import { StubViewStub } from '@assayer/shared/contracts';
+import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 
 export const stubIndexFetchBrokerProxy = (): {
   setupView: (params: { view: ReturnType<typeof StubViewStub> }) => void;

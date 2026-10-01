@@ -1,4 +1,6 @@
-import { configFindBrokerProxy, configGenerateBrokerProxy, configLoadBrokerProxy } from '@assayer/core/testing';
+import { configFindBrokerProxy } from '@assayer/core/brokers/config/find/config-find-broker.proxy';
+import { configGenerateBrokerProxy } from '@assayer/core/brokers/config/generate/config-generate-broker.proxy';
+import { configLoadBrokerProxy } from '@assayer/core/brokers/config/load/config-load-broker.proxy';
 
 export const ConfigResolveLayerResponderProxy = (): {
   configLivesIn: (params: { configDir: string; content: string }) => void;

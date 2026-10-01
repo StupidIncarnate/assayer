@@ -1,10 +1,8 @@
-import {
-  configHashBrokerProxy,
-  manifestLoadBrokerProxy,
-  manifestTrashBrokerProxy,
-  compileRunBrokerProxy,
-} from '@assayer/core/testing';
-import type { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { configHashBrokerProxy } from '@assayer/core/brokers/config/hash/config-hash-broker.proxy';
+import { manifestLoadBrokerProxy } from '@assayer/core/brokers/manifest/load/manifest-load-broker.proxy';
+import { manifestTrashBrokerProxy } from '@assayer/core/brokers/manifest/trash/manifest-trash-broker.proxy';
+import { compileRunBrokerProxy } from '@assayer/core/brokers/compile/run/compile-run-broker.proxy';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
 import { compileProgressRenderBrokerProxy } from '../../../brokers/compile-progress/render/compile-progress-render-broker.proxy';
 

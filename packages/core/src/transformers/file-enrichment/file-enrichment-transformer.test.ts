@@ -1,4 +1,5 @@
-import { BranchNodeStub, EntrySignatureStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
 
 import { ExtractedFunctionStub } from '../../contracts/extracted-function/extracted-function.stub';
 import { fileEnrichmentTransformer } from './file-enrichment-transformer';

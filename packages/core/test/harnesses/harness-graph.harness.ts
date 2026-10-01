@@ -27,7 +27,8 @@ import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, 
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract, RelPathStub } from '@assayer/shared/contracts';
+import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract } from '@assayer/shared/contracts';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';

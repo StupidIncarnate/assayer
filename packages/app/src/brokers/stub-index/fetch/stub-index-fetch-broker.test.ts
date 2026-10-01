@@ -1,4 +1,4 @@
-import { StubViewStub } from '@assayer/shared/contracts';
+import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 
 import { stubIndexFetchBroker } from './stub-index-fetch-broker';
 import { stubIndexFetchBrokerProxy } from './stub-index-fetch-broker.proxy';

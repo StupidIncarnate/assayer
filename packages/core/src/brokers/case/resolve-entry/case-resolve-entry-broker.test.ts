@@ -1,4 +1,4 @@
-import { EntryAccessStub } from '@assayer/shared/contracts';
+import { EntryAccessStub } from '@assayer/shared/contracts/entry-access/entry-access.stub';
 
 import { caseResolveEntryBroker } from './case-resolve-entry-broker';
 import { caseResolveEntryBrokerProxy } from './case-resolve-entry-broker.proxy';

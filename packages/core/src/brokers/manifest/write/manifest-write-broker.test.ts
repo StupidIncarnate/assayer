@@ -1,4 +1,4 @@
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
 import { FsErrorStub } from '#gateway/node/fs/is-fs-error/fs-error.stub';
 

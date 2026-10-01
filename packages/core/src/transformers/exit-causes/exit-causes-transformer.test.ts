@@ -1,4 +1,7 @@
-import { BranchNodeStub, ConditionLeafStub, ConditionNodeStub, GuardStepStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
+import { GuardStepStub } from '@assayer/shared/contracts/guard-step/guard-step.stub';
 
 import { exitCausesTransformer } from './exit-causes-transformer';
 

@@ -1,4 +1,4 @@
-import { PropertyDemandStub } from '@assayer/shared/contracts';
+import { PropertyDemandStub } from '@assayer/shared/contracts/property-demand/property-demand.stub';
 
 import { flattenPropertyDemandTransformer } from './flatten-property-demand-transformer';
 

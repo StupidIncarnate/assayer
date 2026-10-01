@@ -1,7 +1,8 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
 import { ContractEntryLayerWidgetProxy } from './contract-entry-layer-widget.proxy';
-import { ExternalSignatureStub, ResolvedEdgeStub } from '@assayer/shared/contracts';
+import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
+import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
 
 describe('ContractEntryLayerWidget', () => {
   describe('a local edge', () => {

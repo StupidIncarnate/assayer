@@ -1,6 +1,7 @@
 import { compiledFileFetchBroker } from './compiled-file-fetch-broker';
 import { compiledFileFetchBrokerProxy } from './compiled-file-fetch-broker.proxy';
-import { CompiledFileViewStub, RelPathStub } from '@assayer/shared/contracts';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 describe('compiledFileFetchBroker', () => {
   describe('successful fetch', () => {

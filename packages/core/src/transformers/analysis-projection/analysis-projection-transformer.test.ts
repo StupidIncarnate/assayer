@@ -1,4 +1,5 @@
-import { BranchNodeStub, GlobalUseStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { GlobalUseStub } from '@assayer/shared/contracts/global-use/global-use.stub';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { InvokedFnStub } from '../../contracts/invoked-fn/invoked-fn.stub';

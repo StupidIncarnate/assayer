@@ -1,5 +1,5 @@
 import { stubIndexFetchBrokerProxy } from '../../brokers/stub-index/fetch/stub-index-fetch-broker.proxy';
-import type { StubViewStub } from '@assayer/shared/contracts';
+import type { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 
 export const useStubIndexBindingProxy = (): {
   setupView: (params: { view: ReturnType<typeof StubViewStub> }) => void;

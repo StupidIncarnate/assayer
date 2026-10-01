@@ -1,4 +1,5 @@
-import { RunResultStub, RelPathStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { runFetchSavedBroker } from './run-fetch-saved-broker';
 import { runFetchSavedBrokerProxy } from './run-fetch-saved-broker.proxy';

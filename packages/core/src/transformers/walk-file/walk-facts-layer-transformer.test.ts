@@ -1,4 +1,8 @@
-import { BranchNodeStub, EnvReadStub, ExitNodeStub, GlobalUseStub, ModuleEdgeStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { EnvReadStub } from '@assayer/shared/contracts/env-read/env-read.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
+import { GlobalUseStub } from '@assayer/shared/contracts/global-use/global-use.stub';
+import { ModuleEdgeStub } from '@assayer/shared/contracts/module-edge/module-edge.stub';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { DeclaredShapeStub } from '../../contracts/declared-shape/declared-shape.stub';

@@ -1,4 +1,4 @@
-import { FilePathStub } from '@assayer/core/contracts';
+import { FilePathStub } from '@assayer/core/contracts/file-path/file-path.stub';
 
 import { analyzerRootsResolveBroker } from './analyzer-roots-resolve-broker';
 import { analyzerRootsResolveBrokerProxy } from './analyzer-roots-resolve-broker.proxy';

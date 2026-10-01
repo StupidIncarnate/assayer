@@ -1,4 +1,4 @@
-import { ResolvedIndexStub } from '@assayer/shared/contracts';
+import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { resolvedIndexWriteBroker } from './resolved-index-write-broker';
 import { resolvedIndexWriteBrokerProxy } from './resolved-index-write-broker.proxy';

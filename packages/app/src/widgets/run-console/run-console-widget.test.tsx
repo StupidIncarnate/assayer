@@ -1,4 +1,4 @@
-import { RunConsoleStub } from '@assayer/shared/contracts';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { RunConsoleWidget } from './run-console-widget';

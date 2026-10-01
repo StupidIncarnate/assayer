@@ -1,4 +1,4 @@
-import { RunConsoleStub } from '@assayer/shared/contracts';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 import { runSubscribeOutputBroker } from './run-subscribe-output-broker';
 import { runSubscribeOutputBrokerProxy } from './run-subscribe-output-broker.proxy';

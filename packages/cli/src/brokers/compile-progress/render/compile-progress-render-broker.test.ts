@@ -1,4 +1,4 @@
-import { CompileProgressEventStub } from '@assayer/core/contracts';
+import { CompileProgressEventStub } from '@assayer/core/contracts/compile-progress-event/compile-progress-event.stub';
 
 import { compileProgressRenderBroker } from './compile-progress-render-broker';
 import { compileProgressRenderBrokerProxy } from './compile-progress-render-broker.proxy';

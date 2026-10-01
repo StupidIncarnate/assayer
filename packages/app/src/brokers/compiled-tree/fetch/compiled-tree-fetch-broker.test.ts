@@ -1,6 +1,6 @@
 import { compiledTreeFetchBroker } from './compiled-tree-fetch-broker';
 import { compiledTreeFetchBrokerProxy } from './compiled-tree-fetch-broker.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 
 describe('compiledTreeFetchBroker', () => {
   describe('successful fetch', () => {

@@ -1,4 +1,6 @@
-import { CompiledFileBlobStub, FileAnalysisStub, FunctionAnalysisStub } from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
 
 import { gatherEnvReadsTransformer } from './gather-env-reads-transformer';
 

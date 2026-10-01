@@ -1,4 +1,4 @@
-import { DarkSpotStub } from '@assayer/shared/contracts';
+import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
 
 import { darkSpotLineFormatTransformer } from './dark-spot-line-format-transformer';
 

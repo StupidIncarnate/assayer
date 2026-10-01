@@ -1,7 +1,9 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubRepositoryWidget } from './stub-repository-widget';
 import { StubRepositoryWidgetProxy } from './stub-repository-widget.proxy';
-import { StubViewStub, ObjectStubStub, EnvStubStub } from '@assayer/shared/contracts';
+import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
+import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
+import { EnvStubStub } from '@assayer/shared/contracts/env-stub/env-stub.stub';
 import { waitFor } from '#gateway/npm/testing-library__react';
 
 const CROSS_FILE_TYPES = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/types.ts';

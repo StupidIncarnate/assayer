@@ -1,4 +1,6 @@
-import { AssayerCacheManifestStub, StubIndexStub, ObjectStubStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
+import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
 
 import { stubIndexResolveBroker } from './stub-index-resolve-broker';
 import { stubIndexResolveBrokerProxy } from './stub-index-resolve-broker.proxy';

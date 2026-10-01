@@ -1,4 +1,4 @@
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';

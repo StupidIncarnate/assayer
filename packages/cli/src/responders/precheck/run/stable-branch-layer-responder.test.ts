@@ -1,5 +1,5 @@
-import { AssayerConfigStub } from '@assayer/shared/contracts';
-import { FilePathStub } from '@assayer/core/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
+import { FilePathStub } from '@assayer/core/contracts/file-path/file-path.stub';
 
 import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';

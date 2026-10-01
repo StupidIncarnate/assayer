@@ -1,4 +1,5 @@
-import { RunResultStub, CaseResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
 
 import { runDetailFormatTransformer } from './run-detail-format-transformer';
 

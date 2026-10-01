@@ -1,4 +1,4 @@
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
 import { cacheLoadManifestBroker } from './cache-load-manifest-broker';
 import { cacheLoadManifestBrokerProxy } from './cache-load-manifest-broker.proxy';

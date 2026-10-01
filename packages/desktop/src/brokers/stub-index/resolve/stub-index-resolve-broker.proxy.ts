@@ -1,5 +1,6 @@
-import { stubOverlayLoadBrokerProxy } from '@assayer/core/testing';
-import type { AssayerCacheManifestStub, StubIndexStub } from '@assayer/shared/contracts';
+import { stubOverlayLoadBrokerProxy } from '@assayer/core/brokers/stub-overlay/load/stub-overlay-load-broker.proxy';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import type { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
 
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
 import { cacheLoadStubIndexBrokerProxy } from '../../cache/load-stub-index/cache-load-stub-index-broker.proxy';

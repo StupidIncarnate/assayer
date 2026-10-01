@@ -1,4 +1,4 @@
-import { AssayerConfigStub } from '@assayer/shared/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
 
 import { configGenerateBroker } from './config-generate-broker';
 import { configGenerateBrokerProxy } from './config-generate-broker.proxy';

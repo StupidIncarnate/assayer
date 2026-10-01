@@ -12,7 +12,9 @@ import { CodeViewerWidgetProxy } from '../code-viewer/code-viewer-widget.proxy';
 import { DetailPanelWidgetProxy } from '../detail-panel/detail-panel-widget.proxy';
 import { RawBlobViewerWidgetProxy } from '../raw-blob-viewer/raw-blob-viewer-widget.proxy';
 import { RunConsoleWidgetProxy } from '../run-console/run-console-widget.proxy';
-import type { CompiledTreeStub, CompiledFileViewStub, RunConsoleStub } from '@assayer/shared/contracts';
+import type { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
+import type { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import type { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 import { console } from '#gateway/browser/console';
 
 export const SurfaceExplorerWidgetProxy = (): {

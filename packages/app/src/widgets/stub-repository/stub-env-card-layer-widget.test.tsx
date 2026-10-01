@@ -1,7 +1,7 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubEnvCardLayerWidget } from './stub-env-card-layer-widget';
 import { StubEnvCardLayerWidgetProxy } from './stub-env-card-layer-widget.proxy';
-import { EnvStubStub } from '@assayer/shared/contracts';
+import { EnvStubStub } from '@assayer/shared/contracts/env-stub/env-stub.stub';
 
 describe('StubEnvCardLayerWidget', () => {
   describe('guessed values', () => {

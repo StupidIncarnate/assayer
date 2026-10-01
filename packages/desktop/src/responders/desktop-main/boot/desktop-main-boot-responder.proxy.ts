@@ -1,4 +1,5 @@
-import { runConsoleFindBrokerProxy, runFindBrokerProxy } from '@assayer/core/testing';
+import { runConsoleFindBrokerProxy } from '@assayer/core/brokers/run/console-find/run-console-find-broker.proxy';
+import { runFindBrokerProxy } from '@assayer/core/brokers/run/find/run-find-broker.proxy';
 
 import { desktopBootBrokerProxy } from '../../../brokers/desktop/boot/desktop-boot-broker.proxy';
 import { statusResolveBrokerProxy } from '../../../brokers/status/resolve/status-resolve-broker.proxy';

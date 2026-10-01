@@ -1,4 +1,5 @@
-import { BranchNodeStub, ConditionLeafStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';

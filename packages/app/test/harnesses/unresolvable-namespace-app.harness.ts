@@ -22,7 +22,7 @@ import { tmpdir } from '#gateway/node/os';
 import { mkdtempSync, ensureDirSync, writeFileSync, rmSync } from '#gateway/node/fs';
 import { _electron } from '#gateway/npm/playwright__test';
 import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
 const desktopMainEntry = join(__dirname, '..', '..', '..', 'desktop', 'dist', 'bin', 'desktop-main.js');
 

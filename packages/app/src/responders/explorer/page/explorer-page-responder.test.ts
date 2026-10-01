@@ -1,7 +1,7 @@
 import { themedRenderMiddleware } from '../../../middleware/themed-render/themed-render-middleware';
 import { ExplorerPageResponder } from './explorer-page-responder';
 import { ExplorerPageResponderProxy } from './explorer-page-responder.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import { createElement } from '#gateway/npm/react';
 
 describe('ExplorerPageResponder', () => {

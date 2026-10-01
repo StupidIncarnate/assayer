@@ -1,18 +1,18 @@
-import {
-  composeCrossFilePredicatesBrokerProxy,
-  composeCrossFileMapBrokerProxy,
-  harnessRealizeBrokerProxy,
-  paramTypeResolveBrokerProxy,
-  stubRealizeBrokerProxy,
-  stubOverlayLoadBrokerProxy,
-} from '@assayer/core/testing';
+import { composeCrossFilePredicatesBrokerProxy } from '@assayer/core/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
+import { composeCrossFileMapBrokerProxy } from '@assayer/core/brokers/compose/cross-file-map/compose-cross-file-map-broker.proxy';
+import { harnessRealizeBrokerProxy } from '@assayer/core/brokers/harness/realize/harness-realize-broker.proxy';
+import { paramTypeResolveBrokerProxy } from '@assayer/core/brokers/param-type/resolve/param-type-resolve-broker.proxy';
+import { stubRealizeBrokerProxy } from '@assayer/core/brokers/stub/realize/stub-realize-broker.proxy';
+import { stubOverlayLoadBrokerProxy } from '@assayer/core/brokers/stub-overlay/load/stub-overlay-load-broker.proxy';
 
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
 import { cacheLoadBlobBrokerProxy } from '../../cache/load-blob/cache-load-blob-broker.proxy';
 import { cacheLoadResolvedIndexBrokerProxy } from '../../cache/load-resolved-index/cache-load-resolved-index-broker.proxy';
 import { repoSourceRootBrokerProxy } from '../../repo/source-root/repo-source-root-broker.proxy';
 import { readFileIfExistsProxy } from '#gateway/node/fs__promises/read-file-if-exists/read-file-if-exists.proxy';
-import type { AssayerCacheManifestStub, CompiledFileBlobStub, ResolvedIndexStub } from '@assayer/shared/contracts';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import type { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 export const compiledFileResolveBrokerProxy = (): {
   setupManifest: (params: {

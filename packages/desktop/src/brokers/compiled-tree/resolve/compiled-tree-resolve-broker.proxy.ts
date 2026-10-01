@@ -1,5 +1,5 @@
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
-import type { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const compiledTreeResolveBrokerProxy = (): {

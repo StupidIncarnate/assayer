@@ -1,5 +1,11 @@
 import { caseInterpretBroker, probeRuntimeCreateBroker } from '@assayer/core/brokers';
-import { RunResultStub, CaseResultStub, DarkSpotStub, EntryGapStub, LintEntryStub, DerivedTestCaseStub, CoverageIdStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
+import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
+import { EntryGapStub } from '@assayer/shared/contracts/entry-gap/entry-gap.stub';
+import { LintEntryStub } from '@assayer/shared/contracts/lint-entry/lint-entry.stub';
+import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case/derived-test-case.stub';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';

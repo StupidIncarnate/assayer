@@ -4,20 +4,18 @@ import { themedRenderMiddleware } from '../../middleware/themed-render/themed-re
 import { DetailPanelWidget } from './detail-panel-widget';
 import { DetailPanelWidgetProxy } from './detail-panel-widget.proxy';
 import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
-import {
-  CaseResultStub,
-  DarkSpotStub,
-  EntrySignatureStub,
-  ExternalSignatureStub,
-  FileAnalysisStub,
-  FunctionAnalysisStub,
-  LineNumberStub,
-  LintEntryStub,
-  RelPathStub,
-  ResolvedEdgeStub,
-  RunResultStub,
-  UndrivenEntryStub,
-} from '@assayer/shared/contracts';
+import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
+import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
+import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
+import { LintEntryStub } from '@assayer/shared/contracts/lint-entry/lint-entry.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
+import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
 
 // One entry with a salient case and its grayed breadth twin — both reaching the same exit, so the
 // second is the non-salient breadth. Drives the badge (rides every salient row) and the runMode gray

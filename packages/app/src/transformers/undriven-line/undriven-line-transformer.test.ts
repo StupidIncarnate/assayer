@@ -1,5 +1,5 @@
 import { undrivenLineTransformer } from './undriven-line-transformer';
-import { UndrivenEntryStub } from '@assayer/shared/contracts';
+import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
 
 // The reason strings the analysis actually carries, verbatim, so the report and the window describe
 // one artifact the same way. The module reason is a module scope branching on an OPAQUE operand

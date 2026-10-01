@@ -1,4 +1,4 @@
-import { RunResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { UnitRunResponder } from './unit-run-responder';
 import { UnitRunResponderProxy } from './unit-run-responder.proxy';

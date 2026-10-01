@@ -1,4 +1,4 @@
-import { ConditionLeafStub } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { isObjectMemberLeafGuard } from './is-object-member-leaf-guard';
 

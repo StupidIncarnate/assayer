@@ -1,4 +1,6 @@
-import { ConditionLeafStub, PropertyDemandStub, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
+import { symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { PropertyDemandStub } from '@assayer/shared/contracts/property-demand/property-demand.stub';
 
 import { arrangeObjectPropertiesTransformer } from './arrange-object-properties-transformer';
 

@@ -1,4 +1,7 @@
-import { ConditionLeafStub, ParamDescriptorStub, TypeDescriptorStub, symbolNameContract } from '@assayer/shared/contracts';
+import { symbolNameContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { causeArrangeTransformer } from './cause-arrange-transformer';
 

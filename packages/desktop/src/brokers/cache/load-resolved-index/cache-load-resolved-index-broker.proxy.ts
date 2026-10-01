@@ -1,4 +1,4 @@
-import type { ResolvedIndexStub } from '@assayer/shared/contracts';
+import type { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 import { readJsonFileIfExistsProxy } from '#gateway/node/fs__promises/read-json-file-if-exists/read-json-file-if-exists.proxy';
 
 export const cacheLoadResolvedIndexBrokerProxy = (): {

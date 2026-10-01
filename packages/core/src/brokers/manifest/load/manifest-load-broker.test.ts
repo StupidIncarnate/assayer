@@ -1,6 +1,6 @@
 import { manifestLoadBroker } from './manifest-load-broker';
 import { manifestLoadBrokerProxy } from './manifest-load-broker.proxy';
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
 describe('manifestLoadBroker', () => {
   describe('manifest present and matching', () => {

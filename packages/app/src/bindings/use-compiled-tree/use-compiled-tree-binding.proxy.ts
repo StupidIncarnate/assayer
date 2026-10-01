@@ -1,5 +1,5 @@
 import { compiledTreeFetchBrokerProxy } from '../../brokers/compiled-tree/fetch/compiled-tree-fetch-broker.proxy';
-import type { CompiledTreeStub } from '@assayer/shared/contracts';
+import type { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 
 export const useCompiledTreeBindingProxy = (): {
   setupTree: (params: { tree: ReturnType<typeof CompiledTreeStub> }) => void;

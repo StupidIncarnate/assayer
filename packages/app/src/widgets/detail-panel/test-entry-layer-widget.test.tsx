@@ -1,7 +1,9 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { TestEntryLayerWidget } from './test-entry-layer-widget';
 import { TestEntryLayerWidgetProxy } from './test-entry-layer-widget.proxy';
-import { EntrySignatureStub, FunctionAnalysisStub, RelPathStub } from '@assayer/shared/contracts';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 const NAMED_FUNCTION = FunctionAnalysisStub({
   entry: EntrySignatureStub({

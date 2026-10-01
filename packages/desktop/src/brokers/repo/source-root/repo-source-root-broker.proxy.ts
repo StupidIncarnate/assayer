@@ -1,4 +1,5 @@
-import { configLoadBrokerProxy, compileResolveRootBrokerProxy } from '@assayer/core/testing';
+import { configLoadBrokerProxy } from '@assayer/core/brokers/config/load/config-load-broker.proxy';
+import { compileResolveRootBrokerProxy } from '@assayer/core/brokers/compile/resolve-root/compile-resolve-root-broker.proxy';
 
 export const repoSourceRootBrokerProxy = (): {
   configHasRepoRoot: ({ repoPath, repoRoot }: { repoPath: string; repoRoot: string }) => void;

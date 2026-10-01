@@ -1,4 +1,6 @@
-import { RunResultStub, CaseResultStub, DerivedTestCaseStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
+import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case/derived-test-case.stub';
 
 import { caseRunStatusTransformer } from './case-run-status-transformer';
 

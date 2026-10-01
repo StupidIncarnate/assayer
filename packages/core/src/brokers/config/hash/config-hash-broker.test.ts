@@ -1,4 +1,4 @@
-import { AssayerConfigStub } from '@assayer/shared/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
 
 import { configHashBroker } from './config-hash-broker';
 import { configHashBrokerProxy } from './config-hash-broker.proxy';

@@ -1,4 +1,4 @@
-import { MapNodeStub } from '@assayer/shared/contracts';
+import { MapNodeStub } from '@assayer/shared/contracts/map-node/map-node.stub';
 
 import { mapExtractResultContract } from './map-extract-result-contract';
 import { MapExtractResultStub } from './map-extract-result.stub';

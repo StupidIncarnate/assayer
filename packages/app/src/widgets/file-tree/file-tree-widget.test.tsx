@@ -1,7 +1,7 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { FileTreeWidget } from './file-tree-widget';
 import { FileTreeWidgetProxy } from './file-tree-widget.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 
 describe('FileTreeWidget', () => {
   describe('rendering a compiled tree', () => {

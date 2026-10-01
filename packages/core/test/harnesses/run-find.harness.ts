@@ -26,7 +26,9 @@ import { mkdtempSync, ensureDirSync, writeFileSync, realpathSync, rmSync } from 
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { RelPathStub, RunConsoleStub, RunResultStub } from '@assayer/shared/contracts';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import type { RelPath, RunConsole, RunId, RunResult } from '@assayer/shared/contracts';
 
 import { runConsoleFindBroker } from '../../src/brokers/run/console-find/run-console-find-broker';

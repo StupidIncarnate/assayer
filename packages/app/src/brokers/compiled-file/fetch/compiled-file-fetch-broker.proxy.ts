@@ -1,5 +1,6 @@
 import { window } from '#gateway/browser/window';
-import { CompiledFileViewStub, RelPathStub } from '@assayer/shared/contracts';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 export const compiledFileFetchBrokerProxy = (): {
   setupFile: (params: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }) => void;

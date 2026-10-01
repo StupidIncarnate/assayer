@@ -1,4 +1,5 @@
-import { ConditionLeafStub, DeclaredTypeStub } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { DeclaredTypeStub } from '@assayer/shared/contracts/declared-type/declared-type.stub';
 
 import { collectPropertyDemandsTransformer } from './collect-property-demands-transformer';
 

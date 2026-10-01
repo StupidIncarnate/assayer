@@ -1,4 +1,8 @@
-import { BranchNodeStub, ConditionNodeStub, entryLabelContract, ExitNodeStub, symbolNameContract, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { entryLabelContract, symbolNameContract } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { throughCallbackCasesTransformer } from './through-callback-cases-transformer';

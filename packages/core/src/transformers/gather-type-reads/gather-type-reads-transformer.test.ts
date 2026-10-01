@@ -1,4 +1,7 @@
-import { CompiledFileBlobStub, FileAnalysisStub, ResolvedEdgeStub, ResolvedIndexStub } from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
+import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { gatherTypeReadsTransformer } from './gather-type-reads-transformer';
 

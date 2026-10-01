@@ -1,4 +1,5 @@
-import { gitDetectStableBranchBrokerProxy, configStableBranchSaveBrokerProxy } from '@assayer/core/testing';
+import { gitDetectStableBranchBrokerProxy } from '@assayer/core/brokers/git/detect-stable-branch/git-detect-stable-branch-broker.proxy';
+import { configStableBranchSaveBrokerProxy } from '@assayer/core/brokers/config/stable-branch-save/config-stable-branch-save-broker.proxy';
 
 import { stableBranchPickBrokerProxy } from '../../../brokers/stable-branch/pick/stable-branch-pick-broker.proxy';
 import { stdoutProxy } from '#gateway/node/process/stdout/stdout.proxy';

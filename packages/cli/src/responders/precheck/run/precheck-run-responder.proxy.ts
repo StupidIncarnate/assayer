@@ -1,4 +1,5 @@
-import { analyzerHashBrokerProxy, compileResolveRootBrokerProxy } from '@assayer/core/testing';
+import { analyzerHashBrokerProxy } from '@assayer/core/brokers/analyzer/hash/analyzer-hash-broker.proxy';
+import { compileResolveRootBrokerProxy } from '@assayer/core/brokers/compile/resolve-root/compile-resolve-root-broker.proxy';
 import { join } from '#gateway/node/path';
 
 import { ConfigResolveLayerResponderProxy } from './config-resolve-layer-responder.proxy';

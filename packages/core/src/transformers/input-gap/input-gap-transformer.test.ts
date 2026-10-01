@@ -1,4 +1,6 @@
-import { EntryLabelStub, SymbolNameStub, TypeTextStub } from '@assayer/shared/contracts';
+import { EntryLabelStub } from '@assayer/shared/contracts/entry-label/entry-label.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
+import { TypeTextStub } from '@assayer/shared/contracts/type-text/type-text.stub';
 
 import { inputGapTransformer } from './input-gap-transformer';
 

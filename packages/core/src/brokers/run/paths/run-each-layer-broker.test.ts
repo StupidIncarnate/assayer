@@ -1,4 +1,4 @@
-import { RunResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { runEachLayerBroker } from './run-each-layer-broker';
 import { runEachLayerBrokerProxy } from './run-each-layer-broker.proxy';

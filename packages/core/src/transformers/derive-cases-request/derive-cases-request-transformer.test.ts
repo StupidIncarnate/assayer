@@ -1,10 +1,7 @@
-import {
-  BranchNodeStub,
-  ConditionNodeStub,
-  ExitNodeStub,
-  representativeValueContract,
-  symbolNameContract,
-} from '@assayer/shared/contracts';
+import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { deriveCasesRequestTransformer } from './derive-cases-request-transformer';

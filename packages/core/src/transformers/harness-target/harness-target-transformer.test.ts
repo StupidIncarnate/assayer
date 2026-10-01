@@ -1,4 +1,4 @@
-import { RelPathStub } from '@assayer/shared/contracts';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { harnessTargetTransformer } from './harness-target-transformer';
 

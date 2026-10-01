@@ -2,7 +2,8 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'nod
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { ModuleSpecifierStub, SymbolNameStub } from '@assayer/shared/contracts';
+import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadGlobalDeclarationBroker } from './external-signature-read-global-declaration-broker';

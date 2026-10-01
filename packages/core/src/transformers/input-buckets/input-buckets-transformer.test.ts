@@ -1,4 +1,5 @@
-import { BranchNodeStub, ConditionNodeStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
 
 import { inputBucketsTransformer } from './input-buckets-transformer';
 

@@ -1,10 +1,10 @@
-import { runFindBrokerProxy } from '@assayer/core/testing';
+import { runFindBrokerProxy } from '@assayer/core/brokers/run/find/run-find-broker.proxy';
 import { runProxy } from '#gateway/node/child_process/run/run.proxy';
 import { findUpSyncProxy } from '#gateway/node/fs/find-up-sync/find-up-sync.proxy';
 import { join } from '#gateway/node/path';
 import { execPath } from '#gateway/node/process';
 import { execPathProxy } from '#gateway/node/process/exec-path/exec-path.proxy';
-import { RunResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import type { RunResult } from '@assayer/shared/contracts';
 
 export const runExecuteBrokerProxy = (): {

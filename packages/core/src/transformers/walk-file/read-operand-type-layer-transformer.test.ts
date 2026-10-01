@@ -1,6 +1,6 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { SymbolNameStub } from '@assayer/shared/contracts';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { readOperandTypeLayerTransformer } from './read-operand-type-layer-transformer';

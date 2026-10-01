@@ -1,5 +1,5 @@
 import { window } from '#gateway/browser/window';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 
 export const compiledTreeFetchBrokerProxy = (): {
   setupTree: (params: { tree: ReturnType<typeof CompiledTreeStub> }) => void;

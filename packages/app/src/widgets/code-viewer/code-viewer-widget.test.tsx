@@ -1,14 +1,12 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { CodeViewerWidget } from './code-viewer-widget';
 import { CodeViewerWidgetProxy } from './code-viewer-widget.proxy';
-import {
-  CompiledFileViewStub,
-  DarkSpotStub,
-  EntrySignatureStub,
-  FileAnalysisStub,
-  FunctionAnalysisStub,
-  UndrivenEntryStub,
-} from '@assayer/shared/contracts';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
 import { document } from '#gateway/browser/document';
 
 // The real module-scope shape: nothing can call it, and it takes no params.

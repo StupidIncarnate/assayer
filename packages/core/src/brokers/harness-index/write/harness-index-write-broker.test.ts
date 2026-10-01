@@ -1,4 +1,4 @@
-import { HarnessIndexStub } from '@assayer/shared/contracts';
+import { HarnessIndexStub } from '@assayer/shared/contracts/harness-index/harness-index.stub';
 
 import { harnessIndexWriteBroker } from './harness-index-write-broker';
 import { harnessIndexWriteBrokerProxy } from './harness-index-write-broker.proxy';

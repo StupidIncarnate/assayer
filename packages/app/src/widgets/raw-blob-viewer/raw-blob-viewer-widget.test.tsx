@@ -1,7 +1,7 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { RawBlobViewerWidget } from './raw-blob-viewer-widget';
 import { RawBlobViewerWidgetProxy } from './raw-blob-viewer-widget.proxy';
-import { CompiledFileViewStub } from '@assayer/shared/contracts';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
 
 describe('RawBlobViewerWidget', () => {
   describe('with a compiled file view', () => {

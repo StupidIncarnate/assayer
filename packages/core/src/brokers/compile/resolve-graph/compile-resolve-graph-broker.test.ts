@@ -1,11 +1,9 @@
-import {
-  CompiledFileBlobStub,
-  ContentHashStub,
-  ExternalSignatureStub,
-  GlobalUseStub,
-  ModuleEdgeStub,
-  RelPathStub,
-} from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
+import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
+import { GlobalUseStub } from '@assayer/shared/contracts/global-use/global-use.stub';
+import { ModuleEdgeStub } from '@assayer/shared/contracts/module-edge/module-edge.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { compileResolveGraphBroker } from './compile-resolve-graph-broker';

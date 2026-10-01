@@ -1,4 +1,4 @@
-import { CoverageIdStub } from '@assayer/shared/contracts';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
 import { probeRuntimeCreateBroker } from './probe-runtime-create-broker';
 import { probeRuntimeCreateBrokerProxy } from './probe-runtime-create-broker.proxy';

@@ -1,4 +1,4 @@
-import type { StubIndexStub } from '@assayer/shared/contracts';
+import type { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
 import { readJsonFileIfExistsProxy } from '#gateway/node/fs__promises/read-json-file-if-exists/read-json-file-if-exists.proxy';
 
 export const cacheLoadStubIndexBrokerProxy = (): {

@@ -1,4 +1,4 @@
-import { runConsoleSaveBrokerProxy } from '@assayer/core/testing';
+import { runConsoleSaveBrokerProxy } from '@assayer/core/brokers/run/console-save/run-console-save-broker.proxy';
 
 export const RunReportLayerResponderProxy = (): {
   saveSucceeds: (params: { configDir: string; runId: string }) => void;

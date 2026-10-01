@@ -1,10 +1,8 @@
 import { drivenFunctionsTransformer } from './driven-functions-transformer';
-import {
-  EntrySignatureStub,
-  FileAnalysisStub,
-  FunctionAnalysisStub,
-  UndrivenEntryStub,
-} from '@assayer/shared/contracts';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
 
 // The real module-scope shape: nothing can call it, and it takes no params — which is why its derived
 // cases all arrange nothing.

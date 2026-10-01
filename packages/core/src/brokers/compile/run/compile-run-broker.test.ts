@@ -1,4 +1,5 @@
-import { AssayerConfigStub, AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { compileRunBroker } from './compile-run-broker';

@@ -1,5 +1,5 @@
 import { StubRepositoryWidgetProxy } from '../../../widgets/stub-repository/stub-repository-widget.proxy';
-import type { StubViewStub } from '@assayer/shared/contracts';
+import type { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 
 export const StubsPageResponderProxy = (): {
   setupView: (params: { view: ReturnType<typeof StubViewStub> }) => void;

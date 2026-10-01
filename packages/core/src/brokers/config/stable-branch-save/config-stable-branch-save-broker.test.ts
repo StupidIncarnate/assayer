@@ -1,4 +1,4 @@
-import { AssayerConfigStub } from '@assayer/shared/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
 
 import { configStableBranchSaveBroker } from './config-stable-branch-save-broker';
 import { configStableBranchSaveBrokerProxy } from './config-stable-branch-save-broker.proxy';

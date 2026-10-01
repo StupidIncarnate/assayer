@@ -1,4 +1,5 @@
-import { ExternalSignatureStub, ResolvedEdgeStub } from '@assayer/shared/contracts';
+import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
+import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
 
 import { resolvedEdgeContractTransformer } from './resolved-edge-contract-transformer';
 

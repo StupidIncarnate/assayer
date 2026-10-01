@@ -1,6 +1,6 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { SymbolNameStub } from '@assayer/shared/contracts';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { deriveBranchIdLayerTransformer } from './derive-branch-id-layer-transformer';
 import { deriveBranchIdLayerTransformerProxy } from './derive-branch-id-layer-transformer.proxy';

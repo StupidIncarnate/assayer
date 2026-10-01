@@ -1,5 +1,6 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { RunResultStub, fileCountContract } from '@assayer/shared/contracts';
+import { fileCountContract } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import type { FileCount } from '@assayer/shared/contracts';
 
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';

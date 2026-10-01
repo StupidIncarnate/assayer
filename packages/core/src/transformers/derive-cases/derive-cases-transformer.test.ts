@@ -1,4 +1,9 @@
-import { ParamDescriptorStub, BranchNodeStub, ConditionNodeStub, ExitNodeStub, TypeDescriptorStub, symbolNameContract } from '@assayer/shared/contracts';
+import { symbolNameContract } from '@assayer/shared/contracts';
+import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { deriveCasesTransformer } from './derive-cases-transformer';
 

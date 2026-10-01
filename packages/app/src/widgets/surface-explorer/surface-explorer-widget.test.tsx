@@ -2,7 +2,10 @@ import { waitFor } from '#gateway/npm/testing-library__react';
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { SurfaceExplorerWidget } from './surface-explorer-widget';
 import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
-import { CompiledTreeStub, CompiledFileViewStub, FileAnalysisStub, RunConsoleStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 
 const STUB_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 

@@ -1,4 +1,4 @@
-import { AssayerConfigStub } from '@assayer/shared/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
 import { filePathContract } from '@assayer/core/contracts';
 
 import { PrecheckRunResponder } from './precheck-run-responder';

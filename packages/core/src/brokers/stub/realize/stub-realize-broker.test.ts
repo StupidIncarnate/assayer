@@ -1,4 +1,4 @@
-import { StubOverlayStub } from '@assayer/shared/contracts';
+import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
 
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';

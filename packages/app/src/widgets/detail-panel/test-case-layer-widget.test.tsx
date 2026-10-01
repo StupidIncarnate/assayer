@@ -2,13 +2,11 @@ import { themedRenderMiddleware } from '../../middleware/themed-render/themed-re
 import { TestCaseLayerWidget } from './test-case-layer-widget';
 import { TestCaseLayerWidgetProxy } from './test-case-layer-widget.proxy';
 import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
-import {
-  CaseResultStub,
-  EntrySignatureStub,
-  FunctionAnalysisStub,
-  LineNumberStub,
-  RunResultStub,
-} from '@assayer/shared/contracts';
+import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 const DECIDE = FunctionAnalysisStub({
   entry: EntrySignatureStub({

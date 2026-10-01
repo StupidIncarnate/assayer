@@ -1,4 +1,6 @@
-import { ParamDescriptorStub, SymbolNameStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { appliedParamsTransformer } from './applied-params-transformer';
 

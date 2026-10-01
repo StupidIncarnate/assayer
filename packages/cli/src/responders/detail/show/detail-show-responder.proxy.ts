@@ -1,4 +1,4 @@
-import { runLoadBrokerProxy } from '@assayer/core/testing';
+import { runLoadBrokerProxy } from '@assayer/core/brokers/run/load/run-load-broker.proxy';
 import type { RunResult } from '@assayer/shared/contracts';
 
 export const DetailShowResponderProxy = (): {

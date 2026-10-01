@@ -1,4 +1,4 @@
-import { RunResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { runPathsBroker } from './run-paths-broker';
 import { runPathsBrokerProxy } from './run-paths-broker.proxy';

@@ -1,4 +1,5 @@
-import { ConditionLeafStub, ConditionNodeStub } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
 
 import { conditionLeavesTransformer } from './condition-leaves-transformer';
 

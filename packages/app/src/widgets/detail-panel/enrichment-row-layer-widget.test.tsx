@@ -1,7 +1,8 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
 import { EnrichmentRowLayerWidgetProxy } from './enrichment-row-layer-widget.proxy';
-import { FileAnalysisStub, LineNumberStub } from '@assayer/shared/contracts';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 
 describe('EnrichmentRowLayerWidget', () => {
   describe('row text', () => {

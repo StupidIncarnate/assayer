@@ -1,4 +1,5 @@
-import { SymbolNameStub, LineNumberStub } from '@assayer/shared/contracts';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
+import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 
 import { UndrivenCauseStub } from '../../contracts/undriven-cause/undriven-cause.stub';
 import { undrivenBranchTransformer } from './undriven-branch-transformer';

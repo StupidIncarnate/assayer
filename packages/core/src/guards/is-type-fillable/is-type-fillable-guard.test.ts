@@ -1,4 +1,5 @@
-import { arrangeValueContract, representativeValueContract, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { arrangeValueContract, representativeValueContract } from '@assayer/shared/contracts';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { isTypeFillableGuard } from './is-type-fillable-guard';
 

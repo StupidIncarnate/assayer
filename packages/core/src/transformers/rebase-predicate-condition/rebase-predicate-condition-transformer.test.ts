@@ -1,4 +1,7 @@
-import { ConditionLeafStub, CoverageIdStub, SymbolNameStub, conditionNodeContract } from '@assayer/shared/contracts';
+import { conditionNodeContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { rebasePredicateConditionTransformer } from './rebase-predicate-condition-transformer';
 

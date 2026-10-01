@@ -1,11 +1,9 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import {
-  HarnessIndexStub,
-  ResolvedIndexStub,
-  StubIndexStub,
-  StubOverlayStub,
-  namespaceNameContract,
-} from '@assayer/shared/contracts';
+import { namespaceNameContract } from '@assayer/shared/contracts';
+import { HarnessIndexStub } from '@assayer/shared/contracts/harness-index/harness-index.stub';
+import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
+import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
+import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
 import type { FileCount, NamespaceName } from '@assayer/shared/contracts';
 
 import { PropertyGuardStub } from '../../../contracts/property-guard/property-guard.stub';

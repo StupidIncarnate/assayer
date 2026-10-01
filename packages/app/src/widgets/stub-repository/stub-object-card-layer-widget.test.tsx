@@ -1,7 +1,7 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubObjectCardLayerWidget } from './stub-object-card-layer-widget';
 import { StubObjectCardLayerWidgetProxy } from './stub-object-card-layer-widget.proxy';
-import { ObjectStubStub } from '@assayer/shared/contracts';
+import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
 
 describe('StubObjectCardLayerWidget', () => {
   describe('object stub', () => {

@@ -1,6 +1,6 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { SymbolNameStub } from '@assayer/shared/contracts';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { desugarSwitchLayerTransformer } from './desugar-switch-layer-transformer';
 import { desugarSwitchLayerTransformerProxy } from './desugar-switch-layer-transformer.proxy';

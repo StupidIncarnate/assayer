@@ -1,6 +1,6 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { CoverageIdStub } from '@assayer/shared/contracts';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { readNullishLeafLayerTransformer } from './read-nullish-leaf-layer-transformer';

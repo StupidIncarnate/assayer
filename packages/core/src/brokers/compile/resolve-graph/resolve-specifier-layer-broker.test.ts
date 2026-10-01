@@ -1,4 +1,5 @@
-import { CompiledFileBlobStub, ModuleEdgeStub } from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { ModuleEdgeStub } from '@assayer/shared/contracts/module-edge/module-edge.stub';
 
 import { resolveSpecifierLayerBroker } from './resolve-specifier-layer-broker';
 import { resolveSpecifierLayerBrokerProxy } from './resolve-specifier-layer-broker.proxy';

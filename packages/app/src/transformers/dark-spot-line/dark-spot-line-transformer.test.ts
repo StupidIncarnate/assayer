@@ -1,5 +1,5 @@
 import { darkSpotLineTransformer } from './dark-spot-line-transformer';
-import { DarkSpotStub } from '@assayer/shared/contracts';
+import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
 
 describe('darkSpotLineTransformer', () => {
   describe('rendering a dark spot', () => {

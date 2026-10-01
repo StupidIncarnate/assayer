@@ -1,4 +1,5 @@
-import { PredicateStub, RepresentativeValueStub } from '@assayer/shared/contracts';
+import { PredicateStub } from '@assayer/shared/contracts/predicate/predicate.stub';
+import { RepresentativeValueStub } from '@assayer/shared/contracts/representative-value/representative-value.stub';
 
 import { predicateTransformer } from './predicate-transformer';
 

@@ -2,7 +2,8 @@ import { runSubscribeOutputBrokerProxy } from '../../brokers/run/subscribe-outpu
 import { runExecuteBrokerProxy } from '../../brokers/run/execute/run-execute-broker.proxy';
 import { runFetchConsoleBrokerProxy } from '../../brokers/run/fetch-console/run-fetch-console-broker.proxy';
 import { runFetchSavedBrokerProxy } from '../../brokers/run/fetch-saved/run-fetch-saved-broker.proxy';
-import type { RunConsoleStub, RunResultStub } from '@assayer/shared/contracts';
+import type { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
+import type { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 export const useFileRunBindingProxy = (): {
   setupSavedRun: (params: { run: ReturnType<typeof RunResultStub> }) => void;

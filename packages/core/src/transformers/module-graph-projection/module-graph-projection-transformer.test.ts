@@ -1,4 +1,4 @@
-import { ModuleEdgeStub } from '@assayer/shared/contracts';
+import { ModuleEdgeStub } from '@assayer/shared/contracts/module-edge/module-edge.stub';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';

@@ -1,5 +1,7 @@
-import { AssayerConfigStub, AssayerCacheManifestStub, ContentHashStub } from '@assayer/shared/contracts';
-import { FilePathStub } from '@assayer/core/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
+import { FilePathStub } from '@assayer/core/contracts/file-path/file-path.stub';
 
 import { CompileRunLayerResponder } from './compile-run-layer-responder';
 import { CompileRunLayerResponderProxy } from './compile-run-layer-responder.proxy';

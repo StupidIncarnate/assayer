@@ -1,4 +1,6 @@
-import { statusGetBrokerProxy, configFindBrokerProxy, configLoadBrokerProxy } from '@assayer/core/testing';
+import { statusGetBrokerProxy } from '@assayer/core/brokers/status/get/status-get-broker.proxy';
+import { configFindBrokerProxy } from '@assayer/core/brokers/config/find/config-find-broker.proxy';
+import { configLoadBrokerProxy } from '@assayer/core/brokers/config/load/config-load-broker.proxy';
 
 export const statusResolveBrokerProxy = (): {
   configRunMode: (params: { repoPath: string; runMode: 'thorough' | 'intelligent' }) => void;

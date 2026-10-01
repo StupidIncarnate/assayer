@@ -25,7 +25,7 @@ import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, 
 import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';

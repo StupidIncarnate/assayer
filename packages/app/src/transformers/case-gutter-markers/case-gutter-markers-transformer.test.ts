@@ -1,9 +1,7 @@
-import {
-  FunctionAnalysisStub,
-  BranchNodeStub,
-  ExitNodeStub,
-  DerivedTestCaseStub,
-} from '@assayer/shared/contracts';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
+import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case/derived-test-case.stub';
 
 import { caseGutterMarkersTransformer } from './case-gutter-markers-transformer';
 

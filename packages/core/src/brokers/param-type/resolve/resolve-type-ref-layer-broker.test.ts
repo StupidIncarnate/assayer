@@ -1,4 +1,4 @@
-import { TypeDescriptorStub } from '@assayer/shared/contracts';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 

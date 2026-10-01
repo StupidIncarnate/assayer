@@ -1,4 +1,4 @@
-import type { CompiledFileBlobStub } from '@assayer/shared/contracts';
+import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { readJsonFileProxy } from '#gateway/node/fs__promises/read-json-file/read-json-file.proxy';
 
 export const cacheLoadBlobBrokerProxy = (): {

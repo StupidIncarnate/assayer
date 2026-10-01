@@ -1,4 +1,6 @@
-import { GuardStepStub, ParamDescriptorStub, SymbolNameStub } from '@assayer/shared/contracts';
+import { GuardStepStub } from '@assayer/shared/contracts/guard-step/guard-step.stub';
+import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
+import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { walkContextTransformer } from './walk-context-transformer';

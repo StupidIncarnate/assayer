@@ -1,4 +1,6 @@
-import { BranchNodeStub, EntrySignatureStub, ExitNodeStub } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { ExtractedFunctionStub } from '../../contracts/extracted-function/extracted-function.stub';

@@ -1,4 +1,5 @@
-import { symbolNameContract, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { symbolNameContract } from '@assayer/shared/contracts';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { resolvePropertyTypeTransformer } from './resolve-property-type-transformer';
 

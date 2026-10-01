@@ -1,4 +1,4 @@
-import { StubOverlayStub } from '@assayer/shared/contracts';
+import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
 
 import { PropertyGuardStub } from '../../contracts/property-guard/property-guard.stub';
 

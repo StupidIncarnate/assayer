@@ -36,14 +36,12 @@ import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-res
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
 import { CliFileTextStub } from '../../src/contracts/cli-file-text/cli-file-text.stub';
 import type { CliFileText } from '../../src/contracts/cli-file-text/cli-file-text-contract';
-import {
-  BranchNameStub,
-  RelPathStub,
-  ContentHashStub,
-} from '@assayer/shared/contracts';
-import type { BranchName, RelPath, ContentHash ,
-  AssayerCacheManifestStub,
-  CompiledFileBlobStub} from '@assayer/shared/contracts';
+import { BranchNameStub } from '@assayer/shared/contracts/branch-name/branch-name.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
+import type { BranchName, RelPath, ContentHash } from '@assayer/shared/contracts';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');

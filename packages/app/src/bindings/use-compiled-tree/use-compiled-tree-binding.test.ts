@@ -1,6 +1,6 @@
 import { useCompiledTreeBinding } from './use-compiled-tree-binding';
 import { useCompiledTreeBindingProxy } from './use-compiled-tree-binding.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import { renderHook, waitFor } from '#gateway/npm/testing-library__react';
 
 describe('useCompiledTreeBinding', () => {

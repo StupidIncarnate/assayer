@@ -1,4 +1,4 @@
-import type { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import { readJsonFileProxy } from '#gateway/node/fs__promises/read-json-file/read-json-file.proxy';
 
 export const cacheLoadManifestBrokerProxy = (): {

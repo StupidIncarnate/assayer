@@ -1,4 +1,5 @@
-import { CoverageIdStub, DerivedTestCaseStub } from '@assayer/shared/contracts';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
+import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case/derived-test-case.stub';
 
 import { ProbeRuntimeStub } from '../../../contracts/probe-runtime/probe-runtime.stub';
 import { caseInterpretBroker } from './case-interpret-broker';

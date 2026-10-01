@@ -1,4 +1,8 @@
-import { CompiledTreeStub, CompiledFileViewStub, RunConsoleStub, RunResultStub, StubViewStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 
 import { desktopBootBroker } from './desktop-boot-broker';
 import { desktopBootBrokerProxy } from './desktop-boot-broker.proxy';

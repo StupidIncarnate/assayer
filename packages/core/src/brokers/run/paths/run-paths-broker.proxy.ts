@@ -1,6 +1,6 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import type { RunResultStub} from '@assayer/shared/contracts';
-import { ContentHashStub } from '@assayer/shared/contracts';
+import type { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
 
 import { analyzerHashBroker } from '../../analyzer/hash/analyzer-hash-broker';
 import { analyzerHashBrokerProxy } from '../../analyzer/hash/analyzer-hash-broker.proxy';

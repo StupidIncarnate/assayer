@@ -1,4 +1,4 @@
-import { StubIndexStub } from '@assayer/shared/contracts';
+import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
 
 import { stubIndexWriteBroker } from './stub-index-write-broker';
 import { stubIndexWriteBrokerProxy } from './stub-index-write-broker.proxy';

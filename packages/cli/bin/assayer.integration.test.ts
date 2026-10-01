@@ -4,7 +4,8 @@ import { CliRunResultStub } from '../src/contracts/cli-run-result/cli-run-result
 import { CliFileTextStub } from '../src/contracts/cli-file-text/cli-file-text.stub';
 import { cliUsageStatics } from '../src/statics/cli-usage/cli-usage-statics';
 import { docsOverviewStatics } from '../src/statics/docs-overview/docs-overview-statics';
-import { BranchNameStub, RelPathStub } from '@assayer/shared/contracts';
+import { BranchNameStub } from '@assayer/shared/contracts/branch-name/branch-name.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 const DOCS_OVERVIEW_TOPIC_BODY =
   'Assayer statically identifies what should be tested, generates and runs the tests itself, and fails like a build error when something testable is uncovered or broken.';

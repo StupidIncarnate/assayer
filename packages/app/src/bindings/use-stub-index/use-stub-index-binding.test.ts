@@ -1,6 +1,6 @@
 import { useStubIndexBinding } from './use-stub-index-binding';
 import { useStubIndexBindingProxy } from './use-stub-index-binding.proxy';
-import { StubViewStub } from '@assayer/shared/contracts';
+import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 import { renderHook, waitFor } from '#gateway/npm/testing-library__react';
 
 describe('useStubIndexBinding', () => {

@@ -1,4 +1,4 @@
-import { BranchNameStub } from '@assayer/shared/contracts';
+import { BranchNameStub } from '@assayer/shared/contracts/branch-name/branch-name.stub';
 import { stableBranchPickBroker } from './stable-branch-pick-broker';
 import { stableBranchPickBrokerProxy } from './stable-branch-pick-broker.proxy';
 

@@ -1,4 +1,4 @@
-import { RunResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { DetailShowResponder } from './detail-show-responder';
 import { DetailShowResponderProxy } from './detail-show-responder.proxy';

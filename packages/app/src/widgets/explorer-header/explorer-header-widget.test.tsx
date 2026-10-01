@@ -1,7 +1,7 @@
 import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { ExplorerHeaderWidget } from './explorer-header-widget';
 import { ExplorerHeaderWidgetProxy } from './explorer-header-widget.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 
 describe('ExplorerHeaderWidget', () => {
   describe('with a compiled-surface summary', () => {

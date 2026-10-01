@@ -1,4 +1,5 @@
-import { RunConsoleStub, RelPathStub } from '@assayer/shared/contracts';
+import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { runFetchConsoleBroker } from './run-fetch-console-broker';
 import { runFetchConsoleBrokerProxy } from './run-fetch-console-broker.proxy';

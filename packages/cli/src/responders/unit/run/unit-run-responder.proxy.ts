@@ -1,5 +1,5 @@
-import { runPathsBrokerProxy } from '@assayer/core/testing';
-import { RunResultStub } from '@assayer/shared/contracts';
+import { runPathsBrokerProxy } from '@assayer/core/brokers/run/paths/run-paths-broker.proxy';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { analyzerRootsResolveBrokerProxy } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker.proxy';
 import { RunReportLayerResponderProxy } from './run-report-layer-responder.proxy';

@@ -1,11 +1,9 @@
-import {
-  AssayerCacheManifestStub,
-  CompiledFileBlobStub,
-  FileAnalysisStub,
-  RelPathStub,
-  ResolvedEdgeStub,
-  ResolvedIndexStub,
-} from '@assayer/shared/contracts';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
+import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
+import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { compiledFileResolveBroker } from './compiled-file-resolve-broker';
 import { compiledFileResolveBrokerProxy } from './compiled-file-resolve-broker.proxy';

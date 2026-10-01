@@ -1,10 +1,8 @@
-import {
-  CompiledFileBlobStub,
-  ContentHashStub,
-  FileAnalysisStub,
-  RelPathStub,
-  ResolvedIndexStub,
-} from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
+import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { compileStubGraphBroker } from './compile-stub-graph-broker';
 import { compileStubGraphBrokerProxy } from './compile-stub-graph-broker.proxy';

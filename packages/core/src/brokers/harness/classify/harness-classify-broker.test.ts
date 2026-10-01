@@ -1,4 +1,4 @@
-import { RelPathStub } from '@assayer/shared/contracts';
+import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { FileContentsStub } from '../../../contracts/file-contents/file-contents.stub';
 import { harnessClassifyBroker } from './harness-classify-broker';

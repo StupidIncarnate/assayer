@@ -1,4 +1,5 @@
-import { ConditionLeafStub, symbolNameContract } from '@assayer/shared/contracts';
+import { symbolNameContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { demandsForPropertiesTransformer } from './demands-for-properties-transformer';
 
