@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { ExplorerPageResponder } from './explorer-page-responder';
 import { ExplorerPageResponderProxy } from './explorer-page-responder.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
@@ -10,9 +11,7 @@ describe('ExplorerPageResponder', () => {
       const proxy = ExplorerPageResponderProxy();
       proxy.setupTree({ tree: CompiledTreeStub() });
 
-      const { findByTestId } = themedRenderMiddleware({
-        ui: createElement(ExplorerPageResponder),
-      });
+      const { findByTestId } = render(createElement(ExplorerPageResponder), { wrapper: MantineProvider });
       const panel = await findByTestId('SURFACE_EXPLORER');
 
       expect(panel).toBeInTheDocument();

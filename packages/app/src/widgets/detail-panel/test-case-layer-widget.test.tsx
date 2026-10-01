@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { TestCaseLayerWidget } from './test-case-layer-widget';
 import { TestCaseLayerWidgetProxy } from './test-case-layer-widget.proxy';
 import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
@@ -36,8 +37,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {salient case, no run} => the row reads not run, names the driver and the exit line, and carries the badge', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId, queryByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -50,8 +50,7 @@ describe('TestCaseLayerWidget', () => {
               />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run decide(1) → reaches L4');
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('not-run');
@@ -62,8 +61,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {module entry} => the row names the entry label with no call parens', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -76,8 +74,7 @@ describe('TestCaseLayerWidget', () => {
               />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message → reaches L4');
     });
@@ -87,8 +84,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {hoveredLine 4, the exit line} => data-match is true', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -102,8 +98,7 @@ describe('TestCaseLayerWidget', () => {
               />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('true');
     });
@@ -111,8 +106,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {hoveredLine 9, another line} => data-match is false', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -126,8 +120,7 @@ describe('TestCaseLayerWidget', () => {
               />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('false');
     });
@@ -136,8 +129,7 @@ describe('TestCaseLayerWidget', () => {
       TestCaseLayerWidgetProxy();
       const { runMode } = StatusViewStub({ runMode: 'intelligent' });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId, queryByTestId } = render((
           <>
             {BREADTH.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -151,8 +143,7 @@ describe('TestCaseLayerWidget', () => {
               />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-running')).toBe('false');
       expect(queryByTestId('INTELLIGENT_BADGE')).toBe(null);
@@ -173,8 +164,7 @@ describe('TestCaseLayerWidget', () => {
         ],
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -188,8 +178,7 @@ describe('TestCaseLayerWidget', () => {
               />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('ERROR decide(1) → predicted L4');
       expect(getByTestId('CASE_OUTCOME').textContent).toBe('threw before reaching an exit: items.map is not a function');
@@ -206,8 +195,7 @@ describe('TestCaseLayerWidget', () => {
         ],
       });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId, queryByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -221,8 +209,7 @@ describe('TestCaseLayerWidget', () => {
               />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('passed');
       expect(queryByTestId('CASE_OUTCOME')).toBe(null);

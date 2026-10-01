@@ -1,5 +1,5 @@
-import { waitFor } from '#gateway/npm/testing-library__react';
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render, waitFor } from '#gateway/npm/testing-library__react';
 import { SurfaceExplorerWidget } from './surface-explorer-widget';
 import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
@@ -24,7 +24,7 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('SURFACE_EMPTY')).toBeInTheDocument();
@@ -62,7 +62,7 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       expect(getByTestId('SURFACE_LOADING').textContent).toBe('Reading the compiled surface…');
       expect(queryByTestId('SURFACE_EMPTY')).toBe(null);
@@ -79,7 +79,7 @@ describe('SurfaceExplorerWidget', () => {
           'Cannot resolve current namespace: expected exactly one working-tree entry without a commit among [branch-a, branch-b]',
       });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
@@ -98,7 +98,7 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.failTree({ message: 'Assayer preload bridge unavailable: window.assayerBridge was not exposed.' });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
@@ -149,9 +149,7 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId, getByRole } = themedRenderMiddleware({
-        ui: <SurfaceExplorerWidget />,
-      });
+      const { getByTestId, getByRole } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
@@ -175,7 +173,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failFile();
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -200,7 +198,7 @@ describe('SurfaceExplorerWidget', () => {
         tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
       });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -221,7 +219,7 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -248,7 +246,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'opening a file must never run it' });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -272,7 +270,7 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -304,7 +302,7 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId, getByRole } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, getByRole } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -333,7 +331,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { getByTestId, queryAllByText } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryAllByText } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -366,7 +364,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -393,7 +391,7 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('FILE_TREE')).toBeInTheDocument();

@@ -1,3 +1,4 @@
+import { ErrorStub } from '#gateway/browser/Error/error.stub';
 import { screen } from '#gateway/npm/testing-library__react';
 import userEvent from '#gateway/npm/testing-library__user-event';
 import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
@@ -57,7 +58,7 @@ export const SurfaceExplorerWidgetProxy = (): {
     // Takes the message a real resolver would raise, so the test can assert the widget prints THAT
     // sentence rather than one the widget composed.
     failTree: ({ message }: { message: string }): void => {
-      treeProxy.rejects({ error: new Error(message) });
+      treeProxy.rejects({ error: ErrorStub({ message }) });
     },
     setupFile: ({ relPath, fileView }: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }): void => {
       fileProxy.setupFile({ relPath, fileView });

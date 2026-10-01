@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { StubObjectCardLayerWidget } from './stub-object-card-layer-widget';
 import { StubObjectCardLayerWidgetProxy } from './stub-object-card-layer-widget.proxy';
 import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
@@ -22,9 +23,7 @@ describe('StubObjectCardLayerWidget', () => {
         readers: ['src/reader.ts'],
       });
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
-        ui: <StubObjectCardLayerWidget stub={stub} />,
-      });
+      const { getByTestId, getAllByTestId } = render(<StubObjectCardLayerWidget stub={stub} />, { wrapper: MantineProvider });
 
       expect(getByTestId('STUB_CARD').getAttribute('data-stubkey')).toBe('src/types.ts#Config');
       expect(getByTestId('STUB_KEY').textContent).toBe('src/types.ts#Config');

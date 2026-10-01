@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { StubEnvCardLayerWidget } from './stub-env-card-layer-widget';
 import { StubEnvCardLayerWidgetProxy } from './stub-env-card-layer-widget.proxy';
 import { EnvStubStub } from '@assayer/shared/contracts/env-stub/env-stub.stub';
@@ -15,9 +16,7 @@ describe('StubEnvCardLayerWidget', () => {
         readers: ['src/reader.ts'],
       });
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
-        ui: <StubEnvCardLayerWidget stub={stub} />,
-      });
+      const { getByTestId, getAllByTestId } = render(<StubEnvCardLayerWidget stub={stub} />, { wrapper: MantineProvider });
 
       expect(getByTestId('STUB_CARD').getAttribute('data-stubkey')).toBe('process.env#CODE');
       expect(getByTestId('STUB_GUESSED').textContent).toBe('guessed');
@@ -32,9 +31,7 @@ describe('StubEnvCardLayerWidget', () => {
       StubEnvCardLayerWidgetProxy();
       const stub = EnvStubStub({ key: 'process.env#MODE', property: 'MODE', values: ['prod'], guessed: false, readers: [] });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({
-        ui: <StubEnvCardLayerWidget stub={stub} />,
-      });
+      const { getByTestId, queryByTestId } = render(<StubEnvCardLayerWidget stub={stub} />, { wrapper: MantineProvider });
 
       expect(getByTestId('STUB_CORRECTED').textContent).toBe('corrected');
       expect(queryByTestId('STUB_GUESSED')).toBe(null);

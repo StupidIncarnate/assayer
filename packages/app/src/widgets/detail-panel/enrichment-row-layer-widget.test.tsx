@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
 import { EnrichmentRowLayerWidgetProxy } from './enrichment-row-layer-widget.proxy';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
@@ -9,15 +10,13 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {enrichment.map((row) => (
               <EnrichmentRowLayerWidget key={row.symbol} row={row} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L2  name: string');
     });
@@ -26,15 +25,13 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'x', typeText: 'number', range: [0, 1] }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {enrichment.map((row) => (
               <EnrichmentRowLayerWidget key={row.symbol} row={row} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L2  x: number  → { 0, 1 }');
     });
@@ -45,15 +42,13 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {enrichment.map((row) => (
               <EnrichmentRowLayerWidget key={row.symbol} row={row} hoveredLine={2} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('ENRICHMENT_ROW').getAttribute('data-match')).toBe('true');
     });
@@ -62,15 +57,13 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {enrichment.map((row) => (
               <EnrichmentRowLayerWidget key={row.symbol} row={row} hoveredLine={9} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('ENRICHMENT_ROW').getAttribute('data-match')).toBe('false');
     });
@@ -79,15 +72,13 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <>
             {enrichment.map((row) => (
               <EnrichmentRowLayerWidget key={row.symbol} row={row} hoveredLine={null} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('ENRICHMENT_ROW').getAttribute('data-match')).toBe('false');
     });
