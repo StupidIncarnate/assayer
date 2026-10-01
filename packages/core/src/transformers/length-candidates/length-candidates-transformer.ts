@@ -26,8 +26,6 @@
  * lengthCandidatesTransformer({ domain: { lengthMin: 2, lengthMax: 5, … } });
  * // Returns [2] — the shortest length satisfying both bounds
  */
-import { stringLengthContract } from '../../contracts/string-length/string-length-contract';
-import type { StringLength } from '../../contracts/string-length/string-length-contract';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 
 const FLOOR = 0;
@@ -37,7 +35,7 @@ export const lengthCandidatesTransformer = ({
   domain,
 }: {
   domain: ValueDomain;
-}): StringLength[] | undefined => {
+}): number[] | undefined => {
   if (domain.lengthMin === undefined && domain.lengthMax === undefined && domain.lengthExcluded.length === 0) {
     return undefined;
   }
@@ -62,5 +60,5 @@ export const lengthCandidatesTransformer = ({
 
   return Array.from({ length: Math.max(FLOOR, to - from + ONE_STEP) }, (_, step) => from + step)
     .filter((candidate) => !excluded.includes(candidate))
-    .map((candidate) => stringLengthContract.parse(candidate));
+    .map((candidate) => candidate);
 };
