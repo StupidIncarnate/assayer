@@ -18,12 +18,14 @@ export const PrecheckRunResponderProxy = (): {
   const stableProxy = StableBranchLayerResponderProxy();
   const compileProxy = CompileRunLayerResponderProxy();
   // The analyzer roots resolve from the real module location, ts-morph 26.0.0 is installed at the
-  // monorepo root, and the walk of each root finds no source files. So the analyzer fingerprint is
-  // the hash of the ts-morph version line and three empty roots.
+  // monorepo root, every file the wrapped runner loads by path reads `runtime`, and the walk of each
+  // root finds no source files. So the analyzer fingerprint is the hash of the ts-morph version line,
+  // the run-time files and three empty roots.
   const hashProxy = analyzerHashBrokerProxy();
   const rootsProxy = analyzerRootsResolveBrokerProxy();
   rootsProxy.monorepoAboveThisModule();
   hashProxy.tsMorphAboveThisModule({ version: '26.0.0' });
+  hashProxy.coreRuntimeAboveThisModule({ content: 'runtime' });
   const monorepoRoot = join(__dirname, '..', '..', '..', '..', '..', '..');
   hashProxy.dirHolds({ path: join(monorepoRoot, 'packages', 'core', 'src'), entries: [] });
   hashProxy.dirHolds({ path: join(monorepoRoot, 'packages', '@gateway', 'npm', 'src'), entries: [] });

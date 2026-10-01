@@ -1,8 +1,10 @@
 /**
  * PURPOSE: Resolves the on-disk code roots of the packages whose code decides what Assayer's analysis
  *   produces: @assayer/core, @assayer/npm (the gateway that loads ts-morph and wraps TypeScript's
- *   module resolution) and @assayer/shared. The cache fingerprint (analyzerHashBroker) hashes exactly
- *   these roots, so a cached blob is reused only by the code that wrote it.
+ *   module resolution) and @assayer/shared. The cache fingerprint (analyzerHashBroker) hashes these
+ *   roots, so a cached blob is reused only by the code that wrote it. The files at core's package root
+ *   that the wrapped runner loads by path sit outside every root; analyzerHashBroker finds and hashes
+ *   those itself, from core's own run-time statics.
  *
  *   Each package is found the way Node finds it for this CLI: the nearest
  *   `node_modules/<name>/package.json` in this module's directory or any directory above it, then
