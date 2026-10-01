@@ -105,7 +105,6 @@ export * from './resolved-edge/resolved-edge-contract';
 
 export * from './resolved-index/resolved-index-contract';
 
-export * from './stub-key/stub-key-contract';
 
 export * from './property-demand/property-demand-contract';
 
@@ -181,3 +180,4 @@ export * from './run-result/run-result-contract';
 
 export * from './run-console/run-console-contract';
 export * from './coverage/coverage-contract';
+export * from './stub-entry/stub-entry-contract';

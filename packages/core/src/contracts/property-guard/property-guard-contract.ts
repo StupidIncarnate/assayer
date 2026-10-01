@@ -18,17 +18,10 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import {
-  lineNumberContract,
-  predicateContract,
-  relPathContract,
-  stubKeyContract,
-  symbolNameContract,
-  typeDescriptorContract,
-} from '@assayer/shared/contracts';
+import { lineNumberContract, predicateContract, relPathContract, symbolNameContract, typeDescriptorContract, stubEntryContract } from '@assayer/shared/contracts';
 
 export const propertyGuardContract = z.object({
-  key: stubKeyContract,
+  key: stubEntryContract.shape.key,
   property: symbolNameContract,
   reader: relPathContract,
   line: lineNumberContract,

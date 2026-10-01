@@ -20,11 +20,11 @@ import { z } from '#gateway/npm/zod';
 
 import { propertyDemandContract } from '../property-demand/property-demand-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
-import { stubKeyContract } from '../stub-key/stub-key-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
+import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
 export const objectStubContract = z.object({
-  key: stubKeyContract,
+  key: stubEntryContract.shape.key,
   definitionRelPath: relPathContract,
   typeName: symbolNameContract,
   properties: z.array(propertyDemandContract),

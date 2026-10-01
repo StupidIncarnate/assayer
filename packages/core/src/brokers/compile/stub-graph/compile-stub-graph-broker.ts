@@ -28,14 +28,7 @@
  *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files: [{ relPath, contentHash }] });
  * // Writes '/repo/.assayer/cache/stubs/feature-x.json' and returns { index: StubIndex, guards: PropertyGuard[] }
  */
-import {
-  compiledFileBlobContract,
-  envStubContract,
-  objectStubContract,
-  relPathContract,
-  stubIndexContract,
-  stubKeyContract,
-} from '@assayer/shared/contracts';
+import { compiledFileBlobContract, envStubContract, objectStubContract, relPathContract, stubIndexContract, stubEntryContract } from '@assayer/shared/contracts';
 import type { ContentHash, RelPath, ResolvedIndex, StubIndex } from '@assayer/shared/contracts';
 
 import type { PropertyGuard } from '../../../contracts/property-guard/property-guard-contract';
@@ -76,7 +69,7 @@ export const compileStubGraphBroker = async ({
         .map((reader) => relPathContract.parse(reader));
 
       return objectStubContract.parse({
-        key: stubKeyContract.parse(`${String(group.definitionRelPath)}#${String(group.typeName)}`),
+        key: stubEntryContract.shape.key.parse(`${String(group.definitionRelPath)}#${String(group.typeName)}`),
         definitionRelPath: group.definitionRelPath,
         typeName: group.typeName,
         properties,
@@ -88,7 +81,7 @@ export const compileStubGraphBroker = async ({
   const envStubs = gatherEnvReadsTransformer({ blobs })
     .map((group) =>
       envStubContract.parse({
-        key: stubKeyContract.parse(`process.env#${String(group.property)}`),
+        key: stubEntryContract.shape.key.parse(`process.env#${String(group.property)}`),
         property: group.property,
         values: envGuessedValuesTransformer({ literals: group.literals }),
         guessed: true,
