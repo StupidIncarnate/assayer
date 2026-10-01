@@ -1,79 +1,44 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { fileCountContract, ContentHashStub } from '@assayer/shared/contracts';
-import type { FileCount , AssayerConfigStub} from '@assayer/shared/contracts';
-import type { FilePath } from '@assayer/core/contracts';
-import { analyzerHashBroker } from '@assayer/core/brokers';
 import { analyzerHashBrokerProxy, compileResolveRootBrokerProxy } from '@assayer/core/testing';
 
-import { ConfigResolveLayerResponder } from './config-resolve-layer-responder';
 import { ConfigResolveLayerResponderProxy } from './config-resolve-layer-responder.proxy';
-import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
-import { CompileRunLayerResponder } from './compile-run-layer-responder';
 import { CompileRunLayerResponderProxy } from './compile-run-layer-responder.proxy';
 import { analyzerRootsResolveBrokerProxy } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker.proxy';
-import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
-
-type AssayerConfig = ReturnType<typeof AssayerConfigStub>;
 
 export const PrecheckRunResponderProxy = (): {
-  resolvesConfig: (params: { config: AssayerConfig; configDir: FilePath; configPath: FilePath }) => void;
-  throwsConfigError: (params: { message: string }) => void;
-  stableReturns: (params: { config: AssayerConfig }) => void;
-  compileSucceeds: () => void;
-  stableCallCount: () => FileCount;
-  compileCallCount: () => FileCount;
-  // The options object every compile-run call received, in call order. The test reading this asserts
-  // WHICH arguments compile-run got, so addressing the read by one of those arguments would ask the
-  // question the test exists to answer. It reads the whole list instead, and asserts it complete.
-  // That is stronger than reading the last call: a second compile-run call nobody expected fails it.
-  getCompileRunArgs: () => unknown[];
+  configAt: (params: { configDir: string; content: string }) => void;
+  notGitRepo: () => void;
+  compileSucceeds: (params: { configDir: string; root: string }) => void;
+  getWrittenManifest: (params: { configDir: string }) => unknown;
+  wasManifestWritten: (params: { configDir: string }) => boolean;
 } => {
-  // Bare-called to satisfy enforce-proxy-child-creation. analyzerHashBroker is a cross-package
-  // core broker the responder calls directly, so (like the layer responders below) we registerMock
-  // it directly to give it a deterministic hash — the analyzerRootsResolveBroker it consumes is a
-  // pure __dirname path computation with no I/O, so it is left to run for real.
+  const configProxy = ConfigResolveLayerResponderProxy();
+  const stableProxy = StableBranchLayerResponderProxy();
+  const compileProxy = CompileRunLayerResponderProxy();
+  // The analyzer roots resolve from the real module location, and the walk of each root finds no
+  // source files, so the analyzer fingerprint is the hash of two empty roots.
   analyzerHashBrokerProxy();
-  analyzerRootsResolveBrokerProxy();
-  // Left to run for real: resolving a repoRoot against its config dir is pure path arithmetic with
-  // no I/O, and mocking it would hide the very configDir-vs-root distinction the tests assert.
+  const rootsProxy = analyzerRootsResolveBrokerProxy();
+  rootsProxy.rootAboveThisModule();
   compileResolveRootBrokerProxy();
 
-  // The three layer-responder proxies below are also bare-called only to satisfy
-  // enforce-proxy-child-creation: they wire registerMock onto the CORE BROKERS each layer
-  // responder calls internally, but since we registerMock the layer responders themselves
-  // directly below (replacing their entire implementation), those real bodies never run in
-  // this proxy's tests — the broker-level mocks they set up are inert.
-  ConfigResolveLayerResponderProxy();
-  StableBranchLayerResponderProxy();
-  CompileRunLayerResponderProxy();
-
-  const analyzerHashHandle = registerMock({ fn: analyzerHashBroker });
-  const configResolveHandle = registerMock({ fn: ConfigResolveLayerResponder });
-  const stableBranchHandle = registerMock({ fn: StableBranchLayerResponder });
-  const compileRunHandle = registerMock({ fn: CompileRunLayerResponder });
-
-  analyzerHashHandle.calledWith([]).resolves(ContentHashStub());
-  stableBranchHandle
-    .calledWith([])
-    .implement(async ({ config }: { config: AssayerConfig }) => Promise.resolve(config));
-  compileRunHandle.calledWith([]).resolves(undefined);
-
   return {
-    resolvesConfig: ({ config, configDir, configPath }: { config: AssayerConfig; configDir: FilePath; configPath: FilePath }): void => {
-      configResolveHandle.onceFor([]).resolves({ config, configDir, configPath });
+    configAt: ({ configDir, content }: { configDir: string; content: string }): void => {
+      configProxy.configLivesIn({ configDir, content });
     },
-    throwsConfigError: ({ message }: { message: string }): void => {
-      configResolveHandle.onceFor([]).rejects(new CliExactOutputError({ message }));
+    // Outside a git working tree the stable-branch layer returns the config unchanged and saves
+    // nothing, so the compile has no stable namespace to build.
+    notGitRepo: (): void => {
+      stableProxy.notGitRepo();
     },
-    stableReturns: ({ config }: { config: AssayerConfig }): void => {
-      stableBranchHandle.onceFor([]).resolves(config);
+    // No manifest is cached yet, and the source root holds no files.
+    compileSucceeds: ({ configDir, root }: { configDir: string; root: string }): void => {
+      compileProxy.manifestMissing({ configDir });
+      compileProxy.compileSucceeds({ configDir, root });
     },
-    compileSucceeds: (): void => {
-      compileRunHandle.onceFor([]).resolves(undefined);
-    },
-    stableCallCount: (): FileCount => fileCountContract.parse(stableBranchHandle.callsMatching([]).length),
-    compileCallCount: (): FileCount => fileCountContract.parse(compileRunHandle.callsMatching([]).length),
-    getCompileRunArgs: (): unknown[] => compileRunHandle.callsMatching([]).map((call) => call[0]),
+    getWrittenManifest: ({ configDir }: { configDir: string }): unknown =>
+      compileProxy.getWrittenManifest({ configDir }),
+    wasManifestWritten: ({ configDir }: { configDir: string }): boolean =>
+      compileProxy.wasManifestWritten({ configDir }),
   };
 };
