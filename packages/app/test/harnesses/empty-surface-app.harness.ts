@@ -12,11 +12,11 @@
  * const window = await emptyApp.launch();
  * // window.getByTestId('SURFACE_EMPTY') renders 'No compiled surface — run assayer'
  */
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { join } from '#gateway/node/path';
+import { tmpdir } from '#gateway/node/os';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { _electron } from '@playwright/test';
-import type { ElectronApplication, Page } from '@playwright/test';
+import { _electron } from '#gateway/npm/playwright__test';
+import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
 import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
 
 const desktopMainEntry = join(__dirname, '..', '..', '..', 'desktop', 'dist', 'bin', 'desktop-main.js');

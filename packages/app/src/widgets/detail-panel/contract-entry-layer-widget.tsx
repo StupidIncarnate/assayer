@@ -8,8 +8,8 @@
  * <ContractEntryLayerWidget edge={edge} />
  * // Renders CONTRACT_SYMBOL, CONTRACT_SOURCE, CONTRACT_INPUT lines and an optional CONTRACT_OUTPUT
  */
-import type { ReactElement } from 'react';
-import { Box, Stack, Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Stack, Text } from '#gateway/npm/mantine__core';
 import type { ResolvedEdge } from '@assayer/shared/contracts';
 
 import { resolvedEdgeContractTransformer } from '../../transformers/resolved-edge-contract/resolved-edge-contract-transformer';

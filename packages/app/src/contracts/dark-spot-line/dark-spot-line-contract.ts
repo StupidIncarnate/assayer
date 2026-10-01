@@ -11,7 +11,7 @@
  * darkSpotLineContract.parse('DARK ForOfStatement at L4-L6 in sumAll — Assayer has no handler for it, so nothing inside it is covered');
  * // Returns a branded DarkSpotLine
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const darkSpotLineContract = z.string().min(1).brand<'DarkSpotLine'>();
 

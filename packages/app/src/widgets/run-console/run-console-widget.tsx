@@ -19,8 +19,8 @@
  * <RunConsoleWidget output={output} running={running} failed={runError !== null} onHide={hide} />
  * // Renders the CLI's report; the caller decides when the panel is mounted
  */
-import type { ReactElement } from 'react';
-import { Box, Group, Text, CloseButton, ScrollArea } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Group, Text, CloseButton, ScrollArea } from '#gateway/npm/mantine__core';
 
 import { runConsoleStatics } from '../../statics/run-console/run-console-statics';
 import { runConsoleStatusTransformer } from '../../transformers/run-console-status/run-console-status-transformer';

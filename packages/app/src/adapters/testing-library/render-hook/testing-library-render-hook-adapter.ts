@@ -6,8 +6,8 @@
  * const { result } = testingLibraryRenderHookAdapter({ renderCallback: () => useMyBinding() });
  * // Returns the RenderHookResult from @testing-library/react
  */
-import type { RenderHookResult } from '@testing-library/react';
-import { renderHook } from '@testing-library/react';
+import type { RenderHookResult } from '#gateway/npm/testing-library__react';
+import { renderHook } from '#gateway/npm/testing-library__react';
 
 export const testingLibraryRenderHookAdapter = <TResult>({
   renderCallback,

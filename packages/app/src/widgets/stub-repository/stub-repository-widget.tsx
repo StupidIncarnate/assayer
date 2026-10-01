@@ -19,8 +19,8 @@
  * <StubRepositoryWidget />
  * // Renders the stub cards once the preload bridge resolves the merged stub view
  */
-import type { ReactElement } from 'react';
-import { Box, Stack, Text, Title } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Stack, Text, Title } from '#gateway/npm/mantine__core';
 
 import { useStubIndexBinding } from '../../bindings/use-stub-index/use-stub-index-binding';
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';

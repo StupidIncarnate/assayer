@@ -7,8 +7,8 @@
  * <EnrichmentRowLayerWidget row={row} hoveredLine={hoveredLine} />
  * // Renders `L<line>  <symbol>: <type>` with an optional `→ { values }` suffix
  */
-import type { ReactElement } from 'react';
-import { Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Text } from '#gateway/npm/mantine__core';
 import type { FileAnalysis, LineNumber } from '@assayer/shared/contracts';
 
 export interface EnrichmentRowLayerWidgetProps {

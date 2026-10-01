@@ -9,6 +9,7 @@ import {
   FunctionAnalysisStub,
   UndrivenEntryStub,
 } from '@assayer/shared/contracts';
+import { document } from '#gateway/browser/document';
 
 // The real module-scope shape: nothing can call it, and it takes no params.
 const MODULE_ENTRY = EntrySignatureStub({

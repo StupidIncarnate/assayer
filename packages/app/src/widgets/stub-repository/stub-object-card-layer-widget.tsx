@@ -7,8 +7,8 @@
  * <StubObjectCardLayerWidget stub={stub} />
  * // Renders the stub key, its property rows and its readers
  */
-import type { ReactElement } from 'react';
-import { Card, Stack, Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Card, Stack, Text } from '#gateway/npm/mantine__core';
 import type { ObjectStub } from '@assayer/shared/contracts';
 
 import { flattenPropertyDemandTransformer } from '../../transformers/flatten-property-demand/flatten-property-demand-transformer';

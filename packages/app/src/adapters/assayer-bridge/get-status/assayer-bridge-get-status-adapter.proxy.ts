@@ -6,6 +6,7 @@
  * proxies. Mocking the boundary, not the adapter, keeps the adapter body running real.
  */
 import { StatusViewStub } from '../../../contracts/status-view/status-view.stub';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetStatusAdapterProxy = (): {
   returns: (params: { status: ReturnType<typeof StatusViewStub> }) => void;

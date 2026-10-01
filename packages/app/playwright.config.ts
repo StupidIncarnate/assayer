@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from '#gateway/npm/playwright__test';
 
 // Global e2e headless switch: the desktop main reads ASSAYER_HEADLESS and creates its
 // BrowserWindow hidden, so no window ever pops up on the developer's display during e2e.

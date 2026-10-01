@@ -10,6 +10,7 @@ import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult, RelPath } from '@assayer/shared/contracts';
 
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeRunFileAdapter = async ({ relPath }: { relPath: RelPath }): Promise<RunResult> => {
   const bridge = window.assayerBridge;

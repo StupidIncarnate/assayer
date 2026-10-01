@@ -1,5 +1,5 @@
-import { execSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { execSync } from '#gateway/node/child_process';
+import { resolve } from '#gateway/node/path';
 
 import { compileSmokeCache } from './harnesses/smoke-cache.harness';
 

@@ -7,8 +7,8 @@
  * <TestEntryLayerWidget fn={fn} relPath={relPath} hoveredLine={hoveredLine} run={run} runMode={runMode} />
  * // Renders `<label>(<params>) · N cases` and the case rows beneath it
  */
-import type { ReactElement } from 'react';
-import { Box, Stack, Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Stack, Text } from '#gateway/npm/mantine__core';
 import type { FunctionAnalysis, LineNumber, RelPath, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer, moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 

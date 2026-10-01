@@ -6,7 +6,7 @@
  * const { data, loading, error } = useCompiledTreeBinding();
  * // Returns { data: CompiledTree | null, loading: boolean, error: Error | null }
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '#gateway/npm/react';
 
 import { compiledTreeFetchBroker } from '../../brokers/compiled-tree/fetch/compiled-tree-fetch-broker';
 import type { CompiledTree } from '@assayer/shared/contracts';

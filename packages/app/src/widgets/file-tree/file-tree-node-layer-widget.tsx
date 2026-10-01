@@ -9,9 +9,9 @@
  * <FileTreeNodeLayerWidget node={node} selectedRelPath={relPath} onFileClick={({ relPath }) => {}} />
  * // Renders the node's name; a directory toggles its children open/closed on click
  */
-import { useState } from 'react';
-import type { ReactElement } from 'react';
-import { Group, NavLink, Stack, Text } from '@mantine/core';
+import { useState } from '#gateway/npm/react';
+import type { ReactElement } from '#gateway/npm/react';
+import { Group, NavLink, Stack, Text } from '#gateway/npm/mantine__core';
 import type { RelPath, TreeNode } from '@assayer/shared/contracts';
 
 export interface FileTreeNodeLayerWidgetProps {

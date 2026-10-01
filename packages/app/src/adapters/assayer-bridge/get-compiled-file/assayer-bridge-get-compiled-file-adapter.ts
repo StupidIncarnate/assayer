@@ -10,6 +10,7 @@ import { compiledFileViewContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
 
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetCompiledFileAdapter = async ({
   relPath,

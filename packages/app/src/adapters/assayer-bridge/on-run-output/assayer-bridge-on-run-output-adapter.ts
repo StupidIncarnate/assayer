@@ -12,6 +12,8 @@
  * const unsubscribe = assayerBridgeOnRunOutputAdapter({ onChunk: ({ chunk }) => append(chunk) });
  * // Returns the unsubscribe; call it to stop listening
  */
+import { window } from '#gateway/browser/window';
+
 export const assayerBridgeOnRunOutputAdapter = ({
   onChunk,
 }: {

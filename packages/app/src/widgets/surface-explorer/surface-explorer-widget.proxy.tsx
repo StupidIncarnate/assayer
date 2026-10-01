@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen } from '#gateway/npm/testing-library__react';
+import userEvent from '#gateway/npm/testing-library__user-event';
 import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
 
 import { useCompiledTreeBindingProxy } from '../../bindings/use-compiled-tree/use-compiled-tree-binding.proxy';
@@ -13,6 +13,7 @@ import { DetailPanelWidgetProxy } from '../detail-panel/detail-panel-widget.prox
 import { RawBlobViewerWidgetProxy } from '../raw-blob-viewer/raw-blob-viewer-widget.proxy';
 import { RunConsoleWidgetProxy } from '../run-console/run-console-widget.proxy';
 import type { CompiledTreeStub, CompiledFileViewStub, RunConsoleStub } from '@assayer/shared/contracts';
+import { console } from '#gateway/browser/console';
 
 export const SurfaceExplorerWidgetProxy = (): {
   setupTree: (params: { tree: ReturnType<typeof CompiledTreeStub> }) => void;
@@ -45,7 +46,7 @@ export const SurfaceExplorerWidgetProxy = (): {
   RunConsoleWidgetProxy();
   // Suppress + observe the surface-explorer's own console.error fallback so a failed file load
   // stays silent in the test output while still being assertable.
-  const consoleErrorSpy = registerSpyOn({ object: globalThis.console, method: 'error' });
+  const consoleErrorSpy = registerSpyOn({ object: console, method: 'error' });
   consoleErrorSpy.calledWith([]).implement(() => undefined);
 
   return {

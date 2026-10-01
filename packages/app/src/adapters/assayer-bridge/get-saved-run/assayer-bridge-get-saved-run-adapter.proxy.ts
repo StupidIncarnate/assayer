@@ -4,6 +4,7 @@
  * with the other bridge proxies.
  */
 import { RunResultStub } from '@assayer/shared/contracts';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetSavedRunAdapterProxy = (): {
   returns: (params: { run: ReturnType<typeof RunResultStub> }) => void;

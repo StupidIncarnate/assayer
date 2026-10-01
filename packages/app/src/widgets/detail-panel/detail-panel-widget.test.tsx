@@ -1,4 +1,4 @@
-import userEvent from '@testing-library/user-event';
+import userEvent from '#gateway/npm/testing-library__user-event';
 
 import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
 import { DetailPanelWidget } from './detail-panel-widget';

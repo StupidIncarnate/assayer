@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement } from '#gateway/npm/react';
 
 import { testingLibraryRenderAdapter } from './testing-library-render-adapter';
 import { testingLibraryRenderAdapterProxy } from './testing-library-render-adapter.proxy';

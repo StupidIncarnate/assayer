@@ -4,6 +4,7 @@
  * other bridge proxies.
  */
 import { RunResultStub } from '@assayer/shared/contracts';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeRunFileAdapterProxy = (): {
   returns: (params: { run: ReturnType<typeof RunResultStub> }) => void;

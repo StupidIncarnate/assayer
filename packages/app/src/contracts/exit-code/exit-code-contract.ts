@@ -6,7 +6,7 @@
  * const code = exitCodeContract.parse(0);
  * // Returns a validated ExitCode (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const exitCodeContract = z.number().int().min(0).brand<'ExitCode'>();
 

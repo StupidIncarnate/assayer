@@ -8,7 +8,7 @@
  * statusViewContract.parse({ version: '1.0.0', message: 'Assayer core online', repoPath: '/repo' });
  * // Returns a validated StatusView (branded fields; runMode defaults to 'thorough')
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const statusViewContract = z.object({
   version: z.string().min(1).brand<'AssayerVersion'>(),

@@ -10,7 +10,7 @@
  * undrivenLineContract.parse('UNDRIVEN inner — it is not exported, so nothing outside the module can call it…');
  * // Returns a branded UndrivenLine
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const undrivenLineContract = z.string().min(1).brand<'UndrivenLine'>();
 

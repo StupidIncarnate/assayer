@@ -15,6 +15,7 @@ import { runConsoleContract } from '@assayer/shared/contracts';
 import type { RunConsole, RelPath } from '@assayer/shared/contracts';
 
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetSavedConsoleAdapter = async ({
   relPath,

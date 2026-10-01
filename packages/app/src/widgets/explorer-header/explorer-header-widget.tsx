@@ -6,8 +6,8 @@
  * <ExplorerHeaderWidget summary={tree.summary} />
  * // Renders the explorer top-bar header text
  */
-import type { ReactElement } from 'react';
-import { Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Text } from '#gateway/npm/mantine__core';
 import type { CompiledTree } from '@assayer/shared/contracts';
 
 export interface ExplorerHeaderWidgetProps {

@@ -16,7 +16,7 @@
  * expect([...dirNames].sort()).toStrictEqual(surface.dirNames());
  */
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, relative, sep } from '#gateway/node/path';
 import { RelPathStub, FolderNameStub } from '@assayer/shared/contracts';
 
 import { typescriptHarnessGateAdapter } from '../../../core/src/adapters/typescript/harness-gate/typescript-harness-gate-adapter';

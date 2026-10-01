@@ -6,11 +6,11 @@
  * const { getByTestId } = testingLibraryRenderAdapter({ ui: someElement });
  * // Returns the RenderResult from @testing-library/react
  */
-import { createElement } from 'react';
-import type { ReactElement } from 'react';
-import { MantineProvider } from '@mantine/core';
-import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { createElement } from '#gateway/npm/react';
+import type { ReactElement } from '#gateway/npm/react';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import type { RenderResult } from '#gateway/npm/testing-library__react';
+import { render } from '#gateway/npm/testing-library__react';
 
 import { appThemeStatics } from '../../../statics/app-theme/app-theme-statics';
 

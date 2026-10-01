@@ -14,6 +14,7 @@ import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult, RelPath } from '@assayer/shared/contracts';
 
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetSavedRunAdapter = async ({
   relPath,

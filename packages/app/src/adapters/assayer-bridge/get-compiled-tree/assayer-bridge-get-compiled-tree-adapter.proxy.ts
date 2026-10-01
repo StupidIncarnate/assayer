@@ -5,6 +5,7 @@
  * other bridge-method proxies. Mocking the boundary, not the adapter, keeps the adapter body running real.
  */
 import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetCompiledTreeAdapterProxy = (): {
   returns: (params: { tree: ReturnType<typeof CompiledTreeStub> }) => void;

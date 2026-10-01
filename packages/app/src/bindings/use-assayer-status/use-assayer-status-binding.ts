@@ -6,7 +6,7 @@
  * const { data, loading, error } = useAssayerStatusBinding();
  * // Returns { data: StatusView | null, loading: boolean, error: Error | null }
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '#gateway/npm/react';
 
 import { statusFetchBroker } from '../../brokers/status/fetch/status-fetch-broker';
 import type { StatusView } from '../../contracts/status-view/status-view-contract';

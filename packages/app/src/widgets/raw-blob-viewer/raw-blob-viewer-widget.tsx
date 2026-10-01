@@ -8,8 +8,8 @@
  * <RawBlobViewerWidget fileView={fileView} />
  * // Renders the file's cache blob as formatted JSON (or a prompt when fileView is null)
  */
-import type { ReactElement } from 'react';
-import { Box, Center, Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Center, Text } from '#gateway/npm/mantine__core';
 import type { CompiledFileView } from '@assayer/shared/contracts';
 
 export interface RawBlobViewerWidgetProps {

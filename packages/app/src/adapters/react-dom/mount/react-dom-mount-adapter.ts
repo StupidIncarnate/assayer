@@ -6,10 +6,10 @@
  * reactDomMountAdapter({ container, content });
  * // Returns { success: true } after mounting
  */
-import { StrictMode, createElement } from 'react';
-import type { ReactNode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { MantineProvider } from '@mantine/core';
+import { StrictMode, createElement } from '#gateway/npm/react';
+import type { ReactNode } from '#gateway/npm/react';
+import { createRoot } from '#gateway/npm/react-dom__client';
+import { MantineProvider } from '#gateway/npm/mantine__core';
 import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { appThemeStatics } from '../../../statics/app-theme/app-theme-statics';

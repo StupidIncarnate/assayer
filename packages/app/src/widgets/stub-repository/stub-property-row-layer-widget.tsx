@@ -7,8 +7,8 @@
  * <StubPropertyRowLayerWidget property={property} />
  * // Renders the property name followed by its value badges or an unknown badge
  */
-import type { ReactElement } from 'react';
-import { Badge, Group, Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Badge, Group, Text } from '#gateway/npm/mantine__core';
 
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';
 import type { flattenPropertyDemandTransformer } from '../../transformers/flatten-property-demand/flatten-property-demand-transformer';

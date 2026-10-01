@@ -6,7 +6,7 @@
  * await testingLibraryWaitForAdapter({ callback: () => { expect(state().loading).toBe(false); } });
  * // Resolves once the callback stops throwing
  */
-import { waitFor } from '@testing-library/react';
+import { waitFor } from '#gateway/npm/testing-library__react';
 import type { AdapterResult } from '@assayer/shared/contracts';
 
 export const testingLibraryWaitForAdapter = async ({

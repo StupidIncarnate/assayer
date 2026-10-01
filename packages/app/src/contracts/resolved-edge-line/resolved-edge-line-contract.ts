@@ -8,7 +8,7 @@
  * resolvedEdgeLineContract.parse('name: string');
  * // Returns a branded ResolvedEdgeLine (one inspector cell)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const resolvedEdgeLineContract = z.string().min(1).brand<'ResolvedEdgeLine'>();
 

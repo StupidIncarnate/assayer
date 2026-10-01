@@ -8,8 +8,8 @@
  * <TestCaseLayerWidget fn={fn} testCase={testCase} driver={driver} entryLabel={entryLabel} isModule={false} />
  * // Renders `<marker> <driver>(<arrange>) → reaches L<line>` and, for a settled case, its outcome line
  */
-import type { ReactElement } from 'react';
-import { Box, Group, Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Group, Text } from '#gateway/npm/mantine__core';
 import type { FunctionAnalysis, LineNumber, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 

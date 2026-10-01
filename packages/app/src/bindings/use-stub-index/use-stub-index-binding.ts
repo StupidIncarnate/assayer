@@ -6,7 +6,7 @@
  * const { data, loading, error } = useStubIndexBinding();
  * // Returns { data: StubView | null, loading: boolean, error: Error | null }
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from '#gateway/npm/react';
 
 import { stubIndexFetchBroker } from '../../brokers/stub-index/fetch/stub-index-fetch-broker';
 import type { StubView } from '@assayer/shared/contracts';

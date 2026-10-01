@@ -19,8 +19,8 @@
  *   await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
  * });
  */
-import { test as base, expect, _electron } from '@playwright/test';
-import type { ElectronApplication, Page } from '@playwright/test';
+import { test as base, expect, _electron } from '#gateway/npm/playwright__test';
+import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
 
 import { desktopMainEntry, smokeCacheConfigDir, resetSmokeCache } from './smoke-cache.harness';
 

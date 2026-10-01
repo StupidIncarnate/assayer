@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '#gateway/npm/testing-library__react';
 
 import { codemirrorViewAdapter } from './codemirror-view-adapter';
 import { codemirrorViewAdapterProxy } from './codemirror-view-adapter.proxy';
+import { document } from '#gateway/browser/document';
 
 describe('codemirrorViewAdapter', () => {
   describe('rendering source', () => {

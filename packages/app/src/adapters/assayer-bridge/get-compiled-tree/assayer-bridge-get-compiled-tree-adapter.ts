@@ -9,6 +9,7 @@
 import { compiledTreeContract } from '@assayer/shared/contracts';
 import type { CompiledTree } from '@assayer/shared/contracts';
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetCompiledTreeAdapter = async (): Promise<CompiledTree> => {
   const bridge = window.assayerBridge;

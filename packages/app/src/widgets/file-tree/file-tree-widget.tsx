@@ -7,8 +7,8 @@
  * <FileTreeWidget tree={tree} selectedRelPath={relPath} onFileClick={({ relPath }) => {}} />
  * // Renders every node in tree.nodes, recursing into directories
  */
-import type { ReactElement } from 'react';
-import { Stack } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Stack } from '#gateway/npm/mantine__core';
 import type { CompiledTree, RelPath } from '@assayer/shared/contracts';
 
 import { FileTreeNodeLayerWidget } from './file-tree-node-layer-widget';

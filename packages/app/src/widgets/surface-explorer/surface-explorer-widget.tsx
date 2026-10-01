@@ -28,9 +28,9 @@
  * <SurfaceExplorerWidget />
  * // Renders the explorer once the preload bridge resolves the compiled tree
  */
-import { useCallback, useState } from 'react';
-import type { ReactElement } from 'react';
-import { Box, Center, Flex, Tabs, Text } from '@mantine/core';
+import { useCallback, useState } from '#gateway/npm/react';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Center, Flex, Tabs, Text } from '#gateway/npm/mantine__core';
 import { lineNumberContract } from '@assayer/shared/contracts';
 import type { CompiledFileView, LineNumber, RelPath } from '@assayer/shared/contracts';
 
@@ -45,6 +45,7 @@ import { DetailPanelWidget } from '../detail-panel/detail-panel-widget';
 import { RawBlobViewerWidget } from '../raw-blob-viewer/raw-blob-viewer-widget';
 import { RunConsoleWidget } from '../run-console/run-console-widget';
 import { surfaceExplorerStatics } from '../../statics/surface-explorer/surface-explorer-statics';
+import { console } from '#gateway/browser/console';
 
 const SIDEBAR_WIDTH = 300;
 
@@ -148,7 +149,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                     compiledFileFetchBroker({ relPath })
                       .then(setFileView)
                       .catch((error: unknown) => {
-                        globalThis.console.error('[surface-explorer] failed to load file', error);
+                        console.error('[surface-explorer] failed to load file', error);
                       });
                   }}
                 />

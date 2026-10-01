@@ -6,8 +6,8 @@
  * reactCreateElementAdapter({ component: AppRouterWidget });
  * // Returns a React element for the given component
  */
-import { createElement } from 'react';
-import type { ComponentType, ReactElement } from 'react';
+import { createElement } from '#gateway/npm/react';
+import type { ComponentType, ReactElement } from '#gateway/npm/react';
 
 export const reactCreateElementAdapter = ({
   component,

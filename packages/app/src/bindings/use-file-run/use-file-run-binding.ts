@@ -23,7 +23,7 @@
  * const { run, loading, running, error, output, execute } = useFileRunBinding({ relPath });
  * // run is undefined until the file has been run at least once
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from '#gateway/npm/react';
 
 import { assayerBridgeOnRunOutputAdapter } from '../../adapters/assayer-bridge/on-run-output/assayer-bridge-on-run-output-adapter';
 import { runExecuteBroker } from '../../brokers/run/execute/run-execute-broker';

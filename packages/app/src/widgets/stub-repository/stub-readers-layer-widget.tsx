@@ -7,8 +7,8 @@
  * <StubReadersLayerWidget readers={stub.readers} />
  * // Renders the readers heading and each reader path
  */
-import type { ReactElement } from 'react';
-import { Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Text } from '#gateway/npm/mantine__core';
 import type { ObjectStub } from '@assayer/shared/contracts';
 
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';

@@ -5,6 +5,8 @@
  * bridge-method proxies. `emit` drives the subscriber the way a running CLI would, and absent()
  * removes the method to exercise the missing-preload path.
  */
+import { window } from '#gateway/browser/window';
+
 export const assayerBridgeOnRunOutputAdapterProxy = (): {
   emit: (params: { chunk: string }) => void;
   hasUnsubscribed: () => boolean;

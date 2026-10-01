@@ -13,7 +13,7 @@
  * });
  * // Returns a validated ResolvedContractView (branded cells)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { resolvedEdgeLineContract } from '../resolved-edge-line/resolved-edge-line-contract';
 

@@ -23,10 +23,11 @@
  * // per test (the e2e fixture does this before reloading the warm window):
  * resetSmokeCache({ runMode: 'thorough' });
  */
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { join } from '#gateway/node/path';
+import { tmpdir } from '#gateway/node/os';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { spawn } from 'node:child_process';
+import { spawn } from '#gateway/node/child_process';
+import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', '..', 'cli', 'dist', 'bin', 'assayer.js');
 const smokeRepoPath = join(__dirname, '..', '..', '..', '..', 'smoke-repo');
@@ -61,7 +62,7 @@ export const compileSmokeCache = async (): Promise<void> => {
   writeConfig({ runMode: 'thorough' });
 
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, [cliEntry, 'status'], { cwd: smokeCacheConfigDir, stdio: 'ignore' });
+    const child = spawn(execPath, [cliEntry, 'status'], { cwd: smokeCacheConfigDir, stdio: 'ignore' });
     child.on('error', reject);
     child.on('close', (code, signal) => {
       // The precheck mutates the config in place (fills schema defaults); rewrite the minimal form so the

@@ -15,7 +15,7 @@
  * const status = caseRunStatusContract.parse('not-run');
  * // Returns a validated CaseRunStatus (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const caseRunStatusContract = z.enum(['passed', 'failed', 'errored', 'not-run']).brand<'CaseRunStatus'>();
 

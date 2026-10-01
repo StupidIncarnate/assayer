@@ -9,6 +9,7 @@
 import type { AdapterResult } from '@assayer/shared/contracts';
 
 import { reactDomMountAdapter } from '../../../adapters/react-dom/mount/react-dom-mount-adapter';
+import { document } from '#gateway/browser/document';
 
 export const AppMountResponder = ({ content }: { content: React.JSX.Element }): AdapterResult => {
   const container = document.getElementById('root');

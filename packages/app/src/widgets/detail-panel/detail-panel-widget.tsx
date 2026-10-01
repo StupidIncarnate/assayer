@@ -79,8 +79,8 @@
  * <DetailPanelWidget analysis={fileView.analysis} resolvedEdges={fileView.resolvedEdges} relPath={selectedRelPath} hoveredLine={hoveredLine} runError={fileRun.error} />
  * // Renders the Enrichment / Tests / Contracts tabbed panel, highlighting rows tied to the hovered line
  */
-import type { ReactElement } from 'react';
-import { Box, Tabs, Text, Stack, Button, Group } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Tabs, Text, Stack, Button, Group } from '#gateway/npm/mantine__core';
 import type { FileAnalysis, LineNumber, RelPath, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
 
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';

@@ -30,9 +30,9 @@
  * <CodeViewerWidget fileView={fileView} onLineHover={setHoveredLine} />
  * // Renders the file's source with per-line test counts, shaded dark spots and undriven spans, and emits the hovered line
  */
-import { useMemo } from 'react';
-import type { ReactElement } from 'react';
-import { Box, Center, Text } from '@mantine/core';
+import { useMemo } from '#gateway/npm/react';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Center, Text } from '#gateway/npm/mantine__core';
 import type { CompiledFileView } from '@assayer/shared/contracts';
 
 import { codemirrorViewAdapter } from '../../adapters/codemirror/view/codemirror-view-adapter';

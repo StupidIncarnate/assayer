@@ -4,6 +4,7 @@
  * the other bridge proxies.
  */
 import { RunConsoleStub } from '@assayer/shared/contracts';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetSavedConsoleAdapterProxy = (): {
   returns: (params: { console: ReturnType<typeof RunConsoleStub> }) => void;

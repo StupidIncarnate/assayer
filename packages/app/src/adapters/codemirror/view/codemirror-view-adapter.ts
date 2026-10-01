@@ -25,11 +25,12 @@
  * codemirrorViewAdapter({ value: 'const x = 1;', markers: [{ line: 1, count: 2 }] });
  * // Returns a read-only CodeMirror ReactElement with line numbers, TS highlighting, and a '2' count on line 1
  */
-import { createElement } from 'react';
-import type { ReactElement } from 'react';
-import CodeMirror from '@uiw/react-codemirror';
-import { javascript } from '@codemirror/lang-javascript';
-import { Decoration, EditorView, gutter, GutterMarker } from '@codemirror/view';
+import { createElement } from '#gateway/npm/react';
+import type { ReactElement } from '#gateway/npm/react';
+import CodeMirror from '#gateway/npm/uiw__react-codemirror';
+import { javascript } from '#gateway/npm/codemirror__lang-javascript';
+import { Decoration, EditorView, gutter, GutterMarker } from '#gateway/npm/codemirror__view';
+import { document } from '#gateway/browser/document';
 
 const DARK_SPOT_ACCENT = '#da77f2';
 const UNDRIVEN_ACCENT = '#3bc9db';
@@ -44,7 +45,7 @@ class GutterLabelMarker extends GutterMarker {
 
   public constructor({ text, className, title, testId }: { text: string; className?: string; title?: string; testId?: string }) {
     super();
-    this.node = globalThis.document.createElement('span');
+    this.node = document.createElement('span');
     this.node.textContent = text;
 
     if (className !== undefined) {

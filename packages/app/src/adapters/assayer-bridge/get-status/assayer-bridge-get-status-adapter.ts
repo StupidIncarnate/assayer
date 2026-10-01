@@ -9,6 +9,7 @@
 import { statusViewContract } from '../../../contracts/status-view/status-view-contract';
 import type { StatusView } from '../../../contracts/status-view/status-view-contract';
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetStatusAdapter = async (): Promise<StatusView> => {
   const bridge = window.assayerBridge;

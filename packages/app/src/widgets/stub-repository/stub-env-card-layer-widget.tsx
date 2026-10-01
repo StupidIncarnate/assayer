@@ -7,8 +7,8 @@
  * <StubEnvCardLayerWidget stub={stub} />
  * // Renders the env key, its guessed/corrected badge, its value badges and its readers
  */
-import type { ReactElement } from 'react';
-import { Badge, Card, Group, Text } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Badge, Card, Group, Text } from '#gateway/npm/mantine__core';
 import type { EnvStub } from '@assayer/shared/contracts';
 
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';

@@ -5,6 +5,7 @@
  * other bridge-method proxies. Mocking the boundary, not the adapter, keeps the adapter body running real.
  */
 import { StubViewStub } from '@assayer/shared/contracts';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetStubsAdapterProxy = (): {
   returns: (params: { view: ReturnType<typeof StubViewStub> }) => void;

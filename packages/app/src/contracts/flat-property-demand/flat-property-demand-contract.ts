@@ -9,7 +9,7 @@
  * flatPropertyDemandContract.parse({ name: 'db.retry', demand: { kind: 'demanded', values: [3, 7] } });
  * // Returns a validated FlatPropertyDemand
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
 

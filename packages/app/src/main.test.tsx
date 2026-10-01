@@ -1,4 +1,4 @@
-import path from 'node:path';
+import path from '#gateway/node/path';
 
 describe('main', () => {
   describe('module structure', () => {

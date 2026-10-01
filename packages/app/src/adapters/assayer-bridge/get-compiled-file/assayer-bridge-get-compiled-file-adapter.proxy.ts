@@ -4,6 +4,7 @@
  * onto any existing window.assayerBridge so it composes with the getCompiledTree proxy.
  */
 import { CompiledFileViewStub, RelPathStub } from '@assayer/shared/contracts';
+import { window } from '#gateway/browser/window';
 
 export const assayerBridgeGetCompiledFileAdapterProxy = (): {
   register: (params: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }) => void;
