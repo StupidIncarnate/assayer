@@ -28,25 +28,25 @@ describe('harnessInputKeyContract', () => {
     it('INVALID: {no entry} => throws validation error', () => {
       expect(() => {
         return harnessInputKeyContract.parse({ param: 'report' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('INVALID: {no param} => throws validation error', () => {
       expect(() => {
         return harnessInputKeyContract.parse({ entry: 'audit' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('EMPTY: {empty entry} => throws validation error', () => {
       expect(() => {
         return harnessInputKeyContract.parse({ entry: '', param: 'report' });
-      }).toThrow(/at least 1/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('EMPTY: {empty param} => throws validation error', () => {
       expect(() => {
         return harnessInputKeyContract.parse({ entry: 'audit', param: '' });
-      }).toThrow(/at least 1/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

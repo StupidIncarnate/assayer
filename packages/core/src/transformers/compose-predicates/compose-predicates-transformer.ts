@@ -19,6 +19,7 @@
  */
 import { branchNodeContract } from '@assayer/shared/contracts';
 
+import { extractedFunctionContract } from '../../contracts/extracted-function/extracted-function-contract';
 import type { ExtractedFunction } from '../../contracts/extracted-function/extracted-function-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
 import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
@@ -42,55 +43,59 @@ export const composePredicatesTransformer = ({
     walked.scopes.map((scope) => [`${String(scope.name)}@${String(scope.startLine)}`, scope] as const),
   );
 
-  return functions.map((fn) => ({
-    entry: fn.entry,
-    exits: fn.exits,
-    // The entry's own return predicate is unaffected by rebasing a caller's call-guard, so it rides
-    // through untouched — derive-cases reads it to split a branchless predicate's two return values.
-    ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
-    branches: fn.branches.map((branch) => {
-      const leaf = branch.condition;
+  return functions.map((fn) =>
+    extractedFunctionContract.parse({
+      entry: fn.entry,
+      exits: fn.exits,
+      // The entry's own return predicate is unaffected by rebasing a caller's call-guard, so it rides
+      // through untouched — derive-cases reads it to split a branchless predicate's two return values.
+      ...(fn.predicateSignature === undefined ? {} : { predicateSignature: fn.predicateSignature }),
+      branches: fn.branches.map((branch) => {
+        const leaf = branch.condition;
 
-      if (leaf.kind !== 'leaf' || leaf.predicate.kind !== 'truthy' || leaf.operandCallPosition === undefined) {
-        return branch;
-      }
+        if (leaf.kind !== 'leaf' || leaf.predicate.kind !== 'truthy' || leaf.operandCallPosition === undefined) {
+          return branch;
+        }
 
-      const position = leaf.operandCallPosition;
-      const calls = callsByScope.get(fn.entry.scopePath.join('/')) ?? [];
-      const call = calls.find(
-        (candidate) => candidate.position.line === position.line && candidate.position.column === position.column,
-      );
+        const position = leaf.operandCallPosition;
+        const calls = callsByScope.get(fn.entry.scopePath.join('/')) ?? [];
+        const call = calls.find(
+          (candidate) =>
+            Number(candidate.position.line) === Number(position.line) &&
+            Number(candidate.position.column) === Number(position.column),
+        );
 
-      if (call === undefined || call.callee.target !== 'local') {
-        return branch;
-      }
+        if (call === undefined || call.callee.target !== 'local') {
+          return branch;
+        }
 
-      const callee = calleeByKey.get(`${String(call.callee.name)}@${String(call.callee.startLine)}`);
+        const callee = calleeByKey.get(`${String(call.callee.name)}@${String(call.callee.startLine)}`);
 
-      if (callee?.predicateSignature === undefined) {
-        return branch;
-      }
+        if (callee?.predicateSignature === undefined) {
+          return branch;
+        }
 
-      const { toCallerParam } = callArgBindingsTransformer({ calleeParams: callee.params, args: call.args });
+        const { toCallerParam } = callArgBindingsTransformer({ calleeParams: callee.params, args: call.args });
 
-      const rebased = rebasePredicateConditionTransformer({
-        node: callee.predicateSignature,
-        branchCoverageId: branch.coverageId,
-        path: [],
-        toCallerParam,
-      });
+        const rebased = rebasePredicateConditionTransformer({
+          node: callee.predicateSignature,
+          branchCoverageId: branch.coverageId,
+          path: [],
+          toCallerParam,
+        });
 
-      if (rebased === undefined) {
-        return branch;
-      }
+        if (rebased === undefined) {
+          return branch;
+        }
 
-      return branchNodeContract.parse({
-        coverageId: branch.coverageId,
-        kind: branch.kind,
-        condition: rebased,
-        startLine: branch.startLine,
-        endLine: branch.endLine,
-      });
+        return branchNodeContract.parse({
+          coverageId: branch.coverageId,
+          kind: branch.kind,
+          condition: rebased,
+          startLine: branch.startLine,
+          endLine: branch.endLine,
+        });
+      }),
     }),
-  }));
+  );
 };

@@ -6,13 +6,12 @@
  * DesktopPreloadExposeResponder();
  * // Exposes window.assayerBridge; returns { success: true }
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 
-import { electronPreloadBridgeAdapter } from '../../../adapters/electron/preload-bridge/electron-preload-bridge-adapter';
+import { desktopBridgeExposeBroker } from '../../../brokers/desktop-bridge/expose/desktop-bridge-expose-broker';
 import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
 
-export const DesktopPreloadExposeResponder = (): AdapterResult =>
-  electronPreloadBridgeAdapter({
+export const DesktopPreloadExposeResponder = (): void =>
+  { desktopBridgeExposeBroker({
     bridgeKey: desktopBridgeStatics.bridge.key,
     statusChannel: desktopBridgeStatics.channels.status,
     compiledTreeChannel: desktopBridgeStatics.channels.compiledTree,
@@ -22,4 +21,4 @@ export const DesktopPreloadExposeResponder = (): AdapterResult =>
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
     savedConsoleChannel: desktopBridgeStatics.channels.savedConsole,
     runOutputChannel: desktopBridgeStatics.channels.runOutput,
-  });
+  }); };

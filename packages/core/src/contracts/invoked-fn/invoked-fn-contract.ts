@@ -13,15 +13,14 @@
  * invokedFnContract.parse({ startLine: 1, args: [{ kind: 'literal', value: 7 }] });
  * // Returns a validated InvokedFn (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
 
 export const invokedFnContract = z.object({
-  startLine: lineNumberContract,
+  startLine: z.number().int().positive().brand<'InvokedFnStartLine'>(),
   args: callSiteContract.shape.args,
-});
+}).brand<'InvokedFn'>();
 
 export type InvokedFn = z.infer<typeof invokedFnContract>;

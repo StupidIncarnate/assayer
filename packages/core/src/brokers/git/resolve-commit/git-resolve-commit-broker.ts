@@ -6,10 +6,7 @@
  * await gitResolveCommitBroker({ repoRoot: '/repo', ref: 'master' });
  * // Returns the resolved 40-char commit sha, or undefined when the ref is missing
  */
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
-
-import { gitExecAdapter } from '../../../adapters/git/exec/git-exec-adapter';
+import { GitNotInstalledError, resolveRef } from '#gateway/bin/git';
 
 export const gitResolveCommitBroker = async ({
   repoRoot,
@@ -17,13 +14,14 @@ export const gitResolveCommitBroker = async ({
 }: {
   repoRoot: string;
   ref: string;
-}): Promise<ErrorMessage | undefined> => {
-  const r = await gitExecAdapter({ args: ['rev-parse', ref], cwd: repoRoot });
+}): Promise<string | undefined> => {
+  const sha = await resolveRef({ cwd: repoRoot, ref }).catch((error: unknown) => {
+    if (error instanceof GitNotInstalledError) {
+      return null;
+    }
+    throw error;
+  });
 
-  if (r.exitCode !== 0) {
-    return undefined;
-  }
-
-  // git object id branded as opaque ErrorMessage (no dedicated sha contract)
-  return errorMessageContract.parse(String(r.stdout).trim());
+  // The commit sha is returned as a plain string because no sha contract exists.
+  return sha ?? undefined;
 };

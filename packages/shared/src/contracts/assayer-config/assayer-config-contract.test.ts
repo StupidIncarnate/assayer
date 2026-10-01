@@ -70,7 +70,7 @@ describe('assayerConfigContract', () => {
     it('INVALID: {repoRoot: 123} => throws validation error', () => {
       expect(() => {
         return assayerConfigContract.parse({ repoRoot: 123 });
-      }).toThrow(/Expected string/u);
+      }).toThrow(/Invalid input: expected string, received number/u);
     });
 
     it('INVALID: {repoRoot: ""} => throws, since an empty path names no root', () => {

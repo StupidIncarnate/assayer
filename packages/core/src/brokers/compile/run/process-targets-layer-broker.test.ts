@@ -1,4 +1,4 @@
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { processTargetsLayerBrokerProxy } from './process-targets-layer-broker.proxy';
@@ -29,12 +29,12 @@ describe('processTargetsLayerBroker', () => {
   describe('multiple clean targets', () => {
     it('VALID: {remaining: two clean files} => returns an index entry for each, no errors', async () => {
       const proxy = processTargetsLayerBrokerProxy();
-      proxy.queueCleanWrite();
-      proxy.queueCleanWrite();
       const contentA = 'export const a = 1;\n';
       const contentB = 'export const b = 2;\n';
-      const hashA = cryptoSha256Adapter({ content: contentA });
-      const hashB = cryptoSha256Adapter({ content: contentB });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: contentA });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: contentB });
+      const hashA = contentHashTransformer({ content: contentA });
+      const hashB = contentHashTransformer({ content: contentB });
 
       const result = await processTargetsLayerBroker({
         remaining: [
@@ -66,7 +66,7 @@ describe('processTargetsLayerBroker', () => {
   describe('a target that fails to parse', () => {
     it('ERROR: {remaining: one file with invalid syntax} => returns an error with relPath/line/column/message, no index entries', async () => {
       const proxy = processTargetsLayerBrokerProxy();
-      proxy.queueCleanWrite();
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: 'const x = ;;;{{{' });
 
       const result = await processTargetsLayerBroker({
         remaining: [{ relPath: 'src/broken.ts', content: 'const x = ;;;{{{' }],
@@ -92,10 +92,10 @@ describe('processTargetsLayerBroker', () => {
   describe('a clean target followed by a failing target', () => {
     it('EDGE: {remaining: one clean file then one invalid file} => keeps the clean file in the index and the invalid file in errors', async () => {
       const proxy = processTargetsLayerBrokerProxy();
-      proxy.queueCleanWrite();
-      proxy.queueCleanWrite();
       const cleanContent = 'export const ok = 1;\n';
-      const hash = cryptoSha256Adapter({ content: cleanContent });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: cleanContent });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: 'const x = ;;;{{{' });
+      const hash = contentHashTransformer({ content: cleanContent });
 
       const result = await processTargetsLayerBroker({
         remaining: [
@@ -123,9 +123,9 @@ describe('processTargetsLayerBroker', () => {
   describe('onProgress callback provided', () => {
     it('VALID: {onProgress set, one clean target} => emits one advanced event carrying the new current count', async () => {
       const proxy = processTargetsLayerBrokerProxy();
-      proxy.queueCleanWrite();
       const content = 'export const x = 1;\n';
-      const hash = cryptoSha256Adapter({ content });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content });
+      const hash = contentHashTransformer({ content });
       const events: unknown[] = [];
 
       const result = await processTargetsLayerBroker({

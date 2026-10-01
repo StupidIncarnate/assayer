@@ -1,4 +1,5 @@
-import { ConditionLeafStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { substituteConditionTypesTransformer } from './substitute-condition-types-transformer';
 

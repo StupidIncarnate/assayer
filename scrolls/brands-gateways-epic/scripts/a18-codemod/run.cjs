@@ -2,31 +2,63 @@
 /*
  * A18 codemod: moves mechanical raw outside calls onto the #gateway/* exports.
  *
- *   node tmp/a18-codemod/run.cjs <pkg> [--apply] [--files a,b,c] [--reuse-census] [--no-verify]
- *                                      [--env-writes] [--crypto-webcrypto]
+ *   node scrolls/brands-gateways-epic/scripts/a18-codemod/run.cjs <pkg> --root <repo-root> [--out-dir <dir>]
+ *        [--scope @scope] [--browser-pkgs app,web] [--census-config <file>]
+ *        [--apply] [--files a,b,c] [--reuse-census] [--no-verify] [--env-writes] [--crypto-webcrypto]
  *
- * Run from the repo root. Dry run by default; --apply writes. Every run re-censuses the package
- * (ESLint with tmp/a18-census.config.js) unless --reuse-census, transforms in memory, then VERIFIES
+ * --root         the repo to rewrite (default: the current directory). Must hold packages/@gateway.
+ * --out-dir      where the census and the report go (default: <root>/tmp/a18-codemod).
+ * --scope        the repo's npm scope, passed to the lint rules (default: the scope of <root>/package.json's name).
+ * --browser-pkgs comma list of packages whose source runs in a browser (default: app). Their globals move
+ *                to #gateway/browser/*; every other package moves to #gateway/node/*.
+ * --census-config the ESLint config that finds the raw imports (default: a18-census.config.js beside this file).
+ *
+ * Dry run by default; --apply writes. Every run re-censuses the package
+ * (ESLint with the census config) unless --reuse-census, transforms in memory, then VERIFIES
  * each changed file: the package tsconfig typecheck and the full repo ESLint config must report no
  * new problem (prettier excluded: ward's lint --fix owns formatting), otherwise that file is left
- * untouched and reported as REJECTED. Report goes to stdout and tmp/a18-codemod/<dry|apply>-<pkg>.txt.
+ * untouched and reported as REJECTED. Report goes to stdout and <out-dir>/<dry|apply>-<pkg>.txt.
  */
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const ts = require('typescript');
 
-const ROOT = process.cwd();
-if (!fs.existsSync(path.join(ROOT, 'packages/@gateway'))) {
-  console.error('run from the repo root');
-  process.exit(2);
-}
 const args = process.argv.slice(2);
-const PKG = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--files');
-if (!PKG) {
-  console.error('usage: node tmp/a18-codemod/run.cjs <pkg> [--apply] [--files a,b] [--reuse-census] [--no-verify]');
+const VALUE_FLAGS = ['--files', '--root', '--out-dir', '--scope', '--browser-pkgs', '--census-config'];
+const flagValue = (name) => {
+  const i = args.indexOf(name);
+  if (i < 0) return undefined;
+  if (i + 1 >= args.length || args[i + 1].startsWith('--')) {
+    console.error(`${name} needs a value`);
+    process.exit(2);
+  }
+  return args[i + 1];
+};
+const ROOT = path.resolve(flagValue('--root') || process.cwd());
+if (!fs.existsSync(path.join(ROOT, 'packages/@gateway'))) {
+  console.error(`--root ${ROOT} has no packages/@gateway; pass the repo root with --root`);
   process.exit(2);
 }
+const PKG = args.find((a, i) => !a.startsWith('--') && !VALUE_FLAGS.includes(args[i - 1]));
+if (!PKG) {
+  console.error('usage: node run.cjs <pkg> --root <repo-root> [--out-dir d] [--scope @s] [--browser-pkgs a,b] [--apply] [--files a,b] [--reuse-census] [--no-verify]');
+  process.exit(2);
+}
+const SCOPE = flagValue('--scope') || (() => {
+  const name = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).name || '';
+  const m = /^(@[^/]+)\//u.exec(name);
+  if (!m) {
+    console.error(`${path.join(ROOT, 'package.json')} has no scoped "name"; pass --scope @your-scope`);
+    process.exit(2);
+  }
+  return m[1];
+})();
+// The census config reads these two, so it needs no path or scope of its own.
+process.env.A18_ROOT = ROOT;
+process.env.A18_SCOPE = SCOPE;
+const BROWSER_PKGS = (flagValue('--browser-pkgs') || 'app').split(',').filter(Boolean);
+const CENSUS_CONFIG = path.resolve(flagValue('--census-config') || path.join(__dirname, 'a18-census.config.js'));
 const APPLY = args.includes('--apply');
 const REUSE = args.includes('--reuse-census');
 const NOVERIFY = args.includes('--no-verify');
@@ -42,7 +74,7 @@ const FILES = (() => {
   return i >= 0 ? args[i + 1].split(',').map((f) => path.resolve(ROOT, f)) : null;
 })();
 const PKG_DIR = path.join(ROOT, 'packages', PKG);
-const OUT_DIR = path.join(ROOT, 'tmp/a18-codemod');
+const OUT_DIR = path.resolve(flagValue('--out-dir') || path.join(ROOT, 'tmp/a18-codemod'));
 const GW_ROOT = path.join(ROOT, 'packages/@gateway');
 const rel = (f) => path.relative(ROOT, f);
 
@@ -59,7 +91,8 @@ const barrelFile = (gp) => {
 
 const buildGatewayIndex = () => {
   const barrels = [];
-  for (const kind of ['node', 'browser', 'npm']) {
+  for (const kind of ['node', 'browser', 'npm', 'bin']) {
+    if (!fs.existsSync(path.join(GW_ROOT, kind, 'src'))) continue;
     for (const d of fs.readdirSync(path.join(GW_ROOT, kind, 'src'))) {
       const f = path.join(GW_ROOT, kind, 'src', d, `${d}.ts`);
       if (fs.existsSync(f)) barrels.push({ gp: `#gateway/${kind}/${d}`, f });
@@ -336,7 +369,7 @@ const EVAL_CALLEES = new Set(['evaluate', 'evaluateHandle', '$eval', '$$eval', '
 // ---------------------------------------------------------------------------------------------
 const sideOf = (f) => {
   const r = rel(f);
-  return r.startsWith('packages/web/src/') && !r.endsWith('.e2e.ts') ? 'browser' : 'node';
+  return BROWSER_PKGS.some((p) => r.startsWith(`packages/${p}/src/`)) && !r.endsWith('.e2e.ts') ? 'browser' : 'node';
 };
 const isTestLike = (f) => /\.(test|proxy|stub|e2e)\.tsx?$|\.harness\.tsx?$|\/test\//u.test(f);
 
@@ -897,7 +930,7 @@ const IGNORED_FULL_RULES = new Set(['prettier/prettier', ...CENSUS_RULES]);
 
 const main = async () => {
   const { ESLint } = require('eslint');
-  const censusEslint = new ESLint({ overrideConfigFile: 'tmp/a18-census.config.js', cwd: ROOT, errorOnUnmatchedPattern: false });
+  const censusEslint = new ESLint({ overrideConfigFile: CENSUS_CONFIG, cwd: ROOT, errorOnUnmatchedPattern: false });
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const censusPath = path.join(OUT_DIR, `census-${PKG}.json`);
   let census;
@@ -910,7 +943,6 @@ const main = async () => {
       .map((r) => ({ filePath: rel(r.filePath), messages: r.messages.map((m) => ({ ruleId: m.ruleId, line: m.line, column: m.column, message: m.message, fatal: m.fatal })) }));
     if (!FILES) {
       fs.writeFileSync(censusPath, JSON.stringify(census, null, 1));
-      fs.writeFileSync(path.join(ROOT, 'tmp/a18-census', `${PKG}.json`), JSON.stringify(census.map((r) => ({ filePath: r.filePath, messages: r.messages.map(({ column, ...rest }) => rest) })), null, 1));
     }
   }
   const tCensus = Date.now() - t0;

@@ -1,93 +1,80 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import { configHashBroker, manifestLoadBroker, manifestTrashBroker, compileRunBroker } from '@assayer/core/brokers';
-import {
-  configHashBrokerProxy,
-  manifestLoadBrokerProxy,
-  manifestTrashBrokerProxy,
-  compileRunBrokerProxy,
-} from '@assayer/core/testing';
-import type { AssayerCacheManifestStub, CompileResultStub } from '@assayer/shared/contracts';
-import { contentHashContract, compileResultContract } from '@assayer/shared/contracts';
+import { configHashBrokerProxy } from '@assayer/core/brokers/config/hash/config-hash-broker.proxy';
+import { manifestLoadBrokerProxy } from '@assayer/core/brokers/manifest/load/manifest-load-broker.proxy';
+import { manifestTrashBrokerProxy } from '@assayer/core/brokers/manifest/trash/manifest-trash-broker.proxy';
+import { compileRunBrokerProxy } from '@assayer/core/brokers/compile/run/compile-run-broker.proxy';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
-import { processStdoutCompileProgressAdapterProxy } from '../../../adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy';
+import { compileProgressRenderBrokerProxy } from '../../../brokers/compile-progress/render/compile-progress-render-broker.proxy';
 
 type AssayerCacheManifest = ReturnType<typeof AssayerCacheManifestStub>;
-type CompileResultErrors = ReturnType<typeof CompileResultStub>['errors'];
 
 export const CompileRunLayerResponderProxy = (): {
-  configHashReturns: () => void;
-  manifestMissing: () => void;
-  manifestInvalid: () => void;
-  manifestOk: (params: { manifest: AssayerCacheManifest }) => void;
-  trashSucceeds: () => void;
-  compileSucceeds: () => void;
-  compileFails: (params: { errors: CompileResultErrors }) => void;
-  getCallOrder: () => unknown[];
-  wasTrashCalled: () => boolean;
-  wasCompileCalled: () => boolean;
+  manifestMissing: (params: { configDir: string }) => void;
+  manifestInvalid: (params: { configDir: string }) => void;
+  manifestOk: (params: { configDir: string; manifest: AssayerCacheManifest }) => void;
+  compileSucceeds: (params: { configDir: string; root: string }) => void;
+  compileFails: (params: {
+    configDir: string;
+    root: string;
+    relPath: string;
+    line: number;
+    column: number;
+    message: string;
+  }) => void;
+  getTrashCalls: (params: { configDir: string }) => readonly unknown[][];
+  wasManifestWritten: (params: { configDir: string }) => boolean;
+  getWrittenManifest: (params: { configDir: string }) => unknown;
 } => {
-  // The @assayer/core/testing composed proxies below are instantiated to satisfy
-  // enforce-proxy-child-creation, but the cross-package registerMock chain they wire up
-  // cannot intercept real I/O here — the ts-jest proxy-mock AST collector only resolves
-  // relative imports (see importPathResolverMiddleware in @dungeonmaster/testing), so it
-  // never walks into a bare "@assayer/core/testing" specifier to find the registerMock
-  // calls nested inside core's own adapter proxies. Mocking the broker functions directly
-  // below (same-file imports the transformer CAN see) is what actually drives this test's
-  // behavior — see stable-branch-layer-responder.proxy.ts for the same gotcha.
   configHashBrokerProxy();
-  manifestLoadBrokerProxy();
-  manifestTrashBrokerProxy();
-  compileRunBrokerProxy();
-  processStdoutCompileProgressAdapterProxy();
+  const loadProxy = manifestLoadBrokerProxy();
+  const trashProxy = manifestTrashBrokerProxy();
+  const compileProxy = compileRunBrokerProxy();
+  compileProgressRenderBrokerProxy();
 
-  const configHashHandle = registerMock({ fn: configHashBroker });
-  const manifestLoadHandle = registerMock({ fn: manifestLoadBroker });
-  const manifestTrashHandle = registerMock({ fn: manifestTrashBroker });
-  const compileRunHandle = registerMock({ fn: compileRunBroker });
-
-  const callOrder: unknown[] = [];
-
-  configHashHandle
-    .calledWith([])
-    .returns(contentHashContract.parse('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'));
-  manifestTrashHandle.calledWith([]).implement(async () => {
-    callOrder.push('trash');
-
-    return Promise.resolve({ success: true });
-  });
+  // A compile of a root holding no source files. Its walk of `root` is its only read, so the blob
+  // store under `configDir` is never touched, and the one write is the manifest under `configDir`.
+  const compileEmptyRoot = ({ configDir, root }: { configDir: string; root: string }): void => {
+    compileProxy.onCurrentBranch({ name: 'feature-x' });
+    compileProxy.queueCurrentFiles({ configDir: root, contents: [] });
+    compileProxy.manifestWriteSucceeds({ configDir });
+  };
 
   return {
-    configHashReturns: (): void => undefined,
-    manifestMissing: (): void => {
-      manifestLoadHandle.onceFor([]).resolves({ status: 'missing' });
+    manifestMissing: ({ configDir }: { configDir: string }): void => {
+      loadProxy.absent({ configDir });
     },
-    manifestInvalid: (): void => {
-      manifestLoadHandle.onceFor([]).resolves({
-        status: 'invalid',
-        reason: errorMessageContract.parse('manifest failed schema validation'),
-      });
+    // A manifest that is not JSON reads as invalid, so the responder trashes the whole cache.
+    manifestInvalid: ({ configDir }: { configDir: string }): void => {
+      loadProxy.malformed({ configDir });
+      trashProxy.succeeds({ path: `${configDir}/.assayer/cache` });
     },
-    manifestOk: ({ manifest }: { manifest: AssayerCacheManifest }): void => {
-      manifestLoadHandle.onceFor([]).resolves({ status: 'ok', manifest });
+    manifestOk: ({ configDir, manifest }: { configDir: string; manifest: AssayerCacheManifest }): void => {
+      loadProxy.present({ configDir, manifestJson: JSON.stringify(manifest) });
     },
-    trashSucceeds: (): void => undefined,
-    compileSucceeds: (): void => {
-      compileRunHandle.onceFor([]).implement(async () => {
-        callOrder.push('compile');
-
-        return Promise.resolve(compileResultContract.parse({ status: 'ok', results: [], errors: [] }));
-      });
+    compileSucceeds: compileEmptyRoot,
+    compileFails: ({
+      configDir,
+      root,
+      relPath,
+      line,
+      column,
+      message,
+    }: {
+      configDir: string;
+      root: string;
+      relPath: string;
+      line: number;
+      column: number;
+      message: string;
+    }): void => {
+      compileEmptyRoot({ configDir, root });
+      compileProxy.resolvesWithError({ relPath, line, column, message });
     },
-    compileFails: ({ errors }: { errors: CompileResultErrors }): void => {
-      compileRunHandle.onceFor([]).implement(async () => {
-        callOrder.push('compile');
-
-        return Promise.resolve(compileResultContract.parse({ status: 'errors', results: [], errors }));
-      });
-    },
-    getCallOrder: (): unknown[] => callOrder,
-    wasTrashCalled: (): boolean => manifestTrashHandle.callsMatching([]).length > 0,
-    wasCompileCalled: (): boolean => compileRunHandle.callsMatching([]).length > 0,
+    getTrashCalls: ({ configDir }: { configDir: string }): readonly unknown[][] =>
+      trashProxy.getRmCalls({ path: `${configDir}/.assayer/cache` }),
+    wasManifestWritten: ({ configDir }: { configDir: string }): boolean =>
+      compileProxy.wasManifestWritten({ configDir }),
+    getWrittenManifest: ({ configDir }: { configDir: string }): unknown =>
+      compileProxy.getWrittenManifest({ configDir }),
   };
 };

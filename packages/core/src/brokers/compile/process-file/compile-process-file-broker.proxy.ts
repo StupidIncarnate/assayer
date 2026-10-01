@@ -1,44 +1,45 @@
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
-import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
-import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
-import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
-import { tsMorphWalkFileAdapterProxy } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.proxy';
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
-import type { FileCount } from '@assayer/shared/contracts';
+import { ensureDirProxy } from '#gateway/node/fs__promises/ensure-dir/ensure-dir.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { renameProxy } from '#gateway/node/fs__promises/rename/rename.proxy';
+import { writeFileProxy } from '#gateway/node/fs__promises/write-file/write-file.proxy';
 
 export const compileProcessFileBrokerProxy = (): {
-  blobExists: () => void;
-  blobMissing: () => void;
-  // The broker writes the blob atomically: the bytes go to `<blobsDir>/<contentHash>.json.tmp` first,
-  // and a rename moves them to the final path. So the address a caller asks with is that tmp path, and
-  // naming it in the test is what proves the write went through the tmp file rather than straight to
-  // the final one.
+  // Every address is the blob's exact path: `<blobsDir>/<contentHash>.json`. The broker writes the blob
+  // atomically: the bytes go to `<blobsDir>/<contentHash>.json.tmp` first, and a rename moves them to
+  // the final path. So a caller asks for the written bytes with that tmp path, and naming it in the
+  // test is what proves the write went through the tmp file rather than straight to the final one.
+  blobExists: ({ blobsDir, contentHash }: { blobsDir: string; contentHash: string }) => void;
+  blobMissing: ({ blobsDir, contentHash }: { blobsDir: string; contentHash: string }) => void;
   getWrittenBlobFor: ({ path }: { path: string }) => unknown;
-  wasWriteCalled: () => boolean;
-  processedCount: () => FileCount;
+  wasWriteCalled: ({ path }: { path: string }) => boolean;
+  processedCount: () => number;
 } => {
-  const existsProxy = fsExistsAdapterProxy();
-  const mkdirProxy = fsMkdirAdapterProxy();
-  const writeFileProxy = fsWriteFileAdapterProxy();
-  const renameProxy = fsRenameAdapterProxy();
-  tsMorphWalkFileAdapterProxy();
-  cryptoSha256AdapterProxy();
+  const existsGateway = pathExistsProxy();
+  const ensureDirGateway = ensureDirProxy();
+  const writeFileGateway = writeFileProxy();
+  const renameGateway = renameProxy();
   analyzeFileBrokerProxy();
 
   return {
-    blobExists: (): void => {
-      existsProxy.succeeds();
+    blobExists: ({ blobsDir, contentHash }: { blobsDir: string; contentHash: string }): void => {
+      existsGateway.present({ path: `${blobsDir}/${contentHash}.json` });
     },
-    blobMissing: (): void => {
-      existsProxy.fails();
-      mkdirProxy.succeeds();
-      writeFileProxy.succeeds();
-      renameProxy.succeeds();
+    blobMissing: ({ blobsDir, contentHash }: { blobsDir: string; contentHash: string }): void => {
+      const blobPath = `${blobsDir}/${contentHash}.json`;
+      existsGateway.missing({ path: blobPath });
+      ensureDirGateway.succeeds({ path: blobsDir });
+      writeFileGateway.succeeds({ path: `${blobPath}.tmp` });
+      renameGateway.succeeds({ from: `${blobPath}.tmp`, to: blobPath });
     },
     getWrittenBlobFor: ({ path }: { path: string }): unknown =>
-      writeFileProxy.getWrittenContentFor({ path }),
-    wasWriteCalled: (): boolean => writeFileProxy.wasCalled(),
-    processedCount: (): FileCount => existsProxy.callCount(),
+      writeFileGateway.writtenContentsFor({ path }),
+    wasWriteCalled: ({ path }: { path: string }): boolean =>
+      writeFileGateway.getCallsFor({ path }).length > 0,
+    // Counts the existence checks made on blob files, which are the only paths this broker checks.
+    processedCount: (): number =>
+      existsGateway.getCallsFor({
+          path: (value: unknown): boolean => typeof value === 'string' && value.endsWith('.json'),
+        }).length,
   };
 };

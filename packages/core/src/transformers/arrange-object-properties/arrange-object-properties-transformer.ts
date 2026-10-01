@@ -36,7 +36,7 @@
  * });
  * // Returns { unreachable: false, unfillable: false, properties: [{ name: 'db', value: { retry: 3 } }] }
  */
-import type { ArrangeValue, ConditionLeaf, PropertyDemand, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ArrangeValue, ConditionLeaf, PropertyDemand, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
@@ -57,24 +57,24 @@ export const arrangeObjectPropertiesTransformer = ({
   requirements,
   corrected,
 }: {
-  properties: readonly { name: SymbolName; type: TypeDescriptor }[];
+  properties: readonly { name: string; type: TypeDescriptor }[];
   demands: readonly PropertyDemand[];
   requirements: readonly { leaf: ConditionLeaf; want: boolean }[];
   corrected: ReadonlySet<string>;
-}): { unreachable: boolean; unfillable: boolean; properties: { name: SymbolName; value: ArrangeValue }[] } => {
+}): { unreachable: boolean; unfillable: boolean; properties: { name: string; value: ArrangeValue }[] } => {
   const picks = [...properties]
-    .sort((a, b) => (String(a.name) < String(b.name) ? -1 : 1))
+    .sort((a, b) => (a.name < b.name ? -1 : 1))
     .map((property) => {
       // The bucket's requirements that turn on THIS property — a read whose path (already relative to
       // this list) starts with this property's own name.
       const own = requirements.filter(
         (requirement) =>
           requirement.leaf.operandPropertyPath !== undefined &&
-          String(requirement.leaf.operandPropertyPath[0]) === String(property.name),
+          String(requirement.leaf.operandPropertyPath[0]) === property.name,
       );
       const propertyRequirements = own.filter((requirement) => requirement.leaf.operandPropertyPath?.length === 1);
       const nestedRequirements = own.filter((requirement) => (requirement.leaf.operandPropertyPath?.length ?? 0) > 1);
-      const demand = demands.find((entry) => String(entry.name) === String(property.name))?.demand;
+      const demand = demands.find((entry) => entry.name === property.name)?.demand;
 
       if (nestedRequirements.length > 0 && property.type.kind === 'object') {
         const shifted = nestedRequirements.map((requirement) => ({
@@ -95,12 +95,12 @@ export const arrangeObjectPropertiesTransformer = ({
         // recursion builds is ever falsy, so the two arms cannot both hold. A demanded TRUTHY arm needs
         // no extra check — any built object already satisfies it.
         const falsyContradiction = propertyRequirements.some((requirement) =>
-          isFalsyArmGuard({ predicateKind: String(requirement.leaf.predicate.kind), want: requirement.want }),
+          isFalsyArmGuard({ predicateKind: requirement.leaf.predicate.kind, want: requirement.want }),
         );
 
         return {
           name: property.name,
-          value: sub.unfillable ? undefined : Object.fromEntries(sub.properties.map((p) => [String(p.name), p.value])),
+          value: sub.unfillable ? undefined : Object.fromEntries(sub.properties.map((p) => [p.name, p.value])),
           unreachable: sub.unreachable || falsyContradiction,
         };
       }
@@ -128,7 +128,7 @@ export const arrangeObjectPropertiesTransformer = ({
       const armDomains = propertyRequirements.map((requirement) => {
         const armValues = typeToRangeTransformer({
           type: property.type,
-          predicateKind: String(requirement.leaf.predicate.kind),
+          predicateKind: requirement.leaf.predicate.kind,
           ...(requirement.leaf.predicate.literal === undefined ? {} : { literal: requirement.leaf.predicate.literal }),
         });
         return requirement.want ? armValues.satisfying : armValues.violating;
@@ -149,13 +149,13 @@ export const arrangeObjectPropertiesTransformer = ({
         representativeValueTransformer({ type: property.type }) === undefined &&
         (armDomains.some((domain) => !isDomainUnconstrainedGuard({ domain })) ||
           propertyRequirements.some((requirement) =>
-            isFalsyArmGuard({ predicateKind: String(requirement.leaf.predicate.kind), want: requirement.want }),
+            isFalsyArmGuard({ predicateKind: requirement.leaf.predicate.kind, want: requirement.want }),
           ))
       ) {
         return { name: property.name, value: undefined, unreachable: false };
       }
 
-      if (corrected.has(String(property.name))) {
+      if (corrected.has(property.name)) {
         // A committed correction is AUTHORITATIVE: the property may take ONLY its corrected values, so the
         // narrowed domain is SEEDED from them and the branch literal is never a fallback. When no corrected
         // value satisfies the guard the domain is empty — the branch is unreachable under the human's

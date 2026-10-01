@@ -6,13 +6,12 @@
  * gutterMarkerContract.parse({ line: 2, count: 2 });
  * // Returns a validated GutterMarker (branded line + count)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '@assayer/shared/contracts';
 
 export const gutterMarkerContract = z.object({
-  line: lineNumberContract,
-  count: z.number().int().positive().brand<'TestCaseCount'>(),
-});
+  line: z.number().int().positive().brand<'GutterMarkerLine'>(),
+  count: z.number().int().positive().brand<'GutterMarkerCount'>(),
+}).brand<'GutterMarker'>();
 
 export type GutterMarker = z.infer<typeof gutterMarkerContract>;

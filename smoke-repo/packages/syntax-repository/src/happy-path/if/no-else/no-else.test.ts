@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'no-else.ts'), 'utf8');
 const relPath = 'src/happy-path/if/no-else/no-else.ts';
@@ -59,7 +59,7 @@ describe('if / no-else — a tail if with no else, whose only arm falls through'
   // the `then` one would fail a real run — pinned end to end by
   // `run-unit-broker.integration.test.ts`'s `TAIL_NO_ELSE_SPECIMEN`.
   it('VALID: {tail if with no else} => both arms converge on the one exit, second grayed', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [TOP_EXIT], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
@@ -68,7 +68,7 @@ describe('if / no-else — a tail if with no else, whose only arm falls through'
   });
 
   it('VALID: {tail if with no else} => nothing admitted as undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots }).toStrictEqual({ undriven: [], darkSpots: [] });
   });

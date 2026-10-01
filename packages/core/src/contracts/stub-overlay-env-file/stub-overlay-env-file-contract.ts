@@ -9,13 +9,13 @@
  * stubOverlayEnvFileContract.parse({ source: 'process.env', property: 'CODE', values: ['1', '2', 'other'] });
  * // Returns a validated StubOverlayEnvFile
  */
-import { z } from 'zod';
-import { envVarNameContract, representativeValueContract } from '@assayer/shared/contracts';
+import { z } from '#gateway/npm/zod';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 export const stubOverlayEnvFileContract = z.object({
   source: z.literal('process.env'),
-  property: envVarNameContract,
+  property: z.string().min(1).brand<'StubOverlayEnvFileProperty'>(),
   values: z.array(representativeValueContract),
-});
+}).brand<'StubOverlayEnvFile'>();
 
 export type StubOverlayEnvFile = z.infer<typeof stubOverlayEnvFileContract>;

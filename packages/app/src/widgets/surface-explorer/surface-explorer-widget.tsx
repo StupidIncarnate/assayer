@@ -28,11 +28,10 @@
  * <SurfaceExplorerWidget />
  * // Renders the explorer once the preload bridge resolves the compiled tree
  */
-import { useCallback, useState } from 'react';
-import type { ReactElement } from 'react';
-import { Box, Center, Flex, Tabs, Text } from '@mantine/core';
-import { lineNumberContract } from '@assayer/shared/contracts';
-import type { CompiledFileView, LineNumber, RelPath } from '@assayer/shared/contracts';
+import { useCallback, useState } from '#gateway/npm/react';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Center, Flex, Tabs, Text } from '#gateway/npm/mantine__core';
+import type { CompiledFileView } from '@assayer/shared/contracts';
 
 import { useCompiledTreeBinding } from '../../bindings/use-compiled-tree/use-compiled-tree-binding';
 import { useFileRunBinding } from '../../bindings/use-file-run/use-file-run-binding';
@@ -45,6 +44,7 @@ import { DetailPanelWidget } from '../detail-panel/detail-panel-widget';
 import { RawBlobViewerWidget } from '../raw-blob-viewer/raw-blob-viewer-widget';
 import { RunConsoleWidget } from '../run-console/run-console-widget';
 import { surfaceExplorerStatics } from '../../statics/surface-explorer/surface-explorer-statics';
+import { console } from '#gateway/browser/console';
 
 const SIDEBAR_WIDTH = 300;
 
@@ -57,8 +57,8 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   // reads as `thorough`, so every case shows live until told otherwise.
   const { data: status } = useAssayerStatusBinding();
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
-  const [selectedRelPath, setSelectedRelPath] = useState<RelPath | null>(null);
-  const [hoveredLine, setHoveredLine] = useState<LineNumber | null>(null);
+  const [selectedRelPath, setSelectedRelPath] = useState<string | null>(null);
+  const [hoveredLine, setHoveredLine] = useState<number | null>(null);
   // Keyed on the selected path, so opening a file LOADS its last run and its report, and never starts
   // one.
   const fileRun = useFileRunBinding({ relPath: selectedRelPath });
@@ -72,10 +72,10 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   // Shown when a run was asked for, while one is in flight, or when the selected file has a saved
   // report. A file with none of those has nothing to show, so the panel is ABSENT rather than empty —
   // an empty console reads as "this ran and said nothing".
-  const consoleOpen = !dismissed && (runRequested || fileRun.running || String(fileRun.output) !== '');
+  const consoleOpen = !dismissed && (runRequested || fileRun.running || fileRun.output !== '');
 
   const handleLineHover = useCallback((line: number | null): void => {
-    setHoveredLine(line === null ? null : lineNumberContract.parse(line));
+    setHoveredLine(line === null ? null : line);
   }, []);
 
   const handleRun = useCallback((): void => {
@@ -137,7 +137,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 <FileTreeWidget
                   tree={tree}
                   selectedRelPath={selectedRelPath}
-                  onFileClick={({ relPath }: { relPath: RelPath }): void => {
+                  onFileClick={({ relPath }: { relPath: string }): void => {
                     setSelectedRelPath(relPath);
                     setHoveredLine(null);
                     // Both belong to the file they were made on. Carrying the dismissal across the tree
@@ -148,7 +148,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                     compiledFileFetchBroker({ relPath })
                       .then(setFileView)
                       .catch((error: unknown) => {
-                        globalThis.console.error('[surface-explorer] failed to load file', error);
+                        console.error('[surface-explorer] failed to load file', error);
                       });
                   }}
                 />

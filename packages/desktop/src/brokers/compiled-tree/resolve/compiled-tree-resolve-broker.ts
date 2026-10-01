@@ -7,25 +7,24 @@
  *   its empty-state terminal cleanly instead of the desktop main throwing ENOENT.
  *
  * USAGE:
- * const tree = await compiledTreeResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+ * const tree = await compiledTreeResolveBroker({ repoPath: '/repo' });
  * // Returns the validated CompiledTree (summary + nodes) for the current namespace
  */
 import { compiledTreeContract } from '@assayer/shared/contracts';
 import type { CompiledTree } from '@assayer/shared/contracts';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
-import { nodeFsCacheManifestExistsAdapter } from '../../../adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
 import { treeNodesTransformer } from '../../../transformers/tree-nodes/tree-nodes-transformer';
 import { emptyCompiledTreeStatics } from '../../../statics/empty-compiled-tree/empty-compiled-tree-statics';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
+import { pathExists } from '#gateway/node/fs__promises';
 
 export const compiledTreeResolveBroker = async ({
   repoPath,
 }: {
-  repoPath: RepoPath;
+  repoPath: string;
 }): Promise<CompiledTree> => {
-  const manifestExists = await nodeFsCacheManifestExistsAdapter({ repoPath });
+  const manifestExists = await pathExists(`${repoPath}/.assayer/cache/manifest.json`);
 
   if (!manifestExists) {
     return compiledTreeContract.parse({

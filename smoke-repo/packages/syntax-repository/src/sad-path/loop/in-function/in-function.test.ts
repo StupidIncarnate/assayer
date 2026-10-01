@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
 
@@ -21,7 +21,7 @@ describe('loop / in-function — a for-of loop inside an exported function', () 
   // The whole point of the dark spot: unrecognized is not the same as invisible. The analyzer says
   // out loud that it did not follow this loop, rather than returning a map that looks complete.
   it('VALID: {for-of loop} => is reported as a DARK SPOT rather than silently dropped', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts' });
+    const walked = walkFileTransformer({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts' });
     const analysis = analyzeFileBroker({ walked });
 
     expect(analysis.darkSpots).toStrictEqual([

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'local-shape.ts'), 'utf8');
 const relPath = 'src/happy-path/object/local-shape/local-shape.ts';
@@ -15,7 +15,7 @@ describe('object / local-shape — a branchless function over a locally-declared
   // The arrange is the payoff of reading that shape: `cfg` is an OBJECT binding carrying a value for
   // every property the interface declares, so `cfg.mode` reads a string the case actually supplied.
   it('VALID: {export function pick(cfg: Config) { return cfg.mode }} => param typed as object Config with its properties, one derived case', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -55,7 +55,7 @@ describe('object / local-shape — a branchless function over a locally-declared
   // The locally-declared `Config` shape is projected into `declaredTypes` with its FULL property list —
   // the source later phases splice per-property value demands onto. Nothing is admitted.
   it('VALID: {a locally-declared interface param} => declaredTypes carries Config, and nothing is admitted', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

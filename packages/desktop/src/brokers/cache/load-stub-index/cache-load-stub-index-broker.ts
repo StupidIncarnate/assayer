@@ -10,19 +10,18 @@
  * // Returns the validated StubIndex, or undefined when the namespace has no stub index.
  */
 import { stubIndexContract } from '@assayer/shared/contracts';
-import type { NamespaceName, StubIndex } from '@assayer/shared/contracts';
+import type { StubIndex } from '@assayer/shared/contracts';
 
-import { nodeFsReadStubIndexAdapter } from '../../../adapters/node-fs/read-stub-index/node-fs-read-stub-index-adapter';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
+import { readJsonFileIfExists } from '#gateway/node/fs__promises';
 
 export const cacheLoadStubIndexBroker = async ({
   repoPath,
   namespace,
 }: {
-  repoPath: RepoPath;
-  namespace: NamespaceName;
+  repoPath: string;
+  namespace: string;
 }): Promise<StubIndex | undefined> => {
-  const raw = await nodeFsReadStubIndexAdapter({ repoPath, namespace });
+  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/stubs/${namespace}.json`)) ?? undefined;
 
   if (raw === undefined) {
     return undefined;

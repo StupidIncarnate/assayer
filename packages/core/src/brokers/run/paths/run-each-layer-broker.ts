@@ -12,9 +12,9 @@
  */
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { runIdBroker } from '../id/run-id-broker';
 import { runUnitBroker } from '../unit/run-unit-broker';
+import { readFile } from '#gateway/node/fs__promises';
 
 export const runEachLayerBroker = async ({
   remaining,
@@ -38,7 +38,7 @@ export const runEachLayerBroker = async ({
   }
 
   const absPath = `${root}/${relPath}`;
-  const source = String(await fsReadFileAdapter({ path: absPath }));
+  const source = (await readFile(absPath));
 
   const result = await runUnitBroker({
     cacheDir,

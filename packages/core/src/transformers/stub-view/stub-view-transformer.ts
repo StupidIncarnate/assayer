@@ -39,7 +39,7 @@ export const stubViewTransformer = ({
 
       const correctionByName = new Map(overlay.properties.map((property) => [String(property.name), property.values]));
       const properties = stub.properties.map((property) => {
-        const corrected = correctionByName.get(String(property.name));
+        const corrected = correctionByName.get(property.name);
 
         if (corrected === undefined) {
           return property;

@@ -19,12 +19,11 @@
  * <RunConsoleWidget output={output} running={running} failed={runError !== null} onHide={hide} />
  * // Renders the CLI's report; the caller decides when the panel is mounted
  */
-import type { ReactElement } from 'react';
-import { Box, Group, Text, CloseButton, ScrollArea } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Group, Text, CloseButton, ScrollArea } from '#gateway/npm/mantine__core';
 
 import { runConsoleStatics } from '../../statics/run-console/run-console-statics';
 import { runConsoleStatusTransformer } from '../../transformers/run-console-status/run-console-status-transformer';
-import type { RunConsole } from '@assayer/shared/contracts';
 
 const PANEL_WIDTH = 380;
 
@@ -34,12 +33,12 @@ export const RunConsoleWidget = ({
   failed = false,
   onHide,
 }: {
-  output: RunConsole;
+  output: string;
   running: boolean;
   failed?: boolean;
   onHide: () => void;
 }): ReactElement => {
-  const status = String(runConsoleStatusTransformer({ running, failed }));
+  const status = runConsoleStatusTransformer({ running, failed });
 
   return (
     <Box
@@ -65,15 +64,15 @@ export const RunConsoleWidget = ({
           data-testid="RUN_CONSOLE_STATUS"
           fz="xs"
           fw={600}
-          c={runConsoleStatics.statusColour[status as keyof typeof runConsoleStatics.statusColour]}
+          c={runConsoleStatics.statusColour[status]}
         >
-          {runConsoleStatics.status[status as keyof typeof runConsoleStatics.status]}
+          {runConsoleStatics.status[status]}
         </Text>
         <CloseButton data-testid="RUN_CONSOLE_HIDE" size="sm" onClick={onHide} aria-label="Hide the run console" />
       </Group>
 
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-        {String(output) === '' ? (
+        {output === '' ? (
           <Text data-testid="RUN_CONSOLE_EMPTY" c="dimmed" fz="xs" p="sm">
             {failed ? runConsoleStatics.noOutputMessage : runConsoleStatics.waitingMessage}
           </Text>
@@ -88,7 +87,7 @@ export const RunConsoleWidget = ({
             m={0}
             style={{ whiteSpace: 'pre-wrap' }}
           >
-            {String(output)}
+            {output}
           </Text>
         )}
       </ScrollArea>

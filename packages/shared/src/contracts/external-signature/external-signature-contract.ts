@@ -13,7 +13,7 @@
  * });
  * // Returns a validated ExternalSignature (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
@@ -21,6 +21,6 @@ import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contr
 export const externalSignatureContract = z.object({
   params: z.array(paramDescriptorContract),
   returnType: typeDescriptorContract,
-});
+}).brand<'ExternalSignature'>();
 
 export type ExternalSignature = z.infer<typeof externalSignatureContract>;

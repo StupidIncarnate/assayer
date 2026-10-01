@@ -1,10 +1,8 @@
 import { assayerCliHarness } from '../test/harnesses/assayer-cli.harness';
 import { assayerCompileHarness } from '../test/harnesses/assayer-compile.harness';
 import { CliRunResultStub } from '../src/contracts/cli-run-result/cli-run-result.stub';
-import { CliFileTextStub } from '../src/contracts/cli-file-text/cli-file-text.stub';
 import { cliUsageStatics } from '../src/statics/cli-usage/cli-usage-statics';
 import { docsOverviewStatics } from '../src/statics/docs-overview/docs-overview-statics';
-import { BranchNameStub, RelPathStub } from '@assayer/shared/contracts';
 
 const DOCS_OVERVIEW_TOPIC_BODY =
   'Assayer statically identifies what should be tested, generates and runs the tests itself, and fails like a build error when something testable is uncovered or broken.';
@@ -221,10 +219,10 @@ describe('assayer compile flow (real built binary)', () => {
       const { exitCode } = await compile.run({ argv: ['status'] });
 
       expect(exitCode).toBe(0);
-      expect(compile.manifestNamespaceNames()).toStrictEqual([BranchNameStub({ value: 'default' })]);
+      expect(compile.manifestNamespaceNames()).toStrictEqual(['default']);
       expect(compile.manifestRelPaths({ namespace: 'default' })).toStrictEqual([
-        RelPathStub({ value: 'src/alpha.ts' }),
-        RelPathStub({ value: 'src/nested/beta.tsx' }),
+        'src/alpha.ts',
+        'src/nested/beta.tsx',
       ]);
     });
   });
@@ -309,18 +307,18 @@ describe('assayer compile flow (real built binary)', () => {
 
       await compile.run({ argv: ['status'] });
       const stayHashBefore = compile.manifestContentHash({ namespace: 'default', relPath: 'src/stay.ts' });
-      const stayBlobBefore = compile.readBlobText({ hash: String(stayHashBefore) });
+      const stayBlobBefore = compile.readBlobText({ hash: stayHashBefore });
 
       compile.writeSource({ relPath: 'src/edit.ts', source: SRC_A_EDITED });
       const { exitCode: secondExit } = await compile.run({ argv: ['status'] });
       const stayHashAfter = compile.manifestContentHash({ namespace: 'default', relPath: 'src/stay.ts' });
-      const stayBlobAfter = compile.readBlobText({ hash: String(stayHashBefore) });
+      const stayBlobAfter = compile.readBlobText({ hash: stayHashBefore });
 
       expect(secondExit).toBe(0);
       expect(stayHashAfter).toBe(stayHashBefore);
       expect(stayBlobAfter).toBe(stayBlobBefore);
       expect(compile.blobSourceText({ namespace: 'default', relPath: 'src/edit.ts' })).toBe(
-        CliFileTextStub({ value: SRC_A_EDITED }),
+        SRC_A_EDITED,
       );
     });
   });
@@ -340,19 +338,19 @@ describe('assayer compile flow (real built binary)', () => {
 
       expect(exitCode).toBe(0);
       expect(compile.manifestNamespaceNames()).toStrictEqual([
-        BranchNameStub({ value: 'feature' }),
-        BranchNameStub({ value: 'master' }),
+        'feature',
+        'master',
       ]);
       expect(compile.manifestNamespaceHasCommit({ namespace: 'master' })).toBe(true);
       expect(compile.manifestNamespaceHasCommit({ namespace: 'feature' })).toBe(false);
       expect(compile.blobSourceText({ namespace: 'feature', relPath: 'src/app.ts' })).toBe(
-        CliFileTextStub({ value: GIT_UNCOMMITTED }),
+        GIT_UNCOMMITTED,
       );
       expect(compile.blobSourceText({ namespace: 'master', relPath: 'src/app.ts' })).toBe(
-        CliFileTextStub({ value: GIT_COMMITTED }),
+        GIT_COMMITTED,
       );
-      expect(compile.read({ relPath: 'src/app.ts' })).toBe(CliFileTextStub({ value: GIT_UNCOMMITTED }));
-      await expect(compile.headBranch()).resolves.toBe(CliFileTextStub({ value: 'feature' }));
+      expect(compile.read({ relPath: 'src/app.ts' })).toBe(GIT_UNCOMMITTED);
+      await expect(compile.headBranch()).resolves.toBe('feature');
     });
   });
 
@@ -373,13 +371,13 @@ describe('assayer compile flow (real built binary)', () => {
       const { exitCode } = await compile.run({ argv: ['status'] });
 
       expect(exitCode).toBe(0);
-      expect(compile.manifestNamespaceNames()).toStrictEqual([BranchNameStub({ value: 'master' })]);
+      expect(compile.manifestNamespaceNames()).toStrictEqual(['master']);
       expect(compile.manifestNamespaceHasCommit({ namespace: 'master' })).toBe(false);
       expect(compile.blobSourceText({ namespace: 'master', relPath: 'src/app.ts' })).toBe(
-        CliFileTextStub({ value: GIT_UNCOMMITTED }),
+        GIT_UNCOMMITTED,
       );
-      expect(compile.read({ relPath: 'src/app.ts' })).toBe(CliFileTextStub({ value: GIT_UNCOMMITTED }));
-      await expect(compile.headBranch()).resolves.toBe(CliFileTextStub({ value: 'master' }));
+      expect(compile.read({ relPath: 'src/app.ts' })).toBe(GIT_UNCOMMITTED);
+      await expect(compile.headBranch()).resolves.toBe('master');
     });
   });
 });

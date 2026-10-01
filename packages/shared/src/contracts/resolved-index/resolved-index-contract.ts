@@ -14,7 +14,7 @@
  * });
  * // Returns a validated ResolvedIndex (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { resolvedEdgeContract } from '../resolved-edge/resolved-edge-contract';
@@ -23,6 +23,6 @@ export const resolvedIndexContract = z.object({
   layoutHash: contentHashContract,
   tsconfigHash: contentHashContract,
   edges: z.array(resolvedEdgeContract),
-});
+}).brand<'ResolvedIndex'>();
 
 export type ResolvedIndex = z.infer<typeof resolvedIndexContract>;

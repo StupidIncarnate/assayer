@@ -10,8 +10,6 @@
  */
 import type { UndrivenEntry } from '@assayer/shared/contracts';
 
-import { admissionLineContract } from '../../contracts/admission-line/admission-line-contract';
-import type { AdmissionLine } from '../../contracts/admission-line/admission-line-contract';
 
-export const undrivenLineFormatTransformer = ({ entry }: { entry: UndrivenEntry }): AdmissionLine =>
-  admissionLineContract.parse(`  UNDRIVEN ${String(entry.label ?? entry.name)} — ${String(entry.reason)}`);
+export const undrivenLineFormatTransformer = ({ entry }: { entry: UndrivenEntry }): string =>
+  `  UNDRIVEN ${String(entry.label ?? entry.name)} — ${String(entry.reason)}`;

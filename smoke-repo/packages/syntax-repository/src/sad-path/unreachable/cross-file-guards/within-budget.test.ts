@@ -2,11 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'within-budget.ts'), 'utf8');
 const relPath = 'src/sad-path/unreachable/cross-file-guards/within-budget.ts';
-const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
 describe('unreachable / within-budget — the second predicate function, whose threshold contradicts the first', () => {
   // Identical in shape to `exceeds-limit`, and correct on its own terms: nothing here is wrong until

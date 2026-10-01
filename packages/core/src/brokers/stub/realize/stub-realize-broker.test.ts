@@ -1,6 +1,6 @@
-import { StubOverlayStub } from '@assayer/shared/contracts';
+import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
 
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 
 import { stubRealizeBroker } from './stub-realize-broker';
@@ -46,8 +46,8 @@ const DEAD_SURFACE_SOURCE =
 const MIXED_ENTRIES_SOURCE =
   "interface Config {\n  mode: string;\n}\n\nexport function decide(config: Config): string {\n  if (config.mode === 'a') {\n    return 'x';\n  }\n\n  return 'y';\n}\n\nexport function grade(n: number): string {\n  if (n > 5) {\n    return 'p';\n  }\n\n  return 'f';\n}\n";
 
-// The import never resolves to an in-repo sibling (no proxy.setupTypeDefinition call), so `Config`
-// stays exactly as opaque as the per-file walk left it.
+// The import resolves to no file at all (proxy.importResolvesToNothing), so `Config` stays exactly as
+// opaque as the per-file walk left it.
 const UNRESOLVABLE_CROSS_FILE_SOURCE =
   "import { Config } from './types';\n\nexport function decideA(config: Config): string {\n  if (config.mode === 'a') {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
 
@@ -66,7 +66,7 @@ describe('stubRealizeBroker', () => {
   describe('a same-file object-member branch, no correction', () => {
     it("VALID: {if (config.mode === 'a')} => both arms driven from the derived demand, undriven cleared", () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
@@ -90,7 +90,7 @@ describe('stubRealizeBroker', () => {
     // the then arm arranges the corrected 'a' the guard admits and the else arm the first corrected non-'a'.
     it("VALID: {mode corrected to ['a','dev','prod']} => then arranges the corrected 'a', else the corrected 'dev'", () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({
@@ -121,7 +121,7 @@ describe('stubRealizeBroker', () => {
     // corrected 'dev'. The contradiction itself is a P1 raised by stub-contradictions before running.
     it("VALID: {mode corrected to ['dev','prod'] (no 'a')} => the then case is dropped, only the else arm arranges 'dev'", () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: SAME_FILE_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({
@@ -147,8 +147,9 @@ describe('stubRealizeBroker', () => {
   describe('a cross-file object type resolved through the import', () => {
     it("VALID: {config: Config from './types', if (config.mode === 'a')} => both arms driven, region filled", () => {
       const proxy = stubRealizeBrokerProxy();
-      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
+      const walked = walkFileTransformer({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/caller.ts', overlays: [] });
@@ -179,8 +180,9 @@ describe('stubRealizeBroker', () => {
     // beside two cases that plainly drive the entry.
     it("VALID: {config: Config from './types'} => the input gap the per-file analysis invoiced is cleared", () => {
       const proxy = stubRealizeBrokerProxy();
-      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
+      const walked = walkFileTransformer({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/caller.ts', overlays: [] });
@@ -192,14 +194,15 @@ describe('stubRealizeBroker', () => {
     });
   });
 
-  // The import names a real specifier, but nothing resolves it to an in-repo sibling — the proxy's
-  // module resolver defaults to "not resolved" until a test wires `setupTypeDefinition`. `Config` stays
-  // exactly as opaque as the per-file walk left it, so the entry stays admitted UNDRIVEN and its gap
-  // stands, precisely as compose leaves an unresolvable cross-file guard.
+  // The import names a real specifier, but it resolves to no file. `Config` stays exactly as opaque as
+  // the per-file walk left it, so the entry stays admitted UNDRIVEN and its gap stands, precisely as
+  // compose leaves an unresolvable cross-file guard.
   describe('a cross-file object type whose import cannot resolve', () => {
     it("VALID: {config: Config from './types', nothing resolves it} => the analysis passes through unchanged", () => {
-      stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: UNRESOLVABLE_CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
+      const proxy = stubRealizeBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.importResolvesToNothing({ specifier: './types' });
+      const walked = walkFileTransformer({ source: UNRESOLVABLE_CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/caller.ts', overlays: [] });
@@ -215,7 +218,7 @@ describe('stubRealizeBroker', () => {
   describe('a truthiness read of an object-typed property', () => {
     it('VALID: {if (config.db) where db is an object} => ONE case, the satisfying arm', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: TRUTHY_OBJECT_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: TRUTHY_OBJECT_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
@@ -234,7 +237,7 @@ describe('stubRealizeBroker', () => {
 
     it('VALID: {if (config.tags) where tags is an array} => ONE case, since every array built is truthy', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: TRUTHY_ARRAY_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: TRUTHY_ARRAY_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
@@ -254,7 +257,7 @@ describe('stubRealizeBroker', () => {
     // A string has a falsy point, so nothing is refused and both arms stay real cases.
     it('VALID: {if (config.mode) where mode is a string} => BOTH arms, the else arranging the empty string', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: TRUTHY_SCALAR_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: TRUTHY_SCALAR_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
@@ -285,7 +288,7 @@ describe('stubRealizeBroker', () => {
   describe('an object-member branch whose property refuses on every arm (a `.length` guard on an array property)', () => {
     it('VALID: {if (config.tags.length > 3)} => no case derives, and the per-file undriven admission survives', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: LENGTH_GUARDED_ARRAY_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: LENGTH_GUARDED_ARRAY_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
@@ -318,7 +321,7 @@ describe('stubRealizeBroker', () => {
   describe('a dead-surface lint beside the entry this overlay drives', () => {
     it('VALID: {an unused private helper beside a driven object-member branch} => the lint survives the reconstruction', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: DEAD_SURFACE_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: DEAD_SURFACE_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
@@ -363,7 +366,7 @@ describe('stubRealizeBroker', () => {
   describe('a same-file object-member branch more than one property level deep', () => {
     it('VALID: {if (config.db.retry === 3)} => both arms driven, db built as a real nested object, undriven cleared', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: DEEP_PROPERTY_SOURCE, relPath: 'src/check-deep.ts' });
+      const walked = walkFileTransformer({ source: DEEP_PROPERTY_SOURCE, relPath: 'src/check-deep.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/check-deep.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/check-deep.ts', overlays: [] });
@@ -392,7 +395,7 @@ describe('stubRealizeBroker', () => {
   describe('a file with no object-member branch', () => {
     it('EMPTY: {if (n > 5)} => the analysis passes through unchanged, no disk read', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
+      const walked = walkFileTransformer({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/grade.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/grade.ts', overlays: [] });
@@ -407,7 +410,7 @@ describe('stubRealizeBroker', () => {
   describe('a file with a candidate entry beside one that does not qualify', () => {
     it("VALID: {decide branches on config.mode, grade branches on n} => decide is driven, grade's own cases are untouched", () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: MIXED_ENTRIES_SOURCE, relPath: 'src/decide.ts' });
+      const walked = walkFileTransformer({ source: MIXED_ENTRIES_SOURCE, relPath: 'src/decide.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/decide.ts', overlays: [] });
@@ -433,7 +436,7 @@ describe('stubRealizeBroker', () => {
   describe('a source that failed to parse', () => {
     it('EMPTY: {a walk that did not succeed} => the same analysis reference', () => {
       stubRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: 'export function broken(: {', relPath: 'src/broken.ts' });
+      const walked = walkFileTransformer({ source: 'export function broken(: {', relPath: 'src/broken.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/broken.ts' });
 
       const result = stubRealizeBroker({ analysis, walked, root: '/repo', relPath: 'src/broken.ts', overlays: [] });

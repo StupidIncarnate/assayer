@@ -18,31 +18,27 @@
  * await compile.run({ argv: ['status'] });
  * compile.manifestRelPaths({ namespace: 'default' }); // => ['src/a.ts']
  */
-import { join, dirname } from 'node:path';
-import { spawn } from 'node:child_process';
-import { tmpdir } from 'node:os';
+import { join, dirname } from '#gateway/node/path';
+import { spawn } from '#gateway/node/child_process';
+import { gitRun, currentBranch } from '#gateway/bin/git';
+import { tmpdir } from '#gateway/node/os';
 import {
   mkdtempSync,
-  mkdirSync,
+  ensureDirSync,
   writeFileSync,
   existsSync,
   readFileSync,
   readdirSync,
   rmSync,
-} from 'node:fs';
+} from '#gateway/node/fs';
 
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
-import { CliFileTextStub } from '../../src/contracts/cli-file-text/cli-file-text.stub';
-import type { CliFileText } from '../../src/contracts/cli-file-text/cli-file-text-contract';
-import {
-  BranchNameStub,
-  RelPathStub,
-  ContentHashStub,
-} from '@assayer/shared/contracts';
-import type { BranchName, RelPath, ContentHash ,
-  AssayerCacheManifestStub,
-  CompiledFileBlobStub} from '@assayer/shared/contracts';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
+import type { ContentHash } from '@assayer/shared/contracts';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
 
@@ -67,17 +63,17 @@ export const assayerCompileHarness = (): {
     sources: readonly { relPath: string; source: string }[];
     message: string;
   }) => Promise<void>;
-  headBranch: () => Promise<CliFileText>;
-  read: ({ relPath }: { relPath: string }) => CliFileText;
+  headBranch: () => Promise<string>;
+  read: ({ relPath }: { relPath: string }) => string;
   exists: ({ relPath }: { relPath: string }) => boolean;
-  manifestNamespaceNames: () => readonly BranchName[];
-  manifestRelPaths: ({ namespace }: { namespace: string }) => readonly RelPath[];
+  manifestNamespaceNames: () => readonly string[];
+  manifestRelPaths: ({ namespace }: { namespace: string }) => readonly string[];
   manifestContentHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
   manifestNamespaceHasCommit: ({ namespace }: { namespace: string }) => boolean;
   blobHashes: () => readonly ContentHash[];
-  readBlobText: ({ hash }: { hash: string }) => CliFileText;
-  blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }) => CliFileText;
-  concatAllBlobs: () => CliFileText;
+  readBlobText: ({ hash }: { hash: string }) => string;
+  blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }) => string;
+  concatAllBlobs: () => string;
 } => {
   let dir = '';
 
@@ -93,7 +89,7 @@ export const assayerCompileHarness = (): {
     },
     writeSource: ({ relPath, source }: { relPath: string; source: string }): void => {
       const target = join(dir, relPath);
-      mkdirSync(dirname(target), { recursive: true });
+      ensureDirSync(dirname(target));
       writeFileSync(target, source);
     },
     removeCache: (): void => {
@@ -101,7 +97,7 @@ export const assayerCompileHarness = (): {
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
       new Promise((resolve: (result: CliRunResult) => void, reject: (error: Error) => void) => {
-        const child = spawn(process.execPath, [cliEntry, ...argv], {
+        const child = spawn(execPath, [cliEntry, ...argv], {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
         });
@@ -129,89 +125,67 @@ export const assayerCompileHarness = (): {
       sources: readonly { relPath: string; source: string }[];
       message: string;
     }): Promise<void> => {
-      await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-        const child = spawn('git', ['init', '-q', '-b', workBranch], { cwd: dir, stdio: 'ignore' });
-        child.on('error', reject);
-        child.on('close', () => {
-          resolve();
-        });
-      });
+      const initRun = await gitRun({ args: ['init', '-q', '-b', workBranch], cwd: dir });
+      if (initRun.exitCode !== 0) {
+        throw new Error(`git init -q -b ${workBranch} failed in ${dir}: ${initRun.output}`);
+      }
       sources.forEach(({ relPath, source }) => {
         const target = join(dir, relPath);
-        mkdirSync(dirname(target), { recursive: true });
+        ensureDirSync(dirname(target));
         writeFileSync(target, source);
       });
-      await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-        const child = spawn('git', ['add', '-A'], { cwd: dir, stdio: 'ignore' });
-        child.on('error', reject);
-        child.on('close', () => {
-          resolve();
-        });
+      const addRun = await gitRun({ args: ['add', '-A'], cwd: dir });
+      if (addRun.exitCode !== 0) {
+        throw new Error(`git add -A failed in ${dir}: ${addRun.output}`);
+      }
+      const commitRun = await gitRun({
+        args: [
+          '-c',
+          'user.email=assayer@test.local',
+          '-c',
+          'user.name=Assayer',
+          '-c',
+          'commit.gpgsign=false',
+          'commit',
+          '-q',
+          '-m',
+          message,
+        ],
+        cwd: dir,
       });
-      await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-        const child = spawn(
-          'git',
-          [
-            '-c',
-            'user.email=assayer@test.local',
-            '-c',
-            'user.name=Assayer',
-            '-c',
-            'commit.gpgsign=false',
-            'commit',
-            '-q',
-            '-m',
-            message,
-          ],
-          { cwd: dir, stdio: 'ignore' },
-        );
-        child.on('error', reject);
-        child.on('close', () => {
-          resolve();
-        });
-      });
-      await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-        const child = spawn('git', ['branch', stableBranch], { cwd: dir, stdio: 'ignore' });
-        child.on('error', reject);
-        child.on('close', () => {
-          resolve();
-        });
-      });
+      if (commitRun.exitCode !== 0) {
+        throw new Error(`git commit -q -m ${message} failed in ${dir}: ${commitRun.output}`);
+      }
+      // A stable branch equal to the work branch already exists after the commit.
+      const branchRun =
+        stableBranch === workBranch
+          ? { exitCode: 0, output: '' }
+          : await gitRun({ args: ['branch', stableBranch], cwd: dir });
+      if (branchRun.exitCode !== 0) {
+        throw new Error(`git branch ${stableBranch} failed in ${dir}: ${branchRun.output}`);
+      }
     },
-    headBranch: async (): Promise<CliFileText> =>
-      new Promise((resolve: (value: CliFileText) => void, reject: (error: Error) => void) => {
-        const child = spawn('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
-          cwd: dir,
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
-        let stdout = '';
-        child.stdout.on('data', (chunk: Buffer) => {
-          stdout += String(chunk);
-        });
-        child.on('error', reject);
-        child.on('close', () => {
-          resolve(CliFileTextStub({ value: stdout.trim() }));
-        });
-      }),
-    read: ({ relPath }: { relPath: string }): CliFileText =>
-      CliFileTextStub({ value: readFileSync(join(dir, relPath), 'utf8') }),
+    headBranch: async (): Promise<string> =>
+      ((await currentBranch({ cwd: dir })) ?? ''),
+    read: ({ relPath }: { relPath: string }): string =>
+      readFileSync(join(dir, relPath)),
     exists: ({ relPath }: { relPath: string }): boolean => existsSync(join(dir, relPath)),
-    manifestNamespaceNames: (): readonly BranchName[] => {
+    manifestNamespaceNames: (): readonly string[] => {
       const manifest = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json'), 'utf8'),
+        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       return Object.keys(manifest.namespaces)
         .sort((a, b) => (a < b ? -1 : 1))
-        .map((name) => BranchNameStub({ value: name }));
+        .map((name) => name);
     },
-    manifestRelPaths: ({ namespace }: { namespace: string }): readonly RelPath[] => {
+    manifestRelPaths: ({ namespace }: { namespace: string }): readonly string[] => {
       const manifest = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json'), 'utf8'),
+        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       return (manifest.namespaces[namespace]?.files ?? [])
         .map((file) => String(file.relPath))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-        .map((relPath) => RelPathStub({ value: relPath }));
+        .map((relPath) => relPath);
     },
     manifestContentHash: ({
       namespace,
@@ -221,7 +195,7 @@ export const assayerCompileHarness = (): {
       relPath: string;
     }): ContentHash => {
       const manifest = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json'), 'utf8'),
+        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       const entry = (manifest.namespaces[namespace]?.files ?? []).find(
         (file) => String(file.relPath) === relPath,
@@ -233,7 +207,7 @@ export const assayerCompileHarness = (): {
     },
     manifestNamespaceHasCommit: ({ namespace }: { namespace: string }): boolean => {
       const manifest = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json'), 'utf8'),
+        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       return manifest.namespaces[namespace]?.commit !== undefined;
     },
@@ -248,13 +222,11 @@ export const assayerCompileHarness = (): {
         .sort((a, b) => (a < b ? -1 : 1))
         .map((hash) => ContentHashStub({ value: hash }));
     },
-    readBlobText: ({ hash }: { hash: string }): CliFileText =>
-      CliFileTextStub({
-        value: readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${hash}.json`), 'utf8'),
-      }),
-    blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }): CliFileText => {
+    readBlobText: ({ hash }: { hash: string }): string =>
+      readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${hash}.json`)),
+    blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }): string => {
       const manifest = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json'), 'utf8'),
+        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       const entry = (manifest.namespaces[namespace]?.files ?? []).find(
         (file) => String(file.relPath) === relPath,
@@ -263,17 +235,17 @@ export const assayerCompileHarness = (): {
         throw new Error(`no manifest entry for ${relPath} in namespace ${namespace}`);
       }
       const blob = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${String(entry.contentHash)}.json`), 'utf8'),
+        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${entry.contentHash}.json`)),
       ) as Blob;
-      return CliFileTextStub({ value: blob.displayLines.map((line) => String(line.text)).join('\n') });
+      return blob.displayLines.map((line) => String(line.text)).join('\n');
     },
-    concatAllBlobs: (): CliFileText => {
+    concatAllBlobs: (): string => {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       const names = readdirSync(blobsDir)
         .filter((name) => name.endsWith('.json'))
         .sort((a, b) => (a < b ? -1 : 1));
-      const joined = names.map((name) => readFileSync(join(blobsDir, name), 'utf8')).join('\n');
-      return CliFileTextStub({ value: joined });
+      const joined = names.map((name) => readFileSync(join(blobsDir, name))).join('\n');
+      return joined;
     },
   };
 };

@@ -1,22 +1,36 @@
-import { gitExecAdapterProxy } from '../../../adapters/git/exec/git-exec-adapter.proxy';
+import { gitRunProxy } from '#gateway/bin/git/git-run/git-run.proxy';
+import { GitNotInstalledErrorProxy } from '#gateway/bin/git/git-run/git-not-installed.error.proxy';
+import { resolveRefProxy } from '#gateway/bin/git/resolve-ref/resolve-ref.proxy';
+
+const BRANCH_ARGS = ['rev-parse', '--abbrev-ref', 'HEAD'];
 
 export const gitCurrentBranchBrokerProxy = (): {
   onBranch: (params: { name: string }) => void;
   detachedAt: (params: { shortSha: string }) => void;
   notGitRepo: () => void;
+  gitNotInstalled: () => void;
 } => {
-  const gitProxy = gitExecAdapterProxy();
+  const gitProxy = gitRunProxy();
+  const shortShaProxy = resolveRefProxy();
+  GitNotInstalledErrorProxy();
 
   return {
     onBranch: ({ name }: { name: string }): void => {
-      gitProxy.succeeds({ stdout: `${name}\n`, args: ['rev-parse', '--abbrev-ref'] });
+      gitProxy.setupResult({ args: BRANCH_ARGS, exitCode: 0, output: `${name}\n` });
     },
     detachedAt: ({ shortSha }: { shortSha: string }): void => {
-      gitProxy.succeeds({ stdout: 'HEAD\n', args: ['rev-parse', '--abbrev-ref'] });
-      gitProxy.succeeds({ stdout: `${shortSha}\n`, args: ['rev-parse', '--short'] });
+      gitProxy.setupResult({ args: BRANCH_ARGS, exitCode: 0, output: 'HEAD\n' });
+      shortShaProxy.setupResolves({ ref: 'HEAD', short: true, sha: shortSha });
     },
     notGitRepo: (): void => {
-      gitProxy.fails({ exitCode: 128, stderr: 'fatal: not a git repository' });
+      gitProxy.setupResult({
+        args: BRANCH_ARGS,
+        exitCode: 128,
+        output: 'fatal: not a git repository',
+      });
+    },
+    gitNotInstalled: (): void => {
+      gitProxy.setupNotFound({ args: BRANCH_ARGS });
     },
   };
 };

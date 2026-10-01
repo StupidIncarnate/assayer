@@ -17,13 +17,12 @@ import { assayerConfigContract } from '@assayer/shared/contracts';
 
 import { desktopStatusContract } from '../../../contracts/desktop-status/desktop-status-contract';
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 
-export const statusResolveBroker = async ({ repoPath }: { repoPath: RepoPath }): Promise<DesktopStatus> => {
+export const statusResolveBroker = async ({ repoPath }: { repoPath: string }): Promise<DesktopStatus> => {
   const status = statusGetBroker();
 
-  const found = await configFindBroker({ startDir: String(repoPath) });
-  const loaded = found.found ? await configLoadBroker({ configPath: String(found.configPath) }) : undefined;
+  const found = await configFindBroker({ startDir: repoPath });
+  const loaded = found.found ? await configLoadBroker({ configPath: found.configPath }) : undefined;
   const config = loaded?.success === true ? loaded.data : assayerConfigContract.parse({});
 
   return desktopStatusContract.parse({

@@ -54,8 +54,8 @@
  * //   refusals: [{ entryName, param, type, owner? }] }
  */
 import { anonymousEntryLabelTransformer } from '@assayer/shared/transformers';
-import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { AnonymousReach, ConstLength, DerivedTestCase, EntryAccess, EntryLabel, FunctionAnalysis, LineNumber, LintEntry, ParamDescriptor, RepresentativeValue, SymbolName, TypeText, UndrivenEntry } from '@assayer/shared/contracts';
+import { anonymousReachContract, lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
+import type { DerivedTestCase, EntryAccess, FunctionAnalysis, LintEntry, ParamDescriptor, RepresentativeValue, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -105,14 +105,14 @@ export const followCallsTransformer = ({
   // `funnelNamedCasesTransformer` and `throughCallerCasesTransformer` at each scope they derive, so a
   // supplied parameter binds instead of being refused. Absent for the compile-time walk, which never
   // sees a harness; present only on the consume-time re-derivation `harness-realize` runs.
-  harness?: ReadonlyMap<SymbolName, readonly SymbolName[]>;
+  harness?: ReadonlyMap<string, readonly string[]>;
 }): {
   followedEntries: FunctionAnalysis[];
   undriven: UndrivenEntry[];
   lints: LintEntry[];
   unreachable: {
-    name: SymbolName;
-    label?: EntryLabel;
+    name: string;
+    label?: string;
     access: EntryAccess;
     unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits'];
   }[];
@@ -122,27 +122,27 @@ export const followCallsTransformer = ({
   // also carry `unreachable` — a welded argument's dead arm — for the surface's lint; a callback never
   // welds, so it carries none.
   funnels: {
-    host: SymbolName;
-    hostLine: LineNumber;
+    host: string;
+    hostLine: number;
     cases: DerivedTestCase[];
     unreachable: {
-      line: LineNumber;
-      guardLines: LineNumber[];
-      welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
-      displayName: SymbolName;
+      line: number;
+      guardLines: number[];
+      welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
+      displayName: string;
     }[];
   }[];
   // Every parameter a driving route asked the fill seam for and was REFUSED, keyed to the entry a
   // reader can drive. `owner` names the scope that DECLARES it when that is not the entry — a private
   // or callback the entry folds in, which is no entry of its own and so has nowhere else to be said.
-  refusals: { entryName: SymbolName; param: SymbolName; type: TypeText; owner?: EntryLabel }[];
+  refusals: { entryName: string; param: string; type: string; owner?: string }[];
   // Every same-file PRIVATE a named-call funnel folded into a host — the ONE source `harness-validate`
   // and this same overlay both read for a scope an `owner` names but `followedEntries` does not carry a
   // signature for, so the two can never disagree about what a driving route folded in. A funnelled
   // CALLBACK is deliberately absent: its refused element sits inside the ARRAY the host receives, and
   // `ArrangeValue` has no representation for a harness-bound value living inside a composite, so naming
   // it here would let `harness-validate` accept a key this overlay can never bind — see `funnel-cases`.
-  declaringScopes: { name: SymbolName; hostEntry: SymbolName; params: ParamDescriptor[] }[];
+  declaringScopes: { name: string; hostEntry: string; params: ParamDescriptor[] }[];
 } => {
   if (!walked.success) {
     return { followedEntries: [], undriven: [], lints: [], unreachable: [], funnels: [], refusals: [], declaringScopes: [] };
@@ -174,7 +174,7 @@ export const followCallsTransformer = ({
   // funnelled private is never ALSO reported as a through-caller entry, an undriven admission, or dead
   // surface. Keyed by name + start line, the same key the walk records a local callee by.
   const funnelledPrivateKeys = new Set(
-    namedFunnels.flatMap(({ funnel }) => funnel.consumed.map((entry) => `${String(entry.name)}@${String(entry.startLine)}`)),
+    namedFunnels.flatMap(({ funnel }) => funnel.consumed.map((entry) => `${entry.name}@${String(entry.startLine)}`)),
   );
 
   const results = scopes
@@ -223,14 +223,19 @@ export const followCallsTransformer = ({
       // passthrough of one of the caller's own parameters, or a literal the caller welds in. A mix is
       // allowed: a passthrough param steers a branch, a welded literal evaluates one. An argument that is
       // neither (an opaque expression) leaves the call unable to drive the callee, so it is not a driver.
+      // A local callee link names a scope record by its name and start line. The link's contract cannot
+      // reuse the scope record's fields, because the scope record contract already imports the call-site
+      // contract, so the two sides are compared as plain values.
+      const calleeName: string = callee.name;
+      const calleeStartLine: number = callee.startLine;
       const drives = reachable.flatMap((caller) => {
         const callerParams = new Set(caller.params.map((param) => param.name));
         return caller.calls
           .filter(
             (call) =>
               call.callee.target === 'local' &&
-              call.callee.name === callee.name &&
-              call.callee.startLine === callee.startLine &&
+              call.callee.name === calleeName &&
+              call.callee.startLine === calleeStartLine &&
               call.guardPath.length === 0 &&
               callee.params.every((_param, index) => {
                 const arg = call.args[index];
@@ -245,7 +250,7 @@ export const followCallsTransformer = ({
 
       const isCalled = scopes.some((scope) =>
         scope.calls.some(
-          (call) => call.callee.target === 'local' && call.callee.name === callee.name && call.callee.startLine === callee.startLine,
+          (call) => call.callee.target === 'local' && call.callee.name === calleeName && call.callee.startLine === calleeStartLine,
         ),
       );
 
@@ -275,7 +280,9 @@ export const followCallsTransformer = ({
               ...(callbackReach.call.method === undefined ? {} : { method: callbackReach.call.method }),
               ...(callbackReach.call.callee.target === 'local' ? { callee: callbackReach.call.callee.name } : {}),
             };
-      const reach: AnonymousReach = argumentReach ?? (invoked === undefined ? { kind: 'return' } : { kind: 'invocation' });
+      const reach = anonymousReachContract.parse(
+        argumentReach ?? (invoked === undefined ? { kind: 'return' } : { kind: 'invocation' }),
+      );
       // The scope path ends with the callee's OWN segment, so dropping it leaves the holder last. A scope
       // the module itself holds has none to show — the file is its holder, and every surface already
       // names the file above the entry.
@@ -325,7 +332,7 @@ export const followCallsTransformer = ({
   // for one host references the SAME scope record off the walk, so the grouping keys on that identity.
   const funnelGroups: {
     host: ScopeRecord;
-    callbacks: { callback: ScopeRecord; arrayParam: SymbolName; label?: EntryLabel }[];
+    callbacks: { callback: ScopeRecord; arrayParam: string; label?: string }[];
   }[] = [];
   funnelable.forEach((entry) => {
     const member = {
@@ -365,12 +372,12 @@ export const followCallsTransformer = ({
     }): {
       analysis: FunctionAnalysis;
       unreachableExits: ReturnType<typeof throughCallerCasesTransformer>['unreachableExits'];
-      name: SymbolName;
-      label?: EntryLabel;
+      name: string;
+      label?: string;
       // The refusals this route hit, already keyed to the entry that owes the invoice. A through-caller
       // private files under its OWN name (it is a named entry a reader sees); a callback over a branching
       // host files under the HOST, since its own `name` is a structural projection no surface may print.
-      refusals: { entryName: SymbolName; param: SymbolName; type: TypeText; owner?: EntryLabel }[];
+      refusals: { entryName: string; param: string; type: string; owner?: string }[];
     }[] => {
       if (callbackReach === undefined) {
         // An IIFE that drives: its arrow becomes a module-access entry driven by importing the file. Its

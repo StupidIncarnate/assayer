@@ -1,4 +1,5 @@
-import { FileAnalysisStub, FunctionAnalysisStub } from '@assayer/shared/contracts';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
 
 import { caseSetProjectionTransformer } from './case-set-projection-transformer';
 

@@ -3,7 +3,7 @@ import { join, resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { stubRealizeBroker } from '@assayer/core/stub-realize';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'branch-local.ts'), 'utf8');
 const relPath = 'src/happy-path/object/branch-local/branch-local.ts';
@@ -18,7 +18,7 @@ describe('object / branch-local — an `if` on an object-member operand, DRIVEN 
   // same-file interface. The per-file blob derives no case for it (arranging an object param's property
   // is a consume-time step), so the analyze-only view still carries the branch as `cases: []`.
   it('VALID: {if (config.mode === "a")} => the leaf records the property path, root type-ref, and reads the property type', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -95,7 +95,7 @@ describe('object / branch-local — an `if` on an object-member operand, DRIVEN 
   // else. The undriven admission the per-file walk carried is dropped, and no dark spot or lint is owed,
   // so running this file comes out clean (happy-path). Values are INPUTS (derived demands), not outputs.
   it('VALID: {stub-realize over the object param} => both arms driven, undriven cleared, Config still declared', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = stubRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath, overlays: [] });
 
     expect({

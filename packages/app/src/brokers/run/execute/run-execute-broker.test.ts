@@ -1,4 +1,4 @@
-import { RunResultStub, RelPathStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { runExecuteBroker } from './run-execute-broker';
 import { runExecuteBrokerProxy } from './run-execute-broker.proxy';
@@ -9,7 +9,7 @@ describe('runExecuteBroker', () => {
       const proxy = runExecuteBrokerProxy();
       proxy.setupRun({ run: RunResultStub() });
 
-      const result = await runExecuteBroker({ relPath: RelPathStub({ value: 'src/a.ts' }) });
+      const result = await runExecuteBroker({ relPath: 'src/a.ts' });
 
       expect(result).toStrictEqual(RunResultStub());
     });
@@ -20,7 +20,7 @@ describe('runExecuteBroker', () => {
       const proxy = runExecuteBrokerProxy();
       proxy.fails({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      await expect(runExecuteBroker({ relPath: RelPathStub({ value: 'src/a.ts' }) })).rejects.toThrow(
+      await expect(runExecuteBroker({ relPath: 'src/a.ts' })).rejects.toThrow(
         /the CLI is not built/u,
       );
     });

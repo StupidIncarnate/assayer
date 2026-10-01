@@ -1,19 +1,60 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
-import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
-import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
-import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
-import { tsMorphReadGlobalSignatureAdapter } from '../../../adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter';
-import { tsMorphReadGlobalSignatureAdapterProxy } from '../../../adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter.proxy';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
+import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
+import { externalSignatureReadGlobalDeclarationBrokerProxy } from '../read-global-declaration/external-signature-read-global-declaration-broker.proxy';
+import { ensureDirProxy } from '#gateway/node/fs__promises/ensure-dir/ensure-dir.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { renameProxy } from '#gateway/node/fs__promises/rename/rename.proxy';
+import { writeFileProxy } from '#gateway/node/fs__promises/write-file/write-file.proxy';
+
+const isGlobalSignatureCachePath = (value: unknown): boolean =>
+  String(value).includes('/global-signatures/');
+
+const cachePathFor = ({
+  reference,
+  declText,
+  cacheDir,
+}: {
+  reference: Parameters<typeof externalSignatureReadGlobalDeclarationBroker>[0]['reference'];
+  declText: string;
+  cacheDir: string;
+}): string => {
+  const referenceKey =
+    reference.kind === 'builtin'
+      ? `b:${reference.specifier} ${reference.importedName} ${String(reference.called)}`
+      : `g:${reference.name}.${reference.member === undefined ? '' : reference.member}.${String(reference.called)}`;
+  const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${declText}` });
+
+  return `${cacheDir}/global-signatures/${cacheKey}.json`;
+};
 
 export const externalSignatureReadGlobalBrokerProxy = (): {
-  cacheMiss: () => void;
-  cacheHit: () => void;
-  readsSignature: ({ signature, declText }: { signature: unknown; declText: string }) => void;
-  readsType: ({ type, declText }: { type: unknown; declText: string }) => void;
-  readsNoUsableTypes: () => void;
+  cacheMiss: (params: {
+    reference: Parameters<typeof externalSignatureReadGlobalDeclarationBroker>[0]['reference'];
+    declText: string;
+    cacheDir: string;
+  }) => void;
+  cacheHit: (params: {
+    reference: Parameters<typeof externalSignatureReadGlobalDeclarationBroker>[0]['reference'];
+    declText: string;
+    cacheDir: string;
+  }) => void;
+  readsSignature: (
+    params: Parameters<typeof externalSignatureReadGlobalDeclarationBroker>[0] & {
+      signature: unknown;
+      declText: string;
+    },
+  ) => void;
+  readsType: (
+    params: Parameters<typeof externalSignatureReadGlobalDeclarationBroker>[0] & {
+      type: unknown;
+      declText: string;
+    },
+  ) => void;
+  readsNoUsableTypes: (
+    params: Parameters<typeof externalSignatureReadGlobalDeclarationBroker>[0],
+  ) => void;
   wasWritten: () => boolean;
   // The payload the broker cached. One call writes exactly one file, into
   // `<cacheDir>/global-signatures/`, so that directory is the address. The file's own NAME is a hash of
@@ -21,40 +62,46 @@ export const externalSignatureReadGlobalBrokerProxy = (): {
   // cannot name it up front without re-deriving it.
   getWrittenPayload: () => unknown;
 } => {
-  // The cache existence check and atomic write run through the REAL fs adapters with only their
+  // The cache existence check and atomic write run through the gateway wrappers with only their
   // underlying node calls mocked; the sha256 hasher runs REAL so the cache key is a true content hash;
   // the ts-morph global read is REPLACED wholesale so these tests cover caching only.
-  const existsProxy = fsExistsAdapterProxy();
-  const mkdirProxy = fsMkdirAdapterProxy();
-  const writeFileProxy = fsWriteFileAdapterProxy();
-  const renameProxy = fsRenameAdapterProxy();
-  cryptoSha256AdapterProxy();
-  tsMorphReadGlobalSignatureAdapterProxy();
+  const existsProxy = pathExistsProxy();
+  const mkdirProxy = ensureDirProxy();
+  const writeFileGateway = writeFileProxy();
+  const renameGateway = renameProxy();
+  externalSignatureReadGlobalDeclarationBrokerProxy();
 
-  const readHandle = registerMock({ fn: tsMorphReadGlobalSignatureAdapter });
-  readHandle.calledWith([]).returns({ usable: false });
+  const readHandle = registerMock({ fn: externalSignatureReadGlobalDeclarationBroker });
 
   return {
-    cacheMiss: (): void => {
-      existsProxy.fails();
-      mkdirProxy.succeeds();
-      writeFileProxy.succeeds();
-      renameProxy.succeeds();
+    cacheMiss: (address): void => {
+      const cachePath = cachePathFor(address);
+      existsProxy.missing({ path: cachePath });
+      mkdirProxy.succeeds({ path: `${address.cacheDir}/global-signatures` });
+      writeFileGateway.succeeds({ path: `${cachePath}.tmp` });
+      renameGateway.succeeds({ from: `${cachePath}.tmp`, to: cachePath });
     },
-    cacheHit: (): void => {
-      existsProxy.succeeds();
+    cacheHit: (address): void => {
+      existsProxy.present({ path: cachePathFor(address) });
     },
-    readsSignature: ({ signature, declText }: { signature: unknown; declText: string }): void => {
-      readHandle.calledWith([]).returns({ usable: true, result: 'signature', signature, declText });
+    readsSignature: ({ tsConfigFilePath, reference, signature, declText }): void => {
+      readHandle
+        .calledWith([{ tsConfigFilePath, reference }])
+        .returns({ usable: true, result: 'signature', signature, declText });
     },
-    readsType: ({ type, declText }: { type: unknown; declText: string }): void => {
-      readHandle.calledWith([]).returns({ usable: true, result: 'type', type, declText });
+    readsType: ({ tsConfigFilePath, reference, type, declText }): void => {
+      readHandle
+        .calledWith([{ tsConfigFilePath, reference }])
+        .returns({ usable: true, result: 'type', type, declText });
     },
-    readsNoUsableTypes: (): void => {
-      readHandle.calledWith([]).returns({ usable: false });
+    readsNoUsableTypes: ({ tsConfigFilePath, reference }): void => {
+      readHandle.calledWith([{ tsConfigFilePath, reference }]).returns({ usable: false });
     },
-    wasWritten: (): boolean => writeFileProxy.wasCalled(),
+    wasWritten: (): boolean =>
+      writeFileGateway.getCallsFor({ path: isGlobalSignatureCachePath }).length > 0,
     getWrittenPayload: (): unknown =>
-      JSON.parse(String(writeFileProxy.getWrittenContentMatching({ pathIncludes: '/global-signatures/' }))),
+      JSON.parse(
+        String(writeFileGateway.getCallsFor({ path: isGlobalSignatureCachePath }).at(-1)?.[1]),
+      ),
   };
 };

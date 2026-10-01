@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'pure-statement.ts'), 'utf8');
 const relPath = 'src/happy-path/switch/pure-statement/pure-statement.ts';
@@ -18,7 +18,7 @@ describe('switch / pure-statement — a bare top-level switch DRIVEN by the envi
   // rung as happy-path/if-else/pure-statement/pure-statement.ts one construct over — a switch reads its discriminant's env
   // source exactly as an `if` reads its operand's, so a case can choose an arm.
   it('VALID: {a module-scope switch on Number(process.env.CODE)} => one case per arm, each writing CODE', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [CASE_1_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
@@ -33,7 +33,7 @@ describe('switch / pure-statement — a bare top-level switch DRIVEN by the envi
   // — the exact complement of sad-path/undriven/opaque-module/opaque-module.ts, which switches (in spirit) on an
   // opaque value the analyzer can neither set nor evaluate and therefore cannot be driven at all.
   it('VALID: {an env-driven switch} => admits nothing as undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots }).toStrictEqual({ undriven: [], darkSpots: [] });
   });

@@ -24,15 +24,15 @@
  * });
  * // Returns a validated DeclaringScope (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
+import { entrySignatureContract } from '../entry-signature/entry-signature-contract';
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const declaringScopeContract = z.object({
-  name: symbolNameContract,
-  hostEntry: symbolNameContract,
+  name: z.string().min(1).brand<'DeclaringScopeName'>(),
+  hostEntry: entrySignatureContract.shape.name,
   params: z.array(paramDescriptorContract),
-});
+}).brand<'DeclaringScope'>();
 
 export type DeclaringScope = z.infer<typeof declaringScopeContract>;

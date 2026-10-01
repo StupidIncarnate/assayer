@@ -1,7 +1,13 @@
-import { packageJsonReadAdapterProxy } from '../../../adapters/package-json/read/package-json-read-adapter.proxy';
+import { packageJsonReadBrokerProxy } from '../../../brokers/package-json/read/package-json-read-broker.proxy';
 
-export const VersionShowResponderProxy = (): Record<PropertyKey, never> => {
-  packageJsonReadAdapterProxy();
+export const VersionShowResponderProxy = (): {
+  packageJsonHasVersion: (params: { version: string }) => void;
+} => {
+  const packageJsonProxy = packageJsonReadBrokerProxy();
 
-  return {};
+  return {
+    packageJsonHasVersion: ({ version }: { version: string }): void => {
+      packageJsonProxy.packageJsonHasVersion({ version });
+    },
+  };
 };

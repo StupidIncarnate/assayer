@@ -1,8 +1,13 @@
-import { AssayerConfigStub, BranchNameStub } from '@assayer/shared/contracts';
-import { FilePathStub } from '@assayer/core/contracts';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
 
 import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
+
+const MAIN_MASTER_PROMPT =
+  "Select the stable branch for Assayer's diff baseline:\n" +
+  '  main (default)\n' +
+  '  master\n' +
+  'Enter branch name (press Enter for main): ';
 
 describe('StableBranchLayerResponder', () => {
   describe('stable branch already configured', () => {
@@ -12,12 +17,12 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
       expect(result).toStrictEqual(config);
-      expect(proxy.wasSaveCalled()).toBe(false);
+      expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([]);
     });
   });
 
@@ -29,12 +34,12 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
       expect(result).toStrictEqual(config);
-      expect(proxy.wasSaveCalled()).toBe(false);
+      expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([]);
     });
   });
 
@@ -46,38 +51,39 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
       expect(result).toStrictEqual(config);
-      expect(proxy.wasSaveCalled()).toBe(false);
+      expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([]);
     });
   });
 
   describe('both main and master present on an interactive TTY', () => {
-    it('VALID: {TTY + main and master candidates, picker chooses "develop"} => saves the picker choice, not the preselected candidate', async () => {
+    it('VALID: {TTY + main and master candidates, picker answers "master"} => saves the picker choice, not the preselected candidate', async () => {
       const proxy = StableBranchLayerResponderProxy();
       proxy.enableTty();
       proxy.insideWith({ branchListStdout: '* main\n  master\n' });
-      proxy.picksBranch({ branch: BranchNameStub({ value: 'develop' }) });
-      proxy.saveSucceeds();
+      proxy.answersPicker({ prompt: MAIN_MASTER_PROMPT, input: 'master' });
+      proxy.saveSucceeds({ configPath: '/repo/assayer.config.json' });
       const config = AssayerConfigStub();
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
-      expect(proxy.getSavedConfigJson()).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"develop","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
-      );
+      expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+      ]);
+      expect(proxy.promptsAsked()).toStrictEqual([MAIN_MASTER_PROMPT]);
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',
         exclude: [],
-        stableBranch: 'develop',
+        stableBranch: 'master',
         darkSpots: 'warn',
         deadSurface: 'error',
         inputGaps: 'error',
@@ -90,19 +96,19 @@ describe('StableBranchLayerResponder', () => {
     it('VALID: {only "main" candidate} => auto-selects "main" and saves without invoking the picker', async () => {
       const proxy = StableBranchLayerResponderProxy();
       proxy.insideWith({ branchListStdout: '* main\n' });
-      proxy.saveSucceeds();
+      proxy.saveSucceeds({ configPath: '/repo/assayer.config.json' });
       const config = AssayerConfigStub();
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
-      expect(proxy.getSavedConfigJson()).toBe(
+      expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
         '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
-      );
-      expect(proxy.pickerCallCount()).toBe(0);
+      ]);
+      expect(proxy.promptsAsked()).toStrictEqual([]);
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',
@@ -121,20 +127,19 @@ describe('StableBranchLayerResponder', () => {
       const proxy = StableBranchLayerResponderProxy();
       proxy.disableTty();
       proxy.insideWith({ branchListStdout: '* main\n  master\n' });
-      proxy.saveSucceeds();
+      proxy.saveSucceeds({ configPath: '/repo/assayer.config.json' });
       const config = AssayerConfigStub();
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
-      expect(proxy.pickerCallCount()).toBe(0);
-      expect(proxy.promptWritten()).toBe(false);
-      expect(proxy.getSavedConfigJson()).toBe(
+      expect(proxy.promptsAsked()).toStrictEqual([]);
+      expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
         '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
-      );
+      ]);
       expect(result).toStrictEqual({
         version: '1',
         repoRoot: '.',

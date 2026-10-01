@@ -104,7 +104,7 @@ describe('caseSetContract', () => {
     it('INVALID: {no modulePath} => throws, since an entry that cannot be required cannot be driven', () => {
       expect(() => {
         return caseSetContract.parse({ relPath: 'src/f.ts', entries: [], gaps: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('INVALID: {no relPath} => throws, since a case set with no source it applies to cannot be filed', () => {
@@ -117,7 +117,7 @@ describe('caseSetContract', () => {
           undriven: [],
           lints: [],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('INVALID: {entries key missing} => throws, since an omitted entries list is not the same as an empty one', () => {
@@ -130,7 +130,7 @@ describe('caseSetContract', () => {
           undriven: [],
           lints: [],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {an entry with no access} => throws, since it could only be driven by guessing', () => {
@@ -141,7 +141,7 @@ describe('caseSetContract', () => {
           entries: [{ name: 'grade', exitIds: [], cases: [] }],
           gaps: [],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
 
     // Required, not optional, for the reason darkSpots is: a set that can omit what it could not
@@ -149,7 +149,7 @@ describe('caseSetContract', () => {
     it('INVALID: {no gaps} => throws, since an omitted gap reads as full coverage', () => {
       expect(() => {
         return caseSetContract.parse({ relPath: 'src/f.ts', modulePath: '/abs/f.ts', entries: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     // Required for the same reason gaps is: a dark spot Assayer never understood is a different
@@ -164,7 +164,7 @@ describe('caseSetContract', () => {
           undriven: [],
           lints: [],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {no undriven} => throws, since an empty entries list needs this channel to mean anything', () => {
@@ -177,7 +177,7 @@ describe('caseSetContract', () => {
           darkSpots: [],
           lints: [],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {no lints} => throws, since an omitted lint reads as a repo with nothing to fix', () => {
@@ -190,7 +190,7 @@ describe('caseSetContract', () => {
           darkSpots: [],
           undriven: [],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {harnessPath: ""} => throws too_small', () => {

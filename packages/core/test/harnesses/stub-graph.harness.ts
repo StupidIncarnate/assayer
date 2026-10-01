@@ -21,17 +21,15 @@
  * const result = await stitch.stubBranchLocal();     // { index: StubIndex } — same-file
  * const crossFile = await stitch.stubCrossFileShape(); // { index: StubIndex } — cross-file union
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { resolve, join, dirname } from 'node:path';
+import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, rmSync } from '#gateway/node/fs';
+import { tmpdir } from '#gateway/node/os';
+import { resolve, join, dirname } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileStubGraphBroker } from '../../src/brokers/compile/stub-graph/compile-stub-graph-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const SMOKE_REPO = resolve(__dirname, '..', '..', '..', '..', 'smoke-repo');
 const CATALOGUE = 'packages/syntax-repository/src';
@@ -54,29 +52,29 @@ export const stubGraphHarness = (): {
   stubCrossFileShape: () => Promise<StubResult>;
   stubMultiRead: () => Promise<StubResult>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
   return {
     afterEach: (): void => {
       dirs.forEach((dir) => {
-        rmSync(String(dir), { recursive: true, force: true });
+        rmSync(dir, { recursive: true, force: true });
       });
       dirs.length = 0;
     },
 
     stubBranchLocal: async (): Promise<StubResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stub-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
 
-      const content = readFileSync(join(SMOKE_REPO, BRANCH_LOCAL_REL), 'utf8');
-      mkdirSync(join(dir, dirname(BRANCH_LOCAL_REL)), { recursive: true });
+      const content = readFileSync(join(SMOKE_REPO, BRANCH_LOCAL_REL));
+      ensureDirSync(join(dir, dirname(BRANCH_LOCAL_REL)));
       writeFileSync(join(dir, BRANCH_LOCAL_REL), content);
 
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: BRANCH_LOCAL_REL, content, blobsDir });
 
-      const files = [{ relPath: RelPathStub({ value: BRANCH_LOCAL_REL }), contentHash: cryptoSha256Adapter({ content }) }];
+      const files = [{ relPath: BRANCH_LOCAL_REL, contentHash: contentHashTransformer({ content }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -84,17 +82,17 @@ export const stubGraphHarness = (): {
 
     stubMultiRead: async (): Promise<StubResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stub-env-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
 
-      const content = readFileSync(join(SMOKE_REPO, MULTI_READ_REL), 'utf8');
-      mkdirSync(join(dir, dirname(MULTI_READ_REL)), { recursive: true });
+      const content = readFileSync(join(SMOKE_REPO, MULTI_READ_REL));
+      ensureDirSync(join(dir, dirname(MULTI_READ_REL)));
       writeFileSync(join(dir, MULTI_READ_REL), content);
 
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: MULTI_READ_REL, content, blobsDir });
 
-      const files = [{ relPath: RelPathStub({ value: MULTI_READ_REL }), contentHash: cryptoSha256Adapter({ content }) }];
+      const files = [{ relPath: MULTI_READ_REL, contentHash: contentHashTransformer({ content }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -102,17 +100,17 @@ export const stubGraphHarness = (): {
 
     stubCrossFileShape: async (): Promise<StubResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stub-xf-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
 
       const files = await Promise.all(
         [CROSS_FILE_SHAPE_ROOT_REL, CROSS_FILE_SHAPE_READER_B_REL, CROSS_FILE_SHAPE_TYPES_REL].map(async (relPath) => {
-          const content = readFileSync(join(SMOKE_REPO, relPath), 'utf8');
-          mkdirSync(join(dir, dirname(relPath)), { recursive: true });
+          const content = readFileSync(join(SMOKE_REPO, relPath));
+          ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: RelPathStub({ value: relPath }), contentHash: cryptoSha256Adapter({ content }) };
+          return { relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 

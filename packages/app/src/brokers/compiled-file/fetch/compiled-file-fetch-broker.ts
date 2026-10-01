@@ -6,11 +6,23 @@
  * await compiledFileFetchBroker({ relPath });
  * // Returns the CompiledFileView for the requested path
  */
-import { assayerBridgeGetCompiledFileAdapter } from '../../../adapters/assayer-bridge/get-compiled-file/assayer-bridge-get-compiled-file-adapter';
-import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
+import type { CompiledFileView } from '@assayer/shared/contracts';
+import { window } from '#gateway/browser/window';
+import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
+import { compiledFileViewContract } from '@assayer/shared/contracts';
 
 export const compiledFileFetchBroker = async ({
   relPath,
 }: {
-  relPath: RelPath;
-}): Promise<CompiledFileView> => assayerBridgeGetCompiledFileAdapter({ relPath });
+  relPath: string;
+}): Promise<CompiledFileView> => {
+  const bridge = window.assayerBridge;
+
+  if (bridge?.getCompiledFile === undefined) {
+    throw new Error(preloadBridgeStatics.unavailableMessage);
+  }
+
+  const raw: unknown = await bridge.getCompiledFile({ relPath });
+
+  return compiledFileViewContract.parse(raw);
+};

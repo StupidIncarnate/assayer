@@ -1,19 +1,27 @@
-import type { ResolvedIndexStub } from '@assayer/shared/contracts';
-
-import { nodeFsReadResolvedIndexAdapterProxy } from '../../../adapters/node-fs/read-resolved-index/node-fs-read-resolved-index-adapter.proxy';
+import type { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
+import { readJsonFileIfExistsProxy } from '#gateway/node/fs__promises/read-json-file-if-exists/read-json-file-if-exists.proxy';
 
 export const cacheLoadResolvedIndexBrokerProxy = (): {
-  resolves: (params: { index: ReturnType<typeof ResolvedIndexStub> }) => void;
-  absent: () => void;
+  resolves: (params: {
+    repoPath: string;
+    namespace: string;
+    index: ReturnType<typeof ResolvedIndexStub>;
+  }) => void;
+  absent: (params: { repoPath: string; namespace: string }) => void;
 } => {
-  const adapterProxy = nodeFsReadResolvedIndexAdapterProxy();
+  const readJsonIfExistsGateway = readJsonFileIfExistsProxy();
 
   return {
-    resolves: ({ index }): void => {
-      adapterProxy.returns({ content: JSON.stringify(index) });
+    resolves: ({ repoPath, namespace, index }): void => {
+      readJsonIfExistsGateway.returnsRaw({
+        path: `${repoPath}/.assayer/cache/resolved/${namespace}.json`,
+        rawContents: JSON.stringify(index),
+      });
     },
-    absent: (): void => {
-      adapterProxy.absent();
+    absent: ({ repoPath, namespace }): void => {
+      readJsonIfExistsGateway.missing({
+        path: `${repoPath}/.assayer/cache/resolved/${namespace}.json`,
+      });
     },
   };
 };

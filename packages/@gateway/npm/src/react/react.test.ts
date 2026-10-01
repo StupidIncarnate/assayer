@@ -6,11 +6,10 @@ import * as ourModule from './react';
 import pkgModule = require('react');
 
 describe('#gateway/npm/react', () => {
-  it('VALID: {module} => re-exports useState as the real react value', () => {
-    expect(ourModule.useState).toBe(pkgModule.useState);
-  });
-
-  it("VALID: {module} => default export is react's own module value", () => {
-    expect(ourModule.default).toBe(pkgModule);
+  it('VALID: {module} => default is react itself and each named value is its own binding', () => {
+    expect({ ...ourModule }).toStrictEqual({
+      ...Object.fromEntries(Object.entries(pkgModule).filter(([name]) => name in ourModule)),
+      default: pkgModule,
+    });
   });
 });

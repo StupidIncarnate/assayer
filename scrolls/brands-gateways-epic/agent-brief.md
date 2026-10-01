@@ -10,15 +10,18 @@ Work from the repo root, `/home/brutus-home/projects/assayer`. Never `cd` into a
 
 The operator owns these jobs. If you do one, you break another agent's work.
 
+One exception: when your item is a fix inside the dungeonmaster checkout (`/home/brutus-home/projects/codex-of-consentient-craft`),
+you work there the normal way. You run its ward, build the package you changed, and commit your own files there by
+explicit path, on its current branch. You never run `npm link`. Rules 1, 2 and 3 below still apply to the assayer
+checkout.
+
 1. Never build: no `npm run build` and no `tsc -b`. If a step needs compiled output, stop and report "build needed"
    with the package name.
 2. Never commit, branch, `git add`, `git mv`, `git stash`, `git checkout -- <file>` or `git reset`. The git index is
    shared. Never restore a file with `git show HEAD:<path> > <path>` either, because another agent's unsaved work may
    be in it.
 3. Never run a bare `npm run ward`. Scope it to your files: `npm run ward -- -- <paths>`.
-4. Never run a ward lint before the operator says EPIC item P0-2 is done. Ward's lint runs `--fix`, and three brand
-   rules would rewrite files outside your scope. A typecheck-only run is safe:
-   `npm run ward -- --only typecheck -- <paths>`.
+4. Ward's lint is safe to run on your own files: EPIC item P0-2 turned the three autofixing brand rules off.
 5. Never `npm install`, `npm ci`, `npm link` or `npm rebuild`. If a dependency is missing, report it.
 6. Never edit `.claude/settings.json`, `.mcp.json` or any `.env*` file.
 7. Never dispatch sub-agents or forks. A fork edits the same checkout beside you and redoes your task.

@@ -1,4 +1,5 @@
-import { FunctionAnalysisStub, CoverageIdStub } from '@assayer/shared/contracts';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
 import { caseTouchedLinesTransformer } from './case-touched-lines-transformer';
 

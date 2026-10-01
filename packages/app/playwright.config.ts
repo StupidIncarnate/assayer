@@ -1,10 +1,11 @@
-import { defineConfig } from '@playwright/test';
+import { setEnv } from '#gateway/node/process';
+import { defineConfig } from '#gateway/npm/playwright__test';
 
 // Global e2e headless switch: the desktop main reads ASSAYER_HEADLESS and creates its
 // BrowserWindow hidden, so no window ever pops up on the developer's display during e2e.
 // Set ONCE here (the single e2e config) rather than per-harness — every _electron.launch
 // child inherits this runner env. Production launches leave the flag unset and show the window.
-process.env.ASSAYER_HEADLESS = '1';
+setEnv('ASSAYER_HEADLESS', '1');
 
 // e2e = Playwright, colocated as *.e2e.ts in the flow folder where the journey starts.
 // These boot the REAL built Electron app (dist), so `npm run build` must run first, and a

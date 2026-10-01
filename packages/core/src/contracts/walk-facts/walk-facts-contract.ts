@@ -9,17 +9,9 @@
  * walkFactsContract.parse({ scopes: [], looseBranches: [], looseExits: [], nodes: [] });
  * // Returns a validated WalkFacts (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import {
-  branchNodeContract,
-  envReadContract,
-  exitNodeContract,
-  globalUseContract,
-  lineNumberContract,
-  moduleEdgeContract,
-  symbolNameContract,
-} from '@assayer/shared/contracts';
+import { branchNodeContract, envReadContract, exitNodeContract, globalUseContract, moduleEdgeContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
 import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
@@ -41,7 +33,7 @@ export const walkFactsContract = z.object({
   looseValueUses: z.array(valueUseContract),
   // Loose on its own channel: an exported top-level binding name belongs to the nearest enclosing scope
   // (the module, since exports are top-level) and is claimed on the way back up.
-  looseExportedBindings: z.array(symbolNameContract),
+  looseExportedBindings: z.array(z.string().min(1).brand<'WalkFactsLooseExportedBindings'>()),
   nodes: z.array(walkNodeContract),
   // Flat like `nodes`, not loose like branches/exits: a probe site is a position in the FILE, so no
   // scope ever claims it.
@@ -62,11 +54,11 @@ export const walkFactsContract = z.object({
   // Flat like `globalUses`: the start lines of inline functions the file REACHES other than by a named
   // call — returned to a caller (`return (n) => …`) or invoked in place (`((n) => …)(x)`). A follower
   // reads these to know such a function is reached (not dead surface), even though no case can steer it.
-  reachedFns: z.array(lineNumberContract),
+  reachedFns: z.array(z.number().int().positive().brand<'WalkFactsReachedFns'>()),
   // Flat like `reachedFns`, a parallel channel only the invoked-in-place case populates: each IIFE
   // (`((n) => …)(x)`) with the invocation arguments welded onto its params, which the bare `reachedFns`
   // line cannot carry — what a follower needs to weld the arrow's params and drive it.
   invokedFns: z.array(invokedFnContract),
-});
+}).brand<'WalkFacts'>();
 
 export type WalkFacts = z.infer<typeof walkFactsContract>;

@@ -12,8 +12,8 @@
  * const cardinality = arrayCardinalityContract.parse('one');
  * // Returns a validated ArrayCardinality (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-export const arrayCardinalityContract = z.enum(['empty', 'one', 'many', 'max']).brand<'ArrayCardinality'>();
+export const arrayCardinalityContract = z.enum(['empty', 'one', 'many', 'max']);
 
 export type ArrayCardinality = z.infer<typeof arrayCardinalityContract>;

@@ -1,41 +1,27 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
-import { typescriptResolveModuleAdapterProxy } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter.proxy';
-import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
+import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
 
 export const resolveSpecifierLayerBrokerProxy = (): {
-  // `specifier` is optional so a test resolving a single specifier keeps the old "next call" shorthand.
-  // A test that follows a re-export barrel resolves MORE THAN ONE specifier in the same run (the barrel
-  // itself, then the name it forwards to) and must pass the exact specifier the recursive call names, so
-  // each resolve answers the call that actually asked for it instead of whichever resolve runs first.
-  resolvesLocal: ({ fileName, specifier }: { fileName: string; specifier?: string }) => void;
-  resolvesLocalOnce: ({ fileName, specifier }: { fileName: string; specifier?: string }) => void;
-  resolvesUnresolved: () => void;
+  // Each resolve is staged by the specifier the caller asks for. Following a re-export barrel resolves
+  // more than one specifier in one run (the barrel, then the name it forwards to), so each specifier
+  // answers only the call that names it. A specifier no scenario staged reaches an unstaged call, which
+  // throws.
+  resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }) => void;
+  resolvesLocalOnce: ({ specifier, fileName }: { specifier: string; fileName: string }) => void;
+  resolvesUnresolved: ({ specifier }: { specifier: string }) => void;
 } => {
-  // pathRelativeAdapter runs REAL (deterministic path math). The module resolver is REPLACED wholesale
-  // because resolution against a real filesystem is exactly what a unit test cannot stage — the caller
-  // says where a specifier lands instead.
-  typescriptResolveModuleAdapterProxy();
-  pathRelativeAdapterProxy();
-
-  const resolveHandle = registerMock({ fn: typescriptResolveModuleAdapter });
-  resolveHandle.calledWith([]).returns({ resolved: false });
+  // The path `relative` call runs REAL (deterministic path math). The module resolver runs REAL too,
+  // over the typescript gateway's resolver, which its proxy stages per specifier.
+  const resolveProxy = importSpecifierResolveBrokerProxy();
 
   return {
-    resolvesLocal: ({ fileName, specifier }: { fileName: string; specifier?: string }): void => {
-      resolveHandle
-        .calledWith(specifier === undefined ? [] : [{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+    resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
+      resolveProxy.resolvesTo({ specifier, fileName });
     },
-    resolvesLocalOnce: ({ fileName, specifier }: { fileName: string; specifier?: string }): void => {
-      resolveHandle
-        .onceFor(specifier === undefined ? [] : [{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+    resolvesLocalOnce: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
+      resolveProxy.resolvesToOnce({ specifier, fileName });
     },
-    resolvesUnresolved: (): void => {
-      resolveHandle.calledWith([]).returns({ resolved: false });
+    resolvesUnresolved: ({ specifier }: { specifier: string }): void => {
+      resolveProxy.resolvesToNothing({ specifier });
     },
   };
 };

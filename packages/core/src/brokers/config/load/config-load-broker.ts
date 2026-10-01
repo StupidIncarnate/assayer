@@ -6,29 +6,26 @@
  * USAGE:
  * const result = await configLoadBroker({ configPath: '/repo/assayer.config.json' });
  * // Returns { success: true, data: AssayerConfig } or
- * // { success: false, message: ErrorMessage, line: LineNumber, column: ColumnNumber }
+ * // { success: false, message: string, line: LineNumber, column: ColumnNumber }
  */
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { jsonParseErrorSourcePositionTransformer } from '../../../transformers/json-parse-error-source-position/json-parse-error-source-position-transformer';
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
+import { readFile } from '#gateway/node/fs__promises';
 
 export const configLoadBroker = async ({
   configPath,
 }: {
   configPath: string;
 }): Promise<
-  { success: true; data: AssayerConfig } | ({ success: false; message: ErrorMessage } & SourcePosition)
+  { success: true; data: AssayerConfig } | ({ success: false; message: string } & SourcePosition)
 > => {
-  const text = await fsReadFileAdapter({ path: configPath });
+  const text = (await readFile(configPath));
 
   try {
-    const parsed = JSON.parse(String(text)) as unknown;
 
-    return { success: true, data: assayerConfigContract.parse(parsed) };
+    return { success: true, data: assayerConfigContract.parse(JSON.parse(text)) };
   } catch (error: unknown) {
     if (!(error instanceof SyntaxError)) {
       throw error;
@@ -36,14 +33,9 @@ export const configLoadBroker = async ({
 
     const position = jsonParseErrorSourcePositionTransformer({
       message: error.message,
-      text: String(text),
+      text,
     });
 
-    return {
-      success: false,
-      message: errorMessageContract.parse(error.message),
-      line: position.line,
-      column: position.column,
-    };
+    return { success: false, message: error.message, ...position };
   }
 };

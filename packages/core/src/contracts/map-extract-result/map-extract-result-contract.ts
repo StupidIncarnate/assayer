@@ -7,20 +7,22 @@
  * mapExtractResultContract.parse({ success: true, nodes: [] });
  * // Returns a validated MapExtractResult (discriminated on `success`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { mapNodeContract, lineNumberContract } from '@assayer/shared/contracts';
+import { mapNodeContract } from '@assayer/shared/contracts';
+
+import { sourcePositionContract } from '../source-position/source-position-contract';
 
 export const mapExtractResultContract = z.discriminatedUnion('success', [
-  z.object({ success: z.literal(true), nodes: z.array(mapNodeContract) }),
+  z.object({ success: z.literal(true), nodes: z.array(mapNodeContract) }).brand<'MapExtractResult'>(),
   z.object({
     success: z.literal(false),
     error: z.object({
-      line: lineNumberContract,
-      column: z.number().int().positive().brand<'ColumnNumber'>(),
-      message: z.string().min(1).brand<'ExtractErrorMessage'>(),
-    }),
-  }),
+      line: sourcePositionContract.shape.line,
+      column: sourcePositionContract.shape.column,
+      message: z.string().min(1).brand<'MapExtractResultErrorMessage'>(),
+    }).brand<'MapExtractResultError'>(),
+  }).brand<'MapExtractResult'>(),
 ]);
 
 export type MapExtractResult = z.infer<typeof mapExtractResultContract>;

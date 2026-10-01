@@ -15,10 +15,9 @@
  */
 import { runLoadBroker } from '@assayer/core/brokers';
 
-import { utilParseArgsAdapter } from '../../../adapters/util/parse-args/util-parse-args-adapter';
 import { runDetailFormatTransformer } from '../../../transformers/run-detail-format/run-detail-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
-import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
+import { parseArgs } from '#gateway/node/util';
 
 export const DetailShowResponder = async ({
   configDir,
@@ -26,8 +25,8 @@ export const DetailShowResponder = async ({
 }: {
   configDir: string;
   argv: readonly string[];
-}): Promise<CliOutput> => {
-  const [runId] = utilParseArgsAdapter({ argv }).map(String);
+}): Promise<string> => {
+  const [runId] = parseArgs({ args: [...argv], strict: true, allowPositionals: true }).positionals.map((positional) => positional).map(String);
 
   if (runId === undefined) {
     throw new CliExactOutputError({ message: 'assayer detail: no run id given.\n\nUsage: assayer detail <runId>' });

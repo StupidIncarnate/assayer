@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const relPath = 'src/happy-path/composition/fallthrough-in-if/fallthrough-in-if.ts';
 const source = readFileSync(join(__dirname, 'fallthrough-in-if.ts'), 'utf8');
@@ -27,7 +27,7 @@ describe('composition / fallthrough-in-if — an if arm ending in a switch that 
   // salient (must-run) representative and the other three are the grayed breadth. That the branching
   // converges on one exit is not a reason to collapse the four distinct inputs.
   it('VALID: {two converging branches} => four cases on the one return, exactly one salient', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'a' }], salient: true },

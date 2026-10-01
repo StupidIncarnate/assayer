@@ -43,8 +43,8 @@
  * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }],
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
-import { derivedTestCaseContract, entryLabelContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ConstLength, DerivedTestCase, EntryLabel, LineNumber, ParamDescriptor, RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
+import { arrangeBindingContract, derivedTestCaseContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -62,18 +62,18 @@ export const funnelNamedCasesTransformer = ({
 }: {
   scope: ScopeRecord;
   scopes: ScopeRecord[];
-  welds: Map<SymbolName, RepresentativeValue>;
-  harness?: ReadonlyMap<SymbolName, readonly SymbolName[]>;
+  welds: Map<string, RepresentativeValue>;
+  harness?: ReadonlyMap<string, readonly string[]>;
 }): {
   cases: DerivedTestCase[];
   unreachable: {
-    line: LineNumber;
-    guardLines: LineNumber[];
-    welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
-    displayName: SymbolName;
+    line: number;
+    guardLines: number[];
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
+    displayName: string;
   }[];
-  consumed: { name: SymbolName; startLine: LineNumber; params: ParamDescriptor[] }[];
-  unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[];
+  consumed: { name: string; startLine: number; params: ParamDescriptor[] }[];
+  unfillable: { param: string; type: string; owner: string }[];
 } => {
   // A harness spec for THIS hop alone — the map is consulted by this scope's own name, never a
   // caller's, so a private's harness never leaks onto the surface's own derivation or a sibling private.
@@ -106,8 +106,8 @@ export const funnelNamedCasesTransformer = ({
       return {
         cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
         unreachable: [],
-        consumed: [] as { name: SymbolName; startLine: LineNumber; params: ParamDescriptor[] }[],
-        unfillable: [] as { param: SymbolName; type: TypeText; owner: EntryLabel }[],
+        consumed: [] as { name: string; startLine: number; params: ParamDescriptor[] }[],
+        unfillable: [] as { param: string; type: string; owner: string }[],
       };
     }
 
@@ -126,7 +126,7 @@ export const funnelNamedCasesTransformer = ({
 
     // The private params the surface STEERS: passed straight through from a surface param that is not
     // itself welded. Each maps back onto that surface param when the private's cases rebase up.
-    const calleeToScope = new Map<SymbolName, SymbolName>();
+    const calleeToScope = new Map<string, string>();
     bindings.toCallerParam.forEach((callerParam, calleeParam) => {
       if (!welds.has(callerParam)) {
         calleeToScope.set(calleeParam, callerParam);
@@ -151,14 +151,14 @@ export const funnelNamedCasesTransformer = ({
       // seam REFUSES there drops the case, since the surface cannot be called at all.
       const arrange = scopeParams.flatMap((param): ArrangeBinding[] => {
         const [calleeParam] =
-          [...calleeToScope.entries()].find(([, callerParam]) => String(callerParam) === String(param.name)) ?? [];
+          [...calleeToScope.entries()].find(([, callerParam]) => callerParam === String(param.name)) ?? [];
         const binding =
           calleeParam === undefined
             ? undefined
-            : subCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(calleeParam));
+            : subCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === calleeParam);
 
         if (binding !== undefined && binding.kind !== 'env') {
-          return [{ ...binding, param: param.name }];
+          return [arrangeBindingContract.parse({ ...binding, param: param.name })];
         }
 
         const own = baseCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(param.name));
@@ -205,7 +205,7 @@ export const funnelNamedCasesTransformer = ({
     // already tagged with theirs. The top hop is the surface, whose own derivation invoices the same
     // refusals — the gap channel de-duplicates on (scope, parameter), so it is stated once.
     unfillable: [
-      ...derived.unfillable.map((refusal) => ({ ...refusal, owner: entryLabelContract.parse(String(scope.name)) })),
+      ...derived.unfillable.map((refusal) => ({ ...refusal, owner: String(scope.name) })),
       ...perBase.flatMap((entry) => entry.unfillable),
     ],
   };

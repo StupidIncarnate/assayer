@@ -12,13 +12,12 @@
  * harnessInputKeyContract.parse({ entry: 'audit', param: 'report' });
  * // Returns a validated HarnessInputKey (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const harnessInputKeyContract = z.object({
-  entry: symbolNameContract,
-  param: symbolNameContract,
-});
+  entry: z.string().min(1).brand<'HarnessInputKeyEntry'>(),
+  param: z.string().min(1).brand<'HarnessInputKeyParam'>(),
+}).brand<'HarnessInputKey'>();
 
 export type HarnessInputKey = z.infer<typeof harnessInputKeyContract>;

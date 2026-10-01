@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import { SyntaxKind } from '../bundled-typescript/bundled-typescript';
 import { SourceFileStub } from './source-file.stub';
 
 describe('SourceFileStub', () => {
@@ -14,7 +14,7 @@ describe('SourceFileStub', () => {
       fileName: 'gateway-stub-sample.ts',
       text: 'const a = 1;',
       statementCount: 1,
-      firstStatementKind: ts.SyntaxKind.VariableStatement,
+      firstStatementKind: SyntaxKind.VariableStatement,
     });
   });
 
@@ -26,7 +26,7 @@ describe('SourceFileStub', () => {
       firstStatementKind: sourceFile.statements[0]?.kind,
     }).toStrictEqual({
       fileName: 'other.ts',
-      firstStatementKind: ts.SyntaxKind.FunctionDeclaration,
+      firstStatementKind: SyntaxKind.FunctionDeclaration,
     });
   });
 });

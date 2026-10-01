@@ -12,12 +12,12 @@
  * });
  * // Returns a validated StubOverlayObjectFile
  */
-import { z } from 'zod';
-import { representativeValueContract, stubKeyContract, symbolNameContract } from '@assayer/shared/contracts';
+import { z } from '#gateway/npm/zod';
+import { representativeValueContract, stubEntryContract } from '@assayer/shared/contracts';
 
 export const stubOverlayObjectFileContract = z.object({
-  type: stubKeyContract,
-  properties: z.record(symbolNameContract, z.object({ values: z.array(representativeValueContract) })),
-});
+  type: stubEntryContract.shape.key,
+  properties: z.record(z.string().min(1).brand<'StubOverlayObjectFileProperties'>(), z.object({ values: z.array(representativeValueContract) }).brand<'StubOverlayObjectFileProperties'>()),
+}).brand<'StubOverlayObjectFile'>();
 
 export type StubOverlayObjectFile = z.infer<typeof stubOverlayObjectFileContract>;

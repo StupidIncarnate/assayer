@@ -22,7 +22,7 @@
  * });
  * // Returns a validated HarnessIndex (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { harnessFileContract } from '../harness-file/harness-file-contract';
@@ -32,6 +32,6 @@ export const harnessIndexContract = z.object({
   tsconfigHash: contentHashContract,
   harnessHash: contentHashContract,
   harnesses: z.array(harnessFileContract),
-});
+}).brand<'HarnessIndex'>();
 
 export type HarnessIndex = z.infer<typeof harnessIndexContract>;

@@ -1,8 +1,10 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
-import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render, waitFor } from '#gateway/npm/testing-library__react';
 import { SurfaceExplorerWidget } from './surface-explorer-widget';
 import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
-import { CompiledTreeStub, CompiledFileViewStub, FileAnalysisStub, RunConsoleStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
 
 const STUB_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
@@ -22,12 +24,10 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
       });
 
       expect(getByTestId('EXPLORER_HEADER').textContent).toBe(
@@ -44,12 +44,10 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('SURFACE_EMPTY')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('SURFACE_EMPTY')).toBeInTheDocument();
       });
 
       expect(getByTestId('SURFACE_EMPTY').textContent).toBe('No compiled surface — run assayer');
@@ -64,7 +62,7 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
       expect(getByTestId('SURFACE_LOADING').textContent).toBe('Reading the compiled surface…');
       expect(queryByTestId('SURFACE_EMPTY')).toBe(null);
@@ -81,12 +79,10 @@ describe('SurfaceExplorerWidget', () => {
           'Cannot resolve current namespace: expected exactly one working-tree entry without a commit among [branch-a, branch-b]',
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
       });
 
       expect(getByTestId('SURFACE_ERROR').textContent).toBe(
@@ -102,12 +98,10 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.failTree({ message: 'Assayer preload bridge unavailable: window.assayerBridge was not exposed.' });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('SURFACE_ERROR')).toBeInTheDocument();
       });
 
       expect(queryByTestId('EXPLORER_HEADER')).toBe(null);
@@ -155,22 +149,16 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId, getByRole } = testingLibraryRenderAdapter({
-        ui: <SurfaceExplorerWidget />,
-      });
+      const { getByTestId, getByRole } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
       });
 
       await proxy.clickFile({ label: 'app.tsx' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByRole('textbox')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByRole('textbox')).toBeInTheDocument();
       });
 
       expect(getByRole('textbox').textContent).toBe('const appModule = 1;');
@@ -185,20 +173,16 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failFile();
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
 
       await proxy.clickFile({ label: 'app.tsx' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(proxy.errorLogged()).toBe(true);
-        },
+      await waitFor(() => {
+        expect(proxy.errorLogged()).toBe(true);
       });
 
       expect(getByTestId('EXPLORER_CODE').textContent).toBe('Select a file to view its compiled source');
@@ -214,12 +198,10 @@ describe('SurfaceExplorerWidget', () => {
         tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
 
       expect(queryByTestId('RUN_CONSOLE')).toBe(null);
@@ -237,12 +219,10 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
 
@@ -262,23 +242,19 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
       proxy.setupSavedConsole({
-        console: RunConsoleStub({ value: 'app.tsx  0/1 passed\n  ERROR mapEach("oops")\n' }),
+        console: 'app.tsx  0/1 passed\n  ERROR mapEach("oops")\n',
       });
       proxy.failRun({ message: 'opening a file must never run it' });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
       });
 
       expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe('app.tsx  0/1 passed\n  ERROR mapEach("oops")\n');
@@ -294,21 +270,17 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
       proxy.emitRunOutput({ chunk: 'app.tsx  1/1 passed\n' });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE_OUTPUT')).toBeInTheDocument();
       });
 
       expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe('app.tsx  1/1 passed\n');
@@ -330,20 +302,16 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId, getByRole } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, getByRole } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE')).toBeInTheDocument();
       });
 
       expect(getByTestId('FILE_TREE')).toBeInTheDocument();
@@ -363,20 +331,16 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { getByTestId, queryAllByText } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryAllByText } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_ERROR')).toBeInTheDocument();
       });
 
       // Asserts WHICH surfaces carry the text, not merely that it appears: a second copy anywhere
@@ -400,20 +364,16 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Failed');
-        },
+      await waitFor(() => {
+        expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Failed');
       });
 
       expect(getByTestId('RUN_CONSOLE_EMPTY').textContent).toBe(
@@ -431,21 +391,17 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('FILE_TREE')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
       });
       await proxy.clickFile({ label: 'app.tsx' });
       await proxy.clickRun();
       await proxy.hideRunConsole();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(queryByTestId('RUN_CONSOLE')).toBe(null);
-        },
+      await waitFor(() => {
+        expect(queryByTestId('RUN_CONSOLE')).toBe(null);
       });
 
       expect(getByTestId('FILE_TREE')).toBeInTheDocument();

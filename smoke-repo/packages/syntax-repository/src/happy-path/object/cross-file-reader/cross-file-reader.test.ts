@@ -3,7 +3,7 @@ import { join, resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { paramTypeResolveBroker } from '@assayer/core/param-type-resolve';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'cross-file-reader.ts'), 'utf8');
 const relPath = 'src/happy-path/object/cross-file-reader/cross-file-reader.ts';
@@ -14,7 +14,7 @@ describe('object / cross-file-reader — a reader that USES an imported shape an
   // spelled, so the per-file blob has no shape to fill from — which is why the refusal lives here rather
   // than in the reader's code.
   it('VALID: {settings: Settings, imported} => the parameter is opaque and carries its type reference', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       params: analysis.functions.flatMap((fn) => fn.entry.params),
@@ -31,7 +31,7 @@ describe('object / cross-file-reader — a reader that USES an imported shape an
   // could rescue the shape. Resolution turns on the DECLARATION alone, which is why a plain reader stops
   // being invoiced for an input the file next door constructs happily.
   it('VALID: {param-type-resolve reads Settings off ./settings} => the shape is filled and no gap is owed', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = paramTypeResolveBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath });
 
     expect({

@@ -28,24 +28,18 @@
  *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files: [{ relPath, contentHash }] });
  * // Writes '/repo/.assayer/cache/stubs/feature-x.json' and returns { index: StubIndex, guards: PropertyGuard[] }
  */
-import {
-  compiledFileBlobContract,
-  envStubContract,
-  objectStubContract,
-  relPathContract,
-  stubIndexContract,
-  stubKeyContract,
-} from '@assayer/shared/contracts';
-import type { ContentHash, RelPath, ResolvedIndex, StubIndex } from '@assayer/shared/contracts';
+import { compileStubGraphResultContract } from '../../../contracts/compile-stub-graph-result/compile-stub-graph-result-contract';
+import type { CompileStubGraphResult } from '../../../contracts/compile-stub-graph-result/compile-stub-graph-result-contract';
+import { compiledFileBlobContract, envStubContract, objectStubContract, stubIndexContract, stubEntryContract } from '@assayer/shared/contracts';
+import type { ContentHash, ResolvedIndex } from '@assayer/shared/contracts';
 
-import type { PropertyGuard } from '../../../contracts/property-guard/property-guard-contract';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
 import { envGuessedValuesTransformer } from '../../../transformers/env-guessed-values/env-guessed-values-transformer';
 import { gatherEnvReadsTransformer } from '../../../transformers/gather-env-reads/gather-env-reads-transformer';
 import { gatherPropertyGuardsTransformer } from '../../../transformers/gather-property-guards/gather-property-guards-transformer';
 import { gatherTypeReadsTransformer } from '../../../transformers/gather-type-reads/gather-type-reads-transformer';
 import { stubIndexWriteBroker } from '../../stub-index/write/stub-index-write-broker';
+import { readFile } from '#gateway/node/fs__promises';
 
 export const compileStubGraphBroker = async ({
   configDir,
@@ -58,12 +52,12 @@ export const compileStubGraphBroker = async ({
   namespace: string;
   blobsDir: string;
   resolvedIndex: ResolvedIndex;
-  files: readonly { relPath: RelPath; contentHash: ContentHash }[];
-}): Promise<{ index: StubIndex; guards: PropertyGuard[] }> => {
+  files: readonly { relPath: string; contentHash: ContentHash }[];
+}): Promise<CompileStubGraphResult> => {
   const blobs = await Promise.all(
     files.map(async (file) => {
-      const raw = await fsReadFileAdapter({ path: `${blobsDir}/${String(file.contentHash)}.json` });
-      return compiledFileBlobContract.parse(JSON.parse(String(raw)));
+      const raw = (await readFile(`${blobsDir}/${file.contentHash}.json`));
+      return compiledFileBlobContract.parse(JSON.parse(raw));
     }),
   );
 
@@ -72,10 +66,10 @@ export const compileStubGraphBroker = async ({
       const properties = collectPropertyDemandsTransformer({ declaredType: group.declaredType, leaves: group.leaves });
       const readers = [...new Set(group.readers.map((reader) => String(reader)))]
         .sort((a, b) => (a < b ? -1 : 1))
-        .map((reader) => relPathContract.parse(reader));
+        .map((reader) => reader);
 
       return objectStubContract.parse({
-        key: stubKeyContract.parse(`${String(group.definitionRelPath)}#${String(group.typeName)}`),
+        key: stubEntryContract.shape.key.parse(`${String(group.definitionRelPath)}#${String(group.typeName)}`),
         definitionRelPath: group.definitionRelPath,
         typeName: group.typeName,
         properties,
@@ -87,7 +81,7 @@ export const compileStubGraphBroker = async ({
   const envStubs = gatherEnvReadsTransformer({ blobs })
     .map((group) =>
       envStubContract.parse({
-        key: stubKeyContract.parse(`process.env#${String(group.property)}`),
+        key: stubEntryContract.shape.key.parse(`process.env#${String(group.property)}`),
         property: group.property,
         values: envGuessedValuesTransformer({ literals: group.literals }),
         guessed: true,
@@ -105,5 +99,5 @@ export const compileStubGraphBroker = async ({
 
   await stubIndexWriteBroker({ configDir, namespace, index });
 
-  return { index, guards: gatherPropertyGuardsTransformer({ blobs, resolvedIndex }) };
+  return compileStubGraphResultContract.parse({ index, guards: gatherPropertyGuardsTransformer({ blobs, resolvedIndex }) });
 };

@@ -7,8 +7,7 @@
  * compileResolveRootBroker({ repoRoot: './smoke-repo', configDir: '/repo' });
  * // Returns a validated FilePath: '/repo/smoke-repo'
  */
-import { pathResolveAdapter } from '../../../adapters/path/resolve/path-resolve-adapter';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
+import { resolve } from '#gateway/node/path';
 
 export const compileResolveRootBroker = ({
   repoRoot,
@@ -16,4 +15,4 @@ export const compileResolveRootBroker = ({
 }: {
   repoRoot: string;
   configDir: string;
-}): FilePath => pathResolveAdapter({ segments: [configDir, repoRoot] });
+}): string => resolve(configDir, repoRoot);

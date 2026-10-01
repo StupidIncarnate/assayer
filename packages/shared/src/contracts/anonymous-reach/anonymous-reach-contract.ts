@@ -16,19 +16,18 @@
  * anonymousReachContract.parse({ kind: 'argument', receiver: 'items', method: 'map' });
  * // Returns a validated AnonymousReach (discriminated on `kind`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const anonymousReachContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('argument'),
-    receiver: symbolNameContract.optional(),
-    method: symbolNameContract.optional(),
-    callee: symbolNameContract.optional(),
-  }),
-  z.object({ kind: z.literal('return') }),
-  z.object({ kind: z.literal('invocation') }),
+    receiver: z.string().min(1).brand<'AnonymousReachReceiver'>().optional(),
+    method: z.string().min(1).brand<'AnonymousReachMethod'>().optional(),
+    callee: z.string().min(1).brand<'AnonymousReachCallee'>().optional(),
+  }).brand<'AnonymousReach'>(),
+  z.object({ kind: z.literal('return') }).brand<'AnonymousReach'>(),
+  z.object({ kind: z.literal('invocation') }).brand<'AnonymousReach'>(),
 ]);
 
 export type AnonymousReach = z.infer<typeof anonymousReachContract>;

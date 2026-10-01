@@ -1,7 +1,8 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { FileTreeWidget } from './file-tree-widget';
 import { FileTreeWidgetProxy } from './file-tree-widget.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 
 describe('FileTreeWidget', () => {
   describe('rendering a compiled tree', () => {
@@ -29,9 +30,7 @@ describe('FileTreeWidget', () => {
       const onFileClick = jest.fn();
       FileTreeWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
-      });
+      const { getByTestId } = render(<FileTreeWidget tree={tree} onFileClick={onFileClick} />, { wrapper: MantineProvider });
 
       expect(getByTestId('FILE_TREE')).toBeInTheDocument();
     });
@@ -62,9 +61,7 @@ describe('FileTreeWidget', () => {
       const onFileClick = jest.fn();
       FileTreeWidgetProxy();
 
-      const { getByText } = testingLibraryRenderAdapter({
-        ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
-      });
+      const { getByText } = render(<FileTreeWidget tree={tree} onFileClick={onFileClick} />, { wrapper: MantineProvider });
 
       expect(getByText(label)).toBeInTheDocument();
     });
@@ -94,9 +91,7 @@ describe('FileTreeWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeWidgetProxy();
-      testingLibraryRenderAdapter({
-        ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
-      });
+      render(<FileTreeWidget tree={tree} onFileClick={onFileClick} />, { wrapper: MantineProvider });
 
       await proxy.clickEntry({ label: 'app.tsx' });
 
@@ -126,9 +121,7 @@ describe('FileTreeWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeWidgetProxy();
-      testingLibraryRenderAdapter({
-        ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
-      });
+      render(<FileTreeWidget tree={tree} onFileClick={onFileClick} />, { wrapper: MantineProvider });
 
       await proxy.clickEntry({ label: 'web' });
 

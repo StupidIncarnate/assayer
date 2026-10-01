@@ -25,7 +25,7 @@ describe('stubViewContract', () => {
     it('INVALID: {objectStubs not an array} => throws validation error', () => {
       expect(() => {
         return stubViewContract.parse({ objectStubs: 'nope', envStubs: [] });
-      }).toThrow(/Expected array/u);
+      }).toThrow(/Invalid input: expected array, received string/u);
     });
   });
 });

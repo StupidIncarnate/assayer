@@ -13,9 +13,8 @@
  */
 import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
 
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 
 export const runLoadBroker = async ({
   configDir,
@@ -26,9 +25,9 @@ export const runLoadBroker = async ({
 }): Promise<RunResult | undefined> => {
   const path = `${configDir}/.assayer/cache/runs/${runId}/run.json`;
 
-  if (!(await fsExistsAdapter({ path }))) {
+  if (!(await pathExists(path))) {
     return undefined;
   }
 
-  return runResultContract.parse(JSON.parse(String(await fsReadFileAdapter({ path }))));
+  return runResultContract.parse(JSON.parse((await readFile(path))));
 };

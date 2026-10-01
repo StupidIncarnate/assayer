@@ -1,5 +1,6 @@
-import { AssayerConfigStub, AssayerCacheManifestStub } from '@assayer/shared/contracts';
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { compileRunBroker } from './compile-run-broker';
 import { compileRunBrokerProxy } from './compile-run-broker.proxy';
@@ -11,8 +12,8 @@ describe('compileRunBroker', () => {
     it('VALID: {two clean current files, no stableBranch, no previousManifest} => returns status ok with one result entry and writes the manifest', async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n', 'export const b = 2;\n'] });
-      proxy.manifestWriteSucceeds();
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n', 'export const b = 2;\n'] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       const config = AssayerConfigStub();
 
       const result = await compileRunBroker({
@@ -27,7 +28,7 @@ describe('compileRunBroker', () => {
         results: [{ namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 2 }],
         errors: [],
       });
-      expect(proxy.wasManifestWritten()).toBe(true);
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(true);
     });
   });
 
@@ -35,11 +36,11 @@ describe('compileRunBroker', () => {
     it("VALID: {stableBranch commit unchanged, one clean current file} => reuses the previous manifest's stable files and never processes a stable file", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.stableUnchanged({ sha: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0' });
+      proxy.stableUnchanged({ ref: 'master', sha: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0' });
       const currentContent = 'export const a = 1;\n';
-      const currentHash = cryptoSha256Adapter({ content: currentContent });
-      proxy.queueCurrentFiles({ contents: [currentContent] });
-      proxy.manifestWriteSucceeds();
+      const currentHash = contentHashTransformer({ content: currentContent });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: [currentContent] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       const previousManifest = AssayerCacheManifestStub();
       const config = AssayerConfigStub({ stableBranch: 'master' });
 
@@ -86,7 +87,7 @@ describe('compileRunBroker', () => {
     it("ERROR: {net-new run, one current file with invalid syntax} => returns status errors with that file's namespace/relPath/line/column/message and never writes the manifest", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ['const x = ;;;{{{'] });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['const x = ;;;{{{'] });
       const config = AssayerConfigStub();
 
       const result = await compileRunBroker({
@@ -101,7 +102,7 @@ describe('compileRunBroker', () => {
         results: [{ namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 1 }],
         errors: [{ namespace: 'feature-x', relPath: 'current-0.ts', line: 1, column: 11, message: 'Expression expected.' }],
       });
-      expect(proxy.wasManifestWritten()).toBe(false);
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(false);
     });
   });
 
@@ -109,7 +110,7 @@ describe('compileRunBroker', () => {
     it("ERROR: {clean parse, but an import resolves to nothing} => status errors with the resolver's namespace/relPath/line/column/message and never writes the manifest", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ["import { foo } from './missing';\nfoo();\n"] });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ["import { foo } from './missing';\nfoo();\n"] });
       proxy.resolvesWithError({ relPath: 'current-0.ts', line: 1, column: 10, message: "cannot resolve import './missing'" });
       const config = AssayerConfigStub();
 
@@ -134,9 +135,9 @@ describe('compileRunBroker', () => {
     it("ERROR: {clean run, overlay names a type absent from the current stub index} => status errors with the overlay's rectify-this-stub P1 under the current namespace, cache still written", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n'] });
-      proxy.manifestWriteSucceeds();
-      proxy.overlayStale();
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n'] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
+      proxy.overlayStale({ configDir: '/repo' });
       const config = AssayerConfigStub();
 
       const result = await compileRunBroker({
@@ -159,7 +160,7 @@ describe('compileRunBroker', () => {
           },
         ],
       });
-      expect(proxy.wasManifestWritten()).toBe(true);
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(true);
     });
   });
 
@@ -167,9 +168,9 @@ describe('compileRunBroker', () => {
     it("ERROR: {clean run, overlay corrects mode to a set that cannot satisfy mode === 'a'} => status errors with the contradiction P1 under the current namespace, cache still written", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n'] });
-      proxy.manifestWriteSucceeds();
-      proxy.overlayContradicts();
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n'] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
+      proxy.overlayContradicts({ configDir: '/repo' });
       const config = AssayerConfigStub();
 
       const result = await compileRunBroker({
@@ -192,7 +193,7 @@ describe('compileRunBroker', () => {
           },
         ],
       });
-      expect(proxy.wasManifestWritten()).toBe(true);
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(true);
     });
   });
 
@@ -200,9 +201,10 @@ describe('compileRunBroker', () => {
     it("ERROR: {clean run, harness names a parameter Assayer builds itself} => status errors with the harness P1 under the current namespace, cache still written", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n'] });
-      proxy.manifestWriteSucceeds();
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n'] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       proxy.harnessInvalid({
+        configDir: '/repo',
         relPath: 'src/audit.harness.ts',
         message: '`src/audit.harness.ts` declares no inputs, so it closes nothing.',
       });
@@ -228,7 +230,7 @@ describe('compileRunBroker', () => {
           },
         ],
       });
-      expect(proxy.wasManifestWritten()).toBe(true);
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(true);
     });
   });
 
@@ -236,7 +238,7 @@ describe('compileRunBroker', () => {
     it('ERROR: {incremental run, one current file with invalid syntax} => returns status errors and never writes the manifest', async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ['const x = ;;;{{{'] });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['const x = ;;;{{{'] });
       const previousManifest = AssayerCacheManifestStub();
       const config = AssayerConfigStub();
 
@@ -253,7 +255,7 @@ describe('compileRunBroker', () => {
         results: [{ namespace: 'feature-x', branch: 'feature-x', mode: 'incremental', fileCount: 1 }],
         errors: [{ namespace: 'feature-x', relPath: 'current-0.ts', line: 1, column: 11, message: 'Expression expected.' }],
       });
-      expect(proxy.wasManifestWritten()).toBe(false);
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(false);
     });
   });
 
@@ -262,16 +264,18 @@ describe('compileRunBroker', () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
       const stableContent = 'export const stable = 1;\n';
-      const stableHash = cryptoSha256Adapter({ content: stableContent });
+      const stableHash = contentHashTransformer({ content: stableContent });
       proxy.stableChanged({
+        configDir: '/repo',
+        ref: 'master',
         sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [stableContent],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: stableContent }],
       });
       const currentContent = 'export const current = 1;\n';
-      const currentHash = cryptoSha256Adapter({ content: currentContent });
-      proxy.queueCurrentFiles({ contents: [currentContent] });
-      proxy.manifestWriteSucceeds();
+      const currentHash = contentHashTransformer({ content: currentContent });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: [currentContent] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       const config = AssayerConfigStub({ stableBranch: 'master' });
 
       const result = await compileRunBroker({
@@ -311,12 +315,14 @@ describe('compileRunBroker', () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
       proxy.stableChanged({
+        configDir: '/repo',
+        ref: 'master',
         sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: ['export const stable = 1;\n'],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'export const stable = 1;\n' }],
       });
-      proxy.queueCurrentFiles({ contents: ['export const current = 1;\n'] });
-      proxy.manifestWriteSucceeds();
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const current = 1;\n'] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       const config = AssayerConfigStub({ stableBranch: 'master' });
 
       await compileRunBroker({
@@ -337,11 +343,13 @@ describe('compileRunBroker', () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
       proxy.stableChanged({
+        configDir: '/repo',
+        ref: 'master',
         sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/broken.ts\n`,
-        fileContents: ['const x = ;;;{{{'],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'const x = ;;;{{{' }],
       });
-      proxy.queueCurrentFiles({ contents: [] });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: [] });
       const config = AssayerConfigStub({ stableBranch: 'master' });
 
       const result = await compileRunBroker({
@@ -359,7 +367,7 @@ describe('compileRunBroker', () => {
         ],
         errors: [{ namespace: 'master', relPath: 'src/broken.ts', line: 1, column: 11, message: 'Expression expected.' }],
       });
-      expect(proxy.wasManifestWritten()).toBe(false);
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(false);
     });
   });
 
@@ -369,11 +377,13 @@ describe('compileRunBroker', () => {
       proxy.onCurrentBranch({ name: 'feature-x' });
       const stableContent = 'export const stable = 1;\n';
       proxy.stableChanged({
+        configDir: '/repo',
+        ref: 'master',
         sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [stableContent],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: stableContent }],
       });
-      proxy.queueCurrentFiles({ contents: ['export const current = 1;\n'] });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const current = 1;\n'] });
       proxy.resolvesWithError({ relPath: 'src/x.ts', line: 3, column: 10, message: "cannot resolve import './missing'" });
       const config = AssayerConfigStub({ stableBranch: 'master' });
 
@@ -402,8 +412,8 @@ describe('compileRunBroker', () => {
     it('VALID: {onProgress set, no stableBranch, one clean current file} => receives planned, advanced, and done events for the current namespace in order', async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
-      proxy.queueCurrentFiles({ contents: ['export const a = 1;\n'] });
-      proxy.manifestWriteSucceeds();
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: ['export const a = 1;\n'] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       const config = AssayerConfigStub();
       const events: unknown[] = [];
 
@@ -430,13 +440,15 @@ describe('compileRunBroker', () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
       const stableContent = 'export const stable = 1;\n';
-      const stableHash = cryptoSha256Adapter({ content: stableContent });
+      const stableHash = contentHashTransformer({ content: stableContent });
       proxy.stableChangedCommitUnresolvable({
+        configDir: '/repo',
+        ref: 'master',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [stableContent],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: stableContent }],
       });
-      proxy.queueCurrentFiles({ contents: [] });
-      proxy.manifestWriteSucceeds();
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: [] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       const config = AssayerConfigStub({ stableBranch: 'master' });
 
       const result = await compileRunBroker({
@@ -473,14 +485,16 @@ describe('compileRunBroker', () => {
       proxy.onCurrentBranch({ name: 'master' });
       const stableContent = 'export const stable = 1;\n';
       proxy.stableChanged({
+        configDir: '/repo',
+        ref: 'master',
         sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [stableContent],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: stableContent }],
       });
       const currentContent = 'export const current = 1;\n';
-      const currentHash = cryptoSha256Adapter({ content: currentContent });
-      proxy.queueCurrentFiles({ contents: [currentContent] });
-      proxy.manifestWriteSucceeds();
+      const currentHash = contentHashTransformer({ content: currentContent });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: [currentContent] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
       const config = AssayerConfigStub({ stableBranch: 'master' });
 
       const result = await compileRunBroker({

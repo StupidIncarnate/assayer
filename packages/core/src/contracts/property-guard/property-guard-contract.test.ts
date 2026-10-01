@@ -39,11 +39,11 @@ describe('propertyGuardContract', () => {
           key: 'src/config/config.ts#Config',
           property: 'mode',
           reader: 'src/decide.ts',
-          line: 'six' as never,
+          line: 'six',
           predicate: { kind: 'eq', literal: 'a' },
           operandType: { kind: 'string' },
         });
-      }).toThrow(/Expected number/u);
+      }).toThrow(/Invalid input: expected number, received string/u);
     });
   });
 });

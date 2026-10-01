@@ -33,14 +33,10 @@
  * // Returns { analysis: FunctionAnalysis (entry.access { kind: 'through-caller', callerName }),
  * //   unfillable: [{ param, type, owner }, …] }
  */
-import {
-  arrangeValueContract,
-  derivedTestCaseContract,
-  entryAccessContract,
-  entryLabelContract,
-  functionAnalysisContract,
-} from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, EntryLabel, FunctionAnalysis, SymbolName, TypeText } from '@assayer/shared/contracts';
+import { throughCallbackCasesContract } from '../../contracts/through-callback-cases/through-callback-cases-contract';
+import type { ThroughCallbackCases } from '../../contracts/through-callback-cases/through-callback-cases-contract';
+import { arrangeBindingContract, arrangeValueContract, derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { isValueBindingGuard } from '../../guards/is-value-binding/is-value-binding-guard';
@@ -57,9 +53,9 @@ export const throughCallbackCasesTransformer = ({
 }: {
   callback: ScopeRecord;
   entry: ScopeRecord;
-  arrayParam: SymbolName;
-  label?: EntryLabel;
-}): { analysis: FunctionAnalysis; unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[] } => {
+  arrayParam: string;
+  label?: string;
+}): ThroughCallbackCases => {
   // The callback's first parameter is the one bound to the array element; its steered value is the
   // array's single element. The callback's branches are derived over it exactly as a scalar param.
   const elementParamName = callback.params[0]?.name;
@@ -115,8 +111,15 @@ export const throughCallbackCasesTransformer = ({
     const arrange = entryParams.flatMap((param): ArrangeBinding[] => {
       // A REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
       // positional slots the entry's `.map` steers instead of handing it over as one argument.
-      if (String(param.name) === String(arrayParam)) {
-        return [{ kind: 'array', param: param.name, value: element, ...(param.rest === true ? { rest: true } : {}) }];
+      if (String(param.name) === arrayParam) {
+        return [
+          arrangeBindingContract.parse({
+            kind: 'array',
+            param: param.name,
+            value: element,
+            ...(param.rest === true ? { rest: true } : {}),
+          }),
+        ];
       }
 
       const fill = fillParamTransformer({ param });
@@ -129,7 +132,7 @@ export const throughCallbackCasesTransformer = ({
       : [];
   });
 
-  return {
+  return throughCallbackCasesContract.parse({
     analysis: functionAnalysisContract.parse({
       entry: {
         name: callback.name,
@@ -151,7 +154,7 @@ export const throughCallbackCasesTransformer = ({
     // inline scope, and a named one shows its own name.
     unfillable: derived.unfillable.map((refusal) => ({
       ...refusal,
-      owner: label ?? entryLabelContract.parse(String(callback.name)),
+      owner: label ?? String(callback.name),
     })),
-  };
+  });
 };

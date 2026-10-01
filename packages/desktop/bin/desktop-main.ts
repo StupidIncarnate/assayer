@@ -8,9 +8,10 @@
  */
 import { repoFlagTransformer } from '../src/transformers/repo-flag/repo-flag-transformer';
 import { StartDesktopMain } from '../src/startup/start-desktop-main';
+import { argv, stderr } from '#gateway/node/process';
 
-StartDesktopMain({ repoPath: repoFlagTransformer({ argv: process.argv }) }).catch(
+StartDesktopMain({ repoPath: repoFlagTransformer({ argv }) }).catch(
   (error: unknown) => {
-    process.stderr.write(`[assayer-desktop] boot failed: ${String(error)}\n`);
+    stderr.write(`[assayer-desktop] boot failed: ${String(error)}\n`);
   },
 );

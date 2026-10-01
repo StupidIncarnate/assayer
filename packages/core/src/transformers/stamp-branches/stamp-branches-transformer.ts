@@ -10,7 +10,7 @@
  * stampBranchesTransformer({ branches, welds: new Map([['value', 3]]) });
  * // Returns the branches with the welded value stamped onto every leaf that reads `value`
  */
-import type { BranchNode, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { BranchNode, RepresentativeValue } from '@assayer/shared/contracts';
 
 import { stampConstLeavesTransformer } from '../stamp-const-leaves/stamp-const-leaves-transformer';
 
@@ -19,7 +19,7 @@ export const stampBranchesTransformer = ({
   welds,
 }: {
   branches: BranchNode[];
-  welds: Map<SymbolName, RepresentativeValue>;
+  welds: Map<string, RepresentativeValue>;
 }): BranchNode[] =>
   welds.size === 0
     ? branches

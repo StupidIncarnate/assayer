@@ -29,24 +29,21 @@
  * });
  * // Returns a validated UndrivenEntry (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { entryLabelContract } from '../entry-label/entry-label-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const undrivenEntryContract = z.object({
-  name: symbolNameContract,
-  reason: z.string().min(1).brand<'UndrivenReason'>(),
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
+  name: z.string().min(1).brand<'UndrivenEntryName'>(),
+  reason: z.string().min(1).brand<'UndrivenEntryReason'>(),
+  startLine: z.number().int().positive().brand<'UndrivenEntryStartLine'>(),
+  endLine: z.number().int().positive().brand<'UndrivenEntryEndLine'>(),
   // The human label a surface shows instead of the internal `name`, present whenever `name` is a key
   // rather than something a reader recognises: a MODULE entry's single exported binding, else the file
   // basename (`welded-const.ts`), and an ANONYMOUS scope's callsite (`makeClassifier › return (n) => …
   // L2`). `name` stays `*module*` / the structural projection because it keys the driven/undriven
   // match; `label` is DISPLAY only, so the report and the window never read a cache key. A named
   // private carries none and shows its `name`.
-  label: entryLabelContract.optional(),
-});
+  label: z.string().min(1).brand<'UndrivenEntryLabel'>().optional(),
+}).brand<'UndrivenEntry'>();
 
 export type UndrivenEntry = z.infer<typeof undrivenEntryContract>;

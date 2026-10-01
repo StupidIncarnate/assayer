@@ -61,7 +61,7 @@ describe('fileModuleGraphContract', () => {
     it('INVALID: {missing references} => throws validation error', () => {
       expect(() => {
         return fileModuleGraphContract.parse({ edges: [] });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
   });
 });

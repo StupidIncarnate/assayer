@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { composeCrossFilePredicatesBroker } from '@assayer/core/compose-cross-file';
 import { moduleGraphProjectionTransformer } from '@assayer/core/module-graph';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 // The compose is a CONSUME-TIME overlay: the per-file blob never reads another file, so the caller's
 // opaque `if (exceedsLimit(size))` guard is joined to its sibling definition here, exactly as a run
@@ -12,7 +12,7 @@ import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
 const relPath = 'packages/syntax-repository/src/sad-path/unreachable/cross-file-guards/cross-file-guards.ts';
 const root = resolve(__dirname, '../../../../../..');
 const source = readFileSync(resolve(root, relPath), 'utf8');
-const walked = tsMorphWalkFileAdapter({ source, relPath });
+const walked = walkFileTransformer({ source, relPath });
 const analysis = composeCrossFilePredicatesBroker({ analysis: analyzeFileBroker({ walked }), walked, root, relPath });
 const graph = moduleGraphProjectionTransformer({ walked });
 const upload = analysis.functions[0];

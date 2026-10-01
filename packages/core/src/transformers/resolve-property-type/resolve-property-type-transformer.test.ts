@@ -1,4 +1,4 @@
-import { symbolNameContract, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { resolvePropertyTypeTransformer } from './resolve-property-type-transformer';
 
@@ -7,7 +7,7 @@ describe('resolvePropertyTypeTransformer', () => {
     it("VALID: {config.mode off {mode: string}} => the property's own type", () => {
       const result = resolvePropertyTypeTransformer({
         type: TypeDescriptorStub({ kind: 'object', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
-        path: [symbolNameContract.parse('mode')],
+        path: ['mode'],
       });
 
       expect(result).toStrictEqual({ kind: 'string' });
@@ -26,7 +26,7 @@ describe('resolvePropertyTypeTransformer', () => {
             },
           ],
         }),
-        path: [symbolNameContract.parse('db'), symbolNameContract.parse('retry')],
+        path: ['db', 'retry'],
       });
 
       expect(result).toStrictEqual({ kind: 'number' });
@@ -51,7 +51,7 @@ describe('resolvePropertyTypeTransformer', () => {
             },
           ],
         }),
-        path: [symbolNameContract.parse('db'), symbolNameContract.parse('retry'), symbolNameContract.parse('backoff')],
+        path: ['db', 'retry', 'backoff'],
       });
 
       expect(result).toStrictEqual({ kind: 'string' });
@@ -70,7 +70,7 @@ describe('resolvePropertyTypeTransformer', () => {
     it('EMPTY: {a segment name no property has} => undefined, never a guess', () => {
       const result = resolvePropertyTypeTransformer({
         type: TypeDescriptorStub({ kind: 'object', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
-        path: [symbolNameContract.parse('other')],
+        path: ['other'],
       });
 
       expect(result).toBe(undefined);
@@ -81,7 +81,7 @@ describe('resolvePropertyTypeTransformer', () => {
     it('EMPTY: {config.mode.sub where mode is a plain string} => undefined, the path cannot continue', () => {
       const result = resolvePropertyTypeTransformer({
         type: TypeDescriptorStub({ kind: 'object', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
-        path: [symbolNameContract.parse('mode'), symbolNameContract.parse('sub')],
+        path: ['mode', 'sub'],
       });
 
       expect(result).toBe(undefined);
@@ -92,7 +92,7 @@ describe('resolvePropertyTypeTransformer', () => {
     it('EMPTY: {a scalar root with a non-empty path} => undefined', () => {
       const result = resolvePropertyTypeTransformer({
         type: TypeDescriptorStub({ kind: 'unknown', text: 'any' }),
-        path: [symbolNameContract.parse('mode')],
+        path: ['mode'],
       });
 
       expect(result).toBe(undefined);

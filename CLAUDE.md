@@ -163,10 +163,14 @@ examples, and every other specimen.
 
 ### `npm run dev`
 
-`npm run dev` runs three watchers at once, under `concurrently`:
+`npm run dev` first runs `npm run build`, which builds every package once,
+in dependency order. Then it runs three kinds of watcher at once, under
+`concurrently`:
 
-- `tsc --build --watch` recompiles every referenced project into its own
-  `dist/` folder.
+- One `tsc -p packages/<pkg>/tsconfig.build.json --watch` per package, for
+  `shared`, `core`, `desktop` and `cli`. Each one recompiles its package
+  into that package's own `dist/` folder. The gateway packages are built
+  once by `npm run build` and are not watched.
 - The Vite server hot-reloads the renderer (React Fast Refresh), reached
   through `ASSAYER_DEV=1`.
 - `nodemon` restarts the Electron main process whenever a watched `dist/`
@@ -200,21 +204,11 @@ details inside `dev:stop` matter and are not incidental:
 
 ## Known defect: core is not ready to publish
 
-Fix both of these before publishing `@assayer/core`:
+`@assayer/core` is marked `"private": true` on purpose, so `npm publish`
+refuses it. Nothing publishes it yet. Fix this problem before that flag
+comes off:
 
-- Running `npm pack` ships 359 files, and 0 of them are inside `dist/`.
-  `package.json`'s `exports` field points every export at a path under
-  `./dist/*.js`. `dist/` is gitignored, there is no `files` allowlist in
-  `package.json`, and there is no prepublish build step. A published core
-  package would resolve every export to a file that is not in the tarball.
-  The tarball also ships 127 `.test.ts` files a published package does not
-  need.
-- Core declares `typescript` and `ts-jest` as regular `dependencies`. A
-  package installed into an arbitrary consumer's TypeScript repo
-  conventionally declares `typescript` as a `peerDependency` instead.
-  Otherwise the consumer ends up with a second copy of TypeScript, and that
-  copy can disagree with the consumer's own `tsc`, and with Assayer's own
-  `ts-morph`, about what the code means. This one is still undecided.
+- Core depends on `@assayer/shared`, which is also private.
 
 ## Constraints that shape every implementation decision
 
@@ -294,12 +288,14 @@ structural projection of that node instead: its node kind, its children,
 and its leaf values. Assayer's cache is a translated AST. Do not fall back
 to `getText()`. Pulling text into static analysis is a bug, full stop.
 
-For a concrete example, `ts-morph-extract-analysis-adapter.ts` keys a
-coverage ID on the identifier's resolved SYMBOL name when the operand is
-simple, and on the whole condition's structural projection otherwise. It
-reads a predicate's operator and literal from the node's kind and from
-`getLiteralValue()`. No path in that file calls `getText()` to produce an
-ID.
+For a concrete example, `project-node-layer-transformer.ts` builds the
+structural projection a branch's coverage ID keys on. It writes each node
+as its kind, each string or number literal as its value from
+`getLiteralValue()`, and each identifier as its name. It skips redundant
+parentheses. `read-condition-layer-transformer.ts` reads a predicate's
+operator from the operator token's kind, and its literal through
+`getLiteralValue()`. Neither file reads a condition's source text to
+produce an ID.
 
 ### Never derive an expected value from the code under test
 

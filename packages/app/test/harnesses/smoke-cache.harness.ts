@@ -23,10 +23,11 @@
  * // per test (the e2e fixture does this before reloading the warm window):
  * resetSmokeCache({ runMode: 'thorough' });
  */
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { spawn } from 'node:child_process';
+import { join } from '#gateway/node/path';
+import { tmpdir } from '#gateway/node/os';
+import { ensureDirSync, writeFileSync, rmSync } from '#gateway/node/fs';
+import { spawn } from '#gateway/node/child_process';
+import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', '..', 'cli', 'dist', 'bin', 'assayer.js');
 const smokeRepoPath = join(__dirname, '..', '..', '..', '..', 'smoke-repo');
@@ -57,11 +58,11 @@ const writeConfig = ({ runMode }: { runMode: 'thorough' | 'intelligent' }): void
 
 export const compileSmokeCache = async (): Promise<void> => {
   rmSync(smokeCacheParent, { recursive: true, force: true });
-  mkdirSync(smokeCacheConfigDir, { recursive: true });
+  ensureDirSync(smokeCacheConfigDir);
   writeConfig({ runMode: 'thorough' });
 
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, [cliEntry, 'status'], { cwd: smokeCacheConfigDir, stdio: 'ignore' });
+    const child = spawn(execPath, [cliEntry, 'status'], { cwd: smokeCacheConfigDir, stdio: 'ignore' });
     child.on('error', reject);
     child.on('close', (code, signal) => {
       // The precheck mutates the config in place (fills schema defaults); rewrite the minimal form so the

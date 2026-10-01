@@ -1,18 +1,25 @@
-import { nodeFsReadCacheBlobAdapterProxy } from '../../../adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.proxy';
-import type { CompiledFileBlobStub } from '@assayer/shared/contracts';
+import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { readJsonFileProxy } from '#gateway/node/fs__promises/read-json-file/read-json-file.proxy';
 
 export const cacheLoadBlobBrokerProxy = (): {
-  resolves: (params: { blob: ReturnType<typeof CompiledFileBlobStub> }) => void;
-  rejects: (params: { error: Error }) => void;
+  resolves: (params: {
+    repoPath: string;
+    contentHash: string;
+    blob: ReturnType<typeof CompiledFileBlobStub>;
+  }) => void;
+  missing: (params: { repoPath: string; contentHash: string }) => void;
 } => {
-  const adapterProxy = nodeFsReadCacheBlobAdapterProxy();
+  const readJsonGateway = readJsonFileProxy();
 
   return {
-    resolves: ({ blob }): void => {
-      adapterProxy.returns({ content: JSON.stringify(blob) });
+    resolves: ({ repoPath, contentHash, blob }): void => {
+      readJsonGateway.returnsRaw({
+        path: `${repoPath}/.assayer/cache/blobs/${contentHash}.json`,
+        rawContents: JSON.stringify(blob),
+      });
     },
-    rejects: ({ error }): void => {
-      adapterProxy.throws({ error });
+    missing: ({ repoPath, contentHash }): void => {
+      readJsonGateway.missing({ path: `${repoPath}/.assayer/cache/blobs/${contentHash}.json` });
     },
   };
 };

@@ -1,5 +1,7 @@
-import { runIdContract } from './run-id-contract';
-import type { RunId } from './run-id-contract';
+import type { RunResult } from '../run-result/run-result-contract';
+import { runResultContract } from '../run-result/run-result-contract';
 
-export const RunIdStub = ({ value }: { value: string } = { value: 'r-1784093000000' }): RunId =>
+const runIdContract = runResultContract.shape.runId;
+
+export const RunIdStub = ({ value }: { value: string } = { value: 'r-1784093000000' }): RunResult['runId'] =>
   runIdContract.parse(value);

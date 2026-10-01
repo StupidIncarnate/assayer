@@ -1,4 +1,5 @@
-import { CompiledFileBlobStub, ModuleEdgeStub } from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { ModuleEdgeStub } from '@assayer/shared/contracts/module-edge/module-edge.stub';
 
 import { resolveSpecifierLayerBroker } from './resolve-specifier-layer-broker';
 import { resolveSpecifierLayerBrokerProxy } from './resolve-specifier-layer-broker.proxy';
@@ -46,7 +47,7 @@ describe('resolveSpecifierLayerBroker', () => {
   describe('a specifier that resolves to nothing', () => {
     it('EMPTY: {specifier "./missing" resolves false} => unresolved', () => {
       const proxy = resolveSpecifierLayerBrokerProxy();
-      proxy.resolvesUnresolved();
+      proxy.resolvesUnresolved({ specifier: './missing' });
 
       const result = resolveSpecifierLayerBroker({
         containingFile: '/repo/src/a.ts',
@@ -65,7 +66,7 @@ describe('resolveSpecifierLayerBroker', () => {
   describe('a specifier that resolves inside the repo', () => {
     it('VALID: {resolves to /repo/src/b/foo.ts, no importedName} => local keyed by repo-relative path', () => {
       const proxy = resolveSpecifierLayerBrokerProxy();
-      proxy.resolvesLocal({ fileName: '/repo/src/b/foo.ts' });
+      proxy.resolvesLocal({ specifier: '../b/foo', fileName: '/repo/src/b/foo.ts' });
 
       const result = resolveSpecifierLayerBroker({
         containingFile: '/repo/src/a/caller.ts',
@@ -84,7 +85,7 @@ describe('resolveSpecifierLayerBroker', () => {
   describe('a specifier that resolves into node_modules', () => {
     it('VALID: {resolves under node_modules} => package keyed by the specifier package name', () => {
       const proxy = resolveSpecifierLayerBrokerProxy();
-      proxy.resolvesLocal({ fileName: '/repo/node_modules/vendored-pkg/index.d.ts' });
+      proxy.resolvesLocal({ specifier: 'vendored-pkg', fileName: '/repo/node_modules/vendored-pkg/index.d.ts' });
 
       const result = resolveSpecifierLayerBroker({
         containingFile: '/repo/src/a/caller.ts',
@@ -105,7 +106,7 @@ describe('resolveSpecifierLayerBroker', () => {
 
     it('VALID: {a scoped package resolves under node_modules} => package keyed by the scoped name', () => {
       const proxy = resolveSpecifierLayerBrokerProxy();
-      proxy.resolvesLocal({ fileName: '/repo/node_modules/@scope/pkg/index.d.ts' });
+      proxy.resolvesLocal({ specifier: '@scope/pkg/sub', fileName: '/repo/node_modules/@scope/pkg/index.d.ts' });
 
       const result = resolveSpecifierLayerBroker({
         containingFile: '/repo/src/a/caller.ts',
@@ -158,7 +159,8 @@ describe('resolveSpecifierLayerBroker', () => {
   describe('a re-export barrel that cycles back to itself', () => {
     it('EDGE: {loop.ts re-exports foo from ./loop} => the seen-set stops the recursion at the barrel', () => {
       const proxy = resolveSpecifierLayerBrokerProxy();
-      proxy.resolvesLocal({ fileName: '/repo/src/loop.ts' });
+      proxy.resolvesLocal({ specifier: '../loop', fileName: '/repo/src/loop.ts' });
+      proxy.resolvesLocal({ specifier: './loop', fileName: '/repo/src/loop.ts' });
       const loop = CompiledFileBlobStub({
         relPath: 'src/loop.ts',
         moduleGraph: {

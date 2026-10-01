@@ -15,32 +15,28 @@
  * });
  * // Returns a validated AssayerCacheManifest (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { contentHashContract } from '../content-hash/content-hash-contract';
-import { branchNameContract } from '../branch-name/branch-name-contract';
-import { repoNameContract } from '../repo-name/repo-name-contract';
-import { folderNameContract } from '../folder-name/folder-name-contract';
 
 export const assayerCacheManifestContract = z.object({
-  assayerVersion: z.string().min(1).brand<'AssayerVersion'>(),
+  assayerVersion: z.string().min(1).brand<'AssayerCacheManifestAssayerVersion'>(),
   configHash: z
     .string()
     .regex(/^[0-9a-f]{64}$/u)
-    .brand<'ConfigHash'>(),
+    .brand<'AssayerCacheManifestConfigHash'>(),
   namespaces: z
     .record(
       z.string(),
       z.object({
-        branch: branchNameContract.optional(),
-        commit: z.string().min(1).brand<'CommitSha'>().optional(),
-        files: z.array(z.object({ relPath: relPathContract, contentHash: contentHashContract })),
-      }),
+        branch: z.string().min(1).brand<'AssayerCacheManifestNamespacesBranch'>().optional(),
+        commit: z.string().min(1).brand<'AssayerCacheManifestNamespacesCommit'>().optional(),
+        files: z.array(z.object({ relPath: z.string().min(1).brand<'AssayerCacheManifestNamespacesFilesRelPath'>(), contentHash: contentHashContract }).brand<'AssayerCacheManifestNamespacesFiles'>()),
+      }).brand<'AssayerCacheManifestNamespaces'>(),
     )
-    .brand<'NamespaceMap'>(),
-  repoName: repoNameContract,
-  rootFolderName: folderNameContract,
-});
+    .brand<'AssayerCacheManifestNamespaces'>(),
+  repoName: z.string().min(1).brand<'AssayerCacheManifestRepoName'>(),
+  rootFolderName: z.string().min(1).brand<'AssayerCacheManifestRootFolderName'>(),
+}).brand<'AssayerCacheManifest'>();
 
 export type AssayerCacheManifest = z.infer<typeof assayerCacheManifestContract>;

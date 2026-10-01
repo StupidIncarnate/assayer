@@ -46,7 +46,7 @@ describe('probeSiteContract', () => {
     it('INVALID: {negative offset} => throws validation error', () => {
       expect(() => {
         return probeSiteContract.parse({ id: 'x', kind: 'cond', start: -1, end: 1 });
-      }).toThrow(/greater than or equal to 0/u);
+      }).toThrow(/Too small: expected number to be >=0/u);
     });
   });
 });

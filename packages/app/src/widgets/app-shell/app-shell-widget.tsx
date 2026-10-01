@@ -9,9 +9,9 @@
  * createHashRouter([{ element: <AppShellWidget />, children: [...routes] }]);
  * // Renders the nav header + the matched child route
  */
-import type { ReactElement } from 'react';
-import { Anchor, Box, Group } from '@mantine/core';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import type { ReactElement } from '#gateway/npm/react';
+import { Anchor, Box, Group } from '#gateway/npm/mantine__core';
+import { Link, Outlet, useLocation } from '#gateway/npm/react-router-dom';
 
 export const AppShellWidget = (): ReactElement => {
   const location = useLocation();

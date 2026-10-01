@@ -1,0 +1,236 @@
+== packages/app/playwright.config.ts  census=2 after=1
+   CHANGE L1: '@playwright/test' -> '#gateway/npm/playwright__test'
+   SKIP L7: process.env write/delete (setEnv/deleteEnv by hand)
+== packages/app/src/adapters/assayer-bridge/get-compiled-file/assayer-bridge-get-compiled-file-adapter.proxy.ts  census=3 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-compiled-file/assayer-bridge-get-compiled-file-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-compiled-tree/assayer-bridge-get-compiled-tree-adapter.proxy.ts  census=7 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-compiled-tree/assayer-bridge-get-compiled-tree-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-saved-console/assayer-bridge-get-saved-console-adapter.proxy.ts  census=3 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-saved-console/assayer-bridge-get-saved-console-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-saved-run/assayer-bridge-get-saved-run-adapter.proxy.ts  census=3 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-saved-run/assayer-bridge-get-saved-run-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-status/assayer-bridge-get-status-adapter.proxy.ts  census=5 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-status/assayer-bridge-get-status-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-stubs/assayer-bridge-get-stubs-adapter.proxy.ts  census=7 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/get-stubs/assayer-bridge-get-stubs-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/on-run-output/assayer-bridge-on-run-output-adapter.proxy.ts  census=3 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/on-run-output/assayer-bridge-on-run-output-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/run-file/assayer-bridge-run-file-adapter.proxy.ts  census=3 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/assayer-bridge/run-file/assayer-bridge-run-file-adapter.ts  census=1 after=0
+   CHANGE IMPORT { window } from '#gateway/browser/window'
+== packages/app/src/adapters/codemirror/view/codemirror-view-adapter.test.ts  census=19 after=0
+   CHANGE L1: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+   CHANGE IMPORT { document } from '#gateway/browser/document'
+== packages/app/src/adapters/codemirror/view/codemirror-view-adapter.ts  census=6 after=0
+   CHANGE L28: 'react' -> '#gateway/npm/react'
+   CHANGE L29: 'react' -> '#gateway/npm/react'
+   CHANGE L30: '@uiw/react-codemirror' -> '#gateway/npm/uiw__react-codemirror'
+   CHANGE L31: '@codemirror/lang-javascript' -> '#gateway/npm/codemirror__lang-javascript'
+   CHANGE L32: '@codemirror/view' -> '#gateway/npm/codemirror__view'
+   CHANGE L47: globalThis.document -> document
+   CHANGE IMPORT { document } from '#gateway/browser/document'
+== packages/app/src/adapters/react/create-element/react-create-element-adapter.ts  census=2 after=0
+   CHANGE L9: 'react' -> '#gateway/npm/react'
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+== packages/app/src/adapters/react-dom/mount/react-dom-mount-adapter.ts  census=4 after=0
+   CHANGE L9: 'react' -> '#gateway/npm/react'
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: 'react-dom/client' -> '#gateway/npm/react-dom__client'
+   CHANGE L12: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/adapters/testing-library/render/testing-library-render-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'react' -> '#gateway/npm/react'
+== packages/app/src/adapters/testing-library/render/testing-library-render-adapter.ts  census=5 after=0
+   CHANGE L9: 'react' -> '#gateway/npm/react'
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+   CHANGE L12: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+   CHANGE L13: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+== packages/app/src/adapters/testing-library/render-hook/testing-library-render-hook-adapter.ts  census=2 after=0
+   CHANGE L9: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+   CHANGE L10: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+== packages/app/src/adapters/testing-library/wait-for/testing-library-wait-for-adapter.ts  census=1 after=0
+   CHANGE L9: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+== packages/app/src/bindings/use-assayer-status/use-assayer-status-binding.ts  census=1 after=0
+   CHANGE L9: 'react' -> '#gateway/npm/react'
+== packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.ts  census=1 after=0
+   CHANGE L9: 'react' -> '#gateway/npm/react'
+== packages/app/src/bindings/use-file-run/use-file-run-binding.ts  census=1 after=0
+   CHANGE L26: 'react' -> '#gateway/npm/react'
+== packages/app/src/bindings/use-stub-index/use-stub-index-binding.ts  census=1 after=0
+   CHANGE L9: 'react' -> '#gateway/npm/react'
+== packages/app/src/contracts/case-run-status/case-run-status-contract.ts  census=1 after=0
+   CHANGE L18: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/dark-spot-line/dark-spot-line-contract.ts  census=1 after=0
+   CHANGE L14: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/exit-code/exit-code-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/flat-property-demand/flat-property-demand-contract.ts  census=1 after=0
+   CHANGE L12: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/gutter-marker/gutter-marker-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/resolved-contract-view/resolved-contract-view-contract.ts  census=1 after=0
+   CHANGE L16: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/resolved-edge-line/resolved-edge-line-contract.ts  census=1 after=0
+   CHANGE L11: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/run-console-status/run-console-status-contract.ts  census=1 after=0
+   CHANGE L15: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/status-view/status-view-contract.ts  census=1 after=0
+   CHANGE L11: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/contracts/undriven-line/undriven-line-contract.ts  census=1 after=0
+   CHANGE L13: 'zod' -> '#gateway/npm/zod'
+== packages/app/src/flows/app/app-flow.tsx  census=1 after=0
+   CHANGE L11: 'react-router-dom' -> '#gateway/npm/react-router-dom'
+== packages/app/src/main.test.tsx  census=1 after=0
+   CHANGE L1: 'node:path' -> '#gateway/node/path'
+== packages/app/src/responders/app/mount/app-mount-responder.ts  census=1 after=0
+   CHANGE IMPORT { document } from '#gateway/browser/document'
+== packages/app/src/widgets/app-shell/app-shell-widget.test.tsx  census=1 after=0
+   CHANGE L1: 'react-router-dom' -> '#gateway/npm/react-router-dom'
+== packages/app/src/widgets/app-shell/app-shell-widget.tsx  census=3 after=0
+   CHANGE L12: 'react' -> '#gateway/npm/react'
+   CHANGE L13: '@mantine/core' -> '#gateway/npm/mantine__core'
+   CHANGE L14: 'react-router-dom' -> '#gateway/npm/react-router-dom'
+== packages/app/src/widgets/code-viewer/code-viewer-widget.test.tsx  census=18 after=0
+   CHANGE IMPORT { document } from '#gateway/browser/document'
+== packages/app/src/widgets/code-viewer/code-viewer-widget.tsx  census=3 after=0
+   CHANGE L33: 'react' -> '#gateway/npm/react'
+   CHANGE L34: 'react' -> '#gateway/npm/react'
+   CHANGE L35: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/detail-panel/contract-entry-layer-widget.tsx  census=2 after=0
+   CHANGE L11: 'react' -> '#gateway/npm/react'
+   CHANGE L12: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/detail-panel/detail-panel-widget.proxy.tsx  census=2 after=0
+   CHANGE L1: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+   CHANGE L2: '@testing-library/user-event' -> '#gateway/npm/testing-library__user-event'
+== packages/app/src/widgets/detail-panel/detail-panel-widget.test.tsx  census=1 after=0
+   CHANGE L1: '@testing-library/user-event' -> '#gateway/npm/testing-library__user-event'
+== packages/app/src/widgets/detail-panel/detail-panel-widget.tsx  census=2 after=0
+   CHANGE L82: 'react' -> '#gateway/npm/react'
+   CHANGE L83: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/detail-panel/enrichment-row-layer-widget.tsx  census=2 after=0
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/detail-panel/test-case-layer-widget.tsx  census=2 after=0
+   CHANGE L11: 'react' -> '#gateway/npm/react'
+   CHANGE L12: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/detail-panel/test-entry-layer-widget.tsx  census=2 after=0
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/explorer-header/explorer-header-widget.tsx  census=2 after=0
+   CHANGE L9: 'react' -> '#gateway/npm/react'
+   CHANGE L10: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/file-tree/file-tree-node-layer-widget.proxy.tsx  census=2 after=0
+   CHANGE L1: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+   CHANGE L2: '@testing-library/user-event' -> '#gateway/npm/testing-library__user-event'
+== packages/app/src/widgets/file-tree/file-tree-node-layer-widget.tsx  census=3 after=0
+   CHANGE L12: 'react' -> '#gateway/npm/react'
+   CHANGE L13: 'react' -> '#gateway/npm/react'
+   CHANGE L14: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/file-tree/file-tree-widget.proxy.tsx  census=2 after=0
+   CHANGE L1: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+   CHANGE L2: '@testing-library/user-event' -> '#gateway/npm/testing-library__user-event'
+== packages/app/src/widgets/file-tree/file-tree-widget.tsx  census=2 after=0
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/raw-blob-viewer/raw-blob-viewer-widget.tsx  census=2 after=0
+   CHANGE L11: 'react' -> '#gateway/npm/react'
+   CHANGE L12: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/run-console/run-console-widget.tsx  census=2 after=0
+   CHANGE L22: 'react' -> '#gateway/npm/react'
+   CHANGE L23: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/stub-repository/stub-env-card-layer-widget.tsx  census=2 after=0
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/stub-repository/stub-object-card-layer-widget.tsx  census=2 after=0
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/stub-repository/stub-property-row-layer-widget.tsx  census=2 after=0
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/stub-repository/stub-readers-layer-widget.tsx  census=2 after=0
+   CHANGE L10: 'react' -> '#gateway/npm/react'
+   CHANGE L11: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/stub-repository/stub-repository-widget.tsx  census=2 after=0
+   CHANGE L22: 'react' -> '#gateway/npm/react'
+   CHANGE L23: '@mantine/core' -> '#gateway/npm/mantine__core'
+== packages/app/src/widgets/surface-explorer/surface-explorer-widget.proxy.tsx  census=3 after=0
+   CHANGE L1: '@testing-library/react' -> '#gateway/npm/testing-library__react'
+   CHANGE L2: '@testing-library/user-event' -> '#gateway/npm/testing-library__user-event'
+   CHANGE L48: globalThis.console -> console
+   CHANGE IMPORT { console } from '#gateway/browser/console'
+== packages/app/src/widgets/surface-explorer/surface-explorer-widget.tsx  census=4 after=0
+   CHANGE L31: 'react' -> '#gateway/npm/react'
+   CHANGE L32: 'react' -> '#gateway/npm/react'
+   CHANGE L33: '@mantine/core' -> '#gateway/npm/mantine__core'
+   CHANGE L151: globalThis.console -> console
+   CHANGE IMPORT { console } from '#gateway/browser/console'
+== packages/app/test/e2e-global-build.ts  census=3 after=1
+   CHANGE L1: 'node:child_process' -> '#gateway/node/child_process'
+   CHANGE L2: 'node:path' -> '#gateway/node/path'
+== packages/app/test/harnesses/cache-only-source-app.harness.ts  census=5 after=1
+   CHANGE L22: 'node:path' -> '#gateway/node/path'
+   CHANGE L23: 'node:os' -> '#gateway/node/os'
+   CHANGE L25: '@playwright/test' -> '#gateway/npm/playwright__test'
+   CHANGE L26: '@playwright/test' -> '#gateway/npm/playwright__test'
+   SKIP L24: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/app/test/harnesses/e2e-fixtures.ts  census=2 after=0
+   CHANGE L22: '@playwright/test' -> '#gateway/npm/playwright__test'
+   CHANGE L23: '@playwright/test' -> '#gateway/npm/playwright__test'
+== packages/app/test/harnesses/empty-surface-app.harness.ts  census=5 after=1
+   CHANGE L15: 'node:path' -> '#gateway/node/path'
+   CHANGE L16: 'node:os' -> '#gateway/node/os'
+   CHANGE L18: '@playwright/test' -> '#gateway/npm/playwright__test'
+   CHANGE L19: '@playwright/test' -> '#gateway/npm/playwright__test'
+   SKIP L17: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/app/test/harnesses/no-cache-app.harness.ts  census=5 after=1
+   CHANGE L17: 'node:path' -> '#gateway/node/path'
+   CHANGE L18: 'node:os' -> '#gateway/node/os'
+   CHANGE L20: '@playwright/test' -> '#gateway/npm/playwright__test'
+   CHANGE L21: '@playwright/test' -> '#gateway/npm/playwright__test'
+   SKIP L19: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/app/test/harnesses/smoke-cache.harness.ts  census=5 after=1
+   CHANGE L26: 'node:path' -> '#gateway/node/path'
+   CHANGE L27: 'node:os' -> '#gateway/node/os'
+   CHANGE L29: 'node:child_process' -> '#gateway/node/child_process'
+   CHANGE L64: process.execPath -> execPath
+   CHANGE IMPORT { execPath } from '#gateway/node/process'
+   SKIP L28: import 'node:fs' -> #gateway/node/fs: 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/app/test/harnesses/syntax-surface.harness.ts  census=2 after=1
+   CHANGE L19: 'node:path' -> '#gateway/node/path'
+   SKIP L18: import 'node:fs' -> #gateway/node/fs: 'readdirSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/app/test/harnesses/unresolvable-namespace-app.harness.ts  census=5 after=1
+   CHANGE L20: 'node:path' -> '#gateway/node/path'
+   CHANGE L21: 'node:os' -> '#gateway/node/os'
+   CHANGE L23: '@playwright/test' -> '#gateway/npm/playwright__test'
+   CHANGE L24: '@playwright/test' -> '#gateway/npm/playwright__test'
+   SKIP L22: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/app/vite.config.ts  census=2
+   GAP L1: import '@vitejs/plugin-react': no barrel #gateway/npm/vitejs__plugin-react
+   GAP L2: import 'vite': no barrel #gateway/npm/vite
+
+SUMMARY app: census messages=205 (parse errors 0) in 76 files; files changed=75 (rejected 0); messages cleared=195; left=10; files fully cleared=67; census 6s
+SKIPS by reason:
+  3  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/app/test/harnesses/cache-only-source-app.harness.ts:24, packages/app/test/harnesses/empty-surface-app.harness.ts:17, packages/app/test/harnesses/unresolvable-namespace-app.harness.ts:22
+  1  process.env write/delete (setEnv/deleteEnv by hand)  e.g. packages/app/playwright.config.ts:7
+  1  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/app/test/harnesses/no-cache-app.harness.ts:19
+  1  import 'node:fs' -> #gateway/node/fs: 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/app/test/harnesses/smoke-cache.harness.ts:28
+  1  import 'node:fs' -> #gateway/node/fs: 'readdirSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function  e.g. packages/app/test/harnesses/syntax-surface.harness.ts:18
+GAPS:
+  1  import '@vitejs/plugin-react': no barrel #gateway/npm/vitejs__plugin-react  e.g. packages/app/vite.config.ts:1
+  1  import 'vite': no barrel #gateway/npm/vite  e.g. packages/app/vite.config.ts:2
+REJECTED (file left untouched) by first new problem:

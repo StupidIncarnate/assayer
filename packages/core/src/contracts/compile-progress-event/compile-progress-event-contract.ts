@@ -21,31 +21,30 @@
  * });
  * // Returns a validated CompileProgressEvent (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { namespaceNameContract, branchNameContract, fileCountContract } from '@assayer/shared/contracts';
 
 // Supporting phase schema (kept local, non-exported const; export only the type)
-const compileProgressPhaseContract = z.enum(['planned', 'advanced', 'done']).brand<'CompileProgressPhase'>();
+const compileProgressPhaseContract = z.enum(['planned', 'advanced', 'done']);
 export type CompileProgressPhase = z.infer<typeof compileProgressPhaseContract>;
 
 export const compileProgressEventContract = z.object({
   // namespace: which branch-keyed manifest index this progress reports on
-  namespace: namespaceNameContract,
+  namespace: z.string().min(1).brand<'CompileProgressEventNamespace'>(),
   // branch: the git branch (or 'default'/'detached-<sha>')
-  branch: branchNameContract,
+  branch: z.string().min(1).brand<'CompileProgressEventBranch'>(),
   // phase: lifecycle stage of the compile — 'planned' | 'advanced' | 'done'
   phase: compileProgressPhaseContract,
   // current: files processed so far
-  current: fileCountContract,
+  current: z.number().int().nonnegative().brand<'CompileProgressEventCurrent'>(),
   // max: total files planned (0 when skipped)
-  max: fileCountContract,
+  max: z.number().int().nonnegative().brand<'CompileProgressEventMax'>(),
   // stableMax: pre-counted total for the stable namespace
-  stableMax: fileCountContract,
+  stableMax: z.number().int().nonnegative().brand<'CompileProgressEventStableMax'>(),
   // currentMax: pre-counted total for the current namespace
-  currentMax: fileCountContract,
+  currentMax: z.number().int().nonnegative().brand<'CompileProgressEventCurrentMax'>(),
   // reused: for an 'advanced' event, whether THAT file was already cached at its content hash — so
   // nothing was written for it. Absent on 'planned'/'done', which report a namespace, not a file.
   reused: z.boolean().optional(),
-});
+}).brand<'CompileProgressEvent'>();
 export type CompileProgressEvent = z.infer<typeof compileProgressEventContract>;

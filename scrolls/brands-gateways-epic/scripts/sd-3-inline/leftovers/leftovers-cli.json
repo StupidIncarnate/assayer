@@ -1,0 +1,145 @@
+{
+  "summary": {
+    "package": "cli",
+    "mode": "apply",
+    "root": "/home/brutus-home/projects/assayer",
+    "adaptersInlined": 2,
+    "adaptersLeft": 0,
+    "skipped": 0,
+    "editsDone": 15,
+    "editsLeft": 1
+  },
+  "adapters": [
+    {
+      "adapter": "processStdoutIsTtyAdapter",
+      "path": "packages/cli/src/adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "The caller proxy composes `stdoutProxy`."
+    },
+    {
+      "adapter": "utilParseArgsAdapter",
+      "path": "packages/cli/src/adapters/util/parse-args/util-parse-args-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "Each caller maps `positionals` through `cliPositionalContract`."
+    }
+  ],
+  "skipped": [],
+  "left": [
+    {
+      "file": "packages/cli/src/responders/detail/show/detail-show-responder.proxy.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "utilParseArgsAdapter",
+      "what": "a comment names the adapter"
+    }
+  ],
+  "done": [
+    {
+      "file": "packages/cli/src/responders/detail/show/detail-show-responder.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "utilParseArgsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/cli/src/responders/detail/show/detail-show-responder.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "utilParseArgsAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/cli/src/responders/detail/show/detail-show-responder.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "utilParseArgsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/cli/src/responders/detail/show/detail-show-responder.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "utilParseArgsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/stable-branch-layer-responder.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "processStdoutIsTtyAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/stable-branch-layer-responder.proxy.ts",
+      "line": 41,
+      "endLine": 41,
+      "adapter": "processStdoutIsTtyAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/stable-branch-layer-responder.proxy.ts",
+      "line": 42,
+      "endLine": 42,
+      "adapter": "processStdoutIsTtyAdapter",
+      "what": "proxy: disableTty -> assignment through setupIsTty"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/stable-branch-layer-responder.proxy.ts",
+      "line": 91,
+      "endLine": 91,
+      "adapter": "processStdoutIsTtyAdapter",
+      "what": "proxy: enableTty -> assignment through setupIsTty"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/stable-branch-layer-responder.proxy.ts",
+      "line": 94,
+      "endLine": 94,
+      "adapter": "processStdoutIsTtyAdapter",
+      "what": "proxy: disableTty -> assignment through setupIsTty"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/stable-branch-layer-responder.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "processStdoutIsTtyAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/stable-branch-layer-responder.ts",
+      "line": 51,
+      "endLine": 51,
+      "adapter": "processStdoutIsTtyAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/cli/src/responders/unit/run/unit-run-responder.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "utilParseArgsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/cli/src/responders/unit/run/unit-run-responder.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "utilParseArgsAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/cli/src/responders/unit/run/unit-run-responder.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "utilParseArgsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/cli/src/responders/unit/run/unit-run-responder.ts",
+      "line": 70,
+      "endLine": 70,
+      "adapter": "utilParseArgsAdapter",
+      "what": "call"
+    }
+  ]
+}

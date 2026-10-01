@@ -10,8 +10,8 @@
  * runVerdictContract.parse({ passed: false });
  * // Returns a validated RunVerdict
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-export const runVerdictContract = z.object({ passed: z.boolean() });
+export const runVerdictContract = z.object({ passed: z.boolean() }).brand<'RunVerdict'>();
 
 export type RunVerdict = z.infer<typeof runVerdictContract>;

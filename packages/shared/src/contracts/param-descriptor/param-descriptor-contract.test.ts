@@ -58,19 +58,19 @@ describe('paramDescriptorContract', () => {
     it('INVALID: {name: ""} => throws validation error', () => {
       expect(() => {
         return paramDescriptorContract.parse({ name: '', type: { kind: 'string' } });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {no name} => throws validation error', () => {
       expect(() => {
         return paramDescriptorContract.parse({ type: { kind: 'string' } });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
 
     it('INVALID: {no type} => throws validation error', () => {
       expect(() => {
         return paramDescriptorContract.parse({ name: 'name' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
   });
 });

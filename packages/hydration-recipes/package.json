@@ -1,20 +1,20 @@
 {
-  "name": "@assayer-monorepo/hydration-recipes",
+  "name": "@assayer/hydration-recipes",
   "version": "0.1.0",
   "description": "hydration-recipes package",
   "private": true,
   "imports": {
-    "#gateway/npm/*": "@assayer-monorepo/npm/*",
-    "#gateway/node/*": "@assayer-monorepo/node/*",
-    "#gateway/browser/*": "@assayer-monorepo/browser/*",
-    "#gateway/bin/*": "@assayer-monorepo/bin/*"
+    "#gateway/npm/*": "@assayer/npm/*",
+    "#gateway/node/*": "@assayer/node/*",
+    "#gateway/browser/*": "@assayer/browser/*",
+    "#gateway/bin/*": "@assayer/bin/*"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./package.json": "./package.json",
     "./*.proxy": {
@@ -25,9 +25,9 @@
     },
     "./responders": {
       "source": "./src/responders/responders.ts",
-      "types": "./dist/responders/responders.d.ts",
-      "import": "./dist/responders/responders.js",
-      "require": "./dist/responders/responders.js"
+      "types": "./dist/src/responders/responders.d.ts",
+      "import": "./dist/src/responders/responders.js",
+      "require": "./dist/src/responders/responders.js"
     }
   },
   "scripts": {

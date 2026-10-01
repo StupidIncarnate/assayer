@@ -20,14 +20,10 @@
  */
 import type { DarkSpot } from '@assayer/shared/contracts';
 
-import { darkSpotLineContract } from '../../contracts/dark-spot-line/dark-spot-line-contract';
-import type { DarkSpotLine } from '../../contracts/dark-spot-line/dark-spot-line-contract';
 
-export const darkSpotLineTransformer = ({ darkSpot }: { darkSpot: DarkSpot }): DarkSpotLine => {
+export const darkSpotLineTransformer = ({ darkSpot }: { darkSpot: DarkSpot }): string => {
   const scope = darkSpot.scopePath.map((segment) => String(segment)).join('/');
 
-  return darkSpotLineContract.parse(
-    `DARK ${String(darkSpot.kind)} at L${String(darkSpot.startLine)}-L${String(darkSpot.endLine)} in ` +
-      `${scope} — Assayer has no handler for it, so nothing inside it is covered`,
-  );
+  return (`DARK ${String(darkSpot.kind)} at L${String(darkSpot.startLine)}-L${String(darkSpot.endLine)} in ` +
+      `${scope} — Assayer has no handler for it, so nothing inside it is covered`);
 };

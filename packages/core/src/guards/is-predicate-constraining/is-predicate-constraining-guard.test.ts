@@ -1,4 +1,4 @@
-import { ConditionLeafStub } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { isPredicateConstrainingGuard } from './is-predicate-constraining-guard';
 

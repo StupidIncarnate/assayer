@@ -32,13 +32,13 @@ describe('walkNodeContract', () => {
     it('EMPTY: {kind: ""} => throws validation error', () => {
       expect(() => {
         return walkNodeContract.parse({ kind: '', scopePath: [], startLine: 1, endLine: 2, handled: true });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {handled: "yes"} => throws validation error', () => {
       expect(() => {
         return walkNodeContract.parse({ kind: 'IfStatement', scopePath: [], startLine: 1, endLine: 2, handled: 'yes' });
-      }).toThrow(/Expected boolean/u);
+      }).toThrow(/Invalid input: expected boolean, received string/u);
     });
   });
 });

@@ -9,11 +9,11 @@ import { syntaxTraits } from '../../../../test/harnesses/syntax-traits';
 // The case list is WALKED off disk, never written down: a literal list of specimens goes stale the
 // moment someone adds syntax, and goes stale silently.
 const CATALOGUE_PATHS = specimenCatalogue().relPaths();
-const SPECIMENS = CATALOGUE_PATHS.map((relPath) => String(relPath));
+const SPECIMENS = CATALOGUE_PATHS.map((relPath) => relPath);
 
 // Paired here rather than looked up inside a test, which may hold no conditionals.
 const DECLARED = CATALOGUE_PATHS.map(
-  (relPath) => [String(relPath), [...(specimenRegistry.get(relPath) ?? [])].sort()] as const,
+  (relPath) => [relPath, [...(specimenRegistry.get(relPath) ?? [])].sort()] as const,
 );
 
 // What the contracts model minus what the catalogue actually contains — computed outside the test
@@ -37,7 +37,7 @@ describe('analyzeFileBroker (integration)', () => {
     // Nobody can add syntax without saying what it is. Without this a new specimen simply never
     // reaches the checks below — and a suite that skipped a file looks exactly like one that passed it.
     it('VALID: {every specimen on disk} => is declared in the registry', () => {
-      expect(SPECIMENS).toStrictEqual([...specimenRegistry.keys()].map((relPath) => String(relPath)).sort());
+      expect(SPECIMENS).toStrictEqual([...specimenRegistry.keys()].map((relPath) => relPath).sort());
     });
   });
 
@@ -47,7 +47,7 @@ describe('analyzeFileBroker (integration)', () => {
     // no orphan child in a folder with no root. A misfiled or misnamed specimen names itself here
     // rather than silently escaping the bucket driver that keys on the layout.
     it('VALID: {every specimen on disk} => sits at <bucket>/…/<name>/<name>.ts with its colocated test', () => {
-      expect(specimenCatalogue().structuralErrors().map((message) => String(message))).toStrictEqual([]);
+      expect(specimenCatalogue().structuralErrors()).toStrictEqual([]);
     });
   });
 

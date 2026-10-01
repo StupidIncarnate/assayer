@@ -6,7 +6,7 @@ describe('compilePlanStableBroker', () => {
     it('VALID: {previousCommit: current commit sha} => returns mode "skipped" with no targets', async () => {
       const proxy = compilePlanStableBrokerProxy();
       const sha = '9fceb02f1a3e4c98d9c8b1e6f2a7d5c3b0e1f4a2';
-      proxy.resolvesUnchanged({ sha });
+      proxy.resolvesUnchanged({ ref: 'master', sha });
 
       const result = await compilePlanStableBroker({
         repoRoot: '/repo',
@@ -23,12 +23,16 @@ describe('compilePlanStableBroker', () => {
       const proxy = compilePlanStableBrokerProxy();
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       proxy.resolvesChanged({
+        ref: 'master',
         sha,
         lsTreeStdout:
           '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tpackages/shared/index.ts\n' +
           '100644 blob a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\tpackages/shared/index.test.ts\n' +
           '100644 blob b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3\tpackages/web/app.tsx\n',
-        fileContents: ['export const x = 1;\n', 'export const App = () => null;\n'],
+        blobs: [
+          { blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'export const x = 1;\n' },
+          { blobSha: 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', content: 'export const App = () => null;\n' },
+        ],
       });
 
       const result = await compilePlanStableBroker({ repoRoot: '/repo', ref: 'master' });
@@ -49,12 +53,16 @@ describe('compilePlanStableBroker', () => {
       const proxy = compilePlanStableBrokerProxy();
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       proxy.resolvesChanged({
+        ref: 'master',
         sha,
         lsTreeStdout:
           '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tpackages/shared/index.ts\n' +
           '100644 blob a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\tpackages/shared/index.test.ts\n' +
           '100644 blob b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3\tpackages/web/app.tsx\n',
-        fileContents: ['export const x = 2;\n', 'export const App = () => "v2";\n'],
+        blobs: [
+          { blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'export const x = 2;\n' },
+          { blobSha: 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', content: 'export const App = () => "v2";\n' },
+        ],
       });
 
       const result = await compilePlanStableBroker({
@@ -78,9 +86,12 @@ describe('compilePlanStableBroker', () => {
     it('VALID: {ref: an unresolvable ref, previousCommit: a prior sha} => returns mode "incremental", since an unresolvable ref can never satisfy the skip check', async () => {
       const proxy = compilePlanStableBrokerProxy();
       proxy.resolvesChangedCommitUnresolvable({
+        ref: 'does-not-exist',
         lsTreeStdout:
           '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tpackages/shared/index.ts\n',
-        fileContents: ['export const x = 1;\n'],
+        blobs: [
+          { blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'export const x = 1;\n' },
+        ],
       });
 
       const result = await compilePlanStableBroker({
@@ -102,11 +113,14 @@ describe('compilePlanStableBroker', () => {
       const proxy = compilePlanStableBrokerProxy();
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       proxy.resolvesChanged({
+        ref: 'master',
         sha,
         lsTreeStdout:
           '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tgenerated/foo.ts\n' +
           '100644 blob a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\tsrc/index.ts\n',
-        fileContents: ['export const x = 1;\n'],
+        blobs: [
+          { blobSha: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2', content: 'export const x = 1;\n' },
+        ],
       });
 
       const result = await compilePlanStableBroker({

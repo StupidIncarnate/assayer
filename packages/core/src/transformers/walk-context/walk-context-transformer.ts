@@ -14,7 +14,7 @@
  */
 import { walkContextContract } from '../../contracts/walk-context/walk-context-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
-import type { GuardStep, ParamDescriptor, SymbolName } from '@assayer/shared/contracts';
+import type { GuardStep, ParamDescriptor } from '@assayer/shared/contracts';
 
 export const walkContextTransformer = ({
   context,
@@ -26,12 +26,12 @@ export const walkContextTransformer = ({
   enclosingClass,
 }: {
   context: WalkContext;
-  scopeSegment?: SymbolName;
+  scopeSegment?: string;
   guardSteps?: GuardStep[];
   params?: ParamDescriptor[];
   exported?: boolean;
   tail?: boolean;
-  enclosingClass?: { name: SymbolName; constructable: boolean };
+  enclosingClass?: { name: string; constructable: boolean };
 }): WalkContext => {
   // Same reset rule as guardPath, for the same reason: a class hands its identity to its MEMBERS,
   // but entering any other scope clears it — a function nested inside a method is not a method.

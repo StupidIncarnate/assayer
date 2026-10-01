@@ -10,17 +10,16 @@
  * });
  * // Returns a validated SourceLine (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '../line-number/line-number-contract';
 
 export const sourceLineContract = z.object({
-  n: lineNumberContract,
+  n: z.number().int().positive().brand<'SourceLineN'>(),
   text: z.string().brand<'SourceLineText'>(),
   hash: z
     .string()
     .regex(/^[0-9a-f]{64}$/u)
-    .brand<'LineHash'>(),
-});
+    .brand<'SourceLineHash'>(),
+}).brand<'SourceLine'>();
 
 export type SourceLine = z.infer<typeof sourceLineContract>;

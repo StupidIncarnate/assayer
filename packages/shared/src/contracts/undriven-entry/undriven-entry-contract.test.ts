@@ -39,13 +39,13 @@ describe('undrivenEntryContract', () => {
     it('INVALID: {reason: ""} => throws, since a reason nobody can read admits nothing', () => {
       expect(() => {
         return undrivenEntryContract.parse({ name: '*module*', reason: '' });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {no name} => throws validation error', () => {
       expect(() => {
         return undrivenEntryContract.parse({ reason: 'it runs at import time' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

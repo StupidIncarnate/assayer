@@ -22,15 +22,13 @@
  */
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
-import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
-import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 import type { RunResult } from '@assayer/shared/contracts';
 import { darkSpotLineFormatTransformer } from '../dark-spot-line-format/dark-spot-line-format-transformer';
 import { gapLineFormatTransformer } from '../gap-line-format/gap-line-format-transformer';
 import { lintLineFormatTransformer } from '../lint-line-format/lint-line-format-transformer';
 import { undrivenLineFormatTransformer } from '../undriven-line-format/undriven-line-format-transformer';
 
-export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutput => {
+export const runDetailFormatTransformer = ({ run }: { run: RunResult }): string => {
   const header = `${String(run.relPath)}  run ${String(run.runId)}`;
 
   const cases = run.cases.flatMap((testCase) => {
@@ -38,13 +36,13 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
     const events = testCase.trace.map((event) => {
       const outcome = event.outcome === undefined ? '' : ` ${String(event.outcome)}`;
 
-      return `    ${String(event.kind)}  ${String(event.id)}${outcome}  ${String(event.valueText)}`;
+      return `    ${event.kind}  ${String(event.id)}${outcome}  ${String(event.valueText)}`;
     });
 
     // `errored` renders as ERROR rather than its own spelling: the marker is product surface shared
     // with `assayer unit`, and two spellings of one outcome is two vocabularies for the reader to
     // learn. PASS/FAIL are already their own uppercase.
-    const marker = String(testCase.status) === 'errored' ? 'ERROR' : String(testCase.status).toUpperCase();
+    const marker = testCase.status === 'errored' ? 'ERROR' : testCase.status.toUpperCase();
 
     return [
       `  ${marker} ${String(testCase.entryName)}(${args})`,
@@ -61,5 +59,5 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): CliOutp
   const undriven = run.undriven.map((entry) => undrivenLineFormatTransformer({ entry }));
   const lints = run.lints.map((lint) => lintLineFormatTransformer({ lint }));
 
-  return cliOutputContract.parse([header, ...cases, ...gaps, ...darkSpots, ...undriven, ...lints].join('\n'));
+  return [header, ...cases, ...gaps, ...darkSpots, ...undriven, ...lints].join('\n');
 };

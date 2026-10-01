@@ -1,9 +1,11 @@
-import { ConditionLeafStub, CoverageIdStub, SymbolNameStub, conditionNodeContract } from '@assayer/shared/contracts';
+import { conditionNodeContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
 import { rebasePredicateConditionTransformer } from './rebase-predicate-condition-transformer';
 
 const BRANCH_ID = CoverageIdStub({ value: '*module*/classify/if:CallExpression,id:tooBig,id:x' });
-const N_TO_X = new Map([[SymbolNameStub({ value: 'n' }), SymbolNameStub({ value: 'x' })]]);
+const N_TO_X = new Map([['n', 'x']]);
 
 describe('rebasePredicateConditionTransformer', () => {
   describe('a leaf whose operand the caller passed straight through', () => {

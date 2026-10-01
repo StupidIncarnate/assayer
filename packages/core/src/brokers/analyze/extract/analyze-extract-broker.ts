@@ -12,7 +12,7 @@
  * analyzeExtractBroker({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
  * // Returns a validated AnalysisExtractResult: { success: true, functions: [...] }
  */
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import type { AnalysisExtractResult } from '../../../contracts/analysis-extract-result/analysis-extract-result-contract';
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
 
@@ -23,4 +23,4 @@ export const analyzeExtractBroker = ({
   source: string;
   relPath: string;
 }): AnalysisExtractResult =>
-  analysisProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+  analysisProjectionTransformer({ walked: walkFileTransformer({ source, relPath }) });

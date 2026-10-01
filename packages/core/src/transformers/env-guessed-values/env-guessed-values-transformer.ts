@@ -23,7 +23,7 @@ import { representativeValueStatics } from '../../statics/representative-value/r
 
 export const envGuessedValuesTransformer = ({ literals }: { literals: RepresentativeValue[] }): RepresentativeValue[] => {
   const distinct = [...new Map(literals.map((value) => [JSON.stringify(value), value])).values()];
-  const numerics = distinct.flatMap((value) => (typeof value === 'number' ? [Number(value)] : []));
+  const numerics = distinct.flatMap((value) => (typeof value === 'number' ? [value] : []));
   const allNumeric = distinct.length > 0 && numerics.length === distinct.length;
 
   const other = allNumeric

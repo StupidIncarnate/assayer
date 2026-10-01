@@ -21,32 +21,32 @@
  * });
  * // Returns a validated CallSite (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract, guardStepContract, lineNumberContract, moduleSpecifierContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { conditionLeafContract, guardStepContract, paramDescriptorContract, representativeValueContract } from '@assayer/shared/contracts';
 
 const calleeLinkContract = z.discriminatedUnion('target', [
-  z.object({ target: z.literal('local'), name: symbolNameContract, startLine: lineNumberContract }),
-  z.object({ target: z.literal('import'), specifier: moduleSpecifierContract, importedName: symbolNameContract }),
-  z.object({ target: z.literal('unresolved') }),
+  z.object({ target: z.literal('local'), name: z.string().min(1).brand<'CalleeLinkName'>(), startLine: z.number().int().positive().brand<'CalleeLinkStartLine'>() }).brand<'CalleeLink'>(),
+  z.object({ target: z.literal('import'), specifier: z.string().min(1).brand<'CalleeLinkSpecifier'>(), importedName: z.string().min(1).brand<'CalleeLinkImportedName'>() }).brand<'CalleeLink'>(),
+  z.object({ target: z.literal('unresolved') }).brand<'CalleeLink'>(),
 ]);
 
 const callArgContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('param-ref'), paramName: symbolNameContract }),
-  z.object({ kind: z.literal('literal'), value: representativeValueContract }),
+  z.object({ kind: z.literal('param-ref'), paramName: paramDescriptorContract.shape.name }).brand<'CallArg'>(),
+  z.object({ kind: z.literal('literal'), value: representativeValueContract }).brand<'CallArg'>(),
   // An inline function-like argument (`items.map((n) => …)`, `apply(x, (n) => …)`). It is a scope of
   // its own the walk opens elsewhere; this records only the LINK — the callback scope's start line,
   // the same key `follow-calls` matches a scope record by — so a reached callback is never mistaken
   // for dead surface.
-  z.object({ kind: z.literal('callback'), startLine: lineNumberContract }),
+  z.object({ kind: z.literal('callback'), startLine: z.number().int().positive().brand<'CallArgStartLine'>() }).brand<'CallArg'>(),
   // A BARE function REFERENCE passed as an argument (`items.map(bandReading)`) whose declaration the
   // walk can name — an IMPORT (its sibling definition resolved at consume time) or a same-file `local`
   // function. It carries the SAME callee LINK a call site records, so the cross-file-map overlay can
   // resolve the imported callee to its sibling scope and FUNNEL that scope's branches into the host —
   // the reference twin of the inline `callback`. A non-nameable identifier (a param, a const, an
   // arbitrary expression) stays `param-ref`/`opaque`.
-  z.object({ kind: z.literal('fn-ref'), callee: calleeLinkContract }),
-  z.object({ kind: z.literal('opaque') }),
+  z.object({ kind: z.literal('fn-ref'), callee: calleeLinkContract }).brand<'CallArg'>(),
+  z.object({ kind: z.literal('opaque') }).brand<'CallArg'>(),
 ]);
 
 export const callSiteContract = z.object({
@@ -54,16 +54,18 @@ export const callSiteContract = z.object({
   args: z.array(callArgContract),
   guardPath: z.array(guardStepContract),
   // Where the call is written — the position that anchors an import-resolution build error at the
-  // call site (P1). Carried structurally from the parse; never re-derived downstream.
-  position: z.object({ line: lineNumberContract, column: columnNumberContract }),
+  // call site (P1). Carried structurally from the parse; never re-derived downstream. It reuses the
+  // condition leaf's `operandCallPosition` schema because a call operand's leaf joins back to its call
+  // site on this one coordinate; the leaf contract lives in shared, which cannot import core.
+  position: conditionLeafContract.shape.operandCallPosition.unwrap(),
   // A method call on an IDENTIFIER receiver (`items.map(...)`) records that receiver's name and the
   // method's name. Present only for a `receiver.method(...)` shape whose receiver is a plain
   // identifier; a bare call, a computed member, or a chained receiver leaves both unset. This is what
   // lets a follower see that a callback argument iterates one of the entry's ARRAY params — the
   // element the callback's parameter binds to — so its branches drive through that param.
-  receiver: symbolNameContract.optional(),
-  method: symbolNameContract.optional(),
-});
+  receiver: z.string().min(1).brand<'CallSiteReceiver'>().optional(),
+  method: z.string().min(1).brand<'CallSiteMethod'>().optional(),
+}).brand<'CallSite'>();
 
 export type CallSite = z.infer<typeof callSiteContract>;
 export type CalleeLink = z.infer<typeof calleeLinkContract>;

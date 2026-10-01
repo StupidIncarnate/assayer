@@ -1,18 +1,24 @@
-import { nodeFsReadCacheManifestAdapterProxy } from '../../../adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter.proxy';
-import type { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { readJsonFileProxy } from '#gateway/node/fs__promises/read-json-file/read-json-file.proxy';
 
 export const cacheLoadManifestBrokerProxy = (): {
-  resolves: (params: { manifest: ReturnType<typeof AssayerCacheManifestStub> }) => void;
-  rejects: (params: { error: Error }) => void;
+  resolves: (params: {
+    repoPath: string;
+    manifest: ReturnType<typeof AssayerCacheManifestStub>;
+  }) => void;
+  missing: (params: { repoPath: string }) => void;
 } => {
-  const adapterProxy = nodeFsReadCacheManifestAdapterProxy();
+  const readJsonGateway = readJsonFileProxy();
 
   return {
-    resolves: ({ manifest }): void => {
-      adapterProxy.returns({ content: JSON.stringify(manifest) });
+    resolves: ({ repoPath, manifest }): void => {
+      readJsonGateway.returnsRaw({
+        path: `${repoPath}/.assayer/cache/manifest.json`,
+        rawContents: JSON.stringify(manifest),
+      });
     },
-    rejects: ({ error }): void => {
-      adapterProxy.throws({ error });
+    missing: ({ repoPath }): void => {
+      readJsonGateway.missing({ path: `${repoPath}/.assayer/cache/manifest.json` });
     },
   };
 };

@@ -41,45 +41,41 @@
  * arrangeBindingContract.parse({ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } });
  * // Returns a validated ArrangeBinding (discriminated on `kind`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
-import { envValueContract } from '../env-value/env-value-contract';
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
-import { harnessKeyPathContract } from '../harness-key-path/harness-key-path-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 export const arrangeBindingContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('param'),
-    param: symbolNameContract,
+    param: z.string().min(1).brand<'ArrangeBindingParam'>(),
     value: representativeValueContract,
-  }),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('env'),
-    name: envVarNameContract,
-    value: envValueContract,
-  }),
+    name: z.string().min(1).brand<'ArrangeBindingName'>(),
+    value: z.string().brand<'ArrangeBindingValue'>(),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('object'),
-    param: symbolNameContract,
-    value: z.record(symbolNameContract, arrangeValueContract),
-  }),
+    param: z.string().min(1).brand<'ArrangeBindingParam'>(),
+    value: z.record(z.string().min(1).brand<'ArrangeBindingValue'>(), arrangeValueContract),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('array'),
-    param: symbolNameContract,
+    param: z.string().min(1).brand<'ArrangeBindingParam'>(),
     value: z.array(arrangeValueContract),
     // Present only when this array realizes a REST parameter — see the PURPOSE doc above.
     rest: z.boolean().optional(),
-  }),
+  }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('harness'),
-    param: symbolNameContract,
-    key: harnessKeyPathContract,
+    param: z.string().min(1).brand<'ArrangeBindingParam'>(),
+    key: z.string().min(1).brand<'ArrangeBindingKey'>(),
     // Present only when this key realizes a REST parameter — see the PURPOSE doc above.
     rest: z.boolean().optional(),
-  }),
+  }).brand<'ArrangeBinding'>(),
 ]);
 
 export type ArrangeBinding = z.infer<typeof arrangeBindingContract>;

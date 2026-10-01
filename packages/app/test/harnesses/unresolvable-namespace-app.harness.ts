@@ -17,12 +17,12 @@
  * const window = await brokenApp.launch();
  * // window.getByTestId('SURFACE_ERROR') carries the resolver's own sentence, verbatim
  */
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { _electron } from '@playwright/test';
-import type { ElectronApplication, Page } from '@playwright/test';
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { join } from '#gateway/node/path';
+import { tmpdir } from '#gateway/node/os';
+import { mkdtempSync, ensureDirSync, writeFileSync, rmSync } from '#gateway/node/fs';
+import { _electron } from '#gateway/npm/playwright__test';
+import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
 const desktopMainEntry = join(__dirname, '..', '..', '..', 'desktop', 'dist', 'bin', 'desktop-main.js');
 
@@ -41,7 +41,7 @@ export const unresolvableNamespaceAppHarness = (): {
     launch: async (): Promise<Page> => {
       const configDir = mkdtempSync(join(tmpdir(), 'assayer-unresolvable-namespace-'));
       cleanups.push(() => { rmSync(configDir, { recursive: true, force: true }); });
-      mkdirSync(join(configDir, '.assayer', 'cache'), { recursive: true });
+      ensureDirSync(join(configDir, '.assayer', 'cache'));
       const manifest = AssayerCacheManifestStub({
         namespaces: {
           'branch-a': { branch: 'branch-a', files: [] },

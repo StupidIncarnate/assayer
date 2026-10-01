@@ -5,7 +5,7 @@
  * long the process lives.
  *
  * USAGE:
- * import { run, runSync, runSyncWithInput, stream, streamLines, spawnDetached, spawnLongLived, spawnPiped, spawnLive, runFireAndForget, RunNotFoundError } from '#gateway/node/child_process';
+ * import { run, runSync, runSyncWithInput, stream, streamLines, spawnDetached, spawnFireAndForget, spawnLongLived, spawnPiped, spawnLive, runFireAndForget, RunNotFoundError } from '#gateway/node/child_process';
  */
 
 export * from 'child_process';
@@ -15,6 +15,7 @@ export { RunNotFoundError } from './run-not-found.error';
 export { runSync } from './run-sync/run-sync';
 export { runSyncWithInput } from './run-sync-with-input/run-sync-with-input';
 export { spawnDetached } from './spawn-detached/spawn-detached';
+export { spawnFireAndForget } from './spawn-fire-and-forget/spawn-fire-and-forget';
 export { spawnLive } from './spawn-live/spawn-live';
 export { spawnLongLived } from './spawn-long-lived/spawn-long-lived';
 export { spawnPiped } from './spawn-piped/spawn-piped';

@@ -21,20 +21,21 @@
  * const result = await engine.run({ relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts', runId: 'r1' });
  * engine.savedRun({ runId: 'r1' }); // => the RunResult parsed back off disk
  */
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { ensureDirSync, readFileSync, rmSync } from '#gateway/node/fs';
+import { tmpdir } from '#gateway/node/os';
+import { join, resolve } from '#gateway/node/path';
 
 import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
 import { runUnitBroker } from '../../src/brokers/run/unit/run-unit-broker';
+import { pid } from '#gateway/node/process';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
 const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
 // Stable for the whole worker, unique across parallel ones — see the note above on why the path must
 // not change between tests.
-const CACHE_DIR = join(tmpdir(), `assayer-engine-${String(process.pid)}`);
+const CACHE_DIR = join(tmpdir(), `assayer-engine-${String(pid)}`);
 
 export const runUnitHarness = (): {
   beforeEach: () => void;
@@ -45,7 +46,7 @@ export const runUnitHarness = (): {
   return {
     beforeEach: (): void => {
       rmSync(CACHE_DIR, { recursive: true, force: true });
-      mkdirSync(CACHE_DIR, { recursive: true });
+      ensureDirSync(CACHE_DIR);
     },
     afterEach: (): void => {
       rmSync(CACHE_DIR, { recursive: true, force: true });
@@ -59,12 +60,12 @@ export const runUnitHarness = (): {
         repoRoot: SMOKE_REPO,
         relPath,
         absPath,
-        source: readFileSync(absPath, 'utf8'),
+        source: readFileSync(absPath),
         runId,
         analyzerContentHash: 'harness-pinned-hash',
       });
     },
     savedRun: ({ runId }: { runId: string }): RunResult =>
-      runResultContract.parse(JSON.parse(readFileSync(join(CACHE_DIR, 'runs', runId, 'run.json'), 'utf8'))),
+      runResultContract.parse(JSON.parse(readFileSync(join(CACHE_DIR, 'runs', runId, 'run.json')))),
   };
 };

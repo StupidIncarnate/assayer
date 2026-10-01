@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'welded-arg.ts'), 'utf8');
 const relPath = 'src/sad-path/unreachable/welded-arg/welded-arg.ts';
@@ -28,7 +28,7 @@ describe('unreachable / welded-arg — a private whose branch a surface welds a 
   // the SOLE entry, with ONE funnel case — the live `else` arm — arranging nothing, since the welded `3`
   // is baked into `report`'s body, not a settable input. No separate `decide` entry.
   it('VALID: {report returns decide(3)} => report is the sole entry with one live-arm funnel case', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.map((fn) => ({ name: String(fn.entry.name), access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
       {
@@ -43,7 +43,7 @@ describe('unreachable / welded-arg — a private whose branch a surface welds a 
   // it (`report`, the sole entry) while the message names where the dead code lives (`decide`, on its own
   // line), naming the operand and its welded value exactly as a welded-const scope's dead arm does.
   it('VALID: {the welded then-arm} => an unreachable-exit lint keyed to report, naming `value` welded to `3`', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(
       analysis.lints.map((lint) => ({
@@ -59,7 +59,7 @@ describe('unreachable / welded-arg — a private whose branch a surface welds a 
   // NO LONGER undriven and NOT a dark spot: the analyzer resolved which arm is live, so the file admits
   // nothing it cannot drive — its only debt is the repo's dead arm, on the lint channel.
   it('VALID: {a fully-evaluated welded-arg funnel} => admits nothing as undriven or a dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots }).toStrictEqual({ undriven: [], darkSpots: [] });
   });

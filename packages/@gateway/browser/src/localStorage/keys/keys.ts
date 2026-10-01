@@ -17,7 +17,7 @@ export const keys = (): { success: true; keys: string[] } | { success: false; er
     const result: string[] = [];
     for (let index = 0; index < globalThis.localStorage.length; index += 1) {
       const key = globalThis.localStorage.key(index);
-      if (key !== null) result.push(key);
+      if (key !== null) {result.push(key);}
     }
     return { success: true, keys: result };
   } catch (error: unknown) {

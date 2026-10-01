@@ -23,22 +23,19 @@
  * const both = await stitch.stitchTwice({ first: sourceA, second: sourceB });
  * const passes = await stitch.compileTwice({ source: TWO_CALLBACK_SOURCE, first: harnessA, second: harnessB });
  */
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, rmSync } from '#gateway/node/fs';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
-import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract, RelPathStub } from '@assayer/shared/contracts';
+import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract } from '@assayer/shared/contracts';
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
-import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
+import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileHarnessGraphBroker } from '../../src/brokers/compile/harness-graph/compile-harness-graph-broker';
 import { harnessRealizeBroker } from '../../src/brokers/harness/realize/harness-realize-broker';
-import { FileContentsStub } from '../../src/contracts/file-contents/file-contents.stub';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 const NAMESPACE = 'main';
@@ -73,24 +70,24 @@ export const TWO_CALLBACK_SOURCE = [
 
 export const harnessGraphHarness = (): {
   afterEach: () => void;
-  stitchOnce: (params: { harness: string }) => Promise<{ written: HarnessIndex; errorMessages: ErrorMessage[] }>;
+  stitchOnce: (params: { harness: string }) => Promise<{ written: HarnessIndex; errorMessages: string[] }>;
   stitchTwice: (params: { first: string; second: string }) => Promise<{ first: HarnessIndex; second: HarnessIndex }>;
   compileTwice: (params: { source: string; first: string; second: string }) => Promise<{
     first: { index: HarnessIndex; blob: 'compiled' | 'reused'; contentHash: ContentHash; analysis: FileAnalysis };
     second: { index: HarnessIndex; blob: 'compiled' | 'reused'; contentHash: ContentHash; analysis: FileAnalysis };
   }>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
-  const blobsDirOf = ({ dir }: { dir: ReturnType<typeof FilePathStub> }): ReturnType<typeof FilePathStub> =>
-    FilePathStub({ value: join(String(dir), '.assayer', 'cache', 'blobs') });
+  const blobsDirOf = ({ dir }: { dir: string }): string =>
+    join(dir, '.assayer', 'cache', 'blobs');
 
-  const seed = ({ source }: { source: string }): ReturnType<typeof FilePathStub> => {
-    const dir = FilePathStub({ value: realpathSync(mkdtempSync(join(tmpdir(), 'assayer-harness-'))) });
+  const seed = ({ source }: { source: string }): string => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-harness-')));
     dirs.push(dir);
-    writeFileSync(join(String(dir), 'tsconfig.json'), NODE_TSCONFIG);
-    mkdirSync(join(String(dir), 'src'), { recursive: true });
-    writeFileSync(join(String(dir), SOURCE_REL), source);
+    writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
+    ensureDirSync(join(dir, 'src'));
+    writeFileSync(join(dir, SOURCE_REL), source);
 
     return dir;
   };
@@ -99,23 +96,23 @@ export const harnessGraphHarness = (): {
   // graph, stitch the harness index, and read that index back off disk. The cache's own `reused` flag is
   // carried out rather than inferred, so a caller never has to guess whether the source was re-parsed.
   const stitch = async (params: {
-    dir: ReturnType<typeof FilePathStub>;
+    dir: string;
     source: string;
     harness: string;
   }): Promise<{
     written: HarnessIndex;
-    errorMessages: ErrorMessage[];
+    errorMessages: string[];
     blob: 'compiled' | 'reused';
     contentHash: ContentHash;
   }> => {
-    const dir = String(params.dir);
+    const {dir} = params;
     writeFileSync(join(dir, HARNESS_REL), params.harness);
 
-    const blobsDir = String(blobsDirOf({ dir: params.dir }));
+    const blobsDir = blobsDirOf({ dir: params.dir });
     const processed = await compileProcessFileBroker({ relPath: SOURCE_REL, content: params.source, blobsDir });
-    const contentHash = cryptoSha256Adapter({ content: params.source });
+    const contentHash = contentHashTransformer({ content: params.source });
 
-    const files = [{ relPath: RelPathStub({ value: SOURCE_REL }), contentHash }];
+    const files = [{ relPath: SOURCE_REL, contentHash }];
     const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
     const result = await compileHarnessGraphBroker({
@@ -124,11 +121,11 @@ export const harnessGraphHarness = (): {
       blobsDir,
       resolvedIndex: resolved.index,
       files,
-      harnesses: [{ relPath: RelPathStub({ value: HARNESS_REL }), content: FileContentsStub({ value: params.harness }) }],
+      harnesses: [{ relPath: HARNESS_REL, content: params.harness }],
     });
 
     const written = harnessIndexContract.parse(
-      JSON.parse(readFileSync(join(dir, '.assayer', 'cache', 'harness', `${NAMESPACE}.json`), 'utf8')),
+      JSON.parse(readFileSync(join(dir, '.assayer', 'cache', 'harness', `${NAMESPACE}.json`))),
     );
 
     return {
@@ -148,20 +145,20 @@ export const harnessGraphHarness = (): {
     dir,
     contentHash,
   }: {
-    dir: ReturnType<typeof FilePathStub>;
+    dir: string;
     contentHash: ContentHash;
   }): FileAnalysis => {
     const blob = compiledFileBlobContract.parse(
-      JSON.parse(readFileSync(join(String(blobsDirOf({ dir })), `${String(contentHash)}.json`), 'utf8')),
+      JSON.parse(readFileSync(join(blobsDirOf({ dir }), `${contentHash}.json`))),
     );
-    const walked = tsMorphWalkFileAdapter({
-      source: readFileSync(join(String(dir), SOURCE_REL), 'utf8'),
+    const walked = walkFileTransformer({
+      source: readFileSync(join(dir, SOURCE_REL)),
       relPath: SOURCE_REL,
     });
 
     return harnessRealizeBroker({
       analysis: fileAnalysisContract.parse(blob.analysis),
-      root: String(dir),
+      root: dir,
       relPath: SOURCE_REL,
       walked,
     });
@@ -170,7 +167,7 @@ export const harnessGraphHarness = (): {
   return {
     afterEach: (): void => {
       dirs.forEach((dir) => {
-        rmSync(String(dir), { recursive: true, force: true });
+        rmSync(dir, { recursive: true, force: true });
       });
       dirs.length = 0;
     },
@@ -179,7 +176,7 @@ export const harnessGraphHarness = (): {
       harness,
     }: {
       harness: string;
-    }): Promise<{ written: HarnessIndex; errorMessages: ErrorMessage[] }> => {
+    }): Promise<{ written: HarnessIndex; errorMessages: string[] }> => {
       const pass = await stitch({ dir: seed({ source: AUDIT_SOURCE }), source: AUDIT_SOURCE, harness });
 
       return { written: pass.written, errorMessages: pass.errorMessages };

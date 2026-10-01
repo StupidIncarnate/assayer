@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'and.ts'), 'utf8');
 const relPath = 'src/happy-path/boolean/and/and.ts';
@@ -46,7 +46,7 @@ describe('boolean / and — a conjunction inside an exported function', () => {
   // reach the SAME exit and so return the same value: the first is the salient (must-run)
   // representative, the second is the grayed breadth twin.
   it('VALID: {&& condition} => one case per CAUSE — one for then, TWO for else, second else grayed', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       // 6 > 5 && 2 > 1 — both hold.
@@ -82,7 +82,7 @@ describe('boolean / and — a conjunction inside an exported function', () => {
 
   // A compound condition used to enrich NEITHER operand: there was no single param name to report.
   it('VALID: {&& condition} => enriches BOTH operands on the branch line', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.enrichment).toStrictEqual([
       { line: 1, symbol: 'score', typeText: 'number' },

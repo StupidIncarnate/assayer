@@ -1,4 +1,4 @@
-import { RepresentativeValueStub } from '@assayer/shared/contracts';
+import { RepresentativeValueStub } from '@assayer/shared/contracts/representative-value/representative-value.stub';
 
 import { literalTokenTransformer } from './literal-token-transformer';
 

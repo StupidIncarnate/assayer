@@ -1,4 +1,4 @@
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from './analyze-file-broker';
 import { analyzeFileBrokerProxy } from './analyze-file-broker.proxy';
 
@@ -47,7 +47,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function formatGreeting(name: string): string {\n  if (name.length === 0) {\n    return 'Hello, stranger!';\n  }\n  return 'Hello, ' + name + '!';\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/format-greeting.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/format-greeting.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -61,7 +61,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function formatGreeting(name: string): string {\n  if (name.length === 0) {\n    return 'Hello, stranger!';\n  }\n  return 'Hello, ' + name + '!';\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/format-greeting.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/format-greeting.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -75,7 +75,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function formatGreeting(name: string): string {\n  if (name.length === 0) {\n    return 'Hello, stranger!';\n  }\n  return 'Hello, ' + name + '!';\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/format-greeting.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/format-greeting.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -96,7 +96,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "const value = 7;\n\nif (value > 5) {\n  console.log('big');\n} else {\n  console.log('small');\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/welded-operand.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/welded-operand.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/welded-operand.ts' });
 
@@ -171,7 +171,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "const value = 7;\n\nif (value > 5) {\n  console.log('big');\n} else {\n  console.log('small');\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/welded-operand.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/welded-operand.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/welded-operand.ts' });
 
@@ -187,7 +187,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export class Classifier {\n  classify(value: number): string {\n    if (value > 5) {\n      return 'big';\n    }\n\n    return 'small';\n  }\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/classifier.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/classifier.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -200,7 +200,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         'export function outer(value: number): number {\n  function inner(n: number): number {\n    return n;\n  }\n  return inner(value);\n}\n';
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/outer.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/outer.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -215,7 +215,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function outer(value: number): string {\n  function inner(n: number): string {\n    if (n > 5) {\n      return 'inner big';\n    }\n\n    return 'inner small';\n  }\n\n  return inner(value);\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/outer.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/outer.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -245,7 +245,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function outer(value: number): string {\n  function inner(n: number): string {\n    if (n > 5) {\n      return 'inner big';\n    }\n\n    return 'inner small';\n  }\n\n  return inner(value);\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/outer.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/outer.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -263,7 +263,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "function tooBig(n: number): boolean {\n  return n > 50;\n}\n\nexport function classify(x: number): string {\n  if (tooBig(x)) {\n    return 'big';\n  }\n\n  return 'small';\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/same-file-predicate.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/same-file-predicate.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -307,7 +307,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         'export function sumAll(items: number[]): number {\n  let total = 0;\n  for (const item of items) {\n    total = total + item;\n  }\n  return total;\n}\n';
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/sum-all.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/sum-all.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -326,7 +326,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         'export function sumAll(items: number[]): number {\n  let total = 0;\n  for (const item of items) {\n    total = total + item;\n  }\n  return total;\n}\n';
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/sum-all.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/sum-all.ts' });
 
       const result = analyzeFileBroker({ walked });
 
@@ -342,7 +342,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function audit(size: number, report: (message: string) => string): string {\n  if (size > 10) {\n    return report('over');\n  }\n\n  return report('under');\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/audit.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
@@ -355,7 +355,7 @@ describe('analyzeFileBroker', () => {
       analyzeFileBrokerProxy();
       const source =
         "export function audit(size: number, report: (message: string) => string): string {\n  if (size > 10) {\n    return report('over');\n  }\n\n  return report('under');\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/audit.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
@@ -369,7 +369,7 @@ describe('analyzeFileBroker', () => {
     it('VALID: {every param constructable} => no gap, so a drivable entry invoices nothing', () => {
       analyzeFileBrokerProxy();
       const source = 'export function audit(size: number): number {\n  return size + 1;\n}\n';
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/audit.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
@@ -384,7 +384,7 @@ describe('analyzeFileBroker', () => {
       const source =
         'export type Config = { mode: string };\n' +
         "export function checkConfigObj(config: Config): string {\n  if (config) {\n    return 'truthy';\n  }\n\n  return 'falsy';\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/check-config-obj.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/check-config-obj.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/check-config-obj.ts' });
 
@@ -420,7 +420,7 @@ describe('analyzeFileBroker', () => {
 
     it('VALID: {the private takes a callback} => a GAP on the surface, naming the private that declares it', () => {
       analyzeFileBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: FUNNEL_SOURCE, relPath: 'src/surface.ts' });
+      const walked = walkFileTransformer({ source: FUNNEL_SOURCE, relPath: 'src/surface.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
 
@@ -429,7 +429,7 @@ describe('analyzeFileBroker', () => {
 
     it('VALID: {the private takes a callback} => the surface derives nothing, and says so on exactly one channel', () => {
       analyzeFileBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: FUNNEL_SOURCE, relPath: 'src/surface.ts' });
+      const walked = walkFileTransformer({ source: FUNNEL_SOURCE, relPath: 'src/surface.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
 
@@ -447,7 +447,7 @@ describe('analyzeFileBroker', () => {
         'function helper(size: number): string {\n' +
         "  if (size > 5) {\n    return 'big';\n  }\n\n  return 'small';\n}\n" +
         'export function surface(size: number): string {\n  return helper(size);\n}\n';
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/surface.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/surface.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
 
@@ -469,7 +469,7 @@ describe('analyzeFileBroker', () => {
 
     it('VALID: {an unconstructable input and an opaque branch} => the gap alone, the undriven admission suppressed', () => {
       analyzeFileBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: BOTH_SOURCE, relPath: 'src/audit.ts' });
+      const walked = walkFileTransformer({ source: BOTH_SOURCE, relPath: 'src/audit.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
@@ -487,7 +487,7 @@ describe('analyzeFileBroker', () => {
         "import { flag } from './flag';\n" +
         'export function audit(size: number): string {\n' +
         "  if (flag) {\n    return 'on';\n  }\n\n  return 'off';\n}\n";
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/audit.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/audit.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
@@ -513,7 +513,7 @@ describe('analyzeFileBroker', () => {
 
     it('VALID: {a through-caller private reached unguarded} => a gap for the private, distinct from the surface\'s own gap', () => {
       analyzeFileBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: THROUGH_CALLER_SOURCE, relPath: 'src/surface.ts' });
+      const walked = walkFileTransformer({ source: THROUGH_CALLER_SOURCE, relPath: 'src/surface.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/surface.ts' });
 
@@ -532,7 +532,7 @@ describe('analyzeFileBroker', () => {
 
     it('VALID: {a top-level branch on an opaque import} => the module reads wholly undriven, on exactly one admission', () => {
       analyzeFileBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: OPAQUE_MODULE_SOURCE, relPath: 'src/opaque-module.ts' });
+      const walked = walkFileTransformer({ source: OPAQUE_MODULE_SOURCE, relPath: 'src/opaque-module.ts' });
 
       const result = analyzeFileBroker({ walked, relPath: 'src/opaque-module.ts' });
 
@@ -548,7 +548,7 @@ describe('analyzeFileBroker', () => {
   describe('parse error', () => {
     it('ERROR: {invalid source} => empty analysis', () => {
       analyzeFileBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: 'const x = ;\n', relPath: 'src/x.ts' });
+      const walked = walkFileTransformer({ source: 'const x = ;\n', relPath: 'src/x.ts' });
 
       const result = analyzeFileBroker({ walked });
 

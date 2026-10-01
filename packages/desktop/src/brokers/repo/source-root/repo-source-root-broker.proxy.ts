@@ -1,36 +1,25 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { configLoadBroker } from '@assayer/core/brokers';
-import { configLoadBrokerProxy, compileResolveRootBrokerProxy } from '@assayer/core/testing';
-import { AssayerConfigStub } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
+import { configLoadBrokerProxy } from '@assayer/core/brokers/config/load/config-load-broker.proxy';
+import { compileResolveRootBrokerProxy } from '@assayer/core/brokers/compile/resolve-root/compile-resolve-root-broker.proxy';
 
 export const repoSourceRootBrokerProxy = (): {
-  configHasRepoRoot: ({ repoRoot }: { repoRoot: string }) => void;
-  configUnreadable: ({ message }: { message: string }) => void;
+  configHasRepoRoot: ({ repoPath, repoRoot }: { repoPath: string; repoRoot: string }) => void;
+  configUnreadable: ({ repoPath }: { repoPath: string }) => void;
 } => {
-  // Bare-called for enforce-proxy-child-creation. compileResolveRootBroker is left to run for real:
-  // it is pure path arithmetic, and mocking it would hide the configDir-vs-root distinction the
-  // tests exist to pin.
-  configLoadBrokerProxy();
+  const configProxy = configLoadBrokerProxy();
+  // compileResolveRootBroker runs for real: it is pure path arithmetic, and replacing it would hide
+  // the configDir-vs-root distinction the tests exist to pin.
   compileResolveRootBrokerProxy();
 
-  const handle = registerMock({ fn: configLoadBroker });
-
-  // The broker calls this at most once per resolve, so there is no second real call to confuse it
-  // with — `calledWith([])` is a blanket match on purpose, not a stand-in for a real argument.
-  handle.calledWith([]).resolves({ success: true, data: AssayerConfigStub() });
-
   return {
-    configHasRepoRoot: ({ repoRoot }: { repoRoot: string }): void => {
-      handle.calledWith([]).resolves({ success: true, data: AssayerConfigStub({ repoRoot }) });
-    },
-    configUnreadable: ({ message }: { message: string }): void => {
-      handle.calledWith([]).resolves({
-        success: false,
-        message: errorMessageContract.parse(message),
-        line: 1,
-        column: 1,
+    configHasRepoRoot: ({ repoPath, repoRoot }: { repoPath: string; repoRoot: string }): void => {
+      configProxy.hasContent({
+        path: `${repoPath}/assayer.config.json`,
+        content: JSON.stringify({ repoRoot }),
       });
+    },
+    // The file is present but is not valid JSON, so the config load answers success: false.
+    configUnreadable: ({ repoPath }: { repoPath: string }): void => {
+      configProxy.hasContent({ path: `${repoPath}/assayer.config.json`, content: '{' });
     },
   };
 };

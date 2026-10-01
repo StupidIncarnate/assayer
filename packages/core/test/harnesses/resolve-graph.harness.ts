@@ -12,16 +12,14 @@
  * const barrel = await stitch.resolveBarrelRepo();  // an import chased through a re-export barrel
  * const broken = await stitch.resolveBrokenRepo();  // an import that resolves to nothing
  */
-import { mkdtempSync, mkdirSync, writeFileSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { mkdtempSync, ensureDirSync, writeFileSync, realpathSync, rmSync } from '#gateway/node/fs';
+import { tmpdir } from '#gateway/node/os';
+import { join } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 const VENDORED_PKG_JSON = '{ "name": "vendored-pkg", "version": "1.0.0", "types": "index.d.ts" }';
@@ -52,23 +50,23 @@ export const resolveGraphHarness = (): {
   resolveBrokenRepo: () => Promise<ResolveResult>;
   resolveDynamicRepo: () => Promise<ResolveResult>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
   return {
     afterEach: (): void => {
-      dirs.forEach((dir) => { rmSync(String(dir), { recursive: true, force: true }); });
+      dirs.forEach((dir) => { rmSync(dir, { recursive: true, force: true }); });
       dirs.length = 0;
     },
 
     resolveMixedRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stitch-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', 'vendored-pkg'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'index.d.ts'), VENDORED_DTS);
-      mkdirSync(join(dir, 'src', 'a'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'b'), { recursive: true });
+      ensureDirSync(join(dir, 'src', 'a'));
+      ensureDirSync(join(dir, 'src', 'b'));
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'a', 'caller.ts'), CALLER_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
@@ -79,21 +77,21 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: cryptoSha256Adapter({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: cryptoSha256Adapter({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
 
     resolveTypedRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-typed-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', 'vendored-pkg'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'index.d.ts'), VENDORED_DTS);
-      mkdirSync(join(dir, 'src', 'a'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'b'), { recursive: true });
+      ensureDirSync(join(dir, 'src', 'a'));
+      ensureDirSync(join(dir, 'src', 'b'));
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'a', 'caller.ts'), CALLER_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
@@ -105,19 +103,19 @@ export const resolveGraphHarness = (): {
         blobsDir,
         cacheDir: join(dir, '.assayer', 'cache'),
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: cryptoSha256Adapter({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: cryptoSha256Adapter({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
 
     resolveBarrelRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-barrel-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src', 'b'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'barrel'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'c'), { recursive: true });
+      ensureDirSync(join(dir, 'src', 'b'));
+      ensureDirSync(join(dir, 'src', 'barrel'));
+      ensureDirSync(join(dir, 'src', 'c'));
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'barrel', 'index.ts'), BARREL_SRC);
       writeFileSync(join(dir, 'src', 'c', 'user.ts'), USER_SRC);
@@ -130,18 +128,18 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: cryptoSha256Adapter({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/barrel/index.ts' }), contentHash: cryptoSha256Adapter({ content: BARREL_SRC }) },
-          { relPath: RelPathStub({ value: 'src/c/user.ts' }), contentHash: cryptoSha256Adapter({ content: USER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/barrel/index.ts', contentHash: contentHashTransformer({ content: BARREL_SRC }) },
+          { relPath: 'src/c/user.ts', contentHash: contentHashTransformer({ content: USER_SRC }) },
         ],
       });
     },
 
     resolveBrokenRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-broken-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src'), { recursive: true });
+      ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'broken.ts'), BROKEN_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: 'src/broken.ts', content: BROKEN_SRC, blobsDir });
@@ -149,15 +147,15 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/broken.ts' }), contentHash: cryptoSha256Adapter({ content: BROKEN_SRC }) }],
+        files: [{ relPath: 'src/broken.ts', contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
       });
     },
 
     resolveDynamicRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-dynamic-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src'), { recursive: true });
+      ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'dynamic.ts'), DYNAMIC_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: 'src/dynamic.ts', content: DYNAMIC_SRC, blobsDir });
@@ -165,7 +163,7 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/dynamic.ts' }), contentHash: cryptoSha256Adapter({ content: DYNAMIC_SRC }) }],
+        files: [{ relPath: 'src/dynamic.ts', contentHash: contentHashTransformer({ content: DYNAMIC_SRC }) }],
       });
     },
   };

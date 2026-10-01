@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'spread.ts'), 'utf8');
 const relPath = 'src/happy-path/array/spread/spread.ts';
@@ -16,7 +16,7 @@ describe('array / spread — a branchless function returning `[...items]`', () =
   // array; all three RUN, `intelligent` grays the two twins. The values are INPUTS (P4); each case
   // asserts only that the flow REACHES the exit.
   it('VALID: {export function copy(items: number[]): number[] { return [...items] }} => array-of-number param and return, three cardinality cases', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -54,7 +54,7 @@ describe('array / spread — a branchless function returning `[...items]`', () =
   // An array param and return declare no OBJECT shape, and a spread element is not a callee, so nothing
   // is admitted: no declared types, no dark spot, no undriven, no lint.
   it('VALID: {an array-typed param spread into a new array} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

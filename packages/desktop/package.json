@@ -3,33 +3,40 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./brokers": {
-      "source": "./brokers.ts",
-      "import": "./dist/brokers.js",
-      "require": "./dist/brokers.js",
-      "types": "./dist/brokers.d.ts"
+    "./*.proxy": {
+      "source": "./src/*.proxy.ts"
     },
-    "./testing": {
-      "source": "./testing.ts",
-      "import": "./dist/testing.js",
-      "require": "./dist/testing.js",
-      "types": "./dist/testing.d.ts"
+    "./*.stub": {
+      "source": "./src/*.stub.ts"
+    },
+    "./brokers": {
+      "source": "./src/brokers/brokers.ts",
+      "types": "./dist/src/brokers/brokers.d.ts",
+      "import": "./dist/src/brokers/brokers.js",
+      "require": "./dist/src/brokers/brokers.js"
     }
   },
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc -p tsconfig.build.json",
+    "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
     "start": "electron dist/bin/desktop-main.js",
-    "dev": "ASSAYER_DEV=1 nodemon --exec \"electron dist/bin/desktop-main.js --repo ../..\""
+    "dev": "ASSAYER_DEV=1 nodemon --exec \"electron dist/bin/desktop-main.js --repo ../..\"",
+    "test": "dungeonmaster-ward --only test",
+    "typecheck": "dungeonmaster-ward --only typecheck",
+    "lint": "dungeonmaster-ward --only lint",
+    "ward": "dungeonmaster-ward"
   },
   "dependencies": {
     "@assayer/core": "*",
+    "@assayer/node": "*",
+    "@assayer/npm": "*",
     "@assayer/shared": "*",
     "zod": "^4.6.5"
   },
   "imports": {
-    "#gateway/npm/*": "@assayer-monorepo/npm/*",
-    "#gateway/node/*": "@assayer-monorepo/node/*",
-    "#gateway/browser/*": "@assayer-monorepo/browser/*",
-    "#gateway/bin/*": "@assayer-monorepo/bin/*"
+    "#gateway/npm/*": "@assayer/npm/*",
+    "#gateway/node/*": "@assayer/node/*",
+    "#gateway/browser/*": "@assayer/browser/*",
+    "#gateway/bin/*": "@assayer/bin/*"
   }
 }

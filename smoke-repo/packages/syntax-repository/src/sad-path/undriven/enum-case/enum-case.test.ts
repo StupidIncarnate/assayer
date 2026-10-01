@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'enum-case.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/enum-case/enum-case.ts';
@@ -20,19 +20,19 @@ describe('undriven / enum-case — a `case` whose expression is an enum member, 
   // was never emitted, the `default` lost the else that guards it, and the one derived case predicted
   // the default while the run reached the skipped clause — reported as "reached no exit".
   it('VALID: {case Severity.Low} => a branch is emitted for the clause, never a dropped arm', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.branches.map((branch) => branch.kind))).toStrictEqual(['switch']);
   });
 
   it('VALID: {an enum-member case} => the branch admitted undriven, naming the comparison', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.undriven).toStrictEqual([{ name: 'rank', reason: BRANCH_REASON, startLine: 8, endLine: 8 }]);
   });
 
   it('VALID: {an unreadable case expression} => no case is derived, so nothing errors against correct code', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
   });

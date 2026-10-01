@@ -1,4 +1,3 @@
-import { SymbolNameStub, LineNumberStub } from '@assayer/shared/contracts';
 
 import { UndrivenCauseStub } from '../../contracts/undriven-cause/undriven-cause.stub';
 import { undrivenBranchTransformer } from './undriven-branch-transformer';
@@ -64,8 +63,8 @@ describe('undrivenBranchTransformer', () => {
   describe('an opaque-call branch with no nameable operand', () => {
     it('VALID: {a branch on line 3, no operand} => one admission spanning that line, reason omits the operand', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'opaqueIf' }),
-        undrivenBranches: [{ line: LineNumberStub({ value: 3 }), cause: UndrivenCauseStub() }],
+        entryName: 'opaqueIf',
+        undrivenBranches: [{ line: 3, cause: UndrivenCauseStub() }],
       });
 
       expect(result).toStrictEqual([
@@ -77,12 +76,12 @@ describe('undrivenBranchTransformer', () => {
   describe('a non-param local branch with a nameable operand', () => {
     it('VALID: {a branch on line 4 deciding on `u`} => the admission names the operand in its reason', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'nonParam' }),
+        entryName: 'nonParam',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 4 }),
+            line: 4,
             cause: UndrivenCauseStub(),
-            operand: SymbolNameStub({ value: 'u' }),
+            operand: 'u',
           },
         ],
       });
@@ -96,12 +95,12 @@ describe('undrivenBranchTransformer', () => {
   describe('a param compared against a value the parse could not read', () => {
     it('VALID: {a branch on line 5 comparing `m`} => the reason names the comparison, never the parameter', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'pick' }),
+        entryName: 'pick',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 5 }),
-            cause: UndrivenCauseStub({ value: 'unread-comparison' }),
-            operand: SymbolNameStub({ value: 'm' }),
+            line: 5,
+            cause: 'unread-comparison',
+            operand: 'm',
           },
         ],
       });
@@ -119,8 +118,8 @@ describe('undrivenBranchTransformer', () => {
     it('ERROR: {a branch on line 5, no operand, cause unread-comparison} => throws the invariant violation', () => {
       expect(() =>
         undrivenBranchTransformer({
-          entryName: SymbolNameStub({ value: 'pick' }),
-          undrivenBranches: [{ line: LineNumberStub({ value: 5 }), cause: UndrivenCauseStub({ value: 'unread-comparison' }) }],
+          entryName: 'pick',
+          undrivenBranches: [{ line: 5, cause: 'unread-comparison' }],
         }),
       ).toThrow(/^unreachable: an 'unread-comparison' branch on line 5 of `pick` carries no operand$/u);
     });
@@ -129,8 +128,8 @@ describe('undrivenBranchTransformer', () => {
   describe('a typeof-narrowed branch', () => {
     it('VALID: {a branch on line 3 narrowing typeof} => the reason names the typeof limit, never "make it a parameter"', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'checkTypeof' }),
-        undrivenBranches: [{ line: LineNumberStub({ value: 3 }), cause: UndrivenCauseStub({ value: 'unarrangeable-typeof' }) }],
+        entryName: 'checkTypeof',
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-typeof' }],
       });
 
       expect(result).toStrictEqual([
@@ -142,12 +141,12 @@ describe('undrivenBranchTransformer', () => {
   describe('a typeof branch that narrows a union whose matching member has no scalar point', () => {
     it('VALID: {a branch on line 2 narrowing `target` to a union member Assayer cannot pick} => the reason names the shape limit, never "compare against a literal"', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'choose' }),
+        entryName: 'choose',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 2 }),
-            cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }),
-            operand: SymbolNameStub({ value: 'target' }),
+            line: 2,
+            cause: 'unarrangeable-typeof-member',
+            operand: 'target',
           },
         ],
       });
@@ -162,9 +161,9 @@ describe('undrivenBranchTransformer', () => {
     it('ERROR: {a branch on line 2, no operand, cause unarrangeable-typeof-member} => throws the invariant violation', () => {
       expect(() =>
         undrivenBranchTransformer({
-          entryName: SymbolNameStub({ value: 'choose' }),
+          entryName: 'choose',
           undrivenBranches: [
-            { line: LineNumberStub({ value: 2 }), cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }) },
+            { line: 2, cause: 'unarrangeable-typeof-member' },
           ],
         }),
       ).toThrow(/^unreachable: an 'unarrangeable-typeof-member' branch on line 2 of `choose` carries no operand$/u);
@@ -177,12 +176,12 @@ describe('undrivenBranchTransformer', () => {
   describe('an object-member branch reading a property more than one segment deep', () => {
     it('VALID: {a branch on line 4 deciding on `config.db.retry.backoff`} => the same generic reason a plain opaque operand gets', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'checkDeep' }),
+        entryName: 'checkDeep',
         undrivenBranches: [
           {
-            line: LineNumberStub({ value: 4 }),
+            line: 4,
             cause: UndrivenCauseStub(),
-            operand: SymbolNameStub({ value: 'config.db.retry.backoff' }),
+            operand: 'config.db.retry.backoff',
           },
         ],
       });
@@ -196,7 +195,7 @@ describe('undrivenBranchTransformer', () => {
   describe('an entry with no un-steerable branch', () => {
     it('EMPTY: {no undriven branches} => no admissions', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'classify' }),
+        entryName: 'classify',
         undrivenBranches: [],
       });
 
@@ -210,13 +209,13 @@ describe('undrivenBranchTransformer', () => {
     // first.
     it('VALID: {branches on line 4 and line 5, different causes} => one admission per branch, in order', () => {
       const result = undrivenBranchTransformer({
-        entryName: SymbolNameStub({ value: 'pick' }),
+        entryName: 'pick',
         undrivenBranches: [
-          { line: LineNumberStub({ value: 4 }), cause: UndrivenCauseStub(), operand: SymbolNameStub({ value: 'u' }) },
+          { line: 4, cause: UndrivenCauseStub(), operand: 'u' },
           {
-            line: LineNumberStub({ value: 5 }),
-            cause: UndrivenCauseStub({ value: 'unread-comparison' }),
-            operand: SymbolNameStub({ value: 'm' }),
+            line: 5,
+            cause: 'unread-comparison',
+            operand: 'm',
           },
         ],
       });

@@ -14,30 +14,29 @@
  *
  * USAGE:
  * const view = await compiledFileResolveBroker({
- *   repoPath: RepoPathStub({ value: '/repo' }),
- *   relPath: RelPathStub({ value: 'src/index.ts' }),
+ *   repoPath: '/repo',
+ *   relPath: 'src/index.ts',
  * });
  * // Returns a validated CompiledFileView; throws if relPath is not in the current namespace.
  */
 import { compiledFileViewContract } from '@assayer/shared/contracts';
-import type { CompiledFileView, RelPath } from '@assayer/shared/contracts';
+import type { CompiledFileView } from '@assayer/shared/contracts';
 import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, harnessRealizeBroker, paramTypeResolveBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
-import { tsMorphWalkFileAdapter } from '@assayer/core/adapters';
+import { walkFileTransformer } from '@assayer/core/transformers';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
 import { cacheLoadBlobBroker } from '../../cache/load-blob/cache-load-blob-broker';
 import { cacheLoadResolvedIndexBroker } from '../../cache/load-resolved-index/cache-load-resolved-index-broker';
 import { repoSourceRootBroker } from '../../repo/source-root/repo-source-root-broker';
-import { nodeFsReadSourceAdapter } from '../../../adapters/node-fs/read-source/node-fs-read-source-adapter';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
+import { readFileIfExists } from '#gateway/node/fs__promises';
 
 export const compiledFileResolveBroker = async ({
   repoPath,
   relPath,
 }: {
-  repoPath: RepoPath;
-  relPath: RelPath;
+  repoPath: string;
+  relPath: string;
 }): Promise<CompiledFileView> => {
   const manifest = await cacheLoadManifestBroker({ repoPath });
   const { namespaceName, files } = currentNamespaceTransformer({ manifest });
@@ -58,20 +57,20 @@ export const compiledFileResolveBroker = async ({
   // reference no-ops for a file they do not touch.
   const root = blob.analysis === undefined ? undefined : await repoSourceRootBroker({ repoPath });
   const source =
-    root === undefined ? undefined : await nodeFsReadSourceAdapter({ absPath: `${String(root)}/${String(relPath)}` });
+    root === undefined ? null : await readFileIfExists(`${root}/${relPath}`);
   const walked =
-    source === undefined ? undefined : tsMorphWalkFileAdapter({ source: String(source), relPath: String(relPath) });
+    source === null ? undefined : walkFileTransformer({ source, relPath });
   // The types first: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // per-file blob refuses it and invoices an input Assayer can build. Resolving the declaration against
   // the sibling on disk is what lets every overlay below read real parameter types.
   const typed =
     blob.analysis === undefined || root === undefined || walked === undefined
       ? blob.analysis
-      : paramTypeResolveBroker({ analysis: blob.analysis, walked, root: String(root), relPath: String(relPath) });
+      : paramTypeResolveBroker({ analysis: blob.analysis, walked, root, relPath });
   const composed =
     typed === undefined || root === undefined || walked === undefined
       ? typed
-      : composeCrossFilePredicatesBroker({ analysis: typed, walked, root: String(root), relPath: String(relPath) });
+      : composeCrossFilePredicatesBroker({ analysis: typed, walked, root, relPath });
   // The object-arrange overlay on top: an object-member branch (`if (config.mode === 'a')`) is DRIVEN
   // from the merged stub view — the derived per-property demands combined with the committed
   // `assayer/stubs/` overlay under the SAME source root, read fresh per serve and never persisted.
@@ -81,9 +80,9 @@ export const compiledFileResolveBroker = async ({
       : stubRealizeBroker({
           analysis: composed,
           walked,
-          root: String(root),
-          relPath: String(relPath),
-          overlays: await stubOverlayLoadBroker({ repoRoot: String(root) }),
+          root,
+          relPath,
+          overlays: await stubOverlayLoadBroker({ repoRoot: root }),
         });
   // The cross-file-map fold next: a surface mapping an IMPORTED function over an array param folds that
   // sibling callee's branches into the surface's cases, so the Tests tab shows the folded funnel. A
@@ -91,7 +90,7 @@ export const compiledFileResolveBroker = async ({
   const mapped =
     realized === undefined || root === undefined || walked === undefined
       ? realized
-      : composeCrossFileMapBroker({ analysis: realized, walked, root: String(root), relPath: String(relPath) });
+      : composeCrossFileMapBroker({ analysis: realized, walked, root, relPath });
   // The harness overlay last: an entry whose input Assayer refused is DRIVEN from the colocated
   // `<basename>.harness.ts` under the SAME source root, so the Tests tab shows the supplied cases and the
   // Admissions tab stops naming a debt the reader has already paid. Read fresh per serve, never persisted.
@@ -104,8 +103,8 @@ export const compiledFileResolveBroker = async ({
       ? mapped
       : harnessRealizeBroker({
           analysis: mapped,
-          root: String(root),
-          relPath: String(relPath),
+          root,
+          relPath,
           ...(walked === undefined ? {} : { walked }),
         });
 

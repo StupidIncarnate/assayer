@@ -1,27 +1,35 @@
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { stubIndexWriteBrokerProxy } from '../../stub-index/write/stub-index-write-broker.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const compileStubGraphBrokerProxy = (): {
-  queueBlob: ({ blob }: { blob: unknown }) => void;
+  // `path` is the blob file the broker reads: `<blobsDir>/<contentHash>.json`. One-shot, so two blobs
+  // queued for the same path are read in the order queued.
+  queueBlob: ({ path, blob }: { path: string; blob: unknown }) => void;
   // The index write is atomic: the bytes go to `<namespace>.json.tmp` first and a rename moves them
   // into place, so the address a caller asks with is that tmp path.
   getWrittenIndex: ({ path }: { path: string }) => unknown;
-  // Every path written, in call order. Asking WHICH path the index landed at cannot be addressed by
-  // that path without assuming the answer, so a caller reads the whole list and asserts it complete.
-  getWrittenPaths: () => unknown[];
+  // Stages the mkdir -> write -> rename of `<configDir>/.assayer/cache/stubs/<namespace>.json`. A write
+  // to any other path is not staged, so it throws.
+  indexWriteSucceeds: ({ configDir, namespace }: { configDir: string; namespace: string }) => void;
+  // Every rename of `<namespace>.json.tmp` onto `<namespace>.json` under the stubs cache directory, as
+  // full argument tuples.
+  getIndexRenames: ({ configDir, namespace }: { configDir: string; namespace: string }) => readonly unknown[][];
 } => {
-  // Blob loading runs through the REAL fsReadFileAdapter with only the underlying readFile mocked; each
-  // queued blob is one file's on-disk record. The write runs through the REAL stubIndexWriteBroker with
-  // only its fs adapters mocked, so the written content and tmp path can be read back.
-  const readFileProxy = fsReadFileAdapterProxy();
+  // Each queued blob is one file's on-disk record, answered to a read of its exact path. The write runs
+  // through the REAL stubIndexWriteBroker with only its fs calls mocked, so the written content and tmp
+  // path can be read back.
+  const readFileGateway = readFileProxy();
   const writeProxy = stubIndexWriteBrokerProxy();
-  writeProxy.succeeds();
 
   return {
-    queueBlob: ({ blob }: { blob: unknown }): void => {
-      readFileProxy.returns({ content: JSON.stringify(blob) });
+    queueBlob: ({ path, blob }: { path: string; blob: unknown }): void => {
+      readFileGateway.returnsOnce({ path, contents: JSON.stringify(blob) });
     },
     getWrittenIndex: ({ path }: { path: string }): unknown => writeProxy.getWrittenIndex({ path }),
-    getWrittenPaths: (): unknown[] => writeProxy.getWrittenPaths(),
+    indexWriteSucceeds: ({ configDir, namespace }: { configDir: string; namespace: string }): void => {
+      writeProxy.succeeds({ configDir, namespace });
+    },
+    getIndexRenames: ({ configDir, namespace }: { configDir: string; namespace: string }): readonly unknown[][] =>
+      writeProxy.getRenameArgs({ configDir, namespace }),
   };
 };

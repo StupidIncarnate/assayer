@@ -1,4 +1,4 @@
-import { ParamDescriptorStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
 
 import { callArgBindingsTransformer } from './call-arg-bindings-transformer';
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';

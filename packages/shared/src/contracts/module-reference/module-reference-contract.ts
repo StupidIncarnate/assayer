@@ -10,18 +10,14 @@
  * moduleReferenceContract.parse({ specifier: './other', importedName: 'foo', line: 5, column: 10 });
  * // Returns a validated ModuleReference (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract } from '../column-number/column-number-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
-import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const moduleReferenceContract = z.object({
-  specifier: moduleSpecifierContract,
-  importedName: symbolNameContract,
-  line: lineNumberContract,
-  column: columnNumberContract,
-});
+  specifier: z.string().min(1).brand<'ModuleReferenceSpecifier'>(),
+  importedName: z.string().min(1).brand<'ModuleReferenceImportedName'>(),
+  line: z.number().int().positive().brand<'ModuleReferenceLine'>(),
+  column: z.number().int().positive().brand<'ModuleReferenceColumn'>(),
+}).brand<'ModuleReference'>();
 
 export type ModuleReference = z.infer<typeof moduleReferenceContract>;

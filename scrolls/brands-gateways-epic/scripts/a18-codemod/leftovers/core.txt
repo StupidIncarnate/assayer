@@ -1,0 +1,460 @@
+== packages/core/src/adapters/crypto/sha256/crypto-sha256-adapter.ts  census=1 after=0
+   CHANGE L9: 'node:crypto' -> '#gateway/node/crypto'
+== packages/core/src/adapters/fs/exists/fs-exists-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/exists/fs-exists-adapter.proxy.ts]
+== packages/core/src/adapters/fs/exists/fs-exists-adapter.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/exists/fs-exists-adapter.proxy.ts]
+== packages/core/src/adapters/fs/exists-sync/fs-exists-sync-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'fs' is mocked/spied in the staging set [packages/core/src/adapters/fs/exists-sync/fs-exists-sync-adapter.proxy.ts]
+== packages/core/src/adapters/fs/exists-sync/fs-exists-sync-adapter.ts  census=1
+   SKIP L13: raw module 'fs' is mocked/spied in the staging set [packages/core/src/adapters/fs/exists-sync/fs-exists-sync-adapter.proxy.ts]
+== packages/core/src/adapters/fs/find-up/fs-find-up-adapter.ts  census=2 after=1
+   CHANGE L15: 'path' -> '#gateway/node/path'
+   SKIP L14: raw module 'fs' is mocked/spied in the staging set [packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy.ts]
+== packages/core/src/adapters/fs/mkdir/fs-mkdir-adapter.proxy.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/mkdir/fs-mkdir-adapter.proxy.ts]
+== packages/core/src/adapters/fs/mkdir/fs-mkdir-adapter.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/mkdir/fs-mkdir-adapter.proxy.ts]
+== packages/core/src/adapters/fs/read-file/fs-read-file-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/read-file/fs-read-file-adapter.proxy.ts]
+== packages/core/src/adapters/fs/read-file/fs-read-file-adapter.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/read-file/fs-read-file-adapter.proxy.ts]
+== packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'fs' is mocked/spied in the staging set [packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy.ts]
+== packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.ts  census=1
+   SKIP L13: raw module 'fs' is mocked/spied in the staging set [packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy.ts]
+== packages/core/src/adapters/fs/readdir/fs-readdir-adapter.proxy.ts  census=1
+   SKIP L9: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/readdir/fs-readdir-adapter.proxy.ts]
+== packages/core/src/adapters/fs/readdir/fs-readdir-adapter.ts  census=1
+   SKIP L9: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/readdir/fs-readdir-adapter.proxy.ts]
+== packages/core/src/adapters/fs/rename/fs-rename-adapter.proxy.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/rename/fs-rename-adapter.proxy.ts]
+== packages/core/src/adapters/fs/rename/fs-rename-adapter.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/rename/fs-rename-adapter.proxy.ts]
+== packages/core/src/adapters/fs/rm/fs-rm-adapter.proxy.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/rm/fs-rm-adapter.proxy.ts]
+== packages/core/src/adapters/fs/rm/fs-rm-adapter.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/rm/fs-rm-adapter.proxy.ts]
+== packages/core/src/adapters/fs/write-file/fs-write-file-adapter.proxy.ts  census=1
+   SKIP L1: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/write-file/fs-write-file-adapter.proxy.ts]
+== packages/core/src/adapters/fs/write-file/fs-write-file-adapter.ts  census=1
+   SKIP L8: raw module 'fs/promises' is mocked/spied in the staging set [packages/core/src/adapters/fs/write-file/fs-write-file-adapter.proxy.ts]
+== packages/core/src/adapters/git/exec/git-exec-adapter.proxy.ts  census=1
+   SKIP L9: raw module 'node:child_process' is mocked/spied in the staging set [packages/core/src/adapters/git/exec/git-exec-adapter.proxy.ts]
+== packages/core/src/adapters/git/exec/git-exec-adapter.ts  census=2
+   SKIP L10: raw module 'node:child_process' is mocked/spied in the staging set [packages/core/src/adapters/git/exec/git-exec-adapter.proxy.ts]
+== packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.test.ts  census=10 after=5
+   CHANGE L385: process.env[NAME] -> getEnv(NAME)
+   CHANGE L399: process.env[NAME] -> getEnv(NAME)
+   CHANGE L410: process.env[NAME] -> getEnv(NAME)
+   CHANGE L416: process.env[NAME] -> getEnv(NAME)
+   CHANGE L447: process.env[NAME] -> getEnv(NAME)
+   CHANGE IMPORT { getEnv } from '#gateway/node/process'
+   SKIP L380: Reflect.deleteProperty(process.env, K) (deleteEnv by hand, or --env-writes)
+   SKIP L405: process.env write/delete (setEnv/deleteEnv by hand)
+   SKIP L417: Reflect.deleteProperty(process.env, K) (deleteEnv by hand, or --env-writes)
+   SKIP L434: process.env write/delete (setEnv/deleteEnv by hand)
+   SKIP L448: Reflect.deleteProperty(process.env, K) (deleteEnv by hand, or --env-writes)
+== packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.ts  census=4
+   SKIP L157: 'getEnv' is a gateway wrapper; packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.proxy.ts must then compose getEnvProxy (proxy work)
+   SKIP L161: process.env write/delete (setEnv/deleteEnv by hand)
+   SKIP L176: Reflect.deleteProperty(process.env, K) (deleteEnv by hand, or --env-writes)
+   SKIP L178: process.env write/delete (setEnv/deleteEnv by hand)
+== packages/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter.test.ts  census=1 after=0
+   CHANGE L4: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter.ts  census=1 after=0
+   CHANGE L23: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/adapters/jest/probe-inject/probe-visit-node-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/adapters/jest/probe-inject/probe-visit-node-layer-adapter.ts  census=1 after=0
+   CHANGE L25: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/adapters/jest/run-cli/jest-run-cli-adapter.proxy.ts  census=1
+   SKIP L1: raw module '@jest/core' is mocked/spied in the staging set [packages/core/src/adapters/jest/run-cli/jest-run-cli-adapter.proxy.ts]
+== packages/core/src/adapters/jest/run-cli/jest-run-cli-adapter.ts  census=2 after=1
+   CHANGE L38: 'node:path' -> '#gateway/node/path'
+   SKIP L37: raw module '@jest/core' is mocked/spied in the staging set [packages/core/src/adapters/jest/run-cli/jest-run-cli-adapter.proxy.ts]
+== packages/core/src/adapters/node-module/builtins/node-module-builtins-adapter.ts  census=1 after=0
+   CHANGE L11: 'node:module' -> '#gateway/node/module'
+== packages/core/src/adapters/path/basename/path-basename-adapter.ts  census=1 after=0
+   CHANGE L9: 'node:path' -> '#gateway/node/path'
+== packages/core/src/adapters/path/dirname/path-dirname-adapter.ts  census=1 after=0
+   CHANGE L9: 'node:path' -> '#gateway/node/path'
+== packages/core/src/adapters/path/relative/path-relative-adapter.ts  census=1 after=0
+   CHANGE L9: 'node:path' -> '#gateway/node/path'
+== packages/core/src/adapters/path/resolve/path-resolve-adapter.ts  census=1 after=0
+   CHANGE L9: 'node:path' -> '#gateway/node/path'
+== packages/core/src/adapters/ts-morph/read-external-signature/read-signature-type-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-external-signature/read-signature-type-layer-adapter.ts  census=2 after=0
+   CHANGE L45: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L46: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-external-signature/ts-morph-read-external-signature-adapter.test.ts  census=3 after=1
+   CHANGE L2: 'node:os' -> '#gateway/node/os'
+   CHANGE L3: 'node:path' -> '#gateway/node/path'
+   SKIP L1: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/src/adapters/ts-morph/read-external-signature/ts-morph-read-external-signature-adapter.ts  census=1 after=0
+   CHANGE L19: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-global-signature/read-global-type-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-global-signature/read-global-type-layer-adapter.ts  census=2 after=0
+   CHANGE L37: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L38: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter.test.ts  census=3 after=1
+   CHANGE L2: 'node:os' -> '#gateway/node/os'
+   CHANGE L3: 'node:path' -> '#gateway/node/path'
+   SKIP L1: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/src/adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter.ts  census=3 after=0
+   CHANGE L25: 'node:path' -> '#gateway/node/path'
+   CHANGE L27: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-harness-value-types/read-harness-value-type-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-harness-value-types/read-harness-value-type-layer-adapter.ts  census=1 after=0
+   CHANGE L23: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/read-harness-value-types/ts-morph-read-harness-value-types-adapter.ts  census=1 after=0
+   CHANGE L29: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/derive-branch-id-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/derive-branch-id-layer-adapter.ts  census=1 after=0
+   CHANGE L13: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/desugar-switch-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/desugar-switch-layer-adapter.ts  census=2 after=0
+   CHANGE L18: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L19: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/dispatch-node-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/dispatch-node-layer-adapter.ts  census=1 after=0
+   CHANGE L16: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/flatten-short-circuit-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/flatten-short-circuit-layer-adapter.ts  census=2 after=0
+   CHANGE L18: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L19: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-block-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-block-layer-adapter.ts  census=2 after=0
+   CHANGE L27: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L28: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-call-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-call-layer-adapter.ts  census=2 after=0
+   CHANGE L20: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L21: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-class-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-class-layer-adapter.ts  census=2 after=0
+   CHANGE L22: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L23: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-dynamic-import-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-dynamic-import-layer-adapter.ts  census=2 after=0
+   CHANGE L18: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L19: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-exit-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-exit-layer-adapter.ts  census=2 after=0
+   CHANGE L21: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L22: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-export-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-export-layer-adapter.ts  census=1 after=0
+   CHANGE L16: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-function-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-function-layer-adapter.ts  census=2 after=0
+   CHANGE L25: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L27: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-if-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-if-layer-adapter.ts  census=2 after=0
+   CHANGE L28: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L29: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-import-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-import-layer-adapter.ts  census=1 after=0
+   CHANGE L16: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-member-access-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-member-access-layer-adapter.ts  census=2 after=0
+   CHANGE L28: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L29: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-source-file-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-source-file-layer-adapter.ts  census=1 after=0
+   CHANGE L12: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-switch-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-switch-layer-adapter.ts  census=2 after=0
+   CHANGE L27: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L43: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-type-declaration-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-type-declaration-layer-adapter.ts  census=2 after=0
+   CHANGE L27: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L28: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-variable-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handle-variable-layer-adapter.ts  census=2 after=0
+   CHANGE L21: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L22: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/handler-result-layer-adapter.ts  census=1 after=0
+   CHANGE L15: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/project-node-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/project-node-layer-adapter.ts  census=1 after=0
+   CHANGE L21: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-accounted-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-accounted-layer-adapter.ts  census=1 after=0
+   CHANGE L18: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-ambient-root-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-ambient-root-layer-adapter.ts  census=1 after=0
+   CHANGE L20: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-call-args-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-call-args-layer-adapter.ts  census=1 after=0
+   CHANGE L16: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-callee-layer-adapter.test.ts  census=2 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L2: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-callee-layer-adapter.ts  census=1 after=0
+   CHANGE L26: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-condition-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-condition-layer-adapter.ts  census=1 after=0
+   CHANGE L41: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-condition-tree-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-condition-tree-layer-adapter.ts  census=1 after=0
+   CHANGE L26: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-conditional-exit-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-conditional-exit-layer-adapter.ts  census=1 after=0
+   CHANGE L40: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-const-operand-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-const-operand-layer-adapter.ts  census=1 after=0
+   CHANGE L25: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-declared-type-text-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-declared-type-text-layer-adapter.ts  census=2 after=0
+   CHANGE L24: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L25: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-entry-access-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-entry-access-layer-adapter.ts  census=1 after=0
+   CHANGE L25: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-env-operand-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-env-operand-layer-adapter.ts  census=1 after=0
+   CHANGE L33: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-export-flag-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-export-flag-layer-adapter.ts  census=1 after=0
+   CHANGE L20: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-function-name-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-function-name-layer-adapter.ts  census=1 after=0
+   CHANGE L21: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-module-export-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-module-export-layer-adapter.ts  census=1 after=0
+   CHANGE L24: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-nullish-leaf-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-nullish-leaf-layer-adapter.ts  census=1 after=0
+   CHANGE L21: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-operand-type-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-operand-type-layer-adapter.ts  census=1 after=0
+   CHANGE L21: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-property-path-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-property-path-layer-adapter.ts  census=1 after=0
+   CHANGE L16: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-terminal-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-terminal-layer-adapter.ts  census=1 after=0
+   CHANGE L16: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-type-fact-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-type-fact-layer-adapter.ts  census=2 after=0
+   CHANGE L52: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L53: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-value-flow-exit-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/read-value-flow-exit-layer-adapter.ts  census=2 after=0
+   CHANGE L27: 'ts-morph' -> '#gateway/npm/ts-morph'
+   CHANGE L28: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter.ts  census=1 after=0
+   CHANGE L15: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/walk-node-layer-adapter.test.ts  census=1 after=0
+   CHANGE L1: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/ts-morph/walk-file/walk-node-layer-adapter.ts  census=1 after=0
+   CHANGE L17: 'ts-morph' -> '#gateway/npm/ts-morph'
+== packages/core/src/adapters/typescript/harness-gate/typescript-harness-gate-adapter.ts  census=1 after=0
+   CHANGE L24: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/adapters/typescript/load-harness/typescript-load-harness-adapter.ts  census=3 after=0
+   CHANGE L25: 'node:util' -> '#gateway/node/util'
+   CHANGE L26: 'node:vm' -> '#gateway/node/vm'
+   CHANGE L28: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/adapters/typescript/read-config/typescript-read-config-adapter.test.ts  census=4 after=1
+   CHANGE L1: 'node:crypto' -> '#gateway/node/crypto'
+   CHANGE L3: 'node:os' -> '#gateway/node/os'
+   CHANGE L4: 'node:path' -> '#gateway/node/path'
+   SKIP L2: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/src/adapters/typescript/read-config/typescript-read-config-adapter.ts  census=3 after=0
+   CHANGE L14: 'node:crypto' -> '#gateway/node/crypto'
+   CHANGE L15: 'node:path' -> '#gateway/node/path'
+   CHANGE L17: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/adapters/typescript/resolve-module/typescript-resolve-module-adapter.test.ts  census=4 after=1
+   CHANGE L2: 'node:os' -> '#gateway/node/os'
+   CHANGE L3: 'node:path' -> '#gateway/node/path'
+   CHANGE L5: 'typescript' -> '#gateway/npm/typescript'
+   SKIP L1: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/src/adapters/typescript/resolve-module/typescript-resolve-module-adapter.ts  census=1 after=0
+   CHANGE L13: 'typescript' -> '#gateway/npm/typescript'
+== packages/core/src/contracts/analysis-extract-result/analysis-extract-result-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/arm-values/arm-values-contract.ts  census=1 after=0
+   CHANGE L14: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/ast-projection/ast-projection-contract.ts  census=1 after=0
+   CHANGE L12: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/call-site/call-site-contract.ts  census=1 after=0
+   CHANGE L24: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/case-set/case-set-contract.ts  census=1 after=0
+   CHANGE L45: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/case-signature/case-signature-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/compile-progress-event/compile-progress-event-contract.ts  census=1 after=0
+   CHANGE L24: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/condition-cause/condition-cause-contract.ts  census=1 after=0
+   CHANGE L17: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/declared-shape/declared-shape-contract.ts  census=1 after=0
+   CHANGE L20: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/dir-entry/dir-entry-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/extracted-function/extracted-function-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/file-contents/file-contents-contract.ts  census=1 after=0
+   CHANGE L8: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/file-index-entry/file-index-entry-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/file-path/file-path-contract.ts  census=1 after=0
+   CHANGE L8: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/git-exec-result/git-exec-result-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/harness-declaration/harness-declaration-contract.ts  census=1 after=0
+   CHANGE L18: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/invoked-fn/invoked-fn-contract.ts  census=1 after=0
+   CHANGE L16: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/map-extract-result/map-extract-result-contract.ts  census=1 after=0
+   CHANGE L10: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/normalized-source/normalized-source-contract.ts  census=1 after=0
+   CHANGE L11: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/ordered-bounds/ordered-bounds-contract.ts  census=1 after=0
+   CHANGE L13: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/predicted-output/predicted-output-contract.ts  census=1 after=0
+   CHANGE L11: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/probe-plan/probe-plan-contract.ts  census=1 after=0
+   CHANGE L15: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/probe-runtime/probe-runtime-contract.ts  census=1 after=0
+   CHANGE L18: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/probe-site/probe-site-contract.ts  census=1 after=0
+   CHANGE L32: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/property-guard/property-guard-contract.ts  census=1 after=0
+   CHANGE L19: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/run-verdict/run-verdict-contract.ts  census=1 after=0
+   CHANGE L13: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/scope-record/scope-record-contract.ts  census=1 after=0
+   CHANGE L23: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/shim-source/shim-source-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/source-position/source-position-contract.ts  census=1 after=0
+   CHANGE L9: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/string-length/string-length-contract.ts  census=1 after=0
+   CHANGE L12: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/stub-overlay-env-file/stub-overlay-env-file-contract.ts  census=1 after=0
+   CHANGE L12: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/stub-overlay-object-file/stub-overlay-object-file-contract.ts  census=1 after=0
+   CHANGE L15: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/test-path-pattern/test-path-pattern-contract.ts  census=1 after=0
+   CHANGE L13: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/type-fact/type-fact-contract.ts  census=1 after=0
+   CHANGE L32: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/undriven-cause/undriven-cause-contract.ts  census=1 after=0
+   CHANGE L33: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/value-domain/value-domain-contract.ts  census=1 after=0
+   CHANGE L45: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/value-use/value-use-contract.ts  census=1 after=0
+   CHANGE L18: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/walk-context/walk-context-contract.ts  census=1 after=0
+   CHANGE L23: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/walk-facts/walk-facts-contract.ts  census=1 after=0
+   CHANGE L12: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/walk-file-result/walk-file-result-contract.ts  census=1 after=0
+   CHANGE L12: 'zod' -> '#gateway/npm/zod'
+== packages/core/src/contracts/walk-node/walk-node-contract.ts  census=1 after=0
+   CHANGE L16: 'zod' -> '#gateway/npm/zod'
+== packages/core/test/harnesses/example-resolution.harness.ts  census=3 after=1
+   CHANGE L18: 'node:os' -> '#gateway/node/os'
+   CHANGE L19: 'node:path' -> '#gateway/node/path'
+   SKIP L17: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/test/harnesses/harness-graph.harness.ts  census=3 after=1
+   CHANGE L27: 'node:os' -> '#gateway/node/os'
+   CHANGE L28: 'node:path' -> '#gateway/node/path'
+   SKIP L26: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/test/harnesses/resolve-graph.harness.ts  census=3 after=1
+   CHANGE L16: 'node:os' -> '#gateway/node/os'
+   CHANGE L17: 'node:path' -> '#gateway/node/path'
+   SKIP L15: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/test/harnesses/run-find.harness.ts  census=3 after=1
+   CHANGE L26: 'node:os' -> '#gateway/node/os'
+   CHANGE L27: 'node:path' -> '#gateway/node/path'
+   SKIP L25: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/test/harnesses/run-unit.harness.ts  census=4 after=1
+   CHANGE L25: 'node:os' -> '#gateway/node/os'
+   CHANGE L26: 'node:path' -> '#gateway/node/path'
+   CHANGE L37: process.pid -> pid
+   CHANGE IMPORT { pid } from '#gateway/node/process'
+   SKIP L24: raw module 'node:fs' is mocked/spied in the staging set [packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy.ts]
+== packages/core/test/harnesses/specimen-catalogue.ts  census=3 after=1
+   CHANGE L27: 'node:path' -> '#gateway/node/path'
+   CHANGE L29: 'ts-morph' -> '#gateway/npm/ts-morph'
+   SKIP L26: raw module 'node:fs' is mocked/spied in the staging set [packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy.ts]
+== packages/core/test/harnesses/stub-graph.harness.ts  census=3 after=1
+   CHANGE L25: 'node:os' -> '#gateway/node/os'
+   CHANGE L26: 'node:path' -> '#gateway/node/path'
+   SKIP L24: import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function [node:fs]
+== packages/core/test/harnesses/syntax-traits.ts  census=2 after=1
+   CHANGE L23: 'node:path' -> '#gateway/node/path'
+   SKIP L22: import 'node:fs' -> #gateway/node/fs: 'readFileSync' is a gateway wrapper, not the raw function [node:fs]
+
+SUMMARY core: census messages=259 (parse errors 0) in 183 files; files changed=161 (rejected 0); messages cleared=214; left=45; files fully cleared=146; census 16s
+SKIPS by reason:
+  14  raw module 'fs/promises' is mocked/spied in the staging set  e.g. packages/core/src/adapters/fs/exists/fs-exists-adapter.proxy.ts:1, packages/core/src/adapters/fs/exists/fs-exists-adapter.ts:8, packages/core/src/adapters/fs/mkdir/fs-mkdir-adapter.proxy.ts:8
+  5  raw module 'fs' is mocked/spied in the staging set  e.g. packages/core/src/adapters/fs/exists-sync/fs-exists-sync-adapter.proxy.ts:1, packages/core/src/adapters/fs/exists-sync/fs-exists-sync-adapter.ts:13, packages/core/src/adapters/fs/find-up/fs-find-up-adapter.ts:14
+  4  Reflect.deleteProperty(process.env, K) (deleteEnv by hand, or --env-writes)  e.g. packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.test.ts:380, packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.test.ts:417, packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.test.ts:448
+  4  process.env write/delete (setEnv/deleteEnv by hand)  e.g. packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.test.ts:405, packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.test.ts:434, packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.ts:161
+  3  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function  e.g. packages/core/src/adapters/ts-morph/read-external-signature/ts-morph-read-external-signature-adapter.test.ts:1, packages/core/src/adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter.test.ts:1, packages/core/src/adapters/typescript/resolve-module/typescript-resolve-module-adapter.test.ts:1
+  3  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'readFileSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/core/test/harnesses/example-resolution.harness.ts:17, packages/core/test/harnesses/harness-graph.harness.ts:26, packages/core/test/harnesses/stub-graph.harness.ts:24
+  2  raw module 'node:child_process' is mocked/spied in the staging set  e.g. packages/core/src/adapters/git/exec/git-exec-adapter.proxy.ts:9, packages/core/src/adapters/git/exec/git-exec-adapter.ts:10
+  2  raw module '@jest/core' is mocked/spied in the staging set  e.g. packages/core/src/adapters/jest/run-cli/jest-run-cli-adapter.proxy.ts:1, packages/core/src/adapters/jest/run-cli/jest-run-cli-adapter.ts:37
+  2  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'realpathSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/core/test/harnesses/resolve-graph.harness.ts:15, packages/core/test/harnesses/run-find.harness.ts:25
+  2  raw module 'node:fs' is mocked/spied in the staging set  e.g. packages/core/test/harnesses/run-unit.harness.ts:24, packages/core/test/harnesses/specimen-catalogue.ts:26
+  1  'getEnv' is a gateway wrapper; packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.proxy.ts must then compose getEnvProxy (proxy work)  e.g. packages/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter.ts:157
+  1  import 'node:fs' -> #gateway/node/fs: 'mkdtempSync' is a gateway wrapper, not the raw function; 'writeFileSync' is a gateway wrapper, not the raw function; 'rmSync' is a gateway wrapper, not the raw function  e.g. packages/core/src/adapters/typescript/read-config/typescript-read-config-adapter.test.ts:2
+  1  import 'node:fs' -> #gateway/node/fs: 'readFileSync' is a gateway wrapper, not the raw function  e.g. packages/core/test/harnesses/syntax-traits.ts:22
+GAPS:
+REJECTED (file left untouched) by first new problem:

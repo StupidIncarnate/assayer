@@ -1,23 +1,21 @@
-import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
-import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
+import { writeFileCreatingParentProxy } from '#gateway/node/fs__promises/write-file-creating-parent/write-file-creating-parent.proxy';
 
 export const configGenerateBrokerProxy = (): {
-  succeeds: () => void;
-  // Every path the broker wrote, in call order. A test asking WHICH path the config landed at asserts
-  // this whole list, so a second write nobody expected fails it.
-  getWrittenPaths: () => unknown[];
+  succeeds: ({ path }: { path: string }) => void;
   getWrittenContentFor: ({ path }: { path: string }) => unknown;
+  // The directories created before the config was written. A test asking WHERE the config landed
+  // asserts this together with the written content.
+  getCreatedDirsFor: ({ path }: { path: string }) => readonly unknown[][];
 } => {
-  const mkdirProxy = fsMkdirAdapterProxy();
-  const writeFileProxy = fsWriteFileAdapterProxy();
+  const writeProxy = writeFileCreatingParentProxy();
 
   return {
-    succeeds: (): void => {
-      mkdirProxy.succeeds();
-      writeFileProxy.succeeds();
+    succeeds: ({ path }: { path: string }): void => {
+      writeProxy.succeeds({ path });
     },
-    getWrittenPaths: (): unknown[] => writeFileProxy.getWrittenPaths(),
     getWrittenContentFor: ({ path }: { path: string }): unknown =>
-      writeFileProxy.getWrittenContentFor({ path }),
+      writeProxy.writtenContentsFor({ path }),
+    getCreatedDirsFor: ({ path }: { path: string }): readonly unknown[][] =>
+      writeProxy.mkdirCallsFor({ path }),
   };
 };

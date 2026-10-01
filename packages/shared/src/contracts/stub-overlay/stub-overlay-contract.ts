@@ -17,28 +17,25 @@
  * });
  * // Returns a validated StubOverlay (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
-import { stubKeyContract } from '../stub-key/stub-key-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
+import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
 export const stubOverlayContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('object'),
-    key: stubKeyContract,
-    overlayPath: relPathContract,
-    properties: z.array(z.object({ name: symbolNameContract, values: z.array(representativeValueContract) })),
-  }),
+    key: stubEntryContract.shape.key,
+    overlayPath: z.string().min(1).brand<'StubOverlayOverlayPath'>(),
+    properties: z.array(z.object({ name: z.string().min(1).brand<'StubOverlayPropertiesName'>(), values: z.array(representativeValueContract) }).brand<'StubOverlayProperties'>()),
+  }).brand<'StubOverlay'>(),
   z.object({
     kind: z.literal('env'),
-    key: stubKeyContract,
-    overlayPath: relPathContract,
-    property: envVarNameContract,
+    key: stubEntryContract.shape.key,
+    overlayPath: z.string().min(1).brand<'StubOverlayOverlayPath'>(),
+    property: z.string().min(1).brand<'StubOverlayProperty'>(),
     values: z.array(representativeValueContract),
-  }),
+  }).brand<'StubOverlay'>(),
 ]);
 
 export type StubOverlay = z.infer<typeof stubOverlayContract>;

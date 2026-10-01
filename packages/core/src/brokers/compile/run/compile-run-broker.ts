@@ -19,7 +19,7 @@
  * // Returns { status: 'ok', results: [...], errors: [] } and writes the cache manifest, or
  * // { status: 'errors', results: [...], errors: [...] } and leaves the prior manifest untouched
  */
-import { compileResultContract, assayerCacheManifestContract, namespaceNameContract } from '@assayer/shared/contracts';
+import { compileResultContract, assayerCacheManifestContract } from '@assayer/shared/contracts';
 import type { CompileResult, AssayerCacheManifest, AssayerConfig } from '@assayer/shared/contracts';
 
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
@@ -33,7 +33,6 @@ import { gitCurrentBranchBroker } from '../../git/current-branch/git-current-bra
 import { manifestWriteBroker } from '../../manifest/write/manifest-write-broker';
 import { resolvedIndexWriteBroker } from '../../resolved-index/write/resolved-index-write-broker';
 
-import { pathBasenameAdapter } from '../../../adapters/path/basename/path-basename-adapter';
 
 import { compileResolveGraphBroker } from '../resolve-graph/compile-resolve-graph-broker';
 import { compileStubGraphBroker } from '../stub-graph/compile-stub-graph-broker';
@@ -43,6 +42,7 @@ import { stubOverlayReconcileBroker } from '../../stub-overlay/reconcile/stub-ov
 import { stubContradictionsTransformer } from '../../../transformers/stub-contradictions/stub-contradictions-transformer';
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';
+import { basename } from '#gateway/node/path';
 
 export const compileRunBroker = async ({
   configDir,
@@ -60,12 +60,12 @@ export const compileRunBroker = async ({
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<CompileResult> => {
   const root = compileResolveRootBroker({ repoRoot: config.repoRoot, configDir });
-  const rootFolderName = pathBasenameAdapter({ path: String(root) });
-  const repoName = pathBasenameAdapter({ path: configDir });
+  const rootFolderName = basename(root);
+  const repoName = basename(configDir);
   const blobsDir = `${configDir}/.assayer/cache/blobs`;
 
-  const currentBranch = await gitCurrentBranchBroker({ repoRoot: String(root) });
-  const currentPlan = await compilePlanCurrentBroker({ root: String(root), exclude: config.exclude });
+  const currentBranch = await gitCurrentBranchBroker({ repoRoot: root });
+  const currentPlan = await compilePlanCurrentBroker({ root, exclude: config.exclude });
   const currentMax = currentPlan.targets.length;
 
   const {stableBranch} = config;
@@ -74,7 +74,7 @@ export const compileRunBroker = async ({
     stableBranch === undefined
       ? undefined
       : await stableNamespaceLayerBroker({
-          root: String(root),
+          root,
           branch: String(stableBranch),
           exclude: config.exclude,
           currentMax,
@@ -99,8 +99,8 @@ export const compileRunBroker = async ({
 
   const currentProcessed = await processTargetsLayerBroker({
     remaining: currentPlan.targets,
-    namespace: String(currentBranch),
-    branch: String(currentBranch),
+    namespace: currentBranch,
+    branch: currentBranch,
     blobsDir,
     max: currentMax,
     stableMax,
@@ -131,7 +131,7 @@ export const compileRunBroker = async ({
   // SKIPPED stable is unchanged, so its resolved index already sits on disk from the compile that made
   // it.
   const resolved = await compileResolveGraphBroker({
-    root: String(root),
+    root,
     blobsDir,
     cacheDir: `${configDir}/.assayer/cache`,
     files: currentProcessed.index,
@@ -141,7 +141,7 @@ export const compileRunBroker = async ({
     stable === undefined || stable.resultEntry.mode === 'skipped'
       ? undefined
       : await compileResolveGraphBroker({
-          root: String(root),
+          root,
           blobsDir,
           cacheDir: `${configDir}/.assayer/cache`,
           files: stable.manifestNamespace.files,
@@ -155,12 +155,12 @@ export const compileRunBroker = async ({
   ];
 
   const currentErrors = currentProcessed.errors.map((error) => ({
-    namespace: namespaceNameContract.parse(String(currentBranch)),
+    namespace: currentBranch,
     ...error,
   }));
 
   const resolveErrors = resolved.errors.map((error) => ({
-    namespace: namespaceNameContract.parse(String(currentBranch)),
+    namespace: currentBranch,
     ...error,
   }));
 
@@ -186,15 +186,15 @@ export const compileRunBroker = async ({
   // For distinct branches order is irrelevant (both coexist; manifestWriteBroker sorts keys).
   const namespaces = {
     ...(stable === undefined ? {} : { [String(stable.manifestNamespace.branch)]: stable.manifestNamespace }),
-    [String(currentBranch)]: { branch: currentBranch, files: currentProcessed.index },
+    [currentBranch]: { branch: currentBranch, files: currentProcessed.index },
   };
 
   const manifest = {
     assayerVersion,
     configHash,
     namespaces,
-    repoName: String(repoName),
-    rootFolderName: String(rootFolderName),
+    repoName,
+    rootFolderName,
   };
 
   await manifestWriteBroker({ configDir, manifest: assayerCacheManifestContract.parse(manifest) });
@@ -206,7 +206,7 @@ export const compileRunBroker = async ({
     await resolvedIndexWriteBroker({ configDir, namespace: String(stable.resultEntry.namespace), index: resolvedStable.index });
   }
 
-  await resolvedIndexWriteBroker({ configDir, namespace: String(currentBranch), index: resolved.index });
+  await resolvedIndexWriteBroker({ configDir, namespace: currentBranch, index: resolved.index });
 
   // The stub stitch: derive each namespace's stub index (object types' per-property value demands
   // spliced onto their full property lists) from the SAME finished blobs, keyed on the SAME layout +
@@ -226,7 +226,7 @@ export const compileRunBroker = async ({
 
   const currentStub = await compileStubGraphBroker({
     configDir,
-    namespace: String(currentBranch),
+    namespace: currentBranch,
     blobsDir,
     resolvedIndex: resolved.index,
     files: currentProcessed.index,
@@ -258,20 +258,20 @@ export const compileRunBroker = async ({
 
   const currentHarness = await compileHarnessGraphBroker({
     configDir,
-    namespace: String(currentBranch),
+    namespace: currentBranch,
     blobsDir,
     resolvedIndex: resolved.index,
     files: currentProcessed.index,
     harnesses: currentPlan.harnesses,
   });
 
-  const overlay = await stubOverlayLoadBroker({ repoRoot: String(root) });
+  const overlay = await stubOverlayLoadBroker({ repoRoot: root });
   const stitchErrors = [
     ...stubOverlayReconcileBroker({ index: currentStub.index, overlays: overlay }),
     ...stubContradictionsTransformer({ guards: currentStub.guards, overlays: overlay }),
     ...currentHarness.errors,
   ].map((error) => ({
-    namespace: namespaceNameContract.parse(String(currentBranch)),
+    namespace: currentBranch,
     ...error,
   }));
 

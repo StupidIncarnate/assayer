@@ -8,8 +8,8 @@
  * contracts, so it cannot check what it hands back — the caller parses the result through one.
  *
  * USAGE:
- * const parsed = await fetchJson({ url: 'http://127.0.0.1:4173/api/guilds', method: 'POST', body: { name: 'guild-1' } });
- * const guild = guildContract.parse(parsed);
+ * const parsed = await fetchJson({ url: 'http://127.0.0.1:4173/api/docs/overview' });
+ * const docs = docsResultContract.parse(parsed);
  * // fetchJson resolves the parsed JSON response body as `unknown`; throws naming url, status and
  * // body text otherwise
  */

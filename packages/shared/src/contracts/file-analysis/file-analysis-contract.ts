@@ -34,7 +34,7 @@
  * fileAnalysisContract.parse({ functions: [], enrichment: [], gaps: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
  * // Returns a validated FileAnalysis (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
 import { declaredTypeContract } from '../declared-type/declared-type-contract';
@@ -59,6 +59,6 @@ export const fileAnalysisContract = z.object({
   declaredTypes: z.array(declaredTypeContract),
   // Same-file scopes a driving route folded into one of `functions` — see PURPOSE above.
   declaringScopes: z.array(declaringScopeContract),
-});
+}).brand<'FileAnalysis'>();
 
 export type FileAnalysis = z.infer<typeof fileAnalysisContract>;

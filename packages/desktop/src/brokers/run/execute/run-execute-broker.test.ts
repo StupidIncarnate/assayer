@@ -1,13 +1,18 @@
-import { RunResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { runExecuteBroker } from './run-execute-broker';
 import { runExecuteBrokerProxy } from './run-execute-broker.proxy';
+import { join } from '#gateway/node/path';
+import { envSnapshot } from '#gateway/node/process';
+
+// The sha256 of `relPath\nsource` for src/a.ts, the id the runner names its run directory with.
+const RUN_ID = 'c73c5a78c49441e87716db0bd78ae3b2c0f5c1fa0c00c420f8ad7f32761c6931';
 
 describe('runExecuteBroker', () => {
   describe('a run from the UI', () => {
     it('VALID: {a file} => the saved run', async () => {
       const proxy = runExecuteBrokerProxy();
-      proxy.savedRun({ run: RunResultStub() });
+      proxy.savedRun({ repoPath: '/repo', relPath: 'src/a.ts', harnessPath: '/repo/src/a.harness.ts', runId: RUN_ID, run: RunResultStub() });
 
       const result = await runExecuteBroker({ repoPath: '/repo', root: '/repo', relPath: 'src/a.ts' });
 
@@ -22,20 +27,37 @@ describe('runExecuteBroker', () => {
     // so without the flag the run never returns and the UI spins forever.
     it('VALID: {a file} => spawns the built CLI with `unit <relPath>` in the repo, as node rather than as an Electron app', async () => {
       const proxy = runExecuteBrokerProxy();
+      proxy.runSucceeds({ repoPath: '/repo', relPath: 'src/a.ts', harnessPath: '/repo/src/a.harness.ts', runId: RUN_ID });
 
       await runExecuteBroker({ repoPath: '/repo', root: '/repo', relPath: 'src/a.ts' });
 
-      expect(proxy.getSpawnCalls()).toStrictEqual([
-        [
-          process.execPath,
-          ['/repo/packages/cli/dist/bin/assayer.js', 'unit', 'src/a.ts'],
+      expect({ args: proxy.getSpawnArgs(), options: proxy.getSpawnOptions() }).toStrictEqual({
+        args: [[join(__dirname, 'packages', 'cli', 'dist', 'bin', 'assayer.js'), 'unit', 'src/a.ts']],
+        options: [
           {
             cwd: '/repo',
-            env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+            env: { ...envSnapshot(), ELECTRON_RUN_AS_NODE: '1' },
             stdio: ['ignore', 'pipe', 'pipe'],
           },
         ],
-      ]);
+      });
+    });
+
+    it('VALID: {a file, an onOutput callback} => the CLI output reaches the callback as it is written', async () => {
+      const proxy = runExecuteBrokerProxy();
+      proxy.runSucceeds({ repoPath: '/repo', relPath: 'src/a.ts', harnessPath: '/repo/src/a.harness.ts', runId: RUN_ID });
+      const chunks: string[] = [];
+
+      await runExecuteBroker({
+        repoPath: '/repo',
+        root: '/repo',
+        relPath: 'src/a.ts',
+        onOutput: ({ chunk }) => {
+          chunks.push(chunk);
+        },
+      });
+
+      expect(chunks).toStrictEqual(['src/a.ts  1/1 passed']);
     });
 
     // A failing CASE is a normal outcome with a perfectly good artifact behind it — the exit code is
@@ -43,7 +65,7 @@ describe('runExecuteBroker', () => {
     it('VALID: {a run whose cases failed} => still returns the artifact', async () => {
       const proxy = runExecuteBrokerProxy();
       const failing = RunResultStub({ cases: [] });
-      proxy.savedRun({ run: failing });
+      proxy.savedRun({ repoPath: '/repo', relPath: 'src/a.ts', harnessPath: '/repo/src/a.harness.ts', runId: RUN_ID, run: failing });
 
       const result = await runExecuteBroker({ repoPath: '/repo', root: '/repo', relPath: 'src/a.ts' });
 
@@ -56,7 +78,7 @@ describe('runExecuteBroker', () => {
     // paraphrase of it.
     it('ERROR: {no artifact} => throws carrying the CLI report', async () => {
       const proxy = runExecuteBrokerProxy();
-      proxy.noArtifact({ stderr: 'assayer.config.json: invalid JSON at line 3' });
+      proxy.noArtifact({ repoPath: '/repo', relPath: 'src/a.ts', harnessPath: '/repo/src/a.harness.ts', runId: RUN_ID, stderr: 'assayer.config.json: invalid JSON at line 3' });
 
       await expect(runExecuteBroker({ repoPath: '/repo', root: '/repo', relPath: 'src/a.ts' })).rejects.toThrow(
         /assayer\.config\.json: invalid JSON at line 3/u,

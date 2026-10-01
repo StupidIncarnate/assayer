@@ -1,11 +1,10 @@
-import { RelPathStub } from '@assayer/shared/contracts';
 
 import { treeNodesTransformer } from './tree-nodes-transformer';
 
 describe('treeNodesTransformer', () => {
   describe('building nested directories', () => {
     it('VALID: {relPaths: ["packages/shared/src/index.ts"]} => returns nested dir/file tree', () => {
-      const relPaths = [RelPathStub({ value: 'packages/shared/src/index.ts' })];
+      const relPaths = ['packages/shared/src/index.ts'];
 
       const result = treeNodesTransformer({ relPaths });
 
@@ -36,7 +35,7 @@ describe('treeNodesTransformer', () => {
 
   describe('sorting siblings', () => {
     it('VALID: {relPaths: ["a.ts", "b.ts"]} => returns alphabetically sorted file nodes', () => {
-      const relPaths = [RelPathStub({ value: 'a.ts' }), RelPathStub({ value: 'b.ts' })];
+      const relPaths = ['a.ts', 'b.ts'];
 
       const result = treeNodesTransformer({ relPaths });
 
@@ -47,7 +46,7 @@ describe('treeNodesTransformer', () => {
     });
 
     it('VALID: {relPaths: ["dir/one.ts", "dir/two.ts"]} => returns dir node with sorted file children', () => {
-      const relPaths = [RelPathStub({ value: 'dir/one.ts' }), RelPathStub({ value: 'dir/two.ts' })];
+      const relPaths = ['dir/one.ts', 'dir/two.ts'];
 
       const result = treeNodesTransformer({ relPaths });
 

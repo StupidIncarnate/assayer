@@ -20,13 +20,13 @@ describe('execResultContract', () => {
     it('INVALID: {no exitCode} => throws, since it is the whole point of capturing', () => {
       expect(() => {
         return execResultContract.parse({ stdout: '', stderr: '' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected number, received undefined/u);
     });
 
     it('INVALID: {a fractional exit code} => throws', () => {
       expect(() => {
         return execResultContract.parse({ exitCode: 1.5, stdout: '', stderr: '' });
-      }).toThrow(/integer/u);
+      }).toThrow(/Invalid input: expected int, received number/u);
     });
   });
 });

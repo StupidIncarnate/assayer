@@ -13,12 +13,12 @@
  * execResultContract.parse({ exitCode: 0, stdout: 'src/a.ts  3/3 passed', stderr: '' });
  * // Returns a validated ExecResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const execResultContract = z.object({
-  exitCode: z.number().int().brand<'ExitCode'>(),
-  stdout: z.string().brand<'ExecStdout'>(),
-  stderr: z.string().brand<'ExecStderr'>(),
-});
+  exitCode: z.number().int().brand<'ExecResultExitCode'>(),
+  stdout: z.string().brand<'ExecResultStdout'>(),
+  stderr: z.string().brand<'ExecResultStderr'>(),
+}).brand<'ExecResult'>();
 
 export type ExecResult = z.infer<typeof execResultContract>;

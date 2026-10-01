@@ -11,13 +11,13 @@
  * armValuesContract.parse({ satisfying: { members: [''] }, violating: { members: ['a'] } });
  * // Returns a validated ArmValues (branded value domains)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { valueDomainContract } from '../value-domain/value-domain-contract';
 
 export const armValuesContract = z.object({
   satisfying: valueDomainContract,
   violating: valueDomainContract,
-});
+}).brand<'ArmValues'>();
 
 export type ArmValues = z.infer<typeof armValuesContract>;

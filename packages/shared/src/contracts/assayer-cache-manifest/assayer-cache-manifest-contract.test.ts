@@ -62,7 +62,7 @@ describe('assayerCacheManifestContract', () => {
           namespaces: {},
           rootFolderName: 'smoke-repo',
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

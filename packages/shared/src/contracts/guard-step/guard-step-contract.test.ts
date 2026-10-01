@@ -19,7 +19,7 @@ describe('guardStepContract', () => {
           branchCoverageId: 'formatGreeting/if:name.length===0',
           arm: '',
         });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

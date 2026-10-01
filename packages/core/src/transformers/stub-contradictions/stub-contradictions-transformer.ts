@@ -24,10 +24,9 @@
  * // [{ relPath: 'assayer/stubs/objects/src/decide.ts/Config.json', line: 1, column: 1,
  * //    message: "corrected values for property 'mode' cannot satisfy the guard at src/decide.ts:6 (needs 'mode' === 'a') — rectify this stub" }]
  */
-import { columnNumberContract, lineNumberContract, relPathContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, LineNumber, RelPath, StubOverlay } from '@assayer/shared/contracts';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
+import { stubContradictionsContract } from '../../contracts/stub-contradictions/stub-contradictions-contract';
+import type { StubContradictions } from '../../contracts/stub-contradictions/stub-contradictions-contract';
+import type { StubOverlay } from '@assayer/shared/contracts';
 
 import type { PropertyGuard } from '../../contracts/property-guard/property-guard-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -61,7 +60,7 @@ export const stubContradictionsTransformer = ({
 }: {
   guards: readonly PropertyGuard[];
   overlays: readonly StubOverlay[];
-}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: ErrorMessage }[] => {
+}): StubContradictions => {
   // The corrected values a human committed for each `(typeKey, property)`, with the overlay file they
   // live in — the authoritative domain each guard on that property must be satisfiable within.
   const correctionByKeyProperty = new Map(
@@ -88,7 +87,7 @@ export const stubContradictionsTransformer = ({
     const authoritative = valueDomainContract.parse({ members: correction.values });
     const { satisfying } = typeToRangeTransformer({
       type: guard.operandType,
-      predicateKind: String(guard.predicate.kind),
+      predicateKind: guard.predicate.kind,
       literal: guard.predicate.literal,
     });
 
@@ -96,7 +95,7 @@ export const stubContradictionsTransformer = ({
       return [];
     }
 
-    const operator = OPERATOR_BY_KIND.get(String(guard.predicate.kind)) ?? 'satisfying';
+    const operator = OPERATOR_BY_KIND.get(guard.predicate.kind) ?? 'satisfying';
     const literal = typeof guard.predicate.literal === 'string' ? `'${guard.predicate.literal}'` : String(guard.predicate.literal);
 
     return [
@@ -107,12 +106,12 @@ export const stubContradictionsTransformer = ({
     ];
   });
 
-  return [...new Map(raw.map((entry) => [`${String(entry.overlayPath)}::${entry.message}`, entry])).values()]
+  return stubContradictionsContract.parse([...new Map(raw.map((entry) => [`${String(entry.overlayPath)}::${entry.message}`, entry])).values()]
     .map((entry) => ({
-      relPath: relPathContract.parse(String(entry.overlayPath)),
-      line: lineNumberContract.parse(OVERLAY_LINE),
-      column: columnNumberContract.parse(OVERLAY_COLUMN),
-      message: errorMessageContract.parse(entry.message),
+      relPath: String(entry.overlayPath),
+      line: OVERLAY_LINE,
+      column: OVERLAY_COLUMN,
+      message: entry.message,
     }))
-    .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
+    .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1)));
 };

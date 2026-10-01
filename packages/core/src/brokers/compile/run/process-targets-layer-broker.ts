@@ -12,9 +12,7 @@
  * });
  * // Returns { index: [{ relPath, contentHash }], errors: [] } after writing/reusing each blob
  */
-import { relPathContract } from '@assayer/shared/contracts';
-import type { RelPath, ContentHash, LineNumber } from '@assayer/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
+import type { ContentHash } from '@assayer/shared/contracts';
 
 import { compileProcessFileBroker } from '../process-file/compile-process-file-broker';
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
@@ -42,12 +40,12 @@ export const processTargetsLayerBroker = async ({
   stableMax: number;
   currentMax: number;
   current: number;
-  index: { relPath: RelPath; contentHash: ContentHash }[];
-  errors: { relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: ErrorMessage }[];
+  index: { relPath: string; contentHash: ContentHash }[];
+  errors: { relPath: string; line: number; column: SourcePosition['column']; message: string }[];
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<{
-  index: { relPath: RelPath; contentHash: ContentHash }[];
-  errors: { relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: ErrorMessage }[];
+  index: { relPath: string; contentHash: ContentHash }[];
+  errors: { relPath: string; line: number; column: SourcePosition['column']; message: string }[];
 }> => {
   const [target, ...rest] = remaining;
 
@@ -61,7 +59,7 @@ export const processTargetsLayerBroker = async ({
     blobsDir,
   });
   const nextCurrent = current + 1;
-  const relPath = relPathContract.parse(target.relPath);
+  const {relPath} = target;
 
   // `reused` rides along because "advanced past a file" and "compiled a file" are different facts,
   // and only this broker still knows which one happened. A consumer told merely that the count moved

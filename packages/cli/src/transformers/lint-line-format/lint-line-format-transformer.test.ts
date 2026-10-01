@@ -1,4 +1,4 @@
-import { LintEntryStub } from '@assayer/shared/contracts';
+import { LintEntryStub } from '@assayer/shared/contracts/lint-entry/lint-entry.stub';
 
 import { lintLineFormatTransformer } from './lint-line-format-transformer';
 

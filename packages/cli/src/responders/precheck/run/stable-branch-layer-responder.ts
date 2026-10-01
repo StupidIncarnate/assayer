@@ -12,12 +12,11 @@
  * // resolved (interactively on a TTY, else the detected default) and saved to disk
  */
 import { gitDetectStableBranchBroker, configStableBranchSaveBroker } from '@assayer/core/brokers';
-import type { FilePath } from '@assayer/core/contracts';
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 
-import { processStdoutIsTtyAdapter } from '../../../adapters/process-stdout/is-tty/process-stdout-is-tty-adapter';
-import { readlineStableBranchPickAdapter } from '../../../adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter';
+import { stableBranchPickBroker } from '../../../brokers/stable-branch/pick/stable-branch-pick-broker';
+import { stdout } from '#gateway/node/process';
 
 export const StableBranchLayerResponder = async ({
   config,
@@ -25,7 +24,7 @@ export const StableBranchLayerResponder = async ({
   repoRoot,
 }: {
   config: AssayerConfig;
-  configPath: FilePath;
+  configPath: string;
   repoRoot: string;
 }): Promise<AssayerConfig> => {
   if (config.stableBranch !== undefined) {
@@ -48,8 +47,8 @@ export const StableBranchLayerResponder = async ({
   // interactive TTY. In CI / piped / non-TTY runs, use the detected default without prompting so no
   // picker text pollutes stdout ahead of the command's own output.
   const chosen =
-    candidates.length > 1 && processStdoutIsTtyAdapter()
-      ? await readlineStableBranchPickAdapter({ candidates, preselected })
+    candidates.length > 1 && stdout.isTTY
+      ? await stableBranchPickBroker({ candidates, preselected })
       : preselected;
 
   const nextConfig = assayerConfigContract.parse({ ...config, stableBranch: chosen });

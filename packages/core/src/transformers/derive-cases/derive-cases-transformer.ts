@@ -56,23 +56,9 @@
  * // Returns { cases: [{ reachesPath, arrange, salient }, …], unreachableExits: [{ line, guardLines }, …],
  * //   undrivenBranches: [{ line, operand? }, …], unfillable: [{ param, type }, …] }
  */
-import { derivedTestCaseContract, symbolNameContract } from '@assayer/shared/contracts';
-import type {
-  BranchNode,
-  ConditionNode,
-  ConstLength,
-  DerivedTestCase,
-  ExitNode,
-  LineNumber,
-  ParamDescriptor,
-  RepresentativeValue,
-  SymbolName,
-  TypeText,
-} from '@assayer/shared/contracts';
+import { derivedTestCaseContract } from '@assayer/shared/contracts';
+import type { BranchNode, ConditionNode, DerivedTestCase, ExitNode, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
-import { caseSignatureContract } from '../../contracts/case-signature/case-signature-contract';
-import type { CaseSignature } from '../../contracts/case-signature/case-signature-contract';
-import type { PredictedOutput } from '../../contracts/predicted-output/predicted-output-contract';
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
 import { isPredicateConstrainingGuard } from '../../guards/is-predicate-constraining/is-predicate-constraining-guard';
@@ -97,16 +83,16 @@ export const deriveCasesTransformer = ({
   exits: ExitNode[];
   envDrivable: boolean;
   returnPredicate?: ConditionNode;
-  harness?: { entry: SymbolName; params: readonly SymbolName[] } | undefined;
+  harness?: { entry: string; params: readonly string[] } | undefined;
 }): {
   cases: DerivedTestCase[];
   unreachableExits: {
-    line: LineNumber;
-    guardLines: LineNumber[];
-    welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
+    line: number;
+    guardLines: number[];
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
   }[];
-  undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: SymbolName }[];
-  unfillable: { param: SymbolName; type: TypeText }[];
+  undrivenBranches: { line: number; cause: UndrivenCause; operand?: string }[];
+  unfillable: { param: string; type: string }[];
 } => {
   const lineByBranch = new Map(branches.map((branch) => [branch.coverageId, branch.startLine]));
   // The parameters a CALL supplies — the declared list minus the trailing tail no caller owes and no
@@ -227,9 +213,7 @@ export const deriveCasesTransformer = ({
           ? undefined
           : leaf.operandPropertyPath === undefined
             ? leaf.operandParamName
-            : symbolNameContract.parse(
-                `${String(leaf.operandParamName)}.${leaf.operandPropertyPath.map((member) => String(member)).join('.')}`,
-              ),
+            : `${String(leaf.operandParamName)}.${leaf.operandPropertyPath.map((member) => String(member)).join('.')}`,
       )
       .find((name) => name !== undefined);
 
@@ -294,14 +278,14 @@ export const deriveCasesTransformer = ({
 
   // Feasible buckets, in enumeration order, de-duplicated by (exit, arrange): identical inputs render
   // once, so the salient representative below is stable. Each carries its predicted-output key.
-  const seen = new Set<CaseSignature>();
+  const seen = new Set<string>();
   const feasibleCases = evaluated.flatMap(({ predWant, arrange, exit }) => {
     if (exit === undefined || arrange.unreachable) {
       return [];
     }
 
     return arrange.arrangements.flatMap((arrangement) => {
-      const signature = caseSignatureContract.parse(`${String(exit.coverageId)}::${JSON.stringify(arrangement)}`);
+      const signature = `${String(exit.coverageId)}::${JSON.stringify(arrangement)}`;
 
       if (seen.has(signature)) {
         return [];
@@ -323,7 +307,7 @@ export const deriveCasesTransformer = ({
 
   // The first case per predicted output is the execution-salient representative; the rest are the
   // grayed breadth. Enumeration order makes which one is salient deterministic.
-  const salientSeen = new Set<PredictedOutput>();
+  const salientSeen = new Set<string>();
   const cases = feasibleCases.map((entry) => {
     const salient = !salientSeen.has(entry.predictedOutput);
     salientSeen.add(entry.predictedOutput);

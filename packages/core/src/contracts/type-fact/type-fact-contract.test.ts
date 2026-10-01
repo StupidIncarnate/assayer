@@ -183,13 +183,13 @@ describe('typeFactContract', () => {
     it('INVALID: {flavor: "tuple", no elements} => throws validation error', () => {
       expect(() => {
         return typeFactContract.parse({ flavor: 'tuple' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {flavor: "other", no text} => throws validation error', () => {
       expect(() => {
         return typeFactContract.parse({ flavor: 'other', typeRef: 'Config' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

@@ -1,0 +1,1404 @@
+{
+  "needles": [
+    "adapters/ts-morph/walk-file/",
+    "derive-branch-id-layer-adapter",
+    "deriveBranchIdLayerAdapter",
+    "deriveBranchIdLayerAdapterProxy",
+    "desugar-switch-layer-adapter",
+    "desugarSwitchLayerAdapter",
+    "desugarSwitchLayerAdapterProxy",
+    "dispatch-node-layer-adapter",
+    "dispatchNodeLayerAdapter",
+    "dispatchNodeLayerAdapterProxy",
+    "flatten-short-circuit-layer-adapter",
+    "flattenShortCircuitLayerAdapter",
+    "flattenShortCircuitLayerAdapterProxy",
+    "handle-block-layer-adapter",
+    "handle-call-layer-adapter",
+    "handle-class-layer-adapter",
+    "handle-dynamic-import-layer-adapter",
+    "handle-exit-layer-adapter",
+    "handle-export-layer-adapter",
+    "handle-function-layer-adapter",
+    "handle-if-layer-adapter",
+    "handle-import-layer-adapter",
+    "handle-member-access-layer-adapter",
+    "handle-source-file-layer-adapter",
+    "handle-switch-layer-adapter",
+    "handle-type-declaration-layer-adapter",
+    "handle-variable-layer-adapter",
+    "handleBlockLayerAdapter",
+    "handleBlockLayerAdapterProxy",
+    "handleCallLayerAdapter",
+    "handleCallLayerAdapterProxy",
+    "handleClassLayerAdapter",
+    "handleClassLayerAdapterProxy",
+    "handleDynamicImportLayerAdapter",
+    "handleDynamicImportLayerAdapterProxy",
+    "handleExitLayerAdapter",
+    "handleExitLayerAdapterProxy",
+    "handleExportLayerAdapter",
+    "handleExportLayerAdapterProxy",
+    "handleFunctionLayerAdapter",
+    "handleFunctionLayerAdapterProxy",
+    "handleIfLayerAdapter",
+    "handleIfLayerAdapterProxy",
+    "handleImportLayerAdapter",
+    "handleImportLayerAdapterProxy",
+    "handleMemberAccessLayerAdapter",
+    "handleMemberAccessLayerAdapterProxy",
+    "handleSourceFileLayerAdapter",
+    "handleSourceFileLayerAdapterProxy",
+    "handleSwitchLayerAdapter",
+    "handleSwitchLayerAdapterProxy",
+    "handleTypeDeclarationLayerAdapter",
+    "handleTypeDeclarationLayerAdapterProxy",
+    "handleVariableLayerAdapter",
+    "handleVariableLayerAdapterProxy",
+    "handler-result-layer-adapter",
+    "handlerResultLayerAdapter",
+    "handlerResultLayerAdapterProxy",
+    "project-node-layer-adapter",
+    "projectNodeLayerAdapter",
+    "projectNodeLayerAdapterProxy",
+    "read-accounted-layer-adapter",
+    "read-ambient-root-layer-adapter",
+    "read-call-args-layer-adapter",
+    "read-callee-layer-adapter",
+    "read-condition-layer-adapter",
+    "read-condition-tree-layer-adapter",
+    "read-conditional-exit-layer-adapter",
+    "read-const-operand-layer-adapter",
+    "read-declared-type-text-layer-adapter",
+    "read-entry-access-layer-adapter",
+    "read-env-operand-layer-adapter",
+    "read-export-flag-layer-adapter",
+    "read-function-name-layer-adapter",
+    "read-module-export-layer-adapter",
+    "read-nullish-leaf-layer-adapter",
+    "read-operand-type-layer-adapter",
+    "read-property-path-layer-adapter",
+    "read-terminal-layer-adapter",
+    "read-type-fact-layer-adapter",
+    "read-value-flow-exit-layer-adapter",
+    "readAccountedLayerAdapter",
+    "readAccountedLayerAdapterProxy",
+    "readAmbientRootLayerAdapter",
+    "readAmbientRootLayerAdapterProxy",
+    "readCallArgsLayerAdapter",
+    "readCallArgsLayerAdapterProxy",
+    "readCalleeLayerAdapter",
+    "readCalleeLayerAdapterProxy",
+    "readConditionLayerAdapter",
+    "readConditionLayerAdapterProxy",
+    "readConditionTreeLayerAdapter",
+    "readConditionTreeLayerAdapterProxy",
+    "readConditionalExitLayerAdapter",
+    "readConditionalExitLayerAdapterProxy",
+    "readConstOperandLayerAdapter",
+    "readConstOperandLayerAdapterProxy",
+    "readDeclaredTypeTextLayerAdapter",
+    "readDeclaredTypeTextLayerAdapterProxy",
+    "readEntryAccessLayerAdapter",
+    "readEntryAccessLayerAdapterProxy",
+    "readEnvOperandLayerAdapter",
+    "readEnvOperandLayerAdapterProxy",
+    "readExportFlagLayerAdapter",
+    "readExportFlagLayerAdapterProxy",
+    "readFunctionNameLayerAdapter",
+    "readFunctionNameLayerAdapterProxy",
+    "readModuleExportLayerAdapter",
+    "readModuleExportLayerAdapterProxy",
+    "readNullishLeafLayerAdapter",
+    "readNullishLeafLayerAdapterProxy",
+    "readOperandTypeLayerAdapter",
+    "readOperandTypeLayerAdapterProxy",
+    "readPropertyPathLayerAdapter",
+    "readPropertyPathLayerAdapterProxy",
+    "readTerminalLayerAdapter",
+    "readTerminalLayerAdapterProxy",
+    "readTypeFactLayerAdapter",
+    "readTypeFactLayerAdapterProxy",
+    "readValueFlowExitLayerAdapter",
+    "readValueFlowExitLayerAdapterProxy",
+    "ts-morph-walk-file-adapter",
+    "tsMorphWalkFileAdapter",
+    "tsMorphWalkFileAdapterProxy",
+    "walk-facts-layer-adapter",
+    "walk-node-layer-adapter",
+    "walkFactsLayerAdapter",
+    "walkFactsLayerAdapterProxy",
+    "walkNodeLayerAdapter",
+    "walkNodeLayerAdapterProxy"
+  ],
+  "counts": {
+    "comment": 61,
+    "doc-line": 34,
+    "string": 45
+  },
+  "total": 140,
+  "leftovers": [
+    {
+      "file": "eslint-rules/no-nullish-coalescing-on-arrange-value/no-nullish-coalescing-on-arrange-value-rule.test.js",
+      "line": 42,
+      "kind": "comment",
+      "needles": [
+        "handler-result-layer-adapter"
+      ],
+      "text": "*   being discarded. `handler-result-layer-adapter.ts` and `is-domain-empty/is-domain-empty-guard.ts`"
+    },
+    {
+      "file": "eslint-rules/no-nullish-coalescing-on-arrange-value/no-nullish-coalescing-on-arrange-value-rule.test.js",
+      "line": 90,
+      "kind": "comment",
+      "needles": [
+        "adapters/ts-morph/walk-file/"
+      ],
+      "text": "// REGRESSION LOCK. Reconstructs packages/core/src/adapters/ts-morph/walk-file/"
+    },
+    {
+      "file": "eslint-rules/no-nullish-coalescing-on-arrange-value/no-nullish-coalescing-on-arrange-value-rule.test.js",
+      "line": 91,
+      "kind": "comment",
+      "needles": [
+        "handler-result-layer-adapter"
+      ],
+      "text": "// handler-result-layer-adapter.ts:113 — `calls ?? []`, where `calls`'s element type has an"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 94,
+      "kind": "doc-line",
+      "needles": [
+        "ts-morph-walk-file-adapter"
+      ],
+      "text": "1. `ts-morph-walk-file-adapter` is the only place that touches ts-morph"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 97,
+      "kind": "doc-line",
+      "needles": [
+        "walk-node-layer-adapter"
+      ],
+      "text": "2. `walk-node-layer-adapter` is the recursion. It calls itself once per"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 99,
+      "kind": "doc-line",
+      "needles": [
+        "dispatch-node-layer-adapter"
+      ],
+      "text": "3. `dispatch-node-layer-adapter` is the only place that decides which"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 103,
+      "kind": "doc-line",
+      "needles": [
+        "walk-node-layer-adapter"
+      ],
+      "text": "returns are what drives `walk-node-layer-adapter`'s next call."
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 120,
+      "kind": "doc-line",
+      "needles": [
+        "dispatch-node-layer-adapter",
+        "walk-node-layer-adapter"
+      ],
+      "text": "machinery: `walk-node-layer-adapter` and `dispatch-node-layer-adapter`) is"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 178,
+      "kind": "doc-line",
+      "needles": [
+        "handle-function-layer-adapter"
+      ],
+      "text": "`handle-function-layer-adapter`, which owns every `FunctionLikeNode` (any"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 203,
+      "kind": "doc-line",
+      "needles": [
+        "project-node-layer-adapter"
+      ],
+      "text": "`project-node-layer-adapter`."
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 206,
+      "kind": "doc-line",
+      "needles": [
+        "read-operand-type-layer-adapter"
+      ],
+      "text": "`read-operand-type-layer-adapter`, but read section 5.9 first."
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 333,
+      "kind": "doc-line",
+      "needles": [
+        "read-declared-type-text-layer-adapter"
+      ],
+      "text": "resolving to plain `any`. Touch `read-declared-type-text-layer-adapter`,"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 377,
+      "kind": "doc-line",
+      "needles": [
+        "read-const-operand-layer-adapter"
+      ],
+      "text": "the exact point where it becomes welded: `read-const-operand-layer-adapter`"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 408,
+      "kind": "doc-line",
+      "needles": [
+        "read-callee-layer-adapter"
+      ],
+      "text": "Assayer cannot resolve). Touch `read-callee-layer-adapter`. A callee in"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 413,
+      "kind": "doc-line",
+      "needles": [
+        "handle-import-layer-adapter"
+      ],
+      "text": "**Record an import or re-export edge.** Touch `handle-import-layer-adapter`"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 414,
+      "kind": "doc-line",
+      "needles": [
+        "handle-export-layer-adapter"
+      ],
+      "text": "and `handle-export-layer-adapter`, plus their routes in `dispatch-node`."
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 418,
+      "kind": "doc-line",
+      "needles": [
+        "handle-type-declaration-layer-adapter"
+      ],
+      "text": "`enum Level`). Touch `handle-type-declaration-layer-adapter`, plus its"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 437,
+      "kind": "doc-line",
+      "needles": [
+        "handle-member-access-layer-adapter"
+      ],
+      "text": "Touch `handle-member-access-layer-adapter` for member-access forms and"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 439,
+      "kind": "doc-line",
+      "needles": [
+        "read-ambient-root-layer-adapter"
+      ],
+      "text": "`read-ambient-root-layer-adapter`. `transformers/module-graph-projection`"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 443,
+      "kind": "doc-line",
+      "needles": [
+        "handle-member-access-layer-adapter"
+      ],
+      "text": "`handle-member-access-layer-adapter`, which reads the outer"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 602,
+      "kind": "doc-line",
+      "needles": [
+        "project-node-layer-adapter"
+      ],
+      "text": "STRUCTURAL projection of it instead, the way `project-node-layer-adapter`"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 736,
+      "kind": "doc-line",
+      "needles": [
+        "ts-morph-walk-file-adapter"
+      ],
+      "text": "`ts-morph-walk-file-adapter` parses using `useInMemoryFileSystem: true`"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1021,
+      "kind": "doc-line",
+      "needles": [
+        "dispatch-node-layer-adapter"
+      ],
+      "text": "`dispatch-node-layer-adapter`."
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1049,
+      "kind": "doc-line",
+      "needles": [
+        "ts-morph-walk-file-adapter",
+        "tsMorphWalkFileAdapter"
+      ],
+      "text": "# import { tsMorphWalkFileAdapter } from '/abs/.../walk-file/ts-morph-walk-file-adapter';"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1083,
+      "kind": "doc-line",
+      "needles": [
+        "handler-result-layer-adapter"
+      ],
+      "text": "**`handler-result-layer-adapter` is a LEAF.** It imports nothing else from"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1095,
+      "kind": "doc-line",
+      "needles": [
+        "walk-node-layer-adapter"
+      ],
+      "text": "`walk-node-layer-adapter`, so a branch that sits inside a `return`"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1099,
+      "kind": "doc-line",
+      "needles": [
+        "read-conditional-exit-layer-adapter"
+      ],
+      "text": "body that IS a ternary) is handed to `read-conditional-exit-layer-adapter`,"
+    },
+    {
+      "file": "packages/core/adapters.ts",
+      "line": 8,
+      "kind": "comment",
+      "needles": [
+        "tsMorphWalkFileAdapter"
+      ],
+      "text": "* import { jestProbeInjectAdapter, tsMorphWalkFileAdapter } from '@assayer/core/adapters';"
+    },
+    {
+      "file": "packages/core/src/adapters/ts-morph/read-external-signature/read-signature-type-layer-adapter.test.ts",
+      "line": 199,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// ALIAS symbol instead — the same split the walk reader (`read-type-fact-layer-adapter`) resolves."
+    },
+    {
+      "file": "packages/core/src/adapters/ts-morph/read-external-signature/read-signature-type-layer-adapter.ts",
+      "line": 8,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "*   external reader's OWN boundary read: it MIRRORS `read-type-fact-layer-adapter` in the walk-file"
+    },
+    {
+      "file": "packages/core/src/adapters/ts-morph/read-harness-value-types/read-harness-value-type-layer-adapter.ts",
+      "line": 6,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "*   shapes are read by this one function. It MIRRORS `read-type-fact-layer-adapter` in the walk-file"
+    },
+    {
+      "file": "packages/core/src/brokers/analyze/file/analyze-file-broker.ts",
+      "line": 31,
+      "kind": "comment",
+      "needles": [
+        "tsMorphWalkFileAdapter"
+      ],
+      "text": "* analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });"
+    },
+    {
+      "file": "packages/core/src/guards/is-type-fillable/is-type-fillable-guard.ts",
+      "line": 86,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// as a genuine two-member union. But `read-type-fact-layer-adapter` has no dedicated case for the"
+    },
+    {
+      "file": "packages/core/src/transformers/declared-types-projection/declared-types-projection-transformer.ts",
+      "line": 16,
+      "kind": "comment",
+      "needles": [
+        "tsMorphWalkFileAdapter"
+      ],
+      "text": "* declaredTypesProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/derive-branch-id-layer-transformer.test.ts",
+      "line": 11,
+      "kind": "string",
+      "needles": [
+        "deriveBranchIdLayerAdapter"
+      ],
+      "text": "describe('deriveBranchIdLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/derive-branch-id-layer-transformer.ts",
+      "line": 10,
+      "kind": "comment",
+      "needles": [
+        "deriveBranchIdLayerAdapter"
+      ],
+      "text": "* deriveBranchIdLayerAdapter({ node: ifStatement, scopePath: ['Classifier', 'classify'] });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/desugar-switch-layer-transformer.test.ts",
+      "line": 13,
+      "kind": "string",
+      "needles": [
+        "desugarSwitchLayerAdapter"
+      ],
+      "text": "describe('desugarSwitchLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/desugar-switch-layer-transformer.ts",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "desugarSwitchLayerAdapter"
+      ],
+      "text": "* desugarSwitchLayerAdapter({ switchStatement, scopePath: ['*module*', 'routeLabel'] });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/dispatch-node-layer-transformer.test.ts",
+      "line": 10,
+      "kind": "string",
+      "needles": [
+        "dispatchNodeLayerAdapter"
+      ],
+      "text": "describe('dispatchNodeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/dispatch-node-layer-transformer.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "dispatchNodeLayerAdapter"
+      ],
+      "text": "* dispatchNodeLayerAdapter({ node, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/flatten-short-circuit-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "flattenShortCircuitLayerAdapter"
+      ],
+      "text": "describe('flattenShortCircuitLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/flatten-short-circuit-layer-transformer.ts",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "flattenShortCircuitLayerAdapter"
+      ],
+      "text": "* flattenShortCircuitLayerAdapter({ expression: orChain, operator: SyntaxKind.BarBarToken });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-block-layer-transformer.test.ts",
+      "line": 26,
+      "kind": "string",
+      "needles": [
+        "handleBlockLayerAdapter"
+      ],
+      "text": "describe('handleBlockLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-block-layer-transformer.ts",
+      "line": 24,
+      "kind": "comment",
+      "needles": [
+        "handleBlockLayerAdapter"
+      ],
+      "text": "* handleBlockLayerAdapter({ statements, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-call-layer-transformer.test.ts",
+      "line": 35,
+      "kind": "string",
+      "needles": [
+        "handleCallLayerAdapter"
+      ],
+      "text": "describe('handleCallLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-call-layer-transformer.ts",
+      "line": 17,
+      "kind": "comment",
+      "needles": [
+        "handleCallLayerAdapter"
+      ],
+      "text": "* handleCallLayerAdapter({ node: callExpression, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-class-layer-transformer.test.ts",
+      "line": 10,
+      "kind": "string",
+      "needles": [
+        "handleClassLayerAdapter"
+      ],
+      "text": "describe('handleClassLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-class-layer-transformer.ts",
+      "line": 19,
+      "kind": "comment",
+      "needles": [
+        "handleClassLayerAdapter"
+      ],
+      "text": "* handleClassLayerAdapter({ node: classDeclaration, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-dynamic-import-layer-transformer.test.ts",
+      "line": 15,
+      "kind": "string",
+      "needles": [
+        "handleDynamicImportLayerAdapter"
+      ],
+      "text": "describe('handleDynamicImportLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-dynamic-import-layer-transformer.ts",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "handleDynamicImportLayerAdapter"
+      ],
+      "text": "* handleDynamicImportLayerAdapter({ node: dynamicImportCall, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-exit-layer-transformer.test.ts",
+      "line": 21,
+      "kind": "string",
+      "needles": [
+        "handleExitLayerAdapter"
+      ],
+      "text": "describe('handleExitLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-exit-layer-transformer.ts",
+      "line": 18,
+      "kind": "comment",
+      "needles": [
+        "handleExitLayerAdapter"
+      ],
+      "text": "* handleExitLayerAdapter({ node: returnStatement, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-export-layer-transformer.test.ts",
+      "line": 15,
+      "kind": "string",
+      "needles": [
+        "handleExportLayerAdapter"
+      ],
+      "text": "describe('handleExportLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-export-layer-transformer.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "handleExportLayerAdapter"
+      ],
+      "text": "* handleExportLayerAdapter({ node: exportDeclaration, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-function-layer-transformer.test.ts",
+      "line": 10,
+      "kind": "string",
+      "needles": [
+        "handleFunctionLayerAdapter"
+      ],
+      "text": "describe('handleFunctionLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-function-layer-transformer.ts",
+      "line": 14,
+      "kind": "comment",
+      "needles": [
+        "handleFunctionLayerAdapter"
+      ],
+      "text": "* handleFunctionLayerAdapter({ node: functionDeclaration, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-if-layer-transformer.test.ts",
+      "line": 38,
+      "kind": "string",
+      "needles": [
+        "handleIfLayerAdapter"
+      ],
+      "text": "describe('handleIfLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-if-layer-transformer.ts",
+      "line": 25,
+      "kind": "comment",
+      "needles": [
+        "handleIfLayerAdapter"
+      ],
+      "text": "* handleIfLayerAdapter({ node: ifStatement, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-import-layer-transformer.test.ts",
+      "line": 15,
+      "kind": "string",
+      "needles": [
+        "handleImportLayerAdapter"
+      ],
+      "text": "describe('handleImportLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-import-layer-transformer.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "handleImportLayerAdapter"
+      ],
+      "text": "* handleImportLayerAdapter({ node: importDeclaration, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-member-access-layer-transformer.test.ts",
+      "line": 15,
+      "kind": "string",
+      "needles": [
+        "handleMemberAccessLayerAdapter"
+      ],
+      "text": "describe('handleMemberAccessLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-member-access-layer-transformer.ts",
+      "line": 25,
+      "kind": "comment",
+      "needles": [
+        "handleMemberAccessLayerAdapter"
+      ],
+      "text": "* handleMemberAccessLayerAdapter({ node: propertyAccess, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-source-file-layer-transformer.test.ts",
+      "line": 24,
+      "kind": "string",
+      "needles": [
+        "handleSourceFileLayerAdapter"
+      ],
+      "text": "describe('handleSourceFileLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-source-file-layer-transformer.ts",
+      "line": 9,
+      "kind": "comment",
+      "needles": [
+        "handleSourceFileLayerAdapter"
+      ],
+      "text": "* handleSourceFileLayerAdapter({ node: sourceFile, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-switch-layer-transformer.test.ts",
+      "line": 30,
+      "kind": "string",
+      "needles": [
+        "handleSwitchLayerAdapter"
+      ],
+      "text": "describe('handleSwitchLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-switch-layer-transformer.ts",
+      "line": 24,
+      "kind": "comment",
+      "needles": [
+        "handleSwitchLayerAdapter"
+      ],
+      "text": "* handleSwitchLayerAdapter({ node: switchStatement, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-type-declaration-layer-transformer.test.ts",
+      "line": 25,
+      "kind": "string",
+      "needles": [
+        "handleTypeDeclarationLayerAdapter"
+      ],
+      "text": "describe('handleTypeDeclarationLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-type-declaration-layer-transformer.ts",
+      "line": 24,
+      "kind": "comment",
+      "needles": [
+        "handleTypeDeclarationLayerAdapter"
+      ],
+      "text": "* handleTypeDeclarationLayerAdapter({ node: interfaceDeclaration, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-variable-layer-transformer.test.ts",
+      "line": 15,
+      "kind": "string",
+      "needles": [
+        "handleVariableLayerAdapter"
+      ],
+      "text": "describe('handleVariableLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handle-variable-layer-transformer.ts",
+      "line": 18,
+      "kind": "comment",
+      "needles": [
+        "handleVariableLayerAdapter"
+      ],
+      "text": "* handleVariableLayerAdapter({ node: variableStatement, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handler-result-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "handlerResultLayerAdapter"
+      ],
+      "text": "describe('handlerResultLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/handler-result-layer-transformer.ts",
+      "line": 12,
+      "kind": "comment",
+      "needles": [
+        "handlerResultLayerAdapter"
+      ],
+      "text": "* handlerResultLayerAdapter({ descents, opensScope });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/project-node-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "projectNodeLayerAdapter"
+      ],
+      "text": "describe('projectNodeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/project-node-layer-transformer.ts",
+      "line": 18,
+      "kind": "comment",
+      "needles": [
+        "projectNodeLayerAdapter"
+      ],
+      "text": "* projectNodeLayerAdapter({ node: ifStatement.getExpression() });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-accounted-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "readAccountedLayerAdapter"
+      ],
+      "text": "describe('readAccountedLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-accounted-layer-transformer.ts",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "readAccountedLayerAdapter"
+      ],
+      "text": "* readAccountedLayerAdapter({ node: block.getStatements().at(-1) });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-ambient-root-layer-transformer.test.ts",
+      "line": 18,
+      "kind": "string",
+      "needles": [
+        "readAmbientRootLayerAdapter"
+      ],
+      "text": "describe('readAmbientRootLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-ambient-root-layer-transformer.ts",
+      "line": 17,
+      "kind": "comment",
+      "needles": [
+        "readAmbientRootLayerAdapter"
+      ],
+      "text": "* readAmbientRootLayerAdapter({ node: identifier });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-call-args-layer-transformer.test.ts",
+      "line": 13,
+      "kind": "string",
+      "needles": [
+        "readCallArgsLayerAdapter"
+      ],
+      "text": "describe('readCallArgsLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-call-args-layer-transformer.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "readCallArgsLayerAdapter"
+      ],
+      "text": "* readCallArgsLayerAdapter({ args: callExpression.getArguments() });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-callee-layer-transformer.test.ts",
+      "line": 16,
+      "kind": "string",
+      "needles": [
+        "readCalleeLayerAdapter"
+      ],
+      "text": "describe('readCalleeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-callee-layer-transformer.ts",
+      "line": 22,
+      "kind": "comment",
+      "needles": [
+        "readCalleeLayerAdapter"
+      ],
+      "text": "* readCalleeLayerAdapter({ callee: callExpression.getExpression() });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-condition-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "readConditionLayerAdapter"
+      ],
+      "text": "describe('readConditionLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-condition-layer-transformer.ts",
+      "line": 38,
+      "kind": "comment",
+      "needles": [
+        "readConditionLayerAdapter"
+      ],
+      "text": "* readConditionLayerAdapter({ condition: ifStatement.getExpression() });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-condition-tree-layer-transformer.test.ts",
+      "line": 42,
+      "kind": "string",
+      "needles": [
+        "readConditionTreeLayerAdapter"
+      ],
+      "text": "describe('readConditionTreeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-condition-tree-layer-transformer.ts",
+      "line": 23,
+      "kind": "comment",
+      "needles": [
+        "readConditionTreeLayerAdapter"
+      ],
+      "text": "* readConditionTreeLayerAdapter({ condition: ifStatement.getExpression(), context, branchCoverageId, path: [] });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-conditional-exit-layer-transformer.test.ts",
+      "line": 25,
+      "kind": "string",
+      "needles": [
+        "readConditionalExitLayerAdapter"
+      ],
+      "text": "describe('readConditionalExitLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-conditional-exit-layer-transformer.ts",
+      "line": 36,
+      "kind": "comment",
+      "needles": [
+        "readConditionalExitLayerAdapter"
+      ],
+      "text": "* readConditionalExitLayerAdapter({ expression: returnStatement.getExpression(), kind: 'return', context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-const-operand-layer-transformer.test.ts",
+      "line": 17,
+      "kind": "string",
+      "needles": [
+        "readConstOperandLayerAdapter"
+      ],
+      "text": "describe('readConstOperandLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-const-operand-layer-transformer.ts",
+      "line": 22,
+      "kind": "comment",
+      "needles": [
+        "readConstOperandLayerAdapter"
+      ],
+      "text": "* readConstOperandLayerAdapter({ node: operandIdentifier });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-declared-type-text-layer-transformer.test.ts",
+      "line": 8,
+      "kind": "string",
+      "needles": [
+        "readDeclaredTypeTextLayerAdapter"
+      ],
+      "text": "describe('readDeclaredTypeTextLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-declared-type-text-layer-transformer.ts",
+      "line": 21,
+      "kind": "comment",
+      "needles": [
+        "readDeclaredTypeTextLayerAdapter"
+      ],
+      "text": "* readDeclaredTypeTextLayerAdapter({ node: param.getTypeNodeOrThrow() });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-entry-access-layer-transformer.test.ts",
+      "line": 7,
+      "kind": "string",
+      "needles": [
+        "readEntryAccessLayerAdapter"
+      ],
+      "text": "describe('readEntryAccessLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-entry-access-layer-transformer.ts",
+      "line": 22,
+      "kind": "comment",
+      "needles": [
+        "readEntryAccessLayerAdapter"
+      ],
+      "text": "* readEntryAccessLayerAdapter({ node: methodDeclaration, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-env-operand-layer-transformer.test.ts",
+      "line": 17,
+      "kind": "string",
+      "needles": [
+        "readEnvOperandLayerAdapter"
+      ],
+      "text": "describe('readEnvOperandLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-env-operand-layer-transformer.ts",
+      "line": 30,
+      "kind": "comment",
+      "needles": [
+        "readEnvOperandLayerAdapter"
+      ],
+      "text": "* readEnvOperandLayerAdapter({ node: operandIdentifier });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-export-flag-layer-transformer.test.ts",
+      "line": 7,
+      "kind": "string",
+      "needles": [
+        "readExportFlagLayerAdapter"
+      ],
+      "text": "describe('readExportFlagLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-export-flag-layer-transformer.ts",
+      "line": 17,
+      "kind": "comment",
+      "needles": [
+        "readExportFlagLayerAdapter"
+      ],
+      "text": "* readExportFlagLayerAdapter({ node: arrowFunction, context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-function-name-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "readFunctionNameLayerAdapter"
+      ],
+      "text": "describe('readFunctionNameLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-function-name-layer-transformer.ts",
+      "line": 18,
+      "kind": "comment",
+      "needles": [
+        "readFunctionNameLayerAdapter"
+      ],
+      "text": "* readFunctionNameLayerAdapter({ node: arrowFunction });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-module-export-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "readModuleExportLayerAdapter"
+      ],
+      "text": "describe('readModuleExportLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-module-export-layer-transformer.ts",
+      "line": 20,
+      "kind": "comment",
+      "needles": [
+        "readModuleExportLayerAdapter"
+      ],
+      "text": "* readModuleExportLayerAdapter({ node: arrowFunction });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-nullish-leaf-layer-transformer.test.ts",
+      "line": 21,
+      "kind": "string",
+      "needles": [
+        "readNullishLeafLayerAdapter"
+      ],
+      "text": "describe('readNullishLeafLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-nullish-leaf-layer-transformer.ts",
+      "line": 18,
+      "kind": "comment",
+      "needles": [
+        "readNullishLeafLayerAdapter"
+      ],
+      "text": "* readNullishLeafLayerAdapter({ operand: nullishChain.getLeft(), context, branchCoverageId });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-operand-type-layer-transformer.test.ts",
+      "line": 34,
+      "kind": "string",
+      "needles": [
+        "readOperandTypeLayerAdapter"
+      ],
+      "text": "describe('readOperandTypeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-operand-type-layer-transformer.ts",
+      "line": 18,
+      "kind": "comment",
+      "needles": [
+        "readOperandTypeLayerAdapter"
+      ],
+      "text": "* readOperandTypeLayerAdapter({ node: operandNode, context, name: 'value' });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-property-path-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "readPropertyPathLayerAdapter"
+      ],
+      "text": "describe('readPropertyPathLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-property-path-layer-transformer.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "readPropertyPathLayerAdapter"
+      ],
+      "text": "* readPropertyPathLayerAdapter({ node: propertyAccessExpression });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-terminal-layer-transformer.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "readTerminalLayerAdapter"
+      ],
+      "text": "describe('readTerminalLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-terminal-layer-transformer.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "readTerminalLayerAdapter"
+      ],
+      "text": "* readTerminalLayerAdapter({ node: block.getStatements().at(-1) });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-type-fact-layer-transformer.test.ts",
+      "line": 7,
+      "kind": "string",
+      "needles": [
+        "readTypeFactLayerAdapter"
+      ],
+      "text": "describe('readTypeFactLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-type-fact-layer-transformer.ts",
+      "line": 49,
+      "kind": "comment",
+      "needles": [
+        "readTypeFactLayerAdapter"
+      ],
+      "text": "* readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNode() });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-value-flow-exit-layer-transformer.test.ts",
+      "line": 19,
+      "kind": "string",
+      "needles": [
+        "readValueFlowExitLayerAdapter"
+      ],
+      "text": "describe('readValueFlowExitLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/read-value-flow-exit-layer-transformer.ts",
+      "line": 23,
+      "kind": "comment",
+      "needles": [
+        "readValueFlowExitLayerAdapter"
+      ],
+      "text": "* readValueFlowExitLayerAdapter({ statements: block.getStatements(), context });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-facts-layer-transformer.test.ts",
+      "line": 14,
+      "kind": "string",
+      "needles": [
+        "walkFactsLayerAdapter"
+      ],
+      "text": "describe('walkFactsLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-facts-layer-transformer.ts",
+      "line": 9,
+      "kind": "comment",
+      "needles": [
+        "handler-result-layer-adapter"
+      ],
+      "text": "*   `handler-result-layer-adapter`; adding a channel means adding it there, in `walk-facts-contract`,"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-facts-layer-transformer.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "walkFactsLayerAdapter"
+      ],
+      "text": "* walkFactsLayerAdapter({ facts: descents.map(walk) });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-file-transformer.test.ts",
+      "line": 13,
+      "kind": "string",
+      "needles": [
+        "tsMorphWalkFileAdapter"
+      ],
+      "text": "describe('tsMorphWalkFileAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-file-transformer.test.ts",
+      "line": 99,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// instead of collapsing to plain `string`. `read-type-fact-layer-adapter` has no dedicated case for"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-file-transformer.ts",
+      "line": 12,
+      "kind": "comment",
+      "needles": [
+        "tsMorphWalkFileAdapter"
+      ],
+      "text": "* tsMorphWalkFileAdapter({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-node-layer-transformer.test.ts",
+      "line": 9,
+      "kind": "string",
+      "needles": [
+        "walkNodeLayerAdapter"
+      ],
+      "text": "describe('walkNodeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/walk-file/walk-node-layer-transformer.ts",
+      "line": 14,
+      "kind": "comment",
+      "needles": [
+        "walkNodeLayerAdapter"
+      ],
+      "text": "* walkNodeLayerAdapter({ node: sourceFile, context });"
+    },
+    {
+      "file": "packages/core/test/harnesses/specimen-registry.ts",
+      "line": 721,
+      "kind": "string",
+      "needles": [
+        "readEntryAccessLayerAdapter"
+      ],
+      "text": "'always resolves away before analysis is exposed. `readEntryAccessLayerAdapter` assigns `unreachable` ' +"
+    },
+    {
+      "file": "packages/core/test/harnesses/specimen-registry.ts",
+      "line": 729,
+      "kind": "string",
+      "needles": [
+        "read-entry-access-layer-adapter"
+      ],
+      "text": "'before `FileAnalysis` — pinned there, and only there, by `read-entry-access-layer-adapter.test.ts`.',"
+    },
+    {
+      "file": "plan/open-defects.md",
+      "line": 136,
+      "kind": "doc-line",
+      "needles": [
+        "read-entry-access-layer-adapter"
+      ],
+      "text": "`read-entry-access-layer-adapter.test.ts`. Changing that would mean changing what the field"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 15,
+      "kind": "doc-line",
+      "needles": [
+        "handle-exit-layer-adapter"
+      ],
+      "text": "EXIT OWNERSHIP. `handle-exit-layer-adapter.ts` emits one unguarded exit BEFORE"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 16,
+      "kind": "doc-line",
+      "needles": [
+        "walk-node-layer-adapter"
+      ],
+      "text": "descending (`:41-58`), and exits merge upward (`walk-node-layer-adapter.ts:39`),"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 31,
+      "kind": "doc-line",
+      "needles": [
+        "read-condition-tree-layer-adapter"
+      ],
+      "text": "`read-condition-tree-layer-adapter.ts` already reads `&&`/`||` as CONNECTIVES (one"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 57,
+      "kind": "doc-line",
+      "needles": [
+        "read-condition-tree-layer-adapter"
+      ],
+      "text": "- **Condition reading:** `read-condition-tree-layer-adapter.ts` takes the condition"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 60,
+      "kind": "doc-line",
+      "needles": [
+        "project-node-layer-adapter"
+      ],
+      "text": "- **Branch id + exit id:** `coverage-id-transformer.ts` + `project-node-layer-adapter.ts`"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 61,
+      "kind": "doc-line",
+      "needles": [
+        "derive-branch-id-layer-adapter"
+      ],
+      "text": "(structural projection of the condition). `derive-branch-id-layer-adapter.ts` is"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 82,
+      "kind": "doc-line",
+      "needles": [
+        "read-conditional-exit-layer-adapter"
+      ],
+      "text": "- **New layer adapter** `read-conditional-exit-layer-adapter.ts` (+ proxy + test):"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 93,
+      "kind": "doc-line",
+      "needles": [
+        "handle-exit-layer-adapter"
+      ],
+      "text": "- **Wire `handle-exit-layer-adapter.ts`:** when the returned expression is"
+    },
+    {
+      "file": "plan/ternary-conditionals.md",
+      "line": 98,
+      "kind": "doc-line",
+      "needles": [
+        "ts-morph-walk-file-adapter"
+      ],
+      "text": "- **Flip the walk-adapter test** `ts-morph-walk-file-adapter.test.ts:438` — the"
+    },
+    {
+      "file": "smoke-repo/packages/syntax-repository/src/happy-path/array/at/at.test.ts",
+      "line": 11,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-adapter` has no"
+    },
+    {
+      "file": "smoke-repo/packages/syntax-repository/src/happy-path/array/pop/pop.test.ts",
+      "line": 11,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-adapter` has no"
+    },
+    {
+      "file": "smoke-repo/packages/syntax-repository/src/happy-path/array/shift/shift.test.ts",
+      "line": 11,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-adapter` has no"
+    },
+    {
+      "file": "smoke-repo/packages/syntax-repository/src/happy-path/null/eq-null/eq-null.test.ts",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-adapter` has no"
+    },
+    {
+      "file": "smoke-repo/packages/syntax-repository/src/happy-path/optional-chain/basic/basic.test.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-adapter` has no"
+    },
+    {
+      "file": "smoke-repo/packages/syntax-repository/src/happy-path/short-circuit/nullish/nullish.test.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "read-type-fact-layer-adapter"
+      ],
+      "text": "// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-adapter` has no"
+    }
+  ]
+}

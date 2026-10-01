@@ -28,11 +28,11 @@
  * // unreachable-exit lint appended
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
-import { branchNodeContract, entryLabelContract, fileAnalysisContract } from '@assayer/shared/contracts';
+import { branchNodeContract, fileAnalysisContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { callArgBindingsTransformer } from '../../../transformers/call-arg-bindings/call-arg-bindings-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
@@ -91,7 +91,7 @@ export const composeCrossFilePredicatesBroker = ({
     return analysis;
   }
 
-  const { options } = typescriptReadConfigAdapter({ searchPath: root });
+  const { options } = tsconfigReadBroker({ searchPath: root });
   const containingFile = `${root}/${relPath}`;
 
   const composed = perFunction.map(({ fn, candidates }) => {
@@ -166,7 +166,7 @@ export const composeCrossFilePredicatesBroker = ({
     const displayName =
       fn.entry.access.kind === 'module'
         ? moduleEntryLabelTransformer({ ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }), relPath })
-        : entryLabelContract.parse(String(fn.entry.name));
+        : String(fn.entry.name);
 
     return {
       fn: {

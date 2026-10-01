@@ -130,7 +130,7 @@ describe('conditionNodeContract', () => {
           operandType: { kind: 'number' },
           predicate: { kind: 'truthy' },
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

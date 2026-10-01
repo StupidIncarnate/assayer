@@ -16,13 +16,11 @@
  * USAGE:
  * import { test, expect } from '../../../test/harnesses/e2e-fixtures';
  * test('…', async ({ smokeWindow: window }) => {
- *   await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+ *   await expect(window.getByTestId('FILE_TREE')).toBeVisible();
  * });
  */
-import { test as base, expect, _electron } from '@playwright/test';
-import type { ElectronApplication, Page } from '@playwright/test';
-import { absoluteFilePathContract } from '@dungeonmaster/shared/contracts';
-import type { AbsoluteFilePath } from '@dungeonmaster/shared/contracts';
+import { test as base, expect, _electron } from '#gateway/npm/playwright__test';
+import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
 
 import { desktopMainEntry, smokeCacheConfigDir, resetSmokeCache } from './smoke-cache.harness';
 
@@ -35,14 +33,14 @@ interface SmokeFixtures {
 }
 
 interface SmokeWorkerFixtures {
-  smokeCacheDir: AbsoluteFilePath;
+  smokeCacheDir: string;
   smokeApp: { app: ElectronApplication; window: Page };
 }
 
 export const test = base.extend<SmokeFixtures, SmokeWorkerFixtures>({
   // The compiled cache the shared window reads — a worker-scoped VALUE fixture, so the launch below has a
   // real dependency to destructure (Playwright requires a fixture's first arg to be an object pattern).
-  smokeCacheDir: [absoluteFilePathContract.parse(smokeCacheConfigDir), { option: true, scope: 'worker' }],
+  smokeCacheDir: [smokeCacheConfigDir, { option: true, scope: 'worker' }],
 
   // beforeAll (worker-scoped): launch ONE Electron against the shared compiled cache and warm it. The
   // first paint pays Chromium's one-time DOM-storage service init (~8s here); with the process kept

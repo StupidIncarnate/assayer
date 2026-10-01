@@ -42,31 +42,21 @@
  * caseSetContract.parse({ relPath: 'src/happy-path/boolean/and/and.ts', modulePath: '/abs/and.ts', entries: [...], gaps: [], darkSpots: [], undriven: [] });
  * // Returns a validated CaseSet (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import {
-  coverageIdContract,
-  darkSpotContract,
-  derivedTestCaseContract,
-  entryAccessContract,
-  entryGapContract,
-  lintEntryContract,
-  relPathContract,
-  symbolNameContract,
-  undrivenEntryContract,
-} from '@assayer/shared/contracts';
+import { darkSpotContract, derivedTestCaseContract, entryAccessContract, entryGapContract, lintEntryContract, undrivenEntryContract, coverageContract } from '@assayer/shared/contracts';
 
 export const caseSetContract = z.object({
-  relPath: relPathContract,
-  modulePath: z.string().min(1).brand<'ModulePath'>(),
-  harnessPath: z.string().min(1).brand<'HarnessPath'>().optional(),
+  relPath: z.string().min(1).brand<'CaseSetRelPath'>(),
+  modulePath: z.string().min(1).brand<'CaseSetModulePath'>(),
+  harnessPath: z.string().min(1).brand<'CaseSetHarnessPath'>().optional(),
   entries: z.array(
     z.object({
-      name: symbolNameContract,
+      name: z.string().min(1).brand<'CaseSetEntriesName'>(),
       access: entryAccessContract,
-      exitIds: z.array(coverageIdContract),
+      exitIds: z.array(coverageContract.shape.id),
       cases: z.array(derivedTestCaseContract),
-    }),
+    }).brand<'CaseSetEntries'>(),
   ),
   gaps: z.array(entryGapContract),
   darkSpots: z.array(darkSpotContract),
@@ -74,6 +64,6 @@ export const caseSetContract = z.object({
   // Carried through to the run artifact so `assayer unit` can fail on a lint when the repo asked,
   // the same way it carries dark spots and undriven entries the shim writes but the runner cannot see.
   lints: z.array(lintEntryContract),
-});
+}).brand<'CaseSet'>();
 
 export type CaseSet = z.infer<typeof caseSetContract>;

@@ -1,12 +1,12 @@
-import { assayerBridgeOnRunOutputAdapterProxy } from '../../adapters/assayer-bridge/on-run-output/assayer-bridge-on-run-output-adapter.proxy';
+import { runSubscribeOutputBrokerProxy } from '../../brokers/run/subscribe-output/run-subscribe-output-broker.proxy';
 import { runExecuteBrokerProxy } from '../../brokers/run/execute/run-execute-broker.proxy';
 import { runFetchConsoleBrokerProxy } from '../../brokers/run/fetch-console/run-fetch-console-broker.proxy';
 import { runFetchSavedBrokerProxy } from '../../brokers/run/fetch-saved/run-fetch-saved-broker.proxy';
-import type { RunConsoleStub, RunResultStub } from '@assayer/shared/contracts';
+import type { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 export const useFileRunBindingProxy = (): {
   setupSavedRun: (params: { run: ReturnType<typeof RunResultStub> }) => void;
-  setupSavedConsole: (params: { console: ReturnType<typeof RunConsoleStub> }) => void;
+  setupSavedConsole: (params: { console: string }) => void;
   neverRun: () => void;
   setupRunResult: (params: { run: ReturnType<typeof RunResultStub> }) => void;
   runFails: (params: { message: string }) => void;
@@ -15,7 +15,7 @@ export const useFileRunBindingProxy = (): {
   const savedProxy = runFetchSavedBrokerProxy();
   const consoleProxy = runFetchConsoleBrokerProxy();
   const executeProxy = runExecuteBrokerProxy();
-  const outputProxy = assayerBridgeOnRunOutputAdapterProxy();
+  const outputProxy = runSubscribeOutputBrokerProxy();
 
   return {
     emitRunOutput: ({ chunk }: { chunk: string }): void => {
@@ -24,7 +24,7 @@ export const useFileRunBindingProxy = (): {
     setupSavedRun: ({ run }: { run: ReturnType<typeof RunResultStub> }): void => {
       savedProxy.setupRun({ run });
     },
-    setupSavedConsole: ({ console: consoleText }: { console: ReturnType<typeof RunConsoleStub> }): void => {
+    setupSavedConsole: ({ console: consoleText }: { console: string }): void => {
       consoleProxy.setupConsole({ console: consoleText });
     },
     // Both halves of a run are absent together: a file nobody has run has neither verdicts nor a

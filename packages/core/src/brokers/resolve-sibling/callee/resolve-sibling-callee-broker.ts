@@ -16,13 +16,11 @@
  * resolveSiblingCalleeBroker({ specifier: './band-reading', containingFile: '/repo/src/a.ts', root: '/repo', options });
  * // Returns { walked, relPath: 'src/band-reading.ts', source } or undefined
  */
-import type { RelPath } from '@assayer/shared/contracts';
 
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
-import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
+import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
+import { readFileSync } from '#gateway/node/fs';
+import { relative } from '#gateway/node/path';
 
 export const resolveSiblingCalleeBroker = ({
   specifier,
@@ -33,22 +31,22 @@ export const resolveSiblingCalleeBroker = ({
   specifier: string;
   containingFile: string;
   root: string;
-  options: Parameters<typeof typescriptResolveModuleAdapter>[0]['options'];
-}): { walked: ReturnType<typeof tsMorphWalkFileAdapter>; relPath: RelPath; source: FileContents } | undefined => {
-  const resolved = typescriptResolveModuleAdapter({ specifier, containingFile, options });
+  options: Parameters<typeof importSpecifierResolveBroker>[0]['options'];
+}): { walked: ReturnType<typeof walkFileTransformer>; relPath: string; source: string } | undefined => {
+  const resolved = importSpecifierResolveBroker({ specifier, containingFile, options });
 
   if (!resolved.resolved) {
     return undefined;
   }
 
   const fileName = String(resolved.fileName);
-  const relPath = pathRelativeAdapter({ from: root, to: fileName });
+  const relPath = relative(root, fileName);
 
-  if (String(relPath).startsWith('..') || fileName.includes('/node_modules/')) {
+  if (relPath.startsWith('..') || fileName.includes('/node_modules/')) {
     return undefined;
   }
 
-  const source = fsReadFileSyncAdapter({ path: fileName });
+  const source = readFileSync(fileName);
 
-  return { walked: tsMorphWalkFileAdapter({ source: String(source), relPath: String(relPath) }), relPath, source };
+  return { walked: walkFileTransformer({ source, relPath }), relPath, source };
 };

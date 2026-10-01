@@ -11,8 +11,6 @@
  * harnessKeyPathTransformer({ entry: 'audit', param: 'report' });
  * // Returns 'inputs.audit.report'
  */
-import { harnessKeyPathContract } from '@assayer/shared/contracts';
-import type { HarnessKeyPath, SymbolName } from '@assayer/shared/contracts';
 
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
 
@@ -20,9 +18,7 @@ export const harnessKeyPathTransformer = ({
   entry,
   param,
 }: {
-  entry: SymbolName;
-  param: SymbolName;
-}): HarnessKeyPath =>
-  harnessKeyPathContract.parse(
-    [harnessModuleStatics.inputsRoot, String(entry), String(param)].join(harnessModuleStatics.keySeparator),
-  );
+  entry: string;
+  param: string;
+}): string =>
+  [harnessModuleStatics.inputsRoot, entry, param].join(harnessModuleStatics.keySeparator);

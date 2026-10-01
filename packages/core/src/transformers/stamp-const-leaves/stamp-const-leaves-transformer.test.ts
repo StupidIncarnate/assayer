@@ -1,8 +1,9 @@
-import { ConditionLeafStub, conditionLeafContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { conditionLeafContract, representativeValueContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { stampConstLeavesTransformer } from './stamp-const-leaves-transformer';
 
-const VALUE = symbolNameContract.parse('value');
+const VALUE = 'value';
 const THREE = representativeValueContract.parse(3);
 
 describe('stampConstLeavesTransformer', () => {
@@ -20,7 +21,7 @@ describe('stampConstLeavesTransformer', () => {
     it('EMPTY: {leaf on `value`, welds other->3} => the leaf is returned unchanged', () => {
       const leaf = ConditionLeafStub({ operandParamName: 'value' });
 
-      const result = stampConstLeavesTransformer({ condition: leaf, welds: new Map([[symbolNameContract.parse('other'), THREE]]) });
+      const result = stampConstLeavesTransformer({ condition: leaf, welds: new Map([['other', THREE]]) });
 
       expect(result).toStrictEqual(leaf);
     });
@@ -38,7 +39,7 @@ describe('stampConstLeavesTransformer', () => {
 
       const result = stampConstLeavesTransformer({
         condition: leaf,
-        welds: new Map([[symbolNameContract.parse('config'), representativeValueContract.parse('a')]]),
+        welds: new Map([['config', representativeValueContract.parse('a')]]),
       });
 
       expect(result).toStrictEqual(leaf);

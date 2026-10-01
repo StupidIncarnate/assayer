@@ -1,4 +1,4 @@
-import { EntryGapStub } from '@assayer/shared/contracts';
+import { EntryGapStub } from '@assayer/shared/contracts/entry-gap/entry-gap.stub';
 
 import { gapLineFormatTransformer } from './gap-line-format-transformer';
 

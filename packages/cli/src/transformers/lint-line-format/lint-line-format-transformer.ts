@@ -9,8 +9,6 @@
  */
 import type { LintEntry } from '@assayer/shared/contracts';
 
-import { admissionLineContract } from '../../contracts/admission-line/admission-line-contract';
-import type { AdmissionLine } from '../../contracts/admission-line/admission-line-contract';
 
-export const lintLineFormatTransformer = ({ lint }: { lint: LintEntry }): AdmissionLine =>
-  admissionLineContract.parse(`  LINT ${String(lint.name)} — ${String(lint.message)}`);
+export const lintLineFormatTransformer = ({ lint }: { lint: LintEntry }): string =>
+  `  LINT ${String(lint.name)} — ${String(lint.message)}`;

@@ -8,11 +8,9 @@
  */
 import { desktopLaunchBroker } from '@assayer/desktop/brokers';
 
-import { cliOutputContract } from '../../../contracts/cli-output/cli-output-contract';
-import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
 
-export const LaunchRunResponder = ({ repoPath }: { repoPath: string }): CliOutput => {
+export const LaunchRunResponder = ({ repoPath }: { repoPath: string }): string => {
   desktopLaunchBroker({ repoPath });
 
-  return cliOutputContract.parse(`Opening the Assayer desktop app for ${repoPath}...`);
+  return `Opening the Assayer desktop app for ${repoPath}...`;
 };

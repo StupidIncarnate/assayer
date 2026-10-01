@@ -1,26 +1,29 @@
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
-import { nodeFsCacheManifestExistsAdapterProxy } from '../../../adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.proxy';
-import type { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const compiledTreeResolveBrokerProxy = (): {
-  setupManifest: (params: { manifest: ReturnType<typeof AssayerCacheManifestStub> }) => void;
-  rejects: (params: { error: Error }) => void;
-  setupMissingManifest: () => void;
+  setupManifest: (params: {
+    repoPath: string;
+    manifest: ReturnType<typeof AssayerCacheManifestStub>;
+  }) => void;
+  setupManifestVanishes: (params: { repoPath: string }) => void;
+  setupMissingManifest: (params: { repoPath: string }) => void;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
-  const existsProxy = nodeFsCacheManifestExistsAdapterProxy();
+  const existsProxy = pathExistsProxy();
 
   return {
-    setupManifest: ({ manifest }): void => {
-      existsProxy.exists();
-      manifestProxy.resolves({ manifest });
+    setupManifest: ({ repoPath, manifest }): void => {
+      existsProxy.present({ path: `${repoPath}/.assayer/cache/manifest.json` });
+      manifestProxy.resolves({ repoPath, manifest });
     },
-    rejects: ({ error }): void => {
-      existsProxy.exists();
-      manifestProxy.rejects({ error });
+    setupManifestVanishes: ({ repoPath }): void => {
+      existsProxy.present({ path: `${repoPath}/.assayer/cache/manifest.json` });
+      manifestProxy.missing({ repoPath });
     },
-    setupMissingManifest: (): void => {
-      existsProxy.missing();
+    setupMissingManifest: ({ repoPath }): void => {
+      existsProxy.missing({ path: `${repoPath}/.assayer/cache/manifest.json` });
     },
   };
 };

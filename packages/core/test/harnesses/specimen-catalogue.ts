@@ -23,16 +23,12 @@
  * specimenCatalogue().relPaths();
  * // ['packages/syntax-repository/src/happy-path/boolean/and/and.ts', ...] — sorted, smoke-repo-relative
  */
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { resolve, join, relative, sep, basename, dirname, extname } from 'node:path';
+import { existsSync, readFileSync, walkFilesSync } from '#gateway/node/fs';
+import { resolve, join, relative, sep, basename, dirname, extname } from '#gateway/node/path';
 
-import { Project, ts } from 'ts-morph';
-import { errorMessageContract } from '@dungeonmaster/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
-import { relPathContract } from '@assayer/shared/contracts';
-import type { RelPath } from '@assayer/shared/contracts';
+import { Project, ts } from '#gateway/npm/ts-morph';
 
-import { typescriptHarnessGateAdapter } from '../../src/adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { isAssayerHarnessGuard } from '../../src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../src/statics/harness-module/harness-module-statics';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
@@ -43,7 +39,7 @@ const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 // applies, off the same bytes, so the catalogue and the compiled surface can never disagree.
 const isAnalysed = (entry: { name: string; parentPath: string }): boolean =>
   !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
-  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name), 'utf8') });
+  !isAssayerHarnessGuard({ source: readFileSync(join(entry.parentPath, entry.name)) });
 
 // The combined `.ts`/`.tsx` inclusion rule the compiled surface applies — a harness is never `.tsx`
 // (CLAUDE.md: a colocated harness is always `.ts`, even beside a `.tsx` source), so the symbol gate
@@ -54,40 +50,44 @@ const isAnalysedSourceFile = (entry: { name: string; parentPath: string }): bool
   (entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'));
 
 export const specimenCatalogue = (): {
-  relPaths: () => RelPath[];
-  roots: () => { relPath: RelPath; bucket: 'happy-path' | 'sad-path' }[];
-  children: () => RelPath[];
-  structuralErrors: () => ErrorMessage[];
-  syntacticErrors: (params: { relPath: string }) => ErrorMessage[];
+  relPaths: () => string[];
+  roots: () => { relPath: string; bucket: 'happy-path' | 'sad-path' }[];
+  children: () => string[];
+  structuralErrors: () => string[];
+  syntacticErrors: (params: { relPath: string }) => string[];
 } => ({
-  relPaths: (): RelPath[] =>
-    readdirSync(CATALOGUE_DIR, { recursive: true, withFileTypes: true })
-      .filter((entry) => entry.isFile() && isAnalysedSourceFile(entry))
+  relPaths: (): string[] =>
+    [
+      ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.ts' }),
+      ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.tsx' }),
+    ]
+      .map((file) => ({ name: basename(file.path), parentPath: dirname(file.path) }))
+      .filter((entry) => isAnalysedSourceFile(entry))
       // Posix-joined rather than platform-joined: the relPath is a cache and manifest key, so it must
       // not change shape with the OS that produced it.
       .map((entry) => relative(SMOKE_REPO, join(entry.parentPath, entry.name)).split(sep).join('/'))
       .sort()
-      .map((relPath) => relPathContract.parse(relPath)),
+      .map((relPath) => relPath),
 
   // The EPONYMOUS specimens — a file that names its own folder (`boolean/and/and.ts`) — paired with
   // the bucket their path declares. These are the roots whose run verdict the bucket claims; the
   // driver checks each against it. Compared by BASENAME MINUS ITS OWN EXTENSION, so a `.tsx` root
   // (`component/component.tsx`) is recognized exactly as a `.ts` one is.
-  roots: (): { relPath: RelPath; bucket: 'happy-path' | 'sad-path' }[] =>
+  roots: (): { relPath: string; bucket: 'happy-path' | 'sad-path' }[] =>
     specimenCatalogue()
       .relPaths()
-      .filter((relPath) => basename(String(relPath), extname(String(relPath))) === basename(dirname(String(relPath))))
+      .filter((relPath) => basename(relPath, extname(relPath)) === basename(dirname(relPath)))
       .map((relPath) => ({
         relPath,
-        bucket: relative(CATALOGUE_DIR, join(SMOKE_REPO, String(relPath))).split(sep)[0] as 'happy-path' | 'sad-path',
+        bucket: relative(CATALOGUE_DIR, join(SMOKE_REPO, relPath)).split(sep)[0] as 'happy-path' | 'sad-path',
       })),
 
   // The helper CHILDREN — every other file in an example folder (`uses-greeting/greeting.ts`). They
   // ride their root and are never checked against a bucket on their own.
-  children: (): RelPath[] =>
+  children: (): string[] =>
     specimenCatalogue()
       .relPaths()
-      .filter((relPath) => basename(String(relPath), extname(String(relPath))) !== basename(dirname(String(relPath)))),
+      .filter((relPath) => basename(relPath, extname(relPath)) !== basename(dirname(relPath))),
 
   // The `<bucket>/…/<name>/<name>.{ts,tsx}` invariant, checked off disk and returned as named
   // violations so the test asserts an empty list. Every specimen sits under a known bucket and owes
@@ -96,11 +96,11 @@ export const specimenCatalogue = (): {
   // root to belong to. The colocated-test and orphan-root lookups are keyed on the file's OWN
   // extension: `.replace(/\.ts$/u, …)` never matches a `.tsx` path (it ends in `x`, not `s`), so an
   // extension-blind version would silently pass a `.tsx` root with no colocated test at all.
-  structuralErrors: (): ErrorMessage[] =>
+  structuralErrors: (): string[] =>
     specimenCatalogue()
       .relPaths()
-      .flatMap((relPath): ErrorMessage[] => {
-        const rel = String(relPath);
+      .flatMap((relPath): string[] => {
+        const rel = relPath;
         const abs = join(SMOKE_REPO, rel);
         const [bucket] = relative(CATALOGUE_DIR, abs).split(sep);
         const ext = extname(rel);
@@ -118,12 +118,12 @@ export const specimenCatalogue = (): {
           existsSync(join(dirname(abs), `${rootName}.tsx`))
             ? null
             : `${rel}: orphan child — its folder has no eponymous ${rootName}.ts or ${rootName}.tsx`,
-        ].flatMap((message) => (message === null ? [] : [errorMessageContract.parse(message)]));
+        ].flatMap((message) => (message === null ? [] : [message]));
       }),
 
-  syntacticErrors: ({ relPath }: { relPath: string }): ErrorMessage[] => {
+  syntacticErrors: ({ relPath }: { relPath: string }): string[] => {
     const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile(basename(relPath), readFileSync(join(SMOKE_REPO, relPath), 'utf8'));
+    const sourceFile = project.createSourceFile(basename(relPath), readFileSync(join(SMOKE_REPO, relPath)));
 
     return (
       project
@@ -132,7 +132,7 @@ export const specimenCatalogue = (): {
         // Flattened rather than stringified: a diagnostic's message is a string OR a nested chain, and
         // the chain stringifies to '[object Object]' — which would report a real syntax error as noise.
         .map((diagnostic) =>
-          errorMessageContract.parse(ts.flattenDiagnosticMessageText(diagnostic.compilerObject.messageText, '\n')),
+          ts.flattenDiagnosticMessageText(diagnostic.compilerObject.messageText, '\n'),
         )
     );
   },

@@ -32,7 +32,7 @@ describe('traceEventContract', () => {
     it('INVALID: {no valueText} => throws, since an event with no rendering cannot be displayed', () => {
       expect(() => {
         return traceEventContract.parse({ id: 'x', kind: 'exit' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

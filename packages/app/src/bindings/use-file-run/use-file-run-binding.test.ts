@@ -1,9 +1,8 @@
-import { RunResultStub, RunConsoleStub, RelPathStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
-import { testingLibraryRenderHookAdapter } from '../../adapters/testing-library/render-hook/testing-library-render-hook-adapter';
-import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
 import { useFileRunBinding } from './use-file-run-binding';
 import { useFileRunBindingProxy } from './use-file-run-binding.proxy';
+import { renderHook, waitFor } from '#gateway/npm/testing-library__react';
 
 describe('useFileRunBinding', () => {
   describe('opening a file', () => {
@@ -15,15 +14,11 @@ describe('useFileRunBinding', () => {
       proxy.setupSavedRun({ run });
       proxy.runFails({ message: 'opening a file must never run it' });
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
-      });
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().loading).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().loading).toBe(false);
       });
 
       expect(currentState().run).toStrictEqual(run);
@@ -33,15 +28,11 @@ describe('useFileRunBinding', () => {
       const proxy = useFileRunBindingProxy();
       proxy.neverRun();
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
-      });
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().loading).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().loading).toBe(false);
       });
 
       expect({ run: currentState().run, error: currentState().error }).toStrictEqual({ run: undefined, error: null });
@@ -50,9 +41,7 @@ describe('useFileRunBinding', () => {
     it('EMPTY: {no file selected} => nothing is fetched and run stays undefined', () => {
       useFileRunBindingProxy();
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useFileRunBinding({ relPath: null }),
-      });
+      const { result } = renderHook(() => useFileRunBinding({ relPath: null }));
 
       expect(result.current.run).toBe(undefined);
     });
@@ -64,19 +53,15 @@ describe('useFileRunBinding', () => {
       const proxy = useFileRunBindingProxy();
       proxy.setupSavedRun({ run: RunResultStub() });
       proxy.setupSavedConsole({
-        console: RunConsoleStub({ value: 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n' }),
+        console: 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n',
       });
       proxy.runFails({ message: 'opening a file must never run it' });
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
-      });
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(String(currentState().output)).toBe('src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n');
-        },
+      await waitFor(() => {
+        expect(currentState().output).toBe('src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n');
       });
 
       expect(currentState().error).toBe(null);
@@ -89,18 +74,14 @@ describe('useFileRunBinding', () => {
       const proxy = useFileRunBindingProxy();
       proxy.neverRun();
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
-      });
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().loading).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().loading).toBe(false);
       });
 
-      expect({ output: String(currentState().output), error: currentState().error }).toStrictEqual({
+      expect({ output: currentState().output, error: currentState().error }).toStrictEqual({
         output: '',
         error: null,
       });
@@ -114,23 +95,17 @@ describe('useFileRunBinding', () => {
       const fresh = RunResultStub({ runId: 'fresh' });
       proxy.setupRunResult({ run: fresh });
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
-      });
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().loading).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().loading).toBe(false);
       });
 
       currentState().execute();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().running).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().running).toBe(false);
       });
 
       expect(currentState().run).toStrictEqual(fresh);
@@ -143,23 +118,17 @@ describe('useFileRunBinding', () => {
       proxy.neverRun();
       proxy.runFails({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useFileRunBinding({ relPath: RelPathStub({ value: 'src/a.ts' }) }),
-      });
+      const { result } = renderHook(() => useFileRunBinding({ relPath: 'src/a.ts' }));
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().loading).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().loading).toBe(false);
       });
 
       currentState().execute();
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(currentState().running).toBe(false);
-        },
+      await waitFor(() => {
+        expect(currentState().running).toBe(false);
       });
 
       expect(currentState().error?.message).toBe('assayer: the CLI is not built, so nothing can be run.');

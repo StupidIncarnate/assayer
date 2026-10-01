@@ -9,8 +9,7 @@
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
+import { writeFileCreatingParent } from '#gateway/node/fs__promises';
 
 export const configGenerateBroker = async ({
   configDir,
@@ -19,11 +18,7 @@ export const configGenerateBroker = async ({
 }): Promise<AssayerConfig> => {
   const config = assayerConfigContract.parse({});
 
-  await fsMkdirAdapter({ path: configDir });
-  await fsWriteFileAdapter({
-    path: `${configDir}/assayer.config.json`,
-    content: JSON.stringify(config),
-  });
+  await writeFileCreatingParent(`${configDir}/assayer.config.json`, JSON.stringify(config));
 
   return config;
 };

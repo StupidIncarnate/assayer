@@ -1,12 +1,8 @@
-import {
-  CompiledFileBlobStub,
-  ContentHashStub,
-  FileAnalysisStub,
-  RelPathStub,
-  ResolvedIndexStub,
-} from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
-import { FileContentsStub } from '../../../contracts/file-contents/file-contents.stub';
 import { compileHarnessGraphBroker } from './compile-harness-graph-broker';
 import { compileHarnessGraphBrokerProxy } from './compile-harness-graph-broker.proxy';
 
@@ -36,6 +32,9 @@ const AUDIT_BLOB = CompiledFileBlobStub({
     declaredTypes: [],
   }),
 });
+
+const AUDIT_BLOB_PATH = `/blobs/${EMPTY_HASH}.json`;
+const BAND_BLOB_PATH = `/blobs/${'a'.repeat(64)}.json`;
 
 const HARNESS_SOURCE = [
   "import { assayerHarness } from '@assayer/core';",
@@ -113,18 +112,19 @@ describe('compileHarnessGraphBroker', () => {
   describe('a harness that closes an invoiced gap', () => {
     it('VALID: {src/audit.harness.ts declaring audit.report} => records the (entry, param) key against its target', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: HARNESS_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: HARNESS_SOURCE,
           },
         ],
       });
@@ -148,39 +148,41 @@ describe('compileHarnessGraphBroker', () => {
 
     it('VALID: {a config-dir + namespace} => writes the index to the tmp path under .assayer/cache/harness', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: HARNESS_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: HARNESS_SOURCE,
           },
         ],
       });
 
-      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/.assayer/cache/harness/feature-x.json.tmp']);
+      expect(proxy.getWrittenPaths({ configDir: '/repo' })).toStrictEqual(['/repo/.assayer/cache/harness/feature-x.json.tmp']);
     });
 
     it('VALID: {the same layout, an edited harness} => the harness hash moves while layout and tsconfig hashes stay', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: EDITED_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: EDITED_SOURCE,
           },
         ],
       });
@@ -201,38 +203,41 @@ describe('compileHarnessGraphBroker', () => {
 
     it('VALID: {two harness files supplied out of alphabetical order} => the written index sorts by relPath and the harness hash is order-independent', async () => {
       const reversedProxy = compileHarnessGraphBrokerProxy();
-      reversedProxy.queueBlob({ blob: AUDIT_BLOB });
-      reversedProxy.queueBlob({ blob: BAND_BLOB });
+      reversedProxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      reversedProxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
+      reversedProxy.queueBlob({ path: BAND_BLOB_PATH, blob: BAND_BLOB });
       const reversedResult = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
         files: [
-          { relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() },
-          { relPath: RelPathStub({ value: 'src/band.ts' }), contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
+          { relPath: 'src/audit.ts', contentHash: ContentHashStub() },
+          { relPath: 'src/band.ts', contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
         ],
         harnesses: [
-          { relPath: RelPathStub({ value: 'src/band.harness.ts' }), content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
-          { relPath: RelPathStub({ value: 'src/audit.harness.ts' }), content: FileContentsStub({ value: HARNESS_SOURCE }) },
+          { relPath: 'src/band.harness.ts', content: BAND_HARNESS_SOURCE },
+          { relPath: 'src/audit.harness.ts', content: HARNESS_SOURCE },
         ],
       });
 
       const forwardProxy = compileHarnessGraphBrokerProxy();
-      forwardProxy.queueBlob({ blob: AUDIT_BLOB });
-      forwardProxy.queueBlob({ blob: BAND_BLOB });
+
+      forwardProxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      forwardProxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
+      forwardProxy.queueBlob({ path: BAND_BLOB_PATH, blob: BAND_BLOB });
       const forwardResult = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
         files: [
-          { relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() },
-          { relPath: RelPathStub({ value: 'src/band.ts' }), contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
+          { relPath: 'src/audit.ts', contentHash: ContentHashStub() },
+          { relPath: 'src/band.ts', contentHash: ContentHashStub({ value: 'a'.repeat(64) }) },
         ],
         harnesses: [
-          { relPath: RelPathStub({ value: 'src/audit.harness.ts' }), content: FileContentsStub({ value: HARNESS_SOURCE }) },
-          { relPath: RelPathStub({ value: 'src/band.harness.ts' }), content: FileContentsStub({ value: BAND_HARNESS_SOURCE }) },
+          { relPath: 'src/audit.harness.ts', content: HARNESS_SOURCE },
+          { relPath: 'src/band.harness.ts', content: BAND_HARNESS_SOURCE },
         ],
       });
 
@@ -253,14 +258,15 @@ describe('compileHarnessGraphBroker', () => {
 
     it('EMPTY: {no harness files} => an empty inventory keyed on the empty digest', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [],
       });
 
@@ -279,18 +285,19 @@ describe('compileHarnessGraphBroker', () => {
   describe('a harness the stitch cannot read', () => {
     it('ERROR: {a harness with no source file at its basename} => a P1 naming the file, and no index entry', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/missing.harness.ts' }),
-            content: FileContentsStub({ value: HARNESS_SOURCE }),
+            relPath: 'src/missing.harness.ts',
+            content: HARNESS_SOURCE,
           },
         ],
       });
@@ -314,18 +321,19 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a harness whose module body throws} => a P1 naming the file and the thrown message', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: THROWING_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: THROWING_SOURCE,
           },
         ],
       });
@@ -350,18 +358,19 @@ describe('compileHarnessGraphBroker', () => {
   describe('a harness whose keys are wrong', () => {
     it('ERROR: {a key naming an entry the file does not offer} => a P1 with did-you-mean', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: WRONG_ENTRY_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: WRONG_ENTRY_SOURCE,
           },
         ],
       });
@@ -381,18 +390,19 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a key naming a parameter the entry does not take} => a P1 with did-you-mean', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: WRONG_PARAM_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: WRONG_PARAM_SOURCE,
           },
         ],
       });
@@ -412,18 +422,19 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a key naming a parameter Assayer can build} => a P1 saying the harness does not own it', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: FILLABLE_PARAM_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: FILLABLE_PARAM_SOURCE,
           },
         ],
       });
@@ -444,18 +455,19 @@ describe('compileHarnessGraphBroker', () => {
 
     it('ERROR: {a harness with nothing invoiced in it} => a P1 saying it closes nothing', async () => {
       const proxy = compileHarnessGraphBrokerProxy();
-      proxy.queueBlob({ blob: AUDIT_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: AUDIT_BLOB_PATH, blob: AUDIT_BLOB });
 
       const result = await compileHarnessGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/audit.ts' }), contentHash: ContentHashStub() }],
+        files: [{ relPath: 'src/audit.ts', contentHash: ContentHashStub() }],
         harnesses: [
           {
-            relPath: RelPathStub({ value: 'src/audit.harness.ts' }),
-            content: FileContentsStub({ value: NOTHING_INVOICED_SOURCE }),
+            relPath: 'src/audit.harness.ts',
+            content: NOTHING_INVOICED_SOURCE,
           },
         ],
       });

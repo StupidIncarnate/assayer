@@ -9,7 +9,7 @@
  * stubViewContract.parse({ objectStubs: [], envStubs: [] });
  * // Returns a validated StubView
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { envStubContract } from '../env-stub/env-stub-contract';
 import { objectStubContract } from '../object-stub/object-stub-contract';
@@ -17,6 +17,6 @@ import { objectStubContract } from '../object-stub/object-stub-contract';
 export const stubViewContract = z.object({
   objectStubs: z.array(objectStubContract),
   envStubs: z.array(envStubContract),
-});
+}).brand<'StubView'>();
 
 export type StubView = z.infer<typeof stubViewContract>;

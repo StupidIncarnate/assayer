@@ -39,7 +39,7 @@
  * // Returns [{ name: 'opaqueIf', startLine: 3, endLine: 3, reason: '…' }]
  */
 import { undrivenEntryContract } from '@assayer/shared/contracts';
-import type { LineNumber, SymbolName, UndrivenEntry } from '@assayer/shared/contracts';
+import type { UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
 
@@ -47,8 +47,8 @@ export const undrivenBranchTransformer = ({
   entryName,
   undrivenBranches,
 }: {
-  entryName: SymbolName;
-  undrivenBranches: { line: LineNumber; cause: UndrivenCause; operand?: SymbolName }[];
+  entryName: string;
+  undrivenBranches: { line: number; cause: UndrivenCause; operand?: string }[];
 }): UndrivenEntry[] =>
   undrivenBranches.map((branch) => {
     // `unread-comparison` and `unarrangeable-typeof-member` both fire only once EVERY leaf of the
@@ -57,17 +57,17 @@ export const undrivenBranchTransformer = ({
     // `operandParamName` is read off. So a leaf reaching either cause always carries an operand; the
     // check below is the invariant, not a real branch of behaviour.
     if (
-      (String(branch.cause) === 'unread-comparison' || String(branch.cause) === 'unarrangeable-typeof-member') &&
+      (branch.cause === 'unread-comparison' || branch.cause === 'unarrangeable-typeof-member') &&
       branch.operand === undefined
     ) {
       throw new Error(
-        `unreachable: an '${String(branch.cause)}' branch on line ${String(branch.line)} of \`${String(entryName)}\` carries no operand`,
+        `unreachable: an '${branch.cause}' branch on line ${String(branch.line)} of \`${entryName}\` carries no operand`,
       );
     }
 
-    const named = `\`${String(entryName)}\` has a branch on line ${String(branch.line)}`;
+    const named = `\`${entryName}\` has a branch on line ${String(branch.line)}`;
 
-    if (String(branch.cause) === 'unread-comparison') {
+    if (branch.cause === 'unread-comparison') {
       return undrivenEntryContract.parse({
         name: entryName,
         startLine: branch.line,
@@ -87,7 +87,7 @@ export const undrivenBranchTransformer = ({
     // parameter root — never gets far enough to ask what the comparison narrows. This is the SAME limit
     // an opaque non-`typeof` operand has, worded to say so: Assayer read the `typeof`, it is the thing
     // `typeof` applies to that has no input a case can set.
-    if (String(branch.cause) === 'unarrangeable-typeof') {
+    if (branch.cause === 'unarrangeable-typeof') {
       return undrivenEntryContract.parse({
         name: entryName,
         startLine: branch.line,
@@ -108,7 +108,7 @@ export const undrivenBranchTransformer = ({
     // union to build a value from on its own, only the union's first fillable member regardless of which
     // arm asked. Telling the reader to make `target` a parameter, or to compare against a literal, would
     // both be advice about a state that already holds.
-    if (String(branch.cause) === 'unarrangeable-typeof-member') {
+    if (branch.cause === 'unarrangeable-typeof-member') {
       return undrivenEntryContract.parse({
         name: entryName,
         startLine: branch.line,
@@ -130,7 +130,7 @@ export const undrivenBranchTransformer = ({
       endLine: branch.line,
       reason:
         `${named} whose deciding value` +
-        `${branch.operand === undefined ? '' : ` \`${String(branch.operand)}\``} is neither one of its ` +
+        `${branch.operand === undefined ? '' : ` \`${branch.operand}\``} is neither one of its ` +
         'parameters nor an environment variable, so no case can steer which arm runs: with nothing to ' +
         'vary, both arms would arrange the same inputs and one would fail against correct code. Assayer ' +
         'understood the branch — this is not syntax it missed — but its execution model cannot set the ' +

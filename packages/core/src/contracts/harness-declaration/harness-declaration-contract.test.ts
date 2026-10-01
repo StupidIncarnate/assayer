@@ -25,6 +25,22 @@ describe('harnessDeclarationContract', () => {
       expect(result).toStrictEqual({ inputs: { audit: { report: 1 }, collect: { sink: 2 } } });
     });
 
+    it('VALID: {an object whose member is a callback} => passes the object through by reference', () => {
+      const declaration = HarnessDeclarationStub({
+        inputs: { emit: { sink: { write: (line: string): string => line } } },
+      });
+
+      const result = harnessDeclarationContract.parse(declaration);
+
+      expect(result.inputs.emit?.sink).toBe(declaration.inputs.emit?.sink);
+    });
+
+    it('VALID: {a parameter declared as undefined} => keeps the key with an undefined value', () => {
+      const result = harnessDeclarationContract.parse({ inputs: { audit: { report: undefined } } });
+
+      expect(result).toStrictEqual({ inputs: { audit: { report: undefined } } });
+    });
+
     it('EMPTY: {no entries} => parses an empty inputs map', () => {
       const result = harnessDeclarationContract.parse({ inputs: {} });
 
@@ -36,13 +52,13 @@ describe('harnessDeclarationContract', () => {
     it('INVALID: {no inputs} => throws validation error', () => {
       expect(() => {
         return harnessDeclarationContract.parse({});
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
 
     it('INVALID: {a value under an entry that is not an object} => throws validation error', () => {
       expect(() => {
         return harnessDeclarationContract.parse({ inputs: { audit: 'report' } });
-      }).toThrow(/Expected object/u);
+      }).toThrow(/Invalid input: expected object, received string/u);
     });
   });
 });

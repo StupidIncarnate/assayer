@@ -27,7 +27,7 @@ describe('desktopStatusContract', () => {
     it('INVALID: {missing repoPath} => throws validation error', () => {
       expect(() => {
         return desktopStatusContract.parse({ version: '1.0.0', message: 'Assayer core online' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

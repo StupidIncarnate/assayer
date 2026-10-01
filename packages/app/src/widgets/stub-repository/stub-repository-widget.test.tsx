@@ -1,8 +1,10 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
-import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
+import { MantineProvider } from '#gateway/npm/mantine__core';
 import { StubRepositoryWidget } from './stub-repository-widget';
 import { StubRepositoryWidgetProxy } from './stub-repository-widget.proxy';
-import { StubViewStub, ObjectStubStub, EnvStubStub } from '@assayer/shared/contracts';
+import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
+import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
+import { EnvStubStub } from '@assayer/shared/contracts/env-stub/env-stub.stub';
+import { render, waitFor } from '#gateway/npm/testing-library__react';
 
 const CROSS_FILE_TYPES = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/types.ts';
 const READER_A = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/cross-file-shape.ts';
@@ -32,12 +34,10 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_UNKNOWN').textContent).toBe('unknown');
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_UNKNOWN').textContent).toBe('unknown');
       });
 
       expect(getByTestId('STUB_KEY').textContent).toBe(`${CROSS_FILE_TYPES}#Config`);
@@ -80,12 +80,10 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_CARD')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_CARD')).toBeInTheDocument();
       });
 
       expect(getAllByTestId('STUB_PROPERTY').map((element) => element.getAttribute('data-propname'))).toStrictEqual([
@@ -105,12 +103,10 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_GUESSED').textContent).toBe('guessed');
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_GUESSED').textContent).toBe('guessed');
       });
 
       expect(getByTestId('STUB_KEY').textContent).toBe('process.env#CODE');
@@ -127,12 +123,10 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_CARD')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_CARD')).toBeInTheDocument();
       });
 
       expect(getByTestId('STUB_CORRECTED').textContent).toBe('corrected');
@@ -146,12 +140,10 @@ describe('StubRepositoryWidget', () => {
       const proxy = StubRepositoryWidgetProxy();
       proxy.setupView({ view: StubViewStub({ objectStubs: [], envStubs: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_EMPTY')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_EMPTY')).toBeInTheDocument();
       });
 
       expect(getByTestId('STUB_EMPTY').textContent).toBe('No stubs — run assayer');
@@ -163,7 +155,7 @@ describe('StubRepositoryWidget', () => {
       const proxy = StubRepositoryWidgetProxy();
       proxy.setupView({ view: StubViewStub({ objectStubs: [], envStubs: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       expect(getByTestId('STUB_LOADING').textContent).toBe('Reading the stub repository…');
       expect(queryByTestId('STUB_EMPTY')).toBe(null);
@@ -178,12 +170,10 @@ describe('StubRepositoryWidget', () => {
         message: 'assayer: cannot read /repo/assayer.config.json. Run `assayer status` in that repo to generate one.',
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
-      await testingLibraryWaitForAdapter({
-        callback: () => {
-          expect(getByTestId('STUB_ERROR')).toBeInTheDocument();
-        },
+      await waitFor(() => {
+        expect(getByTestId('STUB_ERROR')).toBeInTheDocument();
       });
 
       expect(getByTestId('STUB_ERROR').textContent).toBe(

@@ -142,7 +142,7 @@ export const isTypeCompatibleGuard = ({
         supplied.kind === 'object' &&
         declared.truncated !== true &&
         declared.properties.every((property) => {
-          const match = supplied.properties.find((candidate) => String(candidate.name) === String(property.name));
+          const match = supplied.properties.find((candidate) => candidate.name === property.name);
 
           return match === undefined
             ? property.optional === true

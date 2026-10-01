@@ -1,4 +1,6 @@
-import { RunResultStub, CaseResultStub, DerivedTestCaseStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
+import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case/derived-test-case.stub';
 
 import { caseRunStatusTransformer } from './case-run-status-transformer';
 
@@ -9,7 +11,7 @@ describe('caseRunStatusTransformer', () => {
 
       const result = caseRunStatusTransformer({ run, testCase: CaseResultStub().testCase });
 
-      expect(String(result)).toBe('passed');
+      expect(result).toBe('passed');
     });
 
     it('VALID: {a failing case} => failed', () => {
@@ -17,7 +19,7 @@ describe('caseRunStatusTransformer', () => {
 
       const result = caseRunStatusTransformer({ run, testCase: CaseResultStub().testCase });
 
-      expect(String(result)).toBe('failed');
+      expect(result).toBe('failed');
     });
 
     // Passed THROUGH, not mapped: the artifact already distinguishes a case that reached the wrong
@@ -28,7 +30,7 @@ describe('caseRunStatusTransformer', () => {
 
       const result = caseRunStatusTransformer({ run, testCase: CaseResultStub().testCase });
 
-      expect(String(result)).toBe('errored');
+      expect(result).toBe('errored');
     });
 
     // salient is a must-run display opinion, not identity: an all-salient blob still matches a run
@@ -38,7 +40,7 @@ describe('caseRunStatusTransformer', () => {
 
       const result = caseRunStatusTransformer({ run, testCase: DerivedTestCaseStub({ salient: false }) });
 
-      expect(String(result)).toBe('passed');
+      expect(result).toBe('passed');
     });
   });
 
@@ -56,13 +58,13 @@ describe('caseRunStatusTransformer', () => {
         }).testCase,
       });
 
-      expect(String(result)).toBe('not-run');
+      expect(result).toBe('not-run');
     });
 
     it('EMPTY: {no run at all} => not-run', () => {
       const result = caseRunStatusTransformer({ run: undefined, testCase: CaseResultStub().testCase });
 
-      expect(String(result)).toBe('not-run');
+      expect(result).toBe('not-run');
     });
   });
 });

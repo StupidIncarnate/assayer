@@ -6,7 +6,19 @@
  * await statusFetchBroker();
  * // Returns the StatusView from the desktop main process
  */
-import { assayerBridgeGetStatusAdapter } from '../../../adapters/assayer-bridge/get-status/assayer-bridge-get-status-adapter';
 import type { StatusView } from '../../../contracts/status-view/status-view-contract';
+import { window } from '#gateway/browser/window';
+import { statusViewContract } from '../../../contracts/status-view/status-view-contract';
+import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
 
-export const statusFetchBroker = async (): Promise<StatusView> => assayerBridgeGetStatusAdapter();
+export const statusFetchBroker = async (): Promise<StatusView> => {
+  const bridge = window.assayerBridge;
+
+  if (bridge?.getStatus === undefined) {
+    throw new Error(preloadBridgeStatics.unavailableMessage);
+  }
+
+  const raw: unknown = await bridge.getStatus();
+
+  return statusViewContract.parse(raw);
+};

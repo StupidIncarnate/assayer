@@ -22,31 +22,28 @@
  * globalUseContract.parse({ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1, scopePath: ['*module*'] });
  * // Returns a validated GlobalUse (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract } from '../column-number/column-number-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 // The structural projection of one argument — identical in shape to a local call's arg, never the
 // value it would compute: a `param-ref` a caller passes straight through, a `literal` welded in, or
 // `opaque` for anything else.
 const globalCallArgContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('param-ref'), paramName: symbolNameContract }),
-  z.object({ kind: z.literal('literal'), value: representativeValueContract }),
-  z.object({ kind: z.literal('opaque') }),
+  z.object({ kind: z.literal('param-ref'), paramName: z.string().min(1).brand<'GlobalCallArgParamName'>() }).brand<'GlobalCallArg'>(),
+  z.object({ kind: z.literal('literal'), value: representativeValueContract }).brand<'GlobalCallArg'>(),
+  z.object({ kind: z.literal('opaque') }).brand<'GlobalCallArg'>(),
 ]);
 
 export const globalUseContract = z.object({
-  name: symbolNameContract,
-  member: symbolNameContract.optional(),
+  name: z.string().min(1).brand<'GlobalUseName'>(),
+  member: z.string().min(1).brand<'GlobalUseMember'>().optional(),
   called: z.boolean(),
   args: z.array(globalCallArgContract),
-  line: lineNumberContract,
-  column: columnNumberContract,
-  scopePath: z.array(symbolNameContract),
-});
+  line: z.number().int().positive().brand<'GlobalUseLine'>(),
+  column: z.number().int().positive().brand<'GlobalUseColumn'>(),
+  scopePath: z.array(z.string().min(1).brand<'GlobalUseScopePath'>()),
+}).brand<'GlobalUse'>();
 
 export type GlobalUse = z.infer<typeof globalUseContract>;
 export type GlobalCallArg = z.infer<typeof globalCallArgContract>;

@@ -21,23 +21,23 @@
  * // Returns [{ rule: 'unreachable-exit', name: 'classify', message: '…', startLine: 10, endLine: 10 }]
  */
 import { lintEntryContract } from '@assayer/shared/contracts';
-import type { ConstLength, EntryLabel, LineNumber, LintEntry, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { LintEntry, RepresentativeValue } from '@assayer/shared/contracts';
 
 export const unreachableLintTransformer = ({
   name,
   displayName,
   unreachableExits,
 }: {
-  name: SymbolName;
-  displayName: EntryLabel;
+  name: string;
+  displayName: string;
   unreachableExits: {
-    line: LineNumber;
-    guardLines: LineNumber[];
-    welded?: { line: LineNumber; operand?: SymbolName; value?: RepresentativeValue; length?: ConstLength };
+    line: number;
+    guardLines: number[];
+    welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
   }[];
 }): LintEntry[] =>
   unreachableExits.map((unreachable) => {
-    const subject = unreachable.welded?.operand === undefined ? 'the value it branches on' : `\`${String(unreachable.welded.operand)}\``;
+    const subject = unreachable.welded?.operand === undefined ? 'the value it branches on' : `\`${unreachable.welded.operand}\``;
     const weldedTo =
       unreachable.welded?.length === undefined
         ? `welded to \`${JSON.stringify(unreachable.welded?.value)}\``
@@ -45,8 +45,8 @@ export const unreachableLintTransformer = ({
 
     const message =
       unreachable.welded === undefined
-        ? `\`${String(displayName)}\` can never reach the exit on line ${String(unreachable.line)}: the guards on ${unreachable.guardLines.length === 1 ? 'line' : 'lines'} ${unreachable.guardLines.map((line) => String(line)).join(', ')} cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.`
-        : `\`${String(displayName)}\` can never reach the exit on line ${String(unreachable.line)}: ${subject} is ${weldedTo}, so the branch on line ${String(unreachable.welded.line)} always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.`;
+        ? `\`${displayName}\` can never reach the exit on line ${String(unreachable.line)}: the guards on ${unreachable.guardLines.length === 1 ? 'line' : 'lines'} ${unreachable.guardLines.map((line) => String(line)).join(', ')} cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.`
+        : `\`${displayName}\` can never reach the exit on line ${String(unreachable.line)}: ${subject} is ${weldedTo}, so the branch on line ${String(unreachable.welded.line)} always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.`;
 
     return lintEntryContract.parse({
       rule: 'unreachable-exit',

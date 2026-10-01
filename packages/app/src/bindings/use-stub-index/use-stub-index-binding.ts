@@ -6,16 +6,14 @@
  * const { data, loading, error } = useStubIndexBinding();
  * // Returns { data: StubView | null, loading: boolean, error: Error | null }
  */
-import { useEffect, useState } from 'react';
+import { useStubIndexResultContract } from '../../contracts/use-stub-index-result/use-stub-index-result-contract';
+import type { UseStubIndexResult } from '../../contracts/use-stub-index-result/use-stub-index-result-contract';
+import { useEffect, useState } from '#gateway/npm/react';
 
 import { stubIndexFetchBroker } from '../../brokers/stub-index/fetch/stub-index-fetch-broker';
 import type { StubView } from '@assayer/shared/contracts';
 
-export const useStubIndexBinding = (): {
-  data: StubView | null;
-  loading: boolean;
-  error: Error | null;
-} => {
+export const useStubIndexBinding = (): UseStubIndexResult => {
   const [data, setData] = useState<StubView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -27,5 +25,5 @@ export const useStubIndexBinding = (): {
       .finally(() => { setLoading(false); });
   }, []);
 
-  return { data, loading, error };
+  return useStubIndexResultContract.parse({ data, loading, error });
 };

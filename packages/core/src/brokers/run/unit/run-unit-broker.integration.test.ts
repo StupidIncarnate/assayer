@@ -60,10 +60,10 @@ const EMIT_ELSE = '*module*/emit/return@if:BinaryExpression,id:size,GreaterThanT
 // compiler across runs; when each run had its own config this file OOM'd at ~4GB.
 const ROOTS = specimenCatalogue()
   .roots()
-  .map((root) => [String(root.relPath), root.bucket] as const);
+  .map((root) => [root.relPath, root.bucket] as const);
 const CHILDREN = specimenCatalogue()
   .children()
-  .map((relPath) => String(relPath));
+  .map((relPath) => relPath);
 
 describe('runUnitBroker (integration)', () => {
   describe('a real run against a real specimen', () => {
@@ -72,7 +72,7 @@ describe('runUnitBroker (integration)', () => {
     it('VALID: {an && specimen} => every derived case reaches the exit derivation predicted', async () => {
       const result = await engine.run({ relPath: AND_SPECIMEN, runId: 'r-and' });
 
-      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed', 'passed']);
+      expect(result.cases.map((testCase) => testCase.status)).toStrictEqual(['passed', 'passed', 'passed']);
     });
 
     // A method is reached through an INSTANCE. Driving it as a module property found nothing and
@@ -80,7 +80,7 @@ describe('runUnitBroker (integration)', () => {
     it('VALID: {a class method} => is constructed and driven, not reported as missing', async () => {
       const result = await engine.run({ relPath: CLASS_SPECIMEN, runId: 'r-class' });
 
-      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed']);
+      expect(result.cases.map((testCase) => testCase.status)).toStrictEqual(['passed', 'passed']);
     });
 
     // Its `if` is real, but its operand is `Math.random()` — an opaque call the analyzer can neither
@@ -106,7 +106,7 @@ describe('runUnitBroker (integration)', () => {
     it('VALID: {a private funnelled into its caller} => every case passes, inner reached through outer', async () => {
       const result = await engine.run({ relPath: NESTED_SPECIMEN, runId: 'r-nested' });
 
-      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed']);
+      expect(result.cases.map((testCase) => testCase.status)).toStrictEqual(['passed', 'passed']);
     });
 
     // The defect this pins: with the fix, BOTH cases converge on the enclosing scope's own exit —
@@ -118,7 +118,7 @@ describe('runUnitBroker (integration)', () => {
       const result = await engine.run({ relPath: TAIL_NO_ELSE_SPECIMEN, runId: 'r-tail-no-else' });
 
       expect({
-        statuses: result.cases.map((testCase) => String(testCase.status)),
+        statuses: result.cases.map((testCase) => testCase.status),
         reachesPaths: result.cases.map((testCase) => testCase.testCase.reachesPath.map(String)),
       }).toStrictEqual({
         statuses: ['passed', 'passed'],
@@ -132,7 +132,7 @@ describe('runUnitBroker (integration)', () => {
       const result = await engine.run({ relPath: SWITCH_NO_DEFAULT_SPECIMEN, runId: 'r-switch-no-default' });
 
       expect({
-        statuses: result.cases.map((testCase) => String(testCase.status)),
+        statuses: result.cases.map((testCase) => testCase.status),
         reachesPaths: result.cases.map((testCase) => testCase.testCase.reachesPath.map(String)),
       }).toStrictEqual({
         statuses: ['passed', 'passed'],
@@ -147,8 +147,8 @@ describe('runUnitBroker (integration)', () => {
       const result = await engine.run({ relPath: DEAD_SURFACE_SPECIMEN, runId: 'r-dead' });
 
       expect({
-        cases: result.cases.map((testCase) => String(testCase.status)),
-        lints: result.lints.map((lint) => ({ rule: String(lint.rule), name: String(lint.name) })),
+        cases: result.cases.map((testCase) => testCase.status),
+        lints: result.lints.map((lint) => ({ rule: lint.rule, name: String(lint.name) })),
       }).toStrictEqual({ cases: ['passed'], lints: [{ rule: 'dead-surface', name: 'unused' }] });
     });
 
@@ -158,7 +158,7 @@ describe('runUnitBroker (integration)', () => {
     it('VALID: {an env-driven module switch} => every case passes, default included', async () => {
       const result = await engine.run({ relPath: SWITCH_ENV_SPECIMEN, runId: 'r-switch-env' });
 
-      expect(result.cases.map((testCase) => String(testCase.status))).toStrictEqual(['passed', 'passed', 'passed']);
+      expect(result.cases.map((testCase) => testCase.status)).toStrictEqual(['passed', 'passed', 'passed']);
     });
 
     // The cross-file compose payoff, RUN and not merely derived: with both imported guards rebased onto
@@ -170,8 +170,8 @@ describe('runUnitBroker (integration)', () => {
       const result = await engine.run({ relPath: CROSS_FILE_GUARDS_SPECIMEN, runId: 'r-cross-file' });
 
       expect({
-        cases: result.cases.map((testCase) => String(testCase.status)),
-        lints: result.lints.map((lint) => ({ rule: String(lint.rule), name: String(lint.name) })),
+        cases: result.cases.map((testCase) => testCase.status),
+        lints: result.lints.map((lint) => ({ rule: lint.rule, name: String(lint.name) })),
       }).toStrictEqual({ cases: ['passed', 'passed', 'passed'], lints: [{ rule: 'unreachable-exit', name: 'upload' }] });
     });
 
@@ -184,7 +184,7 @@ describe('runUnitBroker (integration)', () => {
       const result = await engine.run({ relPath: BRANCH_LOCAL_SPECIMEN, runId: 'r-branch-local' });
 
       expect({
-        statuses: result.cases.map((testCase) => String(testCase.status)),
+        statuses: result.cases.map((testCase) => testCase.status),
         arranges: result.cases.map((testCase) => testCase.testCase.arrange),
       }).toStrictEqual({
         statuses: ['passed', 'passed'],
@@ -229,7 +229,7 @@ describe('runUnitBroker (integration)', () => {
 
       expect(
         result.cases.map((testCase) => ({
-          status: String(testCase.status),
+          status: testCase.status,
           arrange: testCase.testCase.arrange,
           predicted: testCase.testCase.reachesPath.map(String),
           observed: testCase.observedPath.map(String),
@@ -266,7 +266,7 @@ describe('runUnitBroker (integration)', () => {
 
       expect(
         result.cases.map((testCase) => ({
-          status: String(testCase.status),
+          status: testCase.status,
           arrange: testCase.testCase.arrange,
           observed: testCase.observedPath.map(String),
         })),
@@ -356,8 +356,8 @@ describe('runUnitBroker (integration)', () => {
 
       const saved = engine.savedRun({ runId: 'r-same' });
 
-      expect(saved.cases.map((testCase) => String(testCase.status))).toStrictEqual(
-        returned.cases.map((testCase) => String(testCase.status)),
+      expect(saved.cases.map((testCase) => testCase.status)).toStrictEqual(
+        returned.cases.map((testCase) => testCase.status),
       );
     });
   });

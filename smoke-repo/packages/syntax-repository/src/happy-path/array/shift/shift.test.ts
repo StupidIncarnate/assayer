@@ -2,13 +2,13 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'shift.ts'), 'utf8');
 const relPath = 'src/happy-path/array/shift/shift.ts';
 
 // The hermetic walk parses with strict-null-checks on, so `number | undefined` arrives as a genuine
-// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-adapter` has no
+// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-transformer` has no
 // dedicated case for the undefined type, so its member reads through the generic opaque path as
 // `{ kind: 'unknown', text: 'undefined' }`, sitting beside the real `{ kind: 'number' }` member.
 const OPTIONAL_NUMBER = { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] };
@@ -22,7 +22,7 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
   // `[7,7]` twins are the grayed breadth (all run under `thorough`; only `intelligent` grays the two).
   // Values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function takeFirst(items: number[]): number | undefined { return items.shift() }} => array-of-number param, return read as a real optional union, three cardinality cases', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -58,7 +58,7 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
   });
 
   it('VALID: {an array-typed param, a builtin array method call} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

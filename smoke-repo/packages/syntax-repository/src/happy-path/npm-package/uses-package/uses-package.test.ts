@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { moduleGraphProjectionTransformer } from '@assayer/core/module-graph';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'uses-package.ts'), 'utf8');
 const relPath = 'src/happy-path/npm-package/uses-package/uses-package.ts';
@@ -12,7 +12,7 @@ describe('npm-package / uses-package — a call into a function imported from a 
   // A BARE specifier (`vendored-fixture`) is recorded verbatim; the stitch resolves it through node's
   // module resolution to a package and pulls its declared signature from the shipped `.d.ts`.
   it('VALID: {import { greet } from "vendored-fixture"; greet(\'world\')} => one package import edge and one reference', () => {
-    const graph = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const graph = moduleGraphProjectionTransformer({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(graph).toStrictEqual({
       edges: [{ kind: 'import', specifier: 'vendored-fixture', bindings: [{ kind: 'named', name: 'greet' }], line: 1, column: 1 }],
@@ -25,7 +25,7 @@ describe('npm-package / uses-package — a call into a function imported from a 
   // Calling a package import is a CONSUMPTION site, so the module scope is a DRIVEN entry with one
   // branchless happy-path case that arranges nothing (P4).
   it('VALID: {export const hello = greet(\'world\')} => one module entry with one structural happy-path case', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {

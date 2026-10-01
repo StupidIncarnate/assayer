@@ -16,7 +16,7 @@
  * typeRefKeyTransformer({ type: { kind: 'unknown', text: 'Box<string>', typeRef: 'Box' } });
  * // Returns 'Box<string>'
  */
-import type { TypeDescriptor, TypeText } from '@assayer/shared/contracts';
+import type { TypeDescriptor } from '@assayer/shared/contracts';
 
-export const typeRefKeyTransformer = ({ type }: { type: TypeDescriptor }): TypeText | undefined =>
+export const typeRefKeyTransformer = ({ type }: { type: TypeDescriptor }): string | undefined =>
   type.kind === 'unknown' ? type.text : undefined;

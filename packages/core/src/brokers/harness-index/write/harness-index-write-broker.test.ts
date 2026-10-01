@@ -1,4 +1,4 @@
-import { HarnessIndexStub } from '@assayer/shared/contracts';
+import { HarnessIndexStub } from '@assayer/shared/contracts/harness-index/harness-index.stub';
 
 import { harnessIndexWriteBroker } from './harness-index-write-broker';
 import { harnessIndexWriteBrokerProxy } from './harness-index-write-broker.proxy';
@@ -9,15 +9,15 @@ describe('harnessIndexWriteBroker', () => {
   describe('writing a harness index for a namespace', () => {
     it('VALID: {configDir "/repo", namespace "feature-x", one harness} => writes the canonical index and returns success', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
-      const result = await harnessIndexWriteBroker({
-        configDir: '/repo',
-        namespace: 'feature-x',
-        index: HarnessIndexStub(),
-      });
-
-      expect(result).toStrictEqual({ success: true });
+      await expect(
+        harnessIndexWriteBroker({
+          configDir: '/repo',
+          namespace: 'feature-x',
+          index: HarnessIndexStub(),
+        }),
+      ).resolves.toBe(undefined);
       expect(
         proxy.getWrittenIndex({ path: '/repo/.assayer/cache/harness/feature-x.json.tmp' }),
       ).toStrictEqual({
@@ -32,7 +32,7 @@ describe('harnessIndexWriteBroker', () => {
 
     it('VALID: {two harnesses out of path order} => writes them sorted by path (determinism)', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
       await harnessIndexWriteBroker({
         configDir: '/repo',
@@ -60,7 +60,7 @@ describe('harnessIndexWriteBroker', () => {
 
     it('VALID: {keys out of order within one harness} => writes them sorted by entry then parameter', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
       await harnessIndexWriteBroker({
         configDir: '/repo',
@@ -102,7 +102,7 @@ describe('harnessIndexWriteBroker', () => {
 
     it('EMPTY: {index.harnesses: []} => writes the canonical index with an empty harnesses array', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
       await harnessIndexWriteBroker({
         configDir: '/repo',
@@ -122,11 +122,11 @@ describe('harnessIndexWriteBroker', () => {
 
     it('VALID: {namespace "feature-x"} => writes to the tmp path under .assayer/cache/harness before renaming', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
       await harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() });
 
-      expect(proxy.getWrittenPaths()).toStrictEqual([
+      expect(proxy.getWrittenPaths({ configDir: '/repo' })).toStrictEqual([
         '/repo/.assayer/cache/harness/feature-x.json.tmp',
       ]);
       expect(
@@ -141,29 +141,29 @@ describe('harnessIndexWriteBroker', () => {
   describe('a failure along the mkdir -> write -> rename sequence', () => {
     it('ERROR: {harness cache dir cannot be created} => propagates the mkdir rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.mkdirThrows({ error: new Error('EACCES: permission denied') });
+      proxy.mkdirDenied({ configDir: '/repo' });
 
       await expect(
         harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: mkdir '\/repo\/\.assayer\/cache\/harness'$/u);
     });
 
     it('ERROR: {tmp harness index cannot be written} => propagates the write rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.writeThrows({ error: new Error('ENOSPC: no space left on device') });
+      proxy.writeFailsNoSpace({ configDir: '/repo', namespace: 'feature-x' });
 
       await expect(
         harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() }),
-      ).rejects.toThrow(/^ENOSPC: no space left on device$/u);
+      ).rejects.toThrow(/^ENOSPC: write '\/repo\/\.assayer\/cache\/harness\/feature-x\.json\.tmp'$/u);
     });
 
     it('ERROR: {tmp harness index cannot be renamed into place} => propagates the rename rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = harnessIndexWriteBrokerProxy();
-      proxy.renameThrows({ error: new Error('ENOENT: no such file or directory') });
+      proxy.renameFailsMissing({ configDir: '/repo', namespace: 'feature-x' });
 
       await expect(
         harnessIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: HarnessIndexStub() }),
-      ).rejects.toThrow(/^ENOENT: no such file or directory$/u);
+      ).rejects.toThrow(/^ENOENT: rename '\/repo\/\.assayer\/cache\/harness\/feature-x\.json\.tmp'$/u);
     });
   });
 });

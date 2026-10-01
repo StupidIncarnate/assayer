@@ -3,16 +3,15 @@
  *   resolved, LLM-consumable documentation body.
  *
  * USAGE:
- * docsResultContract.parse({ topic: docsTopicContract.parse('overview'), body: '# Assayer' });
+ * docsResultContract.parse({ topic: 'overview', body: '# Assayer' });
  * // Returns a validated DocsResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { docsTopicContract } from '../docs-topic/docs-topic-contract';
 
 export const docsResultContract = z.object({
-  topic: docsTopicContract,
-  body: z.string().min(1).brand<'DocsBody'>(),
-});
+  topic: z.string().min(1).brand<'DocsResultTopic'>(),
+  body: z.string().min(1).brand<'DocsResultBody'>(),
+}).brand<'DocsResult'>();
 
 export type DocsResult = z.infer<typeof docsResultContract>;

@@ -9,10 +9,9 @@
  * // CliExactOutputError with one "relPath:line:column message" line per error otherwise
  */
 import { configHashBroker, manifestLoadBroker, manifestTrashBroker, compileRunBroker } from '@assayer/core/brokers';
-import type { FilePath } from '@assayer/core/contracts';
 import type { AssayerConfig, ContentHash } from '@assayer/shared/contracts';
 
-import { processStdoutCompileProgressAdapter } from '../../../adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter';
+import { compileProgressRenderBroker } from '../../../brokers/compile-progress/render/compile-progress-render-broker';
 import { compileErrorMessageFormatTransformer } from '../../../transformers/compile-error-message-format/compile-error-message-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 
@@ -22,7 +21,7 @@ export const CompileRunLayerResponder = async ({
   assayerVersion,
 }: {
   config: AssayerConfig;
-  configDir: FilePath;
+  configDir: string;
   assayerVersion: ContentHash;
 }): Promise<undefined> => {
   const configHash = configHashBroker({ config });
@@ -37,7 +36,7 @@ export const CompileRunLayerResponder = async ({
   }
 
   const previousManifest = loaded.status === 'ok' ? loaded.manifest : undefined;
-  const progress = processStdoutCompileProgressAdapter();
+  const progress = compileProgressRenderBroker();
 
   const result = await compileRunBroker({
     configDir,

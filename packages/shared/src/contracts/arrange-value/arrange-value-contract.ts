@@ -7,10 +7,13 @@
  *   what makes a deep property shape representable at all. Every value is an INPUT drawn from the
  *   declared type, never a code-derived output (P4).
  *
- *   The scalar leaf reuses `RepresentativeValue` (a branded point in a scalar operand's domain), so an
- *   arrange fill flows straight through; only the recursive ARRAY and OBJECT shapes are added here. The
- *   run side passes the value positionally and the render side JSON-stringifies it, both generic over
- *   the nesting. The `unknown` input arm follows the recursive-contract pattern (`type-descriptor`).
+ *   The scalar leaf is a `RepresentativeValue` (a point in a scalar operand's domain), so an arrange
+ *   fill flows straight through; only the recursive ARRAY and OBJECT shapes are added here. The run side passes the value positionally and the render side JSON-stringifies it, both generic over
+ *   the nesting.
+ *
+ *   The schema is `z.json()`: a scalar, an array or a plain object, checked at every depth, which is
+ *   exactly the ArrangeValue shape. A refine adds the one check JSON lacks: a property key is a symbol
+ *   name, so it is never empty.
  *
  * USAGE:
  * arrangeValueContract.parse(7);                       // a scalar leaf
@@ -18,19 +21,16 @@
  * arrangeValueContract.parse({ db: { host: 'x' } });   // a nested object value
  * // Returns a validated ArrangeValue
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
-import type { SymbolName } from '../symbol-name/symbol-name-contract';
 
-export type ArrangeValue = RepresentativeValue | ArrangeValue[] | { [key: SymbolName]: ArrangeValue };
+export type ArrangeValue = RepresentativeValue | ArrangeValue[] | { [key: string]: ArrangeValue };
 
-export const arrangeValueContract: z.ZodType<ArrangeValue> = z.lazy(() =>
-  z.union([
-    representativeValueContract,
-    z.array(arrangeValueContract),
-    z.record(symbolNameContract, arrangeValueContract),
-  ]),
-);
+// `JSON.stringify` escapes every quote inside a string, so an unescaped `""` right after `{` or `,`
+// and right before `:` can only be an empty property key, at any depth.
+export const arrangeValueContract: z.ZodType<ArrangeValue> = z
+  .json()
+  .refine((value) => !/[{,]"":/u.test(JSON.stringify(value)), {
+    message: 'A property key of an arrange value is never empty.',
+  });

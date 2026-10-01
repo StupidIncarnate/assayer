@@ -1,4 +1,4 @@
-import { CoverageIdStub } from '@assayer/shared/contracts';
+import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
 import { probeRuntimeContract } from './probe-runtime-contract';
 import { ProbeRuntimeStub } from './probe-runtime.stub';

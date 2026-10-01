@@ -1,4 +1,4 @@
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { composeCrossFileMapBroker } from './compose-cross-file-map-broker';
 import { composeCrossFileMapBrokerProxy } from './compose-cross-file-map-broker.proxy';
@@ -41,8 +41,9 @@ describe('composeCrossFileMapBroker', () => {
   describe('a surface mapping an imported branching function over its array param', () => {
     it('VALID: {items.map(bandReading), bandReading branches on n} => the callee`s branches funnel into the host`s cases', () => {
       const proxy = composeCrossFileMapBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE, specifier: './band-reading' });
+      const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({ analysis: analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' }), walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
 
@@ -62,8 +63,9 @@ describe('composeCrossFileMapBroker', () => {
 
     it('VALID: {the folded host} => its own exit unioned with the sibling callee`s three band exits', () => {
       const proxy = composeCrossFileMapBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE, specifier: './band-reading' });
+      const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({ analysis: analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' }), walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
 
@@ -86,8 +88,9 @@ describe('composeCrossFileMapBroker', () => {
 
     it('VALID: {the sibling also takes a callback} => a GAP on the host, naming the sibling that declares it', () => {
       const proxy = composeCrossFileMapBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SINK_CHILD_SOURCE });
-      const walked = tsMorphWalkFileAdapter({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SINK_CHILD_SOURCE, specifier: './band-reading' });
+      const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({
         analysis: analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' }),
@@ -103,7 +106,7 @@ describe('composeCrossFileMapBroker', () => {
   describe('a file with no cross-file map', () => {
     it('EMPTY: {a plain if function} => the analysis passes through unchanged, no sibling read', () => {
       composeCrossFileMapBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
+      const walked = walkFileTransformer({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/grade.ts' });
 
       const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/grade.ts' });
@@ -115,7 +118,7 @@ describe('composeCrossFileMapBroker', () => {
   describe('a file that fails to parse', () => {
     it('EMPTY: {invalid syntax} => the analysis passes through unchanged, no sibling read', () => {
       composeCrossFileMapBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: 'const x = ;;;{{{', relPath: 'src/broken.ts' });
+      const walked = walkFileTransformer({ source: 'const x = ;;;{{{', relPath: 'src/broken.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/broken.ts' });
 
       const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/broken.ts' });
@@ -127,8 +130,9 @@ describe('composeCrossFileMapBroker', () => {
   describe('a specifier that resolves to a sibling that fails to parse', () => {
     it('EDGE: {items.map(bandReading), the sibling has invalid syntax} => the analysis passes through unchanged', () => {
       const proxy = composeCrossFileMapBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: 'const x = ;;;{{{' });
-      const walked = tsMorphWalkFileAdapter({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: 'const x = ;;;{{{', specifier: './band-reading' });
+      const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
@@ -140,11 +144,13 @@ describe('composeCrossFileMapBroker', () => {
   describe('a specifier that resolves to a sibling exporting no function by the imported name', () => {
     it('EDGE: {items.map(bandReading), the sibling exports a differently-named function} => the analysis passes through unchanged', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupSibling({
         fileName: '/repo/src/band-reading.ts',
         source: 'export function notBandReading(n: number): string {\n  return String(n);\n}\n',
+        specifier: './band-reading',
       });
-      const walked = tsMorphWalkFileAdapter({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
@@ -156,9 +162,10 @@ describe('composeCrossFileMapBroker', () => {
   describe('a file with a second function unrelated to any cross-file map', () => {
     it('VALID: {bandReadings maps bandReading, grade is a separate plain function} => grade`s function record is untouched by the fold', () => {
       const proxy = composeCrossFileMapBrokerProxy();
-      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE });
+      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: CHILD_SOURCE, specifier: './band-reading' });
       const source = PARENT_SOURCE + PLAIN_SOURCE;
-      const walked = tsMorphWalkFileAdapter({ source, relPath: 'src/cross-file-map.ts' });
+      const walked = walkFileTransformer({ source, relPath: 'src/cross-file-map.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({ analysis, walked, root: '/repo', relPath: 'src/cross-file-map.ts' });
@@ -185,11 +192,12 @@ describe('composeCrossFileMapBroker', () => {
 
     it('VALID: {items.map(bandReading), others.map(otherReading), same host} => the cartesian of both callbacks funnels into ONE case set', () => {
       const proxy = composeCrossFileMapBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
       // actually answers rather than to the order the fold happens to resolve them in.
       proxy.setupSibling({ fileName: '/repo/src/band-reading.ts', source: SIMPLE_CHILD_A, specifier: './band-reading' });
       proxy.setupSibling({ fileName: '/repo/src/other-reading.ts', source: SIMPLE_CHILD_B, specifier: './other-reading' });
-      const walked = tsMorphWalkFileAdapter({ source: TWO_CALLBACK_PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
+      const walked = walkFileTransformer({ source: TWO_CALLBACK_PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });
 
       const result = composeCrossFileMapBroker({
         analysis: analyzeFileBroker({ walked, relPath: 'src/cross-file-map.ts' }),

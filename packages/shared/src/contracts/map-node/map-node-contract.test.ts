@@ -30,7 +30,7 @@ describe('mapNodeContract', () => {
     it('INVALID: {startLine: 0} => throws validation error', () => {
       expect(() => {
         return mapNodeContract.parse({ kind: 'function', startLine: 0, endLine: 5 });
-      }).toThrow(/greater than 0/u);
+      }).toThrow(/Too small: expected number to be >0/u);
     });
   });
 });

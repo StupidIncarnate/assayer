@@ -24,14 +24,13 @@
  * await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
  * // Returns a RunId — the same one, for the same bytes and the same harness, forever
  */
-import { relPathContract, runIdContract } from '@assayer/shared/contracts';
-import type { RunId } from '@assayer/shared/contracts';
+import { runResultContract } from '@assayer/shared/contracts';
+import type { RunResult } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { typescriptHarnessGateAdapter } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
+import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
 
 export const runIdBroker = async ({
   root,
@@ -41,22 +40,20 @@ export const runIdBroker = async ({
   root: string;
   relPath: string;
   source: string;
-}): Promise<RunId> => {
-  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
-  const harnessSource = (await fsExistsAdapter({ path: harnessPath }))
-    ? String(await fsReadFileAdapter({ path: harnessPath }))
+}): Promise<RunResult['runId']> => {
+  const harnessPath = `${root}/${harnessPathTransformer({ relPath })}`;
+  const harnessSource = (await pathExists(harnessPath))
+    ? (await readFile(harnessPath))
     : undefined;
   const harnessDigest =
-    harnessSource !== undefined && typescriptHarnessGateAdapter({ source: harnessSource })
-      ? String(cryptoSha256Adapter({ content: harnessSource }))
+    harnessSource !== undefined && isAssayerHarnessGuard({ source: harnessSource })
+      ? contentHashTransformer({ content: harnessSource })
       : undefined;
 
-  return runIdContract.parse(
-    String(
-      cryptoSha256Adapter({
-        content:
-          harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
-      }),
-    ),
+  return runResultContract.shape.runId.parse(
+    contentHashTransformer({
+      content:
+        harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
+    }),
   );
 };

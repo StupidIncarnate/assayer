@@ -9,47 +9,41 @@
  * // { hasGitRepo: true, candidates: [] } when neither main nor master exist, or
  * // { hasGitRepo: false } when repoRoot isn't a git working tree
  */
-import { branchNameContract } from '@assayer/shared/contracts';
-import type { BranchName } from '@assayer/shared/contracts';
 
-import { gitExecAdapter } from '../../../adapters/git/exec/git-exec-adapter';
+import { gitDetectStableBranchResultContract } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
+import type { GitDetectStableBranchResult } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
+import { GitNotInstalledError, branchList, isInsideWorkTree } from '#gateway/bin/git';
 
 export const gitDetectStableBranchBroker = async ({
   repoRoot,
 }: {
   repoRoot: string;
 }): Promise<
-  { hasGitRepo: false } | { hasGitRepo: true; candidates: BranchName[]; preselected?: BranchName }
+  GitDetectStableBranchResult
 > => {
-  const inside = await gitExecAdapter({
-    args: ['rev-parse', '--is-inside-work-tree'],
-    cwd: repoRoot,
+  const inside = await isInsideWorkTree({ cwd: repoRoot }).catch((error: unknown) => {
+    if (error instanceof GitNotInstalledError) {
+      return false;
+    }
+    throw error;
   });
 
-  if (inside.exitCode !== 0 || String(inside.stdout).trim() !== 'true') {
-    return { hasGitRepo: false };
+  if (!inside) {
+    return gitDetectStableBranchResultContract.parse({ hasGitRepo: false });
   }
 
-  const branches = await gitExecAdapter({
-    args: ['branch', '--list', 'main', 'master'],
-    cwd: repoRoot,
-  });
+  const branches = await branchList({ cwd: repoRoot, patterns: ['main', 'master'] });
 
-  const parsed = String(branches.stdout)
-    .split('\n')
-    .map((line) => line.replace('*', '').trim())
-    .filter((line) => line.length > 0);
-
-  const present = new Set(parsed);
+  const present = new Set(branches ?? []);
   const candidates = (['main', 'master'] as const)
     .filter((branch) => present.has(branch))
-    .map((branch) => branchNameContract.parse(branch));
+    .map((branch) => branch);
 
   const [preselected] = candidates;
 
   if (preselected === undefined) {
-    return { hasGitRepo: true, candidates: [] };
+    return gitDetectStableBranchResultContract.parse({ hasGitRepo: true, candidates: [] });
   }
 
-  return { hasGitRepo: true, candidates, preselected };
+  return gitDetectStableBranchResultContract.parse({ hasGitRepo: true, candidates, preselected });
 };

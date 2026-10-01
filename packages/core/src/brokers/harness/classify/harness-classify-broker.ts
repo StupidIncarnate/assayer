@@ -19,29 +19,26 @@
  * harnessClassifyBroker({ files: [{ relPath, content }, ...] });
  * // Returns { targets: [...], harnesses: [...] } — the same entries, partitioned
  */
-import type { RelPath } from '@assayer/shared/contracts';
 
-import { typescriptHarnessGateAdapter } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
+import { harnessClassifyResultContract } from '../../../contracts/harness-classify-result/harness-classify-result-contract';
+import type { HarnessClassifyResult } from '../../../contracts/harness-classify-result/harness-classify-result-contract';
+import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../statics/harness-module/harness-module-statics';
 
 export const harnessClassifyBroker = ({
   files,
 }: {
-  files: readonly { relPath: RelPath; content: FileContents }[];
-}): {
-  targets: { relPath: RelPath; content: FileContents }[];
-  harnesses: { relPath: RelPath; content: FileContents }[];
-} => {
+  files: readonly { relPath: string; content: string }[];
+}): HarnessClassifyResult => {
   const classified = files.map((file) => ({
     file: { relPath: file.relPath, content: file.content },
     isHarness:
-      String(file.relPath).endsWith(harnessModuleStatics.fileSuffix) &&
-      typescriptHarnessGateAdapter({ source: String(file.content) }),
+      file.relPath.endsWith(harnessModuleStatics.fileSuffix) &&
+      isAssayerHarnessGuard({ source: file.content }),
   }));
 
-  return {
+  return harnessClassifyResultContract.parse({
     targets: classified.filter((entry) => !entry.isHarness).map((entry) => entry.file),
     harnesses: classified.filter((entry) => entry.isHarness).map((entry) => entry.file),
-  };
+  });
 };

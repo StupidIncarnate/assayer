@@ -6,8 +6,8 @@
  * const kind = treeNodeKindContract.parse('dir');
  * // Returns a validated TreeNodeKind (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-export const treeNodeKindContract = z.enum(['dir', 'file']).brand<'TreeNodeKind'>();
+export const treeNodeKindContract = z.enum(['dir', 'file']);
 
 export type TreeNodeKind = z.infer<typeof treeNodeKindContract>;

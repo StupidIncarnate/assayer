@@ -16,14 +16,14 @@
  * });
  * // Returns { kind: 'number' }
  */
-import type { SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { TypeDescriptor } from '@assayer/shared/contracts';
 
 export const resolvePropertyTypeTransformer = ({
   type,
   path,
 }: {
   type: TypeDescriptor;
-  path: readonly SymbolName[];
+  path: readonly string[];
 }): TypeDescriptor | undefined => {
   const [head, ...rest] = path;
 
@@ -35,7 +35,7 @@ export const resolvePropertyTypeTransformer = ({
     return undefined;
   }
 
-  const property = type.properties.find((candidate) => String(candidate.name) === String(head));
+  const property = type.properties.find((candidate) => candidate.name === head);
 
   return property === undefined ? undefined : resolvePropertyTypeTransformer({ type: property.type, path: rest });
 };

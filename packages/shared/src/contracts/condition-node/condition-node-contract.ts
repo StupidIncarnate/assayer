@@ -20,7 +20,7 @@
  * });
  * // Returns a validated ConditionNode (recursive discriminated union)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { conditionLeafContract } from '../condition-leaf/condition-leaf-contract';
 import type { ConditionLeaf } from '../condition-leaf/condition-leaf-contract';
@@ -31,11 +31,32 @@ export type ConditionNode =
   | { kind: 'and'; left: ConditionNode; right: ConditionNode }
   | { kind: 'or'; left: ConditionNode; right: ConditionNode };
 
-export const conditionNodeContract: z.ZodType<ConditionNode> = z.lazy(() =>
-  z.discriminatedUnion('kind', [
-    conditionLeafContract,
-    z.object({ kind: z.literal('not'), operand: conditionNodeContract }),
-    z.object({ kind: z.literal('and'), left: conditionNodeContract, right: conditionNodeContract }),
-    z.object({ kind: z.literal('or'), left: conditionNodeContract, right: conditionNodeContract }),
-  ]),
-);
+// Each self-reference is a getter whose return type wraps `z.core.$ZodType<ConditionNode>`, so the
+// lookup of `conditionNodeContract` waits until a parse runs.
+export const conditionNodeContract: z.ZodType<ConditionNode> = z.discriminatedUnion('kind', [
+  conditionLeafContract,
+  z.object({
+    kind: z.literal('not'),
+    get operand(): z.core.$ZodType<ConditionNode> {
+      return conditionNodeContract;
+    },
+  }).brand<'ConditionNode'>(),
+  z.object({
+    kind: z.literal('and'),
+    get left(): z.core.$ZodType<ConditionNode> {
+      return conditionNodeContract;
+    },
+    get right(): z.core.$ZodType<ConditionNode> {
+      return conditionNodeContract;
+    },
+  }).brand<'ConditionNode'>(),
+  z.object({
+    kind: z.literal('or'),
+    get left(): z.core.$ZodType<ConditionNode> {
+      return conditionNodeContract;
+    },
+    get right(): z.core.$ZodType<ConditionNode> {
+      return conditionNodeContract;
+    },
+  }).brand<'ConditionNode'>(),
+]);

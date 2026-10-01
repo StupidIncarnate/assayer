@@ -1,4 +1,4 @@
-import { ParamDescriptorStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
 
 import { fillParamTransformer } from './fill-param-transformer';
 

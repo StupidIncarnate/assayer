@@ -21,16 +21,15 @@
  * traceEventContract.parse({ id: 'grade/if:…#leaf.0', kind: 'cond', outcome: true, valueText: 'true' });
  * // Returns a validated TraceEvent (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
-import { traceValueTextContract } from '../trace-value-text/trace-value-text-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const traceEventContract = z.object({
-  id: coverageIdContract,
-  kind: z.enum(['cond', 'exit']).brand<'TraceKind'>(),
+  id: coverageContract.shape.id,
+  kind: z.enum(['cond', 'exit']),
   outcome: z.boolean().optional(),
-  valueText: traceValueTextContract,
-});
+  valueText: z.string().min(1).brand<'TraceEventValueText'>(),
+}).brand<'TraceEvent'>();
 
 export type TraceEvent = z.infer<typeof traceEventContract>;

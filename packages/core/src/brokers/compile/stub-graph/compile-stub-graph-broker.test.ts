@@ -1,16 +1,14 @@
-import {
-  CompiledFileBlobStub,
-  ContentHashStub,
-  FileAnalysisStub,
-  RelPathStub,
-  ResolvedIndexStub,
-} from '@assayer/shared/contracts';
+import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
+import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { compileStubGraphBroker } from './compile-stub-graph-broker';
 import { compileStubGraphBrokerProxy } from './compile-stub-graph-broker.proxy';
 
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 const HASH = ContentHashStub();
+const BLOB_PATH = `/blobs/${HASH}.json`;
 
 const CONFIG_BLOB = CompiledFileBlobStub({
   relPath: 'src/config/config.ts',
@@ -81,14 +79,15 @@ describe('compileStubGraphBroker', () => {
   describe('a blob declaring a type it reads on one property', () => {
     it('VALID: {Config{mode,retries}, reads config.mode === "a"} => mode demanded, retries unknown, this file the reader', async () => {
       const proxy = compileStubGraphBrokerProxy();
-      proxy.queueBlob({ blob: CONFIG_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       const result = await compileStubGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({
@@ -112,14 +111,15 @@ describe('compileStubGraphBroker', () => {
 
     it("VALID: {Config{mode,retries}, reads config.mode === 'a'} => one property guard naming Config#mode, this file as reader, the branch's line, eq 'a', string operand type", async () => {
       const proxy = compileStubGraphBrokerProxy();
-      proxy.queueBlob({ blob: CONFIG_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       const result = await compileStubGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
       expect(result.guards).toStrictEqual([
@@ -134,19 +134,22 @@ describe('compileStubGraphBroker', () => {
       ]);
     });
 
-    it('VALID: {a config-dir + namespace} => writes the index to the tmp path under .assayer/cache/stubs', async () => {
+    it('VALID: {a config-dir + namespace} => renames the tmp index onto .assayer/cache/stubs/<namespace>.json', async () => {
       const proxy = compileStubGraphBrokerProxy();
-      proxy.queueBlob({ blob: CONFIG_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       await compileStubGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
-      expect(proxy.getWrittenPaths()).toStrictEqual(['/repo/.assayer/cache/stubs/feature-x.json.tmp']);
+      expect(proxy.getIndexRenames({ configDir: '/repo', namespace: 'feature-x' })).toStrictEqual([
+        ['/repo/.assayer/cache/stubs/feature-x.json.tmp', '/repo/.assayer/cache/stubs/feature-x.json'],
+      ]);
     });
 
     // `stubIndexWriteBroker` re-canonicalizes (re-sorts objectStubs/envStubs by key) independently of the
@@ -155,14 +158,15 @@ describe('compileStubGraphBroker', () => {
     // WRITTEN cache file could disagree about one compile.
     it('VALID: {Config{mode,retries}, reads config.mode === "a"} => the written index is byte-identical to the returned index', async () => {
       const proxy = compileStubGraphBrokerProxy();
-      proxy.queueBlob({ blob: CONFIG_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: BLOB_PATH, blob: CONFIG_BLOB });
 
       const result = await compileStubGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
       expect(proxy.getWrittenIndex({ path: '/repo/.assayer/cache/stubs/feature-x.json.tmp' })).toStrictEqual(
@@ -174,14 +178,15 @@ describe('compileStubGraphBroker', () => {
   describe('a blob that declares no types', () => {
     it('EMPTY: {no declared types} => a stub index with no object stubs and no env stubs', async () => {
       const proxy = compileStubGraphBrokerProxy();
-      proxy.queueBlob({ blob: CompiledFileBlobStub({ relPath: 'src/plain.ts', analysis: FileAnalysisStub({ functions: [], declaredTypes: [] }) }) });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: BLOB_PATH, blob: CompiledFileBlobStub({ relPath: 'src/plain.ts', analysis: FileAnalysisStub({ functions: [], declaredTypes: [] }) }) });
 
       const result = await compileStubGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/plain.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/plain.ts', contentHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({ layoutHash: EMPTY_HASH, tsconfigHash: EMPTY_HASH, objectStubs: [], envStubs: [] });
@@ -201,14 +206,15 @@ describe('compileStubGraphBroker', () => {
 
     it("VALID: {process.env.MODE === 'production'} => one env stub, MODE guessed ['abc123','production'], this file the reader", async () => {
       const proxy = compileStubGraphBrokerProxy();
-      proxy.queueBlob({ blob: ENV_BLOB });
+      proxy.indexWriteSucceeds({ configDir: '/repo', namespace: 'feature-x' });
+      proxy.queueBlob({ path: BLOB_PATH, blob: ENV_BLOB });
 
       const result = await compileStubGraphBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/flags/flags.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/flags/flags.ts', contentHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({

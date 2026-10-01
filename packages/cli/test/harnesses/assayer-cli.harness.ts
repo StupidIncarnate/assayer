@@ -15,15 +15,21 @@
  * const result = await cli.run({ argv: ['status'] });
  * // result.exitCode === 0; result.stdout ends with the status block
  */
-import { join, dirname } from 'node:path';
-import { spawn } from 'node:child_process';
-import { tmpdir } from 'node:os';
-import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
+import { join, dirname } from '#gateway/node/path';
+import { spawn } from '#gateway/node/child_process';
+import { tmpdir } from '#gateway/node/os';
+import {
+  mkdtempSync,
+  ensureDirSync,
+  writeFileSync,
+  existsSync,
+  readFileSync,
+  rmSync,
+} from '#gateway/node/fs';
 
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
-import { CliFileTextStub } from '../../src/contracts/cli-file-text/cli-file-text.stub';
-import type { CliFileText } from '../../src/contracts/cli-file-text/cli-file-text-contract';
+import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
 
@@ -35,7 +41,7 @@ export const assayerCliHarness = (): {
   writeCacheFile: ({ relPath, contents }: { relPath: string; contents: string }) => void;
   run: ({ argv }: { argv: readonly string[] }) => Promise<CliRunResult>;
   exists: ({ relPath }: { relPath: string }) => boolean;
-  read: ({ relPath }: { relPath: string }) => CliFileText;
+  read: ({ relPath }: { relPath: string }) => string;
 } => {
   let dir = '';
 
@@ -51,17 +57,17 @@ export const assayerCliHarness = (): {
     },
     writeSource: ({ relPath, source }: { relPath: string; source: string }): void => {
       const target = join(dir, relPath);
-      mkdirSync(dirname(target), { recursive: true });
+      ensureDirSync(dirname(target));
       writeFileSync(target, source);
     },
     writeCacheFile: ({ relPath, contents }: { relPath: string; contents: string }): void => {
       const target = join(dir, relPath);
-      mkdirSync(dirname(target), { recursive: true });
+      ensureDirSync(dirname(target));
       writeFileSync(target, contents);
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
       new Promise((resolve: (result: CliRunResult) => void, reject: (error: Error) => void) => {
-        const child = spawn(process.execPath, [cliEntry, ...argv], {
+        const child = spawn(execPath, [cliEntry, ...argv], {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
         });
@@ -79,7 +85,7 @@ export const assayerCliHarness = (): {
         });
       }),
     exists: ({ relPath }: { relPath: string }): boolean => existsSync(join(dir, relPath)),
-    read: ({ relPath }: { relPath: string }): CliFileText =>
-      CliFileTextStub({ value: readFileSync(join(dir, relPath), 'utf8') }),
+    read: ({ relPath }: { relPath: string }): string =>
+      readFileSync(join(dir, relPath)),
   };
 };

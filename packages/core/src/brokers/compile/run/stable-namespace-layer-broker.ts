@@ -9,26 +9,15 @@
  * });
  * // Returns { resultEntry, manifestNamespace, errors } for the 'master' namespace
  */
-import { namespaceNameContract, branchNameContract, fileCountContract } from '@assayer/shared/contracts';
-import type {
-  AssayerCacheManifest,
-  NamespaceName,
-  BranchName,
-  CompileMode,
-  FileCount,
-  RelPath,
-  ContentHash,
-  LineNumber,
-} from '@assayer/shared/contracts';
-import type { ErrorMessage } from '@dungeonmaster/shared/contracts';
+import { stableNamespaceLayerResultContract } from '../../../contracts/stable-namespace-layer-result/stable-namespace-layer-result-contract';
+import type { StableNamespaceLayerResult } from '../../../contracts/stable-namespace-layer-result/stable-namespace-layer-result-contract';
+import type { AssayerCacheManifest } from '@assayer/shared/contracts';
 
 import { compilePlanStableBroker } from '../plan-stable/compile-plan-stable-broker';
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
 import type { CompileProgressEvent } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
-import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 
 export const stableNamespaceLayerBroker = async ({
   root,
@@ -46,12 +35,7 @@ export const stableNamespaceLayerBroker = async ({
   currentMax: number;
   blobsDir: string;
   onProgress?: (event: CompileProgressEvent) => void;
-}): Promise<{
-  resultEntry: { namespace: NamespaceName; branch: BranchName; mode: CompileMode; fileCount: FileCount };
-  manifestNamespace: { branch: BranchName; commit?: ErrorMessage; files: { relPath: RelPath; contentHash: ContentHash }[] };
-  harnesses: { relPath: RelPath; content: FileContents }[];
-  errors: { namespace: NamespaceName; relPath: RelPath; line: LineNumber; column: SourcePosition['column']; message: ErrorMessage }[];
-}> => {
+}): Promise<StableNamespaceLayerResult> => {
   const previousStableCommit = previousManifest?.namespaces[branch]?.commit;
 
   const plan = await compilePlanStableBroker({
@@ -88,21 +72,21 @@ export const stableNamespaceLayerBroker = async ({
 
   const files = plan.mode === 'skipped' ? (previousManifest?.namespaces[branch]?.files ?? []) : processed.index;
 
-  return {
+  return stableNamespaceLayerResultContract.parse({
     resultEntry: {
-      namespace: namespaceNameContract.parse(branch),
-      branch: branchNameContract.parse(branch),
+      namespace: branch,
+      branch,
       mode: plan.mode,
-      fileCount: fileCountContract.parse(max),
+      fileCount: max,
     },
     manifestNamespace: {
-      branch: branchNameContract.parse(branch),
+      branch,
       ...(commit === undefined ? {} : { commit }),
       files,
     },
     // A SKIPPED ref planned nothing, so it has no harness bytes to stitch; its harness index already
     // sits on disk from the compile that made it, exactly as its resolved and stub indexes do.
     harnesses: plan.harnesses,
-    errors: processed.errors.map((error) => ({ namespace: namespaceNameContract.parse(branch), ...error })),
-  };
+    errors: processed.errors.map((error) => ({ namespace: branch, ...error })),
+  });
 };

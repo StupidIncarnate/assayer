@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'component.tsx'), 'utf8');
 const relPath = 'src/happy-path/tsx/component/component.tsx';
@@ -12,7 +12,7 @@ describe('tsx / component — the .tsx FILE-EXTENSION rung, a component returnin
   // branch pair over `urgent` — the JSX each arm returns never enters analysis (P4; §5.1's descend-the-
   // expression corollary), so the returned `<strong>`/`<span>` elements do not appear anywhere below.
   it('VALID: {a .tsx component with an if/else returning JSX} => one entry, one branch, both arms driven', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -82,7 +82,7 @@ describe('tsx / component — the .tsx FILE-EXTENSION rung, a component returnin
   });
 
   it('VALID: {a .tsx component} => nothing admitted, no declared shape', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,

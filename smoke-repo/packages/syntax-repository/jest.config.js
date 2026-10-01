@@ -22,9 +22,9 @@ module.exports = {
     prefix: `${__dirname}/`,
   }),
   transform: {
-    // One entry covering both TypeScript extensions, the same widening `jest-run-cli-adapter` uses for
-    // the wrapped runner — a `.tsx` test file needs ts-jest exactly as a `.ts` one does, whether or not
-    // it contains JSX itself.
+    // One entry covering both TypeScript extensions, the same widening `run-execute-cases-broker` uses
+    // for the wrapped runner — a `.tsx` test file needs ts-jest exactly as a `.ts` one does, whether or
+    // not it contains JSX itself.
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: tsconfigPath }],
   },
 };

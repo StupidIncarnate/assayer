@@ -10,7 +10,7 @@ const A_EXIT = '*module*/orElse/return@ternary:id:a#then';
 const B_EXIT = '*module*/orElse/return@ternary:id:a#else';
 
 // The hermetic walk parses with strict-null-checks on, so `string | null` arrives as a genuine
-// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-adapter` has no
+// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-transformer` has no
 // dedicated case for the null type, so its member reads through the generic opaque path as `{ kind:
 // 'unknown', text: 'null' }`, sitting beside the real `{ kind: 'string' }` member.
 const NULLABLE_STRING = { kind: 'union', members: [{ kind: 'unknown', text: 'null' }, { kind: 'string' }] };

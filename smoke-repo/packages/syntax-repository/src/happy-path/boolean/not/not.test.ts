@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'not.ts'), 'utf8');
 const relPath = 'src/happy-path/boolean/not/not.ts';
@@ -38,7 +38,7 @@ describe('boolean / not — a negated operand inside an exported function', () =
   // `ready: false` — so the else-case claimed `gate(false)` reaches the else, which is the opposite
   // of what the code does.
   it('VALID: {!ready} => then arranges ready=false and else arranges ready=true', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'ready', value: false }], salient: true },

@@ -5,16 +5,17 @@
  *   Siblings at every level (including the root) are sorted ascending by name.
  *
  * USAGE:
- * treeNodesTransformer({ relPaths: [RelPathStub({ value: 'packages/shared/src/index.ts' })] });
+ * treeNodesTransformer({ relPaths: ['packages/shared/src/index.ts'] });
  * // Returns [{ name: 'packages', path: 'packages', kind: 'dir', children: [...] }]
  */
-import { relPathContract, treeNodeKindContract } from '@assayer/shared/contracts';
-import type { RelPath, TreeNode } from '@assayer/shared/contracts';
-import { treeNodeNameContract } from '../../contracts/tree-node-name/tree-node-name-contract';
+import { compiledTreeContract } from '@assayer/shared/contracts';
+import type { TreeNode } from '@assayer/shared/contracts';
 
-export const treeNodesTransformer = ({ relPaths }: { relPaths: readonly RelPath[] }): TreeNode[] => {
+const treeNodeContract = compiledTreeContract.shape.nodes.element;
+
+export const treeNodesTransformer = ({ relPaths }: { relPaths: readonly string[] }): TreeNode[] => {
   const roots: TreeNode[] = [];
-  const childrenByPath = new Map<RelPath, TreeNode[]>();
+  const childrenByPath = new Map<string, TreeNode[]>();
 
   for (const relPath of relPaths) {
     const segments = relPath.split('/');
@@ -23,14 +24,10 @@ export const treeNodesTransformer = ({ relPaths }: { relPaths: readonly RelPath[
 
     for (const [index, segment] of segments.entries()) {
       accumulatedPath = accumulatedPath === '' ? segment : `${accumulatedPath}/${segment}`;
-      const nodePath = relPathContract.parse(accumulatedPath);
+      const nodePath = accumulatedPath;
 
       if (index === segments.length - 1) {
-        siblings.push({
-          name: treeNodeNameContract.parse(segment),
-          path: nodePath,
-          kind: treeNodeKindContract.parse('file'),
-        });
+        siblings.push(treeNodeContract.parse({ name: segment, path: nodePath, kind: 'file' }));
         continue;
       }
 
@@ -40,13 +37,14 @@ export const treeNodesTransformer = ({ relPaths }: { relPaths: readonly RelPath[
         continue;
       }
 
-      const children: TreeNode[] = [];
-      siblings.push({
-        name: treeNodeNameContract.parse(segment),
+      const dirNode = treeNodeContract.parse({
+        name: segment,
         path: nodePath,
-        kind: treeNodeKindContract.parse('dir'),
-        children,
+        kind: 'dir',
+        children: [],
       });
+      const children = dirNode.children ?? [];
+      siblings.push(dirNode);
       childrenByPath.set(nodePath, children);
       siblings = children;
     }

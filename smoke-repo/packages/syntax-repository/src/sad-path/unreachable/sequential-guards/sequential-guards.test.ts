@@ -2,11 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'sequential-guards.ts'), 'utf8');
 const relPath = 'src/sad-path/unreachable/sequential-guards/sequential-guards.ts';
-const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 const classify = analysis.functions[0];
 
 describe('unreachable / sequential-guards — two guards on one value whose else-arms cannot both hold', () => {

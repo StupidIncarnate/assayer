@@ -16,12 +16,9 @@
  * await runConsoleFindBroker({ configDir: '/repo', root: '/repo/smoke-repo', relPath: 'src/a.ts' });
  * // Returns the RunConsole for the file's CURRENT bytes, or undefined
  */
-import { runConsoleContract } from '@assayer/shared/contracts';
-import type { RunConsole } from '@assayer/shared/contracts';
 
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { runIdBroker } from '../id/run-id-broker';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
 
 export const runConsoleFindBroker = async ({
   configDir,
@@ -31,20 +28,20 @@ export const runConsoleFindBroker = async ({
   configDir: string;
   root: string;
   relPath: string;
-}): Promise<RunConsole | undefined> => {
+}): Promise<string | undefined> => {
   const absPath = `${root}/${relPath}`;
 
-  if (!(await fsExistsAdapter({ path: absPath }))) {
+  if (!(await pathExists(absPath))) {
     return undefined;
   }
 
-  const source = String(await fsReadFileAdapter({ path: absPath }));
+  const source = (await readFile(absPath));
   const runId = String(await runIdBroker({ root, relPath, source }));
   const path = `${configDir}/.assayer/cache/runs/${runId}/console.txt`;
 
-  if (!(await fsExistsAdapter({ path }))) {
+  if (!(await pathExists(path))) {
     return undefined;
   }
 
-  return runConsoleContract.parse(String(await fsReadFileAdapter({ path })));
+  return (readFile(path));
 };

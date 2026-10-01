@@ -14,7 +14,7 @@
  * functionAnalysisContract.parse({ entry, branches, exits, cases });
  * // Returns a validated FunctionAnalysis (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { entrySignatureContract } from '../entry-signature/entry-signature-contract';
 import { branchNodeContract } from '../branch-node/branch-node-contract';
@@ -28,6 +28,6 @@ export const functionAnalysisContract = z.object({
   exits: z.array(exitNodeContract),
   cases: z.array(derivedTestCaseContract),
   predicateSignature: conditionNodeContract.optional(),
-});
+}).brand<'FunctionAnalysis'>();
 
 export type FunctionAnalysis = z.infer<typeof functionAnalysisContract>;

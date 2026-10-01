@@ -1,4 +1,3 @@
-import { RunConsoleStub, RelPathStub } from '@assayer/shared/contracts';
 
 import { runFetchConsoleBroker } from './run-fetch-console-broker';
 import { runFetchConsoleBrokerProxy } from './run-fetch-console-broker.proxy';
@@ -7,9 +6,9 @@ describe('runFetchConsoleBroker', () => {
   describe('a file whose last run left a report', () => {
     it('VALID: {a saved report} => the report', async () => {
       const proxy = runFetchConsoleBrokerProxy();
-      proxy.setupConsole({ console: RunConsoleStub({ value: 'src/a.ts  0/1 passed\n' }) });
+      proxy.setupConsole({ console: 'src/a.ts  0/1 passed\n' });
 
-      const result = await runFetchConsoleBroker({ relPath: RelPathStub({ value: 'src/a.ts' }) });
+      const result = await runFetchConsoleBroker({ relPath: 'src/a.ts' });
 
       expect(String(result)).toBe('src/a.ts  0/1 passed\n');
     });
@@ -22,7 +21,7 @@ describe('runFetchConsoleBroker', () => {
       const proxy = runFetchConsoleBrokerProxy();
       proxy.neverRun();
 
-      const result = await runFetchConsoleBroker({ relPath: RelPathStub({ value: 'src/a.ts' }) });
+      const result = await runFetchConsoleBroker({ relPath: 'src/a.ts' });
 
       expect(result).toBe(undefined);
     });

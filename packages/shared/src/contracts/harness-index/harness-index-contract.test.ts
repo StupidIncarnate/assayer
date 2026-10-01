@@ -54,7 +54,7 @@ describe('harnessIndexContract', () => {
     it.each(REQUIRED_FIELDS)('INVALID: {missing %s} => throws validation error', (field) => {
       const entries = Object.entries(HarnessIndexStub()).filter(([key]) => key !== field);
 
-      expect(() => harnessIndexContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
+      expect(() => harnessIndexContract.parse(Object.fromEntries(entries))).toThrow(/Invalid input: expected [a-z]+, received undefined/u);
     });
 
     it('INVALID: {layoutHash: "not-a-hash"} => throws validation error', () => {

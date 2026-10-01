@@ -38,7 +38,7 @@ describe('compileResultContract', () => {
           results: [{ namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 }],
           errors: [{ namespace: 'master', relPath: 'a.ts', line: 1, column: 1 }],
         });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

@@ -29,7 +29,7 @@ export const isWithinDomainBoundsGuard = ({
     return true;
   }
 
-  const point = Number(value);
+  const point = value;
   const min = domain.min === undefined ? undefined : Number(domain.min);
   const max = domain.max === undefined ? undefined : Number(domain.max);
 

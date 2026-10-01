@@ -1,6 +1,6 @@
 # @assayer/core: the analyzer
 
-Read this file before touching anything under `adapters/ts-morph/**`,
+Read this file before touching anything under `transformers/walk-file/**`,
 `transformers/*projection*`, `transformers/*coverage-id*`, or
 `brokers/analyze/**`. The root `CLAUDE.md` states the project's principles.
 This file states how the parser actually works, and what you are not
@@ -91,16 +91,16 @@ not re-implement any of them inside a handler.
 
 The walk runs through four layers, in order:
 
-1. `ts-morph-walk-file-adapter` is the only place that touches ts-morph
+1. `walk-file-transformer` is the only place that touches ts-morph
    (the library that parses TypeScript into an AST), and it parses the
    file exactly once.
-2. `walk-node-layer-adapter` is the recursion. It calls itself once per
+2. `walk-node-layer-transformer` is the recursion. It calls itself once per
    descent a handler asks for.
-3. `dispatch-node-layer-adapter` is the only place that decides which
+3. `dispatch-node-layer-transformer` is the only place that decides which
    handler owns a given node kind.
-4. A `handle-<x>-layer-adapter` file is one handler. It returns
+4. A `handle-<x>-layer-transformer` file is one handler. It returns
    `{ facts, descents }` and never recurses itself. The `descents` it
-   returns are what drives `walk-node-layer-adapter`'s next call.
+   returns are what drives `walk-node-layer-transformer`'s next call.
 
 The output of that recursion is a `WalkFileResult`: a normalized,
 serializable model of the file that no longer touches ts-morph at all. Two
@@ -117,7 +117,7 @@ exactly its own facts this way, so no node ever has to ask "which function
 am I in?"
 
 A handler only describes what to descend into. The core (the shared walk
-machinery: `walk-node-layer-adapter` and `dispatch-node-layer-adapter`) is
+machinery: `walk-node-layer-transformer` and `dispatch-node-layer-transformer`) is
 what actually performs every descent. Core owns all traversal, and a
 plugin never parses anything itself. The full requirement is R15 in
 `plan/requirements.md`. Because of that split, a `switch` handler needs
@@ -171,11 +171,11 @@ Each entry below names one thing you might want to change, and exactly
 which file or files own that change.
 
 **Add support for a new syntax family.** Add one new
-`handle-<x>-layer-adapter` file, plus exactly one new route for it inside
+`handle-<x>-layer-transformer` file, plus exactly one new route for it inside
 `dispatch-node`.
 
 **Add support for a new kind of callable.** Touch
-`handle-function-layer-adapter`, which owns every `FunctionLikeNode` (any
+`handle-function-layer-transformer`, which owns every `FunctionLikeNode` (any
 function-shaped node: a function declaration, an arrow function, a method,
 and so on), plus its route in `dispatch-node`.
 
@@ -200,10 +200,10 @@ valid comparison.
 and `transformers/exit-coverage-id`.
 
 **Change what counts as identity for a node.** Touch
-`project-node-layer-adapter`.
+`project-node-layer-transformer`.
 
 **Change how an operand's type is determined.** Touch
-`read-operand-type-layer-adapter`, but read section 5.9 first.
+`read-operand-type-layer-transformer`, but read section 5.9 first.
 
 **Capture an object-member operand, such as `config.mode`.** Touch
 `read-condition`, plus `read-property-path` for reading the `.member`
@@ -330,7 +330,7 @@ refusal is resolved, anything still blocking the entry (an access gap, an
 undriven branch) states itself on its own line at that point.
 
 **Render a type the checker collapses**, for example `Db | string`
-resolving to plain `any`. Touch `read-declared-type-text-layer-adapter`,
+resolving to plain `any`. Touch `read-declared-type-text-layer-transformer`,
 threaded through `read-type-fact` as `typeNode` (supplied from
 `handle-function`, and carried down into array elements and object
 properties too). It walks the type NODE itself, by kind, and asks the
@@ -374,7 +374,7 @@ It reports which one failed as the `undriven-cause`, because the two have
 different fixes.
 
 **Evaluate a branch welded to a literal constant.** Capture the value at
-the exact point where it becomes welded: `read-const-operand-layer-adapter`
+the exact point where it becomes welded: `read-const-operand-layer-transformer`
 for a same-file `const` (it stamps `operandConstValue` or
 `operandConstLength` onto the leaf, during the walk itself), or
 `transformers/stamp-const-leaves` for a literal argument at a call site or
@@ -405,17 +405,17 @@ as a top-level, testable unit). Touch `transformers/analysis-projection`.
 This policy decision lives there, not in the walk itself.
 
 **Change what a call targets** (a local function, an import, or something
-Assayer cannot resolve). Touch `read-callee-layer-adapter`. A callee in
+Assayer cannot resolve). Touch `read-callee-layer-transformer`. A callee in
 the same file is a `local` link whether it is a `FunctionDeclaration` or a
 `const`/`let` bound to a function-like value, read off the declaration's
 own kind, and keyed on the line where the walk opened that scope.
 
-**Record an import or re-export edge.** Touch `handle-import-layer-adapter`
-and `handle-export-layer-adapter`, plus their routes in `dispatch-node`.
+**Record an import or re-export edge.** Touch `handle-import-layer-transformer`
+and `handle-export-layer-transformer`, plus their routes in `dispatch-node`.
 `transformers/module-graph-projection` projects the result.
 
 **Record a type declaration** (`interface Config`, `type Config = { ... }`,
-`enum Level`). Touch `handle-type-declaration-layer-adapter`, plus its
+`enum Level`). Touch `handle-type-declaration-layer-transformer`, plus its
 route in `dispatch-node`. It reads the declaration through the same
 `read-type-fact` to `type-descriptor` pipeline every function signature
 goes through, and it emits the declared NAME (plus `typeParams`, for a
@@ -434,21 +434,21 @@ whether `Point` is declared as an interface or as a class.
 signature-derived descriptors (see section 3).
 
 **Record a use of an ambient global**, such as `console` or `process`.
-Touch `handle-member-access-layer-adapter` for member-access forms and
+Touch `handle-member-access-layer-transformer` for member-access forms and
 `handle-call` for a bare-identifier global call, plus
-`read-ambient-root-layer-adapter`. `transformers/module-graph-projection`
+`read-ambient-root-layer-transformer`. `transformers/module-graph-projection`
 projects the result as `globalUses`.
 
 **Record a `process.env.<X>` read.** Touch
-`handle-member-access-layer-adapter`, which reads the outer
+`handle-member-access-layer-transformer`, which reads the outer
 `process.env.<X>` access: the property name, plus any literal it is
 directly compared against. `transformers/module-graph-projection` projects
 it as `envReads`, and the stub stitch (section 9) aggregates these into
 per-property environment stubs.
 
 **Change import resolution (the stitch).** Touch
-`brokers/compile/resolve-graph`, plus `adapters/typescript/read-config`
-and `adapters/typescript/resolve-module`.
+`brokers/compile/resolve-graph`, plus `brokers/tsconfig/read`
+and `brokers/import-specifier/resolve`.
 
 **Change the stub index** (the per-property value demands computed over
 declared types). Touch `brokers/compile/stub-graph`, the twin stitch pass
@@ -460,18 +460,18 @@ seam) and `transformers/collect-property-demands` (the value math).
 **Read an external signature**, meaning the declared shape of something
 from an npm package or a Node built-in. Touch
 `brokers/external-signature/read`, plus
-`adapters/ts-morph/read-external-signature`, the second, `node_modules`-
+`brokers/external-signature/read-declaration`, the second, `node_modules`-
 aware parse project (section 5.10 explains why a second project exists at
 all).
 
 **Read an ambient global's or a called built-in's signature.** Touch
 `brokers/external-signature/read-global`, plus
-`adapters/ts-morph/read-global-signature`, which probes that same second
+`brokers/external-signature/read-global-declaration`, which probes that same second
 project's global scope. A built-in resolves only through the checker
 itself, never through a `.d.ts` file path.
 
 **Decide whether a `*.harness.ts` file is actually an Assayer harness.**
-Touch `adapters/typescript/harness-gate`, the symbol gate that checks
+Touch `guards/is-assayer-harness`, the symbol gate that checks
 whether the module imports `assayerHarness` from `@assayer/core` and
 calls it, plus `brokers/harness/classify`, the one place a planned file is
 split into either an analyzed target or a harness. Both plan brokers (the
@@ -493,7 +493,7 @@ published as `assayerHarness` from the package's main barrel
 (`packages/core/index.ts`). That is the exact specifier the input-gap
 error message tells a reader to import.
 
-**Change how a harness is read.** Touch `adapters/typescript/load-harness`.
+**Change how a harness is read.** Touch `brokers/harness/load`.
 It runs `transpileModule` (with no require hook, and nothing added to the
 module cache), then runs the result inside a bare sandbox holding a
 CommonJS shell and exactly one reachable import: `@assayer/core`, bound to
@@ -556,13 +556,13 @@ derived entry's cases in exactly the one binding a harness supplied.
 **Resolve a harness-supplied value at run time.** Touch the generated test
 file (`transformers/assemble-shim`), which requires the harness file
 through ts-jest, and note that Jest maps `@assayer/core` to the root
-`harness-registrar.js` (`adapters/jest/run-cli`) so the harness's
+`harness-registrar.js` (`brokers/run/execute-cases`) so the harness's
 registration lands where the generated test file can read it. This
 mapping matters because resolving the `@assayer/core` package separately
 from the harness and from the generated test file can otherwise land on
 two different installs of the package inside one workspace, and two
 separate module instances mean a harness registration that nothing ever
-collects. `adapters/jest/interpret-case` then walks the key path
+collects. `brokers/case/interpret` then walks the key path
 (`transformers/harness-value`); a key the harness declaration does not
 carry produces an `errored` case naming it, never a silent `undefined`
 argument.
@@ -599,7 +599,7 @@ handles it? The second belongs in `dispatch-node`, and nowhere else.
 Derive every fact from node KINDS, resolved SYMBOLS, and literal VALUES
 (read through `getLiteralValue()`, never a literal's quoted spelling). If
 the AST cannot yet be decomposed for some syntax, build a normalized
-STRUCTURAL projection of it instead, the way `project-node-layer-adapter`
+STRUCTURAL projection of it instead, the way `project-node-layer-transformer`
 already does for any node kind. Do not add a `getText()` fallback. A
 formatting-only edit that moves a coverage ID is a bug.
 
@@ -733,10 +733,22 @@ analyzing a `switch` over that union worth anything at all.
 
 ### 5.10 The analyzer's own parse has no ambient Node types, and the environment-variable feature depends on that
 
-`ts-morph-walk-file-adapter` parses using `useInMemoryFileSystem: true`
+`walk-file-transformer` parses using `useInMemoryFileSystem: true`
 and a single source string. Call this the hermetic walk: it resolves
-TypeScript's standard library, but nothing from `node_modules`. Two
-consequences follow, and both are load-bearing:
+TypeScript's standard library, but nothing from `node_modules`.
+
+The walk parses through `transformers/hermetic-source-file`, and so does
+the harness type reader (`transformers/harness-value-types`). That
+transformer keeps one in-memory ts-morph project per compiler-options set
+for the life of the process. Each call adds its one file, reads it, and
+removes it again in a `finally`. So a walk's program holds only its own
+file plus TypeScript's lib files, and nothing an earlier walk declared is
+visible to it. The lib files are parsed once per process and reused by
+every walk. The checker is new for every walk. A walk must copy out
+everything it needs as plain data before it returns, because its file's
+nodes and types stop being valid once the file is removed.
+
+Two consequences of the hermetic walk follow, and both are load-bearing:
 
 - This is what lets `read-env-operand` prove that an access is really
   `process.env`, rather than merely pattern-matching the text
@@ -764,7 +776,7 @@ consequences follow, and both are load-bearing:
 Reading an external type does not weaken any of this. When a resolved
 import needs its declared input or output types, a SEPARATE,
 `node_modules`-aware parse project reads them out of band:
-`adapters/ts-morph/read-external-signature` opens its own `new Project`,
+`brokers/external-signature/read-declaration` opens its own `new Project`,
 without `useInMemoryFileSystem`, rooted at the consumer repo so
 `node_modules` and `@types` resolve normally, and it reads only DECLARED
 types, never executes anything (which keeps it consistent with the "never
@@ -1009,7 +1021,7 @@ editing a specimen, run BOTH `npm run test:syntax` and `npm run ward`.
 
 ### Step 2: write the handler
 
-Write `handle-<x>-layer-adapter.ts`. It emits the construct's branch or
+Write `handle-<x>-layer-transformer.ts`. It emits the construct's branch or
 branches, and its exit or exits, and returns descents built with
 `walkContextTransformer({ context, guardSteps: [...] })` for each arm. It
 must not recurse itself, must not look at its own parents, and must not
@@ -1018,7 +1030,7 @@ know that any other construct even exists.
 ### Step 3: add one route
 
 Add exactly one route for the new handler inside
-`dispatch-node-layer-adapter`.
+`dispatch-node-layer-transformer`.
 
 ### Step 4: add the handler's proxy and test
 
@@ -1046,7 +1058,7 @@ repo root:
 ```bash
 npx tsx /tmp/.../probe.ts
 # Import by ABSOLUTE path:
-# import { tsMorphWalkFileAdapter } from '/abs/.../walk-file/ts-morph-walk-file-adapter';
+# import { walkFileTransformer } from '/abs/.../transformers/walk-file/walk-file-transformer';
 # Import ts-morph the same way too, from '/abs/.../node_modules/ts-morph'.
 ```
 
@@ -1070,33 +1082,36 @@ Two properties must hold, and a probe script is a cheap way to check both:
 
 ## 8. Traps that will cost you an hour
 
-**Never `import type` across layer files.** The lint rule
-`enforce-proxy-child-creation` runs after you save, keys on the imported
-NAME, and demands a matching `<Name>Proxy` file, which cannot exist for a
-type import. It also then flags the proxy file you add for that type as a
-"phantom" proxy, because the type itself is never imported as a value.
-This is a genuine catch-22. To escape it, either annotate with
-`ReturnType<typeof someValueYouAlreadyImport>` (the same way every handler
-already declares its own return type), or let the file declare the type
-itself instead of importing it.
+**A layer file's proxy stays empty.** Every `*-layer-transformer.ts` file
+in `transformers/walk-file/` is a pure transformer. Tests run it for real
+and never mock it. So its `.proxy.ts` returns an empty object, and no
+proxy creates a child proxy for a transformer it imports. The lint rule
+`enforce-proxy-child-creation` reports such a creation as a "phantom"
+proxy. This is also why the walk's mutual recursion needs no proxy wiring
+at all.
 
-**`handler-result-layer-adapter` is a LEAF.** It imports nothing else from
-its own folder. Vocabulary shared across handlers lives there specifically
-because putting it beside the recursion instead would make the proxy
-dependency graph circular: `walk-node.proxy` would depend on
-`dispatch.proxy`, which would depend on `handler.proxy`, which would
-depend on `walk-node.proxy` again, an infinite loop at runtime.
+**A type that several layer files share lives in `contracts/`.** The
+walk's vocabulary (`HandlerResult`, `Descent`, `WalkNode`, `ScopeRecord`,
+and the readout shapes) is declared there, one contract per shape. A layer
+file imports it with `import type` from `contracts/`, never from a sibling
+layer file.
+
+**No handler imports `walk-node-layer-transformer`.** A handler returns
+descents instead of recursing, so the import graph runs one way:
+`walk-node` imports `dispatch-node`, and `dispatch-node` imports the
+handlers. `handler-result-layer-transformer`, the constructor every
+handler builds its answer with, imports nothing else from the walk.
 
 **An expression-level branch is exit ownership, not a handler.** Section
 6's recipe does not reach this case, because `guardPath` assumes a guard
 is a STATEMENT enclosing other STATEMENTS, while a ternary's arms guard an
 expression SUBTREE instead. `handle-exit` emits its own exit BEFORE
 descending into its expression, and exits merge back UPWARD through
-`walk-node-layer-adapter`, so a branch that sits inside a `return`
+`walk-node-layer-transformer`, so a branch that sits inside a `return`
 expression cannot reach back out and retract that `return`'s own unguarded
 exit. Instead, the exit's OWNER splits it. An exit-position ternary
 (`return cond ? a : b`, `throw cond ? a : b`, or a concise-arrow function
-body that IS a ternary) is handed to `read-conditional-exit-layer-adapter`,
+body that IS a ternary) is handed to `read-conditional-exit-layer-transformer`,
 which reads the condition as a `ternary` branch and emits one guarded exit
 per arm, recursing for a nested ternary. `handle-exit` delegates to it for
 a block-bodied `return` or `throw`; `handle-function` delegates to it
@@ -1171,7 +1186,9 @@ releases it. Anything that varies the config per file strands a whole
 extra compiler in memory, roughly 370MB each, which shows up as `assayer
 unit` running out of memory partway through a real repo, not merely
 running slowly. Which run to execute travels through the test-path
-pattern instead, never through `roots` or `testMatch`. There are two ways
+pattern instead, never through `roots` or `testMatch`. The
+`__assayerCoreRuntime` global and the source-tree export condition are
+fixed for the life of one process, so they keep the config identical. There are two ways
 to break this rule, and the second looks harmless:
 
 - naming the run's own directory directly inside the config, and
@@ -1180,8 +1197,9 @@ to break this rule, and the second looks harmless:
   `run-unit.harness.ts` wipes and reuses one stable path, rather than
   generating a new one per run.
 
-The test `jest-run-cli-adapter.test.ts` checks this rule directly, with
-the assertion "two different runs => the config is IDENTICAL." If you are
+The test `run-execute-cases-broker.test.ts` checks this rule directly, with
+the assertion "{two different runs} => the config is IDENTICAL, so ts-jest
+reuses one compiler." If you are
 about to make the config depend on which file is running, that test is
 exactly why not to.
 
@@ -1192,20 +1210,27 @@ rule above holds. The memory cost is per CONFIG, not per run, and it does
 not show up until something drives the whole specimen catalogue through
 this path at once.
 
-**The wrapped runner executes COMPILED adapters, never your TypeScript
-source directly.** The generated test file `require`s
-`<coreRoot>/dist/adapters` by absolute path, and that IS the intended
-behavior: a published core package ships `dist`, and a consumer's
-generated test file requires exactly that compiled output, so mapping it
-to the TypeScript source instead would test a path nothing in production
-actually runs. One consequence: `dist` and `src` disagreeing is a SILENT
-wrong answer. A stale `dist` folder lets the integration suite pass
-against old compiled code, while the unit suite passes separately against
-the new source, and neither one notices the other is stale.
-`jest.config.base.js` closes this gap with a `globalSetup` step that
-builds first, so every Jest path is covered, not merely `npm run ward`.
-`tsc --build` is content-hashed, so a build with nothing to do costs about
-0.2 seconds. Do not remove this step.
+**The wrapped runner loads core's run-time modules from the same tree
+`runUnitBroker` was loaded from.** The run-time modules are the typed code
+the nested Jest calls: the case interpreter, the entry resolver, the probe
+runtime, the probe injector, and `assayerHarness`.
+`coreRuntimeTransformer` picks the tree from the broker's own `__dirname`.
+When the broker runs from `src`, under ts-jest or `tsx`, the nested
+ts-jest compiles core's TypeScript source. That run also sets the `source`
+export condition, so a workspace package core imports resolves to its
+source too. When the broker runs from `dist`, as in the built CLI or a
+published install, the nested Jest loads `dist`. One run therefore reads
+one tree, so `src` and `dist` cannot disagree inside it.
+
+No Jest run builds anything. Core's unit and integration tests read
+source. The CLI integration tests are the exception: they spawn the built
+CLI binary, so they need a current build.
+
+The ceremony files are the three plain-JS files at core's package root
+that Jest loads by path: `probe-runtime.js`, `probe-transformer.js` and
+`harness-registrar.js`. Each one reads its module path from the runner's
+config and loads it. The file paths of the run-time modules and the
+ceremony files live in `statics/core-runtime`. Moving a run-time module means editing that file.
 
 **Coverage IDs are cache-internal by design.** Changing how they are
 computed only costs a fixture rewrite, never a migration for anyone
@@ -1229,8 +1254,8 @@ back, not re-walked), and it reconciles references purely by lookup.
 Different ways of spelling the same import (`../b/foo` vs `../../b/foo`),
 and aliased paths (`@app/foo`), all resolve to one canonical
 repo-relative `(file, symbol)` pair, through TypeScript's own
-`ts.resolveModuleName` (`adapters/typescript/resolve-module`, configured
-by `adapters/typescript/read-config`). A re-export barrel file (a file
+`ts.resolveModuleName` (`brokers/import-specifier/resolve`, configured
+by `brokers/tsconfig/read`). A re-export barrel file (a file
 whose whole job is re-exporting things from elsewhere) is followed through
 to the real definition, using a seen-set (a record of files already
 visited) to stop if it cycles, implemented as recursion rather than a
@@ -1247,7 +1272,7 @@ name.
 **Read external signatures through the second, `node_modules`-aware
 project (section 5.10).** A resolved edge for a CALLED package or builtin
 carries the declared `{ params, returnType }` of that callable, read
-through `adapters/ts-morph/read-external-signature` and fed through the
+through `brokers/external-signature/read-declaration` and fed through the
 SAME `read-type-fact` to `type-descriptor` pipeline every other type goes
 through, so this introduces no new type language. The result is cached by
 the `.d.ts` file's own byte hash, at
@@ -1479,7 +1504,7 @@ refuses is reported as a GAP in the per-file analysis, because section
 `harness-realize-broker` closes this at run or serve time: it finds the
 colocated `<basename>.harness.ts` file using the same conjunction the
 stitch uses (matching basename, plus the symbol gate), loads it through
-the same `typescript/load-harness`, and re-derives each entry named in a
+the same `brokers/harness/load`, and re-derives each entry named in a
 gap through the SAME `derive-cases`, with `harness: { entry, params }`
 supplied. `cause-arrange` then emits a `{ kind: 'harness', param, key }`
 binding exactly where it would otherwise have refused. A supplied entry's
@@ -1535,14 +1560,14 @@ the harness file itself: `case-set-projection` carries `harnessPath` (an
 absolute path, exactly like `modulePath`) whenever some case names a
 harness binding. The generated file REQUIRES that path through the same
 ts-jest transform the subject under test goes through, and
-`jest-run-cli-adapter` maps `@assayer/core` to the root
+`run-execute-cases-broker` maps `@assayer/core` to the root
 `harness-registrar.js`, so the harness's registration lands where the
 generated file can read it. This mapping is what makes the read
 deterministic: resolving the `@assayer/core` package separately from the
 harness file and from the generated file can otherwise land on two
 different installs inside one workspace, and two separate module instances
 mean a registration nobody actually collects, and every key reported as
-missing even though it was supplied. `jest-interpret-case-adapter` then
+missing even though it was supplied. `case-interpret-broker` then
 walks the key path (`transformers/harness-value`) and applies the value
 positionally. A key the declaration does not carry produces an `errored`
 case NAMING that key, never a thrown exception, and never a silent

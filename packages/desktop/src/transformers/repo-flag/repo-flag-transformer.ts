@@ -6,14 +6,12 @@
  * repoFlagTransformer({ argv: ['--repo', '/home/user/project'] });
  * // Returns the branded RepoPath '/home/user/project'
  */
-import { repoPathContract } from '../../contracts/repo-path/repo-path-contract';
-import type { RepoPath } from '../../contracts/repo-path/repo-path-contract';
 
 const REPO_FLAG = '--repo';
 
-export const repoFlagTransformer = ({ argv }: { argv: readonly string[] }): RepoPath => {
+export const repoFlagTransformer = ({ argv }: { argv: readonly string[] }): string => {
   const flagIndex = argv.indexOf(REPO_FLAG);
   const provided = flagIndex >= 0 ? argv[flagIndex + 1] : undefined;
 
-  return repoPathContract.parse(provided ?? '.');
+  return (provided ?? '.');
 };

@@ -15,9 +15,8 @@
  * });
  * // Returns a validated CompiledFileView (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { sourceLineContract } from '../source-line/source-line-contract';
 import { mapNodeContract } from '../map-node/map-node-contract';
@@ -25,7 +24,7 @@ import { fileAnalysisContract } from '../file-analysis/file-analysis-contract';
 import { resolvedEdgeContract } from '../resolved-edge/resolved-edge-contract';
 
 export const compiledFileViewContract = z.object({
-  relPath: relPathContract,
+  relPath: z.string().min(1).brand<'CompiledFileViewRelPath'>(),
   contentHash: contentHashContract.optional(),
   // Raw per-line source for DISPLAY only (the code viewer / raw-blob view). Never read by analysis.
   displayLines: z.array(sourceLineContract),
@@ -36,6 +35,6 @@ export const compiledFileViewContract = z.object({
   // signature once read). The resolver filters the per-namespace resolved index to `from === relPath`.
   // Empty for a file that imports nothing, and defaulted so an older cache view still parses.
   resolvedEdges: z.array(resolvedEdgeContract).default([]),
-});
+}).brand<'CompiledFileView'>();
 
 export type CompiledFileView = z.infer<typeof compiledFileViewContract>;

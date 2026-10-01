@@ -30,7 +30,7 @@
  * resolveTypeRefLayerBroker({ reference, walked, relPath: 'src/reader.ts', root: '/repo', options, seen: new Set() });
  * // Returns { kind: 'object', typeName: 'Config', properties: [...] } or undefined
  */
-import { symbolNameContract, typeDescriptorContract } from '@assayer/shared/contracts';
+import { typeDescriptorContract } from '@assayer/shared/contracts';
 import type { TypeDescriptor } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -79,10 +79,10 @@ export const resolveTypeRefLayerBroker = ({
   );
   // A NAMESPACE-qualified reference (`T.Leaf`) names a module, not a local declaration. Its root is the
   // local binding an `import * as T` made, and only the member after it is the type to ask for.
-  const [namespaceRoot, ...memberPath] = String(typeRef).split('.');
+  const [namespaceRoot, ...memberPath] = typeRef.split('.');
   const memberName = memberPath.join('.');
   const declared =
-    memberName.length > 0 ? undefined : walked.declaredShapes.find((shape) => String(shape.name) === String(typeRef));
+    memberName.length > 0 ? undefined : walked.declaredShapes.find((shape) => String(shape.name) === typeRef);
 
   if (declared !== undefined) {
     // The declaration's OWN references, resolved in the file that declares it — which is the only place
@@ -115,22 +115,22 @@ export const resolveTypeRefLayerBroker = ({
   // forwards the member off it (`import * as T` then `T.Leaf` asks for `Leaf`); a bare `export *`
   // forwards it unchanged, and each star is tried in declaration order until one answers.
   const forwards = walked.moduleEdges.flatMap((edge) => {
-    if (edge.specifier === undefined || String(edge.kind) === 'dynamic') {
+    if (edge.specifier === undefined || edge.kind === 'dynamic') {
       return [];
     }
 
     if (memberName.length > 0) {
       return edge.bindings.some((binding) => binding.kind === 'namespace' && String(binding.local) === namespaceRoot)
-        ? [{ specifier: String(edge.specifier), exportedName: symbolNameContract.parse(memberName) }]
+        ? [{ specifier: String(edge.specifier), exportedName: memberName }]
         : [];
     }
 
     const named = edge.bindings.find(
-      (binding) => binding.kind === 'named' && String(binding.alias ?? binding.name) === String(typeRef),
+      (binding) => binding.kind === 'named' && String(binding.alias ?? binding.name) === typeRef,
     );
 
     if (named?.kind === 'named') {
-      return [{ specifier: String(edge.specifier), exportedName: symbolNameContract.parse(named.name) }];
+      return [{ specifier: String(edge.specifier), exportedName: named.name }];
     }
 
     return edge.bindings.some((binding) => binding.kind === 'star')
@@ -163,7 +163,7 @@ export const resolveTypeRefLayerBroker = ({
     const resolved = resolveTypeRefLayerBroker({
       reference: forwarded,
       walked: sibling.walked,
-      relPath: String(sibling.relPath),
+      relPath: sibling.relPath,
       root,
       options,
       seen: visited,

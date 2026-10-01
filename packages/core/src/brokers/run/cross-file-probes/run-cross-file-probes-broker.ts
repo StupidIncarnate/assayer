@@ -19,15 +19,14 @@
  * await runCrossFileProbesBroker({ walked, root: '/repo', relPath: 'src/cross-file-map.ts', probeDir: '/repo/.assayer/cache/probes' });
  * // Writes '<probeDir>/<siblingContentHash>.json' for each mapped imported callee, returns ['src/band-reading.ts']
  */
-import type { RelPath } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { crossFileMapReachesTransformer } from '../../../transformers/cross-file-map-reaches/cross-file-map-reaches-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
 import { resolveSiblingCalleeBroker } from '../../resolve-sibling/callee/resolve-sibling-callee-broker';
+import { writeFile } from '#gateway/node/fs__promises';
 
 export const runCrossFileProbesBroker = async ({
   walked,
@@ -39,7 +38,7 @@ export const runCrossFileProbesBroker = async ({
   root: string;
   relPath: string;
   probeDir: string;
-}): Promise<RelPath[]> => {
+}): Promise<string[]> => {
   if (!walked.success) {
     return [];
   }
@@ -50,7 +49,7 @@ export const runCrossFileProbesBroker = async ({
     return [];
   }
 
-  const { options } = typescriptReadConfigAdapter({ searchPath: root });
+  const { options } = tsconfigReadBroker({ searchPath: root });
   const containingFile = `${root}/${relPath}`;
 
   // One plan per DISTINCT specifier — two maps of the same sibling share a plan (same bytes, same hash).
@@ -62,20 +61,20 @@ export const runCrossFileProbesBroker = async ({
       return [];
     }
 
-    const contentHash = cryptoSha256Adapter({ content: String(sibling.source) });
+    const contentHash = contentHashTransformer({ content: sibling.source });
 
     return [
       {
         relPath: sibling.relPath,
-        path: `${probeDir}/${String(contentHash)}.json`,
+        path: `${probeDir}/${contentHash}.json`,
         content: JSON.stringify(
-          probePlanProjectionTransformer({ walked: sibling.walked, relPath: String(sibling.relPath), contentHash: String(contentHash) }),
+          probePlanProjectionTransformer({ walked: sibling.walked, relPath: sibling.relPath, contentHash }),
         ),
       },
     ];
   });
 
-  await Promise.all(plans.map(async (plan) => fsWriteFileAdapter({ path: plan.path, content: plan.content })));
+  await Promise.all(plans.map(async (plan) => writeFile(plan.path, plan.content)));
 
   return plans.map((plan) => plan.relPath);
 };

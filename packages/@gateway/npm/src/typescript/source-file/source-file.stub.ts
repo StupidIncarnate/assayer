@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import { ts } from 'ts-morph';
 
 export const SourceFileStub = ({
   code = 'const a = 1;',

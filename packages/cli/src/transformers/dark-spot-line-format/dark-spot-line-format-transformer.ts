@@ -10,12 +10,8 @@
  */
 import type { DarkSpot } from '@assayer/shared/contracts';
 
-import { admissionLineContract } from '../../contracts/admission-line/admission-line-contract';
-import type { AdmissionLine } from '../../contracts/admission-line/admission-line-contract';
 
-export const darkSpotLineFormatTransformer = ({ darkSpot }: { darkSpot: DarkSpot }): AdmissionLine =>
-  admissionLineContract.parse(
-    `  DARK ${String(darkSpot.kind)} at L${String(darkSpot.startLine)}-L${String(darkSpot.endLine)} in ` +
+export const darkSpotLineFormatTransformer = ({ darkSpot }: { darkSpot: DarkSpot }): string =>
+  (`  DARK ${String(darkSpot.kind)} at L${String(darkSpot.startLine)}-L${String(darkSpot.endLine)} in ` +
       `${darkSpot.scopePath.map((segment) => String(segment)).join('/')} — Assayer has no handler for it, so ` +
-      'nothing inside it is covered',
-  );
+      'nothing inside it is covered');

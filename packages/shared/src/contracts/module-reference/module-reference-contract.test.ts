@@ -27,7 +27,7 @@ describe('moduleReferenceContract', () => {
     it('INVALID: {column: 0} => throws validation error', () => {
       expect(() => {
         return moduleReferenceContract.parse({ specifier: './other', importedName: 'foo', line: 1, column: 0 });
-      }).toThrow(/greater than 0/u);
+      }).toThrow(/Too small: expected number to be >0/u);
     });
   });
 });

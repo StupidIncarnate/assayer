@@ -10,6 +10,7 @@ const OUR_WRAPPERS = [
   'runSync',
   'runSyncWithInput',
   'spawnDetached',
+  'spawnFireAndForget',
   'spawnLive',
   'spawnLongLived',
   'spawnPiped',

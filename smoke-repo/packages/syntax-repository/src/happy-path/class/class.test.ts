@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'class.ts'), 'utf8');
 const relPath = 'src/happy-path/class/class.ts';
@@ -12,7 +12,7 @@ describe('class — a branchless class method with no explicit constructor', () 
   // build one with no arguments — the method is `constructable` and therefore DRIVEN, not a gap. It is
   // branchless, so it reaches its single return and owes exactly one case for its one exit.
   it('VALID: {class Greeter { greet(name) { return `hi, ${name}` } }} => one constructable method entry, one exit, one case', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -39,7 +39,7 @@ describe('class — a branchless class method with no explicit constructor', () 
 
   // Nothing is admitted: a branchless constructable method is fully understood and fully driven.
   it('VALID: {a branchless constructable method} => no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({ darkSpots: analysis.darkSpots, undriven: analysis.undriven, lints: analysis.lints }).toStrictEqual({
       darkSpots: [],

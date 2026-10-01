@@ -1,8 +1,8 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer detail panel's TESTS tab — the derived
- *   case set. Compiles the smoke-repo syntax-repository into a PER-TEST temp cache, launches the REAL
- *   built Electron app, selects a single file by its exact data-relpath, and asserts the entry title,
- *   the per-exit derived case rows, and the hover coupling that highlights the case a code line runs
+ *   case set. Reads the smoke-repo syntax-repository cache that globalSetup compiles once, through the
+ *   REAL built Electron app the e2e fixture keeps warm, selects a single file by its exact
+ *   data-relpath, and asserts the entry title, the per-exit derived case rows, and the hover coupling that highlights the case a code line runs
  *   through. Covers the if-else / switch / boolean rungs and the nested-function funnel proof (the
  *   private inner driven through outer, folded into outer's single entry).
  *
@@ -25,8 +25,8 @@ const NESTED_FUNCTION = 'packages/syntax-repository/src/happy-path/function/nest
 // cardinality matrix and its salient lens reach the renderer.
 const ARRAY_ELEMENT_LENGTH = 'packages/syntax-repository/src/happy-path/array/element-length/element-length.ts';
 
-// The remaining branch/pure rungs, each selected by exact relPath and asserted in ONE launch (compile
-// + launch once, walk many). Class rungs (if-else / switch in a method), the three boolean shapes, the
+// The remaining branch/pure rungs, each selected by exact relPath and asserted in ONE test on the shared
+// window (walk many). Class rungs (if-else / switch in a method), the three boolean shapes, the
 // composition rungs, and the branchless pure function + method.
 const IF_ELSE_IN_CLASS = 'packages/syntax-repository/src/happy-path/if-else/in-class/in-class.ts';
 const SWITCH_IN_CLASS = 'packages/syntax-repository/src/happy-path/switch/in-class/in-class.ts';
@@ -64,7 +64,7 @@ const USES_CONSOLE = 'packages/syntax-repository/src/happy-path/node-global/uses
 
 test.describe('Compiled Surface Explorer — Tests tab', () => {
   test('VALID: {happy-path/if-else/in-function/in-function.ts selected} => the Tests tab lists the 2 derived cases and hovering L3 highlights the then-case', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_IN_FUNCTION}"]`).click();
 
     // code-shown: the read-only CodeMirror renders the cached blob, and the right detail panel is up.
@@ -96,7 +96,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
   });
 
   test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the switch over a 3-member union derives 3 exhaustive cases (one per label + the default\'s single uncovered member) and hovering the default return highlights only that case', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_FUNCTION}"]`).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
@@ -125,7 +125,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
   });
 
   test('VALID: {happy-path/boolean/and/and.ts selected} => the compound condition derives one case per CAUSE (1 then + 2 else)', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
@@ -160,7 +160,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     // display lens, not a change to what is derived or run. The title keeps the FULL count either way.
     await reloadSmokeRunMode({ window, runMode: 'intelligent' });
 
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
@@ -179,7 +179,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
   });
 
   test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the empty [] salient', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${ARRAY_ELEMENT_LENGTH}"]`).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
@@ -205,7 +205,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
   });
 
   test('VALID: {happy-path/ternary/return-basic/return-basic.ts selected} => the exit-position ternary splits into a then/else return, one case per arm, and hovering the ternary line highlights both', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_RETURN_BASIC}"]`).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
@@ -235,7 +235,7 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
   });
 
   test('VALID: {happy-path/function/nested/nested.ts selected} => the private inner FUNNELS into outer as one entry, its branch covered by cases arranged in outer\'s param', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${NESTED_FUNCTION}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
@@ -259,8 +259,8 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
   });
 
-  test('VALID: {compile+launch once, walk the class/boolean/composition/pure rungs} => each file\'s Tests tab lists its exact entry title and derived cases', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+  test('VALID: {one shared window, walk the class/boolean/composition/pure rungs} => each file\'s Tests tab lists its exact entry title and derived cases', async ({ smokeWindow: window }) => {
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
 
     // Each file is selected by its exact relPath; gating on the (unique) entry title lets the case-row
     // read settle on the newly-opened file before it is asserted whole. Class rung — an `if` in a method.
@@ -425,8 +425,8 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     ]);
   });
 
-  test('VALID: {compile+launch once, walk the module-scope + consumption entries} => each is a DRIVEN module entry labelled by export-or-filename, its case row carrying no args', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+  test('VALID: {one shared window, walk the module-scope + consumption entries} => each is a DRIVEN module entry labelled by export-or-filename, its case row carrying no args', async ({ smokeWindow: window }) => {
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
 
     // A module scope DRIVEN from `process.env` — labelled by its filename, no `()`, and its case rows
     // carry NO args (a module is reached by importing it, not calling it).

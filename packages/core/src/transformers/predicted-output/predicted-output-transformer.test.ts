@@ -1,8 +1,8 @@
-import { coverageIdContract } from '@assayer/shared/contracts';
+import { coverageContract } from '@assayer/shared/contracts';
 
 import { predictedOutputTransformer } from './predicted-output-transformer';
 
-const EXIT = coverageIdContract.parse('*module*/f/return@top');
+const EXIT = coverageContract.shape.id.parse('*module*/f/return@top');
 
 describe('predictedOutputTransformer', () => {
   describe('branch-decided output', () => {

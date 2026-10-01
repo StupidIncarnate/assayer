@@ -1,7 +1,7 @@
-import { codemirrorViewAdapterProxy } from '../../adapters/codemirror/view/codemirror-view-adapter.proxy';
+import { SourceEditorLayerWidgetProxy } from './source-editor-layer-widget.proxy';
 
 export const CodeViewerWidgetProxy = (): Record<PropertyKey, never> => {
-  codemirrorViewAdapterProxy();
+  SourceEditorLayerWidgetProxy();
 
   return {};
 };

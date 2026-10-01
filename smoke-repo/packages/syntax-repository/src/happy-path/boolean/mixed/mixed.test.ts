@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'mixed.ts'), 'utf8');
 const relPath = 'src/happy-path/boolean/mixed/mixed.ts';
@@ -17,7 +17,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
   // cause enumeration linear (MC/DC's n+1), which is what makes exhaustive derivation affordable at
   // all. If this ever grows exponentially, the whole approach stops scaling.
   it('VALID: {three leaves} => FOUR cases, one per cause — linear, not 2^n', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       // admin holds, 4 > 3 holds — `owner` never evaluates.
@@ -69,7 +69,7 @@ describe('boolean / mixed — nested connectives inside an exported function', (
   // Parens are formatting, so they must not reach identity: the nested leaves key on their POSITION
   // in the tree, and `project-node` collapses the ParenthesizedExpression out of the branch ID.
   it('VALID: {parenthesized sub-expression} => leaves key on tree position, parens invisible', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
     const enrichment = analysis.enrichment.filter((entry) => entry.line === 2);
 
     expect(enrichment).toStrictEqual([

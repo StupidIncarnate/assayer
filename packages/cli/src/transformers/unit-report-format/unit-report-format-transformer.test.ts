@@ -1,4 +1,5 @@
-import { RunResultStub, CaseResultStub } from '@assayer/shared/contracts';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
+import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
 
 import { unitReportFormatTransformer } from './unit-report-format-transformer';
 
@@ -7,7 +8,7 @@ describe('unitReportFormatTransformer', () => {
     it('VALID: {all cases passed} => one line per file, no noise', () => {
       const result = unitReportFormatTransformer({ runs: [RunResultStub()] });
 
-      expect(String(result)).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed');
+      expect(result).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed');
     });
   });
 
@@ -30,7 +31,7 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/2 passed\n' +
           '  FAIL grade(6)\n' +
           '    predicted grade/return@then\n' +
@@ -51,7 +52,7 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/1 passed\n' +
           '  ERROR grade(6, 2)\n' +
           '    threw before reaching an exit: boom\n' +
@@ -78,7 +79,7 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/2 passed\n' +
           '  ERROR grade(6, 2)\n' +
           '    threw before reaching an exit: boom\n' +
@@ -101,7 +102,7 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
-      expect(String(result).endsWith('  assayer detail abc123')).toBe(true);
+      expect(result.endsWith('  assayer detail abc123')).toBe(true);
     });
   });
 
@@ -113,7 +114,7 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n  GAP find — needs a harness',
       );
     });
@@ -125,7 +126,7 @@ describe('unitReportFormatTransformer', () => {
     it('EMPTY: {a file that derived no cases} => its header, with the count honest', () => {
       const result = unitReportFormatTransformer({ runs: [RunResultStub({ cases: [] })] });
 
-      expect(String(result)).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/0 passed');
+      expect(result).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/0 passed');
     });
   });
 
@@ -144,7 +145,7 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'src/a.ts  1/1 passed\n' +
           'src/b.ts  0/1 passed\n' +
           '  ERROR grade(6, 2)\n' +
@@ -177,7 +178,7 @@ describe('unitReportFormatTransformer', () => {
 
       // The report shows the module's label (its file basename here), never the internal *module* —
       // exactly what the desktop panel shows, so the two describe one artifact identically.
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  0/0 passed\n' +
           '  UNDRIVEN welded-const.ts — it runs at import time, so no case drove its branches',
       );
@@ -195,7 +196,7 @@ describe('unitReportFormatTransformer', () => {
 
       const result = unitReportFormatTransformer({ runs });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  GAP find — needs a harness\n' +
           '  UNDRIVEN inner — it is not exported',

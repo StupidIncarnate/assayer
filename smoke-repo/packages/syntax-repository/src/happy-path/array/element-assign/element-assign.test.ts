@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'element-assign.ts'), 'utf8');
 const relPath = 'src/happy-path/array/element-assign/element-assign.ts';
@@ -17,7 +17,7 @@ describe('array / element-assign — a branchless function assigning `items[2] =
   // value `[7, 7]`, emitted in that order. The scalar `value` is fixed to `7` across all three. The
   // values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function put(items: number[], value: number): void { items[2] = value }} => array-of-number + number params, void read as unknown, three cardinality cases reaching one implicit exit', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -68,7 +68,7 @@ describe('array / element-assign — a branchless function assigning `items[2] =
   // reaching no reportable callee, so nothing is admitted: no declared types, no dark spot, no undriven,
   // no lint.
   it('VALID: {an array-typed param, a scalar param, an index write} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

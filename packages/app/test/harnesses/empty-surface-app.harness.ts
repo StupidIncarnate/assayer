@@ -12,12 +12,12 @@
  * const window = await emptyApp.launch();
  * // window.getByTestId('SURFACE_EMPTY') renders 'No compiled surface — run assayer'
  */
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { _electron } from '@playwright/test';
-import type { ElectronApplication, Page } from '@playwright/test';
-import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { join } from '#gateway/node/path';
+import { tmpdir } from '#gateway/node/os';
+import { mkdtempSync, ensureDirSync, writeFileSync, rmSync } from '#gateway/node/fs';
+import { _electron } from '#gateway/npm/playwright__test';
+import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
+import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 
 const desktopMainEntry = join(__dirname, '..', '..', '..', 'desktop', 'dist', 'bin', 'desktop-main.js');
 
@@ -36,7 +36,7 @@ export const emptySurfaceAppHarness = (): {
     launch: async (): Promise<Page> => {
       const configDir = mkdtempSync(join(tmpdir(), 'assayer-empty-surface-'));
       cleanups.push(() => { rmSync(configDir, { recursive: true, force: true }); });
-      mkdirSync(join(configDir, '.assayer', 'cache'), { recursive: true });
+      ensureDirSync(join(configDir, '.assayer', 'cache'));
       const manifest = AssayerCacheManifestStub({ namespaces: { master: { files: [] } } });
       writeFileSync(join(configDir, '.assayer', 'cache', 'manifest.json'), JSON.stringify(manifest));
 

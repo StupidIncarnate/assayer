@@ -1,4 +1,5 @@
-import { ParamDescriptorStub, SymbolNameStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { appliedParamsTransformer } from './applied-params-transformer';
 
@@ -77,7 +78,7 @@ describe('appliedParamsTransformer', () => {
     it('VALID: {a rest array of callbacks the harness names} => kept, not truncated', () => {
       const params = [SIZE, ParamDescriptorStub({ name: 'sinks', type: { kind: 'array', element: REPORT_TYPE }, rest: true })];
 
-      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'sinks' })] })).toStrictEqual([
+      expect(appliedParamsTransformer({ params, harness: ['sinks'] })).toStrictEqual([
         { name: 'size', type: { kind: 'number' } },
         { name: 'sinks', type: { kind: 'array', element: { kind: 'callable', text: '(m: string) => void' } }, rest: true },
       ]);
@@ -86,7 +87,7 @@ describe('appliedParamsTransformer', () => {
     it('VALID: {an optional callback the harness names} => kept, not truncated', () => {
       const params = [SIZE, ParamDescriptorStub({ name: 'report', type: REPORT_TYPE, optional: true })];
 
-      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'report' })] })).toStrictEqual([
+      expect(appliedParamsTransformer({ params, harness: ['report'] })).toStrictEqual([
         { name: 'size', type: { kind: 'number' } },
         { name: 'report', type: { kind: 'callable', text: '(m: string) => void' }, optional: true },
       ]);
@@ -99,7 +100,7 @@ describe('appliedParamsTransformer', () => {
         ParamDescriptorStub({ name: 'retries', type: { kind: 'number' }, optional: true }),
       ];
 
-      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'report' })] })).toStrictEqual([
+      expect(appliedParamsTransformer({ params, harness: ['report'] })).toStrictEqual([
         { name: 'size', type: { kind: 'number' } },
         { name: 'report', type: { kind: 'callable', text: '(m: string) => void' }, optional: true },
         { name: 'retries', type: { kind: 'number' }, optional: true },
@@ -109,7 +110,7 @@ describe('appliedParamsTransformer', () => {
     it('VALID: {a harness naming a DIFFERENT, unrelated param} => the unowed tail still truncates', () => {
       const params = [SIZE, ParamDescriptorStub({ name: 'report', type: REPORT_TYPE, optional: true })];
 
-      expect(appliedParamsTransformer({ params, harness: [SymbolNameStub({ value: 'size' })] })).toStrictEqual([
+      expect(appliedParamsTransformer({ params, harness: ['size'] })).toStrictEqual([
         { name: 'size', type: { kind: 'number' } },
       ]);
     });

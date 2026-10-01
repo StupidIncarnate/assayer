@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'hof-callback.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/hof-callback/hof-callback.ts';
@@ -24,7 +24,7 @@ describe('undriven / hof-callback — a branching callback passed to a same-file
   // REACHED, so NOT a dead-surface lint (the callback would once have been mis-filed as one). It rides
   // the undriven channel — "Assayer cannot steer it", not "the repo should delete it".
   it('VALID: {a callback passed to apply} => admitted UNDRIVEN, naming why no case steers it', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.undriven.map((entry) => ({ reason: entry.reason, startLine: entry.startLine, endLine: entry.endLine }))).toStrictEqual([
       { reason: CALLBACK_UNDRIVEN_REASON, startLine: 6, endLine: 12 },
@@ -35,7 +35,7 @@ describe('undriven / hof-callback — a branching callback passed to a same-file
   // only as an argument. Only the exported `run` is driven, with its one representative case. Nothing is
   // a dead-surface lint or a dark spot — the walk read every arm; it simply cannot steer the element.
   it('VALID: {a reached-but-unsteerable callback} => only run is driven; no lint, no dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       functions: analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases })),

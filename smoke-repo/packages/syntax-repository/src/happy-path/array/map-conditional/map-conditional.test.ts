@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'map-conditional.ts'), 'utf8');
 const relPath = 'src/happy-path/array/map-conditional/map-conditional.ts';
@@ -38,7 +38,7 @@ describe('array / map-conditional — `items.map((n) => …)` whose callback BRA
   // array, firing the callback once per element. Each value is an INPUT (P4); the case asserts only the
   // reached PATH. This is the array/element twin of composition/nested-function, funnelled one rung up.
   it('VALID: {a map callback branching on n} => FUNNELLED into rescale as its single entry, array shapes driving each arm', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(
       analysis.functions.map((fn) => ({ name: fn.entry.name, label: fn.entry.label, access: fn.entry.access, cases: fn.cases })),
@@ -66,7 +66,7 @@ describe('array / map-conditional — `items.map((n) => …)` whose callback BRA
   // Nothing is admitted — the walk read every arm and each drives through rescale's funnel. A file that
   // once mis-reported "delete this callback" now reports one driven entry.
   it('VALID: {a reached, funnelled callback} => no dead-surface lint, nothing undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       lints: analysis.lints,

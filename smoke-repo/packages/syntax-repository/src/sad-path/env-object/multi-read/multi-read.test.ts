@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { moduleGraphProjectionTransformer } from '@assayer/core/module-graph';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'multi-read.ts'), 'utf8');
 const relPath = 'src/sad-path/env-object/multi-read/multi-read.ts';
@@ -29,7 +29,7 @@ describe('env-object / multi-read — two env reads, one DRIVEN and one UNDRIVEN
   // exactly as switch/pure-statement is: one case per arm, each writing CODE and importing the module
   // fresh.
   it('VALID: {a module-scope switch on Number(process.env.CODE)} => one env case per arm', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [CASE_1_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
@@ -42,7 +42,7 @@ describe('env-object / multi-read — two env reads, one DRIVEN and one UNDRIVEN
   // walk (no ambient Node types, §5.10), so no case can steer which arm runs and the branch is admitted
   // UNDRIVEN at its line. This is what makes the file sad-path — the switch runs clean, the `if` cannot.
   it('VALID: {a bare process.env.MODE compare} => the branch admitted undriven, naming process.env.MODE', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.undriven).toStrictEqual([{ name: '*module*', reason: MODE_REASON, startLine: 1, endLine: 1 }]);
   });
@@ -50,7 +50,7 @@ describe('env-object / multi-read — two env reads, one DRIVEN and one UNDRIVEN
   // NOT a dark spot: the walk read both the switch and the `if` perfectly. The MODE branch is understood
   // and simply un-steerable — the two admissions are opposite claims and never merge.
   it('VALID: {a fully-understood file} => admits nothing as a dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.darkSpots).toStrictEqual([]);
   });
@@ -59,7 +59,7 @@ describe('env-object / multi-read — two env reads, one DRIVEN and one UNDRIVEN
   // no adjacent literal) and `MODE` (compared to `'production'`, the literal the stub guesses). The
   // per-property env stubs the stitch folds these into are asserted in the stub-graph integration test.
   it('VALID: {process.env.CODE and process.env.MODE reads} => both captured, MODE carrying its compared literal', () => {
-    const graph = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const graph = moduleGraphProjectionTransformer({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(graph.envReads).toStrictEqual([
       { property: 'MODE', literals: ['production'] },

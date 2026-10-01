@@ -40,13 +40,13 @@ describe('walkContextContract', () => {
           params: [],
           exported: true,
         });
-      }).toThrow(/at least 1 character/u);
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {exported: "yes"} => throws validation error', () => {
       expect(() => {
         return walkContextContract.parse({ scopePath: [], guardPath: [], params: [], exported: 'yes' });
-      }).toThrow(/Expected boolean/u);
+      }).toThrow(/Invalid input: expected boolean, received string/u);
     });
   });
 });

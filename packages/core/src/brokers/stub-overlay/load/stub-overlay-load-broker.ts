@@ -18,12 +18,9 @@ import type { StubOverlay } from '@assayer/shared/contracts';
 import { stubOverlayObjectFileContract } from '../../../contracts/stub-overlay-object-file/stub-overlay-object-file-contract';
 import { stubOverlayEnvFileContract } from '../../../contracts/stub-overlay-env-file/stub-overlay-env-file-contract';
 
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { pathBasenameAdapter } from '../../../adapters/path/basename/path-basename-adapter';
-import { pathDirnameAdapter } from '../../../adapters/path/dirname/path-dirname-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { basename, dirname, relative } from '#gateway/node/path';
 
 const JSON_EXT = '.json';
 
@@ -31,30 +28,30 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
   const objectsRoot = `${repoRoot}/assayer/stubs/objects`;
   const envRoot = `${repoRoot}/assayer/stubs/env`;
 
-  const objectAbs = (await fsExistsAdapter({ path: objectsRoot }))
+  const objectAbs = (await pathExists(objectsRoot))
     ? await compileWalkWorkingTreeBroker({ root: objectsRoot })
     : [];
-  const envAbs = (await fsExistsAdapter({ path: envRoot }))
+  const envAbs = (await pathExists(envRoot))
     ? await compileWalkWorkingTreeBroker({ root: envRoot })
     : [];
 
   const objectEntries = await Promise.all(
     objectAbs
-      .filter((abs) => String(abs).endsWith(JSON_EXT))
+      .filter((abs) => abs.endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromObjects = pathRelativeAdapter({ from: objectsRoot, to: String(abs) });
-        const definitionRelPath = pathDirnameAdapter({ path: String(relFromObjects) });
-        const typeName = String(pathBasenameAdapter({ path: String(relFromObjects) })).slice(0, -JSON_EXT.length);
-        const raw = await fsReadFileAdapter({ path: String(abs) });
-        const file = stubOverlayObjectFileContract.parse(JSON.parse(String(raw)));
+        const relFromObjects = relative(objectsRoot, abs);
+        const definitionRelPath = dirname(relFromObjects);
+        const typeName = basename(relFromObjects).slice(0, -JSON_EXT.length);
+        const raw = (await readFile(abs));
+        const file = stubOverlayObjectFileContract.parse(JSON.parse(raw));
         const properties = Object.entries(file.properties)
           .map(([name, spec]) => ({ name, values: spec.values }))
           .sort((a, b) => (a.name < b.name ? -1 : 1));
 
         return stubOverlayContract.parse({
           kind: 'object',
-          key: `${String(definitionRelPath)}#${typeName}`,
-          overlayPath: `assayer/stubs/objects/${String(relFromObjects)}`,
+          key: `${definitionRelPath}#${typeName}`,
+          overlayPath: `assayer/stubs/objects/${relFromObjects}`,
           properties,
         });
       }),
@@ -62,17 +59,17 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
 
   const envEntries = await Promise.all(
     envAbs
-      .filter((abs) => String(abs).endsWith(JSON_EXT))
+      .filter((abs) => abs.endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromEnv = pathRelativeAdapter({ from: envRoot, to: String(abs) });
-        const property = String(pathBasenameAdapter({ path: String(relFromEnv) })).slice(0, -JSON_EXT.length);
-        const raw = await fsReadFileAdapter({ path: String(abs) });
-        const file = stubOverlayEnvFileContract.parse(JSON.parse(String(raw)));
+        const relFromEnv = relative(envRoot, abs);
+        const property = basename(relFromEnv).slice(0, -JSON_EXT.length);
+        const raw = (await readFile(abs));
+        const file = stubOverlayEnvFileContract.parse(JSON.parse(raw));
 
         return stubOverlayContract.parse({
           kind: 'env',
           key: `process.env#${property}`,
-          overlayPath: `assayer/stubs/env/${String(relFromEnv)}`,
+          overlayPath: `assayer/stubs/env/${relFromEnv}`,
           property,
           values: file.values,
         });

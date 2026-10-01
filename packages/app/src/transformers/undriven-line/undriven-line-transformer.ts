@@ -22,8 +22,6 @@
  */
 import type { UndrivenEntry } from '@assayer/shared/contracts';
 
-import { undrivenLineContract } from '../../contracts/undriven-line/undriven-line-contract';
-import type { UndrivenLine } from '../../contracts/undriven-line/undriven-line-contract';
 
-export const undrivenLineTransformer = ({ entry }: { entry: UndrivenEntry }): UndrivenLine =>
-  undrivenLineContract.parse(`UNDRIVEN ${String(entry.label ?? entry.name)} — ${String(entry.reason)}`);
+export const undrivenLineTransformer = ({ entry }: { entry: UndrivenEntry }): string =>
+  `UNDRIVEN ${String(entry.label ?? entry.name)} — ${String(entry.reason)}`;

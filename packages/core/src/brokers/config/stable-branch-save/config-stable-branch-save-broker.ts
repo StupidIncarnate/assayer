@@ -10,7 +10,7 @@
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
+import { writeFile } from '#gateway/node/fs__promises';
 
 export const configStableBranchSaveBroker = async ({
   configPath,
@@ -21,7 +21,7 @@ export const configStableBranchSaveBroker = async ({
 }): Promise<AssayerConfig> => {
   const parsed = assayerConfigContract.parse(config);
 
-  await fsWriteFileAdapter({ path: configPath, content: JSON.stringify(parsed) });
+  await writeFile(configPath, JSON.stringify(parsed));
 
   return parsed;
 };

@@ -83,7 +83,7 @@ describe('arrangeBindingContract', () => {
         param: 'report',
         key: 'inputs.audit.report',
         value: 'abc123',
-      } as never);
+      });
 
       expect(result).toStrictEqual({ kind: 'harness', param: 'report', key: 'inputs.audit.report' });
     });
@@ -101,7 +101,7 @@ describe('arrangeBindingContract', () => {
   describe('a malformed binding', () => {
     it('INVALID: {kind: "callback"} => throws validation error', () => {
       expect(() => {
-        return arrangeBindingContract.parse({ kind: 'callback' } as never);
+        return arrangeBindingContract.parse({ kind: 'callback' });
       }).toThrow(/invalid_union_discriminator|Invalid discriminator/u);
     });
   });

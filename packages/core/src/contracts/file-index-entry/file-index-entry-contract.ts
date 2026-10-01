@@ -6,12 +6,11 @@
  * fileIndexEntryContract.parse({ relPath: 'packages/core/src/index.ts' });
  * // Returns a validated FileIndexEntry (branded relPath field)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { relPathContract } from '@assayer/shared/contracts';
 
 export const fileIndexEntryContract = z.object({
-  relPath: relPathContract,
-});
+  relPath: z.string().min(1).brand<'FileIndexEntryRelPath'>(),
+}).brand<'FileIndexEntry'>();
 
 export type FileIndexEntry = z.infer<typeof fileIndexEntryContract>;

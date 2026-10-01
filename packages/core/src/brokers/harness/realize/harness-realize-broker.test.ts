@@ -1,4 +1,4 @@
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 
 import { harnessRealizeBroker } from './harness-realize-broker';
@@ -106,8 +106,8 @@ describe('harnessRealizeBroker', () => {
   describe('a harness that supplies every refused input', () => {
     it('VALID: {report declared} => both arms driven, the callback bound to its key path', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: HARNESS });
+      const walked = walkFileTransformer({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -134,8 +134,8 @@ describe('harnessRealizeBroker', () => {
 
     it('VALID: {report declared} => the input gap is PAID, not reprinted', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: HARNESS });
+      const walked = walkFileTransformer({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -154,8 +154,8 @@ describe('harnessRealizeBroker', () => {
     // than leaving it refused.
     it('VALID: {a refused param beside the one the predicate reads} => both return values driven, differing from the plain twin only by the binding', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: PREDICATE_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: PREDICATE_SOURCE, relPath: 'src/is-big.ts' });
+      proxy.setupHarness({ path: '/repo/src/is-big.harness.ts', source: PREDICATE_HARNESS });
+      const walked = walkFileTransformer({ source: PREDICATE_SOURCE, relPath: 'src/is-big.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/is-big.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/is-big.ts' });
@@ -184,7 +184,7 @@ describe('harnessRealizeBroker', () => {
     // sight. Two cases here and one there is the whole defect, so both counts are asserted.
     it('VALID: {the same predicate with nothing refused} => the same two return values, without the binding', () => {
       harnessRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: PREDICATE_TWIN_SOURCE, relPath: 'src/is-big.ts' });
+      const walked = walkFileTransformer({ source: PREDICATE_TWIN_SOURCE, relPath: 'src/is-big.ts' });
 
       const analysis = analyzeFileBroker({ walked, relPath: 'src/is-big.ts' });
 
@@ -206,8 +206,8 @@ describe('harnessRealizeBroker', () => {
   describe('a paid gap revives what it was suppressing', () => {
     it('VALID: {a branch nothing can steer} => the gap goes, the undriven admission arrives', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: OPAQUE_BRANCH_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: HARNESS });
+      const walked = walkFileTransformer({ source: OPAQUE_BRANCH_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -229,8 +229,8 @@ describe('harnessRealizeBroker', () => {
   describe('a PARTIAL harness', () => {
     it('VALID: {one of two callbacks declared} => no case, and the invoice names only what is missing', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: PARTIAL_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: TWO_CALLBACKS_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: PARTIAL_HARNESS });
+      const walked = walkFileTransformer({ source: TWO_CALLBACKS_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -252,8 +252,8 @@ describe('harnessRealizeBroker', () => {
   describe('two gapped entries, the harness declaring keys for only one', () => {
     it('VALID: {audit declared, summarize not mentioned} => audit is paid, summarize keeps its own original gap', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: AUDIT_ONLY_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: TWO_ENTRIES_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: AUDIT_ONLY_HARNESS });
+      const walked = walkFileTransformer({ source: TWO_ENTRIES_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -295,8 +295,8 @@ describe('harnessRealizeBroker', () => {
     // already derived.
     it('VALID: {audit declared and gapped, grade declared but never gapped} => grade is untouched', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: AUDIT_AND_UNGAPPED_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: UNGAPPED_ENTRY_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: AUDIT_AND_UNGAPPED_HARNESS });
+      const walked = walkFileTransformer({ source: UNGAPPED_ENTRY_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -336,8 +336,8 @@ describe('harnessRealizeBroker', () => {
   describe('a dead-surface lint beside the entry a harness pays', () => {
     it('VALID: {an unused private helper beside a paid gap} => the lint survives the reconstruction', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: DEAD_SURFACE_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: HARNESS });
+      const walked = walkFileTransformer({ source: DEAD_SURFACE_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -378,8 +378,8 @@ describe('harnessRealizeBroker', () => {
     // leave standing, now resolved by NOT silently mis-deriving rather than by a guess.
     it("VALID: {no walked threaded} => backward compatible, the surface's gap stands untouched", () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: FUNNELLED_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: FUNNELLED_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: FUNNELLED_HARNESS });
+      const walked = walkFileTransformer({ source: FUNNELLED_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -389,8 +389,8 @@ describe('harnessRealizeBroker', () => {
 
     it('VALID: {walked threaded} => the surface derives both arms, pathing through the private then its own return', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: FUNNELLED_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: FUNNELLED_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: FUNNELLED_HARNESS });
+      const walked = walkFileTransformer({ source: FUNNELLED_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts', walked });
@@ -413,8 +413,8 @@ describe('harnessRealizeBroker', () => {
   describe('a through-caller private\'s own refusal, closed via a harness naming the private', () => {
     it("VALID: {walked threaded} => build's gap closes, its cases rebase the harness binding onto audit's own `report` argument", () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: THROUGH_CALLER_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: THROUGH_CALLER_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: THROUGH_CALLER_HARNESS });
+      const walked = walkFileTransformer({ source: THROUGH_CALLER_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts', walked });
@@ -455,8 +455,8 @@ describe('harnessRealizeBroker', () => {
   describe('a harness naming a TRAILING REST parameter — never gapped, but not inert', () => {
     it('VALID: {sinks declared} => the case binds sinks, spread-ready, though collect was never gapped', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: TRAILING_REST_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: TRAILING_REST_SOURCE, relPath: 'src/collect.ts' });
+      proxy.setupHarness({ path: '/repo/src/collect.harness.ts', source: TRAILING_REST_HARNESS });
+      const walked = walkFileTransformer({ source: TRAILING_REST_SOURCE, relPath: 'src/collect.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/collect.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/collect.ts' });
@@ -485,8 +485,8 @@ describe('harnessRealizeBroker', () => {
   describe('a harness key the entry does not declare', () => {
     it('INVALID: {a parameter no signature has} => nothing is arranged and the gap stands', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: WRONG_PARAM_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: WRONG_PARAM_HARNESS });
+      const walked = walkFileTransformer({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       const result = harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' });
@@ -498,8 +498,8 @@ describe('harnessRealizeBroker', () => {
   describe('a `*.harness.ts` belonging to some other tool', () => {
     it('VALID: {a Playwright harness} => silently not Assayer\'s, so the analysis is untouched', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: OTHER_TOOL_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: OTHER_TOOL_HARNESS });
+      const walked = walkFileTransformer({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       expect(harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' })).toBe(analysis);
@@ -509,8 +509,8 @@ describe('harnessRealizeBroker', () => {
   describe('a harness whose module body throws', () => {
     it('ERROR: {a throwing harness} => the analysis is untouched, since the compile stitch reports it', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupHarness({ source: THROWING_HARNESS });
-      const walked = tsMorphWalkFileAdapter({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupHarness({ path: '/repo/src/audit.harness.ts', source: THROWING_HARNESS });
+      const walked = walkFileTransformer({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       expect(harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' })).toBe(analysis);
@@ -520,8 +520,8 @@ describe('harnessRealizeBroker', () => {
   describe('a file with no colocated harness', () => {
     it('EMPTY: {nothing on disk} => the analysis passes through unchanged', () => {
       const proxy = harnessRealizeBrokerProxy();
-      proxy.setupNoHarness();
-      const walked = tsMorphWalkFileAdapter({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
+      proxy.setupNoHarness({ path: '/repo/src/audit.harness.ts' });
+      const walked = walkFileTransformer({ source: CALLBACK_SOURCE, relPath: 'src/audit.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/audit.ts' });
 
       expect(harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/audit.ts' })).toBe(analysis);
@@ -531,7 +531,7 @@ describe('harnessRealizeBroker', () => {
   describe('a file that owes nothing', () => {
     it('EMPTY: {no gap} => the analysis passes through unchanged, no disk read', () => {
       harnessRealizeBrokerProxy();
-      const walked = tsMorphWalkFileAdapter({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
+      const walked = walkFileTransformer({ source: PLAIN_SOURCE, relPath: 'src/grade.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/grade.ts' });
 
       expect(harnessRealizeBroker({ analysis, root: '/repo', relPath: 'src/grade.ts' })).toBe(analysis);

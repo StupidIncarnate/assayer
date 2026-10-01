@@ -17,7 +17,7 @@
  * // Returns [{ key: 'src/config/config.ts#Config', property: 'mode', reader: 'src/decide.ts', line: 6,
  * //   predicate: { kind: 'eq', literal: 'a' }, operandType: { kind: 'string' } }, …]
  */
-import { stubKeyContract } from '@assayer/shared/contracts';
+import { stubEntryContract } from '@assayer/shared/contracts';
 import type { CompiledFileBlob, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { propertyGuardContract } from '../../contracts/property-guard/property-guard-contract';
@@ -77,7 +77,7 @@ export const gatherPropertyGuardsTransformer = ({
               ? []
               : [
                   propertyGuardContract.parse({
-                    key: stubKeyContract.parse(`${definitionRelPath}#${typeName}`),
+                    key: stubEntryContract.shape.key.parse(`${definitionRelPath}#${typeName}`),
                     property: leaf.operandPropertyPath[0],
                     reader: blob.relPath,
                     line: branch.startLine,

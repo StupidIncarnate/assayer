@@ -1,8 +1,9 @@
-import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
-import { testingLibraryRenderAdapter } from '../../../adapters/testing-library/render/testing-library-render-adapter';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { ExplorerPageResponder } from './explorer-page-responder';
 import { ExplorerPageResponderProxy } from './explorer-page-responder.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
+import { createElement } from '#gateway/npm/react';
 
 describe('ExplorerPageResponder', () => {
   describe('rendering the explorer page', () => {
@@ -10,9 +11,7 @@ describe('ExplorerPageResponder', () => {
       const proxy = ExplorerPageResponderProxy();
       proxy.setupTree({ tree: CompiledTreeStub() });
 
-      const { findByTestId } = testingLibraryRenderAdapter({
-        ui: reactCreateElementAdapter({ component: ExplorerPageResponder }),
-      });
+      const { findByTestId } = render(createElement(ExplorerPageResponder), { wrapper: MantineProvider });
       const panel = await findByTestId('SURFACE_EXPLORER');
 
       expect(panel).toBeInTheDocument();

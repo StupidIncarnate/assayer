@@ -1,7 +1,8 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { FileTreeNodeLayerWidget } from './file-tree-node-layer-widget';
 import { FileTreeNodeLayerWidgetProxy } from './file-tree-node-layer-widget.proxy';
-import { CompiledTreeStub } from '@assayer/shared/contracts';
+import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 
 describe('FileTreeNodeLayerWidget', () => {
   describe('file node', () => {
@@ -12,15 +13,13 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByTestId } = render((
           <>
             {nodes.map((node) => (
               <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('FILE_TREE_FILE')).toHaveTextContent('app.tsx');
       expect(getByTestId('FILE_TREE_FILE')).toHaveAttribute('data-relpath', 'app.tsx');
@@ -32,15 +31,13 @@ describe('FileTreeNodeLayerWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeNodeLayerWidgetProxy();
-      testingLibraryRenderAdapter({
-        ui: (
+      render((
           <>
             {nodes.map((node) => (
               <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       await proxy.clickEntry({ label: 'app.tsx' });
 
@@ -63,15 +60,13 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId, getByText } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByTestId, getByText } = render((
           <>
             {nodes.map((node) => (
               <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('FILE_TREE_DIR')).toHaveTextContent('src');
       expect(getByText('index.ts')).toBeInTheDocument();
@@ -90,15 +85,13 @@ describe('FileTreeNodeLayerWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeNodeLayerWidgetProxy();
-      testingLibraryRenderAdapter({
-        ui: (
+      render((
           <>
             {nodes.map((node) => (
               <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       await proxy.clickEntry({ label: 'src' });
 
@@ -118,15 +111,13 @@ describe('FileTreeNodeLayerWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeNodeLayerWidgetProxy();
-      const { getByText, queryAllByTestId } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByText, queryAllByTestId } = render((
           <>
             {nodes.map((node) => (
               <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByText('index.ts')).toBeInTheDocument();
 
@@ -148,15 +139,13 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId, queryAllByTestId } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByTestId, queryAllByTestId } = render((
           <>
             {nodes.map((node) => (
               <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('FILE_TREE_DIR')).toHaveTextContent('empty-dir');
       expect(queryAllByTestId('FILE_TREE_FILE')).toStrictEqual([]);
@@ -169,15 +158,13 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId, queryAllByTestId } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByTestId, queryAllByTestId } = render((
           <>
             {nodes.map((node) => (
               <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
             ))}
           </>
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('FILE_TREE_DIR')).toHaveTextContent('bare-dir');
       expect(queryAllByTestId('FILE_TREE_FILE')).toStrictEqual([]);

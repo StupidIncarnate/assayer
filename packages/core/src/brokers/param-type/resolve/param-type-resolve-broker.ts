@@ -34,7 +34,7 @@ import type { FileAnalysis, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { walkFileResultContract } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { collectTypeRefsTransformer } from '../../../transformers/collect-type-refs/collect-type-refs-transformer';
 import { substituteConditionTypesTransformer } from '../../../transformers/substitute-condition-types/substitute-condition-types-transformer';
 import { substituteTypeRefsTransformer } from '../../../transformers/substitute-type-refs/substitute-type-refs-transformer';
@@ -75,7 +75,7 @@ export const paramTypeResolveBroker = ({
     return analysis;
   }
 
-  const { options } = typescriptReadConfigAdapter({ searchPath: root });
+  const { options } = tsconfigReadBroker({ searchPath: root });
   const resolved = new Map(
     refs.flatMap((reference) => {
       const type: TypeDescriptor | undefined = resolveTypeRefLayerBroker({

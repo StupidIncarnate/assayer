@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "composite": false,
     "noEmit": true,
     "jsx": "react-jsx",
     "lib": [
@@ -16,20 +15,6 @@
     "moduleResolution": "node16",
     "customConditions": ["source"]
   },
-  "references": [
-    {
-      "path": "./packages/shared"
-    },
-    {
-      "path": "./packages/core"
-    },
-    {
-      "path": "./packages/desktop"
-    },
-    {
-      "path": "./packages/cli"
-    }
-  ],
   "include": [
     "packages/*/src/**/*.ts",
     "packages/*/src/**/*.tsx",

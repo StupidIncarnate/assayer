@@ -29,22 +29,22 @@
  * typeFactContract.parse({ flavor: 'callable', text: '(message: string) => string' });
  * // Returns a validated TypeFact (recursive discriminated union)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, SymbolName, TemplateText, TypeText } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
+import type { RepresentativeValue } from '@assayer/shared/contracts';
 
 export type TypeFact =
   | { flavor: 'string' }
   | { flavor: 'number' }
   | { flavor: 'boolean' }
   | { flavor: 'literal'; value: RepresentativeValue }
-  | { flavor: 'union'; members: TypeFact[]; text: TypeText }
+  | { flavor: 'union'; members: TypeFact[]; text: string }
   | { flavor: 'array'; element: TypeFact }
   // Fixed-length and HETEROGENEOUS, unlike `array` — see the PURPOSE doc.
   | { flavor: 'tuple'; elements: TypeFact[] }
   // The checker's own `texts`/`types` split for a template literal type — see the PURPOSE doc.
-  | { flavor: 'template'; texts: TemplateText[]; types: TypeFact[] }
+  | { flavor: 'template'; texts: string[]; types: TypeFact[] }
   /**
    * `truncated` is true when the reader re-entered a type already on its own path
    * (`interface Tree { next: Tree }`) and stopped, so the empty property list is where the read ended
@@ -52,11 +52,11 @@ export type TypeFact =
    */
   | {
       flavor: 'object';
-      typeName?: SymbolName | undefined;
+      typeName?: string | undefined;
       truncated?: boolean | undefined;
-      properties: { name: SymbolName; fact: TypeFact; optional?: boolean | undefined }[];
+      properties: { name: string; fact: TypeFact; optional?: boolean | undefined }[];
     }
-  | { flavor: 'callable'; text: TypeText }
+  | { flavor: 'callable'; text: string }
   /**
    * `typeRef` is the type-reference NAME the declaration spelled, present only when the opaque type was
    * written as a plain reference (`config: Config`). It is the FOREIGN KEY a consume-time overlay
@@ -64,32 +64,62 @@ export type TypeFact =
    * reference's type ARGUMENTS in order (`Box<string>`), which are what the declaration's type
    * parameters stand for.
    */
-  | { flavor: 'other'; text: TypeText; typeRef?: SymbolName | undefined; typeArgs?: TypeFact[] | undefined };
+  | { flavor: 'other'; text: string; typeRef?: string | undefined; typeArgs?: TypeFact[] | undefined };
 
-export const typeFactContract: z.ZodType<TypeFact> = z.lazy(() =>
-  z.discriminatedUnion('flavor', [
-    z.object({ flavor: z.literal('string') }),
-    z.object({ flavor: z.literal('number') }),
-    z.object({ flavor: z.literal('boolean') }),
-    z.object({ flavor: z.literal('literal'), value: representativeValueContract }),
-    z.object({ flavor: z.literal('union'), members: z.array(typeFactContract), text: typeTextContract }),
-    z.object({ flavor: z.literal('array'), element: typeFactContract }),
-    z.object({ flavor: z.literal('tuple'), elements: z.array(typeFactContract) }),
-    z.object({ flavor: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeFactContract) }),
-    z.object({
-      flavor: z.literal('object'),
-      typeName: symbolNameContract.optional(),
-      truncated: z.boolean().optional(),
-      properties: z.array(
-        z.object({ name: symbolNameContract, fact: typeFactContract, optional: z.boolean().optional() }),
-      ),
-    }),
-    z.object({ flavor: z.literal('callable'), text: typeTextContract }),
-    z.object({
-      flavor: z.literal('other'),
-      text: typeTextContract,
-      typeRef: symbolNameContract.optional(),
-      typeArgs: z.array(typeFactContract).optional(),
-    }),
-  ]),
-);
+// Each self-reference is a getter whose return type wraps `z.core.$ZodType<TypeFact>`, so the lookup
+// of `typeFactContract` waits until a parse runs.
+export const typeFactContract: z.ZodType<TypeFact> = z.discriminatedUnion('flavor', [
+  z.object({ flavor: z.literal('string') }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('number') }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('boolean') }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('literal'), value: representativeValueContract }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('union'),
+    get members(): z.ZodArray<z.core.$ZodType<TypeFact>> {
+      return z.array(typeFactContract);
+    },
+    text: z.string().min(1).brand<'TypeFactText'>(),
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('array'),
+    get element(): z.core.$ZodType<TypeFact> {
+      return typeFactContract;
+    },
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('tuple'),
+    get elements(): z.ZodArray<z.core.$ZodType<TypeFact>> {
+      return z.array(typeFactContract);
+    },
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('template'),
+    texts: z.array(z.string().brand<'TypeFactTexts'>()),
+    get types(): z.ZodArray<z.core.$ZodType<TypeFact>> {
+      return z.array(typeFactContract);
+    },
+  }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('object'),
+    typeName: z.string().min(1).brand<'TypeFactTypeName'>().optional(),
+    truncated: z.boolean().optional(),
+    properties: z.array(
+      z.object({
+        name: z.string().min(1).brand<'TypeFactPropertiesName'>(),
+        get fact(): z.core.$ZodType<TypeFact> {
+          return typeFactContract;
+        },
+        optional: z.boolean().optional(),
+      }).brand<'TypeFactProperties'>(),
+    ),
+  }).brand<'TypeFact'>(),
+  z.object({ flavor: z.literal('callable'), text: z.string().min(1).brand<'TypeFactText'>() }).brand<'TypeFact'>(),
+  z.object({
+    flavor: z.literal('other'),
+    text: z.string().min(1).brand<'TypeFactText'>(),
+    typeRef: z.string().min(1).brand<'TypeFactTypeRef'>().optional(),
+    get typeArgs(): z.ZodOptional<z.ZodArray<z.core.$ZodType<TypeFact>>> {
+      return z.array(typeFactContract).optional();
+    },
+  }).brand<'TypeFact'>(),
+]);

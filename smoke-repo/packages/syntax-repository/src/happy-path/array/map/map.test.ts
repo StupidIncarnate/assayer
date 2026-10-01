@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'map.ts'), 'utf8');
 const relPath = 'src/happy-path/array/map/map.ts';
@@ -20,7 +20,7 @@ describe('array / map — a branchless function returning `items.map((n) => n * 
   // so `items.map(...)` runs on an actual array. The values are INPUTS (P4); each case asserts only
   // that the flow REACHES the exit.
   it('VALID: {export function double(items: number[]): number[] { return items.map((n) => n * 2) }} => array-of-number param and return, transparent callback, three cardinality cases', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -59,7 +59,7 @@ describe('array / map — a branchless function returning `items.map((n) => n * 
   // anonymous callback arrow is one of the resolver's reportable callees or an admitted scope, so
   // nothing is admitted: no declared types, no dark spot, no undriven, no lint.
   it('VALID: {an array-typed param, a builtin array method call, an anonymous callback arrow} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

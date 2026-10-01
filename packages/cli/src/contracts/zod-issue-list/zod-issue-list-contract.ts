@@ -11,17 +11,17 @@
  *   // issues: [{ path: ['repoRoot'], message: 'Invalid input: expected string, received number' }, ...]
  * }
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const zodIssueListContract = z.object({
   issues: z.array(
     z.object({
       path: z.array(
-        z.union([z.string().brand<'ZodIssuePathSegment'>(), z.number().brand<'ZodIssuePathSegment'>()]),
+        z.union([z.string().brand<'ZodIssueListIssuesPath'>(), z.number().brand<'ZodIssueListIssuesPath'>()]),
       ),
-      message: z.string().brand<'ZodIssueMessage'>(),
-    }),
+      message: z.string().brand<'ZodIssueListIssuesMessage'>(),
+    }).brand<'ZodIssueListIssues'>(),
   ),
-});
+}).brand<'ZodIssueList'>();
 
 export type ZodIssueList = z.infer<typeof zodIssueListContract>;

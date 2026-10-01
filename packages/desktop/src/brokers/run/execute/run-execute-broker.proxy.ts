@@ -1,50 +1,100 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { runFindBroker } from '@assayer/core/brokers';
-import { runFindBrokerProxy } from '@assayer/core/testing';
-import { RunResultStub } from '@assayer/shared/contracts';
+import { runFindBrokerProxy } from '@assayer/core/brokers/run/find/run-find-broker.proxy';
+import { runProxy } from '#gateway/node/child_process/run/run.proxy';
+import { findUpSyncProxy } from '#gateway/node/fs/find-up-sync/find-up-sync.proxy';
+import { join } from '#gateway/node/path';
+import { execPath } from '#gateway/node/process';
+import { execPathProxy } from '#gateway/node/process/exec-path/exec-path.proxy';
+import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { assayerCliEntryPathAdapter } from '../../../adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter';
-import { assayerCliEntryPathAdapterProxy } from '../../../adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter.proxy';
-import { nodeChildProcessExecAdapterProxy } from '../../../adapters/node-child-process/exec/node-child-process-exec-adapter.proxy';
-import { ExecutablePathStub } from '../../../contracts/executable-path/executable-path.stub';
-
 export const runExecuteBrokerProxy = (): {
-  savedRun: ({ run }: { run: RunResult }) => void;
-  noArtifact: ({ stderr }: { stderr: string }) => void;
+  savedRun: (params: { repoPath: string; relPath: string; harnessPath: string; runId: string; run: RunResult }) => void;
+  noArtifact: (params: { repoPath: string; relPath: string; harnessPath: string; runId: string; stderr: string }) => void;
   cliNotBuilt: () => void;
-  runSucceeds: () => void;
-  getSpawnCalls: () => unknown[][];
+  runSucceeds: (params: { repoPath: string; relPath: string; harnessPath: string; runId: string }) => void;
+  getSpawnArgs: () => readonly string[][];
+  getSpawnOptions: () => readonly { cwd: string; env: Record<string, string>; stdio: readonly unknown[] }[];
 } => {
-  // Bare-called for enforce-proxy-child-creation; the cross-package chain cannot intercept core's
-  // I/O from here, so the direct registerMock is what drives it.
-  runFindBrokerProxy();
-  assayerCliEntryPathAdapterProxy();
+  execPathProxy();
+  const findProxy = runFindBrokerProxy();
+  const findUp = findUpSyncProxy();
+  const runGateway = runProxy();
 
-  const exec = nodeChildProcessExecAdapterProxy();
-  const findHandle = registerMock({ fn: runFindBroker });
-  const entryHandle = registerMock({ fn: assayerCliEntryPathAdapter });
-
-  // Each broker call reads the CLI entry and finds the run's artifact at most once, so there is no
-  // second real call either handle could confuse it with — `calledWith([])` is a blanket match on
-  // purpose, not a stand-in for a real argument.
-  entryHandle.calledWith([]).returns(ExecutablePathStub({ value: '/repo/packages/cli/dist/bin/assayer.js' }));
-  findHandle.calledWith([]).resolves(RunResultStub());
+  const entry = join('packages', 'cli', 'dist', 'bin', 'assayer.js');
+  const cliEntry = join(__dirname, entry);
+  const segments = __dirname.split('/').filter((segment) => segment !== '');
+  // The run lookup reads this source and then looks for its colocated harness at harnessPath.
+  const source = 'export const a = 1;\n';
 
   return {
-    savedRun: ({ run }: { run: RunResult }): void => {
-      findHandle.calledWith([]).resolves(run);
+    savedRun: ({ repoPath, relPath, harnessPath, runId, run }): void => {
+      findProxy.savedRun({
+        sourcePath: `${repoPath}/${relPath}`,
+        harnessPath,
+        source,
+        configDir: repoPath,
+        runId,
+        run,
+      });
+      // This directory sits inside the monorepo, so the CLI entry is found on the walk's first step.
+      findUp.foundAt({ path: cliEntry });
+      runGateway.setupSuccess({
+        command: execPath,
+        args: [cliEntry, 'unit', relPath],
+        cwd: repoPath,
+        exitCode: 0,
+        stdout: 'src/a.ts  1/1 passed',
+        stderr: '',
+      });
     },
-    noArtifact: ({ stderr }: { stderr: string }): void => {
-      findHandle.calledWith([]).resolves(undefined);
-      exec.exitsWith({ exitCode: 1, stdout: '', stderr });
+    noArtifact: ({ repoPath, relPath, harnessPath, runId, stderr }): void => {
+      findProxy.neverRun({
+        sourcePath: `${repoPath}/${relPath}`,
+        harnessPath,
+        source,
+        configDir: repoPath,
+        runId,
+      });
+      // This directory sits inside the monorepo, so the CLI entry is found on the walk's first step.
+      findUp.foundAt({ path: cliEntry });
+      runGateway.setupSuccess({
+        command: execPath,
+        args: [cliEntry, 'unit', relPath],
+        cwd: repoPath,
+        exitCode: 1,
+        stdout: '',
+        stderr,
+      });
     },
     cliNotBuilt: (): void => {
-      entryHandle.calledWith([]).returns(undefined);
+      // The walk visits every ancestor of this directory, root included, so each candidate is staged.
+      Array.from({ length: segments.length + 1 }, (_, depth) =>
+        join('/', ...segments.slice(0, depth), entry),
+      ).forEach((path) => {
+        findUp.notFound({ path });
+      });
     },
-    runSucceeds: (): void => {
-      exec.exitsWith({ exitCode: 0, stdout: 'src/a.ts  1/1 passed', stderr: '' });
+    runSucceeds: ({ repoPath, relPath, harnessPath, runId }): void => {
+      findProxy.savedRun({
+        sourcePath: `${repoPath}/${relPath}`,
+        harnessPath,
+        source,
+        configDir: repoPath,
+        runId,
+        run: RunResultStub(),
+      });
+      // This directory sits inside the monorepo, so the CLI entry is found on the walk's first step.
+      findUp.foundAt({ path: cliEntry });
+      runGateway.setupSuccess({
+        command: execPath,
+        args: [cliEntry, 'unit', relPath],
+        cwd: repoPath,
+        exitCode: 0,
+        stdout: 'src/a.ts  1/1 passed',
+        stderr: '',
+      });
     },
-    getSpawnCalls: (): unknown[][] => exec.getCalls(),
+    getSpawnArgs: (): readonly string[][] => runGateway.getCallsFor({ command: execPath }),
+    getSpawnOptions: () => runGateway.getOptionsFor({ command: execPath }),
   };
 };

@@ -25,7 +25,7 @@
  * // Returns [{ name: 'db', demand: { kind: 'nested', properties: [{ name: 'retry', demand: { kind: 'demanded', values: [3, 7] } }] } }]
  */
 import { propertyDemandContract } from '@assayer/shared/contracts';
-import type { ConditionLeaf, PropertyDemand, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ConditionLeaf, PropertyDemand, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
 import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
@@ -35,14 +35,14 @@ export const demandsForPropertiesTransformer = ({
   properties,
   leaves,
 }: {
-  properties: readonly { name: SymbolName; type: TypeDescriptor }[];
+  properties: readonly { name: string; type: TypeDescriptor }[];
   leaves: readonly ConditionLeaf[];
 }): PropertyDemand[] =>
   [...properties]
-    .sort((a, b) => (String(a.name) < String(b.name) ? -1 : 1))
+    .sort((a, b) => (a.name < b.name ? -1 : 1))
     .map((property) => {
       const matching = leaves.filter(
-        (leaf) => leaf.operandPropertyPath !== undefined && String(leaf.operandPropertyPath[0]) === String(property.name),
+        (leaf) => leaf.operandPropertyPath !== undefined && String(leaf.operandPropertyPath[0]) === property.name,
       );
       const direct = matching.filter((leaf) => leaf.operandPropertyPath?.length === 1);
       const nested = matching.filter((leaf) => (leaf.operandPropertyPath?.length ?? 0) > 1);
@@ -77,7 +77,7 @@ export const demandsForPropertiesTransformer = ({
       const values = direct.flatMap((leaf) => {
         const armValues = typeToRangeTransformer({
           type: property.type,
-          predicateKind: String(leaf.predicate.kind),
+          predicateKind: leaf.predicate.kind,
           ...(leaf.predicate.literal === undefined ? {} : { literal: leaf.predicate.literal }),
         });
 

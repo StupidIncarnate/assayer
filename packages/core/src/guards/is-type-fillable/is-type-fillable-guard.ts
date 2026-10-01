@@ -83,7 +83,7 @@ export const isTypeFillableGuard = ({
   switch (type.kind) {
     // `null` passes every SCALAR kind (`string`/`number`/`boolean`/`literal`), never only a `union` that
     // spells it out. The hermetic walk parses with strict-null-checks ON, so `string | null` arrives here
-    // as a genuine two-member union. But `read-type-fact-layer-adapter` has no dedicated case for the
+    // as a genuine two-member union. But `read-type-fact-layer-transformer` has no dedicated case for the
     // null or undefined type: that member reads through the generic opaque path and comes out as `kind:
     // 'unknown'`, which the `unknown` case below refuses unconditionally, with or without a candidate
     // value. So a scalar member's OWN allowance here is the only way the union ends up admitting the
@@ -155,7 +155,7 @@ export const isTypeFillableGuard = ({
             !Array.isArray(value) &&
             type.truncated !== true &&
             type.properties.every((property) => {
-              const candidate = Reflect.get(value, String(property.name)) as ArrangeValue | undefined;
+              const candidate = Reflect.get(value, property.name) as ArrangeValue | undefined;
 
               return property.optional === true
                 ? candidate === undefined || isTypeFillableGuard({ type: property.type, value: candidate })

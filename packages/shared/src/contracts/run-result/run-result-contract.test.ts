@@ -141,7 +141,7 @@ describe('runResultContract', () => {
     it.each(REQUIRED_FIELDS)('INVALID: {missing %s} => throws validation error', (field) => {
       const entries = Object.entries(RunResultStub()).filter(([key]) => key !== field);
 
-      expect(() => runResultContract.parse(Object.fromEntries(entries))).toThrow(/Required/u);
+      expect(() => runResultContract.parse(Object.fromEntries(entries))).toThrow(/Invalid input: expected [a-z]+, received undefined/u);
     });
   });
 });

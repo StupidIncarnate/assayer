@@ -12,19 +12,15 @@
  * await externalSignatureReadGlobalBroker({ tsConfigFilePath, reference: { kind: 'global', name: 'process', member: 'env', called: false }, cacheDir });
  * // Returns { usable: true, result: 'signature', signature } | { usable: true, result: 'type', type } | { usable: false }
  */
-import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ExternalSignature, TypeDescriptor } from '@assayer/shared/contracts';
 
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { tsMorphReadGlobalSignatureAdapter } from '../../../adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
+import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
+import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
 
 type GlobalReference =
-  | { kind: 'global'; name: SymbolName; member?: SymbolName; called: boolean }
-  | { kind: 'builtin'; specifier: ModuleSpecifier; importedName: SymbolName; called: boolean };
+  | { kind: 'global'; name: string; member?: string; called: boolean }
+  | { kind: 'builtin'; specifier: string; importedName: string; called: boolean };
 
 type GlobalSignatureResult =
   | { usable: true; result: 'signature'; signature: ExternalSignature }
@@ -36,11 +32,11 @@ export const externalSignatureReadGlobalBroker = async ({
   reference,
   cacheDir,
 }: {
-  tsConfigFilePath: FilePath;
+  tsConfigFilePath: string;
   reference: GlobalReference;
   cacheDir: string;
 }): Promise<GlobalSignatureResult> => {
-  const read = tsMorphReadGlobalSignatureAdapter({ tsConfigFilePath, reference });
+  const read = externalSignatureReadGlobalDeclarationBroker({ tsConfigFilePath, reference });
 
   if (!read.usable) {
     return { usable: false };
@@ -51,21 +47,21 @@ export const externalSignatureReadGlobalBroker = async ({
   // declared type does.
   const referenceKey =
     reference.kind === 'builtin'
-      ? `b:${String(reference.specifier)} ${String(reference.importedName)} ${String(reference.called)}`
-      : `g:${String(reference.name)}.${reference.member === undefined ? '' : String(reference.member)}.${String(reference.called)}`;
+      ? `b:${reference.specifier} ${reference.importedName} ${String(reference.called)}`
+      : `g:${reference.name}.${reference.member === undefined ? '' : reference.member}.${String(reference.called)}`;
 
-  const cacheKey = cryptoSha256Adapter({ content: `${referenceKey}\n${String(read.declText)}` });
+  const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${read.declText}` });
   const dir = `${cacheDir}/global-signatures`;
-  const cachePath = `${dir}/${String(cacheKey)}.json`;
+  const cachePath = `${dir}/${cacheKey}.json`;
 
   const payload =
     read.result === 'signature' ? { result: 'signature', signature: read.signature } : { result: 'type', type: read.type };
 
-  if (!(await fsExistsAdapter({ path: cachePath }))) {
-    await fsMkdirAdapter({ path: dir });
+  if (!(await pathExists(cachePath))) {
+    await ensureDir(dir);
     const tmpPath = `${cachePath}.tmp`;
-    await fsWriteFileAdapter({ path: tmpPath, content: JSON.stringify(payload) });
-    await fsRenameAdapter({ from: tmpPath, to: cachePath });
+    await writeFile(tmpPath, JSON.stringify(payload));
+    await rename(tmpPath, cachePath);
   }
 
   return read.result === 'signature'

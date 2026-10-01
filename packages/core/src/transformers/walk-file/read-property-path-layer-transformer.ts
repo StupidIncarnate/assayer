@@ -1,0 +1,28 @@
+/**
+ * PURPOSE: Decomposes a property-access operand (`config.mode`, `a.b.c`) into its ROOT node — the
+ *   leftmost expression the chain reads off — and the ordered `.member` chain from that root outward.
+ *   `config.mode` yields `{ root: <config>, path: ['mode'] }`; `a.b.c` yields `{ root: <a>, path:
+ *   ['b','c'] }`. A non-property-access node is its own root with an empty chain.
+ *
+ *   The member NAMES come from `getName()` on each access — the accessed identifier's name, which
+ *   carries no formatting freedom (§5.1) — so the chain is spelling-invariant and safe for identity.
+ *   `read-condition` reads the root's own name and declared type-reference off the returned root; this
+ *   layer owns only the structural walk down the chain.
+ *
+ * USAGE:
+ * readPropertyPathLayerTransformer({ node: propertyAccessExpression });
+ * // Returns { root, path: ['mode'] } — path left-to-right from the root outward
+ */
+import { Node } from '#gateway/npm/ts-morph';
+
+import type { PropertyPathReadout } from '../../contracts/property-path-readout/property-path-readout-contract';
+
+export const readPropertyPathLayerTransformer = ({ node }: { node: Node }): PropertyPathReadout => {
+  if (Node.isPropertyAccessExpression(node)) {
+    const inner = readPropertyPathLayerTransformer({ node: node.getExpression() });
+
+    return { root: inner.root, path: [...inner.path, node.getName()] };
+  }
+
+  return { root: node, path: [] };
+};

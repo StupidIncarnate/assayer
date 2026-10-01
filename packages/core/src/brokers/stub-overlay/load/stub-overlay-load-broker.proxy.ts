@@ -1,43 +1,44 @@
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
-import { pathBasenameAdapterProxy } from '../../../adapters/path/basename/path-basename-adapter.proxy';
-import { pathDirnameAdapterProxy } from '../../../adapters/path/dirname/path-dirname-adapter.proxy';
-import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
 import { compileWalkWorkingTreeBrokerProxy } from '../../compile/walk-working-tree/compile-walk-working-tree-broker.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const stubOverlayLoadBrokerProxy = (): {
-  dirExists: () => void;
-  dirMissing: () => void;
-  queueDir: (params: { entries: readonly { name: string; isDirectory: boolean }[] }) => void;
-  queueFileContent: (params: { content: string }) => void;
-  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and
-  // the like) propagates to the caller unmodified. This stages that rejection.
-  readThrows: (params: { error: Error }) => void;
+  dirExists: (params: { path: string }) => void;
+  dirMissing: (params: { path: string }) => void;
+  queueDir: (params: {
+    path: string;
+    entries: readonly { name: string; kind: 'file' | 'directory' }[];
+  }) => void;
+  queueFileContent: (params: { path: string; content: string }) => void;
+  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES and the
+  // like) propagates to the caller unmodified. This stages that rejection for one file.
+  readDenied: (params: { path: string }) => void;
 } => {
   const walkProxy = compileWalkWorkingTreeBrokerProxy();
-  const existsProxy = fsExistsAdapterProxy();
-  const readFileProxy = fsReadFileAdapterProxy();
-  pathRelativeAdapterProxy();
-  pathDirnameAdapterProxy();
-  pathBasenameAdapterProxy();
+  const existsProxy = pathExistsProxy();
+  const readFileGateway = readFileProxy();
 
-  // The load broker checks `objects/` then `env/` in that order, so the two existence outcomes are
-  // queued in call order. Unqueued checks fall through to the proxy default (the directory exists).
   return {
-    dirExists: (): void => {
-      existsProxy.succeeds();
+    dirExists: ({ path }: { path: string }): void => {
+      existsProxy.present({ path });
     },
-    dirMissing: (): void => {
-      existsProxy.fails();
+    dirMissing: ({ path }: { path: string }): void => {
+      existsProxy.missing({ path });
     },
-    queueDir: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }): void => {
-      walkProxy.queueDir({ entries });
+    queueDir: ({
+      path,
+      entries,
+    }: {
+      path: string;
+      entries: readonly { name: string; kind: 'file' | 'directory' }[];
+    }): void => {
+      walkProxy.queueDir({ path, entries });
     },
-    queueFileContent: ({ content }: { content: string }): void => {
-      readFileProxy.returns({ content });
+    queueFileContent: ({ path, content }: { path: string; content: string }): void => {
+      readFileGateway.returns({ path, contents: content });
     },
-    readThrows: ({ error }: { error: Error }): void => {
-      readFileProxy.throws({ error });
+    readDenied: ({ path }: { path: string }): void => {
+      readFileGateway.denied({ path });
     },
   };
 };

@@ -1,7 +1,8 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { RawBlobViewerWidget } from './raw-blob-viewer-widget';
 import { RawBlobViewerWidgetProxy } from './raw-blob-viewer-widget.proxy';
-import { CompiledFileViewStub } from '@assayer/shared/contracts';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
 
 describe('RawBlobViewerWidget', () => {
   describe('with a compiled file view', () => {
@@ -9,7 +10,7 @@ describe('RawBlobViewerWidget', () => {
       RawBlobViewerWidgetProxy();
       const fileView = CompiledFileViewStub();
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <RawBlobViewerWidget fileView={fileView} /> });
+      const { getByTestId } = render(<RawBlobViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RAW_BLOB').textContent).toBe(JSON.stringify(fileView, null, '  '));
     });
@@ -19,9 +20,7 @@ describe('RawBlobViewerWidget', () => {
     it('EMPTY: {fileView: null} => renders the inspect prompt and no blob', () => {
       RawBlobViewerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <RawBlobViewerWidget fileView={null} />,
-      });
+      const { getByTestId } = render(<RawBlobViewerWidget fileView={null} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RAW_EMPTY').textContent).toBe('Select a file to inspect its cache blob');
     });

@@ -25,7 +25,7 @@
  * predicateContract.parse({ kind: 'eq', literal: 'blocked' });
  * // Returns a validated Predicate (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
@@ -50,10 +50,9 @@ export const predicateContract = z.object({
       'typeof-eq',
       'typeof-neq',
       'unrecognized',
-    ])
-    .brand<'PredicateKind'>(),
+    ]),
   literal: representativeValueContract.optional(),
-});
+}).brand<'Predicate'>();
 
 export type Predicate = z.infer<typeof predicateContract>;
 export type PredicateKind = Predicate['kind'];

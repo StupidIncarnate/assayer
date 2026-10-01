@@ -1,8 +1,10 @@
-import { BranchNodeStub, ConditionLeafStub, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
+import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { stampBranchesTransformer } from './stamp-branches-transformer';
 
-const VALUE = symbolNameContract.parse('value');
+const VALUE = 'value';
 const THREE = representativeValueContract.parse(3);
 
 describe('stampBranchesTransformer', () => {

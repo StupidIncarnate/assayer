@@ -1,4 +1,5 @@
-import { ConditionLeafStub, PropertyDemandStub, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
+import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
+import { PropertyDemandStub } from '@assayer/shared/contracts/property-demand/property-demand.stub';
 
 import { arrangeObjectPropertiesTransformer } from './arrange-object-properties-transformer';
 
@@ -25,7 +26,7 @@ describe('arrangeObjectPropertiesTransformer', () => {
   describe('an unconstrained property', () => {
     it('VALID: {mode: string, no requirement} => the seam fill', () => {
       const result = arrangeObjectPropertiesTransformer({
-        properties: [{ name: symbolNameContract.parse('mode'), type: { kind: 'string' } }],
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
         demands: [],
         requirements: [],
         corrected: new Set(),
@@ -40,8 +41,8 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
-            type: { kind: 'object', properties: [{ name: symbolNameContract.parse('retry'), type: { kind: 'number' } }] },
+            name: 'db',
+            type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
           },
         ],
         demands: [dbRetryDemand],
@@ -56,8 +57,8 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
-            type: { kind: 'object', properties: [{ name: symbolNameContract.parse('retry'), type: { kind: 'number' } }] },
+            name: 'db',
+            type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
           },
         ],
         demands: [dbRetryDemand],
@@ -79,17 +80,17 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
+            name: 'db',
             type: {
               kind: 'object',
               properties: [
                 {
-                  name: symbolNameContract.parse('retry'),
+                  name: 'retry',
                   type: {
                     kind: 'object',
                     properties: [
-                      { name: symbolNameContract.parse('backoff'), type: { kind: 'string' } },
-                      { name: symbolNameContract.parse('max'), type: { kind: 'number' } },
+                      { name: 'backoff', type: { kind: 'string' } },
+                      { name: 'max', type: { kind: 'number' } },
                     ],
                   },
                 },
@@ -120,7 +121,7 @@ describe('arrangeObjectPropertiesTransformer', () => {
         predicate: { kind: 'eq', literal: 'a' },
       });
       const result = arrangeObjectPropertiesTransformer({
-        properties: [{ name: symbolNameContract.parse('mode'), type: { kind: 'string' } }],
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
         demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['a', 'dev'] } })],
         requirements: [{ leaf: modeEqALeaf, want: true }],
         corrected: new Set(['mode']),
@@ -133,8 +134,8 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
-            type: { kind: 'object', properties: [{ name: symbolNameContract.parse('retry'), type: { kind: 'number' } }] },
+            name: 'db',
+            type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
           },
         ],
         demands: [dbRetryDemand],
@@ -154,8 +155,8 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
-            type: { kind: 'object', properties: [{ name: symbolNameContract.parse('retry'), type: { kind: 'number' } }] },
+            name: 'db',
+            type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
           },
         ],
         demands: [],
@@ -173,8 +174,8 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
-            type: { kind: 'object', properties: [{ name: symbolNameContract.parse('retry'), type: { kind: 'number' } }] },
+            name: 'db',
+            type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
           },
         ],
         demands: [],
@@ -194,8 +195,8 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
-            type: { kind: 'object', properties: [{ name: symbolNameContract.parse('retry'), type: { kind: 'number' } }] },
+            name: 'db',
+            type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
           },
         ],
         demands: [PropertyDemandStub({ name: 'db', demand: { kind: 'nested', properties: [PropertyDemandStub({ name: 'retry', demand: { kind: 'demanded', values: [3] } })] } })],
@@ -217,12 +218,12 @@ describe('arrangeObjectPropertiesTransformer', () => {
       const result = arrangeObjectPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
+            name: 'db',
             type: {
               kind: 'object',
               properties: [
-                { name: symbolNameContract.parse('retry'), type: { kind: 'number' } },
-                { name: symbolNameContract.parse('write'), type: { kind: 'callable', text: typeTextContract.parse('() => void') } },
+                { name: 'retry', type: { kind: 'number' } },
+                { name: 'write', type: { kind: 'callable', text: '() => void' } },
               ],
             },
           },

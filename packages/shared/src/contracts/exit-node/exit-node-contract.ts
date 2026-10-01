@@ -10,17 +10,16 @@
  * });
  * // Returns a validated ExitNode (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { guardStepContract } from '../guard-step/guard-step-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const exitNodeContract = z.object({
-  coverageId: coverageIdContract,
-  kind: z.enum(['return', 'throw', 'implicit']).brand<'ExitKind'>(),
+  coverageId: coverageContract.shape.id,
+  kind: z.enum(['return', 'throw', 'implicit']),
   guardPath: z.array(guardStepContract),
-  line: lineNumberContract,
-});
+  line: z.number().int().positive().brand<'ExitNodeLine'>(),
+}).brand<'ExitNode'>();
 
 export type ExitNode = z.infer<typeof exitNodeContract>;

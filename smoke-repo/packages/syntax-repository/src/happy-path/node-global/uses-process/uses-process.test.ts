@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { moduleGraphProjectionTransformer } from '@assayer/core/module-graph';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'uses-process.ts'), 'utf8');
 const relPath = 'src/happy-path/node-global/uses-process/uses-process.ts';
@@ -13,7 +13,7 @@ describe('node-global / uses-process — ambient process.env access plus a proce
   // uncalled) and a member CALL (`process.cwd()`). Each is recorded WITHOUT resolving — the stitch
   // gives the access its member type and the call its signature from `@types/node`'s global scope.
   it('VALID: {process.env access + process.cwd() call} => two global uses, one uncalled, one called', () => {
-    const graph = moduleGraphProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const graph = moduleGraphProjectionTransformer({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(graph).toStrictEqual({
       edges: [],
@@ -32,7 +32,7 @@ describe('node-global / uses-process — ambient process.env access plus a proce
   // entry with one branchless happy-path case that arranges nothing (P4). The uncalled `process.env`
   // access alone would not project it — a value read is not a call — but the `process.cwd()` call does.
   it('VALID: {export const dir = process.cwd()} => one module entry with one structural happy-path case', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {

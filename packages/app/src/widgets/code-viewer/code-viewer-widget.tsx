@@ -30,12 +30,12 @@
  * <CodeViewerWidget fileView={fileView} onLineHover={setHoveredLine} />
  * // Renders the file's source with per-line test counts, shaded dark spots and undriven spans, and emits the hovered line
  */
-import { useMemo } from 'react';
-import type { ReactElement } from 'react';
-import { Box, Center, Text } from '@mantine/core';
+import { useMemo } from '#gateway/npm/react';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Center, Text } from '#gateway/npm/mantine__core';
 import type { CompiledFileView } from '@assayer/shared/contracts';
 
-import { codemirrorViewAdapter } from '../../adapters/codemirror/view/codemirror-view-adapter';
+import { SourceEditorLayerWidget } from './source-editor-layer-widget';
 import { caseGutterMarkersTransformer } from '../../transformers/case-gutter-markers/case-gutter-markers-transformer';
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
 import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
@@ -72,7 +72,7 @@ export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProp
       (fileView?.analysis?.darkSpots ?? []).map((darkSpot) => ({
         startLine: Number(darkSpot.startLine),
         endLine: Number(darkSpot.endLine),
-        label: String(darkSpotLineTransformer({ darkSpot })),
+        label: darkSpotLineTransformer({ darkSpot }),
       })),
     [fileView],
   );
@@ -90,14 +90,14 @@ export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProp
         .map((entry) => ({
           startLine: Number(entry.startLine),
           endLine: Number(entry.endLine),
-          label: String(undrivenLineTransformer({ entry })),
+          label: undrivenLineTransformer({ entry }),
         })),
     [fileView],
   );
 
   const editor = useMemo(
     () =>
-      codemirrorViewAdapter({
+      SourceEditorLayerWidget({
         value,
         height: '100%',
         markers,

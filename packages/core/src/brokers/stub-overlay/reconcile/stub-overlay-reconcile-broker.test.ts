@@ -1,4 +1,6 @@
-import { StubIndexStub, EnvStubStub, StubOverlayStub } from '@assayer/shared/contracts';
+import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
+import { EnvStubStub } from '@assayer/shared/contracts/env-stub/env-stub.stub';
+import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
 
 import { stubOverlayReconcileBroker } from './stub-overlay-reconcile-broker';
 import { stubOverlayReconcileBrokerProxy } from './stub-overlay-reconcile-broker.proxy';

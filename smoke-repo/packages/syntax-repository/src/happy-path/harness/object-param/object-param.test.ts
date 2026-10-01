@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { harnessRealizeBroker } from '@assayer/core/harness-realize';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'object-param.ts'), 'utf8');
 const relPath = 'src/happy-path/harness/object-param/object-param.ts';
@@ -18,7 +18,7 @@ describe('harness / object-param — a harness supplies a whole SHAPE, not merel
   // when EVERY property is and `write` is a function. So the refusal is precise, and what the harness
   // answers is the whole parameter rather than one member of it.
   it('VALID: {the per-file analysis alone} => the shape is read in full and the parameter still refused', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,
@@ -37,7 +37,7 @@ describe('harness / object-param — a harness supplies a whole SHAPE, not merel
   // property inside it — a shape Assayer refuses is refused entire, so what the caller owes is the whole
   // value and the case says so in one line.
   it('VALID: {the colocated harness applied} => both arms derive, the whole shape bound to one key path', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = harnessRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), root, relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
@@ -61,7 +61,7 @@ describe('harness / object-param — a harness supplies a whole SHAPE, not merel
   });
 
   it('VALID: {the colocated harness applied} => the gap comes off the channel and no other admission replaces it', () => {
-    const walked = tsMorphWalkFileAdapter({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath });
     const analysis = harnessRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), root, relPath });
 
     expect({

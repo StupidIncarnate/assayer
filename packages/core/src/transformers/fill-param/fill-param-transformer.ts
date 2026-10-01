@@ -34,8 +34,10 @@
  * fillParamTransformer({ param: { name: 'report', type: { kind: 'callable', text: '(m: string) => void' } } });
  * // { kind: 'unfillable', param: 'report', type: '(m: string) => void' }
  */
+import { fillParamResultContract } from '../../contracts/fill-param-result/fill-param-result-contract';
+import type { FillParamResult } from '../../contracts/fill-param-result/fill-param-result-contract';
 import { arrangeBindingContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ParamDescriptor, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { ParamDescriptor } from '@assayer/shared/contracts';
 
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
 import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
@@ -43,9 +45,6 @@ import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transfor
 import { fillValueTransformer } from '../fill-value/fill-value-transformer';
 import { typeTextTransformer } from '../type-text/type-text-transformer';
 
-export type FillParamResult =
-  | { kind: 'filled'; binding: ArrangeBinding }
-  | { kind: 'unfillable'; param: SymbolName; type: TypeText };
 
 export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): FillParamResult => {
   const { type } = param;
@@ -56,11 +55,11 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
   // renders as its full braced property list, and pasting that into the message buries the one fact
   // the reader needs under every property the shape declares. `declaredText` is present exactly where
   // the two differ. Built once, so every refusal below is the same sentence.
-  const unfillable: FillParamResult = {
+  const unfillable: FillParamResult = fillParamResultContract.parse({
     kind: 'unfillable',
     param: param.name,
     type: param.declaredText ?? typeTextTransformer({ type }),
-  };
+  });
 
   // An ARRAY parameter takes the array BINDING, so the run passes a real array and the render shows one.
   // `array-arrange` asks the same rule of the ELEMENT that the guard asks of the whole array type. A
@@ -71,7 +70,7 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
 
     return elements === undefined
       ? unfillable
-      : {
+      : fillParamResultContract.parse({
           kind: 'filled',
           binding: arrangeBindingContract.parse({
             kind: 'array',
@@ -79,7 +78,7 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
             value: elements,
             ...(param.rest === true ? { rest: true } : {}),
           }),
-        };
+        });
   }
 
   const value = isTypeFillableGuard({ type }) ? fillValueTransformer({ type }) : undefined;
@@ -94,7 +93,7 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
   // only accepts a scalar, so anything else has to carry the binding kind that actually matches.
   const bindingKind = Array.isArray(value) ? 'array' : typeof value === 'object' && value !== null ? 'object' : 'param';
 
-  return {
+  return fillParamResultContract.parse({
     kind: 'filled',
     binding: arrangeBindingContract.parse({
       kind: bindingKind,
@@ -104,5 +103,5 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
       // or from a union's first fillable member landing on one.
       ...(bindingKind === 'array' && param.rest === true ? { rest: true } : {}),
     }),
-  };
+  });
 };

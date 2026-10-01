@@ -1,31 +1,18 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { runLoadBroker } from '@assayer/core/brokers';
-import { runLoadBrokerProxy } from '@assayer/core/testing';
-import { RunResultStub } from '@assayer/shared/contracts';
+import { runLoadBrokerProxy } from '@assayer/core/brokers/run/load/run-load-broker.proxy';
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { utilParseArgsAdapterProxy } from '../../../adapters/util/parse-args/util-parse-args-adapter.proxy';
-
 export const DetailShowResponderProxy = (): {
-  savedRun: ({ run }: { run: RunResult }) => void;
-  noSuchRun: () => void;
+  savedRun: ({ configDir, runId, run }: { configDir: string; runId: string; run: RunResult }) => void;
+  noSuchRun: ({ configDir, runId }: { configDir: string; runId: string }) => void;
 } => {
-  // Bare-called for enforce-proxy-child-creation. The cross-package chain cannot intercept core's
-  // I/O from here (the ts-jest collector only walks RELATIVE imports), so the direct registerMock
-  // below is what drives this. utilParseArgsAdapter is pure argv parsing and runs for real.
-  runLoadBrokerProxy();
-  utilParseArgsAdapterProxy();
-
-  const handle = registerMock({ fn: runLoadBroker });
-
-  handle.calledWith([]).resolves(RunResultStub());
+  const loadProxy = runLoadBrokerProxy();
 
   return {
-    savedRun: ({ run }: { run: RunResult }): void => {
-      handle.calledWith([]).resolves(run);
+    savedRun: ({ configDir, runId, run }: { configDir: string; runId: string; run: RunResult }): void => {
+      loadProxy.savedRun({ configDir, runId, run });
     },
-    noSuchRun: (): void => {
-      handle.calledWith([]).resolves(undefined);
+    noSuchRun: ({ configDir, runId }: { configDir: string; runId: string }): void => {
+      loadProxy.noSuchRun({ configDir, runId });
     },
   };
 };

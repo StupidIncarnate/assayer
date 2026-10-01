@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'truthy-array-param.ts'), 'utf8');
 const relPath = 'src/sad-path/input-gap/truthy-array-param/truthy-array-param.ts';
@@ -30,7 +30,7 @@ describe('input-gap / truthy-array-param — a bare truthy read of an ARRAY para
   // unconstrained array param does — because nothing about `if (tags)` alone narrows a LENGTH; every
   // array, regardless of size, is truthy.
   it('VALID: {if (tags)} => the truthy arm fans out over cardinality, empty/one/many', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [THEN], arrange: [{ kind: 'array', param: 'tags', value: [] }], salient: true },
@@ -43,13 +43,13 @@ describe('input-gap / truthy-array-param — a bare truthy read of an ARRAY para
   // it the SAME empty array the truthy arm's `empty` cardinality already claims — the refusal is
   // invoiced as a GAP, never a silent duplicate of the `#then` case reaching the wrong exit.
   it('VALID: {if (tags)} => the falsy arm is refused and invoiced as a GAP naming `tags`', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.gaps).toStrictEqual([{ name: 'hasEntries', reason: GAP_REASON }]);
   });
 
   it('VALID: {a truthy array param} => the gap rides no other channel: no dark spot, no undriven, no lint', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({ darkSpots: analysis.darkSpots, undriven: analysis.undriven, lints: analysis.lints }).toStrictEqual({
       darkSpots: [],

@@ -1,35 +1,44 @@
 /**
  * PURPOSE: Resolves the current git branch name for a repo root, falling back to a
  *   `detached-<sha>` placeholder when HEAD is detached and to 'default' when the
- *   directory is not a git repository at all.
+ *   directory is not a git repository at all or git is not installed.
  *
  * USAGE:
  * await gitCurrentBranchBroker({ repoRoot: '/repo' });
  * // Returns a validated BranchName, e.g. 'feature-x', 'detached-abc1234', or 'default'
  */
-import { branchNameContract } from '@assayer/shared/contracts';
-import type { BranchName } from '@assayer/shared/contracts';
 
-import { gitExecAdapter } from '../../../adapters/git/exec/git-exec-adapter';
+import { gitRun, GitNotInstalledError, resolveRef } from '#gateway/bin/git';
 
 export const gitCurrentBranchBroker = async ({
   repoRoot,
 }: {
   repoRoot: string;
-}): Promise<BranchName> => {
-  const r = await gitExecAdapter({ args: ['rev-parse', '--abbrev-ref', 'HEAD'], cwd: repoRoot });
+}): Promise<string> => {
+  try {
+    const { exitCode, stdout } = await gitRun({
+      args: ['rev-parse', '--abbrev-ref', 'HEAD'],
+      cwd: repoRoot,
+    });
 
-  if (r.exitCode !== 0) {
-    return branchNameContract.parse('default');
+    if (exitCode !== 0) {
+      return 'default';
+    }
+
+    const name = stdout.trim();
+
+    if (name === 'HEAD') {
+      const short = await resolveRef({ cwd: repoRoot, ref: 'HEAD', short: true });
+
+      return `detached-${short ?? ''}`;
+    }
+
+    return name;
+  } catch (error: unknown) {
+    if (error instanceof GitNotInstalledError) {
+      return 'default';
+    }
+
+    throw error;
   }
-
-  const name = String(r.stdout).trim();
-
-  if (name === 'HEAD') {
-    const short = await gitExecAdapter({ args: ['rev-parse', '--short', 'HEAD'], cwd: repoRoot });
-
-    return branchNameContract.parse(`detached-${String(short.stdout).trim()}`);
-  }
-
-  return branchNameContract.parse(name);
 };

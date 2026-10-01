@@ -1,23 +1,34 @@
-import { ExternalSignatureStub, ModuleSpecifierStub, SymbolNameStub, TypeDescriptorStub } from '@assayer/shared/contracts';
+import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadGlobalBroker } from './external-signature-read-global-broker';
 import { externalSignatureReadGlobalBrokerProxy } from './external-signature-read-global-broker.proxy';
 
 const DECL_TEXT = 'declare var process: { env: { [k: string]: string }; cwd(): string };\n';
+const CACHE_DIR = '/repo/.assayer/cache';
 
 describe('externalSignatureReadGlobalBroker', () => {
   describe('a called global method not yet cached', () => {
     it('VALID: {cache miss} => reads the signature via ts-morph and writes it to the cache once', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
       const signature = ExternalSignatureStub({ params: [], returnType: { kind: 'string' } });
-      proxy.cacheMiss();
-      proxy.readsSignature({ signature, declText: DECL_TEXT });
+      const tsConfigFilePath = '/repo/tsconfig.json';
+      proxy.cacheMiss({
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
+        declText: DECL_TEXT,
+        cacheDir: CACHE_DIR,
+      });
+      proxy.readsSignature({
+        tsConfigFilePath,
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
+        signature,
+        declText: DECL_TEXT,
+      });
 
       const result = await externalSignatureReadGlobalBroker({
-        tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
-        cacheDir: '/repo/.assayer/cache',
+        tsConfigFilePath,
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
+        cacheDir: CACHE_DIR,
       });
 
       expect(result).toStrictEqual({ usable: true, result: 'signature', signature });
@@ -30,13 +41,23 @@ describe('externalSignatureReadGlobalBroker', () => {
     it('VALID: {cache miss} => reads the member type and writes it to the cache once', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
       const type = TypeDescriptorStub({ kind: 'unknown', text: 'ProcessEnv' });
-      proxy.cacheMiss();
-      proxy.readsType({ type, declText: DECL_TEXT });
+      const tsConfigFilePath = '/repo/tsconfig.json';
+      proxy.cacheMiss({
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
+        declText: DECL_TEXT,
+        cacheDir: CACHE_DIR,
+      });
+      proxy.readsType({
+        tsConfigFilePath,
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
+        type,
+        declText: DECL_TEXT,
+      });
 
       const result = await externalSignatureReadGlobalBroker({
-        tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'env' }), called: false },
-        cacheDir: '/repo/.assayer/cache',
+        tsConfigFilePath,
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
+        cacheDir: CACHE_DIR,
       });
 
       expect(result).toStrictEqual({ usable: true, result: 'type', type });
@@ -48,13 +69,23 @@ describe('externalSignatureReadGlobalBroker', () => {
     it('VALID: {cache hit} => returns the signature and writes nothing further', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
       const signature = ExternalSignatureStub({ params: [], returnType: { kind: 'string' } });
-      proxy.cacheHit();
-      proxy.readsSignature({ signature, declText: DECL_TEXT });
+      const tsConfigFilePath = '/repo/tsconfig.json';
+      proxy.cacheHit({
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
+        declText: DECL_TEXT,
+        cacheDir: CACHE_DIR,
+      });
+      proxy.readsSignature({
+        tsConfigFilePath,
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
+        signature,
+        declText: DECL_TEXT,
+      });
 
       const result = await externalSignatureReadGlobalBroker({
-        tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
-        cacheDir: '/repo/.assayer/cache',
+        tsConfigFilePath,
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
+        cacheDir: CACHE_DIR,
       });
 
       expect(result).toStrictEqual({ usable: true, result: 'signature', signature });
@@ -65,13 +96,16 @@ describe('externalSignatureReadGlobalBroker', () => {
   describe('a reference @types/node cannot type', () => {
     it('EMPTY: {ts-morph reports no usable types} => returns usable: false and writes nothing', async () => {
       const proxy = externalSignatureReadGlobalBrokerProxy();
-      proxy.cacheMiss();
-      proxy.readsNoUsableTypes();
+      const tsConfigFilePath = '/repo/tsconfig.json';
+      proxy.readsNoUsableTypes({
+        tsConfigFilePath,
+        reference: { kind: 'builtin', specifier: 'node:unknownmod', importedName: 'x', called: true },
+      });
 
       const result = await externalSignatureReadGlobalBroker({
-        tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: SymbolNameStub({ value: 'x' }), called: true },
-        cacheDir: '/repo/.assayer/cache',
+        tsConfigFilePath,
+        reference: { kind: 'builtin', specifier: 'node:unknownmod', importedName: 'x', called: true },
+        cacheDir: CACHE_DIR,
       });
 
       expect(result).toStrictEqual({ usable: false });

@@ -175,31 +175,31 @@ describe('typeDescriptorContract', () => {
     it('INVALID: {kind: "tuple", no elements} => throws validation error', () => {
       expect(() => {
         return typeDescriptorContract.parse({ kind: 'tuple' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {kind: "literal", no value} => throws validation error', () => {
       expect(() => {
         return typeDescriptorContract.parse({ kind: 'literal' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input/u);
     });
 
     it('INVALID: {kind: "array", no element} => throws validation error', () => {
       expect(() => {
         return typeDescriptorContract.parse({ kind: 'array' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected object, received undefined/u);
     });
 
     it('INVALID: {kind: "object", no properties} => throws validation error', () => {
       expect(() => {
         return typeDescriptorContract.parse({ kind: 'object' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected array, received undefined/u);
     });
 
     it('INVALID: {kind: "unknown", no text} => throws validation error', () => {
       expect(() => {
         return typeDescriptorContract.parse({ kind: 'unknown' });
-      }).toThrow(/Required/u);
+      }).toThrow(/Invalid input: expected string, received undefined/u);
     });
   });
 });

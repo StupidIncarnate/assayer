@@ -15,14 +15,13 @@
  * valueUseContract.parse({ target: 'import', specifier: 'node:path', importedName: 'sep' });
  * // Returns a validated ValueUse (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract, moduleSpecifierContract, symbolNameContract } from '@assayer/shared/contracts';
 
 export const valueUseContract = z.discriminatedUnion('target', [
-  z.object({ target: z.literal('import'), specifier: moduleSpecifierContract, importedName: symbolNameContract }),
-  z.object({ target: z.literal('local'), name: symbolNameContract, startLine: lineNumberContract }),
-  z.object({ target: z.literal('global'), name: symbolNameContract, member: symbolNameContract.optional() }),
+  z.object({ target: z.literal('import'), specifier: z.string().min(1).brand<'ValueUseSpecifier'>(), importedName: z.string().min(1).brand<'ValueUseImportedName'>() }).brand<'ValueUse'>(),
+  z.object({ target: z.literal('local'), name: z.string().min(1).brand<'ValueUseName'>(), startLine: z.number().int().positive().brand<'ValueUseStartLine'>() }).brand<'ValueUse'>(),
+  z.object({ target: z.literal('global'), name: z.string().min(1).brand<'ValueUseName'>(), member: z.string().min(1).brand<'ValueUseMember'>().optional() }).brand<'ValueUse'>(),
 ]);
 
 export type ValueUse = z.infer<typeof valueUseContract>;

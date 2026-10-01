@@ -5,8 +5,7 @@
  * StartDesktopPreload();
  * // Exposes the preload bridge
  */
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
 
 import { DesktopPreloadFlow } from '../flows/desktop-preload/desktop-preload-flow';
 
-export const StartDesktopPreload = (): AdapterResult => DesktopPreloadFlow();
+export const StartDesktopPreload = (): void => { DesktopPreloadFlow(); };

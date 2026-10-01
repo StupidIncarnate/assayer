@@ -10,14 +10,13 @@
  * declaredTypeContract.parse({ name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] });
  * // Returns a validated DeclaredType (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 
 export const declaredTypeContract = z.object({
-  name: symbolNameContract,
-  properties: z.array(z.object({ name: symbolNameContract, type: typeDescriptorContract })),
-});
+  name: z.string().min(1).brand<'DeclaredTypeName'>(),
+  properties: z.array(z.object({ name: z.string().min(1).brand<'DeclaredTypePropertiesName'>(), type: typeDescriptorContract }).brand<'DeclaredTypeProperties'>()),
+}).brand<'DeclaredType'>();
 
 export type DeclaredType = z.infer<typeof declaredTypeContract>;

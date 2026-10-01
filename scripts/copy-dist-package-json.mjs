@@ -1,5 +1,5 @@
 // `tsc --build` never emits a package.json into a package's dist/, but the built CLI reads one at
-// runtime: packageJsonReadAdapter resolves `<pkg>/dist/package.json` (four levels up from the compiled
+// runtime: packageJsonReadBroker resolves `<pkg>/dist/package.json` (four levels up from the compiled
 // adapter) to print `assayer --version`. Nothing else in the pipeline creates it, so a clean build
 // (`rm -rf packages/*/dist && npm run build`) would otherwise leave the CLI throwing ENOENT. Copy each
 // package's package.json into its dist/ so a from-scratch build produces a runnable CLI.

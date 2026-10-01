@@ -19,12 +19,13 @@
  * <StubRepositoryWidget />
  * // Renders the stub cards once the preload bridge resolves the merged stub view
  */
-import type { ReactElement } from 'react';
-import { Badge, Box, Card, Group, Stack, Text, Title } from '@mantine/core';
+import type { ReactElement } from '#gateway/npm/react';
+import { Box, Stack, Text, Title } from '#gateway/npm/mantine__core';
 
 import { useStubIndexBinding } from '../../bindings/use-stub-index/use-stub-index-binding';
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';
-import { flattenPropertyDemandTransformer } from '../../transformers/flatten-property-demand/flatten-property-demand-transformer';
+import { StubEnvCardLayerWidget } from './stub-env-card-layer-widget';
+import { StubObjectCardLayerWidget } from './stub-object-card-layer-widget';
 
 export const StubRepositoryWidget = (): ReactElement => {
   const { data, loading, error } = useStubIndexBinding();
@@ -49,63 +50,7 @@ export const StubRepositoryWidget = (): ReactElement => {
               </Title>
               <Stack gap="sm">
                 {data.objectStubs.map((stub) => (
-                  <Card
-                    key={String(stub.key)}
-                    data-testid="STUB_CARD"
-                    data-stubkey={String(stub.key)}
-                    withBorder
-                    bg="dark.7"
-                    padding="sm"
-                  >
-                    <Text data-testid="STUB_KEY" fw={600} ff="monospace" fz="sm" c="gray.1">
-                      {String(stub.key)}
-                    </Text>
-                    <Stack gap={4} mt="xs">
-                      {flattenPropertyDemandTransformer({ properties: stub.properties }).map((property) => (
-                        <Group
-                          key={String(property.name)}
-                          data-testid="STUB_PROPERTY"
-                          data-propname={String(property.name)}
-                          gap="xs"
-                        >
-                          <Text ff="monospace" fz="xs" c="gray.4">
-                            {String(property.name)}
-                          </Text>
-                          {property.demand.kind === 'unknown' ? (
-                            <Badge data-testid="STUB_UNKNOWN" color="gray" variant="outline" size="sm">
-                              {stubRepositoryStatics.unknownLabel}
-                            </Badge>
-                          ) : (
-                            property.demand.values.map((value) => (
-                              <Badge
-                                key={`${String(property.name)}:${JSON.stringify(value)}`}
-                                data-testid="STUB_PROPERTY_VALUE"
-                                color="blue"
-                                variant="light"
-                                size="sm"
-                              >
-                                {String(value)}
-                              </Badge>
-                            ))
-                          )}
-                        </Group>
-                      ))}
-                    </Stack>
-                    <Text fz="xs" c="dimmed" mt="xs">
-                      {stubRepositoryStatics.readersHeading}
-                    </Text>
-                    {stub.readers.length === 0 ? (
-                      <Text data-testid="STUB_NO_READERS" fz="xs" c="dimmed" fs="italic">
-                        {stubRepositoryStatics.noReadersLabel}
-                      </Text>
-                    ) : (
-                      stub.readers.map((reader) => (
-                        <Text key={String(reader)} data-testid="STUB_READER" ff="monospace" fz="xs" c="gray.5">
-                          {String(reader)}
-                        </Text>
-                      ))
-                    )}
-                  </Card>
+                  <StubObjectCardLayerWidget key={String(stub.key)} stub={stub} />
                 ))}
               </Stack>
             </Box>
@@ -117,56 +62,7 @@ export const StubRepositoryWidget = (): ReactElement => {
               </Title>
               <Stack gap="sm">
                 {data.envStubs.map((stub) => (
-                  <Card
-                    key={String(stub.key)}
-                    data-testid="STUB_CARD"
-                    data-stubkey={String(stub.key)}
-                    withBorder
-                    bg="dark.7"
-                    padding="sm"
-                  >
-                    <Group gap="xs">
-                      <Text data-testid="STUB_KEY" fw={600} ff="monospace" fz="sm" c="gray.1">
-                        {String(stub.key)}
-                      </Text>
-                      {stub.guessed ? (
-                        <Badge data-testid="STUB_GUESSED" color="yellow" variant="light" size="sm">
-                          {stubRepositoryStatics.guessedLabel}
-                        </Badge>
-                      ) : (
-                        <Badge data-testid="STUB_CORRECTED" color="green" variant="light" size="sm">
-                          {stubRepositoryStatics.correctedLabel}
-                        </Badge>
-                      )}
-                    </Group>
-                    <Group data-testid="STUB_PROPERTY" data-propname={String(stub.property)} gap="xs" mt="xs">
-                      {stub.values.map((value) => (
-                        <Badge
-                          key={JSON.stringify(value)}
-                          data-testid="STUB_PROPERTY_VALUE"
-                          color="blue"
-                          variant="light"
-                          size="sm"
-                        >
-                          {String(value)}
-                        </Badge>
-                      ))}
-                    </Group>
-                    <Text fz="xs" c="dimmed" mt="xs">
-                      {stubRepositoryStatics.readersHeading}
-                    </Text>
-                    {stub.readers.length === 0 ? (
-                      <Text data-testid="STUB_NO_READERS" fz="xs" c="dimmed" fs="italic">
-                        {stubRepositoryStatics.noReadersLabel}
-                      </Text>
-                    ) : (
-                      stub.readers.map((reader) => (
-                        <Text key={String(reader)} data-testid="STUB_READER" ff="monospace" fz="xs" c="gray.5">
-                          {String(reader)}
-                        </Text>
-                      ))
-                    )}
-                  </Card>
+                  <StubEnvCardLayerWidget key={String(stub.key)} stub={stub} />
                 ))}
               </Stack>
             </Box>

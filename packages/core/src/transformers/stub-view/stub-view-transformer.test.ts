@@ -1,4 +1,7 @@
-import { StubIndexStub, ObjectStubStub, EnvStubStub, StubOverlayStub } from '@assayer/shared/contracts';
+import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
+import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
+import { EnvStubStub } from '@assayer/shared/contracts/env-stub/env-stub.stub';
+import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
 
 import { stubViewTransformer } from './stub-view-transformer';
 

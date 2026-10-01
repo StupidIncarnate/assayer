@@ -7,9 +7,7 @@
  * await compileWalkWorkingTreeBroker({ root: '/repo/smoke-repo' });
  * // Returns a validated FilePath[]: every file under root, depth-first, node_modules excluded
  */
-import { fsReaddirAdapter } from '../../../adapters/fs/readdir/fs-readdir-adapter';
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
+import { readdirEntries } from '#gateway/node/fs__promises';
 
 export const compileWalkWorkingTreeBroker = async ({
   root,
@@ -17,15 +15,15 @@ export const compileWalkWorkingTreeBroker = async ({
 }: {
   root: string;
   dir?: string;
-}): Promise<FilePath[]> => {
-  const entries = await fsReaddirAdapter({ path: dir });
+}): Promise<string[]> => {
+  const entries = await readdirEntries(dir);
   const nested = await Promise.all(
-    entries.map(async (entry): Promise<FilePath[]> => {
-      if (entry.isDirectory) {
+    entries.map(async (entry): Promise<string[]> => {
+      if (entry.kind === 'directory') {
         if (entry.name === 'node_modules') {return [];}
         return compileWalkWorkingTreeBroker({ root, dir: `${dir}/${entry.name}` });
       }
-      return [filePathContract.parse(`${dir}/${entry.name}`)];
+      return [`${dir}/${entry.name}`];
     })
   );
   return nested.flat();

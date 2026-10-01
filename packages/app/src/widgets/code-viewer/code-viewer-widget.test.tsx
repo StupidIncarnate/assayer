@@ -1,14 +1,14 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { CodeViewerWidget } from './code-viewer-widget';
 import { CodeViewerWidgetProxy } from './code-viewer-widget.proxy';
-import {
-  CompiledFileViewStub,
-  DarkSpotStub,
-  EntrySignatureStub,
-  FileAnalysisStub,
-  FunctionAnalysisStub,
-  UndrivenEntryStub,
-} from '@assayer/shared/contracts';
+import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
+import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
+import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
+import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
+import { document } from '#gateway/browser/document';
 
 // The real module-scope shape: nothing can call it, and it takes no params.
 const MODULE_ENTRY = EntrySignatureStub({
@@ -76,7 +76,7 @@ describe('CodeViewerWidget', () => {
         ],
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const gutterElementTexts = Array.from(
         document.querySelectorAll('.cm-lineNumbers .cm-gutterElement'),
@@ -91,9 +91,7 @@ describe('CodeViewerWidget', () => {
         displayLines: [{ n: 1, text: 'export const foo = 1;', hash: STUB_HASH }],
       });
 
-      const { getByRole } = testingLibraryRenderAdapter({
-        ui: <CodeViewerWidget fileView={fileView} />,
-      });
+      const { getByRole } = render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const editor = getByRole('textbox');
       const highlightedTokens = editor.querySelectorAll('.cm-line span');
@@ -107,9 +105,7 @@ describe('CodeViewerWidget', () => {
         displayLines: [{ n: 1, text: 'const cached = true;', hash: STUB_HASH }],
       });
 
-      const { getByRole } = testingLibraryRenderAdapter({
-        ui: <CodeViewerWidget fileView={fileView} />,
-      });
+      const { getByRole } = render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(getByRole('textbox').textContent).toBe('const cached = true;');
     });
@@ -125,7 +121,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const shaded = Array.from(document.querySelectorAll('.cm-dark-spot')).map((element) => element.textContent);
 
@@ -140,7 +136,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const icons = Array.from(document.querySelectorAll('[data-testid="DARK_SPOT_ICON"]')).map((element) => ({
         text: element.textContent,
@@ -163,7 +159,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-dark-spot'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="DARK_SPOT_ICON"]'))).toStrictEqual([]);
@@ -175,7 +171,7 @@ describe('CodeViewerWidget', () => {
       CodeViewerWidgetProxy();
       const fileView = CompiledFileViewStub({ displayLines: LOOP_DISPLAY_LINES });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-dark-spot'))).toStrictEqual([]);
     });
@@ -194,7 +190,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const counts = Array.from(document.querySelectorAll('.cm-test-counts .cm-gutterElement')).map(
         (element) => element.textContent,
@@ -212,7 +208,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [NESTED_UNDRIVEN] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const shaded = Array.from(document.querySelectorAll('.cm-undriven')).map((element) => element.textContent);
 
@@ -235,7 +231,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [NESTED_UNDRIVEN] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const icons = Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]')).map((element) => ({
         text: element.textContent,
@@ -263,7 +259,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect({
         undrivenShaded: Array.from(document.querySelectorAll('.cm-undriven')).map((element) => element.textContent),
@@ -303,7 +299,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-undriven'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]'))).toStrictEqual([]);
@@ -316,7 +312,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-undriven'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]'))).toStrictEqual([]);
@@ -327,9 +323,7 @@ describe('CodeViewerWidget', () => {
     it('EMPTY: {fileView: null} => renders the placeholder prompt in EXPLORER_CODE with no editor', () => {
       CodeViewerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <CodeViewerWidget fileView={null} />,
-      });
+      const { getByTestId } = render(<CodeViewerWidget fileView={null} />, { wrapper: MantineProvider });
 
       expect(getByTestId('EXPLORER_CODE').textContent).toBe('Select a file to view its compiled source');
       expect(Array.from(document.querySelectorAll('[role="textbox"]'))).toStrictEqual([]);

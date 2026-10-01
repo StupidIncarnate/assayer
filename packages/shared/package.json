@@ -3,29 +3,41 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
+    "./*.proxy": {
+      "source": "./src/*.proxy.ts"
+    },
+    "./*.stub": {
+      "source": "./src/*.stub.ts"
+    },
     "./contracts": {
-      "source": "./contracts.ts",
-      "import": "./dist/contracts.js",
-      "require": "./dist/contracts.js",
-      "types": "./dist/contracts.d.ts"
+      "source": "./src/contracts/contracts.ts",
+      "types": "./dist/src/contracts/contracts.d.ts",
+      "import": "./dist/src/contracts/contracts.js",
+      "require": "./dist/src/contracts/contracts.js"
     },
     "./transformers": {
-      "source": "./transformers.ts",
-      "import": "./dist/transformers.js",
-      "require": "./dist/transformers.js",
-      "types": "./dist/transformers.d.ts"
+      "source": "./src/transformers/transformers.ts",
+      "types": "./dist/src/transformers/transformers.d.ts",
+      "import": "./dist/src/transformers/transformers.js",
+      "require": "./dist/src/transformers/transformers.js"
     }
   },
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc -p tsconfig.build.json",
+    "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
+    "test": "dungeonmaster-ward --only test",
+    "typecheck": "dungeonmaster-ward --only typecheck",
+    "lint": "dungeonmaster-ward --only lint",
+    "ward": "dungeonmaster-ward"
   },
   "dependencies": {
+    "@assayer/npm": "*",
     "zod": "^4.6.5"
   },
   "imports": {
-    "#gateway/npm/*": "@assayer-monorepo/npm/*",
-    "#gateway/node/*": "@assayer-monorepo/node/*",
-    "#gateway/browser/*": "@assayer-monorepo/browser/*",
-    "#gateway/bin/*": "@assayer-monorepo/bin/*"
+    "#gateway/npm/*": "@assayer/npm/*",
+    "#gateway/node/*": "@assayer/node/*",
+    "#gateway/browser/*": "@assayer/browser/*",
+    "#gateway/bin/*": "@assayer/bin/*"
   }
 }

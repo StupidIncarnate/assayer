@@ -9,42 +9,37 @@
  * });
  * // Returns a validated CompiledTree (recursive children, branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { repoNameContract } from '../repo-name/repo-name-contract';
-import { namespaceNameContract } from '../namespace-name/namespace-name-contract';
-import { folderNameContract } from '../folder-name/folder-name-contract';
-import { fileCountContract } from '../file-count/file-count-contract';
 import { treeNodeKindContract } from '../tree-node-kind/tree-node-kind-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
-
-const treeNodeNameContract = z.string().min(1).brand<'TreeNodeName'>();
 
 export interface TreeNode {
-  name: z.infer<typeof treeNodeNameContract>;
-  path: z.infer<typeof relPathContract>;
+  name: string & z.core.$brand<'TreeNodeName'>;
+  path: string;
   kind: z.infer<typeof treeNodeKindContract>;
   children?: TreeNode[] | undefined;
 }
 
-const treeNodeContract: z.ZodType<TreeNode> = z.lazy(() =>
-  z.object({
-    name: treeNodeNameContract,
-    path: relPathContract,
-    kind: treeNodeKindContract,
-    children: z.array(treeNodeContract).optional(),
-  }),
-);
+// `children` is a getter whose return type wraps `z.core.$ZodType<TreeNode>`, so the lookup of
+// the node contract below waits until a parse runs.
+const treeNodeContract: z.ZodType<TreeNode> = z.object({
+  name: z.string().min(1).brand<'TreeNodeName'>(),
+  path: z.string().min(1).brand<'TreeNodePath'>(),
+  kind: treeNodeKindContract,
+  get children(): z.ZodOptional<z.ZodArray<z.core.$ZodType<TreeNode>>> {
+    return z.array(treeNodeContract).optional();
+  },
+}).brand<'TreeNode'>();
 
 export const compiledTreeContract = z.object({
   summary: z.object({
-    repoName: repoNameContract,
-    branchName: namespaceNameContract,
-    rootFolderName: folderNameContract,
-    tsCount: fileCountContract,
-    tsxCount: fileCountContract,
-  }),
+    repoName: z.string().min(1).brand<'CompiledTreeSummaryRepoName'>(),
+    branchName: z.string().min(1).brand<'CompiledTreeSummaryBranchName'>(),
+    rootFolderName: z.string().min(1).brand<'CompiledTreeSummaryRootFolderName'>(),
+    tsCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsCount'>(),
+    tsxCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsxCount'>(),
+  }).brand<'CompiledTreeSummary'>(),
   nodes: z.array(treeNodeContract),
-});
+}).brand<'CompiledTree'>();
 
 export type CompiledTree = z.infer<typeof compiledTreeContract>;

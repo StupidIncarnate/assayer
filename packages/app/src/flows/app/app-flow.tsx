@@ -8,7 +8,7 @@
  * <AppFlow />
  * // Renders the routed application
  */
-import { RouterProvider, createHashRouter } from 'react-router-dom';
+import { RouterProvider, createHashRouter } from '#gateway/npm/react-router-dom';
 
 import { ShellPageResponder } from '../../responders/shell/page/shell-page-responder';
 import { ExplorerPageResponder } from '../../responders/explorer/page/explorer-page-responder';

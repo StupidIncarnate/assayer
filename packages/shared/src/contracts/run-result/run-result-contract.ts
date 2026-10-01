@@ -32,19 +32,17 @@
  * runResultContract.parse({ runId: 'r-17840…', relPath: 'src/happy-path/boolean/and/and.ts', cases: [...], gaps: [], darkSpots: [], undriven: [] });
  * // Returns a validated RunResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { caseResultContract } from '../case-result/case-result-contract';
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
 import { entryGapContract } from '../entry-gap/entry-gap-contract';
 import { lintEntryContract } from '../lint-entry/lint-entry-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
-import { runIdContract } from '../run-id/run-id-contract';
 import { undrivenEntryContract } from '../undriven-entry/undriven-entry-contract';
 
 export const runResultContract = z.object({
-  runId: runIdContract,
-  relPath: relPathContract,
+  runId: z.string().min(1).brand<'RunResultRunId'>(),
+  relPath: z.string().min(1).brand<'RunResultRelPath'>(),
   cases: z.array(caseResultContract),
   gaps: z.array(entryGapContract),
   darkSpots: z.array(darkSpotContract),
@@ -52,6 +50,6 @@ export const runResultContract = z.object({
   // The fourth channel — patterns the repo should change, carried so `assayer unit` can fail on them
   // when the repo asked (`deadSurface: 'error'`), exactly as it fails on a dark spot under its toggle.
   lints: z.array(lintEntryContract),
-});
+}).brand<'RunResult'>();
 
 export type RunResult = z.infer<typeof runResultContract>;

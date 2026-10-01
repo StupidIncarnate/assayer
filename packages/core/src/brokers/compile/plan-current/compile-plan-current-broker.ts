@@ -16,11 +16,9 @@
  */
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { harnessClassifyBroker } from '../../harness/classify/harness-classify-broker';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { isSourceFileIncludedGuard } from '../../../guards/is-source-file-included/is-source-file-included-guard';
-import type { RelPath } from '@assayer/shared/contracts';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
+import { readFile } from '#gateway/node/fs__promises';
+import { relative } from '#gateway/node/path';
 
 export const compilePlanCurrentBroker = async ({
   root,
@@ -29,19 +27,19 @@ export const compilePlanCurrentBroker = async ({
   root: string;
   exclude?: readonly string[];
 }): Promise<{
-  targets: { relPath: RelPath; content: FileContents }[];
-  harnesses: { relPath: RelPath; content: FileContents }[];
+  targets: { relPath: string; content: string }[];
+  harnesses: { relPath: string; content: string }[];
 }> => {
   const absPaths = await compileWalkWorkingTreeBroker({ root });
 
   const relPathed = absPaths.map((abs) => ({
     abs,
-    relPath: pathRelativeAdapter({ from: root, to: String(abs) }),
+    relPath: relative(root, abs),
   }));
 
   const included = relPathed.filter((r) =>
     isSourceFileIncludedGuard({
-      relPath: String(r.relPath),
+      relPath: r.relPath,
       ...(exclude ? { exclude } : {}),
     })
   );
@@ -49,7 +47,7 @@ export const compilePlanCurrentBroker = async ({
   const planned = await Promise.all(
     included.map(async (r) => ({
       relPath: r.relPath,
-      content: await fsReadFileAdapter({ path: String(r.abs) }),
+      content: await readFile(r.abs),
     }))
   );
 

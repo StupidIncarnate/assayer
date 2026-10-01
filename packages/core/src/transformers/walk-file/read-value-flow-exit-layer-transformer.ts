@@ -1,0 +1,106 @@
+/**
+ * PURPOSE: Detects the value-flow tail pattern `const x = <conditional>; return x` (or `throw x`) and
+ *   collapses it to the same per-arm exit split an exit-position ternary gets. `const x = cond ? y : z`
+ *   followed by `return x` when `x` flows STRAIGHT to the return IS `return cond ? y : z` — but the
+ *   split mints new observable exit ids, and a probe SITE is walk-emitted (§5.11), so the collapse must
+ *   happen in the walk at the block earlier-sibling seam, never in a post-walk pass.
+ *
+ *   The pattern is read off the statement LIST it is handed and symbol equality — no reference scan
+ *   (§5.2). It matches only when the last two statements are (a) a `const` declaring EXACTLY ONE
+ *   identifier binding `x` whose initializer `read-conditional-exit` recognizes as conditional-shaped
+ *   (ternary or `&&`/`||`/`??`), immediately followed by (b) a `return`/`throw` whose expression is
+ *   EXACTLY `x` — matched by SYMBOL (`getSymbol()` identity), never by text.
+ *
+ *   Drivability is NOT gated here: a tail whose condition turns on a call or a non-param local splits
+ *   the same as any other, and the derivation admits its branch undriven — the uniform outcome every
+ *   un-steerable branch gets, whether it sits in an `if`, an exit ternary, or this value-flow tail.
+ *
+ *   On a match it hands back the split's branches/exits/probe sites/walk node/descents (obtained by
+ *   delegating to `read-conditional-exit`, keeping this thin) plus the two consumed statements, so the
+ *   block handler drops the pair from its normal descent and folds the facts in.
+ *
+ * USAGE:
+ * readValueFlowExitLayerTransformer({ statements: block.getStatements(), context });
+ * // { matched: true, result: <split facts>, consumed: [decl, exit] } when the tail pattern + gate hold,
+ * //   { matched: false, result: <empty>, consumed: [] } otherwise
+ */
+import { Node, VariableDeclarationKind } from '#gateway/npm/ts-morph';
+import type { Statement } from '#gateway/npm/ts-morph';
+
+import type { ValueFlowExitReadout } from '../../contracts/value-flow-exit-readout/value-flow-exit-readout-contract';
+import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
+import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
+import { readConditionalExitLayerTransformer } from './read-conditional-exit-layer-transformer';
+
+const NO_MATCH: ValueFlowExitReadout = {
+  matched: false,
+  result: handlerResultLayerTransformer({}),
+  consumed: [],
+};
+
+export const readValueFlowExitLayerTransformer = ({
+  statements,
+  context,
+}: {
+  statements: Statement[];
+  context: WalkContext;
+}): ValueFlowExitReadout => {
+  const exitStatement = statements.at(-1);
+  const declStatement = statements.slice(0, -1).at(-1);
+
+  if (declStatement === undefined || exitStatement === undefined) {
+    return NO_MATCH;
+  }
+
+  // (a) a `const` declaring EXACTLY ONE identifier binding. `let`/reassignment and destructuring stay
+  // the current dark spot — the tight `≡ return cond ? y : z` equivalence holds only for a single,
+  // never-rebound const.
+  if (!Node.isVariableStatement(declStatement)) {
+    return NO_MATCH;
+  }
+  const declarationList = declStatement.getDeclarationList();
+  if (declarationList.getDeclarationKind() !== VariableDeclarationKind.Const) {
+    return NO_MATCH;
+  }
+  const declarations = declarationList.getDeclarations();
+  if (declarations.length !== 1) {
+    return NO_MATCH;
+  }
+  const [declaration] = declarations;
+  if (declaration === undefined) {
+    return NO_MATCH;
+  }
+  const nameNode = declaration.getNameNode();
+  if (!Node.isIdentifier(nameNode)) {
+    return NO_MATCH;
+  }
+  const initializer = declaration.getInitializer();
+  if (initializer === undefined) {
+    return NO_MATCH;
+  }
+
+  // (b) a `return`/`throw` whose expression is EXACTLY the declared identifier, matched by SYMBOL — so
+  // `return x + 1`, `f(x)`, `return { x }` (any transform or a second use) do NOT match, and neither
+  // does a same-spelled binding from another scope.
+  if (!Node.isReturnStatement(exitStatement) && !Node.isThrowStatement(exitStatement)) {
+    return NO_MATCH;
+  }
+  const kind = Node.isThrowStatement(exitStatement) ? 'throw' : 'return';
+  const exitExpression = exitStatement.getExpression();
+  if (exitExpression === undefined || !Node.isIdentifier(exitExpression)) {
+    return NO_MATCH;
+  }
+  const bindingSymbol = nameNode.getSymbol();
+  if (bindingSymbol === undefined || exitExpression.getSymbol() !== bindingSymbol) {
+    return NO_MATCH;
+  }
+
+  // Delegate conditional detection AND the split to Rung A's adapter: a non-conditional initializer
+  // (`const x = f(); return x`) returns the sentinel, so this matches only a real conditional.
+  const conditional = readConditionalExitLayerTransformer({ expression: initializer, kind, context });
+  if (!conditional.conditional) {
+    return NO_MATCH;
+  }
+
+  return { matched: true, result: conditional.result, consumed: [declStatement, exitStatement] };
+};

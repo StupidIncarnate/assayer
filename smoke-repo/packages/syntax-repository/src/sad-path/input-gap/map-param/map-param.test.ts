@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'map-param.ts'), 'utf8');
 const relPath = 'src/sad-path/input-gap/map-param/map-param.ts';
@@ -29,7 +29,7 @@ describe('input-gap / map-param — a built-in generic is OPAQUE, so the entry d
   // this file, so the descriptor carries the reference and its arguments and nothing structural. The
   // branch on `size` is steered normally — this is a refusal about ONE parameter, not about the file.
   it('VALID: {an unsteered Map param} => the entry derives no case at all', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(
       analysis.functions.map((fn) => ({ name: fn.entry.name, params: fn.entry.params, cases: fn.cases })),
@@ -58,7 +58,7 @@ describe('input-gap / map-param — a built-in generic is OPAQUE, so the entry d
   // snippet alike — not `Map`, and not the structural expansion of one, which would bury the one
   // actionable fact under every method the declaration carries.
   it('VALID: {a refused Map param} => the invoice names the type the source spells, arguments and all', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect(analysis.gaps).toStrictEqual([{ name: 'tally', reason: GAP_REASON }]);
   });
@@ -66,7 +66,7 @@ describe('input-gap / map-param — a built-in generic is OPAQUE, so the entry d
   // A GAP and never one of the other three. Nothing here is dark (the syntax is ordinary), nothing is
   // undriven (`size` steers the branch perfectly), and nothing is dead. Only the value is missing.
   it("VALID: {a refused Map param} => the debt is the caller's alone, on no other channel", () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
     expect({
       undriven: analysis.undriven,

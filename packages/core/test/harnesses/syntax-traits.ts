@@ -19,14 +19,13 @@
  * syntaxTraits().observed({ relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts' });
  * // ['access:named', 'branch:if'] — sorted, deduped
  */
-import { readFileSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { readFileSync } from '#gateway/node/fs';
+import { resolve, join } from '#gateway/node/path';
 
 import { entryAccessContract, branchNodeContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
-import { nodeModuleBuiltinsAdapter } from '../../src/adapters/node-module/builtins/node-module-builtins-adapter';
-import { tsMorphWalkFileAdapter } from '../../src/adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
 import { composeCrossFileMapBroker } from '../../src/brokers/compose/cross-file-map/compose-cross-file-map-broker';
 import { composeCrossFilePredicatesBroker } from '../../src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
@@ -35,13 +34,14 @@ import { paramTypeResolveBroker } from '../../src/brokers/param-type/resolve/par
 import { stubRealizeBroker } from '../../src/brokers/stub/realize/stub-realize-broker';
 import { conditionLeavesTransformer } from '../../src/transformers/condition-leaves/condition-leaves-transformer';
 import { moduleGraphProjectionTransformer } from '../../src/transformers/module-graph-projection/module-graph-projection-transformer';
+import { builtinModules } from '#gateway/node/module';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
 const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
 
 // The authoritative node-builtin name set, so a specifier like `path` (no `node:` prefix) still
 // classifies as a builtin exactly as the resolver's own builtin check does — never as a package.
-const BUILTINS = new Set(nodeModuleBuiltinsAdapter().map(String));
+const BUILTINS = new Set(builtinModules.map((name) => name).map(String));
 
 // Closed and literal, so a specimen declaring a trait that does not exist fails to typecheck rather
 // than silently never matching. `darkspot:*` is enumerated rather than open for the same reason: a
@@ -143,7 +143,7 @@ export const syntaxTraits = (): {
   // run. The harness overlay is not stubbed at all: a specimen's harness is a committed file beside it, so
   // it is read off disk exactly as a run reads it.
   const analyze = ({ relPath }: { relPath: string }): FileAnalysis => {
-    const walked = tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath });
+    const walked = walkFileTransformer({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath });
 
     const typed = paramTypeResolveBroker({
       analysis: analyzeFileBroker({ walked, relPath }),
@@ -280,7 +280,7 @@ export const syntaxTraits = (): {
       // ambient types are absent must not be CALLED in the compiled surface, so its specimen imports a
       // value, and the trait still has to name it.
       const graph = moduleGraphProjectionTransformer({
-        walked: tsMorphWalkFileAdapter({ source: readFileSync(join(SMOKE_REPO, relPath), 'utf8'), relPath }),
+        walked: walkFileTransformer({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath }),
       });
       const callees = graph.edges.flatMap((edge): SyntaxTrait[] => {
         const specifier = edge.specifier === undefined ? undefined : String(edge.specifier);

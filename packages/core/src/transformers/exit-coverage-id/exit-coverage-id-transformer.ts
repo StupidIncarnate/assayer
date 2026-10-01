@@ -14,7 +14,7 @@
  * exitCoverageIdTransformer({ kind: 'return', guardPath, scopePath: ['Classifier', 'classify'] });
  * // Returns 'Classifier/classify/return@if:id:value,GreaterThanToken,num:5#then' (branded CoverageId)
  */
-import type { CoverageId, GuardStep, SymbolName } from '@assayer/shared/contracts';
+import type { GuardStep, Coverage } from '@assayer/shared/contracts';
 
 import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
 
@@ -25,8 +25,8 @@ export const exitCoverageIdTransformer = ({
 }: {
   kind: string;
   guardPath: GuardStep[];
-  scopePath: SymbolName[];
-}): CoverageId => {
+  scopePath: string[];
+}): Coverage['id'] => {
   const prefix = `${scopePath.join('/')}/`;
 
   const steps = guardPath.map((step) => {

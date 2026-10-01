@@ -1,6 +1,6 @@
-import { RunConsoleStub } from '@assayer/shared/contracts';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
 import { RunConsoleWidget } from './run-console-widget';
 import { RunConsoleWidgetProxy } from './run-console-widget.proxy';
 
@@ -11,15 +11,13 @@ describe('RunConsoleWidget', () => {
     it('VALID: {the CLI report} => the text is shown exactly as the CLI wrote it', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByTestId } = render((
           <RunConsoleWidget
-            output={RunConsoleStub({ value: 'Assayer is updating caches\na.ts  3/3 passed\n' })}
+            output={'Assayer is updating caches\na.ts  3/3 passed\n'}
             running={false}
             onHide={(): void => undefined}
           />
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe(
         'Assayer is updating caches\na.ts  3/3 passed\n',
@@ -29,9 +27,7 @@ describe('RunConsoleWidget', () => {
     it('VALID: {a finished run} => the panel says so rather than leaving the reader to guess', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <RunConsoleWidget output={RunConsoleStub()} running={false} onHide={(): void => undefined} />,
-      });
+      const { getByTestId } = render(<RunConsoleWidget output={'src/a.ts  1/1 passed\n'} running={false} onHide={(): void => undefined} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Finished');
     });
@@ -41,9 +37,7 @@ describe('RunConsoleWidget', () => {
     it('VALID: {a run in flight} => the panel states it is still running', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <RunConsoleWidget output={RunConsoleStub()} running onHide={(): void => undefined} />,
-      });
+      const { getByTestId } = render(<RunConsoleWidget output={'src/a.ts  1/1 passed\n'} running onHide={(): void => undefined} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Running…');
     });
@@ -53,9 +47,7 @@ describe('RunConsoleWidget', () => {
     it('EMPTY: {no output yet} => says it is waiting rather than rendering a blank panel', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: <RunConsoleWidget output={RunConsoleStub({ value: '' })} running onHide={(): void => undefined} />,
-      });
+      const { getByTestId } = render(<RunConsoleWidget output={''} running onHide={(): void => undefined} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_CONSOLE_EMPTY').textContent).toBe('Waiting for the CLI…');
     });
@@ -67,11 +59,9 @@ describe('RunConsoleWidget', () => {
     it('ERROR: {the run failed} => the status says Failed rather than Finished', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: (
-          <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
-        ),
-      });
+      const { getByTestId } = render((
+          <RunConsoleWidget output={''} running={false} failed onHide={(): void => undefined} />
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_CONSOLE_STATUS').textContent).toBe('Failed');
     });
@@ -81,11 +71,9 @@ describe('RunConsoleWidget', () => {
     it('ERROR: {the run failed before the CLI wrote} => says nothing was written and where the reason is', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: (
-          <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
-        ),
-      });
+      const { getByTestId } = render((
+          <RunConsoleWidget output={''} running={false} failed onHide={(): void => undefined} />
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_CONSOLE_EMPTY').textContent).toBe(
         'The CLI wrote nothing — the Tests panel has the reason.',
@@ -96,16 +84,14 @@ describe('RunConsoleWidget', () => {
     it('ERROR: {the run failed after the CLI wrote} => the output written so far is still shown', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByTestId } = render((
           <RunConsoleWidget
-            output={RunConsoleStub({ value: 'Assayer is updating caches\n' })}
+            output={'Assayer is updating caches\n'}
             running={false}
             failed
             onHide={(): void => undefined}
           />
-        ),
-      });
+        ), { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_CONSOLE_OUTPUT').textContent).toBe('Assayer is updating caches\n');
     });
@@ -114,22 +100,20 @@ describe('RunConsoleWidget', () => {
   describe('hiding the panel', () => {
     it('VALID: {click the hide control} => asks the caller to hide it', () => {
       RunConsoleWidgetProxy();
-      const hidden: ReturnType<typeof RunConsoleStub>[] = [];
+      const hidden: string[] = [];
 
-      const { getByTestId } = testingLibraryRenderAdapter({
-        ui: (
+      const { getByTestId } = render((
           <RunConsoleWidget
-            output={RunConsoleStub()}
+            output={'src/a.ts  1/1 passed\n'}
             running={false}
             onHide={(): void => {
-              hidden.push(RunConsoleStub({ value: 'hidden' }));
+              hidden.push('hidden');
             }}
           />
-        ),
-      });
+        ), { wrapper: MantineProvider });
       getByTestId('RUN_CONSOLE_HIDE').click();
 
-      expect(hidden.map((entry) => String(entry))).toStrictEqual(['hidden']);
+      expect(hidden.map((entry) => entry)).toStrictEqual(['hidden']);
     });
   });
 });

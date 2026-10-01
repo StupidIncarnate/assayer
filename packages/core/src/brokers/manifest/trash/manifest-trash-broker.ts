@@ -5,13 +5,12 @@
  *
  * USAGE:
  * await manifestTrashBroker({ configDir: '/repo' });
- * // Removes '/repo/.assayer/cache' recursively and returns { success: true }
+ * // Removes '/repo/.assayer/cache' recursively; a missing directory is not an error
  */
-import { fsRmAdapter } from '../../../adapters/fs/rm/fs-rm-adapter';
-import type { AdapterResult } from '@dungeonmaster/shared/contracts';
+import { rm } from '#gateway/node/fs__promises';
 
 export const manifestTrashBroker = async ({
   configDir,
 }: {
   configDir: string;
-}): Promise<AdapterResult> => fsRmAdapter({ path: `${configDir}/.assayer/cache` });
+}): Promise<void> => rm(`${configDir}/.assayer/cache`, { recursive: true, force: true });

@@ -20,21 +20,21 @@
  *   result is then read back from the artifact the shim wrote rather than from Jest's own reporting,
  *   so raw runner output never reaches a human.
  *
+ *   The run loads core's run-time modules from the tree this broker was loaded from: TypeScript source
+ *   when it runs from `src`, compiled output when it runs from `dist`.
+ *
  * USAGE:
  * await runUnitBroker({ cacheDir, coreRoot, repoRoot, relPath, absPath, source, runId, analyzerContentHash });
  * // Returns { runId, relPath, cases: [{ status, observedPath, trace }], gaps, darkSpots, undriven }
  */
-import { relPathContract, runResultContract } from '@assayer/shared/contracts';
+import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { jestRunCliAdapter } from '../../../adapters/jest/run-cli/jest-run-cli-adapter';
-import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
+import { runExecuteCasesBroker } from '../execute-cases/run-execute-cases-broker';
+import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { assembleShimTransformer } from '../../../transformers/assemble-shim/assemble-shim-transformer';
+import { coreRuntimeTransformer } from '../../../transformers/core-runtime/core-runtime-transformer';
 import { caseSetProjectionTransformer } from '../../../transformers/case-set-projection/case-set-projection-transformer';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
@@ -46,6 +46,7 @@ import { paramTypeResolveBroker } from '../../param-type/resolve/param-type-reso
 import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
+import { ensureDir, pathExists, readFile, writeFile } from '#gateway/node/fs__promises';
 
 export const runUnitBroker = async ({
   cacheDir,
@@ -66,7 +67,8 @@ export const runUnitBroker = async ({
   runId: string;
   analyzerContentHash: string;
 }): Promise<RunResult> => {
-  const walked = tsMorphWalkFileAdapter({ source, relPath });
+  const runtime = coreRuntimeTransformer({ coreRoot, loadedFrom: __dirname });
+  const walked = walkFileTransformer({ source, relPath });
   // First, the types: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // fill seam refuses it and the entry is invoiced for an input Assayer can build perfectly well. This
   // resolves the declaration against the sibling on disk and re-projects the file from it, so every
@@ -110,7 +112,7 @@ export const runUnitBroker = async ({
   // it re-runs the same `follow-calls` classification the compile walk used, rather than leaving that
   // refusal open forever on this, the real run path.
   const analysis = harnessRealizeBroker({ analysis: mapped, root: repoRoot, relPath, walked });
-  const contentHash = cryptoSha256Adapter({ content: source });
+  const contentHash = contentHashTransformer({ content: source });
 
   const probeDir = `${cacheDir}/probes`;
   const runDir = `${cacheDir}/runs/${runId}`;
@@ -122,13 +124,13 @@ export const runUnitBroker = async ({
     modulePath: absPath,
     // Where a colocated harness WOULD be, always: the projection names it only when some case actually
     // reaches for a supplied input, so the two facts cannot drift apart.
-    harnessPath: `${repoRoot}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`,
+    harnessPath: `${repoRoot}/${harnessPathTransformer({ relPath })}`,
   });
 
-  await fsMkdirAdapter({ path: probeDir });
-  await fsMkdirAdapter({ path: runDir });
+  await ensureDir(probeDir);
+  await ensureDir(runDir);
 
-  await fsWriteFileAdapter({ path: caseSetPath, content: JSON.stringify(caseSet) });
+  await writeFile(caseSetPath, JSON.stringify(caseSet));
 
   // Nothing to discover means nothing to run: Jest refuses a suite with no `it()`, so handing it this
   // file could only fail. The artifact is written here instead — with every admission intact, because
@@ -144,17 +146,17 @@ export const runUnitBroker = async ({
       lints: caseSet.lints,
     });
 
-    await fsWriteFileAdapter({ path: resultPath, content: JSON.stringify(result) });
+    await writeFile(resultPath, JSON.stringify(result));
 
     return result;
   }
 
   // Written FIRST and keyed by content hash: the transformer looks the plan up while compiling, so a
   // stale read is unrepresentable rather than merely unlikely.
-  await fsWriteFileAdapter({
-    path: `${probeDir}/${contentHash}.json`,
-    content: JSON.stringify(probePlanProjectionTransformer({ walked, relPath, contentHash })),
-  });
+  await writeFile(
+    `${probeDir}/${contentHash}.json`,
+    JSON.stringify(probePlanProjectionTransformer({ walked, relPath, contentHash })),
+  );
 
   // Every SIBLING a cross-file-map fold reaches gets its plan written too, keyed on ITS content hash:
   // jest compiles the imported callee when this target requires it, and the transformer only
@@ -163,24 +165,25 @@ export const runUnitBroker = async ({
   // no such reach.
   await runCrossFileProbesBroker({ walked, root: repoRoot, relPath, probeDir });
 
-  await fsWriteFileAdapter({
-    path: `${runDir}/assayer.test.js`,
-    content: assembleShimTransformer({
+  await writeFile(
+    `${runDir}/assayer.test.js`,
+    assembleShimTransformer({
       caseSetPath,
-      adaptersPath: `${coreRoot}/dist/adapters`,
-      registrarPath: `${coreRoot}/harness-registrar.js`,
+      interpretCaseModule: runtime.interpretCaseModule,
+      resolveEntryModule: runtime.resolveEntryModule,
+      registrarPath: runtime.registrar,
       resultPath,
       runId,
     }),
-  });
+  );
 
-  await jestRunCliAdapter({ runDir, repoRoot, probeDir, coreRoot, analyzerContentHash });
+  await runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
 
   // A FAILING case still writes the artifact — the shim's afterAll sees to that — so a missing one
   // means the runner itself died and the run is over with nothing to report. Said plainly here rather
   // than surfaced as an ENOENT on a cache path nobody chose to care about: the reader's file is fine,
   // Assayer's runner is not, and only one of those is actionable.
-  if (!(await fsExistsAdapter({ path: resultPath }))) {
+  if (!(await pathExists(resultPath))) {
     throw new Error(
       `assayer: the runner crashed while running ${relPath} and wrote no result.\n` +
         `  ${String(caseSet.entries.length)} drivable entr${caseSet.entries.length === 1 ? 'y was' : 'ies were'} ` +
@@ -193,5 +196,5 @@ export const runUnitBroker = async ({
 
   // Read back the ARTIFACT, not Jest's reporting: the verdict is already in it, and raw runner output
   // is never what a human sees.
-  return runResultContract.parse(JSON.parse(await fsReadFileAdapter({ path: resultPath })));
+  return runResultContract.parse(JSON.parse((await readFile(resultPath))));
 };

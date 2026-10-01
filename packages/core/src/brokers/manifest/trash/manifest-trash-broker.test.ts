@@ -3,16 +3,14 @@ import { manifestTrashBrokerProxy } from './manifest-trash-broker.proxy';
 
 describe('manifestTrashBroker', () => {
   describe('cache directory removal', () => {
-    it('VALID: {configDir: "/repo" with an existing .assayer/cache dir} => removes .assayer/cache and returns { success: true }', async () => {
+    it('VALID: {configDir: "/repo" with an existing .assayer/cache dir} => removes .assayer/cache and resolves with nothing', async () => {
       const proxy = manifestTrashBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ path: '/repo/.assayer/cache' });
 
-      const result = await manifestTrashBroker({ configDir: '/repo' });
+      await manifestTrashBroker({ configDir: '/repo' });
 
-      expect(result).toStrictEqual({ success: true });
-      expect(proxy.getRmArgs({ path: '/repo/.assayer/cache' })).toStrictEqual([
-        '/repo/.assayer/cache',
-        { recursive: true, force: true },
+      expect(proxy.getRmCalls({ path: '/repo/.assayer/cache' })).toStrictEqual([
+        ['/repo/.assayer/cache', { recursive: true, force: true }],
       ]);
     });
   });

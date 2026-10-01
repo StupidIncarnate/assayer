@@ -6,7 +6,7 @@ describe('gitResolveCommitBroker', () => {
     it('VALID: {repoRoot: "/repo", ref: "master"} => returns the resolved 40-char commit sha', async () => {
       const proxy = gitResolveCommitBrokerProxy();
 
-      proxy.resolvesTo({ sha: '9fceb02f1a3e4c98d9c8b1e6f2a7d5c3b0e1f4a2' });
+      proxy.resolvesTo({ ref: 'master', sha: '9fceb02f1a3e4c98d9c8b1e6f2a7d5c3b0e1f4a2' });
 
       const result = await gitResolveCommitBroker({ repoRoot: '/repo', ref: 'master' });
 
@@ -18,9 +18,22 @@ describe('gitResolveCommitBroker', () => {
     it('EMPTY: {repoRoot: "/repo", ref: "does-not-exist"} => returns undefined', async () => {
       const proxy = gitResolveCommitBrokerProxy();
 
-      proxy.refMissing();
+      proxy.refMissing({ ref: 'does-not-exist' });
 
       const result = await gitResolveCommitBroker({ repoRoot: '/repo', ref: 'does-not-exist' });
+      const notResolved: typeof result = undefined;
+
+      expect(result).toBe(notResolved);
+    });
+  });
+
+  describe('git is not installed', () => {
+    it('EMPTY: {repoRoot: "/repo", ref: "master"} git binary missing => returns undefined', async () => {
+      const proxy = gitResolveCommitBrokerProxy();
+
+      proxy.gitNotInstalled({ ref: 'master' });
+
+      const result = await gitResolveCommitBroker({ repoRoot: '/repo', ref: 'master' });
       const notResolved: typeof result = undefined;
 
       expect(result).toBe(notResolved);

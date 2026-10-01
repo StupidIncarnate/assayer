@@ -1,4 +1,3 @@
-import { DocsTopicStub } from '@assayer/shared/contracts';
 
 import { docsGetBroker } from './docs-get-broker';
 import { docsGetBrokerProxy } from './docs-get-broker.proxy';
@@ -7,7 +6,7 @@ describe('docsGetBroker', () => {
   describe('known topics', () => {
     it('VALID: {topic: "overview"} => returns the overview documentation body', () => {
       docsGetBrokerProxy();
-      const topic = DocsTopicStub({ value: 'overview' });
+      const topic = 'overview';
 
       const result = docsGetBroker({ topic });
 
@@ -21,7 +20,7 @@ describe('docsGetBroker', () => {
   describe('unknown topics', () => {
     it('ERROR: {topic: "nope"} => throws naming the available topics', () => {
       docsGetBrokerProxy();
-      const topic = DocsTopicStub({ value: 'nope' });
+      const topic = 'nope';
 
       expect(() => {
         return docsGetBroker({ topic });

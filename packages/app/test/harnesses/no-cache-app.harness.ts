@@ -14,11 +14,11 @@
  * const window = await noCacheApp.launch();
  * // window.getByTestId('SURFACE_EMPTY') renders 'No compiled surface — run assayer'
  */
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { _electron } from '@playwright/test';
-import type { ElectronApplication, Page } from '@playwright/test';
+import { join } from '#gateway/node/path';
+import { tmpdir } from '#gateway/node/os';
+import { mkdtempSync, rmSync } from '#gateway/node/fs';
+import { _electron } from '#gateway/npm/playwright__test';
+import type { ElectronApplication, Page } from '#gateway/npm/playwright__test';
 
 const desktopMainEntry = join(__dirname, '..', '..', '..', 'desktop', 'dist', 'bin', 'desktop-main.js');
 

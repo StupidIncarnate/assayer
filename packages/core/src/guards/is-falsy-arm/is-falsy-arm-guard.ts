@@ -22,7 +22,8 @@
  * isFalsyArmGuard({ predicateKind: 'truthy', want: true });
  * // Returns false — the then arm, which any constructed object satisfies
  */
-export const isFalsyArmGuard = ({ predicateKind, want }: { predicateKind?: string; want?: boolean }): boolean =>
+import type { Predicate } from '@assayer/shared/contracts';
+export const isFalsyArmGuard = ({ predicateKind, want }: { predicateKind?: Predicate['kind']; want?: boolean }): boolean =>
   want === true
     ? predicateKind === 'falsy'
     : want === false && (predicateKind === 'truthy' || predicateKind === 'non-nullish');

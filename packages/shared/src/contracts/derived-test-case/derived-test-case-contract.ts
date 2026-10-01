@@ -29,15 +29,15 @@
  * });
  * // Returns a validated DerivedTestCase (branded fields; salient defaults to true)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { arrangeBindingContract } from '../arrange-binding/arrange-binding-contract';
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const derivedTestCaseContract = z.object({
-  reachesPath: z.array(coverageIdContract).min(1),
+  reachesPath: z.array(coverageContract.shape.id).min(1),
   arrange: z.array(arrangeBindingContract),
   salient: z.boolean().default(true),
-});
+}).brand<'DerivedTestCase'>();
 
 export type DerivedTestCase = z.infer<typeof derivedTestCaseContract>;

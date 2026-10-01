@@ -1,51 +1,69 @@
 import { compilePlanStableBrokerProxy } from '../plan-stable/compile-plan-stable-broker.proxy';
 import { gitResolveCommitBrokerProxy } from '../../git/resolve-commit/git-resolve-commit-broker.proxy';
 import { processTargetsLayerBrokerProxy } from './process-targets-layer-broker.proxy';
-import type { FileCount } from '@assayer/shared/contracts';
 
 export const stableNamespaceLayerBrokerProxy = (): {
-  unchanged: (params: { sha: string }) => void;
-  changed: (params: { sha: string; lsTreeStdout: string; fileContents: readonly string[] }) => void;
-  changedCommitUnresolvable: (params: { lsTreeStdout: string; fileContents: readonly string[] }) => void;
-  processedCount: () => FileCount;
+  unchanged: (params: { ref: string; sha: string }) => void;
+  changed: (params: {
+    ref: string;
+    sha: string;
+    lsTreeStdout: string;
+    blobs: readonly { blobSha: string; content: string }[];
+    blobsDir: string;
+  }) => void;
+  changedCommitUnresolvable: (params: {
+    ref: string;
+    lsTreeStdout: string;
+    blobs: readonly { blobSha: string; content: string }[];
+    blobsDir: string;
+  }) => void;
+  processedCount: () => number;
 } => {
   const planStableProxy = compilePlanStableBrokerProxy();
   const resolveCommitProxy = gitResolveCommitBrokerProxy();
   const processTargetsProxy = processTargetsLayerBrokerProxy();
 
   return {
-    unchanged: ({ sha }: { sha: string }): void => {
-      planStableProxy.resolvesUnchanged({ sha });
-      resolveCommitProxy.resolvesTo({ sha });
+    unchanged: ({ ref, sha }: { ref: string; sha: string }): void => {
+      planStableProxy.resolvesUnchanged({ ref, sha });
+      resolveCommitProxy.resolvesTo({ ref, sha });
     },
     changed: ({
+      ref,
       sha,
       lsTreeStdout,
-      fileContents,
+      blobs,
+      blobsDir,
     }: {
+      ref: string;
       sha: string;
       lsTreeStdout: string;
-      fileContents: readonly string[];
+      blobs: readonly { blobSha: string; content: string }[];
+      blobsDir: string;
     }): void => {
-      planStableProxy.resolvesChanged({ sha, lsTreeStdout, fileContents });
-      resolveCommitProxy.resolvesTo({ sha });
-      fileContents.forEach(() => {
-        processTargetsProxy.queueCleanWrite();
+      planStableProxy.resolvesChanged({ ref, sha, lsTreeStdout, blobs });
+      resolveCommitProxy.resolvesTo({ ref, sha });
+      blobs.forEach(({ content }) => {
+        processTargetsProxy.queueCleanWrite({ blobsDir, content });
       });
     },
     changedCommitUnresolvable: ({
+      ref,
       lsTreeStdout,
-      fileContents,
+      blobs,
+      blobsDir,
     }: {
+      ref: string;
       lsTreeStdout: string;
-      fileContents: readonly string[];
+      blobs: readonly { blobSha: string; content: string }[];
+      blobsDir: string;
     }): void => {
-      planStableProxy.resolvesChangedCommitUnresolvable({ lsTreeStdout, fileContents });
-      resolveCommitProxy.refMissing();
-      fileContents.forEach(() => {
-        processTargetsProxy.queueCleanWrite();
+      planStableProxy.resolvesChangedCommitUnresolvable({ ref, lsTreeStdout, blobs });
+      resolveCommitProxy.refMissing({ ref });
+      blobs.forEach(({ content }) => {
+        processTargetsProxy.queueCleanWrite({ blobsDir, content });
       });
     },
-    processedCount: (): FileCount => processTargetsProxy.processedCount(),
+    processedCount: (): number => processTargetsProxy.processedCount(),
   };
 };

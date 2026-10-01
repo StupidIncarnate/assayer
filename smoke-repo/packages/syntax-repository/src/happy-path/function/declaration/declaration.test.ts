@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { tsMorphWalkFileAdapter } from '@assayer/core/walk-file';
+import { walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'declaration.ts'), 'utf8');
 const relPath = 'src/happy-path/function/declaration/declaration.ts';
@@ -12,7 +12,7 @@ describe('function / declaration — a branchless named function declaration', (
   // exactly one case for its one exit — arranged with representative param values, asserting only that
   // it REACHES the exit (never the returned value, P4). One entry, no branches, no admission.
   it('VALID: {export function add(a, b) { return a + b }} => one named entry, one return exit, one derived case', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -45,7 +45,7 @@ describe('function / declaration — a branchless named function declaration', (
 
   // Nothing is admitted: a branchless function is fully understood and fully driven.
   it('VALID: {a branchless function} => no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
 
     expect({ darkSpots: analysis.darkSpots, undriven: analysis.undriven, lints: analysis.lints }).toStrictEqual({
       darkSpots: [],

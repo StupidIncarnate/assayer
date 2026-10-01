@@ -11,20 +11,18 @@
  *   It answers for any source path, whether or not that file exists — existence is the caller's read.
  *
  * USAGE:
- * harnessPathTransformer({ relPath: relPathContract.parse('src/audit.ts') });
+ * harnessPathTransformer({ relPath: 'src/audit.ts' });
  * // Returns 'src/audit.harness.ts'
  */
-import { relPathContract } from '@assayer/shared/contracts';
-import type { RelPath } from '@assayer/shared/contracts';
 
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
 
 const TS_EXTENSION = '.ts';
 const TSX_EXTENSION = '.tsx';
 
-export const harnessPathTransformer = ({ relPath }: { relPath: RelPath }): RelPath => {
-  const path = String(relPath);
+export const harnessPathTransformer = ({ relPath }: { relPath: string }): string => {
+  const path = relPath;
   const extension = path.endsWith(TSX_EXTENSION) ? TSX_EXTENSION : path.endsWith(TS_EXTENSION) ? TS_EXTENSION : '';
 
-  return relPathContract.parse(`${path.slice(0, path.length - extension.length)}${harnessModuleStatics.fileSuffix}`);
+  return `${path.slice(0, path.length - extension.length)}${harnessModuleStatics.fileSuffix}`;
 };

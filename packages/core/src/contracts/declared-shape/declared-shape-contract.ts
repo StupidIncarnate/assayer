@@ -17,14 +17,14 @@
  * declaredShapeContract.parse({ name: 'Id', type: { kind: 'string' } });
  * // Returns a validated DeclaredShape (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract, typeDescriptorContract } from '@assayer/shared/contracts';
+import { typeDescriptorContract } from '@assayer/shared/contracts';
 
 export const declaredShapeContract = z.object({
-  name: symbolNameContract,
+  name: z.string().min(1).brand<'DeclaredShapeName'>(),
   type: typeDescriptorContract,
-  typeParams: z.array(symbolNameContract).optional(),
-});
+  typeParams: z.array(z.string().min(1).brand<'DeclaredShapeTypeParams'>()).optional(),
+}).brand<'DeclaredShape'>();
 
 export type DeclaredShape = z.infer<typeof declaredShapeContract>;

@@ -6,13 +6,10 @@
  * const hash = contentHashContract.parse(
  *   'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
  * );
- * // Returns a validated ContentHash (branded)
+ * // Returns a validated ContentHash
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-export const contentHashContract = z
-  .string()
-  .regex(/^[0-9a-f]{64}$/u)
-  .brand<'ContentHash'>();
+export const contentHashContract = z.string().regex(/^[0-9a-f]{64}$/u);
 
 export type ContentHash = z.infer<typeof contentHashContract>;

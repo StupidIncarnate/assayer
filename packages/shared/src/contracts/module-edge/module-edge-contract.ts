@@ -25,29 +25,25 @@
  * });
  * // Returns a validated ModuleEdge (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract } from '../column-number/column-number-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
-import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 const moduleBindingContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('named'), name: symbolNameContract, alias: symbolNameContract.optional() }),
-  z.object({ kind: z.literal('default'), local: symbolNameContract }),
-  z.object({ kind: z.literal('namespace'), local: symbolNameContract }),
-  z.object({ kind: z.literal('star') }),
+  z.object({ kind: z.literal('named'), name: z.string().min(1).brand<'ModuleBindingName'>(), alias: z.string().min(1).brand<'ModuleBindingAlias'>().optional() }).brand<'ModuleBinding'>(),
+  z.object({ kind: z.literal('default'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }).brand<'ModuleBinding'>(),
+  z.object({ kind: z.literal('namespace'), local: z.string().min(1).brand<'ModuleBindingLocal'>() }).brand<'ModuleBinding'>(),
+  z.object({ kind: z.literal('star') }).brand<'ModuleBinding'>(),
 ]);
 
 export const moduleEdgeContract = z.object({
-  kind: z.enum(['import', 'reexport', 'dynamic']).brand<'ModuleEdgeKind'>(),
+  kind: z.enum(['import', 'reexport', 'dynamic']),
   // Absent only for a `dynamic` edge: a dynamic `import()` whose specifier is not a string literal
   // names no module the single-file parse can read.
-  specifier: moduleSpecifierContract.optional(),
+  specifier: z.string().min(1).brand<'ModuleEdgeSpecifier'>().optional(),
   bindings: z.array(moduleBindingContract),
-  line: lineNumberContract,
-  column: columnNumberContract,
-});
+  line: z.number().int().positive().brand<'ModuleEdgeLine'>(),
+  column: z.number().int().positive().brand<'ModuleEdgeColumn'>(),
+}).brand<'ModuleEdge'>();
 
 export type ModuleEdge = z.infer<typeof moduleEdgeContract>;
 export type ModuleBinding = z.infer<typeof moduleBindingContract>;

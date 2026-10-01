@@ -14,8 +14,6 @@
  * testPathPatternTransformer({ runDir: '/cache/.assayer/runs/r1' });
  * // Returns '/cache/\\.assayer/runs/r1/'
  */
-import { testPathPatternContract } from '../../contracts/test-path-pattern/test-path-pattern-contract';
-import type { TestPathPattern } from '../../contracts/test-path-pattern/test-path-pattern-contract';
 
-export const testPathPatternTransformer = ({ runDir }: { runDir: string }): TestPathPattern =>
-  testPathPatternContract.parse(`${runDir.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')}/`);
+export const testPathPatternTransformer = ({ runDir }: { runDir: string }): string =>
+  `${runDir.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')}/`;
