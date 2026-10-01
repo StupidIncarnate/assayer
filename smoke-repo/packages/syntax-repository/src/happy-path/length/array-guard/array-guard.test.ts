@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'array-guard.ts'), 'utf8');
 const relPath = 'src/happy-path/length/array-guard/array-guard.ts';
@@ -16,7 +16,7 @@ describe('length / array-guard — a `.length` comparison on an ARRAY param, the
   // still carries the array's element type as `operandType`, so the length predicate is legible on an
   // array exactly as it is on a string.
   it('VALID: {xs.length > 3} => a length-gt leaf over the array param', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'array-guard.ts') }), relPath });
 
     expect(analysis.functions[0]?.branches[0]?.condition).toStrictEqual({
       kind: 'leaf',
@@ -32,7 +32,7 @@ describe('length / array-guard — a `.length` comparison on an ARRAY param, the
   // classes, which top out at two elements and can never reach `length > 3`. Each arm now arranges an
   // array whose length actually decides that arm: four elements for `#then`, none for `#else`.
   it('VALID: {xs.length > 3} => then arranges a 4-element array and else arranges the empty array', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'array-guard.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       {
@@ -45,7 +45,7 @@ describe('length / array-guard — a `.length` comparison on an ARRAY param, the
   });
 
   it('VALID: {an array length guard} => nothing admitted: no dark spot, no gap, no undriven, no lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'array-guard.ts') }), relPath });
 
     expect({
       darkSpots: analysis.darkSpots,

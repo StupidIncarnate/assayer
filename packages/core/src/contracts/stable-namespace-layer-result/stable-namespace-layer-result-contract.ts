@@ -44,6 +44,7 @@ export const stableNamespaceLayerResultContract = z
                 .string()
                 .brand<"StableNamespaceLayerResultManifestNamespaceFilesRelPath">(),
               contentHash: contentHashContract,
+              analysisHash: contentHashContract,
             })
             .brand<"StableNamespaceLayerResultManifestNamespaceFiles">(),
         ),

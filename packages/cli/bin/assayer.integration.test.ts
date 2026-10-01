@@ -284,7 +284,7 @@ describe('assayer compile flow (real CLI run from source)', () => {
   });
 
   describe('obs-blob-reused — identical file content is compiled to a single shared blob', () => {
-    it('VALID: {two files with identical content} => one blob keyed by that content hash; both files point at it', async () => {
+    it('VALID: {two files with identical content under the same compiler options} => one blob keyed by their shared analysis hash; both files point at it', async () => {
       compile.writeConfig({ json: CONFIG_ROOT_DOT });
       compile.writeSource({ relPath: 'src/dup-one.ts', source: SRC_A });
       compile.writeSource({ relPath: 'src/dup-two.ts', source: SRC_A });
@@ -292,30 +292,36 @@ describe('assayer compile flow (real CLI run from source)', () => {
       const { exitCode } = await compile.run({ argv: ['status'] });
       const oneHash = compile.manifestContentHash({ namespace: 'default', relPath: 'src/dup-one.ts' });
       const twoHash = compile.manifestContentHash({ namespace: 'default', relPath: 'src/dup-two.ts' });
+      const oneAnalysisHash = compile.manifestAnalysisHash({ namespace: 'default', relPath: 'src/dup-one.ts' });
+      const twoAnalysisHash = compile.manifestAnalysisHash({ namespace: 'default', relPath: 'src/dup-two.ts' });
 
       expect(exitCode).toBe(0);
       expect(twoHash).toBe(oneHash);
-      expect(compile.blobHashes()).toStrictEqual([oneHash]);
+      expect(twoAnalysisHash).toBe(oneAnalysisHash);
+      expect(compile.blobHashes()).toStrictEqual([oneAnalysisHash]);
     });
   });
 
   describe('obs-incremental-unchanged — an incremental compile rewrites only the edited file', () => {
-    it('VALID: {compile two files, edit one, recompile} => edited file reflects the new source; unchanged file keeps its prior content hash AND blob bytes', async () => {
+    it('VALID: {compile two files, edit one, recompile} => edited file reflects the new source; unchanged file keeps its prior content hash, analysis hash AND blob bytes', async () => {
       compile.writeConfig({ json: CONFIG_ROOT_DOT });
       compile.writeSource({ relPath: 'src/edit.ts', source: SRC_A });
       compile.writeSource({ relPath: 'src/stay.ts', source: SRC_B });
 
       await compile.run({ argv: ['status'] });
       const stayHashBefore = compile.manifestContentHash({ namespace: 'default', relPath: 'src/stay.ts' });
-      const stayBlobBefore = compile.readBlobText({ hash: stayHashBefore });
+      const stayAnalysisHashBefore = compile.manifestAnalysisHash({ namespace: 'default', relPath: 'src/stay.ts' });
+      const stayBlobBefore = compile.readBlobText({ hash: stayAnalysisHashBefore });
 
       compile.writeSource({ relPath: 'src/edit.ts', source: SRC_A_EDITED });
       const { exitCode: secondExit } = await compile.run({ argv: ['status'] });
       const stayHashAfter = compile.manifestContentHash({ namespace: 'default', relPath: 'src/stay.ts' });
-      const stayBlobAfter = compile.readBlobText({ hash: stayHashBefore });
+      const stayAnalysisHashAfter = compile.manifestAnalysisHash({ namespace: 'default', relPath: 'src/stay.ts' });
+      const stayBlobAfter = compile.readBlobText({ hash: stayAnalysisHashBefore });
 
       expect(secondExit).toBe(0);
       expect(stayHashAfter).toBe(stayHashBefore);
+      expect(stayAnalysisHashAfter).toBe(stayAnalysisHashBefore);
       expect(stayBlobAfter).toBe(stayBlobBefore);
       expect(compile.blobSourceText({ namespace: 'default', relPath: 'src/edit.ts' })).toBe(
         SRC_A_EDITED,

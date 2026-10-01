@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'types-only.ts'), 'utf8');
 const relPath = 'src/happy-path/object/types-only/types-only.ts';
@@ -14,7 +14,7 @@ describe('object / types-only — a declaration-only module, no signature mentio
   // from TWO walk channels and needs both; a types-only file mentions its own shape in no signature, so
   // the signature channel alone would leave this file's declared surface empty).
   it('VALID: {export interface Config with no consuming signature} => declaredTypes still carries Config', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'types-only.ts') }), relPath });
 
     expect(analysis.declaredTypes).toStrictEqual([
       {
@@ -34,7 +34,7 @@ describe('object / types-only — a declaration-only module, no signature mentio
   // channel is CLEAN under the ruling: nothing to run is not a failure, and a declared-but-unconsumed
   // type is testable surface for whoever consumes it, never a debt this file owes on its own.
   it('VALID: {a declaration-only module} => zero entries, zero cases, and no admission on any channel', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'types-only.ts') }), relPath });
 
     expect({
       functions: analysis.functions,

@@ -13,7 +13,7 @@ describe('composition / if-in-switch — an if nested inside a switch case', () 
   // simply whatever the walk carried down. The early-return rule also survives nesting — the
   // `return 'small read'` after the inner if is guarded by that if's else, inside the case arm.
   it('VALID: {if inside a switch case} => exits carry the case guard then the if guard', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/composition/if-in-switch/if-in-switch.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/composition/if-in-switch/if-in-switch.ts', absPath: join(__dirname, 'if-in-switch.ts') });
     const guards = result.success
       ? result.functions.flatMap((fn) => fn.exits).map((exit) => exit.guardPath.map((step) => `${step.branchCoverageId}#${step.arm}`))
       : [];

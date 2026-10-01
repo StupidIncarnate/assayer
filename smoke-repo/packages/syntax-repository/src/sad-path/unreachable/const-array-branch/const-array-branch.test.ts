@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'const-array-branch.ts'), 'utf8');
 const relPath = 'src/sad-path/unreachable/const-array-branch/const-array-branch.ts';
@@ -24,7 +24,7 @@ describe('unreachable / const-array-branch — a module scope whose branch turns
   // fixed length of 3 satisfies `> 2`, so the `then` arm is a real case (arranging nothing) and the
   // `else` arm is dead code on the lint channel. No longer admitted undriven.
   it('VALID: {const items = [1, 2, 3]; if (items.length > 2) {…} else {…}} => the live arm is a case, the dead arm an unreachable-exit lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-array-branch.ts') }), relPath });
 
     expect({
       functions: analysis.functions.map((fn) => ({ name: String(fn.entry.name), access: fn.entry.access, cases: fn.cases })),
@@ -38,7 +38,7 @@ describe('unreachable / const-array-branch — a module scope whose branch turns
   // The walk RECORDS the welded LENGTH on the branch leaf — `operandConstLength: 3` — the count a
   // `.length` comparison is decided against, derived from the array literal's element count (P4-safe).
   it('VALID: {const items = [1, 2, 3]} => the branch leaf carries the welded const length', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-array-branch.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.branches).map((branch) => branch.condition)).toStrictEqual([
       {
@@ -55,7 +55,7 @@ describe('unreachable / const-array-branch — a module scope whose branch turns
   // NOT undriven and NOT a dark spot: the walk read the `if` and both arms perfectly, and the analyzer
   // resolved which arm is live. No OBJECT shape is declared. The dead arm rides the LINT channel.
   it('VALID: {a welded const array module} => nothing is admitted as undriven or a dark spot, and no declared types', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-array-branch.ts') }), relPath });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots, declaredTypes: analysis.declaredTypes }).toStrictEqual({
       undriven: [],

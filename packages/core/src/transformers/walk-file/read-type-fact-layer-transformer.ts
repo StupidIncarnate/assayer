@@ -55,7 +55,9 @@ import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
+import { isDefaultLibraryTypeGuard } from '../../guards/is-default-library-type/is-default-library-type-guard';
 import { readDeclaredTypeTextLayerTransformer } from './read-declared-type-text-layer-transformer';
+import { propertyNameTransformer } from '../property-name/property-name-transformer';
 
 export const readTypeFactLayerTransformer = ({
   type,
@@ -191,7 +193,9 @@ export const readTypeFactLayerTransformer = ({
   // An INTERSECTION reads through this SAME branch as a plain object — see the PURPOSE doc for why
   // `getProperties()`/`getSymbol()`/`getAliasSymbol()` already answer correctly with no merge logic
   // of our own.
-  if (readType.isObject() || readType.isIntersection()) {
+  // A named type only the default library declares (`Map`, `Date`) falls through to the opaque arm below, so
+  // its descriptor carries the reference and its arguments, whichever `lib` the owning tsconfig loads.
+  if ((readType.isObject() || readType.isIntersection()) && !isDefaultLibraryTypeGuard({ type: readType })) {
     // Two ways a shape carries a name, and the checker answers them on different symbols. An
     // `interface Config` names its own symbol; a `type Config = { … }` names an ANONYMOUS object
     // symbol (`__type`) and hangs `Config` on the ALIAS symbol, so reading only the first spells every
@@ -236,7 +240,7 @@ export const readTypeFactLayerTransformer = ({
           declaration.hasQuestionToken();
 
         return {
-          name: symbol.getName(),
+          name: propertyNameTransformer({ symbol }),
           fact:
             declaration === undefined
               ? { flavor: 'other', text: 'unknown' }

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'typeof-narrow.ts'), 'utf8');
 const relPath = 'src/happy-path/typeof/typeof-narrow/typeof-narrow.ts';
@@ -11,7 +11,7 @@ describe('typeof / typeof-narrow — `typeof target === \'string\'` narrows a un
   // `target`'s declared union carries both members Untouched — the predicate narrows by which member's
   // runtime tag matches, so both members have to survive the read for either arm to have a value.
   it('VALID: {target: string | number} => a union descriptor carrying both members', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.entry.params)).toStrictEqual([
       { name: 'target', type: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] } },
@@ -22,7 +22,7 @@ describe('typeof / typeof-narrow — `typeof target === \'string\'` narrows a un
   // string member's representative; the else arm needs anything else, so it arranges the number
   // member's. Two cases, no admission — `typeof` is decomposed into the value each arm needs.
   it("VALID: {typeof target === 'string'} => two cases, one per member the tag picks out", () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow.ts') }), relPath });
 
     expect({
       cases: analysis.functions.flatMap((fn) => fn.cases),

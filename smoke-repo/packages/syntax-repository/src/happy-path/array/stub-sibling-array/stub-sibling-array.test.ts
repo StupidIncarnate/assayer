@@ -3,7 +3,7 @@ import { join, resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { stubRealizeBroker } from '@assayer/core/stub-realize';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'stub-sibling-array.ts'), 'utf8');
 const relPath = 'src/happy-path/array/stub-sibling-array/stub-sibling-array.ts';
@@ -24,7 +24,7 @@ describe('array / stub-sibling-array — a sibling ARRAY param of a stub-realize
   // sits beside a funnelled array param or beside a stub-realized OBJECT param, because both sites route
   // through `fill-param`. One fill authority is what makes those two answers the same.
   it('VALID: {an unsteered array sibling of a stub-realized object param} => a real one-element array', () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'stub-sibling-array.ts') });
     const analysis = stubRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath, overlays: [] });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
@@ -45,7 +45,7 @@ describe('array / stub-sibling-array — a sibling ARRAY param of a stub-realize
   // clears the per-file undriven admission. Two independent mechanisms meet in one entry — the object
   // param from the merged stub view, the array sibling from the fill seam — and this says which is which.
   it('VALID: {the object param beside it} => driven from its declared shape, nothing admitted', () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'stub-sibling-array.ts') });
     const analysis = stubRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath, overlays: [] });
 
     expect({

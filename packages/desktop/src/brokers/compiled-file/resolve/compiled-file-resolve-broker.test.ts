@@ -314,7 +314,7 @@ describe('compiledFileResolveBroker', () => {
       const manifest = AssayerCacheManifestStub({
         namespaces: {
           main: {
-            files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64) }],
+            files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }],
           },
         },
       });
@@ -323,7 +323,7 @@ describe('compiledFileResolveBroker', () => {
       const proxy = compiledFileResolveBrokerProxy();
       proxy.setupManifest({ repoPath: '/repo', manifest });
       proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
-      proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob });
+      proxy.setupBlob({ repoPath: '/repo', analysisHash: 'b'.repeat(64), blob });
 
       const result = await compiledFileResolveBroker({
         repoPath: '/repo',
@@ -337,7 +337,7 @@ describe('compiledFileResolveBroker', () => {
 
     it('VALID: {resolved index has edges from this file and others} => keeps only the edges whose from is this file', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/index.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
       const ownEdge = ResolvedEdgeStub({
         from: 'src/index.ts',
@@ -350,7 +350,7 @@ describe('compiledFileResolveBroker', () => {
 
       const proxy = compiledFileResolveBrokerProxy();
       proxy.setupManifest({ repoPath: '/repo', manifest });
-      proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub() });
+      proxy.setupBlob({ repoPath: '/repo', analysisHash: 'b'.repeat(64), blob: CompiledFileBlobStub() });
       proxy.setupResolvedIndex({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await compiledFileResolveBroker({
@@ -365,16 +365,15 @@ describe('compiledFileResolveBroker', () => {
   describe('cross-file predicate overlay', () => {
     it('VALID: {caller guarding on an imported predicate} => serves the composed cases for both arms', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/classify.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/classify.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupManifest({ repoPath: '/config', manifest });
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/config',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/classify.ts', analysis: CLASSIFY_ANALYSIS }),
       });
       // Config dir is /config; the source root resolves a level away to /repo. The overlays must be
@@ -410,7 +409,7 @@ describe('compiledFileResolveBroker', () => {
 
     it('VALID: {plain caller with no imported-predicate guard} => serves the persisted analysis unchanged', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/audit.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/audit.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
@@ -418,7 +417,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/repo',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/audit.ts', analysis: MAP_ANALYSIS }),
       });
       proxy.sourceRootRepoRoot({ repoPath: '/repo', repoRoot: '.' });
@@ -434,7 +433,7 @@ describe('compiledFileResolveBroker', () => {
 
     it('EMPTY: {caller source cannot be read} => falls back to the opaque persisted analysis', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/classify.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/classify.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
@@ -442,7 +441,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/repo',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/classify.ts', analysis: CLASSIFY_ANALYSIS }),
       });
       proxy.sourceRootRepoRoot({ repoPath: '/repo', repoRoot: '.' });
@@ -460,16 +459,15 @@ describe('compiledFileResolveBroker', () => {
   describe('param-type overlay', () => {
     it('VALID: {caller with an imported-type parameter} => serves the declared shape and no longer reports the gap', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/reader.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/reader.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupManifest({ repoPath: '/config', manifest });
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/config',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/reader.ts', analysis: READER_ANALYSIS }),
       });
       proxy.sourceRootRepoRoot({ repoPath: '/config', repoRoot: '../repo' });
@@ -514,7 +512,7 @@ describe('compiledFileResolveBroker', () => {
   describe('stub-arrange overlay', () => {
     it('VALID: {caller with an object-member branch} => serves both arms driven and nothing undriven', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/decide.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/decide.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
@@ -522,7 +520,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/config',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/decide.ts', analysis: DECIDE_ANALYSIS }),
       });
       proxy.sourceRootRepoRoot({ repoPath: '/config', repoRoot: '../repo' });
@@ -549,16 +547,15 @@ describe('compiledFileResolveBroker', () => {
   describe('cross-file-map overlay', () => {
     it('VALID: {caller mapping an imported function over an array param} => serves the callee branches folded into the host cases', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/cross-file-map.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/cross-file-map.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupManifest({ repoPath: '/config', manifest });
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/config',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/cross-file-map.ts', analysis: MAP_ANALYSIS }),
       });
       proxy.sourceRootRepoRoot({ repoPath: '/config', repoRoot: '../repo' });
@@ -586,7 +583,7 @@ describe('compiledFileResolveBroker', () => {
     // caller's walked parse reached the overlay.
     it('VALID: {a harness naming a funnelled private that owns the refusal} => serves both arms through the private and closes the gap', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/audit.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/audit.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
@@ -594,7 +591,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/config',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/audit.ts', analysis: FUNNELLED_ANALYSIS }),
       });
       proxy.sourceRootRepoRoot({ repoPath: '/config', repoRoot: '../repo' });
@@ -623,7 +620,7 @@ describe('compiledFileResolveBroker', () => {
     // parameter and nothing more.
     it('VALID: {caller source cannot be read} => the harness overlay still pays the entry its own refused parameter', async () => {
       const manifest = AssayerCacheManifestStub({
-        namespaces: { main: { files: [{ relPath: 'src/audit.ts', contentHash: 'a'.repeat(64) }] } },
+        namespaces: { main: { files: [{ relPath: 'src/audit.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }] } },
       });
 
       const proxy = compiledFileResolveBrokerProxy();
@@ -631,7 +628,7 @@ describe('compiledFileResolveBroker', () => {
       proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
       proxy.setupBlob({
         repoPath: '/repo',
-        contentHash: 'a'.repeat(64),
+        analysisHash: 'b'.repeat(64),
         blob: CompiledFileBlobStub({ relPath: 'src/audit.ts', analysis: CALLBACK_ANALYSIS }),
       });
       proxy.sourceRootRepoRoot({ repoPath: '/repo', repoRoot: '.' });
@@ -675,7 +672,7 @@ describe('compiledFileResolveBroker', () => {
       const manifest = AssayerCacheManifestStub({
         namespaces: {
           main: {
-            files: [{ relPath: 'other.ts', contentHash: 'a'.repeat(64) }],
+            files: [{ relPath: 'other.ts', contentHash: 'a'.repeat(64), analysisHash: 'b'.repeat(64) }],
           },
         },
       });

@@ -6,21 +6,24 @@
  *
  *   The compile pipeline does NOT go through here; it walks once and runs both projections itself,
  *   so a file is never parsed twice. This exists for callers that have source and want only the
- *   analysis.
+ *   analysis. `absPath` is the file on disk: the walk reads it under the tsconfig that owns it, the same
+ *   options the compile and the run use, so the catalogue and the pipeline analyse one file one way.
  *
  * USAGE:
- * analyzeExtractBroker({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
+ * analyzeExtractBroker({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts', absPath: '/repo/src/f.ts' });
  * // Returns a validated AnalysisExtractResult: { success: true, functions: [...] }
  */
-import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import type { AnalysisExtractResult } from '../../../contracts/analysis-extract-result/analysis-extract-result-contract';
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
+import { fileWalkBroker } from '../../file/walk/file-walk-broker';
 
 export const analyzeExtractBroker = ({
   source,
   relPath,
+  absPath,
 }: {
   source: string;
   relPath: string;
+  absPath: string;
 }): AnalysisExtractResult =>
-  analysisProjectionTransformer({ walked: walkFileTransformer({ source, relPath }) });
+  analysisProjectionTransformer({ walked: fileWalkBroker({ source, relPath, absPath }) });

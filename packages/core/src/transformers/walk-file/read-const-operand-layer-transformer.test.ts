@@ -1,4 +1,5 @@
 import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readConstOperandLayerTransformer } from './read-const-operand-layer-transformer';
 import { readConstOperandLayerTransformerProxy } from './read-const-operand-layer-transformer.proxy';
@@ -6,7 +7,7 @@ import { readConstOperandLayerTransformerProxy } from './read-const-operand-laye
 // The operand identifier of the file's `if`, extracted exactly as `read-condition` extracts it: the
 // left side, unwrapped past a `.length` access so `items.length > 2` reads its operand as `items`.
 const operandOf = ({ source }: { source: string }): Node => {
-  const project = new Project({ useInMemoryFileSystem: true });
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
   const sourceFile = project.createSourceFile('src/x.ts', source);
   const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
   const left = Node.isBinaryExpression(condition) ? condition.getLeft() : condition;

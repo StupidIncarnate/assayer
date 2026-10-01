@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'index-access.ts'), 'utf8');
 const relPath = 'src/happy-path/array/index-access/index-access.ts';
@@ -15,7 +15,7 @@ describe('array / index-access — a branchless function returning `items[0]`', 
   // order, each an `array` arrange binding whose recursive value list holds the element type. The values
   // are INPUTS (P4); every case asserts only that the flow REACHES the same exit.
   it('VALID: {export function first(items: number[]): number { return items[0] }} => array-of-number param, three cardinality cases reaching the one exit', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'index-access.ts') }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -53,7 +53,7 @@ describe('array / index-access — a branchless function returning `items[0]`', 
   // An array param declares no OBJECT shape, and an element index read is not one of the resolver's
   // reportable callees, so nothing is admitted: no declared types, no dark spot, no undriven, no lint.
   it('VALID: {an array-typed param, an element index read} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'index-access.ts') }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

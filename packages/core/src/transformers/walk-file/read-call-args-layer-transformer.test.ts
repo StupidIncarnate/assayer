@@ -1,11 +1,12 @@
 import type { Node} from '#gateway/npm/ts-morph';
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readCallArgsLayerTransformer } from './read-call-args-layer-transformer';
 import { readCallArgsLayerTransformerProxy } from './read-call-args-layer-transformer.proxy';
 
 const argsOf = ({ source }: { source: string }): Node[] =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression)
     .getArguments();

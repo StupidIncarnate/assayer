@@ -17,6 +17,7 @@ import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
 
+import { analysisHashTransformer } from '../../src/transformers/analysis-hash/analysis-hash-transformer';
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
@@ -70,15 +71,15 @@ export const resolveGraphHarness = (): {
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'a', 'caller.ts'), CALLER_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath: 'src/b/foo.ts', content: FOO_SRC, blobsDir });
-      await compileProcessFileBroker({ relPath: 'src/a/caller.ts', content: CALLER_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/b/foo.ts', content: FOO_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/a/caller.ts', content: CALLER_SRC, blobsDir });
 
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
         files: [
-          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }), analysisHash: analysisHashTransformer({ content: FOO_SRC, options: {} }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }), analysisHash: analysisHashTransformer({ content: CALLER_SRC, options: {} }) },
         ],
       });
     },
@@ -95,16 +96,16 @@ export const resolveGraphHarness = (): {
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), FOO_SRC);
       writeFileSync(join(dir, 'src', 'a', 'caller.ts'), CALLER_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath: 'src/b/foo.ts', content: FOO_SRC, blobsDir });
-      await compileProcessFileBroker({ relPath: 'src/a/caller.ts', content: CALLER_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/b/foo.ts', content: FOO_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/a/caller.ts', content: CALLER_SRC, blobsDir });
 
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
         cacheDir: join(dir, '.assayer', 'cache'),
         files: [
-          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }), analysisHash: analysisHashTransformer({ content: FOO_SRC, options: {} }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }), analysisHash: analysisHashTransformer({ content: CALLER_SRC, options: {} }) },
         ],
       });
     },
@@ -120,17 +121,17 @@ export const resolveGraphHarness = (): {
       writeFileSync(join(dir, 'src', 'barrel', 'index.ts'), BARREL_SRC);
       writeFileSync(join(dir, 'src', 'c', 'user.ts'), USER_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath: 'src/b/foo.ts', content: FOO_SRC, blobsDir });
-      await compileProcessFileBroker({ relPath: 'src/barrel/index.ts', content: BARREL_SRC, blobsDir });
-      await compileProcessFileBroker({ relPath: 'src/c/user.ts', content: USER_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/b/foo.ts', content: FOO_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/barrel/index.ts', content: BARREL_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/c/user.ts', content: USER_SRC, blobsDir });
 
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
         files: [
-          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: 'src/barrel/index.ts', contentHash: contentHashTransformer({ content: BARREL_SRC }) },
-          { relPath: 'src/c/user.ts', contentHash: contentHashTransformer({ content: USER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }), analysisHash: analysisHashTransformer({ content: FOO_SRC, options: {} }) },
+          { relPath: 'src/barrel/index.ts', contentHash: contentHashTransformer({ content: BARREL_SRC }), analysisHash: analysisHashTransformer({ content: BARREL_SRC, options: {} }) },
+          { relPath: 'src/c/user.ts', contentHash: contentHashTransformer({ content: USER_SRC }), analysisHash: analysisHashTransformer({ content: USER_SRC, options: {} }) },
         ],
       });
     },
@@ -142,12 +143,12 @@ export const resolveGraphHarness = (): {
       ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'broken.ts'), BROKEN_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath: 'src/broken.ts', content: BROKEN_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/broken.ts', content: BROKEN_SRC, blobsDir });
 
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: 'src/broken.ts', contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
+        files: [{ relPath: 'src/broken.ts', contentHash: contentHashTransformer({ content: BROKEN_SRC }), analysisHash: analysisHashTransformer({ content: BROKEN_SRC, options: {} }) }],
       });
     },
 
@@ -158,12 +159,12 @@ export const resolveGraphHarness = (): {
       ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'dynamic.ts'), DYNAMIC_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath: 'src/dynamic.ts', content: DYNAMIC_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: 'src/dynamic.ts', content: DYNAMIC_SRC, blobsDir });
 
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: 'src/dynamic.ts', contentHash: contentHashTransformer({ content: DYNAMIC_SRC }) }],
+        files: [{ relPath: 'src/dynamic.ts', contentHash: contentHashTransformer({ content: DYNAMIC_SRC }), analysisHash: analysisHashTransformer({ content: DYNAMIC_SRC, options: {} }) }],
       });
     },
   };

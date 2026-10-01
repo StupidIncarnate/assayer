@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'returned-closure.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/returned-closure/returned-closure.ts';
@@ -22,7 +22,7 @@ describe('undriven / returned-closure — a function that RETURNS a branching cl
   // REACHED via the return, so NOT a dead-surface lint. It rides the undriven channel — "Assayer cannot
   // steer it", not "the repo should delete it".
   it('VALID: {makeClassifier returns (n) => { if (n > threshold) … }} => the returned closure is admitted UNDRIVEN', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'returned-closure.ts') }) });
 
     // The closure is anonymous, so its `name` is a structural projection — a cache key. The admission
     // therefore carries a display `label` naming the return that hands it out, and that is what both the
@@ -35,7 +35,7 @@ describe('undriven / returned-closure — a function that RETURNS a branching cl
   // `makeClassifier` is the sole driven entry — branchless (its `if` belongs to the returned closure, a
   // separate scope), one representative case. Nothing is a lint or a dark spot.
   it('VALID: {a returned closure} => makeClassifier is the sole driven entry; no lint, no dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'returned-closure.ts') }) });
 
     expect({
       functions: analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases })),

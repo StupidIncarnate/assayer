@@ -12,6 +12,7 @@ describe('runIdBroker', () => {
     it('VALID: {a file} => a deterministic id', async () => {
       const proxy = runIdBrokerProxy();
       proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/a.ts' });
 
       const result = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -21,6 +22,7 @@ describe('runIdBroker', () => {
     it('VALID: {the same file twice} => the same id', async () => {
       const proxy = runIdBrokerProxy();
       proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/a.ts' });
 
       const second = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -31,6 +33,7 @@ describe('runIdBroker', () => {
     it('VALID: {same path, changed content} => a different id', async () => {
       const proxy = runIdBrokerProxy();
       proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/a.ts' });
 
       const after = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 2;\n' });
 
@@ -41,6 +44,7 @@ describe('runIdBroker', () => {
     it('VALID: {same content, different path} => a different id', async () => {
       const proxy = runIdBrokerProxy();
       proxy.noHarness({ harnessPath: '/repo/src/b.harness.ts' });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/b.ts' });
 
       const other = await runIdBroker({ root: '/repo', relPath: 'src/b.ts', source: 'export const a = 1;\n' });
 
@@ -55,6 +59,7 @@ describe('runIdBroker', () => {
     it('VALID: {a colocated harness} => an id that differs from the same source with none', async () => {
       const proxy = runIdBrokerProxy();
       proxy.harness({ harnessPath: '/repo/src/a.harness.ts', source: HARNESS });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/a.ts' });
 
       const withHarness = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -64,6 +69,7 @@ describe('runIdBroker', () => {
     it('VALID: {an edited harness, unchanged source} => a different id', async () => {
       const proxy = runIdBrokerProxy();
       proxy.harness({ harnessPath: '/repo/src/a.harness.ts', source: EDITED_HARNESS });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/a.ts' });
 
       const edited = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -75,6 +81,7 @@ describe('runIdBroker', () => {
     it('VALID: {no colocated harness} => the id the file has always had', async () => {
       const proxy = runIdBrokerProxy();
       proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/a.ts' });
 
       const plain = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -86,6 +93,7 @@ describe('runIdBroker', () => {
     it('VALID: {a *.harness.ts that is some other tool\'s} => the id the file has always had', async () => {
       const proxy = runIdBrokerProxy();
       proxy.harness({ harnessPath: '/repo/src/a.harness.ts', source: OTHER_TOOLS_HARNESS });
+      proxy.fileWithoutOwner({ absPath: '/repo/src/a.ts' });
 
       const plain = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
 
@@ -101,6 +109,30 @@ describe('runIdBroker', () => {
       await expect(
         runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' }),
       ).rejects.toThrow(/^EACCES: op '\/repo\/src\/a\.harness\.ts'$/u);
+    });
+  });
+
+  describe('the owning tsconfig it keys on', () => {
+    // The owner's analysis options decide the types the walk reads, so the same bytes under a different
+    // `lib` are a different run.
+    it('VALID: {a file a tsconfig owns} => an id that differs from the same file with no owner', async () => {
+      const proxy = runIdBrokerProxy();
+      proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
+      proxy.fileOwnedBy({ absPath: '/repo/src/a.ts', options: { target: 9, outDir: '/repo/dist' } });
+
+      const owned = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
+
+      expect(String(owned)).toBe('fbd102f417ce3d7b819e65b78cf162d623259d36d654d71e7f1f32c5576533a9');
+    });
+
+    it('VALID: {an owner whose options differ only outside the analysis set} => the same id', async () => {
+      const proxy = runIdBrokerProxy();
+      proxy.noHarness({ harnessPath: '/repo/src/a.harness.ts' });
+      proxy.fileOwnedBy({ absPath: '/repo/src/a.ts', options: { target: 9, outDir: '/elsewhere/out' } });
+
+      const owned = await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
+
+      expect(String(owned)).toBe('fbd102f417ce3d7b819e65b78cf162d623259d36d654d71e7f1f32c5576533a9');
     });
   });
 });

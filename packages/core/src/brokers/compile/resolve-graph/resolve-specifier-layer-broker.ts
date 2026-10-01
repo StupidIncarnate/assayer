@@ -10,9 +10,13 @@
  *   chased is the SOURCE name, so `export { foo as bar }` followed by an import of `bar` continues on
  *   `foo`. Namespace/star/side-effect imports name no single export, so they never follow.
  *
+ *   Each hop resolves under the compiler options of the tsconfig that owns the file it resolves FROM
+ *   (`optionsByRelPath`, keyed by repo-relative path), so a barrel in another package follows that
+ *   package's own `paths` and module settings. A file missing from the map resolves under TypeScript's defaults.
+ *
  * USAGE:
  * resolveSpecifierLayerBroker({ containingFile, specifier: '../b/foo', importedName: 'foo', root,
- *   options, blobsByRelPath, builtins, seen: new Set() });
+ *   optionsByRelPath, blobsByRelPath, builtins, seen: new Set() });
  * // Returns { kind: 'local', relPath } | { kind: 'package', packageName } | { kind: 'builtin', packageName } | { kind: 'unresolved' }
  */
 import type { CompiledFileBlob } from '@assayer/shared/contracts';
@@ -27,7 +31,7 @@ export const resolveSpecifierLayerBroker = ({
   specifier,
   importedName,
   root,
-  options,
+  optionsByRelPath,
   blobsByRelPath,
   builtins,
   seen,
@@ -36,7 +40,7 @@ export const resolveSpecifierLayerBroker = ({
   specifier: string;
   importedName?: string;
   root: string;
-  options: ResolveOptions;
+  optionsByRelPath: ReadonlyMap<string, ResolveOptions>;
   blobsByRelPath: ReadonlyMap<string, CompiledFileBlob>;
   builtins: ReadonlySet<string>;
   seen: ReadonlySet<string>;
@@ -51,7 +55,11 @@ export const resolveSpecifierLayerBroker = ({
     return { kind: 'builtin', packageName: bareBuiltin };
   }
 
-  const resolved = importSpecifierResolveBroker({ specifier, containingFile, options });
+  const resolved = importSpecifierResolveBroker({
+    specifier,
+    containingFile,
+    options: optionsByRelPath.get(relative(root, containingFile)) ?? {},
+  });
 
   if (!resolved.resolved) {
     return { kind: 'unresolved' };
@@ -94,7 +102,7 @@ export const resolveSpecifierLayerBroker = ({
       specifier: namedForward.specifier,
       importedName: namedForward.sourceName,
       root,
-      options,
+      optionsByRelPath,
       blobsByRelPath,
       builtins,
       seen: new Set([...seen, rel]),
@@ -111,7 +119,7 @@ export const resolveSpecifierLayerBroker = ({
       specifier: String(starForward.specifier),
       importedName,
       root,
-      options,
+      optionsByRelPath,
       blobsByRelPath,
       builtins,
       seen: new Set([...seen, rel]),

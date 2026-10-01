@@ -8,7 +8,7 @@
  *   checking out — so the stable-namespace (git blobs) and current-namespace (working tree) caches
  *   are both exercised. It reads back the written .assayer/cache manifest + content-addressed blobs
  *   so a colocated .integration.test.ts asserts on the compiled surface (namespaces, per-file
- *   content hashes, reconstructed source, blob reuse) without touching node builtins itself. Owns
+ *   content and analysis hashes, reconstructed source, blob reuse) without touching node builtins itself. Owns
  *   all node:fs / node:child_process access.
  *
  * USAGE:
@@ -79,6 +79,7 @@ export const assayerCompileHarness = (): {
   manifestNamespaceNames: () => readonly string[];
   manifestRelPaths: ({ namespace }: { namespace: string }) => readonly string[];
   manifestContentHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
+  manifestAnalysisHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
   manifestNamespaceHasCommit: ({ namespace }: { namespace: string }) => boolean;
   blobHashes: () => readonly ContentHash[];
   readBlobText: ({ hash }: { hash: string }) => string;
@@ -215,6 +216,25 @@ export const assayerCompileHarness = (): {
       }
       return entry.contentHash;
     },
+    // The hash that names the file's blob: its bytes plus the analysis options of the tsconfig that owns it.
+    manifestAnalysisHash: ({
+      namespace,
+      relPath,
+    }: {
+      namespace: string;
+      relPath: string;
+    }): ContentHash => {
+      const manifest = JSON.parse(
+        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
+      ) as Manifest;
+      const entry = (manifest.namespaces[namespace]?.files ?? []).find(
+        (file) => String(file.relPath) === relPath,
+      );
+      if (entry === undefined) {
+        throw new Error(`no manifest entry for ${relPath} in namespace ${namespace}`);
+      }
+      return entry.analysisHash;
+    },
     manifestNamespaceHasCommit: ({ namespace }: { namespace: string }): boolean => {
       const manifest = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
@@ -245,7 +265,7 @@ export const assayerCompileHarness = (): {
         throw new Error(`no manifest entry for ${relPath} in namespace ${namespace}`);
       }
       const blob = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${entry.contentHash}.json`)),
+        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${entry.analysisHash}.json`)),
       ) as Blob;
       return blob.displayLines.map((line) => String(line.text)).join('\n');
     },

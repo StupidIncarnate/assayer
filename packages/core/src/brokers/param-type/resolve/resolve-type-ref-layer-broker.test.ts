@@ -56,7 +56,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -76,7 +75,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -95,7 +93,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -118,7 +115,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -140,7 +136,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -164,7 +159,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -189,7 +183,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/open.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -212,7 +205,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/open.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -235,7 +227,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/weigh.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -261,7 +252,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/name.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -287,7 +277,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/read-x.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -317,7 +306,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/read.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -339,7 +327,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -348,6 +335,7 @@ describe('resolveTypeRefLayerBroker', () => {
 
     it('EMPTY: {the specifier lands under node_modules} => undefined', () => {
       const proxy = resolveTypeRefLayerBrokerProxy();
+      proxy.callerWithoutOwner({ containingFile: '/repo/src/decide.ts' });
       proxy.resolvesOutsideRepo({ fileName: '/repo/node_modules/types/index.d.ts', specifier: './types' });
       const walked = walkFileTransformer({ source: IMPORTING_SOURCE, relPath: 'src/decide.ts' });
 
@@ -356,7 +344,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/decide.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -374,7 +361,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/cycle.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 
@@ -392,7 +378,6 @@ describe('resolveTypeRefLayerBroker', () => {
         walked,
         relPath: 'src/broken.ts',
         root: '/repo',
-        options: {},
         seen: new Set(),
       });
 

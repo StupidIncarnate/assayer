@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
@@ -22,7 +23,7 @@ describe('readNullishLeafLayerTransformer', () => {
   describe('a bare param operand', () => {
     it('VALID: {`a` from `a ?? b`, a: string | null} => a non-nullish leaf carrying the operand name and type', () => {
       readNullishLeafLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function orElse(a: string | null, b: string) {\n  return a ?? b;\n}\n');
       const operand = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
 
@@ -39,7 +40,7 @@ describe('readNullishLeafLayerTransformer', () => {
 
     it('VALID: {`a` from `a ?? b`} => a cond probe site spanning the operand', () => {
       readNullishLeafLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function orElse(a: string | null, b: string) {\n  return a ?? b;\n}\n');
       const operand = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
 
@@ -54,7 +55,7 @@ describe('readNullishLeafLayerTransformer', () => {
   describe('a non-identifier operand', () => {
     it('VALID: {`foo()` from `foo() ?? b`} => a non-nullish leaf with no operand name, so it cannot be arranged', () => {
       readNullishLeafLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function foo(): string | null;\nfunction orElse(b: string) {\n  return foo() ?? b;\n}\n',

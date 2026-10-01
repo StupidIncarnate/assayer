@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
 import { readGlobalTypeLayerBroker } from './read-global-type-layer-broker';
@@ -6,7 +7,7 @@ import { readGlobalTypeLayerBrokerProxy } from './read-global-type-layer-broker.
 
 // The type of the first declared const in the source — the reader's input.
 const typeOf = ({ source }: { source: string }): Type =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.VariableDeclaration)
     .getType();
@@ -14,7 +15,7 @@ const typeOf = ({ source }: { source: string }): Type =>
 // The type AND the declaring type node of the first declared const — what a real caller threads in for
 // a called global's parameter/return, or a member access's own declaration.
 const typeAndNodeOf = ({ source }: { source: string }): { type: Type; typeNode: TypeNode } => {
-  const declaration = new Project({ useInMemoryFileSystem: true })
+  const declaration = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.VariableDeclaration);
 

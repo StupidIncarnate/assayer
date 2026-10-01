@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 import type { VariableStatement } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
@@ -8,7 +9,7 @@ import { handleVariableLayerTransformerProxy } from './handle-variable-layer-tra
 const MODULE_CONTEXT = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false });
 
 const variableOf = ({ source }: { source: string }): VariableStatement =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.VariableStatement);
 

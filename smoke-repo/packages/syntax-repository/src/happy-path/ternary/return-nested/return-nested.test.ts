@@ -15,7 +15,7 @@ const NESTED_ELSE_EXIT =
 
 describe('ternary / return-nested — a ternary nested in the else arm', () => {
   it('VALID: {`return g >= 90 ? a : g >= 80 ? b : c`} => two ternary branches, three per-leaf exits', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/return-nested/return-nested.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/return-nested/return-nested.ts', absPath: join(__dirname, 'return-nested.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

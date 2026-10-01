@@ -47,8 +47,11 @@ const WRONG_TYPE_VALUE_HARNESS = [
   '',
 ].join('\n');
 
-const HASH_FOR_VALID = 'd8f5b1d1bc932089d9e0683360e4a8274c4244931987cd18ed327b72be0b8769';
-const HASH_FOR_EDITED = 'a1b98d93dc9257e692b46072405e2468dd71edca85dc389825da2c50a0f80e35';
+// Each harness hash is the SHA-256 of `src/audit.harness.ts`, a newline, the SHA-256 of the harness bytes, a newline,
+// and the analysis options key of the tsconfig that owns the harness. The temp repo's tsconfig sets no analysis option,
+// so that key is `[["strictNullChecks",true]]`, the one option the walk always forces.
+const HASH_FOR_VALID = '842ab765d9e514d5e03714a922e1140077516e45b2211577c45dd5bd49bc1c11';
+const HASH_FOR_EDITED = 'd0b7b38aa360b24e314f605c0ee20f0c25b7b081e825336f61b1796de364b62e';
 
 // The cache-proof pair, against `TWO_CALLBACK_SOURCE` — an entry with two refused callables, so one
 // harness can pay half the debt and the next can pay all of it. Same source both passes; only these two
@@ -74,8 +77,8 @@ const BOTH_HARNESS = [
   '',
 ].join('\n');
 
-const HASH_FOR_LOG_ONLY = '873523ac30424d011986d417d5cc6da96944f2d56f17fee9ad70e8dba70c4c98';
-const HASH_FOR_BOTH = '85fd04664efbdb6421ffe5980093b00049275e6395904d274edd0ab0d965e211';
+const HASH_FOR_LOG_ONLY = '4a0629b1299eac727ffeacb29bbf1a0377e0e508b9ea91a00dc27aeffc8228b0';
+const HASH_FOR_BOTH = 'e44eaee5c15398167fdfef5d706cd83ccaba28c7ad7e57306627102d4c76a1a1';
 
 const THEN = '*module*/audit/return@if:BinaryExpression,id:size,GreaterThanToken,num:3#then';
 const ELSE = '*module*/audit/return@if:BinaryExpression,id:size,GreaterThanToken,num:3#else';

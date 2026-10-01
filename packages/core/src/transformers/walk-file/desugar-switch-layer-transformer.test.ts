@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 
 import { desugarSwitchLayerTransformer } from './desugar-switch-layer-transformer';
@@ -13,7 +14,7 @@ describe('desugarSwitchLayerTransformer', () => {
   describe('the discriminant it reads', () => {
     it('VALID: {switch (method)} => the discriminant symbol name and its node', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', STRING_SWITCH_SOURCE);
       const switchStatement = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -25,7 +26,7 @@ describe('desugarSwitchLayerTransformer', () => {
 
     it('EDGE: {switch (o.k)} => NO discriminant name, because it is not a bare identifier', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "function f(o: { k: string }) {\n  switch (o.k) {\n    case 'a':\n      return 1;\n  }\n}\n",
@@ -42,7 +43,7 @@ describe('desugarSwitchLayerTransformer', () => {
   describe('the eq-branches it desugars each literal case into', () => {
     it('VALID: {string cases} => one case info per case, carrying value, token, and branch id', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', STRING_SWITCH_SOURCE);
       const switchStatement = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -70,7 +71,7 @@ describe('desugarSwitchLayerTransformer', () => {
 
     it('VALID: {numeric case} => a num token and an eq-branch id built from it', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function f(n: number) {\n  switch (n) {\n    case 1:\n      return "one";\n  }\n}\n',
@@ -96,7 +97,7 @@ describe('desugarSwitchLayerTransformer', () => {
 
     it('VALID: {string cases} => each case info points at its own clause', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', STRING_SWITCH_SOURCE);
       const switchStatement = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -107,7 +108,7 @@ describe('desugarSwitchLayerTransformer', () => {
 
     it('EDGE: {non-identifier discriminant} => the branch id keys on the whole structural projection', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "function f(o: { k: string }) {\n  switch (o.k) {\n    case 'a':\n      return 1;\n  }\n}\n",
@@ -123,7 +124,7 @@ describe('desugarSwitchLayerTransformer', () => {
 
     it('EDGE: {enum-member case} => a case info with NO literal value, keyed on the structural projection', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'enum E { A, B }\nfunction f(e: E) {\n  switch (e) {\n    case E.A:\n      return 1;\n    default:\n      return 2;\n  }\n}\n',
@@ -152,7 +153,7 @@ describe('desugarSwitchLayerTransformer', () => {
   describe('the default clause it finds', () => {
     it('VALID: {switch with a default} => that clause', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', STRING_SWITCH_SOURCE);
       const switchStatement = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -163,7 +164,7 @@ describe('desugarSwitchLayerTransformer', () => {
 
     it('EMPTY: {switch without a default} => no default clause', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function f(n: number) {\n  switch (n) {\n    case 1:\n      return "one";\n  }\n}\n',
@@ -179,7 +180,7 @@ describe('desugarSwitchLayerTransformer', () => {
   describe('formatting invariance', () => {
     it('VALID: {double-quoted vs single-quoted case literal} => the SAME branch id', () => {
       desugarSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const doubled = project.createSourceFile(
         'src/a.ts',
         'function f(m: string) {\n  switch (m) {\n    case "get":\n      return 1;\n  }\n}\n',

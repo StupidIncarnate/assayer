@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'not.ts'), 'utf8');
 const relPath = 'src/happy-path/boolean/not/not.ts';
@@ -17,7 +17,7 @@ describe('boolean / not — a negated operand inside an exported function', () =
   // `not` wraps it. That is why no predicate needs a negated twin and the type→range engine is
   // untouched by `!`.
   it('VALID: {!ready} => a not wrapping a truthy leaf, rather than a negated predicate', () => {
-    const result = analyzeExtractBroker({ source, relPath });
+    const result = analyzeExtractBroker({ source, relPath, absPath: join(__dirname, 'not.ts') });
     const conditions = result.success ? result.functions.flatMap((fn) => fn.branches).map((b) => b.condition) : [];
 
     expect(conditions).toStrictEqual([
@@ -38,7 +38,7 @@ describe('boolean / not — a negated operand inside an exported function', () =
   // `ready: false` — so the else-case claimed `gate(false)` reaches the else, which is the opposite
   // of what the code does.
   it('VALID: {!ready} => then arranges ready=false and else arranges ready=true', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'not.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'ready', value: false }], salient: true },

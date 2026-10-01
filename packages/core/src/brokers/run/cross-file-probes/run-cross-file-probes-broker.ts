@@ -21,7 +21,6 @@
  */
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { crossFileMapReachesTransformer } from '../../../transformers/cross-file-map-reaches/cross-file-map-reaches-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
@@ -49,13 +48,12 @@ export const runCrossFileProbesBroker = async ({
     return [];
   }
 
-  const { options } = tsconfigReadBroker({ searchPath: root });
   const containingFile = `${root}/${relPath}`;
 
   // One plan per DISTINCT specifier — two maps of the same sibling share a plan (same bytes, same hash).
   const uniqueSpecifiers = [...new Set(reaches.map((reach) => String(reach.specifier)))];
   const plans = uniqueSpecifiers.flatMap((specifier) => {
-    const sibling = resolveSiblingCalleeBroker({ specifier, containingFile, root, options });
+    const sibling = resolveSiblingCalleeBroker({ specifier, containingFile, root });
 
     if (!sibling?.walked.success) {
       return [];

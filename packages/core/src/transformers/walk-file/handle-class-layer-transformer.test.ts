@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';
@@ -11,7 +12,7 @@ describe('handleClassLayerTransformer', () => {
   describe('naming scope', () => {
     it('VALID: {class} => opens NO scope record, because a class holds no control flow', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -22,7 +23,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('VALID: {class} => records itself as a handled node under its own path', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -44,7 +45,7 @@ describe('handleClassLayerTransformer', () => {
     // ever attach a coverage path to.
     it('VALID: {anonymous default-export class} => names it "default", never undefined', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export default class {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -63,7 +64,7 @@ describe('handleClassLayerTransformer', () => {
   describe('the instance shape it declares', () => {
     it('VALID: {a named class} => the instance shape, keyed by the class name, on the SAME channel an interface uses', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class Point {\n  x: number = 0;\n  y: number = 0;\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -86,7 +87,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('VALID: {a generic class} => the shape carries its type PARAMETERS beside the descriptor', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class Box<T> {\n  value: T | undefined;\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -109,7 +110,7 @@ describe('handleClassLayerTransformer', () => {
     // bound to a `const`, has no such identifier of its own.
     it('EMPTY: {an anonymous class} => declares NO shape at all, since no reference could name it', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export default class {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -120,7 +121,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('EMPTY: {a class expression} => declares NO shape either, for the same reason', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const C = class {\n  m(): void {}\n};\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassExpression);
 
@@ -133,7 +134,7 @@ describe('handleClassLayerTransformer', () => {
   describe('export reach handed to members', () => {
     it('VALID: {exported class} => hands members exported: true', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -152,7 +153,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('VALID: {plain class} => hands members exported: false', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -173,7 +174,7 @@ describe('handleClassLayerTransformer', () => {
     // declaration — so its members inherit the export reach the enclosing context already carries.
     it('VALID: {class expression, exported context} => hands members exported: true FROM THE CONTEXT', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export const C = class {\n  m(): void {}\n};\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassExpression);
       const exportedContext = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true });
@@ -189,7 +190,7 @@ describe('handleClassLayerTransformer', () => {
   describe('constructability handed to members', () => {
     it('VALID: {no constructor} => constructable, since an instance costs nothing', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -202,7 +203,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('VALID: {constructor needing an argument} => NOT constructable', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export class C {\n  constructor(readonly db: string) {}\n  m(): void {}\n}\n',
@@ -219,7 +220,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('VALID: {constructor whose every argument is omittable} => constructable', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export class C {\n  constructor(a?: string, b: number = 1) {}\n  m(): void {}\n}\n',
@@ -236,7 +237,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('VALID: {constructor whose only parameter is a rest parameter} => constructable', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export class C {\n  constructor(...args: string[]) {}\n  m(): void {}\n}\n',
@@ -255,7 +256,7 @@ describe('handleClassLayerTransformer', () => {
   describe('the descents it asks for', () => {
     it('VALID: {class with several members} => one descent per member', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'class C {\n  v = 1;\n  constructor() {}\n  m(): void {}\n}\n',
@@ -273,7 +274,7 @@ describe('handleClassLayerTransformer', () => {
 
     it('VALID: {class declared inside a guarded arm} => RESETS the guard path for its members', () => {
       handleClassLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  m(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
       const guarded = WalkContextStub({

@@ -1,4 +1,5 @@
 import { Project } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { walkNodeLayerTransformer } from './walk-node-layer-transformer';
@@ -10,7 +11,7 @@ describe('walkNodeLayerTransformer', () => {
   describe('recursion', () => {
     it('VALID: {nested functions} => reaches every depth, since it calls itself per descent', () => {
       walkNodeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile(
         'src/f.ts',
         'export function a(): void {\n  function b(): void {\n    function c(): void {}\n    c();\n  }\n  b();\n}\n',
@@ -30,7 +31,7 @@ describe('walkNodeLayerTransformer', () => {
   describe('scope claiming', () => {
     it('VALID: {completed walk} => leaves NO loose facts, because the module scope claims the rest', () => {
       walkNodeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', 'export function a(): void {}\n');
 
       const result = walkNodeLayerTransformer({ node, context: SEED });
@@ -43,7 +44,7 @@ describe('walkNodeLayerTransformer', () => {
 
     it('VALID: {file with a dark spot} => the node record survives the climb back up', () => {
       walkNodeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile(
         'src/f.ts',
         'export function a(xs: number[]): void {\n  for (const x of xs) {\n    xs.pop();\n  }\n}\n',
@@ -59,7 +60,7 @@ describe('walkNodeLayerTransformer', () => {
 
     it('VALID: {calls, a value use and an exported binding at module scope} => each channel is CLAIMED onto its own scope, not dropped', () => {
       walkNodeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile(
         'src/f.ts',
         "const helper = (): string => 'x';\nexport const ref = helper;\nhelper();\n",

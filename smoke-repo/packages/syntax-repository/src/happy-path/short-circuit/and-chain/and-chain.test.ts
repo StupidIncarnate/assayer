@@ -13,7 +13,7 @@ const C_EXIT = '*module*/all/return@ternary:id:a#then/ternary:id:b#then';
 
 describe('short-circuit / and-chain — an `&&` chain in a block return', () => {
   it('VALID: {block `return a && b && c`} => a ternary branch per controlling operand, one exit per path', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/short-circuit/and-chain/and-chain.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/short-circuit/and-chain/and-chain.ts', absPath: join(__dirname, 'and-chain.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

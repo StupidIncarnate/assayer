@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 import type { EnumDeclaration, InterfaceDeclaration, TypeAliasDeclaration } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
@@ -8,17 +9,17 @@ import { handleTypeDeclarationLayerTransformerProxy } from './handle-type-declar
 const MODULE_CONTEXT = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false });
 
 const interfaceOf = ({ source }: { source: string }): InterfaceDeclaration =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.InterfaceDeclaration);
 
 const aliasOf = ({ source }: { source: string }): TypeAliasDeclaration =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.TypeAliasDeclaration);
 
 const enumOf = ({ source }: { source: string }): EnumDeclaration =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.EnumDeclaration);
 

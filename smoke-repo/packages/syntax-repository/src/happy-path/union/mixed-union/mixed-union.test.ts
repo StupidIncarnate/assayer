@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'mixed-union.ts'), 'utf8');
 const relPath = 'src/happy-path/union/mixed-union/mixed-union.ts';
@@ -12,7 +12,7 @@ describe('union / mixed-union — a union whose members are NOT all scalars', ()
   // the half it can. Degrading to `unknown` on the first non-scalar member would refuse `Marker | string`
   // for the half nothing can build — and there is nothing here that cannot be built.
   it('VALID: {target: Marker | string} => a union descriptor carrying the object beside the string', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'mixed-union.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.entry.params)).toStrictEqual([
       {
@@ -35,7 +35,7 @@ describe('union / mixed-union — a union whose members are NOT all scalars', ()
   // The mixed union is filled from its first fillable member — a string — and the scalar branch beside it
   // drives both arms. No gap: nothing here is an input Assayer cannot construct.
   it('VALID: {if (count > 1) beside the mixed union} => both arms driven, the union filled as a string', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'mixed-union.ts') }), relPath });
 
     expect({
       cases: analysis.functions.flatMap((fn) => fn.cases),

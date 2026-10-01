@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'basic.ts'), 'utf8');
 const relPath = 'src/happy-path/template-literal/basic/basic.ts';
@@ -17,7 +17,7 @@ describe('template-literal / basic — a branchless function over a template lit
   // own representative point between the literal segments — `'id-' + 'abc123' + ''` — never a bare
   // placeholder unrelated to the declared pattern.
   it('VALID: {export function idLength(t: `id-${string}`) { return t.length }} => param typed as a template literal type, one derived case', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'basic.ts') }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -49,7 +49,7 @@ describe('template-literal / basic — a branchless function over a template lit
 
   // A clean run: no object shape to declare, and nothing admitted.
   it('VALID: {a template literal type param} => no declaredTypes, and nothing is admitted', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'basic.ts') }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,

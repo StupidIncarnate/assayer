@@ -12,7 +12,7 @@ describe('if-else / in-class — if/else inside an exported class method', () =>
   // start from an exported top-level function. The walk carries scope down, so a method is just a
   // function-like at a greater depth and needed no new derivation — only a longer scope path.
   it('VALID: {exported class method with if/else} => the same analysis as a function, under the class path', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/if-else/in-class/in-class.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/if-else/in-class/in-class.ts', absPath: join(__dirname, 'in-class.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

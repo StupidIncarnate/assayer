@@ -9,10 +9,11 @@
  * A caller that reaches for a member missing here fails typecheck (TS2305 or TS2339). Add the name to
  * both lists.
  *
- * Three jobs are wrappers, not pass-throughs, because each reads the real disk through `ts.sys`:
+ * Some jobs are wrappers, not pass-throughs, because each reads the real disk through `ts.sys`:
  * `resolveModuleFile` resolves a module specifier, `readNearestTsconfig` finds and reads a tsconfig,
- * and `impliedNodeFormat` reads the module format TypeScript gives a file. Each has a proxy a test can
- * stage.
+ * `findTsconfig` finds the nearest tsconfig's path, `readTsconfig` parses one tsconfig into its file
+ * list, references and options, and `impliedNodeFormat` reads the module format TypeScript gives a
+ * file. Each has a proxy a test can stage.
  *
  * USAGE:
  * import ts from '#gateway/npm/typescript';
@@ -20,8 +21,10 @@
  */
 
 export { ts as default } from 'ts-morph';
+export { findTsconfig } from './find-tsconfig/find-tsconfig';
 export { impliedNodeFormat } from './implied-node-format/implied-node-format';
 export { readNearestTsconfig } from './read-nearest-tsconfig/read-nearest-tsconfig';
+export { readTsconfig } from './read-tsconfig/read-tsconfig';
 export { resolveModuleFile } from './resolve-module-file/resolve-module-file';
 export {
   EmitHint,
@@ -111,6 +114,7 @@ export {
   readConfigFile,
   readJsonConfigFile,
   resolveModuleName,
+  resolveProjectReferencePath,
   sys,
   transform,
   transpileModule,
@@ -132,6 +136,7 @@ export type {
   ObjectLiteralElementLike,
   ParameterDeclaration,
   ParseConfigFileHost,
+  ParsedCommandLine,
   Program,
   PropertyName,
   ResolvedModuleWithFailedLookupLocations,

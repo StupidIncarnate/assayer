@@ -439,7 +439,7 @@ Phase 2 edits nothing until the operator says PE-8 has landed. Each step is chec
   `stub-graph.harness.ts`, where each one walks a specimen
 - if (a): the 117 specimen test files, by script, under the extended concession 15
 
-### Step 9: docs
+### Step 9: docs (done)
 
 - `packages/core/CLAUDE.md` sections 5.10 (the owner rule, and why `strictNullChecks` stays forced), 8 (the module
   format entry names the owner, not the nearest config) and 9 (the stitch resolves per importing file)
@@ -451,3 +451,42 @@ Run `bash tmp/p0-5b-hash/run.sh pe9 source`. Every specimen's run id moves (answ
 `pe9.sha256` are compared by each run's `relPath`, read from its `run.json`. Every file whose `cases.json`, `run.json`
 or `console.txt` moves is explained from its source and its library set: ES5 plus DOM before, ES2022 plus DOM and
 `strict` after. `map-param` is the one move the walk already predicts.
+
+## Hash results
+
+Run on 2026-10-01 with `bash tmp/p0-5b-hash/run.sh pe9 source`, against the uncommitted PE-9 tree. It wrote 351
+hashes for 117 runs, the same as the baseline.
+
+How the comparison was made:
+
+- `before.out` is empty (0 bytes), so it cannot serve as the console baseline. `pe8.sha256` is byte-identical to
+  `before.sha256`, so `pe8.out` stands in for it.
+- The baseline run directories no longer exist, so their `relPath` values could not be read from disk. The compiled
+  `dist` still holds the code from before PE-9, so `bash tmp/p0-5b-hash/run.sh pe9-basedist dist` rebuilt them. Its
+  `pe9-basedist.sha256` is byte-identical to `before.sha256`. Each baseline run was then paired with its PE-9 run by
+  the `relPath` in `run.json`.
+- Each pair of files was compared twice: once as raw bytes, and once with each side's own run id replaced by a
+  placeholder.
+
+Summary: every run id moved, as operator answer 4 requires. No `cases.json` moved. Every `run.json` and
+`console.txt` that moved differs only in its run id. 117 specimens moved, 117 are explained, 0 are unexplained. The
+`assayer unit` console output (`pe9.out` against `pe8.out`) differs only in the two `assayer detail <runId>` lines.
+
+| relPath | What moved | Why |
+|---|---|---|
+| `packages/syntax-repository/src/sad-path/unreachable/cross-file-guards/exceeds-limit.ts` | `run.json`: the `runId` field only. `console.txt`: the `assayer detail` line only (`65369a82...` before, `cb5147b8...` after). | The run id now includes the analysis options key of the owning tsconfig (operator answer 4). The console names the run id in its detail line. |
+| `packages/syntax-repository/src/sad-path/unreachable/cross-file-guards/within-budget.ts` | `run.json`: the `runId` field only. `console.txt`: the `assayer detail` line only (`102d93d3...` before, `c1465fc2...` after). | The same as `exceeds-limit.ts`. |
+| `packages/syntax-repository/src/sad-path/input-gap/map-param/map-param.ts` | `run.json`: the `runId` field only. | The run id moved for the reason above. The walk moves for this file: `counts: Map<string, number>` reads as an object type under ES2022, where ES5 has no `Map`. Its members include the symbol-keyed `[Symbol.iterator]` and `[Symbol.toStringTag]`, which now carry the checker's stable names. Those members are callable, so the fill seam still refuses `counts`. The gap text names the type the source spells, so it does not change, and the entry still derives no case. |
+| every other specimen in `tmp/p0-5b-hash/specimens.txt` | `run.json`: the `runId` field only. | The run id moved for the reason above. Nothing else moved, because no input these specimens' cases arrange has a type that differs between the two library sets: their parameters are scalars, literal unions, arrays, tuples, object shapes, callbacks and imported types, and ES2022 declares none of them differently from ES5. DOM is in both library sets, so the `.tsx` specimen reads the same. `strictNullChecks` was already forced on, and the other strict flags change no declared parameter type. `types` never reaches the walk, so `process` still resolves to nothing, and the `process.env` proof holds. `at.ts` calls `items.at(index)`, which ES5 does not declare, but the function declares its return type and the call is not an input, so its cases do not move. |
+
+Both before and after, the run exits with code 1. `exceeds-limit.ts` and `within-budget.ts` each report two errored
+cases that reached no exit. This is the same in `pe8.out`, so PE-9 did not cause it.
+
+`npm run test:syntax` on the same tree: 116 of 117 suites pass, 258 of 259 tests pass. The one failure is the walk move
+named above, in `sad-path/input-gap/map-param/map-param.test.ts`, test "VALID: {an unsteered Map param} => the entry
+derives no case at all". It expects `counts` to read as `{ kind: 'unknown', text: 'Map<string, number>', typeRef:
+'Map', typeArgs: [...] }`. It receives `{ kind: 'object', typeName: 'Map', properties: [...] }`, with properties named
+`[Symbol.iterator]`, `[Symbol.toStringTag]`, `clear`, `delete`, `entries`, `forEach`, `get`, `has`, `keys`, `set`, `size`
+and `values`. Its other two tests, the gap text and the empty admission channels, pass. This is the move "Which
+specimen walks move" predicts. Whether the specimen's expected parameter type changes is the operator's call, as that
+section says, and never something to fit to the analyzer's output.

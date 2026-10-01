@@ -18,6 +18,8 @@ describe('bundled-typescript', () => {
     ['parseJsonConfigFileContent', bundled.parseJsonConfigFileContent, tsMorph.ts.parseJsonConfigFileContent],
     ['readJsonConfigFile', bundled.readJsonConfigFile, tsMorph.ts.readJsonConfigFile],
     ['resolveModuleName', bundled.resolveModuleName, tsMorph.ts.resolveModuleName],
+    ['resolveProjectReferencePath', bundled.resolveProjectReferencePath, tsMorph.ts.resolveProjectReferencePath],
+    ['getParsedCommandLineOfConfigFile', bundled.getParsedCommandLineOfConfigFile, tsMorph.ts.getParsedCommandLineOfConfigFile],
     ['transpileModule', bundled.transpileModule, tsMorph.ts.transpileModule],
   ])('VALID: {module} => lifts %s off the compiler ts-morph bundles', (_name, ours, real) => {
     expect(ours).toBe(real);

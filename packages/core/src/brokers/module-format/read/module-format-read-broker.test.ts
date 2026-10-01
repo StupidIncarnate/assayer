@@ -1,8 +1,7 @@
+import { ModuleKind, ModuleResolutionKind } from '#gateway/npm/typescript';
+
 import { moduleFormatReadBroker } from './module-format-read-broker';
 import { moduleFormatReadBrokerProxy } from './module-format-read-broker.proxy';
-
-const NODENEXT = '{ "compilerOptions": { "module": "nodenext", "moduleResolution": "nodenext" } }';
-const ESNEXT = '{ "compilerOptions": { "module": "esnext", "moduleResolution": "bundler" } }';
 
 describe('moduleFormatReadBroker', () => {
   describe('TypeScript gives an answer', () => {
@@ -10,8 +9,7 @@ describe('moduleFormatReadBroker', () => {
       const proxy = moduleFormatReadBrokerProxy();
       proxy.fileIs({
         absPath: '/repo/src/grade.ts',
-        directory: '/repo/src',
-        tsconfigText: NODENEXT,
+        options: { module: ModuleKind.NodeNext, moduleResolution: ModuleResolutionKind.NodeNext },
         declared: 'esm',
         nodeRule: 'commonjs',
       });
@@ -20,7 +18,7 @@ describe('moduleFormatReadBroker', () => {
 
       expect(result).toBe('esm');
       expect(proxy.getFormatCallsFor({ absPath: '/repo/src/grade.ts' }).map((call) => call[3])).toStrictEqual([
-        { module: 199, moduleResolution: 99, configFilePath: undefined },
+        { module: 199, moduleResolution: 99 },
       ]);
     });
 
@@ -28,8 +26,7 @@ describe('moduleFormatReadBroker', () => {
       const proxy = moduleFormatReadBrokerProxy();
       proxy.fileIs({
         absPath: '/repo/src/grade.ts',
-        directory: '/repo/src',
-        tsconfigText: NODENEXT,
+        options: { module: ModuleKind.NodeNext, moduleResolution: ModuleResolutionKind.NodeNext },
         declared: 'commonjs',
         nodeRule: 'esm',
       });
@@ -45,8 +42,7 @@ describe('moduleFormatReadBroker', () => {
       const proxy = moduleFormatReadBrokerProxy();
       proxy.fileIs({
         absPath: '/repo/src/grade.ts',
-        directory: '/repo/src',
-        tsconfigText: ESNEXT,
+        options: { module: ModuleKind.ESNext, moduleResolution: ModuleResolutionKind.Bundler },
         declared: undefined,
         nodeRule: 'esm',
       });
@@ -55,8 +51,8 @@ describe('moduleFormatReadBroker', () => {
 
       expect(result).toBe('esm');
       expect(proxy.getFormatCallsFor({ absPath: '/repo/src/grade.ts' }).map((call) => call[3])).toStrictEqual([
-        { module: 99, moduleResolution: 100, configFilePath: undefined },
-        { module: 199, moduleResolution: 99, configFilePath: undefined },
+        { module: 99, moduleResolution: 100 },
+        { module: 199, moduleResolution: 99 },
       ]);
     });
 
@@ -64,8 +60,7 @@ describe('moduleFormatReadBroker', () => {
       const proxy = moduleFormatReadBrokerProxy();
       proxy.fileIs({
         absPath: '/repo/src/grade.ts',
-        directory: '/repo/src',
-        tsconfigText: ESNEXT,
+        options: { module: ModuleKind.ESNext, moduleResolution: ModuleResolutionKind.Bundler },
         declared: undefined,
         nodeRule: 'commonjs',
       });
@@ -79,8 +74,7 @@ describe('moduleFormatReadBroker', () => {
       const proxy = moduleFormatReadBrokerProxy();
       proxy.fileIs({
         absPath: '/repo/src/data.json',
-        directory: '/repo/src',
-        tsconfigText: ESNEXT,
+        options: { module: ModuleKind.ESNext, moduleResolution: ModuleResolutionKind.Bundler },
         declared: undefined,
         nodeRule: undefined,
       });
@@ -91,10 +85,10 @@ describe('moduleFormatReadBroker', () => {
     });
   });
 
-  describe('no tsconfig', () => {
-    it('EMPTY: {no tsconfig above the file} => asks with empty options and takes the answer', () => {
+  describe('no owning tsconfig', () => {
+    it('EMPTY: {no tsconfig owns the file} => asks with empty options and takes the answer', () => {
       const proxy = moduleFormatReadBrokerProxy();
-      proxy.fileWithoutTsconfigIs({ absPath: '/repo/grade.ts', directory: '/repo', format: 'esm' });
+      proxy.fileWithoutTsconfigIs({ absPath: '/repo/grade.ts', format: 'esm' });
 
       const result = moduleFormatReadBroker({ absPath: '/repo/grade.ts' });
 

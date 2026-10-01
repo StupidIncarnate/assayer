@@ -14,7 +14,7 @@ const ELSE_EXIT = '*module*/classify/return@ternary:BinaryExpression,id:n,Greate
 
 describe('ternary / value-basic — a value-flow `const x = ternary; return x` tail', () => {
   it('VALID: {`const label = n > 5 ? a : b; return label`} => one ternary branch, then/else return exits, no dark spot', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/value-basic/value-basic.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/value-basic/value-basic.ts', absPath: join(__dirname, 'value-basic.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

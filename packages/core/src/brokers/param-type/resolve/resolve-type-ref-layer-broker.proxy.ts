@@ -5,6 +5,8 @@ export const resolveTypeRefLayerBrokerProxy = (): {
   // only the import that named it.
   setupDefinition: ({ fileName, source, specifier }: { fileName: string; source: string; specifier: string }) => void;
   resolvesOutsideRepo: ({ fileName, specifier }: { fileName: string; specifier: string }) => void;
+  // No tsconfig owns the reading file, so its specifiers resolve under TypeScript's defaults.
+  callerWithoutOwner: ({ containingFile }: { containingFile: string }) => void;
 } => {
   // Only the sibling resolve is staged: landing a specifier on a real filesystem is exactly what a unit
   // test cannot do, so the caller says where a specifier lands and what the definition's source is.
@@ -20,6 +22,9 @@ export const resolveTypeRefLayerBrokerProxy = (): {
     // the reference stays opaque and no source is read.
     resolvesOutsideRepo: ({ fileName, specifier }: { fileName: string; specifier: string }): void => {
       sibling.resolvesToOutside({ fileName, specifier });
+    },
+    callerWithoutOwner: ({ containingFile }: { containingFile: string }): void => {
+      sibling.callerWithoutOwner({ containingFile });
     },
   };
 };

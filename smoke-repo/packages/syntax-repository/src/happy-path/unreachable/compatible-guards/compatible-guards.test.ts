@@ -2,11 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'compatible-guards.ts'), 'utf8');
 const relPath = 'src/happy-path/unreachable/compatible-guards/compatible-guards.ts';
-const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'compatible-guards.ts') }) });
 const bucket = analysis.functions[0];
 
 describe('unreachable / compatible-guards — the same shape as sequential-guards, with every exit reachable', () => {

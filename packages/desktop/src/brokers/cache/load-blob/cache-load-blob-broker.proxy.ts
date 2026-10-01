@@ -4,22 +4,22 @@ import { readJsonFileProxy } from '#gateway/node/fs__promises/read-json-file/rea
 export const cacheLoadBlobBrokerProxy = (): {
   resolves: (params: {
     repoPath: string;
-    contentHash: string;
+    analysisHash: string;
     blob: ReturnType<typeof CompiledFileBlobStub>;
   }) => void;
-  missing: (params: { repoPath: string; contentHash: string }) => void;
+  missing: (params: { repoPath: string; analysisHash: string }) => void;
 } => {
   const readJsonGateway = readJsonFileProxy();
 
   return {
-    resolves: ({ repoPath, contentHash, blob }): void => {
+    resolves: ({ repoPath, analysisHash, blob }): void => {
       readJsonGateway.returnsRaw({
-        path: `${repoPath}/.assayer/cache/blobs/${contentHash}.json`,
+        path: `${repoPath}/.assayer/cache/blobs/${analysisHash}.json`,
         rawContents: JSON.stringify(blob),
       });
     },
-    missing: ({ repoPath, contentHash }): void => {
-      readJsonGateway.missing({ path: `${repoPath}/.assayer/cache/blobs/${contentHash}.json` });
+    missing: ({ repoPath, analysisHash }): void => {
+      readJsonGateway.missing({ path: `${repoPath}/.assayer/cache/blobs/${analysisHash}.json` });
     },
   };
 };

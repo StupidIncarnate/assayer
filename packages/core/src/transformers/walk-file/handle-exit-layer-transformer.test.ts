@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { handleExitLayerTransformer } from './handle-exit-layer-transformer';
@@ -22,7 +23,7 @@ describe('handleExitLayerTransformer', () => {
   describe('the exit it emits', () => {
     it('VALID: {unguarded return} => one return exit keyed @top', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return "small";\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -35,7 +36,7 @@ describe('handleExitLayerTransformer', () => {
 
     it('VALID: {throw} => one throw exit, distinguished from a return', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function classify(value: number) {\n  throw new Error("nope");\n}\n',
@@ -51,7 +52,7 @@ describe('handleExitLayerTransformer', () => {
   describe('the guard it reads straight off the context', () => {
     it('VALID: {return reached through an if-then} => the exit carries that guard and keys on it', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return "big";\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -73,7 +74,7 @@ describe('handleExitLayerTransformer', () => {
   describe('the returned expression it descends into', () => {
     it('VALID: {return with an expression} => descends that expression, since scopes and branches hide in it', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return "small";\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -84,7 +85,7 @@ describe('handleExitLayerTransformer', () => {
 
     it('VALID: {throw new Error(...)} => descends the thrown expression', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function classify(value: number) {\n  throw new Error("nope");\n}\n',
@@ -98,7 +99,7 @@ describe('handleExitLayerTransformer', () => {
 
     it('VALID: {return with an expression} => hands the expression the unchanged context', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return "big";\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -109,7 +110,7 @@ describe('handleExitLayerTransformer', () => {
 
     it('EMPTY: {bare return} => no descents, because there is no expression', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return;\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -122,7 +123,7 @@ describe('handleExitLayerTransformer', () => {
   describe('what it does NOT contribute', () => {
     it('VALID: {return} => no branches and no walk nodes of its own', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return "small";\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -139,7 +140,7 @@ describe('handleExitLayerTransformer', () => {
   describe('a ternary in the returned position delegates the split', () => {
     it('VALID: {return value > 5 ? a : b} => two guarded exits instead of one @top exit', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return value > 5 ? "big" : "small";\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -153,7 +154,7 @@ describe('handleExitLayerTransformer', () => {
 
     it('VALID: {return value > 5 ? a : b} => emits the ternary branch and marks the ConditionalExpression handled', () => {
       handleExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return value > 5 ? "big" : "small";\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 

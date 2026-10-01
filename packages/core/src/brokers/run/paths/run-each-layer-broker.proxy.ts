@@ -44,6 +44,7 @@ export const runEachLayerBrokerProxy = (): {
       runHandle.calledWith([{ absPath: sourcePath }]).resolves(RunResultStub());
       fileProxy.returns({ path: sourcePath, contents: source });
       idProxy.noHarness({ harnessPath });
+      idProxy.fileWithoutOwner({ absPath: sourcePath });
     },
     runCount: (): number => runHandle.callsMatching([]).length,
     // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES and the

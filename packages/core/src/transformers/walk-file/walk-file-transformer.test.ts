@@ -1,3 +1,4 @@
+import { ScriptTarget } from '#gateway/npm/ts-morph';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
@@ -7,6 +8,7 @@ import { moduleGraphProjectionTransformer } from '../module-graph-projection/mod
 import { walkFileTransformer } from './walk-file-transformer';
 import { walkFileTransformerProxy } from './walk-file-transformer.proxy';
 
+const LAST_ELEMENT = 'export const last = (xs: number[]) => xs.at(-1);\n';
 const IMPORTS_AND_CALL_SINGLE = "import { foo } from './y';\nexport function run(): void {\n  foo();\n}\n";
 const IMPORTS_AND_CALL_DOUBLE = 'import { foo } from "./y";\nexport function run(): void {\n  foo();\n}\n';
 const IMPORTS_AND_CALL_MINIFIED = "import {foo} from './y';export function run():void{foo();}";
@@ -922,6 +924,162 @@ describe('walkFileTransformer', () => {
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 3 }],
           }),
         ],
+      });
+    });
+  });
+
+  describe('compiler options', () => {
+    it('VALID: {no options, so TypeScript defaults: ES5 has no Array.prototype.at} => the return reads as any', () => {
+      walkFileTransformerProxy();
+
+      const result = walkFileTransformer({ source: LAST_ELEMENT, relPath: 'src/last.ts' });
+
+      expect(result).toStrictEqual({
+        success: true,
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            anonymous: false,
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            startLine: 1,
+            endLine: 2,
+            branches: [],
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 2 }],
+            calls: [],
+            valueUses: [],
+            exportedBindings: ['last'],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'last'],
+            name: 'last',
+            anonymous: false,
+            kind: 'function',
+            exported: true,
+            access: { kind: 'named' },
+            params: [{ name: 'xs', type: { kind: 'array', element: { kind: 'number' } } }],
+            returnType: { kind: 'unknown', text: 'any' },
+            startLine: 1,
+            endLine: 1,
+            branches: [],
+            exits: [{ coverageId: '*module*/last/return@top', kind: 'return', guardPath: [], line: 1 }],
+            calls: [
+              {
+                callee: { target: 'unresolved' },
+                args: [{ kind: 'opaque' }],
+                guardPath: [],
+                position: { line: 1, column: 39 },
+                receiver: 'xs',
+                method: 'at',
+              },
+            ],
+            valueUses: [],
+            exportedBindings: [],
+          }),
+        ],
+        nodes: [
+          WalkNodeStub({
+            kind: 'ArrowFunction',
+            scopePath: ['*module*', 'last'],
+            name: 'last',
+            startLine: 1,
+            endLine: 1,
+            handled: true,
+          }),
+        ],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 49 },
+          { id: '*module*/last/return@top', kind: 'exit', start: 38, end: 47 },
+        ],
+        moduleEdges: [],
+        declaredShapes: [],
+        globalUses: [],
+        envReads: [],
+        reachedFns: [],
+        invokedFns: [],
+      });
+    });
+
+    it('VALID: {an owning tsconfig with the ES2022 library} => the return reads as number or undefined', () => {
+      walkFileTransformerProxy();
+
+      const result = walkFileTransformer({
+        source: LAST_ELEMENT,
+        relPath: 'src/last.ts',
+        compilerOptions: { target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'], outDir: '/repo/dist' },
+      });
+
+      expect(result).toStrictEqual({
+        success: true,
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*'],
+            name: '*module*',
+            anonymous: false,
+            kind: 'module',
+            exported: false,
+            access: { kind: 'module' },
+            params: [],
+            returnType: { kind: 'unknown', text: 'void' },
+            startLine: 1,
+            endLine: 2,
+            branches: [],
+            exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 2 }],
+            calls: [],
+            valueUses: [],
+            exportedBindings: ['last'],
+          }),
+          ScopeRecordStub({
+            scopePath: ['*module*', 'last'],
+            name: 'last',
+            anonymous: false,
+            kind: 'function',
+            exported: true,
+            access: { kind: 'named' },
+            params: [{ name: 'xs', type: { kind: 'array', element: { kind: 'number' } } }],
+            returnType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+            startLine: 1,
+            endLine: 1,
+            branches: [],
+            exits: [{ coverageId: '*module*/last/return@top', kind: 'return', guardPath: [], line: 1 }],
+            calls: [
+              {
+                callee: { target: 'unresolved' },
+                args: [{ kind: 'opaque' }],
+                guardPath: [],
+                position: { line: 1, column: 39 },
+                receiver: 'xs',
+                method: 'at',
+              },
+            ],
+            valueUses: [],
+            exportedBindings: [],
+          }),
+        ],
+        nodes: [
+          WalkNodeStub({
+            kind: 'ArrowFunction',
+            scopePath: ['*module*', 'last'],
+            name: 'last',
+            startLine: 1,
+            endLine: 1,
+            handled: true,
+          }),
+        ],
+        probeSites: [
+          { id: '*module*/exit@top', kind: 'complete', start: 0, end: 49 },
+          { id: '*module*/last/return@top', kind: 'exit', start: 38, end: 47 },
+        ],
+        moduleEdges: [],
+        declaredShapes: [],
+        globalUses: [],
+        envReads: [],
+        reachedFns: [],
+        invokedFns: [],
       });
     });
   });

@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readAccountedLayerTransformer } from './read-accounted-layer-transformer';
 import { readAccountedLayerTransformerProxy } from './read-accounted-layer-transformer.proxy';
@@ -7,7 +8,7 @@ describe('readAccountedLayerTransformer', () => {
   describe('anything that always exits is accounted for', () => {
     it('VALID: {return statement} => true', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function f(): number {\n  return 1;\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement);
 
@@ -16,7 +17,7 @@ describe('readAccountedLayerTransformer', () => {
 
     it('VALID: {block whose last statement returns} => true', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function f(): number {\n  const q = 1;\n  return q;\n}\n');
       const node = sourceFile.getFunctionOrThrow('f').getBodyOrThrow();
 
@@ -30,7 +31,7 @@ describe('readAccountedLayerTransformer', () => {
     // even though the if does not "always exit" and therefore guards nothing after it.
     it('VALID: {if with an else whose arms merely fall off the end} => true', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const x: boolean;\ndeclare function noop(): void;\nfunction f(): void {\n  if (x) {\n    noop();\n  } else {\n    noop();\n  }\n}\n',
@@ -42,7 +43,7 @@ describe('readAccountedLayerTransformer', () => {
 
     it('VALID: {switch with a default whose case merely breaks} => true', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const m: string;\ndeclare function noop(): void;\nfunction f(): void {\n  switch (m) {\n    case "a":\n      break;\n    default:\n      noop();\n  }\n}\n',
@@ -54,7 +55,7 @@ describe('readAccountedLayerTransformer', () => {
 
     it('VALID: {block ending in a fall-through if/else} => true, deferring to its last statement', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const x: boolean;\ndeclare function noop(): void;\nfunction f(): void {\n  if (x) {\n    noop();\n  } else {\n    noop();\n  }\n}\n',
@@ -68,7 +69,7 @@ describe('readAccountedLayerTransformer', () => {
   describe('an unwritten path is NOT accounted for', () => {
     it('VALID: {if without an else} => false, because the else path falls through unrecorded', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const x: boolean;\ndeclare function noop(): void;\nfunction f(): void {\n  if (x) {\n    noop();\n  }\n}\n',
@@ -80,7 +81,7 @@ describe('readAccountedLayerTransformer', () => {
 
     it('VALID: {switch without a default} => false, because an unmatched discriminant falls through', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const m: string;\nfunction f(): void {\n  switch (m) {\n    case "a":\n      break;\n  }\n}\n',
@@ -92,7 +93,7 @@ describe('readAccountedLayerTransformer', () => {
 
     it('VALID: {expression statement} => false, since running it records no exit', () => {
       readAccountedLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function noop(): void;\nfunction f(): void {\n  noop();\n}\n',

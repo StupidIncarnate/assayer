@@ -87,7 +87,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({
@@ -119,7 +119,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(result.guards).toStrictEqual([
@@ -144,7 +144,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(proxy.getIndexRenames({ configDir: '/repo', namespace: 'feature-x' })).toStrictEqual([
@@ -166,7 +166,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(proxy.getWrittenIndex({ path: '/repo/.assayer/cache/stubs/feature-x.json.tmp' })).toStrictEqual(
@@ -186,7 +186,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: 'src/plain.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/plain.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({ layoutHash: EMPTY_HASH, tsconfigHash: EMPTY_HASH, objectStubs: [], envStubs: [] });
@@ -214,7 +214,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: 'src/flags/flags.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/flags/flags.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({

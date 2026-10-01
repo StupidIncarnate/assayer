@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'types.ts'), 'utf8');
 const relPath = 'src/happy-path/object/cross-file-shape/types.ts';
@@ -15,7 +15,7 @@ describe('object / cross-file-shape — types.ts, the DEFINITION file whose decl
   // case and admits nothing, which is what puts this file in happy-path. Its arrange is an OBJECT
   // binding built from that same enumerated shape, one value per declared property.
   it('VALID: {export interface Config + withDefaults(config: Config)} => declaredTypes carries the full Config property list, one case, nothing admitted', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'types.ts') }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,

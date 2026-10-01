@@ -11,7 +11,7 @@ const ELSE_EXIT = '*module*/classify/return@ternary:BinaryExpression,id:n,Greate
 
 describe('ternary / arrow-basic — a concise-arrow body that IS a ternary', () => {
   it('VALID: {`(n) => n > 5 ? a : b`} => the exit-owning arrow splits into then/else return exits', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/arrow-basic/arrow-basic.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/arrow-basic/arrow-basic.ts', absPath: join(__dirname, 'arrow-basic.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

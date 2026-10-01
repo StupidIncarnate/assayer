@@ -52,8 +52,11 @@ export const stableNamespaceLayerBroker = async ({
     compileProgressEventContract.parse({ namespace: branch, branch, phase: 'planned', current: 0, max, stableMax: max, currentMax }),
   );
 
+  // The ref's files are analysed under the working tree's tsconfigs, found by path: reading the ref's own
+  // configs would need a git-backed parse host that applies include and exclude itself.
   const processed = await processTargetsLayerBroker({
     remaining: plan.targets,
+    root,
     namespace: branch,
     branch,
     blobsDir,

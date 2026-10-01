@@ -21,7 +21,7 @@ describe('switch / in-class — switch inside an exported class method', () => {
   // Previously a declared GAP. The switch handler needed no knowledge of classes and the class
   // handler needed no knowledge of switches — the walk composes them.
   it('VALID: {exported class method with switch} => the same analysis as a function, under the class path', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/switch/in-class/in-class.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/switch/in-class/in-class.ts', absPath: join(__dirname, 'in-class.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

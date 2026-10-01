@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';
@@ -39,7 +40,7 @@ describe('handleIfLayerTransformer', () => {
   describe('the branch it emits', () => {
     it('VALID: {if (value > 5) with value declared a number param} => one if-branch keyed on the condition', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', THEN_RETURNS_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -64,7 +65,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {if} => records itself as a handled node under its scope', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', THEN_RETURNS_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -79,7 +80,7 @@ describe('handleIfLayerTransformer', () => {
   describe('the arms it descends', () => {
     it('VALID: {if without an else} => one descent carrying the THEN step', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', THEN_RETURNS_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -93,7 +94,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {if with an else} => two descents, one per arm', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', NEITHER_ARM_RETURNS_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -108,7 +109,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {if reached through an enclosing guard} => its step is APPENDED, never replacing what reached it', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',
@@ -128,7 +129,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {non-block arm} => the bare statement is descended directly', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  if (value > 5) return 1;\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -141,7 +142,7 @@ describe('handleIfLayerTransformer', () => {
   describe('completion exits in tail position', () => {
     it('VALID: {tail if whose arms both fall off the end} => a guarded implicit exit per arm', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', NEITHER_ARM_RETURNS_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -169,7 +170,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {tail if whose then returns and whose else does not} => only the else gets a completion exit', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    return 1;\n  } else {\n    noop();\n  }\n}\n',
@@ -192,7 +193,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {tail if whose only arm returns} => no completion exit, since the arm already exits', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', THEN_RETURNS_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -203,7 +204,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {if NOT in tail position} => no completion exits, because code runs after it', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', NEITHER_ARM_RETURNS_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
 
@@ -214,7 +215,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {tail if WITH an else, inside an enclosing guard} => the completion exit carries the FULL guard path', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  } else {\n    noop();\n  }\n}\n',
@@ -253,7 +254,7 @@ describe('handleIfLayerTransformer', () => {
     // `run-unit-broker.integration.test.ts`'s `TAIL_NO_ELSE_SPECIMEN`.
     it('VALID: {tail if with NO else, whose only arm does not return} => no completion exit at all', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',
@@ -267,7 +268,7 @@ describe('handleIfLayerTransformer', () => {
 
     it('VALID: {tail if with NO else, nested inside an enclosing guard} => still no completion exit', () => {
       handleIfLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',

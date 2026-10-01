@@ -9,12 +9,14 @@ export const stableNamespaceLayerBrokerProxy = (): {
     sha: string;
     lsTreeStdout: string;
     blobs: readonly { blobSha: string; content: string }[];
+    root: string;
     blobsDir: string;
   }) => void;
   changedCommitUnresolvable: (params: {
     ref: string;
     lsTreeStdout: string;
     blobs: readonly { blobSha: string; content: string }[];
+    root: string;
     blobsDir: string;
   }) => void;
   processedCount: () => number;
@@ -33,35 +35,43 @@ export const stableNamespaceLayerBrokerProxy = (): {
       sha,
       lsTreeStdout,
       blobs,
+      root,
       blobsDir,
     }: {
       ref: string;
       sha: string;
       lsTreeStdout: string;
       blobs: readonly { blobSha: string; content: string }[];
+      root: string;
       blobsDir: string;
     }): void => {
       planStableProxy.resolvesChanged({ ref, sha, lsTreeStdout, blobs });
       resolveCommitProxy.resolvesTo({ ref, sha });
-      blobs.forEach(({ content }) => {
-        processTargetsProxy.queueCleanWrite({ blobsDir, content });
+      // Each blob's path is the `ls-tree` line that names its sha, after the tab.
+      blobs.forEach(({ blobSha, content }) => {
+        const line = lsTreeStdout.split('\n').find((entry) => entry.includes(blobSha)) ?? '';
+        processTargetsProxy.queueCleanWrite({ blobsDir, absPath: `${root}/${line.slice(line.indexOf('\t') + 1)}`, content });
       });
     },
     changedCommitUnresolvable: ({
       ref,
       lsTreeStdout,
       blobs,
+      root,
       blobsDir,
     }: {
       ref: string;
       lsTreeStdout: string;
       blobs: readonly { blobSha: string; content: string }[];
+      root: string;
       blobsDir: string;
     }): void => {
       planStableProxy.resolvesChangedCommitUnresolvable({ ref, lsTreeStdout, blobs });
       resolveCommitProxy.refMissing({ ref });
-      blobs.forEach(({ content }) => {
-        processTargetsProxy.queueCleanWrite({ blobsDir, content });
+      // Each blob's path is the `ls-tree` line that names its sha, after the tab.
+      blobs.forEach(({ blobSha, content }) => {
+        const line = lsTreeStdout.split('\n').find((entry) => entry.includes(blobSha)) ?? '';
+        processTargetsProxy.queueCleanWrite({ blobsDir, absPath: `${root}/${line.slice(line.indexOf('\t') + 1)}`, content });
       });
     },
     processedCount: (): number => processTargetsProxy.processedCount(),

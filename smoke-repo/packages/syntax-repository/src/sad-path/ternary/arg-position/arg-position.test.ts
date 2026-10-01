@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'arg-position.ts'), 'utf8');
 const relPath = 'src/sad-path/ternary/arg-position/arg-position.ts';
@@ -13,7 +13,7 @@ describe('ternary / arg-position — a ternary in a CALL ARGUMENT', () => {
   // call argument has no exit to split, so it stays an ADMITTED dark spot rather than a fabricated fill.
   // This is the boundary ratchet: the day the reverse-map rung lands, the split reaches here too.
   it('VALID: {`return label(n > 5 ? a : b)`} => the ternary is a DARK SPOT, not split', () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'arg-position.ts') });
     const analysis = analyzeFileBroker({ walked });
 
     expect(analysis.darkSpots).toStrictEqual([
@@ -31,7 +31,7 @@ describe('ternary / arg-position — a ternary in a CALL ARGUMENT', () => {
   // a bare declared identifier, so no branch is emitted and the single unguarded return stands. `label`
   // is a branchless private consumed by `pick`, projected as no entry of its own.
   it('VALID: {ternary in a call arg} => the one entry `pick` has no branch and an unguarded return', () => {
-    const result = analyzeExtractBroker({ source, relPath });
+    const result = analyzeExtractBroker({ source, relPath, absPath: join(__dirname, 'arg-position.ts') });
 
     expect(result).toStrictEqual({
       success: true,
