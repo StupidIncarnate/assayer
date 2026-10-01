@@ -11,12 +11,18 @@
  * restriction. A caller that reaches for a member missing here fails typecheck (TS2339) — add the
  * name to the matching list below.
  *
+ * Two jobs are wrappers, not pass-throughs, because each reads the real disk through `ts.sys`:
+ * `resolveModuleFile` resolves a module specifier, and `readNearestTsconfig` finds and reads a
+ * tsconfig. Each has a proxy a test can stage.
+ *
  * USAGE:
  * import * as ts from '#gateway/npm/typescript';
  * import ts from '#gateway/npm/typescript'; // typescript.test.ts pins this to `require('typescript')`
  */
 
 export { default } from 'typescript';
+export { readNearestTsconfig } from './read-nearest-tsconfig/read-nearest-tsconfig';
+export { resolveModuleFile } from './resolve-module-file/resolve-module-file';
 export {
   EmitHint,
   ModuleKind,
@@ -101,7 +107,6 @@ export {
   parseJsonConfigFileContent,
   parseJsonText,
   readConfigFile,
-  resolveModuleName,
   sys,
   transform,
   transpileModule,

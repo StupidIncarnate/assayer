@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Resolves one module specifier against a containing file with the npm `typescript`
- *   resolver (`resolveModuleName` over `ts.sys`) — the same algorithm `tsc` runs, so relative
+ *   resolver, through the gateway's `resolveModuleFile` — the same algorithm `tsc` runs, so relative
  *   spellings and path aliases collapse to one canonical file. Returns the resolved absolute file
  *   name when TypeScript finds one, or `{ resolved: false }` when the specifier points at nothing (a
  *   broken import). The caller classifies local vs package from the file name; builtins are matched by
@@ -12,8 +12,8 @@
  */
 import { importSpecifierResolveResultContract } from '../../../contracts/import-specifier-resolve-result/import-specifier-resolve-result-contract';
 import type { ImportSpecifierResolveResult } from '../../../contracts/import-specifier-resolve-result/import-specifier-resolve-result-contract';
-import ts from '#gateway/npm/typescript';
-
+import { resolveModuleFile } from '#gateway/npm/typescript';
+import type { CompilerOptions } from '#gateway/npm/typescript';
 
 export const importSpecifierResolveBroker = ({
   specifier,
@@ -22,14 +22,13 @@ export const importSpecifierResolveBroker = ({
 }: {
   specifier: string;
   containingFile: string;
-  options: ts.CompilerOptions;
+  options: CompilerOptions;
 }): ImportSpecifierResolveResult => {
-  const result = ts.resolveModuleName(specifier, containingFile, options, ts.sys);
-  const {resolvedModule} = result;
+  const fileName = resolveModuleFile({ specifier, containingFile, options });
 
-  if (resolvedModule === undefined) {
+  if (fileName === undefined) {
     return importSpecifierResolveResultContract.parse({ resolved: false });
   }
 
-  return importSpecifierResolveResultContract.parse({ resolved: true, fileName: resolvedModule.resolvedFileName });
+  return importSpecifierResolveResultContract.parse({ resolved: true, fileName });
 };
