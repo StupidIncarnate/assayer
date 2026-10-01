@@ -1,13 +1,19 @@
-import { gitExecAdapterProxy } from '../../../adapters/git/exec/git-exec-adapter.proxy';
+import { GitNotInstalledErrorProxy } from '#gateway/bin/git/git-run/git-not-installed.error.proxy';
+import { lsTreeProxy } from '#gateway/bin/git/ls-tree/ls-tree.proxy';
 
 export const gitLsTreeBrokerProxy = (): {
-  returnsTree: (params: { stdout: string }) => void;
+  returnsTree: (params: { ref: string; stdout: string }) => void;
+  gitNotInstalled: (params: { ref: string }) => void;
 } => {
-  const execProxy = gitExecAdapterProxy();
+  GitNotInstalledErrorProxy();
+  const treeProxy = lsTreeProxy();
 
   return {
-    returnsTree: ({ stdout }: { stdout: string }): void => {
-      execProxy.succeeds({ stdout });
+    returnsTree: ({ ref, stdout }: { ref: string; stdout: string }): void => {
+      treeProxy.setupTree({ ref, output: stdout });
+    },
+    gitNotInstalled: ({ ref }: { ref: string }): void => {
+      treeProxy.setupNotFound({ ref });
     },
   };
 };

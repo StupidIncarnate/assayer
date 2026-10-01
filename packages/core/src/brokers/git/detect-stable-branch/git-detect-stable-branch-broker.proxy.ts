@@ -1,23 +1,31 @@
-import { gitExecAdapterProxy } from '../../../adapters/git/exec/git-exec-adapter.proxy';
+import { GitNotInstalledErrorProxy } from '#gateway/bin/git/git-run/git-not-installed.error.proxy';
+import { branchListProxy } from '#gateway/bin/git/branch-list/branch-list.proxy';
+import { isInsideWorkTreeProxy } from '#gateway/bin/git/is-inside-work-tree/is-inside-work-tree.proxy';
 
 export const gitDetectStableBranchBrokerProxy = (): {
   notGitRepo: () => void;
   insideWith: (params: { branchListStdout: string }) => void;
   insideNoMainMaster: () => void;
+  gitNotInstalled: () => void;
 } => {
-  const gitProxy = gitExecAdapterProxy();
+  GitNotInstalledErrorProxy();
+  const insideProxy = isInsideWorkTreeProxy();
+  const branchesProxy = branchListProxy();
 
   return {
     notGitRepo: (): void => {
-      gitProxy.fails({ exitCode: 128, stderr: 'fatal: not a git repository' });
+      insideProxy.setupNotRepo();
+    },
+    gitNotInstalled: (): void => {
+      insideProxy.setupNotFound();
     },
     insideWith: ({ branchListStdout }: { branchListStdout: string }): void => {
-      gitProxy.succeeds({ stdout: 'true\n', args: ['rev-parse'] });
-      gitProxy.succeeds({ stdout: branchListStdout, args: ['branch'] });
+      insideProxy.setupInside();
+      branchesProxy.setupBranches({ patterns: ['main', 'master'], output: branchListStdout });
     },
     insideNoMainMaster: (): void => {
-      gitProxy.succeeds({ stdout: 'true\n', args: ['rev-parse'] });
-      gitProxy.succeeds({ stdout: '', args: ['branch'] });
+      insideProxy.setupInside();
+      branchesProxy.setupBranches({ patterns: ['main', 'master'], output: '' });
     },
   };
 };

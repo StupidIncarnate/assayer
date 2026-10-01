@@ -13,6 +13,17 @@ describe('gitDetectStableBranchBroker', () => {
     });
   });
 
+  describe('git is not installed', () => {
+    it('EMPTY: {repoRoot: "/repo"} git binary missing => returns { hasGitRepo: false }', async () => {
+      const proxy = gitDetectStableBranchBrokerProxy();
+      proxy.gitNotInstalled();
+
+      const result = await gitDetectStableBranchBroker({ repoRoot: '/repo' });
+
+      expect(result).toStrictEqual({ hasGitRepo: false });
+    });
+  });
+
   describe('only main present', () => {
     it('VALID: {repoRoot: "/repo"} only long-lived branch is "main" => returns candidates ["main"] preselected "main"', async () => {
       const proxy = gitDetectStableBranchBrokerProxy();

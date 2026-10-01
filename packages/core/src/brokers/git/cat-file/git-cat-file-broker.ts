@@ -4,11 +4,12 @@
  *
  * USAGE:
  * await gitCatFileBroker({ repoRoot: '/repo', blobSha: 'e3b0c44298fc...' });
- * // Returns the blob's exact FileContents, unmodified
+ * // Returns the blob's exact FileContents, unmodified, or empty contents when the blob cannot be read
+ * // or git is not installed
  */
 import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
-import { gitExecAdapter } from '../../../adapters/git/exec/git-exec-adapter';
+import { catFileBlob, GitNotInstalledError } from '#gateway/bin/git';
 
 export const gitCatFileBroker = async ({
   repoRoot,
@@ -17,7 +18,15 @@ export const gitCatFileBroker = async ({
   repoRoot: string;
   blobSha: string;
 }): Promise<FileContents> => {
-  const r = await gitExecAdapter({ args: ['cat-file', 'blob', blobSha], cwd: repoRoot });
+  try {
+    const contents = await catFileBlob({ cwd: repoRoot, sha: blobSha });
 
-  return fileContentsContract.parse(String(r.stdout));
+    return fileContentsContract.parse(contents ?? '');
+  } catch (error: unknown) {
+    if (error instanceof GitNotInstalledError) {
+      return fileContentsContract.parse('');
+    }
+
+    throw error;
+  }
 };

@@ -34,4 +34,15 @@ describe('gitCurrentBranchBroker', () => {
       expect(result).toBe('default');
     });
   });
+
+  describe('git is not installed', () => {
+    it('EMPTY: {repoRoot: "/repo"} git never starts => returns "default"', async () => {
+      const proxy = gitCurrentBranchBrokerProxy();
+      proxy.gitNotInstalled();
+
+      const result = await gitCurrentBranchBroker({ repoRoot: '/repo' });
+
+      expect(result).toBe('default');
+    });
+  });
 });

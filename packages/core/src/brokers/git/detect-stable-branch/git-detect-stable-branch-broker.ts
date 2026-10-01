@@ -12,7 +12,7 @@
 import { branchNameContract } from '@assayer/shared/contracts';
 import type { BranchName } from '@assayer/shared/contracts';
 
-import { gitExecAdapter } from '../../../adapters/git/exec/git-exec-adapter';
+import { GitNotInstalledError, branchList, isInsideWorkTree } from '#gateway/bin/git';
 
 export const gitDetectStableBranchBroker = async ({
   repoRoot,
@@ -21,26 +21,20 @@ export const gitDetectStableBranchBroker = async ({
 }): Promise<
   { hasGitRepo: false } | { hasGitRepo: true; candidates: BranchName[]; preselected?: BranchName }
 > => {
-  const inside = await gitExecAdapter({
-    args: ['rev-parse', '--is-inside-work-tree'],
-    cwd: repoRoot,
+  const inside = await isInsideWorkTree({ cwd: repoRoot }).catch((error: unknown) => {
+    if (error instanceof GitNotInstalledError) {
+      return false;
+    }
+    throw error;
   });
 
-  if (inside.exitCode !== 0 || String(inside.stdout).trim() !== 'true') {
+  if (!inside) {
     return { hasGitRepo: false };
   }
 
-  const branches = await gitExecAdapter({
-    args: ['branch', '--list', 'main', 'master'],
-    cwd: repoRoot,
-  });
+  const branches = await branchList({ cwd: repoRoot, patterns: ['main', 'master'] });
 
-  const parsed = String(branches.stdout)
-    .split('\n')
-    .map((line) => line.replace('*', '').trim())
-    .filter((line) => line.length > 0);
-
-  const present = new Set(parsed);
+  const present = new Set(branches ?? []);
   const candidates = (['main', 'master'] as const)
     .filter((branch) => present.has(branch))
     .map((branch) => branchNameContract.parse(branch));

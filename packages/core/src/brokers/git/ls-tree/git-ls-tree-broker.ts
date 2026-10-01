@@ -9,7 +9,7 @@
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath } from '@assayer/shared/contracts';
 
-import { gitExecAdapter } from '../../../adapters/git/exec/git-exec-adapter';
+import { GitNotInstalledError, lsTree } from '#gateway/bin/git';
 
 export const gitLsTreeBroker = async ({
   repoRoot,
@@ -18,22 +18,16 @@ export const gitLsTreeBroker = async ({
   repoRoot: string;
   ref: string;
 }): Promise<{ relPath: RelPath; blobSha: string }[]> => {
-  const r = await gitExecAdapter({ args: ['ls-tree', '-r', ref], cwd: repoRoot });
-
-  const lines = String(r.stdout)
-    .split('\n')
-    .filter((line) => line.length > 0);
-
-  return lines.map((line) => {
-    const tabParts = line.split('\t');
-    const meta = tabParts[0] ?? '';
-    const relPath = tabParts[1] ?? '';
-    const sha = meta.split(' ')[2] ?? '';
-
-    return {
-      relPath: relPathContract.parse(relPath),
-      // The blob sha is a plain string because no sha contract exists.
-      blobSha: sha,
-    };
+  const entries = await lsTree({ cwd: repoRoot, ref }).catch((error: unknown) => {
+    if (error instanceof GitNotInstalledError) {
+      return null;
+    }
+    throw error;
   });
+
+  return (entries ?? []).map((entry) => ({
+    relPath: relPathContract.parse(entry.path),
+    // The blob sha is a plain string because no sha contract exists.
+    blobSha: entry.sha,
+  }));
 };
