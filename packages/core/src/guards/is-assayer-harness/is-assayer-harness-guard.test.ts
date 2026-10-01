@@ -123,5 +123,11 @@ describe('isAssayerHarnessGuard', () => {
 
       expect(isAssayerHarnessGuard({ source: '' })).toBe(false);
     });
+
+    it('EMPTY: {source: undefined} => returns false', () => {
+      isAssayerHarnessGuardProxy();
+
+      expect(isAssayerHarnessGuard({})).toBe(false);
+    });
   });
 });

@@ -1,7 +1,6 @@
-import { mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
-
 
 import { externalSignatureReadDeclarationBroker } from './external-signature-read-declaration-broker';
 import { externalSignatureReadDeclarationBrokerProxy } from './external-signature-read-declaration-broker.proxy';

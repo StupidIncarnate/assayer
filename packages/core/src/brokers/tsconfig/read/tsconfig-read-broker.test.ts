@@ -1,5 +1,5 @@
 import { createHash } from '#gateway/node/crypto';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 

@@ -41,20 +41,11 @@
 import { Node } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract } from '@assayer/shared/contracts';
-import type { Predicate } from '@assayer/shared/contracts';
+
+import type { ConditionReadout } from '../../contracts/condition-readout/condition-readout-contract';
 
 import { predicateTransformer } from '../predicate/predicate-transformer';
 import { readPropertyPathLayerTransformer } from './read-property-path-layer-transformer';
-
-export interface ConditionReadout {
-  operandNode: Node;
-  operandName?: string;
-  operandRootName?: string;
-  operandPropertyPath?: string[];
-  operandTypeRef?: string;
-  operandIsTypeof?: true;
-  predicate: Predicate;
-}
 
 export const readConditionLayerTransformer = ({ condition }: { condition: Node }): ConditionReadout => {
   const binary = Node.isBinaryExpression(condition) ? condition : undefined;

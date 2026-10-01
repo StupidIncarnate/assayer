@@ -21,17 +21,13 @@
 import { Node } from '#gateway/npm/ts-morph';
 
 import { conditionNodeContract, predicateContract, coverageContract } from '@assayer/shared/contracts';
-import type { ConditionNode, Coverage } from '@assayer/shared/contracts';
+import type { Coverage } from '@assayer/shared/contracts';
 
+import { conditionTreeReadoutContract } from '../../contracts/condition-tree-readout/condition-tree-readout-contract';
+import type { ConditionTreeReadout } from '../../contracts/condition-tree-readout/condition-tree-readout-contract';
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
-import type { ProbeSite } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { readOperandTypeLayerTransformer } from './read-operand-type-layer-transformer';
-
-export interface NullishLeafReadout {
-  condition: ConditionNode;
-  sites: ProbeSite[];
-}
 
 export const readNullishLeafLayerTransformer = ({
   operand,
@@ -41,11 +37,11 @@ export const readNullishLeafLayerTransformer = ({
   operand: Node;
   context: WalkContext;
   branchCoverageId: Coverage['id'];
-}): NullishLeafReadout => {
+}): ConditionTreeReadout => {
   const id = coverageContract.shape.id.parse(`${branchCoverageId}#leaf`);
   const operandName = Node.isIdentifier(operand) ? operand.getText() : undefined;
 
-  return {
+  return conditionTreeReadoutContract.parse({
     condition: conditionNodeContract.parse({
       kind: 'leaf',
       id,
@@ -58,5 +54,5 @@ export const readNullishLeafLayerTransformer = ({
       predicate: predicateContract.parse({ kind: 'non-nullish' }),
     }),
     sites: [probeSiteContract.parse({ id, kind: 'cond', start: operand.getStart(), end: operand.getEnd() })],
-  };
+  });
 };

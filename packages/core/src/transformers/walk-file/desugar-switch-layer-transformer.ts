@@ -16,28 +16,14 @@
  * // Returns { discName: 'method', caseInfos: [{ clause, literalValue: 'get', caseToken: 'str:get', branchCoverageId }], defaultClause }
  */
 import { Node } from '#gateway/npm/ts-morph';
-import type { CaseClause, DefaultClause, SwitchStatement } from '#gateway/npm/ts-morph';
+import type { SwitchStatement } from '#gateway/npm/ts-morph';
 
 import { representativeValueContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, Coverage } from '@assayer/shared/contracts';
 
+import type { DesugaredSwitch } from '../../contracts/desugared-switch/desugared-switch-contract';
 import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
 import { literalTokenTransformer } from '../literal-token/literal-token-transformer';
 import { projectNodeLayerTransformer } from './project-node-layer-transformer';
-
-export interface SwitchCaseInfo {
-  clause: CaseClause;
-  literalValue?: RepresentativeValue;
-  caseToken: string;
-  branchCoverageId: Coverage['id'];
-}
-
-export interface DesugaredSwitch {
-  discName?: string;
-  discNode: Node;
-  caseInfos: SwitchCaseInfo[];
-  defaultClause?: DefaultClause;
-}
 
 export const desugarSwitchLayerTransformer = ({
   switchStatement,

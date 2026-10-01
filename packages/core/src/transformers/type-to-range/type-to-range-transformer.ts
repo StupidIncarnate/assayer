@@ -201,6 +201,7 @@ export const typeToRangeTransformer = ({
         predicateKind === 'typeof-eq' ? { satisfying: matching, violating: rest } : { satisfying: rest, violating: matching },
       );
     }
+    case 'unrecognized':
     default:
       // Unrecognized: constrain NOTHING on either arm. A predicate the analyzer could not read must
       // not narrow anything, or an unread guard would be able to prove a reachable exit impossible.

@@ -23,10 +23,13 @@
  */
 import ts from '#gateway/npm/typescript';
 
-
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
 
-export const isAssayerHarnessGuard = ({ source }: { source: string }): boolean => {
+export const isAssayerHarnessGuard = ({ source }: { source?: string }): boolean => {
+  if (source === undefined) {
+    return false;
+  }
+
   const sourceFile = ts.createSourceFile('harness.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 
   const coreBindings = sourceFile.statements.flatMap((statement) => {

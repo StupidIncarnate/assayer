@@ -15,11 +15,7 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-
-export interface PropertyPathReadout {
-  root: Node;
-  path: string[];
-}
+import type { PropertyPathReadout } from '../../contracts/property-path-readout/property-path-readout-contract';
 
 export const readPropertyPathLayerTransformer = ({ node }: { node: Node }): PropertyPathReadout => {
   if (Node.isPropertyAccessExpression(node)) {

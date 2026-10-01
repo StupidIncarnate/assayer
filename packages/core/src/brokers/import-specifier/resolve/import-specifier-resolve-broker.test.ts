@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
+import { ensureDirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
@@ -15,8 +15,8 @@ describe('importSpecifierResolveBroker', () => {
       importSpecifierResolveBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-resolve-')));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src', 'a'), { recursive: true });
-      mkdirSync(join(dir, 'src', 'b'), { recursive: true });
+      ensureDirSync(join(dir, 'src', 'a'));
+      ensureDirSync(join(dir, 'src', 'b'));
       writeFileSync(join(dir, 'src', 'b', 'foo.ts'), 'export const foo = (): number => 1;\n');
       writeFileSync(join(dir, 'src', 'a', 'caller.ts'), "import { foo } from '../b/foo';\nfoo();\n");
       const parsed = ts.parseJsonConfigFileContent(
@@ -41,7 +41,7 @@ describe('importSpecifierResolveBroker', () => {
       importSpecifierResolveBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-resolve-')));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src'), { recursive: true });
+      ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'caller.ts'), "import { x } from './missing';\n");
       const parsed = ts.parseJsonConfigFileContent(
         ts.readConfigFile(join(dir, 'tsconfig.json'), (path) => ts.sys.readFile(path)).config,
@@ -65,8 +65,8 @@ describe('importSpecifierResolveBroker', () => {
       importSpecifierResolveBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-resolve-')));
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
-      mkdirSync(join(dir, 'src'), { recursive: true });
-      mkdirSync(join(dir, 'node_modules', 'vendored-pkg'), { recursive: true });
+      ensureDirSync(join(dir, 'src'));
+      ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(
         join(dir, 'node_modules', 'vendored-pkg', 'package.json'),
         '{ "name": "vendored-pkg", "version": "1.0.0", "types": "index.d.ts" }',
