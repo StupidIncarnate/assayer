@@ -70,7 +70,6 @@ import type {
   TypeText,
 } from '@assayer/shared/contracts';
 
-import type { PredictedOutput } from '../../contracts/predicted-output/predicted-output-contract';
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
 import { isPredicateConstrainingGuard } from '../../guards/is-predicate-constraining/is-predicate-constraining-guard';
@@ -321,7 +320,7 @@ export const deriveCasesTransformer = ({
 
   // The first case per predicted output is the execution-salient representative; the rest are the
   // grayed breadth. Enumeration order makes which one is salient deterministic.
-  const salientSeen = new Set<PredictedOutput>();
+  const salientSeen = new Set<string>();
   const cases = feasibleCases.map((entry) => {
     const salient = !salientSeen.has(entry.predictedOutput);
     salientSeen.add(entry.predictedOutput);

@@ -45,7 +45,6 @@ import type {
 } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import type { PredictedOutput } from '../../../contracts/predicted-output/predicted-output-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { appliedParamsTransformer } from '../../../transformers/applied-params/applied-params-transformer';
@@ -283,7 +282,7 @@ export const stubRealizeBroker = ({
       return [{ reachesPath: [entry.exit.coverageId], arrange: entry.arrange, predictedOutput: predictedOutputTransformer({ reachesPath: [entry.exit.coverageId] }) }];
     });
 
-    const salientSeen = new Set<PredictedOutput>();
+    const salientSeen = new Set<string>();
     const cases: DerivedTestCase[] = feasible.map((entry) => {
       const salient = !salientSeen.has(entry.predictedOutput);
       salientSeen.add(entry.predictedOutput);

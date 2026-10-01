@@ -19,8 +19,6 @@
  */
 import type { CoverageId } from '@assayer/shared/contracts';
 
-import { predictedOutputContract } from '../../contracts/predicted-output/predicted-output-contract';
-import type { PredictedOutput } from '../../contracts/predicted-output/predicted-output-contract';
 
 export const predictedOutputTransformer = ({
   reachesPath,
@@ -28,8 +26,8 @@ export const predictedOutputTransformer = ({
 }: {
   reachesPath: CoverageId[];
   predWant?: boolean;
-}): PredictedOutput => {
+}): string => {
   const key = reachesPath.map(String).join('>');
 
-  return predictedOutputContract.parse(predWant === undefined ? key : `${key}|pred:${String(predWant)}`);
+  return (predWant === undefined ? key : `${key}|pred:${String(predWant)}`);
 };
