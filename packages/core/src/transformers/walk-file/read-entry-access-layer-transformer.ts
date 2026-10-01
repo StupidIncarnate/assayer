@@ -71,7 +71,7 @@ export const readEntryAccessLayerTransformer = ({ node, context }: { node: Node;
     return entryAccessContract.parse({ kind: 'unreachable' });
   }
 
-  if (String(exportedName) === DEFAULT_EXPORT_NAME) {
+  if (exportedName === DEFAULT_EXPORT_NAME) {
     return entryAccessContract.parse({ kind: 'default' });
   }
 
@@ -82,6 +82,6 @@ export const readEntryAccessLayerTransformer = ({ node, context }: { node: Node;
   // reading it off the module and `runIt` is not there.
   return entryAccessContract.parse({
     kind: 'named',
-    ...(String(name) === String(exportedName) ? {} : { exportedName }),
+    ...(String(name) === exportedName ? {} : { exportedName }),
   });
 };

@@ -34,7 +34,7 @@ export const objectArrangeTransformer = ({
   const own = requirements.filter(
     (requirement) =>
       requirement.leaf.operandParamName !== undefined &&
-      String(requirement.leaf.operandParamName) === String(param) &&
+      String(requirement.leaf.operandParamName) === param &&
       requirement.leaf.operandPropertyPath !== undefined,
   );
 
@@ -42,6 +42,6 @@ export const objectArrangeTransformer = ({
     properties: declaredType.properties,
     demands,
     requirements: own,
-    corrected: new Set(corrected.map((name) => String(name))),
+    corrected: new Set(corrected.map((name) => name)),
   });
 };

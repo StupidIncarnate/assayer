@@ -48,21 +48,21 @@ export const DesktopMainBootResponder = async ({
     resolveStubs: async () => stubIndexResolveBroker({ repoPath }),
     resolveRun: async ({ relPath, onOutput }) =>
       runExecuteBroker({
-        repoPath: String(repoPath),
-        root: String(await repoSourceRootBroker({ repoPath })),
+        repoPath: repoPath,
+        root: (await repoSourceRootBroker({ repoPath })),
         relPath: String(relPath),
         onOutput,
       }),
     resolveSavedRun: async ({ relPath }) =>
       runFindBroker({
-        configDir: String(repoPath),
-        root: String(await repoSourceRootBroker({ repoPath })),
+        configDir: repoPath,
+        root: (await repoSourceRootBroker({ repoPath })),
         relPath: String(relPath),
       }),
     resolveSavedConsole: async ({ relPath }) =>
       runConsoleFindBroker({
-        configDir: String(repoPath),
-        root: String(await repoSourceRootBroker({ repoPath })),
+        configDir: repoPath,
+        root: (await repoSourceRootBroker({ repoPath })),
         relPath: String(relPath),
       }),
   });

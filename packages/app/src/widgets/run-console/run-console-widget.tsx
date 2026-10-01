@@ -38,7 +38,7 @@ export const RunConsoleWidget = ({
   failed?: boolean;
   onHide: () => void;
 }): ReactElement => {
-  const status = String(runConsoleStatusTransformer({ running, failed }));
+  const status = runConsoleStatusTransformer({ running, failed });
 
   return (
     <Box
@@ -72,7 +72,7 @@ export const RunConsoleWidget = ({
       </Group>
 
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-        {String(output) === '' ? (
+        {output === '' ? (
           <Text data-testid="RUN_CONSOLE_EMPTY" c="dimmed" fz="xs" p="sm">
             {failed ? runConsoleStatics.noOutputMessage : runConsoleStatics.waitingMessage}
           </Text>
@@ -87,7 +87,7 @@ export const RunConsoleWidget = ({
             m={0}
             style={{ whiteSpace: 'pre-wrap' }}
           >
-            {String(output)}
+            {output}
           </Text>
         )}
       </ScrollArea>

@@ -36,13 +36,13 @@ export const runDetailFormatTransformer = ({ run }: { run: RunResult }): string 
     const events = testCase.trace.map((event) => {
       const outcome = event.outcome === undefined ? '' : ` ${String(event.outcome)}`;
 
-      return `    ${String(event.kind)}  ${String(event.id)}${outcome}  ${String(event.valueText)}`;
+      return `    ${event.kind}  ${String(event.id)}${outcome}  ${String(event.valueText)}`;
     });
 
     // `errored` renders as ERROR rather than its own spelling: the marker is product surface shared
     // with `assayer unit`, and two spellings of one outcome is two vocabularies for the reader to
     // learn. PASS/FAIL are already their own uppercase.
-    const marker = String(testCase.status) === 'errored' ? 'ERROR' : String(testCase.status).toUpperCase();
+    const marker = testCase.status === 'errored' ? 'ERROR' : testCase.status.toUpperCase();
 
     return [
       `  ${marker} ${String(testCase.entryName)}(${args})`,

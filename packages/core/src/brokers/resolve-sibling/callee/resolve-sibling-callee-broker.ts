@@ -42,11 +42,11 @@ export const resolveSiblingCalleeBroker = ({
   const fileName = String(resolved.fileName);
   const relPath = relative(root, fileName);
 
-  if (String(relPath).startsWith('..') || fileName.includes('/node_modules/')) {
+  if (relPath.startsWith('..') || fileName.includes('/node_modules/')) {
     return undefined;
   }
 
   const source = readFileSync(fileName);
 
-  return { walked: walkFileTransformer({ source: String(source), relPath: String(relPath) }), relPath, source };
+  return { walked: walkFileTransformer({ source: source, relPath: relPath }), relPath, source };
 };

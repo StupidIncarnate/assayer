@@ -30,5 +30,5 @@ export const caseRunStatusTransformer = ({
 }): CaseRunStatus => {
   const result = caseRunResultTransformer({ run, testCase });
 
-  return caseRunStatusContract.parse(result === undefined ? 'not-run' : String(result.status));
+  return caseRunStatusContract.parse(result === undefined ? 'not-run' : result.status);
 };

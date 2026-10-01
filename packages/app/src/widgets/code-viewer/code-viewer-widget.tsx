@@ -72,7 +72,7 @@ export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProp
       (fileView?.analysis?.darkSpots ?? []).map((darkSpot) => ({
         startLine: Number(darkSpot.startLine),
         endLine: Number(darkSpot.endLine),
-        label: String(darkSpotLineTransformer({ darkSpot })),
+        label: darkSpotLineTransformer({ darkSpot }),
       })),
     [fileView],
   );
@@ -90,7 +90,7 @@ export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProp
         .map((entry) => ({
           startLine: Number(entry.startLine),
           endLine: Number(entry.endLine),
-          label: String(undrivenLineTransformer({ entry })),
+          label: undrivenLineTransformer({ entry }),
         })),
     [fileView],
   );

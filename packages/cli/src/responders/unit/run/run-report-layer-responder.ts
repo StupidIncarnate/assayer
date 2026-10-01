@@ -43,19 +43,19 @@ export const RunReportLayerResponder = async ({
       runConsoleSaveBroker({
         configDir,
         runId: String(run.runId),
-        console: String(unitReportFormatTransformer({ runs: [run] })),
+        console: unitReportFormatTransformer({ runs: [run] }),
       }),
     ),
   );
 
   const report = unitReportFormatTransformer({ runs: [...runs] });
-  const failed = runs.some((run) => run.cases.some((testCase) => String(testCase.status) !== 'passed'));
+  const failed = runs.some((run) => run.cases.some((testCase) => testCase.status !== 'passed'));
   const darkened = darkSpots === 'error' && runs.some((run) => run.darkSpots.length > 0);
   const linted = deadSurface === 'error' && runs.some((run) => run.lints.length > 0);
   const gapped = inputGaps === 'error' && runs.some((run) => run.gaps.length > 0);
 
   if (failed || darkened || linted || gapped) {
-    throw new CliExactOutputError({ message: String(report) });
+    throw new CliExactOutputError({ message: report });
   }
 
   return report;

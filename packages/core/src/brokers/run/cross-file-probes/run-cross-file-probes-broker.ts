@@ -61,14 +61,14 @@ export const runCrossFileProbesBroker = async ({
       return [];
     }
 
-    const contentHash = contentHashTransformer({ content: String(sibling.source) });
+    const contentHash = contentHashTransformer({ content: sibling.source });
 
     return [
       {
         relPath: sibling.relPath,
         path: `${probeDir}/${String(contentHash)}.json`,
         content: JSON.stringify(
-          probePlanProjectionTransformer({ walked: sibling.walked, relPath: String(sibling.relPath), contentHash: String(contentHash) }),
+          probePlanProjectionTransformer({ walked: sibling.walked, relPath: sibling.relPath, contentHash: String(contentHash) }),
         ),
       },
     ];

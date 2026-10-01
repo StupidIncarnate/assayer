@@ -151,11 +151,11 @@ export const funnelNamedCasesTransformer = ({
       // seam REFUSES there drops the case, since the surface cannot be called at all.
       const arrange = scopeParams.flatMap((param): ArrangeBinding[] => {
         const [calleeParam] =
-          [...calleeToScope.entries()].find(([, callerParam]) => String(callerParam) === String(param.name)) ?? [];
+          [...calleeToScope.entries()].find(([, callerParam]) => callerParam === String(param.name)) ?? [];
         const binding =
           calleeParam === undefined
             ? undefined
-            : subCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(calleeParam));
+            : subCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === calleeParam);
 
         if (binding !== undefined && binding.kind !== 'env') {
           return [arrangeBindingContract.parse({ ...binding, param: param.name })];

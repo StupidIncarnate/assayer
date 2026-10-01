@@ -21,7 +21,7 @@ export const cacheLoadStubIndexBroker = async ({
   repoPath: string;
   namespace: string;
 }): Promise<StubIndex | undefined> => {
-  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/stubs/${String(namespace)}.json`)) ?? undefined;
+  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/stubs/${namespace}.json`)) ?? undefined;
 
   if (raw === undefined) {
     return undefined;

@@ -30,9 +30,9 @@ export const configFindBroker = async ({
 
   const parent = dirname(startDir);
 
-  if (String(parent) === startDir) {
+  if (parent === startDir) {
     return { found: false };
   }
 
-  return configFindBroker({ startDir: String(parent) });
+  return configFindBroker({ startDir: parent });
 };

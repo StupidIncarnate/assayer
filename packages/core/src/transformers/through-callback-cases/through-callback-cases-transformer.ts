@@ -111,7 +111,7 @@ export const throughCallbackCasesTransformer = ({
     const arrange = entryParams.flatMap((param): ArrangeBinding[] => {
       // A REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
       // positional slots the entry's `.map` steers instead of handing it over as one argument.
-      if (String(param.name) === String(arrayParam)) {
+      if (String(param.name) === arrayParam) {
         return [
           arrangeBindingContract.parse({
             kind: 'array',

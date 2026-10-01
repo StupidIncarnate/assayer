@@ -63,18 +63,18 @@ export const arrangeObjectPropertiesTransformer = ({
   corrected: ReadonlySet<string>;
 }): { unreachable: boolean; unfillable: boolean; properties: { name: string; value: ArrangeValue }[] } => {
   const picks = [...properties]
-    .sort((a, b) => (String(a.name) < String(b.name) ? -1 : 1))
+    .sort((a, b) => (a.name < b.name ? -1 : 1))
     .map((property) => {
       // The bucket's requirements that turn on THIS property — a read whose path (already relative to
       // this list) starts with this property's own name.
       const own = requirements.filter(
         (requirement) =>
           requirement.leaf.operandPropertyPath !== undefined &&
-          String(requirement.leaf.operandPropertyPath[0]) === String(property.name),
+          String(requirement.leaf.operandPropertyPath[0]) === property.name,
       );
       const propertyRequirements = own.filter((requirement) => requirement.leaf.operandPropertyPath?.length === 1);
       const nestedRequirements = own.filter((requirement) => (requirement.leaf.operandPropertyPath?.length ?? 0) > 1);
-      const demand = demands.find((entry) => String(entry.name) === String(property.name))?.demand;
+      const demand = demands.find((entry) => entry.name === property.name)?.demand;
 
       if (nestedRequirements.length > 0 && property.type.kind === 'object') {
         const shifted = nestedRequirements.map((requirement) => ({
@@ -100,7 +100,7 @@ export const arrangeObjectPropertiesTransformer = ({
 
         return {
           name: property.name,
-          value: sub.unfillable ? undefined : Object.fromEntries(sub.properties.map((p) => [String(p.name), p.value])),
+          value: sub.unfillable ? undefined : Object.fromEntries(sub.properties.map((p) => [p.name, p.value])),
           unreachable: sub.unreachable || falsyContradiction,
         };
       }
@@ -155,7 +155,7 @@ export const arrangeObjectPropertiesTransformer = ({
         return { name: property.name, value: undefined, unreachable: false };
       }
 
-      if (corrected.has(String(property.name))) {
+      if (corrected.has(property.name)) {
         // A committed correction is AUTHORITATIVE: the property may take ONLY its corrected values, so the
         // narrowed domain is SEEDED from them and the branch literal is never a fallback. When no corrected
         // value satisfies the guard the domain is empty — the branch is unreachable under the human's

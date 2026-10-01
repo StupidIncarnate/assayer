@@ -32,7 +32,7 @@ export const readDeclaredTypeTextLayerTransformer = ({ node }: { node: TypeNode 
     return node
         .getTypeNodes()
         .map((member) => {
-          const text = String(readDeclaredTypeTextLayerTransformer({ node: member }));
+          const text = readDeclaredTypeTextLayerTransformer({ node: member });
           // Parentheses are grouping, never meaning, so the member is read THROUGH them — and re-added
           // below only where the rendering would otherwise re-associate.
           const inner = Node.isParenthesizedTypeNode(member) ? member.getTypeNode() : member;
@@ -62,7 +62,7 @@ export const readDeclaredTypeTextLayerTransformer = ({ node }: { node: TypeNode 
 
     return (args.length === 0
         ? name
-        : `${name}<${args.map((argument) => String(readDeclaredTypeTextLayerTransformer({ node: argument }))).join(', ')}>`);
+        : `${name}<${args.map((argument) => readDeclaredTypeTextLayerTransformer({ node: argument })).join(', ')}>`);
   }
 
   return node.getType().getText();

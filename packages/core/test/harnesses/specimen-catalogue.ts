@@ -76,10 +76,10 @@ export const specimenCatalogue = (): {
   roots: (): { relPath: string; bucket: 'happy-path' | 'sad-path' }[] =>
     specimenCatalogue()
       .relPaths()
-      .filter((relPath) => basename(String(relPath), extname(String(relPath))) === basename(dirname(String(relPath))))
+      .filter((relPath) => basename(relPath, extname(relPath)) === basename(dirname(relPath)))
       .map((relPath) => ({
         relPath,
-        bucket: relative(CATALOGUE_DIR, join(SMOKE_REPO, String(relPath))).split(sep)[0] as 'happy-path' | 'sad-path',
+        bucket: relative(CATALOGUE_DIR, join(SMOKE_REPO, relPath)).split(sep)[0] as 'happy-path' | 'sad-path',
       })),
 
   // The helper CHILDREN — every other file in an example folder (`uses-greeting/greeting.ts`). They
@@ -87,7 +87,7 @@ export const specimenCatalogue = (): {
   children: (): string[] =>
     specimenCatalogue()
       .relPaths()
-      .filter((relPath) => basename(String(relPath), extname(String(relPath))) !== basename(dirname(String(relPath)))),
+      .filter((relPath) => basename(relPath, extname(relPath)) !== basename(dirname(relPath))),
 
   // The `<bucket>/…/<name>/<name>.{ts,tsx}` invariant, checked off disk and returned as named
   // violations so the test asserts an empty list. Every specimen sits under a known bucket and owes
@@ -100,7 +100,7 @@ export const specimenCatalogue = (): {
     specimenCatalogue()
       .relPaths()
       .flatMap((relPath): string[] => {
-        const rel = String(relPath);
+        const rel = relPath;
         const abs = join(SMOKE_REPO, rel);
         const [bucket] = relative(CATALOGUE_DIR, abs).split(sep);
         const ext = extname(rel);

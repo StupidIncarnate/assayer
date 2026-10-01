@@ -58,7 +58,7 @@ export const resolveSpecifierLayerBroker = ({
   }
 
   const fileName = String(resolved.fileName);
-  const rel = String(relative(root, fileName));
+  const rel = relative(root, fileName);
   const outsideRoot = rel.startsWith('..');
   const inNodeModules = fileName.includes('/node_modules/');
 

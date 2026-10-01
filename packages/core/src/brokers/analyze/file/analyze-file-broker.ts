@@ -93,7 +93,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // own entry: it cannot be reached without calling the host, so its steering values FUNNEL into the
   // host's own case set. The follower returns those funnel cases keyed by the host's name + declaration
   // line, and they REPLACE the host's plain derived cases here — the host becomes the only entry.
-  const funnelByHost = new Map(followed.funnels.map((funnel) => [`${String(funnel.host)}@${String(funnel.hostLine)}`, funnel.cases]));
+  const funnelByHost = new Map(followed.funnels.map((funnel) => [`${funnel.host}@${String(funnel.hostLine)}`, funnel.cases]));
 
   // The fill seam's refusals from every DRIVING route, grouped by the entry that owes the invoice. A
   // funnelled private or callback is no entry of its own, so its refusal is filed against the host a
@@ -219,9 +219,9 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   const derivedNames = new Set(derived.map(({ fn }) => String(fn.entry.name)));
   const followedCaseCounts = new Map(followed.followedEntries.map((entry) => [String(entry.entry.name), entry.cases.length]));
   const followedGaps = [...followedRefusals.entries()].flatMap(([entryName, unfillable]) =>
-    derivedNames.has(String(entryName))
+    derivedNames.has(entryName)
       ? []
-      : inputGapTransformer({ entryName, unfillable, hasCases: (followedCaseCounts.get(String(entryName)) ?? 0) > 0 }),
+      : inputGapTransformer({ entryName, unfillable, hasCases: (followedCaseCounts.get(entryName) ?? 0) > 0 }),
   );
 
   // PRECEDENCE, never a merge: an entry that carries an INPUT gap has its undriven admissions dropped.
@@ -258,7 +258,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
       displayName:
         isModule && relPath !== undefined
           ? moduleEntryLabelTransformer({ relPath })
-          : label ?? String(name),
+          : label ?? name,
       unreachableExits,
     });
   });
@@ -271,7 +271,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     funnel.unreachable.flatMap((entry) =>
       unreachableLintTransformer({
         name: funnel.host,
-        displayName: String(entry.displayName),
+        displayName: entry.displayName,
         unreachableExits: [{ line: entry.line, guardLines: entry.guardLines, ...(entry.welded === undefined ? {} : { welded: entry.welded }) }],
       }),
     ),

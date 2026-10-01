@@ -17,7 +17,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 2,
       });
 
-      expect(String(result)).toBe('rescale › items.map((n) => …) L2');
+      expect(result).toBe('rescale › items.map((n) => …) L2');
     });
 
     it('VALID: {a bare callee} => the called name, since there is no receiver to show', () => {
@@ -28,7 +28,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 4,
       });
 
-      expect(String(result)).toBe('boot › register((n) => …) L4');
+      expect(result).toBe('boot › register((n) => …) L4');
     });
 
     // A computed or chained callee has no name to print. The label degrades to the arrow alone rather
@@ -41,7 +41,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 4,
       });
 
-      expect(String(result)).toBe('boot › (n) => … L4');
+      expect(result).toBe('boot › (n) => … L4');
     });
   });
 
@@ -54,7 +54,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 2,
       });
 
-      expect(String(result)).toBe('makeClassifier › return (n) => … L2');
+      expect(result).toBe('makeClassifier › return (n) => … L2');
     });
 
     it('VALID: {an IIFE} => the invocation shape', () => {
@@ -65,7 +65,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 3,
       });
 
-      expect(String(result)).toBe('boot › ((n) => …)(…) L3');
+      expect(result).toBe('boot › ((n) => …)(…) L3');
     });
   });
 
@@ -79,7 +79,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 3,
       });
 
-      expect(String(result)).toBe('((n) => …)(…) L3');
+      expect(result).toBe('((n) => …)(…) L3');
     });
   });
 
@@ -95,7 +95,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 5,
       });
 
-      expect(String(result)).toBe('total › items.reduce((acc, n) => …) L5');
+      expect(result).toBe('total › items.reduce((acc, n) => …) L5');
     });
 
     it('EMPTY: {no params} => an empty parameter list, never a missing one', () => {
@@ -105,7 +105,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 1,
       });
 
-      expect(String(result)).toBe('(() => …)(…) L1');
+      expect(result).toBe('(() => …)(…) L1');
     });
   });
 
@@ -127,7 +127,7 @@ describe('anonymousEntryLabelTransformer', () => {
         line: 9,
       });
 
-      expect([String(first), String(second)]).toStrictEqual([
+      expect([first, second]).toStrictEqual([
         'rescale › items.map((n) => …) L2',
         'rescale › items.map((n) => …) L9',
       ]);

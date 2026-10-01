@@ -55,7 +55,7 @@ export const undrivenProjectionTransformer = ({
   undrivenModules: { name: string; cause: UndrivenCause; operand?: string }[];
   relPath?: string;
 }): UndrivenEntry[] => {
-  const causeByName = new Map(undrivenModules.map((module) => [String(module.name), module]));
+  const causeByName = new Map(undrivenModules.map((module) => [module.name, module]));
 
   return walked.success
     ? walked.scopes.flatMap((scope) => {
@@ -76,7 +76,7 @@ export const undrivenProjectionTransformer = ({
         const label =
           relPath === undefined ? undefined : moduleEntryLabelTransformer({ ...(exportName === undefined ? {} : { exportName }), relPath });
 
-        if (String(undrivenModule.cause) === 'unread-comparison') {
+        if (undrivenModule.cause === 'unread-comparison') {
           // Same invariant `undrivenBranchTransformer` enforces: every leaf that reaches this cause
           // already passed the arrangeable check, and every arrangeable route (env var included, at
           // module scope) resolves through the same identifier node the operand is read off.
@@ -92,7 +92,7 @@ export const undrivenProjectionTransformer = ({
               endLine: scope.endLine,
               reason:
                 'nothing about it varies, so no case could drive its branches anywhere they do not already go: ' +
-                `it runs at import time, and its top-level branching compares \`${String(undrivenModule.operand)}\` ` +
+                `it runs at import time, and its top-level branching compares \`${undrivenModule.operand}\` ` +
                 'against a value Assayer could not read as a literal — an enum member, an imported or computed ' +
                 'constant, or a property of another object — so it has no value that satisfies the comparison and ' +
                 'none that violates it. Assayer understood the branch — this is not syntax it missed — but it ' +
@@ -106,7 +106,7 @@ export const undrivenProjectionTransformer = ({
         // operand it names is the whole `typeof` expression, not `x`. Telling the reader to read `x`
         // from the environment would be advice about a state that may already hold — the real limit
         // is that Assayer does not decompose a `typeof` read into the per-type case it names.
-        if (String(undrivenModule.cause) === 'unarrangeable-typeof') {
+        if (undrivenModule.cause === 'unarrangeable-typeof') {
           return [
             undrivenEntryContract.parse({
               name: scope.name,
@@ -128,7 +128,7 @@ export const undrivenProjectionTransformer = ({
         // plain `number` the `Number(process.env.X)` coercion produces (§5.10) — never a union, so
         // there is no OTHER member for a tag to fail to match. Handled anyway so the cause's four
         // members stay exhaustively worded rather than falling through to a mismatched default.
-        if (String(undrivenModule.cause) === 'unarrangeable-typeof-member') {
+        if (undrivenModule.cause === 'unarrangeable-typeof-member') {
           // Same invariant as `unread-comparison`: every leaf reaching this cause already passed the
           // arrangeable check, so it always carries an operand.
           if (undrivenModule.operand === undefined) {
@@ -145,8 +145,8 @@ export const undrivenProjectionTransformer = ({
               endLine: scope.endLine,
               reason:
                 'nothing about it varies, so no case could drive its branches anywhere they do not already go: it ' +
-                `runs at import time, and its top-level branching reads \`typeof ${String(undrivenModule.operand)}\`, ` +
-                `narrowing ${String(undrivenModule.operand)}'s own type by runtime tag — but on at least one side, ` +
+                `runs at import time, and its top-level branching reads \`typeof ${undrivenModule.operand}\`, ` +
+                `narrowing ${undrivenModule.operand}'s own type by runtime tag — but on at least one side, ` +
                 'every matching member is a shape Assayer cannot yet select on its own from a union with more than ' +
                 'one member. Assayer understood the branch and read the comparison; only picking the union member ' +
                 'is unbuilt.',

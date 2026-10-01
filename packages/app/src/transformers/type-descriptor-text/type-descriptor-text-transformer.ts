@@ -25,29 +25,29 @@ export const typeDescriptorTextTransformer = ({ type }: { type: TypeDescriptor }
     case 'literal':
       return JSON.stringify(type.value);
     case 'union':
-      return type.members.map((member) => String(typeDescriptorTextTransformer({ type: member }))).join(' | ');
+      return type.members.map((member) => typeDescriptorTextTransformer({ type: member })).join(' | ');
     case 'array':
-      return `${String(typeDescriptorTextTransformer({ type: type.element }))}[]`;
+      return `${typeDescriptorTextTransformer({ type: type.element })}[]`;
     case 'tuple':
-      return `[${type.elements.map((element) => String(typeDescriptorTextTransformer({ type: element }))).join(', ')}]`;
+      return `[${type.elements.map((element) => typeDescriptorTextTransformer({ type: element })).join(', ')}]`;
     case 'template': {
-      const substitutions = type.types.map((substitution) => String(typeDescriptorTextTransformer({ type: substitution })));
+      const substitutions = type.types.map((substitution) => typeDescriptorTextTransformer({ type: substitution }));
       const body = type.texts.reduce((rendered, text, index) => {
         const substitution = substitutions[index];
 
-        return substitution === undefined ? `${rendered}${String(text)}` : `${rendered}${String(text)}\${${substitution}}`;
+        return substitution === undefined ? `${rendered}${text}` : `${rendered}${text}\${${substitution}}`;
       }, '');
 
       return `\`${body}\``;
     }
     case 'object':
       return (type.typeName === undefined
-          ? `{ ${type.properties.map((property) => `${String(property.name)}: ${String(typeDescriptorTextTransformer({ type: property.type }))}`).join('; ')} }`
-          : String(type.typeName));
+          ? `{ ${type.properties.map((property) => `${property.name}: ${typeDescriptorTextTransformer({ type: property.type })}`).join('; ')} }`
+          : type.typeName);
     case 'callable':
-      return String(type.text);
+      return type.text;
     case 'unknown':
-      return String(type.text);
+      return type.text;
     default:
       return 'unknown';
   }

@@ -80,14 +80,14 @@ export const harnessGraphHarness = (): {
   const dirs: string[] = [];
 
   const blobsDirOf = ({ dir }: { dir: string }): string =>
-    join(String(dir), '.assayer', 'cache', 'blobs');
+    join(dir, '.assayer', 'cache', 'blobs');
 
   const seed = ({ source }: { source: string }): string => {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-harness-')));
     dirs.push(dir);
-    writeFileSync(join(String(dir), 'tsconfig.json'), NODE_TSCONFIG);
-    ensureDirSync(join(String(dir), 'src'));
-    writeFileSync(join(String(dir), SOURCE_REL), source);
+    writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
+    ensureDirSync(join(dir, 'src'));
+    writeFileSync(join(dir, SOURCE_REL), source);
 
     return dir;
   };
@@ -105,10 +105,10 @@ export const harnessGraphHarness = (): {
     blob: 'compiled' | 'reused';
     contentHash: ContentHash;
   }> => {
-    const dir = String(params.dir);
+    const dir = params.dir;
     writeFileSync(join(dir, HARNESS_REL), params.harness);
 
-    const blobsDir = String(blobsDirOf({ dir: params.dir }));
+    const blobsDir = blobsDirOf({ dir: params.dir });
     const processed = await compileProcessFileBroker({ relPath: SOURCE_REL, content: params.source, blobsDir });
     const contentHash = contentHashTransformer({ content: params.source });
 
@@ -149,16 +149,16 @@ export const harnessGraphHarness = (): {
     contentHash: ContentHash;
   }): FileAnalysis => {
     const blob = compiledFileBlobContract.parse(
-      JSON.parse(readFileSync(join(String(blobsDirOf({ dir })), `${String(contentHash)}.json`))),
+      JSON.parse(readFileSync(join(blobsDirOf({ dir }), `${String(contentHash)}.json`))),
     );
     const walked = walkFileTransformer({
-      source: readFileSync(join(String(dir), SOURCE_REL)),
+      source: readFileSync(join(dir, SOURCE_REL)),
       relPath: SOURCE_REL,
     });
 
     return harnessRealizeBroker({
       analysis: fileAnalysisContract.parse(blob.analysis),
-      root: String(dir),
+      root: dir,
       relPath: SOURCE_REL,
       walked,
     });
@@ -167,7 +167,7 @@ export const harnessGraphHarness = (): {
   return {
     afterEach: (): void => {
       dirs.forEach((dir) => {
-        rmSync(String(dir), { recursive: true, force: true });
+        rmSync(dir, { recursive: true, force: true });
       });
       dirs.length = 0;
     },

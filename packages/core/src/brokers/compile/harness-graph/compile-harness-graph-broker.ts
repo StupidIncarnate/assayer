@@ -63,7 +63,7 @@ export const compileHarnessGraphBroker = async ({
   files: readonly { relPath: string; contentHash: ContentHash }[];
   harnesses: readonly { relPath: string; content: string }[];
 }): Promise<CompileHarnessGraphResult> => {
-  const ordered = [...harnesses].sort((a, b) => (String(a.relPath) < String(b.relPath) ? -1 : 1));
+  const ordered = [...harnesses].sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
   const sources = files.map((file) => file.relPath);
 
   // The harness files' OWN identity, hashed over path + content in path order — the third key, and the
@@ -72,7 +72,7 @@ export const compileHarnessGraphBroker = async ({
     content: ordered
       .map(
         (harness) =>
-          `${String(harness.relPath)}\n${String(contentHashTransformer({ content: String(harness.content) }))}`,
+          `${harness.relPath}\n${String(contentHashTransformer({ content: harness.content }))}`,
       )
       .join('\n'),
   });
@@ -87,7 +87,7 @@ export const compileHarnessGraphBroker = async ({
           {
             relPath: harness.relPath,
             message:
-              `\`${String(harness.relPath)}\` supplies inputs for a file that is not in the analysed surface. A ` +
+              `\`${harness.relPath}\` supplies inputs for a file that is not in the analysed surface. A ` +
               'harness is COLOCATED with its source and carries the same basename — `src/audit.ts` is addressed ' +
               'by `src/audit.harness.ts`, always `.ts` even beside a `.tsx`. Move this file beside the source it ' +
               'declares inputs for, or delete it.',
@@ -97,8 +97,8 @@ export const compileHarnessGraphBroker = async ({
     }
 
     const loaded = harnessLoadBroker({
-      source: String(harness.content),
-      fileName: String(harness.relPath),
+      source: harness.content,
+      fileName: harness.relPath,
     });
 
     if (!loaded.ok) {
@@ -108,7 +108,7 @@ export const compileHarnessGraphBroker = async ({
           {
             relPath: harness.relPath,
             message:
-              `\`${String(harness.relPath)}\` threw while Assayer read it: ${loaded.message}. Loading IS ` +
+              `\`${harness.relPath}\` threw while Assayer read it: ${loaded.message}. Loading IS ` +
               'the read — the `assayerHarness` call is what registers a harness — so a module body that cannot ' +
               'run declares nothing at all. Keep the file to the `assayerHarness` call and the values it hands ' +
               'over.',
@@ -126,8 +126,8 @@ export const compileHarnessGraphBroker = async ({
           // The STATIC type of every supplied expression, read off the same source's AST — a SEPARATE,
           // narrower read from the eval-based load above, which only ever produces runtime VALUES.
           suppliedTypes: harnessValueTypesTransformer({
-            source: String(harness.content),
-            fileName: String(harness.relPath),
+            source: harness.content,
+            fileName: harness.relPath,
           }),
         },
       ],
@@ -139,13 +139,13 @@ export const compileHarnessGraphBroker = async ({
 
   // Only the blobs a harness actually addresses are read back — the validation asks one question of one
   // file, so there is no reason to load the namespace.
-  const hashByRelPath = new Map(files.map((file) => [String(file.relPath), file.contentHash]));
-  const targets = [...new Set(recorded.map((harness) => String(harness.targetRelPath)))];
+  const hashByRelPath = new Map(files.map((file) => [file.relPath, file.contentHash]));
+  const targets = [...new Set(recorded.map((harness) => harness.targetRelPath))];
   const analysed = await Promise.all(
     targets.map(async (target) => {
       const raw = (await readFile(`${blobsDir}/${String(hashByRelPath.get(target))}.json`));
 
-      return [target, compiledFileBlobContract.parse(JSON.parse(String(raw)))] as const;
+      return [target, compiledFileBlobContract.parse(JSON.parse(raw))] as const;
     }),
   );
   const blobByRelPath = new Map(analysed);
@@ -173,8 +173,8 @@ export const compileHarnessGraphBroker = async ({
       relPath: harness.relPath,
       targetRelPath: harness.targetRelPath,
       keys: harness.keys,
-      entries: (blobByRelPath.get(String(harness.targetRelPath))?.analysis?.functions ?? []).map((fn) => fn.entry),
-      declaringScopes: blobByRelPath.get(String(harness.targetRelPath))?.analysis?.declaringScopes ?? [],
+      entries: (blobByRelPath.get(harness.targetRelPath)?.analysis?.functions ?? []).map((fn) => fn.entry),
+      declaringScopes: blobByRelPath.get(harness.targetRelPath)?.analysis?.declaringScopes ?? [],
       suppliedTypes: harness.suppliedTypes,
     }),
   );

@@ -29,7 +29,7 @@ export const moduleEntryLabelTransformer = ({
   relPath: string;
 }): string => {
   if (exportName !== undefined) {
-    return String(exportName);
+    return exportName;
   }
 
   const basename = relPath.split('/').filter((segment) => segment.length > 0).at(-1);

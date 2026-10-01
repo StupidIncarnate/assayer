@@ -45,7 +45,7 @@ export const stubIndexResolveBroker = async ({ repoPath }: { repoPath: string })
   // The overlay is read from the SOURCE repo root (committed there), the derived index from the cache
   // dir --repo points at — combined here at read time, never re-derived and never persisted merged.
   const root = await repoSourceRootBroker({ repoPath });
-  const overlays = await stubOverlayLoadBroker({ repoRoot: String(root) });
+  const overlays = await stubOverlayLoadBroker({ repoRoot: root });
 
   return stubViewTransformer({ index, overlays });
 };

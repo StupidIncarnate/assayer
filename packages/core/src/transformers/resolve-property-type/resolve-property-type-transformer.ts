@@ -35,7 +35,7 @@ export const resolvePropertyTypeTransformer = ({
     return undefined;
   }
 
-  const property = type.properties.find((candidate) => String(candidate.name) === String(head));
+  const property = type.properties.find((candidate) => candidate.name === head);
 
   return property === undefined ? undefined : resolvePropertyTypeTransformer({ type: property.type, path: rest });
 };

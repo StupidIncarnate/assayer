@@ -50,7 +50,7 @@ describe('runConsoleFindBroker (integration)', () => {
 
       const result = await readers.findConsole({ configDir: seeded.configDir, relPath: seeded.relPath });
 
-      expect(String(result)).toBe(`${String(seeded.relPath)}  1/1 passed\n`);
+      expect(String(result)).toBe(`${seeded.relPath}  1/1 passed\n`);
     });
 
     it('EMPTY: {the colocated harness edited, source untouched} => the stale report is no longer found', async () => {

@@ -128,7 +128,7 @@ describe('RunConsoleWidget', () => {
       });
       getByTestId('RUN_CONSOLE_HIDE').click();
 
-      expect(hidden.map((entry) => String(entry))).toStrictEqual(['hidden']);
+      expect(hidden.map((entry) => entry)).toStrictEqual(['hidden']);
     });
   });
 });

@@ -25,23 +25,23 @@ export const typeTextTransformer = ({ type }: { type: TypeDescriptor }): string 
     case 'union':
       return type.members.map((member) => typeTextTransformer({ type: member })).join(' | ');
     case 'array':
-      return `${String(typeTextTransformer({ type: type.element }))}[]`;
+      return `${typeTextTransformer({ type: type.element })}[]`;
     case 'tuple':
-      return `[${type.elements.map((element) => String(typeTextTransformer({ type: element }))).join(', ')}]`;
+      return `[${type.elements.map((element) => typeTextTransformer({ type: element })).join(', ')}]`;
     case 'template': {
-      const substitutions = type.types.map((substitution) => String(typeTextTransformer({ type: substitution })));
+      const substitutions = type.types.map((substitution) => typeTextTransformer({ type: substitution }));
       const body = type.texts.reduce((rendered, text, index) => {
         const substitution = substitutions[index];
 
-        return substitution === undefined ? `${rendered}${String(text)}` : `${rendered}${String(text)}\${${substitution}}`;
+        return substitution === undefined ? `${rendered}${text}` : `${rendered}${text}\${${substitution}}`;
       }, '');
 
       return `\`${body}\``;
     }
     case 'object':
       return (type.typeName === undefined
-          ? `{ ${type.properties.map((property) => `${String(property.name)}: ${String(typeTextTransformer({ type: property.type }))}`).join('; ')} }`
-          : String(type.typeName));
+          ? `{ ${type.properties.map((property) => `${property.name}: ${typeTextTransformer({ type: property.type })}`).join('; ')} }`
+          : type.typeName);
     case 'callable':
       return type.text;
     case 'unknown':

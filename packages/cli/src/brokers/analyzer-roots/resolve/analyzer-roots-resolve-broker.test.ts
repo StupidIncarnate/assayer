@@ -8,7 +8,7 @@ describe('analyzerRootsResolveBroker', () => {
       const proxy = analyzerRootsResolveBrokerProxy();
       proxy.rootAboveThisModule();
 
-      const roots = analyzerRootsResolveBroker().map((root) => String(root).split('/').slice(-3).join('/'));
+      const roots = analyzerRootsResolveBroker().map((root) => root.split('/').slice(-3).join('/'));
 
       expect(roots).toStrictEqual(['packages/core/src', 'packages/shared/src']);
     });

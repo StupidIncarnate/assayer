@@ -25,8 +25,8 @@ export const harnessTargetTransformer = ({
   relPath: string;
   sources: readonly string[];
 }): string | undefined => {
-  const base = String(relPath).slice(0, -harnessModuleStatics.fileSuffix.length);
-  const known = new Set(sources.map((source) => String(source)));
+  const base = relPath.slice(0, -harnessModuleStatics.fileSuffix.length);
+  const known = new Set(sources.map((source) => source));
 
   return [`${base}${TS_EXTENSION}`, `${base}${TSX_EXTENSION}`]
     .filter((candidate) => known.has(candidate))

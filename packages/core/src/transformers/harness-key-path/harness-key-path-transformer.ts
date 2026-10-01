@@ -21,4 +21,4 @@ export const harnessKeyPathTransformer = ({
   entry: string;
   param: string;
 }): string =>
-  [harnessModuleStatics.inputsRoot, String(entry), String(param)].join(harnessModuleStatics.keySeparator);
+  [harnessModuleStatics.inputsRoot, entry, param].join(harnessModuleStatics.keySeparator);

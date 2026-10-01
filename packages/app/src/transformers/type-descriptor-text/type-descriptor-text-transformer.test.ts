@@ -7,19 +7,19 @@ describe('typeDescriptorTextTransformer', () => {
     it('VALID: {kind: string} => renders "string"', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'string' }) });
 
-      expect(String(result)).toBe('string');
+      expect(result).toBe('string');
     });
 
     it('VALID: {kind: number} => renders "number"', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'number' }) });
 
-      expect(String(result)).toBe('number');
+      expect(result).toBe('number');
     });
 
     it('VALID: {kind: boolean} => renders "boolean"', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'boolean' }) });
 
-      expect(String(result)).toBe('boolean');
+      expect(result).toBe('boolean');
     });
   });
 
@@ -27,13 +27,13 @@ describe('typeDescriptorTextTransformer', () => {
     it('VALID: {kind: literal, value: "get"} => renders the quoted literal', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'literal', value: 'get' }) });
 
-      expect(String(result)).toBe('"get"');
+      expect(result).toBe('"get"');
     });
 
     it('VALID: {kind: literal, value: 7} => renders the numeric literal', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'literal', value: 7 }) });
 
-      expect(String(result)).toBe('7');
+      expect(result).toBe('7');
     });
   });
 
@@ -49,7 +49,7 @@ describe('typeDescriptorTextTransformer', () => {
         }),
       });
 
-      expect(String(result)).toBe('"get" | "post"');
+      expect(result).toBe('"get" | "post"');
     });
   });
 
@@ -57,7 +57,7 @@ describe('typeDescriptorTextTransformer', () => {
     it('VALID: {array of string} => renders "string[]"', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'array', element: { kind: 'string' } }) });
 
-      expect(String(result)).toBe('string[]');
+      expect(result).toBe('string[]');
     });
   });
 
@@ -67,7 +67,7 @@ describe('typeDescriptorTextTransformer', () => {
         type: TypeDescriptorStub({ kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] }),
       });
 
-      expect(String(result)).toBe('Config');
+      expect(result).toBe('Config');
     });
 
     it('VALID: {anonymous object} => renders the braced property list', () => {
@@ -81,7 +81,7 @@ describe('typeDescriptorTextTransformer', () => {
         }),
       });
 
-      expect(String(result)).toBe('{ a: string; b: number }');
+      expect(result).toBe('{ a: string; b: number }');
     });
   });
 
@@ -91,7 +91,7 @@ describe('typeDescriptorTextTransformer', () => {
         type: TypeDescriptorStub({ kind: 'callable', text: '(message: string) => string' }),
       });
 
-      expect(String(result)).toBe('(message: string) => string');
+      expect(result).toBe('(message: string) => string');
     });
   });
 
@@ -99,7 +99,7 @@ describe('typeDescriptorTextTransformer', () => {
     it('VALID: {kind: unknown, text: "Date"} => renders the carried type text', () => {
       const result = typeDescriptorTextTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Date' }) });
 
-      expect(String(result)).toBe('Date');
+      expect(result).toBe('Date');
     });
   });
 
@@ -110,7 +110,7 @@ describe('typeDescriptorTextTransformer', () => {
     it("EDGE: {kind not in the TypeDescriptor union} => falls back to 'unknown'", () => {
       const result = typeDescriptorTextTransformer({ type: { kind: 'nonsense' } as never });
 
-      expect(String(result)).toBe('unknown');
+      expect(result).toBe('unknown');
     });
   });
 });

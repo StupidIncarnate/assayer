@@ -124,7 +124,7 @@ export const runUnitBroker = async ({
     modulePath: absPath,
     // Where a colocated harness WOULD be, always: the projection names it only when some case actually
     // reaches for a supplied input, so the two facts cannot drift apart.
-    harnessPath: `${repoRoot}/${String(harnessPathTransformer({ relPath }))}`,
+    harnessPath: `${repoRoot}/${harnessPathTransformer({ relPath })}`,
   });
 
   await ensureDir(probeDir);

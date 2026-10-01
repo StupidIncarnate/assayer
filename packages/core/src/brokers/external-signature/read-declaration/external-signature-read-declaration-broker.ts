@@ -37,13 +37,13 @@ export const externalSignatureReadDeclarationBroker = ({
   exportName: string;
 }): ExternalSignatureReadDeclarationResult => {
   const existing = projectByConfig.get(tsConfigFilePath);
-  const project = existing ?? new Project({ tsConfigFilePath: String(tsConfigFilePath), skipAddingFilesFromTsConfig: true });
+  const project = existing ?? new Project({ tsConfigFilePath: tsConfigFilePath, skipAddingFilesFromTsConfig: true });
   if (existing === undefined) {
     projectByConfig.set(tsConfigFilePath, project);
   }
 
-  const sourceFile = project.getSourceFile(String(dtsPath)) ?? project.addSourceFileAtPath(String(dtsPath));
-  const [declaration] = sourceFile.getExportedDeclarations().get(String(exportName)) ?? [];
+  const sourceFile = project.getSourceFile(dtsPath) ?? project.addSourceFileAtPath(dtsPath);
+  const [declaration] = sourceFile.getExportedDeclarations().get(exportName) ?? [];
 
   if (declaration === undefined) {
     return externalSignatureReadDeclarationResultContract.parse({ usable: false });

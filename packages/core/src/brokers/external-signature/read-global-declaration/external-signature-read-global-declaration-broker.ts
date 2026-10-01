@@ -55,7 +55,7 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
   reference: GlobalReference;
 }): GlobalSignatureResult => {
   const existing = globalProjectByConfig.get(tsConfigFilePath);
-  const project = existing ?? new Project({ tsConfigFilePath: String(tsConfigFilePath), skipAddingFilesFromTsConfig: true });
+  const project = existing ?? new Project({ tsConfigFilePath: tsConfigFilePath, skipAddingFilesFromTsConfig: true });
   if (existing === undefined) {
     globalProjectByConfig.set(tsConfigFilePath, project);
   }
@@ -64,16 +64,16 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
   // reduce to reading the type of the LAST statement's expression in a throwaway probe source.
   const probeSource =
     reference.kind === 'builtin'
-      ? `import { ${String(reference.importedName)} } from '${String(reference.specifier)}';\n${String(reference.importedName)};\n`
+      ? `import { ${reference.importedName} } from '${reference.specifier}';\n${reference.importedName};\n`
       : reference.member === undefined
-        ? `${String(reference.name)};\n`
-        : `${String(reference.name)}.${String(reference.member)};\n`;
+        ? `${reference.name};\n`
+        : `${reference.name}.${reference.member};\n`;
 
   const {called} = reference;
 
   // The probe sits next to the tsconfig so the project's `@types` resolution (rooted at the tsconfig
   // dir) sees `@types/node`, exactly as a real source file would.
-  const probePath = joinPath(dirname(String(tsConfigFilePath)), PROBE_PATH);
+  const probePath = joinPath(dirname(tsConfigFilePath), PROBE_PATH);
   const probe = project.createSourceFile(probePath, probeSource, { overwrite: true });
   const statement = probe.getStatements().at(-1);
 

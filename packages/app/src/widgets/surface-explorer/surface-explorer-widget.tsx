@@ -72,7 +72,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   // Shown when a run was asked for, while one is in flight, or when the selected file has a saved
   // report. A file with none of those has nothing to show, so the panel is ABSENT rather than empty —
   // an empty console reads as "this ran and said nothing".
-  const consoleOpen = !dismissed && (runRequested || fileRun.running || String(fileRun.output) !== '');
+  const consoleOpen = !dismissed && (runRequested || fileRun.running || fileRun.output !== '');
 
   const handleLineHover = useCallback((line: number | null): void => {
     setHoveredLine(line === null ? null : line);

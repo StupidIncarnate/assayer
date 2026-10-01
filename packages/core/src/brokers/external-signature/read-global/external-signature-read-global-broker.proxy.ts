@@ -22,8 +22,8 @@ const cachePathFor = ({
 }): string => {
   const referenceKey =
     reference.kind === 'builtin'
-      ? `b:${String(reference.specifier)} ${String(reference.importedName)} ${String(reference.called)}`
-      : `g:${String(reference.name)}.${reference.member === undefined ? '' : String(reference.member)}.${String(reference.called)}`;
+      ? `b:${reference.specifier} ${reference.importedName} ${String(reference.called)}`
+      : `g:${reference.name}.${reference.member === undefined ? '' : reference.member}.${String(reference.called)}`;
   const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${declText}` });
 
   return `${cacheDir}/global-signatures/${String(cacheKey)}.json`;

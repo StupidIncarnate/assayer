@@ -35,7 +35,7 @@ export const runConsoleFindBroker = async ({
     return undefined;
   }
 
-  const source = String((await readFile(absPath)));
+  const source = (await readFile(absPath));
   const runId = String(await runIdBroker({ root, relPath, source }));
   const path = `${configDir}/.assayer/cache/runs/${runId}/console.txt`;
 
@@ -43,5 +43,5 @@ export const runConsoleFindBroker = async ({
     return undefined;
   }
 
-  return String((await readFile(path)));
+  return (await readFile(path));
 };

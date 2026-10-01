@@ -51,7 +51,7 @@ export const runFindHarness = (): {
 
   return {
     afterEach: (): void => {
-      dirs.forEach((dir) => { rmSync(String(dir), { recursive: true, force: true }); });
+      dirs.forEach((dir) => { rmSync(dir, { recursive: true, force: true }); });
       dirs.length = 0;
     },
 
@@ -65,21 +65,21 @@ export const runFindHarness = (): {
     }): Promise<{ configDir: string; relPath: string; runId: RunResult['runId'] }> => {
       const configDir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-run-find-')));
       dirs.push(configDir);
-      ensureDirSync(join(String(configDir), 'src'));
-      writeFileSync(join(String(configDir), SOURCE_REL), AUDIT_SOURCE);
+      ensureDirSync(join(configDir, 'src'));
+      writeFileSync(join(configDir, SOURCE_REL), AUDIT_SOURCE);
 
       if (harness !== undefined) {
-        writeFileSync(join(String(configDir), HARNESS_REL), harness);
+        writeFileSync(join(configDir, HARNESS_REL), harness);
       }
 
-      const runId = await runIdBroker({ root: String(configDir), relPath: SOURCE_REL, source: AUDIT_SOURCE });
-      const runDir = join(String(configDir), '.assayer', 'cache', 'runs', String(runId));
+      const runId = await runIdBroker({ root: configDir, relPath: SOURCE_REL, source: AUDIT_SOURCE });
+      const runDir = join(configDir, '.assayer', 'cache', 'runs', String(runId));
       ensureDirSync(runDir);
       writeFileSync(
         join(runDir, 'run.json'),
         JSON.stringify(RunResultStub({ runId, relPath: SOURCE_REL })),
       );
-      writeFileSync(join(runDir, 'console.txt'), String(`${SOURCE_REL}  1/1 passed\n`));
+      writeFileSync(join(runDir, 'console.txt'), (`${SOURCE_REL}  1/1 passed\n`));
 
       return { configDir, relPath: SOURCE_REL, runId };
     },

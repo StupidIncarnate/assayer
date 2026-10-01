@@ -77,16 +77,16 @@ export const harnessValidateTransformer = ({
     ...entries.filter((entry) => entry.access.kind !== 'module'),
     ...declaringScopes,
   ];
-  const entryByName = new Map(callable.map((entry) => [String(entry.name), entry]));
+  const entryByName = new Map(callable.map((entry) => [entry.name, entry]));
   const entryNames = callable.map((entry) => entry.name);
 
   const emptyFile =
     keys.length === 0
       ? [
-          `\`${String(relPath)}\` declares no inputs, so it closes nothing. A harness exists only to supply ` +
-            `values Assayer refused to construct: take the input gap reported against \`${String(targetRelPath)}\` ` +
+          `\`${relPath}\` declares no inputs, so it closes nothing. A harness exists only to supply ` +
+            `values Assayer refused to construct: take the input gap reported against \`${targetRelPath}\` ` +
             'and declare the parameter it names — `assayerHarness({ inputs: { <entry>: { <parameter>: <value> } } })`. ' +
-            `If \`${String(targetRelPath)}\` has no input gap, this file has nothing to close and belongs deleted.`,
+            `If \`${targetRelPath}\` has no input gap, this file has nothing to close and belongs deleted.`,
         ]
       : [];
 
@@ -95,11 +95,11 @@ export const harnessValidateTransformer = ({
 
     if (entry === undefined) {
       const suggestion = didYouMeanTransformer({ name: key.entry, candidates: entryNames });
-      const known = entryNames.length === 0 ? 'it has no callable entries' : `its entries are ${entryNames.map((name) => `\`${String(name)}\``).join(', ')}`;
+      const known = entryNames.length === 0 ? 'it has no callable entries' : `its entries are ${entryNames.map((name) => `\`${name}\``).join(', ')}`;
 
       return [
-        `\`${String(relPath)}\` declares inputs for \`${String(key.entry)}\`, which \`${String(targetRelPath)}\` ` +
-          `does not offer — ${known}${suggestion === undefined ? '' : `; did you mean \`${String(suggestion)}\``}. ` +
+        `\`${relPath}\` declares inputs for \`${String(key.entry)}\`, which \`${targetRelPath}\` ` +
+          `does not offer — ${known}${suggestion === undefined ? '' : `; did you mean \`${suggestion}\``}. ` +
           '`inputs` is keyed by ENTRY name, then PARAMETER name, so rename the key to the entry that owes the ' +
           'input or delete it.',
       ];
@@ -113,16 +113,16 @@ export const harnessValidateTransformer = ({
       const known = paramNames.length === 0 ? 'it takes no parameters' : `its parameters are ${paramNames.map((name) => `\`${String(name)}\``).join(', ')}`;
 
       return [
-        `\`${String(relPath)}\` declares an input \`${String(key.param)}\` on \`${String(key.entry)}\`, which is ` +
-          `not a parameter of \`${String(key.entry)}\` in \`${String(targetRelPath)}\` — ${known}` +
-          `${suggestion === undefined ? '' : `; did you mean \`${String(suggestion)}\``}. Rename the key to the ` +
+        `\`${relPath}\` declares an input \`${String(key.param)}\` on \`${String(key.entry)}\`, which is ` +
+          `not a parameter of \`${String(key.entry)}\` in \`${targetRelPath}\` — ${known}` +
+          `${suggestion === undefined ? '' : `; did you mean \`${suggestion}\``}. Rename the key to the ` +
           'parameter the input gap names, or delete it.',
       ];
     }
 
     if (!isTypeFillableGuard({ type: param.type })) {
       const supplied = suppliedTypes.find(
-        (candidate) => String(candidate.entry) === String(key.entry) && String(candidate.param) === String(key.param),
+        (candidate) => candidate.entry === String(key.entry) && candidate.param === String(key.param),
       );
 
       if (supplied === undefined || isTypeCompatibleGuard({ declared: param.type, supplied: supplied.type })) {
@@ -133,19 +133,19 @@ export const harnessValidateTransformer = ({
       const suppliedText = typeTextTransformer({ type: supplied.type });
 
       return [
-        `\`${String(relPath)}\` declares an input \`${String(key.param)}\` on \`${String(key.entry)}\`, but supplies a ` +
-          `value of the wrong type. \`${String(targetRelPath)}\` declares \`${String(key.entry)}\`'s \`${String(key.param)}\` ` +
-          `as \`${String(declaredText)}\`, and the value supplied here is \`${String(suppliedText)}\`. Supply a value of ` +
-          `type \`${String(declaredText)}\` instead, or change \`${String(key.param)}\`'s declared type in ` +
-          `\`${String(targetRelPath)}\` if it is meant to accept \`${String(suppliedText)}\`.`,
+        `\`${relPath}\` declares an input \`${String(key.param)}\` on \`${String(key.entry)}\`, but supplies a ` +
+          `value of the wrong type. \`${targetRelPath}\` declares \`${String(key.entry)}\`'s \`${String(key.param)}\` ` +
+          `as \`${declaredText}\`, and the value supplied here is \`${suppliedText}\`. Supply a value of ` +
+          `type \`${declaredText}\` instead, or change \`${String(key.param)}\`'s declared type in ` +
+          `\`${targetRelPath}\` if it is meant to accept \`${suppliedText}\`.`,
       ];
     }
 
     return [
-      `\`${String(relPath)}\` declares an input \`${String(key.param)}\` on \`${String(key.entry)}\`, a parameter ` +
+      `\`${relPath}\` declares an input \`${String(key.param)}\` on \`${String(key.entry)}\`, a parameter ` +
         `Assayer builds itself from its declared type — no input gap was raised for it. A harness is GAP-FILL: a ` +
         'value here would silently displace the derived one, so a reader could no longer tell which value their ' +
-        `case ran with. Delete this key; only a parameter \`${String(targetRelPath)}\` is invoiced for belongs here.`,
+        `case ran with. Delete this key; only a parameter \`${targetRelPath}\` is invoiced for belongs here.`,
     ];
   });
 

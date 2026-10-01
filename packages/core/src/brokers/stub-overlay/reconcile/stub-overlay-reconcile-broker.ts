@@ -44,7 +44,7 @@ export const stubOverlayReconcileBroker = ({
         ];
       }
 
-      const known = new Set(stub.properties.map((property) => String(property.name)));
+      const known = new Set(stub.properties.map((property) => property.name));
 
       return overlay.properties
         .filter((property) => !known.has(String(property.name)))

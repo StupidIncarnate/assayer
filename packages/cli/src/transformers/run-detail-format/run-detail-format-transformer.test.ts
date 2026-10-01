@@ -8,7 +8,7 @@ describe('runDetailFormatTransformer', () => {
     it('VALID: {a case with a full trace} => the path, each leaf outcome, and the exit', () => {
       const result = runDetailFormatTransformer({ run: RunResultStub() });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  PASSED grade(6, 2)\n' +
           '    predicted grade/return@then\n' +
@@ -36,7 +36,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  PASSED grade(6, 2)\n' +
           '    predicted grade/return@then\n' +
@@ -64,7 +64,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  ERROR grade(6, 2)\n' +
           '    predicted grade/return@then\n' +
@@ -88,7 +88,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  ERROR grade(6, 2)\n' +
           '    predicted grade/return@then',
@@ -115,7 +115,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  FAILED grade(6, 2)\n' +
           '    predicted grade/return@then\n' +
@@ -143,7 +143,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  PASSED grade(6, 2)\n' +
           '    predicted grade/return@then\n' +
@@ -163,7 +163,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n  GAP find — needs a harness',
       );
     });
@@ -181,7 +181,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
       );
@@ -199,7 +199,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  UNDRIVEN welded-const.ts — it runs at import time, so no case drove its branches',
       );
@@ -215,7 +215,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n  LINT decide — nothing calls it',
       );
     });
@@ -235,7 +235,7 @@ describe('runDetailFormatTransformer', () => {
 
       const result = runDetailFormatTransformer({ run });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  run r-1784093000000\n' +
           '  GAP find — needs a harness\n' +
           '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered\n' +

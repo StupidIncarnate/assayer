@@ -29,7 +29,7 @@ export const harnessValueTransformer = ({
   declarations: readonly HarnessDeclaration[];
   key: string;
 }): HarnessValueResult => {
-  const [root, entry, param, ...rest] = String(key).split(harnessModuleStatics.keySeparator);
+  const [root, entry, param, ...rest] = key.split(harnessModuleStatics.keySeparator);
 
   if (
     root !== harnessModuleStatics.inputsRoot ||

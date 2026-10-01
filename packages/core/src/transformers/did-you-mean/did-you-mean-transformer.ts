@@ -21,10 +21,10 @@ export const didYouMeanTransformer = ({
   name: string;
   candidates: readonly string[];
 }): string | undefined => {
-  const target = Array.from(String(name).toLowerCase());
+  const target = Array.from(name.toLowerCase());
 
   const scored = candidates.map((candidate) => {
-    const source = Array.from(String(candidate).toLowerCase());
+    const source = Array.from(candidate.toLowerCase());
 
     const finalRow = source.reduce(
       (previous, sourceChar, sourceIndex) =>
@@ -43,13 +43,13 @@ export const didYouMeanTransformer = ({
     );
 
     return {
-      candidate: String(candidate),
+      candidate: candidate,
       distance: finalRow[target.length] ?? target.length,
     };
   });
 
   const ranked = [...scored].sort((a, b) =>
-    a.distance === b.distance ? (String(a.candidate) < String(b.candidate) ? -1 : 1) : a.distance - b.distance,
+    a.distance === b.distance ? (a.candidate < b.candidate ? -1 : 1) : a.distance - b.distance,
   );
 
   return ranked[0]?.candidate;

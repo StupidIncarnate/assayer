@@ -37,7 +37,7 @@ export const anonymousEntryLabelTransformer = ({
   // The arrow as the reader wrote it, minus its body: the signature is what distinguishes two
   // callbacks at a glance, and the body is on screen beside the label anyway.
   const arrow = `(${params.map((param) => String(param.name)).join(', ')}) => …`;
-  const prefix = host === undefined ? '' : `${String(host)} › `;
+  const prefix = host === undefined ? '' : `${host} › `;
   const suffix = ` L${String(line)}`;
 
   if (reach.kind === 'return') {

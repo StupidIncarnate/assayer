@@ -24,7 +24,7 @@ describe('undrivenLineTransformer', () => {
     it('VALID: {stub entry} => names the scope and why nothing drove it', () => {
       const result = undrivenLineTransformer({ entry: UndrivenEntryStub() });
 
-      expect(String(result)).toBe('UNDRIVEN *module* — it runs at import time, so no case drove its branches');
+      expect(result).toBe('UNDRIVEN *module* — it runs at import time, so no case drove its branches');
     });
 
     // The line `assayer unit` prints for sad-path/undriven/opaque-module/opaque-module.ts, to the byte.
@@ -35,7 +35,7 @@ describe('undrivenLineTransformer', () => {
         entry: UndrivenEntryStub({ name: '*module*', label: 'opaque-module.ts', reason: MODULE_REASON }),
       });
 
-      expect(String(result)).toBe(`UNDRIVEN opaque-module.ts — ${MODULE_REASON}`);
+      expect(result).toBe(`UNDRIVEN opaque-module.ts — ${MODULE_REASON}`);
     });
 
     // The line `assayer unit` prints for a fixed-arg private — one reached only through a guarded call,
@@ -45,7 +45,7 @@ describe('undrivenLineTransformer', () => {
         entry: UndrivenEntryStub({ name: 'decide', reason: FIXED_ARG_REASON }),
       });
 
-      expect(String(result)).toBe(`UNDRIVEN decide — ${FIXED_ARG_REASON}`);
+      expect(result).toBe(`UNDRIVEN decide — ${FIXED_ARG_REASON}`);
     });
 
     // The reason is authored where the fact is found and passed through untouched. Rewording it here
@@ -55,7 +55,7 @@ describe('undrivenLineTransformer', () => {
         entry: UndrivenEntryStub({ name: 'helper', reason: 'some future reason Assayer has not written yet' }),
       });
 
-      expect(String(result)).toBe('UNDRIVEN helper — some future reason Assayer has not written yet');
+      expect(result).toBe('UNDRIVEN helper — some future reason Assayer has not written yet');
     });
   });
 });

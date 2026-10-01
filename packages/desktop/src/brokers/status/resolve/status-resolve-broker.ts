@@ -21,8 +21,8 @@ import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-st
 export const statusResolveBroker = async ({ repoPath }: { repoPath: string }): Promise<DesktopStatus> => {
   const status = statusGetBroker();
 
-  const found = await configFindBroker({ startDir: String(repoPath) });
-  const loaded = found.found ? await configLoadBroker({ configPath: String(found.configPath) }) : undefined;
+  const found = await configFindBroker({ startDir: repoPath });
+  const loaded = found.found ? await configLoadBroker({ configPath: found.configPath }) : undefined;
   const config = loaded?.success === true ? loaded.data : assayerConfigContract.parse({});
 
   return desktopStatusContract.parse({

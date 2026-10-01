@@ -56,14 +56,14 @@ export const compileResolveGraphBroker = async ({
   const blobs = await Promise.all(
     files.map(async (file) => {
       const raw = (await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
-      return compiledFileBlobContract.parse(JSON.parse(String(raw)));
+      return compiledFileBlobContract.parse(JSON.parse(raw));
     }),
   );
 
   const blobsByRelPath = new Map(blobs.map((blob) => [String(blob.relPath), blob]));
 
   const sortedFiles = [...files]
-    .map((file) => ({ relPath: String(file.relPath), contentHash: String(file.contentHash) }))
+    .map((file) => ({ relPath: file.relPath, contentHash: String(file.contentHash) }))
     .sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
   const layoutHash = contentHashTransformer({ content: JSON.stringify(sortedFiles) });
 
@@ -115,7 +115,7 @@ export const compileResolveGraphBroker = async ({
     cacheDir !== undefined && configFilePath !== undefined && item.classification.kind === 'package' && item.importedName !== undefined
       ? [
           {
-            key: `${String(item.classification.dtsPath)} ${item.importedName}`,
+            key: `${item.classification.dtsPath} ${item.importedName}`,
             dtsPath: item.classification.dtsPath,
             exportName: item.importedName,
           },
@@ -190,7 +190,7 @@ export const compileResolveGraphBroker = async ({
   const typed = await Promise.all(
     classified.map(async (item) => {
       if (cacheDir !== undefined && configFilePath !== undefined && item.classification.kind === 'package' && item.importedName !== undefined) {
-        const read = await packageReadByKey.get(`${String(item.classification.dtsPath)} ${item.importedName}`);
+        const read = await packageReadByKey.get(`${item.classification.dtsPath} ${item.importedName}`);
 
         return { ...item, signature: read?.usable ? read.signature : undefined, typeDescriptor: undefined, usableExternal: read?.usable ?? false };
       }
@@ -225,7 +225,7 @@ export const compileResolveGraphBroker = async ({
       // namespace/star import names no single export to type; a target whose analysis has no matching
       // entry (a re-exported type, an unanalyzed file) stays unsigned but still resolves.
       if (item.classification.kind === 'local' && item.importedName !== undefined) {
-        const targetBlob = blobsByRelPath.get(String(item.classification.relPath));
+        const targetBlob = blobsByRelPath.get(item.classification.relPath);
         const entry = targetBlob?.analysis?.functions.find(
           (fn) => String(fn.entry.name) === item.importedName,
         )?.entry;

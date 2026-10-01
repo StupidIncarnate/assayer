@@ -54,7 +54,7 @@ export const resolveGraphHarness = (): {
 
   return {
     afterEach: (): void => {
-      dirs.forEach((dir) => { rmSync(String(dir), { recursive: true, force: true }); });
+      dirs.forEach((dir) => { rmSync(dir, { recursive: true, force: true }); });
       dirs.length = 0;
     },
 

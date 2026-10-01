@@ -21,7 +21,7 @@ const TS_EXTENSION = '.ts';
 const TSX_EXTENSION = '.tsx';
 
 export const harnessPathTransformer = ({ relPath }: { relPath: string }): string => {
-  const path = String(relPath);
+  const path = relPath;
   const extension = path.endsWith(TSX_EXTENSION) ? TSX_EXTENSION : path.endsWith(TS_EXTENSION) ? TS_EXTENSION : '';
 
   return `${path.slice(0, path.length - extension.length)}${harnessModuleStatics.fileSuffix}`;

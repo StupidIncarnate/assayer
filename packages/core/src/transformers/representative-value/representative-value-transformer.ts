@@ -72,7 +72,7 @@ export const representativeValueTransformer = ({
       }
 
       const joined = type.texts.reduce(
-        (accumulated, text, index) => `${accumulated}${String(text)}${index < points.length ? String(points[index]) : ''}`,
+        (accumulated, text, index) => `${accumulated}${text}${index < points.length ? String(points[index]) : ''}`,
         '',
       );
 

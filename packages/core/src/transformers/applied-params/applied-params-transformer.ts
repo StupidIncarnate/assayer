@@ -40,7 +40,7 @@ export const appliedParamsTransformer = ({
   params: ParamDescriptor[];
   harness?: readonly string[] | undefined;
 }): ParamDescriptor[] => {
-  const harnessNames = new Set((harness ?? []).map((name) => String(name)));
+  const harnessNames = new Set((harness ?? []).map((name) => name));
   const unowed = params.findIndex(
     (param) =>
       (param.optional === true || param.rest === true) &&

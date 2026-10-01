@@ -87,7 +87,7 @@ export const funnelCasesTransformer = ({
 
       // The steered element list each per-element case laid into the array param — a one-element list.
       const steered = perElement.map((testCase): ArrangeValue[] => {
-        const binding = testCase.arrange.find((entry) => entry.kind === 'array' && String(entry.param) === String(arrayParam));
+        const binding = testCase.arrange.find((entry) => entry.kind === 'array' && String(entry.param) === arrayParam);
         return binding !== undefined && binding.kind === 'array' ? binding.value : [];
       });
 
@@ -132,7 +132,7 @@ export const funnelCasesTransformer = ({
     // through the shared fill seam so the surface stays callable — a sibling ARRAY param takes a real
     // array, not a scalar that throws — and a param the seam REFUSES drops the case, since a surface
     // that cannot be called derives nothing rather than something built on a placeholder.
-    const valueByParam = new Map(combo.map((contribution) => [String(contribution.arrayParam), contribution.value] as const));
+    const valueByParam = new Map(combo.map((contribution) => [contribution.arrayParam, contribution.value] as const));
 
     const arrange = surfaceParams.flatMap((param): ArrangeBinding[] => {
       const value = valueByParam.get(String(param.name));

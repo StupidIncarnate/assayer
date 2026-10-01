@@ -34,12 +34,12 @@ export const compilePlanCurrentBroker = async ({
 
   const relPathed = absPaths.map((abs) => ({
     abs,
-    relPath: relative(root, String(abs)),
+    relPath: relative(root, abs),
   }));
 
   const included = relPathed.filter((r) =>
     isSourceFileIncludedGuard({
-      relPath: String(r.relPath),
+      relPath: r.relPath,
       ...(exclude ? { exclude } : {}),
     })
   );
@@ -47,7 +47,7 @@ export const compilePlanCurrentBroker = async ({
   const planned = await Promise.all(
     included.map(async (r) => ({
       relPath: r.relPath,
-      content: await readFile(String(r.abs)),
+      content: await readFile(r.abs),
     }))
   );
 

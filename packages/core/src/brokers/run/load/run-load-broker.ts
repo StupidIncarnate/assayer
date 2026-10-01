@@ -29,5 +29,5 @@ export const runLoadBroker = async ({
     return undefined;
   }
 
-  return runResultContract.parse(JSON.parse(String((await readFile(path)))));
+  return runResultContract.parse(JSON.parse((await readFile(path))));
 };

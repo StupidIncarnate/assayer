@@ -12,7 +12,7 @@ import type { DocsResult } from '@assayer/shared/contracts';
 import { docsCatalogStatics } from '../../../statics/docs-catalog/docs-catalog-statics';
 
 export const docsGetBroker = ({ topic }: { topic: string }): DocsResult => {
-  const requested = String(topic);
+  const requested = topic;
   const match = docsCatalogStatics.topics.find((entry) => entry.key === requested);
 
   if (match === undefined) {

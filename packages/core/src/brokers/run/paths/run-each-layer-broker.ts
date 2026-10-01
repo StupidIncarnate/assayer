@@ -38,7 +38,7 @@ export const runEachLayerBroker = async ({
   }
 
   const absPath = `${root}/${relPath}`;
-  const source = String((await readFile(absPath)));
+  const source = (await readFile(absPath));
 
   const result = await runUnitBroker({
     cacheDir,

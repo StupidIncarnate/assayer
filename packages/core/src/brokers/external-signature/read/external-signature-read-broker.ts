@@ -30,13 +30,13 @@ export const externalSignatureReadBroker = async ({
   exportName: string;
   cacheDir: string;
 }): Promise<ExternalSignatureReadResult> => {
-  const dtsContent = String((await readFile(String(dtsPath))));
-  const declHash = contentHashTransformer({ content: `${String(exportName)}\n${dtsContent}` });
+  const dtsContent = (await readFile(dtsPath));
+  const declHash = contentHashTransformer({ content: `${exportName}\n${dtsContent}` });
   const dir = `${cacheDir}/external-signatures`;
   const cachePath = `${dir}/${String(declHash)}.json`;
 
   if (await pathExists(cachePath)) {
-    const cached = String((await readFile(cachePath)));
+    const cached = (await readFile(cachePath));
 
     return externalSignatureReadResultContract.parse({ usable: true, signature: externalSignatureContract.parse(JSON.parse(cached) as unknown) });
   }

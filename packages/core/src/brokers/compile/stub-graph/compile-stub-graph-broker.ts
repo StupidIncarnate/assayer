@@ -57,7 +57,7 @@ export const compileStubGraphBroker = async ({
   const blobs = await Promise.all(
     files.map(async (file) => {
       const raw = (await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
-      return compiledFileBlobContract.parse(JSON.parse(String(raw)));
+      return compiledFileBlobContract.parse(JSON.parse(raw));
     }),
   );
 

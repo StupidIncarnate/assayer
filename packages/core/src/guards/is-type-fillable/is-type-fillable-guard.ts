@@ -155,7 +155,7 @@ export const isTypeFillableGuard = ({
             !Array.isArray(value) &&
             type.truncated !== true &&
             type.properties.every((property) => {
-              const candidate = Reflect.get(value, String(property.name)) as ArrangeValue | undefined;
+              const candidate = Reflect.get(value, property.name) as ArrangeValue | undefined;
 
               return property.optional === true
                 ? candidate === undefined || isTypeFillableGuard({ type: property.type, value: candidate })

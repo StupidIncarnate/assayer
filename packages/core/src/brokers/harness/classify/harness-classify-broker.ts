@@ -33,8 +33,8 @@ export const harnessClassifyBroker = ({
   const classified = files.map((file) => ({
     file: { relPath: file.relPath, content: file.content },
     isHarness:
-      String(file.relPath).endsWith(harnessModuleStatics.fileSuffix) &&
-      isAssayerHarnessGuard({ source: String(file.content) }),
+      file.relPath.endsWith(harnessModuleStatics.fileSuffix) &&
+      isAssayerHarnessGuard({ source: file.content }),
   }));
 
   return harnessClassifyResultContract.parse({

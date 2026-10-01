@@ -31,14 +31,14 @@ export const resolvedEdgeContractTransformer = ({ edge }: { edge: ResolvedEdge }
       target.signature === undefined
         ? []
         : target.signature.params.map(
-            (param) => `${String(param.name)}: ${String(typeDescriptorTextTransformer({ type: param.type }))}`,
+            (param) => `${String(param.name)}: ${typeDescriptorTextTransformer({ type: param.type })}`,
           );
     const output =
       target.signature === undefined
         ? target.type === undefined
           ? undefined
-          : `type ${String(typeDescriptorTextTransformer({ type: target.type }))}`
-        : `returns ${String(typeDescriptorTextTransformer({ type: target.signature.returnType }))}`;
+          : `type ${typeDescriptorTextTransformer({ type: target.type })}`
+        : `returns ${typeDescriptorTextTransformer({ type: target.signature.returnType })}`;
 
     return resolvedContractViewContract.parse({
       symbol,
@@ -61,7 +61,7 @@ export const resolvedEdgeContractTransformer = ({ edge }: { edge: ResolvedEdge }
     target.signature === undefined
       ? []
       : target.signature.params.map(
-          (param) => `${String(param.name)}: ${String(typeDescriptorTextTransformer({ type: param.type }))}`,
+          (param) => `${String(param.name)}: ${typeDescriptorTextTransformer({ type: param.type })}`,
         );
   // A CALLED import shows its return type; a package/builtin bound as a VALUE (`const sep = sep`) shows
   // its declared type instead — mirroring the ambient-global arm above.
@@ -70,8 +70,8 @@ export const resolvedEdgeContractTransformer = ({ edge }: { edge: ResolvedEdge }
     target.signature === undefined
       ? targetType === undefined
         ? undefined
-        : `type ${String(typeDescriptorTextTransformer({ type: targetType }))}`
-      : `returns ${String(typeDescriptorTextTransformer({ type: target.signature.returnType }))}`;
+        : `type ${typeDescriptorTextTransformer({ type: targetType })}`
+      : `returns ${typeDescriptorTextTransformer({ type: target.signature.returnType })}`;
 
   return resolvedContractViewContract.parse({ symbol, source, inputs, ...(output === undefined ? {} : { output }) });
 };

@@ -12,7 +12,7 @@ export const runExecuteBrokerProxy = (): {
       const { error } = state;
 
       if (error !== undefined) {
-        return Promise.reject(new Error(String(error)));
+        return Promise.reject(new Error(error));
       }
 
       return Promise.resolve(state.run);

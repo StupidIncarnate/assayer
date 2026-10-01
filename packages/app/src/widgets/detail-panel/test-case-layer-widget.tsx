@@ -48,7 +48,7 @@ export const TestCaseLayerWidget = ({
     reachesPath: testCase.reachesPath,
   });
   const isMatch = active && touched.some((line) => line === hoveredLine);
-  const status = String(caseRunStatusTransformer({ run, testCase }));
+  const status = caseRunStatusTransformer({ run, testCase });
   const result = caseRunResultTransformer({ run, testCase });
   // A case the run did not pass never reached the exit on this row, so the row says
   // `predicted` rather than `reaches`. Printing the derived exit as though the run

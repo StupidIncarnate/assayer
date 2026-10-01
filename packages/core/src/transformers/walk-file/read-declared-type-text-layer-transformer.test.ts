@@ -17,7 +17,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
       expect(param.getType().getText()).toBe('any');
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe('Db | string');
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe('Db | string');
     });
 
     it('VALID: {Db & { a: number }, Db imported} => the declared intersection, joined with &', () => {
@@ -29,7 +29,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe('Db & { a: number; }');
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe('Db & { a: number; }');
     });
 
     // A union member the checker DOES resolve is rendered by the checker, so the two halves of one
@@ -43,7 +43,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe('string | Db | number');
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe('string | Db | number');
     });
   });
 
@@ -54,7 +54,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       const sourceFile = project.createSourceFile('src/f.ts', `${IMPORT}export function f(db: Db): void {}\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe('Db');
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe('Db');
     });
 
     it('VALID: {a primitive keyword} => the checker rendering, unchanged', () => {
@@ -63,7 +63,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: number): void {}\n');
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe('number');
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe('number');
     });
 
     it('VALID: {a resolvable literal union} => the checker rendering of each member', () => {
@@ -72,7 +72,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       const sourceFile = project.createSourceFile('src/f.ts', "export function f(mode: 'a' | 'b'): void {}\n");
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('mode');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe('"a" | "b"');
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe('"a" | "b"');
     });
 
     // A type REFERENCE renders as its OWN name plus its arguments, never the checker's module-qualified
@@ -87,7 +87,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('box');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe('Box<Db>');
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe('Box<Db>');
     });
   });
 
@@ -103,8 +103,8 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const fn = sourceFile.getFunctionOrThrow('f');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: fn.getParameterOrThrow('a').getTypeNodeOrThrow() }))).toBe(
-        String(readDeclaredTypeTextLayerTransformer({ node: fn.getParameterOrThrow('b').getTypeNodeOrThrow() })),
+      expect(readDeclaredTypeTextLayerTransformer({ node: fn.getParameterOrThrow('a').getTypeNodeOrThrow() })).toBe(
+        readDeclaredTypeTextLayerTransformer({ node: fn.getParameterOrThrow('b').getTypeNodeOrThrow() }),
       );
     });
 
@@ -119,7 +119,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('cb');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe(
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe(
         '((n: number) => void) | Db',
       );
     });
@@ -133,7 +133,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe(
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe(
         '(Db | string) & { a: number; }',
       );
     });
@@ -150,7 +150,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe(
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe(
         '(Db & string) | number',
       );
     });
@@ -164,7 +164,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
       );
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('make');
 
-      expect(String(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() }))).toBe(
+      expect(readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() })).toBe(
         '(new (n: number) => Db) | string',
       );
     });

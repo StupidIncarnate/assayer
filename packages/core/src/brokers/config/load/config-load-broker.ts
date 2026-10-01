@@ -24,7 +24,7 @@ export const configLoadBroker = async ({
   const text = (await readFile(configPath));
 
   try {
-    const parsed = JSON.parse(String(text)) as unknown;
+    const parsed = JSON.parse(text) as unknown;
 
     return { success: true, data: assayerConfigContract.parse(parsed) };
   } catch (error: unknown) {
@@ -34,7 +34,7 @@ export const configLoadBroker = async ({
 
     const position = jsonParseErrorSourcePositionTransformer({
       message: error.message,
-      text: String(text),
+      text: text,
     });
 
     return { success: false, message: error.message, ...position };

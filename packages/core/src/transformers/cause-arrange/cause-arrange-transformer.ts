@@ -173,10 +173,10 @@ export const causeArrangeTransformer = ({
     harness === undefined
       ? []
       : harness.params.map((param) => {
-          const isRest = params.find((candidate) => String(candidate.name) === String(param))?.rest === true;
+          const isRest = params.find((candidate) => String(candidate.name) === param)?.rest === true;
 
           return [
-            String(param),
+            param,
             arrangeBindingContract.parse({
               kind: 'harness',
               param,
@@ -272,7 +272,7 @@ export const causeArrangeTransformer = ({
 
     if (lengths !== undefined) {
       const [length] = lengths;
-      const value = length === undefined ? undefined : arrayArrangeTransformer({ element: type.element, count: Number(length) });
+      const value = length === undefined ? undefined : arrayArrangeTransformer({ element: type.element, count: length });
 
       return value === undefined ? [] : [{ param: param.name, values: [value] }];
     }
@@ -381,7 +381,7 @@ export const causeArrangeTransformer = ({
           if (param !== undefined && !isTypeFillableGuard({ type: param.type, value })) {
             throw new Error(
               `cause-arrange built a \`${binding.kind}\` value for \`${String(binding.param)}\` that does not satisfy ` +
-                `its own declared type \`${String(param.declaredText ?? typeTextTransformer({ type: param.type }))}\`: ` +
+                `its own declared type \`${(param.declaredText ?? typeTextTransformer({ type: param.type }))}\`: ` +
                 `${JSON.stringify(binding.value)}. Assayer contradicted a type it read itself — its own invariant ` +
                 'broken, never the reader\'s debt.',
             );

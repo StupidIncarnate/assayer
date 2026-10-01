@@ -25,9 +25,9 @@ export const flattenPropertyDemandTransformer = ({
   prefix?: string;
 }): FlatPropertyDemand[] =>
   properties.flatMap((property) => {
-    const name = (prefix === undefined ? String(property.name) : `${prefix}.${String(property.name)}`);
+    const name = (prefix === undefined ? property.name : `${prefix}.${property.name}`);
 
     return property.demand.kind === 'nested'
-      ? flattenPropertyDemandTransformer({ properties: property.demand.properties, prefix: String(name) })
+      ? flattenPropertyDemandTransformer({ properties: property.demand.properties, prefix: name })
       : [flatPropertyDemandContract.parse({ name, demand: property.demand })];
   });

@@ -23,8 +23,8 @@ export const analyzerRootsResolveBroker = ({
   from,
   loadedFrom,
 }: { from?: string; loadedFrom?: string } = {}): string[] => {
-  const dir = from === undefined ? __dirname : String(from);
-  const origin = loadedFrom === undefined ? dir : String(loadedFrom);
+  const dir = from === undefined ? __dirname : from;
+  const origin = loadedFrom === undefined ? dir : loadedFrom;
 
   if (existsSync(join(dir, 'packages', 'core', 'src'))) {
     const cliDist = join(dir, 'packages', 'cli', 'dist');

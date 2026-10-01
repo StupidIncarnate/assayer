@@ -21,7 +21,7 @@ export const cacheLoadResolvedIndexBroker = async ({
   repoPath: string;
   namespace: string;
 }): Promise<ResolvedIndex | undefined> => {
-  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/resolved/${String(namespace)}.json`)) ?? undefined;
+  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/resolved/${namespace}.json`)) ?? undefined;
 
   if (raw === undefined) {
     return undefined;

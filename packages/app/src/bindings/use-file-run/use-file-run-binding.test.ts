@@ -61,7 +61,7 @@ describe('useFileRunBinding', () => {
       const currentState = (): ReturnType<typeof useFileRunBinding> => result.current;
 
       await waitFor(() => {
-        expect(String(currentState().output)).toBe('src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n');
+        expect(currentState().output).toBe('src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n');
       });
 
       expect(currentState().error).toBe(null);
@@ -81,7 +81,7 @@ describe('useFileRunBinding', () => {
         expect(currentState().loading).toBe(false);
       });
 
-      expect({ output: String(currentState().output), error: currentState().error }).toStrictEqual({
+      expect({ output: currentState().output, error: currentState().error }).toStrictEqual({
         output: '',
         error: null,
       });

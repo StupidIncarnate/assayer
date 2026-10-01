@@ -87,13 +87,13 @@ export const harnessRealizeBroker = ({
     return analysis;
   }
 
-  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath }))}`;
+  const harnessPath = `${root}/${harnessPathTransformer({ relPath })}`;
 
   if (!existsSync(harnessPath)) {
     return analysis;
   }
 
-  const source = String(readFileSync(harnessPath));
+  const source = readFileSync(harnessPath);
 
   if (!isAssayerHarnessGuard({ source })) {
     return analysis;
@@ -124,7 +124,7 @@ export const harnessRealizeBroker = ({
   // names an unrelated, ungapped scope changes nothing for it.
   const followHarness = new Map(
     [...declaredByEntry.entries()].flatMap(([entryName, params]) =>
-      gappedNames.has(entryGapContract.shape.name.parse(entryName)) || declaringScopeNames.has(String(entryName)) ? [[entryName, [...params]] as const] : [],
+      gappedNames.has(entryGapContract.shape.name.parse(entryName)) || declaringScopeNames.has(entryName) ? [[entryName, [...params]] as const] : [],
     ),
   );
 
@@ -134,7 +134,7 @@ export const harnessRealizeBroker = ({
   const followed = walked?.success === true ? followCallsTransformer({ walked, harness: followHarness }) : undefined;
   const followedByName = new Map((followed?.followedEntries ?? []).map((fn) => [String(fn.entry.name), fn]));
   const funnelCasesByHost = new Map(
-    (followed?.funnels ?? []).map((funnel) => [`${String(funnel.host)}@${String(funnel.hostLine)}`, funnel.cases]),
+    (followed?.funnels ?? []).map((funnel) => [`${funnel.host}@${String(funnel.hostLine)}`, funnel.cases]),
   );
   // A folded scope's or a through-caller pseudo-entry's OWN refusal still standing after `followHarness`
   // — the axis the flat per-entry derivation below cannot see, because it belongs to a DIFFERENT scope's

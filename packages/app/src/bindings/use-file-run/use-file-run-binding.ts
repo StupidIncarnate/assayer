@@ -57,7 +57,7 @@ export const useFileRunBinding = ({
     () =>
       runSubscribeOutputBroker({
         onChunk: ({ chunk }: { chunk: string }): void => {
-          setOutput((previous) => `${String(previous)}${chunk}`);
+          setOutput((previous) => `${previous}${chunk}`);
         },
       }),
     [],

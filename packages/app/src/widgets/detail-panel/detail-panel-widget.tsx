@@ -196,7 +196,7 @@ export const DetailPanelWidget = ({
               ff="monospace"
               mb="xs"
             >
-              {String(darkSpotLineTransformer({ darkSpot }))}
+              {darkSpotLineTransformer({ darkSpot })}
             </Text>
           ))}
 
@@ -213,7 +213,7 @@ export const DetailPanelWidget = ({
               ff="monospace"
               mb="xs"
             >
-              {String(undrivenLineTransformer({ entry }))}
+              {undrivenLineTransformer({ entry })}
             </Text>
           ))}
 

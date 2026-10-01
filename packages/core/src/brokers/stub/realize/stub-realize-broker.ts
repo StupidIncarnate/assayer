@@ -121,7 +121,7 @@ export const stubRealizeBroker = ({
 
       const edge = walked.moduleEdges.find(
         (candidate) =>
-          String(candidate.kind) === 'import' &&
+          candidate.kind === 'import' &&
           candidate.specifier !== undefined &&
           candidate.bindings.some(
             (binding) => binding.kind === 'named' && String(binding.alias ?? binding.name) === typeRef,
@@ -140,7 +140,7 @@ export const stubRealizeBroker = ({
         return [];
       }
 
-      const definitionRelPath = String(sibling.relPath);
+      const definitionRelPath = sibling.relPath;
       const declaredType: DeclaredType | undefined = analyzeFileBroker({ walked: sibling.walked, relPath: definitionRelPath }).declaredTypes.find(
         (declared) => String(declared.name) === typeRef,
       );
@@ -247,7 +247,7 @@ export const stubRealizeBroker = ({
             : arrangeBindingContract.parse({
                 kind: 'object',
                 param: param.name,
-                value: Object.fromEntries(objectArrange.properties.map((property) => [String(property.name), property.value])),
+                value: Object.fromEntries(objectArrange.properties.map((property) => [property.name, property.value])),
               }),
         };
       });

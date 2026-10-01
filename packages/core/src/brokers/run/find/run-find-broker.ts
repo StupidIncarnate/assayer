@@ -36,7 +36,7 @@ export const runFindBroker = async ({
     return undefined;
   }
 
-  const source = String((await readFile(absPath)));
+  const source = (await readFile(absPath));
 
   return runLoadBroker({ configDir, runId: String(await runIdBroker({ root, relPath, source })) });
 };

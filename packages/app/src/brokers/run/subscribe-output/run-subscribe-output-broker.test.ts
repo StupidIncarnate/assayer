@@ -15,7 +15,7 @@ describe('runSubscribeOutputBroker', () => {
       });
       proxy.emit({ chunk: 'Assayer is updating caches\n' });
 
-      expect(seen.map((entry) => String(entry))).toStrictEqual(['Assayer is updating caches\n']);
+      expect(seen.map((entry) => entry)).toStrictEqual(['Assayer is updating caches\n']);
     });
 
     // The panel rebuilds the CLI's report by appending, so every chunk must arrive in the order the
@@ -32,7 +32,7 @@ describe('runSubscribeOutputBroker', () => {
       proxy.emit({ chunk: 'compiling 1/2\n' });
       proxy.emit({ chunk: 'a.ts  3/3 passed\n' });
 
-      expect(seen.map((entry) => String(entry))).toStrictEqual(['compiling 1/2\n', 'a.ts  3/3 passed\n']);
+      expect(seen.map((entry) => entry)).toStrictEqual(['compiling 1/2\n', 'a.ts  3/3 passed\n']);
     });
 
     it('VALID: {the returned unsubscribe is called} => the bridge subscription is torn down', () => {

@@ -227,7 +227,7 @@ export const readSignatureTypeLayerBroker = ({
           ...(optional ? { optional: true } : {}),
         };
       })
-      .sort((a, b) => (String(a.name) < String(b.name) ? -1 : String(a.name) > String(b.name) ? 1 : 0));
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
     return { flavor: 'object', ...(typeName === undefined ? {} : { typeName }), properties };
   }

@@ -38,12 +38,10 @@ export const TestEntryLayerWidget = ({
   const isModule = fn.entry.access.kind === 'module';
   const entryLabel =
     isModule && relPath !== undefined && relPath !== null
-      ? String(
-          moduleEntryLabelTransformer({
+      ? moduleEntryLabelTransformer({
             ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }),
-            relPath: String(relPath),
-          }),
-        )
+            relPath: relPath,
+          })
       : String(fn.entry.label ?? fn.entry.exportName ?? fn.entry.name);
   // Only a name needs its parameter list appended; a label already carries the whole
   // signature, and a module takes no arguments at all.

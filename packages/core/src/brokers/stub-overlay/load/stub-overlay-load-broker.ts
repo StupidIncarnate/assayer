@@ -37,21 +37,21 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
 
   const objectEntries = await Promise.all(
     objectAbs
-      .filter((abs) => String(abs).endsWith(JSON_EXT))
+      .filter((abs) => abs.endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromObjects = relative(objectsRoot, String(abs));
-        const definitionRelPath = dirname(String(relFromObjects));
-        const typeName = String(basename(String(relFromObjects))).slice(0, -JSON_EXT.length);
-        const raw = (await readFile(String(abs)));
-        const file = stubOverlayObjectFileContract.parse(JSON.parse(String(raw)));
+        const relFromObjects = relative(objectsRoot, abs);
+        const definitionRelPath = dirname(relFromObjects);
+        const typeName = basename(relFromObjects).slice(0, -JSON_EXT.length);
+        const raw = (await readFile(abs));
+        const file = stubOverlayObjectFileContract.parse(JSON.parse(raw));
         const properties = Object.entries(file.properties)
           .map(([name, spec]) => ({ name, values: spec.values }))
           .sort((a, b) => (a.name < b.name ? -1 : 1));
 
         return stubOverlayContract.parse({
           kind: 'object',
-          key: `${String(definitionRelPath)}#${typeName}`,
-          overlayPath: `assayer/stubs/objects/${String(relFromObjects)}`,
+          key: `${definitionRelPath}#${typeName}`,
+          overlayPath: `assayer/stubs/objects/${relFromObjects}`,
           properties,
         });
       }),
@@ -59,17 +59,17 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
 
   const envEntries = await Promise.all(
     envAbs
-      .filter((abs) => String(abs).endsWith(JSON_EXT))
+      .filter((abs) => abs.endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromEnv = relative(envRoot, String(abs));
-        const property = String(basename(String(relFromEnv))).slice(0, -JSON_EXT.length);
-        const raw = (await readFile(String(abs)));
-        const file = stubOverlayEnvFileContract.parse(JSON.parse(String(raw)));
+        const relFromEnv = relative(envRoot, abs);
+        const property = basename(relFromEnv).slice(0, -JSON_EXT.length);
+        const raw = (await readFile(abs));
+        const file = stubOverlayEnvFileContract.parse(JSON.parse(raw));
 
         return stubOverlayContract.parse({
           kind: 'env',
           key: `process.env#${property}`,
-          overlayPath: `assayer/stubs/env/${String(relFromEnv)}`,
+          overlayPath: `assayer/stubs/env/${relFromEnv}`,
           property,
           values: file.values,
         });

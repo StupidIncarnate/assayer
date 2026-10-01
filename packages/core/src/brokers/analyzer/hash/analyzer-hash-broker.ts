@@ -28,12 +28,12 @@ export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promis
       const tree = basename(root) === coreRuntimeStatics.layout.distFolder ? 'dist' : 'source';
       const files = await compileWalkWorkingTreeBroker({ root });
       const codeFiles = files
-        .map((path) => ({ path: String(path), relPath: relative(root, String(path)) }))
-        .filter(({ relPath }) => isAnalyzerCodeFileGuard({ relPath: String(relPath), tree }));
+        .map((path) => ({ path: path, relPath: relative(root, path) }))
+        .filter(({ relPath }) => isAnalyzerCodeFileGuard({ relPath: relPath, tree }));
       const entries = await Promise.all(
         codeFiles.map(async ({ path, relPath }) => {
           const content = (await readFile(path));
-          return `${String(relPath)}:${String(contentHashTransformer({ content: String(content) }))}`;
+          return `${relPath}:${String(contentHashTransformer({ content: content }))}`;
         }),
       );
       return String(contentHashTransformer({ content: [...entries].sort().join('\n') }));

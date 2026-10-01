@@ -9,7 +9,7 @@ describe('repoSourceRootBroker', () => {
 
       const result = await repoSourceRootBroker({ repoPath: '/repo' });
 
-      expect(String(result)).toBe('/repo');
+      expect(result).toBe('/repo');
     });
   });
 
@@ -22,7 +22,7 @@ describe('repoSourceRootBroker', () => {
 
       const result = await repoSourceRootBroker({ repoPath: '/repo' });
 
-      expect(String(result)).toBe('/repo/smoke-repo');
+      expect(result).toBe('/repo/smoke-repo');
     });
   });
 
