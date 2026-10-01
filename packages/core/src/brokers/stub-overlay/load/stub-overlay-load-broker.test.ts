@@ -5,13 +5,30 @@ describe('stubOverlayLoadBroker', () => {
   describe('an objects overlay and an env overlay committed under the root', () => {
     it('VALID: {objects/foo.ts/Config.json + env/MODE.json} => one object correction keyed foo.ts#Config and one env correction keyed process.env#MODE', async () => {
       const proxy = stubOverlayLoadBrokerProxy();
+      proxy.dirExists({ path: '/repo/assayer/stubs/objects' });
+      proxy.dirExists({ path: '/repo/assayer/stubs/env' });
       // objects walk: objects root -> a definition dir -> the type file
-      proxy.queueDir({ entries: [{ name: 'foo.ts', isDirectory: true }] });
-      proxy.queueDir({ entries: [{ name: 'Config.json', isDirectory: false }] });
+      proxy.queueDir({
+        path: '/repo/assayer/stubs/objects',
+        entries: [{ name: 'foo.ts', kind: 'directory' }],
+      });
+      proxy.queueDir({
+        path: '/repo/assayer/stubs/objects/foo.ts',
+        entries: [{ name: 'Config.json', kind: 'file' }],
+      });
       // env walk: env root -> the property file
-      proxy.queueDir({ entries: [{ name: 'MODE.json', isDirectory: false }] });
-      proxy.queueFileContent({ content: '{"type":"foo.ts#Config","properties":{"mode":{"values":["dev","prod"]}}}' });
-      proxy.queueFileContent({ content: '{"source":"process.env","property":"MODE","values":["production"]}' });
+      proxy.queueDir({
+        path: '/repo/assayer/stubs/env',
+        entries: [{ name: 'MODE.json', kind: 'file' }],
+      });
+      proxy.queueFileContent({
+        path: '/repo/assayer/stubs/objects/foo.ts/Config.json',
+        content: '{"type":"foo.ts#Config","properties":{"mode":{"values":["dev","prod"]}}}',
+      });
+      proxy.queueFileContent({
+        path: '/repo/assayer/stubs/env/MODE.json',
+        content: '{"source":"process.env","property":"MODE","values":["production"]}',
+      });
 
       const result = await stubOverlayLoadBroker({ repoRoot: '/repo' });
 
@@ -36,8 +53,8 @@ describe('stubOverlayLoadBroker', () => {
   describe('neither overlay directory exists', () => {
     it('EMPTY: {no objects dir and no env dir} => returns an empty overlay without error', async () => {
       const proxy = stubOverlayLoadBrokerProxy();
-      proxy.dirMissing();
-      proxy.dirMissing();
+      proxy.dirMissing({ path: '/repo/assayer/stubs/objects' });
+      proxy.dirMissing({ path: '/repo/assayer/stubs/env' });
 
       const result = await stubOverlayLoadBroker({ repoRoot: '/repo' });
 
@@ -48,12 +65,20 @@ describe('stubOverlayLoadBroker', () => {
   describe('the objects overlay declares two properties out of alphabetical order', () => {
     it('VALID: {objects/foo.ts/Config.json naming region then mode} => properties sorted by name, values preserved', async () => {
       const proxy = stubOverlayLoadBrokerProxy();
-      proxy.dirExists();
-      proxy.dirMissing();
-      proxy.queueDir({ entries: [{ name: 'foo.ts', isDirectory: true }] });
-      proxy.queueDir({ entries: [{ name: 'Config.json', isDirectory: false }] });
+      proxy.dirExists({ path: '/repo/assayer/stubs/objects' });
+      proxy.dirMissing({ path: '/repo/assayer/stubs/env' });
+      proxy.queueDir({
+        path: '/repo/assayer/stubs/objects',
+        entries: [{ name: 'foo.ts', kind: 'directory' }],
+      });
+      proxy.queueDir({
+        path: '/repo/assayer/stubs/objects/foo.ts',
+        entries: [{ name: 'Config.json', kind: 'file' }],
+      });
       proxy.queueFileContent({
-        content: '{"type":"foo.ts#Config","properties":{"region":{"values":["us"]},"mode":{"values":["dev"]}}}',
+        path: '/repo/assayer/stubs/objects/foo.ts/Config.json',
+        content:
+          '{"type":"foo.ts#Config","properties":{"region":{"values":["us"]},"mode":{"values":["dev"]}}}',
       });
 
       const result = await stubOverlayLoadBroker({ repoRoot: '/repo' });
@@ -73,15 +98,23 @@ describe('stubOverlayLoadBroker', () => {
   });
 
   describe('an object overlay file that cannot be read from disk', () => {
-    it("ERROR: {objects/foo.ts/Config.json exists, fsReadFileAdapter rejects with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
+    it('ERROR: {objects/foo.ts/Config.json exists, the read is denied with EACCES} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch', async () => {
       const proxy = stubOverlayLoadBrokerProxy();
-      proxy.dirExists();
-      proxy.dirMissing();
-      proxy.queueDir({ entries: [{ name: 'foo.ts', isDirectory: true }] });
-      proxy.queueDir({ entries: [{ name: 'Config.json', isDirectory: false }] });
-      proxy.readThrows({ error: new Error('EACCES: permission denied') });
+      proxy.dirExists({ path: '/repo/assayer/stubs/objects' });
+      proxy.dirMissing({ path: '/repo/assayer/stubs/env' });
+      proxy.queueDir({
+        path: '/repo/assayer/stubs/objects',
+        entries: [{ name: 'foo.ts', kind: 'directory' }],
+      });
+      proxy.queueDir({
+        path: '/repo/assayer/stubs/objects/foo.ts',
+        entries: [{ name: 'Config.json', kind: 'file' }],
+      });
+      proxy.readDenied({ path: '/repo/assayer/stubs/objects/foo.ts/Config.json' });
 
-      await expect(stubOverlayLoadBroker({ repoRoot: '/repo' })).rejects.toThrow(/^EACCES: permission denied$/u);
+      await expect(stubOverlayLoadBroker({ repoRoot: '/repo' })).rejects.toThrow(
+        /^EACCES: op '\/repo\/assayer\/stubs\/objects\/foo\.ts\/Config\.json'$/u,
+      );
     });
   });
 });

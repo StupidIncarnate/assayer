@@ -7,17 +7,16 @@ const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852
 
 describe('stubIndexWriteBroker', () => {
   describe('writing a stub index for a namespace', () => {
-    it('VALID: {configDir "/repo", namespace "feature-x", one-object-stub index} => writes the canonical index and returns success', async () => {
+    it('VALID: {configDir "/repo", namespace "feature-x", one-object-stub index} => writes the canonical index to the tmp path', async () => {
       const proxy = stubIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
-      const result = await stubIndexWriteBroker({
+      await stubIndexWriteBroker({
         configDir: '/repo',
         namespace: 'feature-x',
         index: StubIndexStub(),
       });
 
-      expect(result).toBeUndefined();
       expect(
         proxy.getWrittenIndex({ path: '/repo/.assayer/cache/stubs/feature-x.json.tmp' }),
       ).toStrictEqual({
@@ -38,7 +37,7 @@ describe('stubIndexWriteBroker', () => {
 
     it('VALID: {two object stubs out of key order} => writes them sorted by key (determinism)', async () => {
       const proxy = stubIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
       await stubIndexWriteBroker({
         configDir: '/repo',
@@ -76,14 +75,17 @@ describe('stubIndexWriteBroker', () => {
       });
     });
 
-    it('VALID: {namespace "feature-x"} => writes to the tmp path under .assayer/cache/stubs before renaming', async () => {
+    it('VALID: {namespace "feature-x"} => renames the tmp path under .assayer/cache/stubs onto the final path', async () => {
       const proxy = stubIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
       await stubIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: StubIndexStub() });
 
-      expect(proxy.getWrittenPaths()).toStrictEqual([
-        '/repo/.assayer/cache/stubs/feature-x.json.tmp',
+      expect(proxy.getRenameArgs({ configDir: '/repo', namespace: 'feature-x' })).toStrictEqual([
+        [
+          '/repo/.assayer/cache/stubs/feature-x.json.tmp',
+          '/repo/.assayer/cache/stubs/feature-x.json',
+        ],
       ]);
     });
   });
@@ -91,29 +93,29 @@ describe('stubIndexWriteBroker', () => {
   describe('a failure along the mkdir -> write -> rename sequence', () => {
     it('ERROR: {stub cache dir cannot be created} => propagates the mkdir rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = stubIndexWriteBrokerProxy();
-      proxy.mkdirThrows({ error: new Error('EACCES: permission denied') });
+      proxy.mkdirDenied({ configDir: '/repo' });
 
       await expect(
         stubIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: StubIndexStub() }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: mkdir '\/repo\/\.assayer\/cache\/stubs'$/u);
     });
 
     it('ERROR: {tmp stub index cannot be written} => propagates the write rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = stubIndexWriteBrokerProxy();
-      proxy.writeThrows({ error: new Error('ENOSPC: no space left on device') });
+      proxy.writeDiskFull({ configDir: '/repo', namespace: 'feature-x' });
 
       await expect(
         stubIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: StubIndexStub() }),
-      ).rejects.toThrow(/^ENOSPC: no space left on device$/u);
+      ).rejects.toThrow(/^ENOSPC: write '\/repo\/\.assayer\/cache\/stubs\/feature-x\.json\.tmp'$/u);
     });
 
     it('ERROR: {tmp stub index cannot be renamed into place} => propagates the rename rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = stubIndexWriteBrokerProxy();
-      proxy.renameThrows({ error: new Error('ENOENT: no such file or directory') });
+      proxy.renameMissing({ configDir: '/repo', namespace: 'feature-x' });
 
       await expect(
         stubIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: StubIndexStub() }),
-      ).rejects.toThrow(/^ENOENT: no such file or directory$/u);
+      ).rejects.toThrow(/^ENOENT: rename '\/repo\/\.assayer\/cache\/stubs\/feature-x\.json\.tmp'$/u);
     });
   });
 });
