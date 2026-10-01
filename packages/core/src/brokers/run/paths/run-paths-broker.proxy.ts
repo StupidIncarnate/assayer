@@ -1,12 +1,13 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { RunResultStub, ContentHashStub } from '@assayer/shared/contracts';
+import type { RunResultStub} from '@assayer/shared/contracts';
+import { ContentHashStub } from '@assayer/shared/contracts';
 
 import { analyzerHashBroker } from '../../analyzer/hash/analyzer-hash-broker';
 import { analyzerHashBrokerProxy } from '../../analyzer/hash/analyzer-hash-broker.proxy';
 import { runEachLayerBroker } from './run-each-layer-broker';
 import { runEachLayerBrokerProxy } from './run-each-layer-broker.proxy';
 import { findUpSyncProxy } from '#gateway/node/fs/find-up-sync/find-up-sync.proxy';
-import { join } from '#gateway/node/path';
+import { dirname, join } from '#gateway/node/path';
 
 // The broker looks for `probe-runtime.js` upward from its own directory, so a scenario stages that
 // search by the exact path of each candidate. A search no scenario staged reaches an unstaged call,
@@ -14,40 +15,25 @@ import { join } from '#gateway/node/path';
 export const runPathsBrokerProxy = (): {
   coreRootFound: () => void;
   coreRootMissing: () => void;
+  runsEachPath: (params: {
+    configDir: string;
+    root: string;
+    analyzerRoots: readonly string[];
+    runs: readonly { relPath: string; result: ReturnType<typeof RunResultStub> }[];
+  }) => void;
+  getCallsFor: () => readonly { relPaths: readonly string[]; root: string; cacheDir: string }[];
 } => {
   const findUp = findUpSyncProxy();
-  // Both neighbours are REPLACED wholesale: the hash and each run are staged answers, so the paths
+  // Both neighbours are REPLACED wholesale: the hash and each run are staged answers, so the results
   // this broker returns come from them and not from a real analysis.
   analyzerHashBrokerProxy();
   runEachLayerBrokerProxy();
 
   const hashHandle = registerMock({ fn: analyzerHashBroker });
   const runEachHandle = registerMock({ fn: runEachLayerBroker });
-
-  // The broker is handed the caller's analyzer roots and the run set, so each stage names the shape of
-  // the one argument the broker passes: a call with a missing key does not match and throws.
-  hashHandle
-    .calledWith([
-      (arg: unknown): boolean =>
-        typeof arg === 'object' && arg !== null && 'roots' in arg && Array.isArray(arg.roots),
-    ])
-    .resolves(ContentHashStub());
-  runEachHandle
-    .calledWith([
-      (arg: unknown): boolean =>
-        typeof arg === 'object' &&
-        arg !== null &&
-        'remaining' in arg &&
-        Array.isArray(arg.remaining) &&
-        'root' in arg &&
-        'cacheDir' in arg &&
-        'coreRoot' in arg &&
-        'analyzerContentHash' in arg &&
-        'results' in arg,
-    ])
-    .implement(async ({ remaining }: { remaining: readonly string[] }) =>
-    Promise.resolve(remaining.map(() => RunResultStub())),
-  );
+  // Every call the broker made to run its paths, in order, recorded as the call is answered.
+  const received: { relPaths: readonly string[]; root: string; cacheDir: string }[] = [];
+  const analyzerContentHash = ContentHashStub();
 
   return {
     // The marker sits in the broker's own directory, so the first candidate is the one that exists.
@@ -63,5 +49,40 @@ export const runPathsBrokerProxy = (): {
         findUp.notFound({ path: join(directory === '' ? '/' : directory, 'probe-runtime.js') });
       });
     },
+    // The hash is staged by the exact analyzer roots. The run is staged by the exact path list, root,
+    // cache directory and core root the broker hands on, and answers each path with the result the
+    // test gave it. A call with any other path list throws.
+    runsEachPath: ({
+      configDir,
+      root,
+      analyzerRoots,
+      runs,
+    }: {
+      configDir: string;
+      root: string;
+      analyzerRoots: readonly string[];
+      runs: readonly { relPath: string; result: ReturnType<typeof RunResultStub> }[];
+    }): void => {
+      const cacheDir = `${configDir}/.assayer/cache`;
+      hashHandle.calledWith([{ roots: [...analyzerRoots] }]).resolves(analyzerContentHash);
+      runEachHandle
+        .calledWith([
+          {
+            remaining: runs.map(({ relPath }) => relPath),
+            root,
+            cacheDir,
+            coreRoot: dirname(join(__dirname, 'probe-runtime.js')),
+            analyzerContentHash: String(analyzerContentHash),
+            results: [],
+          },
+        ])
+        .implement(async ({ remaining }: { remaining: readonly string[] }) => {
+          received.push({ relPaths: remaining, root, cacheDir });
+          return Promise.resolve(runs.map(({ result }) => result));
+        });
+    },
+    getCallsFor: (): readonly { relPaths: readonly string[]; root: string; cacheDir: string }[] => [
+      ...received,
+    ],
   };
 };
