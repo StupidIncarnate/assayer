@@ -1,5 +1,4 @@
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
-import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { externalSignatureReadGlobalBroker } from './external-signature-read-global-broker';
@@ -100,12 +99,12 @@ describe('externalSignatureReadGlobalBroker', () => {
       const tsConfigFilePath = '/repo/tsconfig.json';
       proxy.readsNoUsableTypes({
         tsConfigFilePath,
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: 'x', called: true },
+        reference: { kind: 'builtin', specifier: 'node:unknownmod', importedName: 'x', called: true },
       });
 
       const result = await externalSignatureReadGlobalBroker({
         tsConfigFilePath,
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:unknownmod' }), importedName: 'x', called: true },
+        reference: { kind: 'builtin', specifier: 'node:unknownmod', importedName: 'x', called: true },
         cacheDir: CACHE_DIR,
       });
 

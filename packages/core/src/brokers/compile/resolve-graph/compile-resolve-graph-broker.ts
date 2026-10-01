@@ -26,7 +26,7 @@
  *   cacheDir: '/repo/.assayer/cache', files: [{ relPath: 'src/a.ts', contentHash }] });
  * // Returns { index: ResolvedIndex, errors: [{ relPath, line, column, message }] }
  */
-import { compiledFileBlobContract, moduleSpecifierContract, resolvedEdgeContract, resolvedIndexContract, packageNameContract } from '@assayer/shared/contracts';
+import { compiledFileBlobContract, resolvedEdgeContract, resolvedIndexContract, packageNameContract } from '@assayer/shared/contracts';
 import type { ContentHash, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
@@ -144,7 +144,7 @@ export const compileResolveGraphBroker = async ({
                   String(reference.specifier) === String(item.edge.specifier) && String(reference.importedName) === item.importedName,
               ),
             )}`,
-            specifier: moduleSpecifierContract.parse(String(item.edge.specifier)),
+            specifier: String(item.edge.specifier),
             importedName: item.importedName,
           },
         ]

@@ -17,7 +17,6 @@
  * crossFileMapReachesTransformer({ walked });
  * // Returns [{ host, arrayParam: 'items', specifier: './band-reading', importedName: 'bandReading' }]
  */
-import type { ModuleSpecifier } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -31,7 +30,7 @@ export const crossFileMapReachesTransformer = ({
   walked,
 }: {
   walked: WalkFileResult;
-}): { host: ScopeRecord; arrayParam: string; specifier: ModuleSpecifier; importedName: string }[] => {
+}): { host: ScopeRecord; arrayParam: string; specifier: string; importedName: string }[] => {
   if (!walked.success) {
     return [];
   }

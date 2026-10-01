@@ -23,11 +23,11 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { guardStepContract, moduleSpecifierContract, representativeValueContract } from '@assayer/shared/contracts';
+import { guardStepContract, representativeValueContract } from '@assayer/shared/contracts';
 
 const calleeLinkContract = z.discriminatedUnion('target', [
   z.object({ target: z.literal('local'), name: z.string().min(1).brand<'CalleeLinkName'>(), startLine: z.number().int().positive().brand<'CalleeLinkStartLine'>() }),
-  z.object({ target: z.literal('import'), specifier: moduleSpecifierContract, importedName: z.string().min(1).brand<'CalleeLinkImportedName'>() }),
+  z.object({ target: z.literal('import'), specifier: z.string().min(1).brand<'CalleeLinkSpecifier'>(), importedName: z.string().min(1).brand<'CalleeLinkImportedName'>() }),
   z.object({ target: z.literal('unresolved') }),
 ]);
 

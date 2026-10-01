@@ -12,7 +12,7 @@
  * await externalSignatureReadGlobalBroker({ tsConfigFilePath, reference: { kind: 'global', name: 'process', member: 'env', called: false }, cacheDir });
  * // Returns { usable: true, result: 'signature', signature } | { usable: true, result: 'type', type } | { usable: false }
  */
-import type { ExternalSignature, ModuleSpecifier, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ExternalSignature, TypeDescriptor } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
@@ -20,7 +20,7 @@ import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__prom
 
 type GlobalReference =
   | { kind: 'global'; name: string; member?: string; called: boolean }
-  | { kind: 'builtin'; specifier: ModuleSpecifier; importedName: string; called: boolean };
+  | { kind: 'builtin'; specifier: string; importedName: string; called: boolean };
 
 type GlobalSignatureResult =
   | { usable: true; result: 'signature'; signature: ExternalSignature }

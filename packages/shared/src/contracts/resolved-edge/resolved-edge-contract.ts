@@ -24,7 +24,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { externalSignatureContract } from '../external-signature/external-signature-contract';
-import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
 import { packageNameContract } from '../package-name/package-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 
@@ -66,7 +65,7 @@ export const resolvedEdgeContract = z.object({
   from: z.string().min(1).brand<'ResolvedEdgeFrom'>(),
   // Absent only for a `global` target: an ambient identifier is USED, never imported, so it names no
   // module specifier. Every import edge carries one.
-  specifier: moduleSpecifierContract.optional(),
+  specifier: z.string().min(1).brand<'ResolvedEdgeSpecifier'>().optional(),
   importedName: z.string().min(1).brand<'ResolvedEdgeImportedName'>().optional(),
   line: z.number().int().positive().brand<'ResolvedEdgeLine'>(),
   column: z.number().int().positive().brand<'ResolvedEdgeColumn'>(),

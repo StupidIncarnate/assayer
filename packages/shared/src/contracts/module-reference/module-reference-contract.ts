@@ -12,10 +12,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
 
 export const moduleReferenceContract = z.object({
-  specifier: moduleSpecifierContract,
+  specifier: z.string().min(1).brand<'ModuleReferenceSpecifier'>(),
   importedName: z.string().min(1).brand<'ModuleReferenceImportedName'>(),
   line: z.number().int().positive().brand<'ModuleReferenceLine'>(),
   column: z.number().int().positive().brand<'ModuleReferenceColumn'>(),

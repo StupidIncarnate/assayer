@@ -27,7 +27,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { moduleSpecifierContract } from '../module-specifier/module-specifier-contract';
 
 const moduleBindingContract = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('named'), name: z.string().min(1).brand<'ModuleBindingName'>(), alias: z.string().min(1).brand<'ModuleBindingAlias'>().optional() }),
@@ -40,7 +39,7 @@ export const moduleEdgeContract = z.object({
   kind: z.enum(['import', 'reexport', 'dynamic']).brand<'ModuleEdgeKind'>(),
   // Absent only for a `dynamic` edge: a dynamic `import()` whose specifier is not a string literal
   // names no module the single-file parse can read.
-  specifier: moduleSpecifierContract.optional(),
+  specifier: z.string().min(1).brand<'ModuleEdgeSpecifier'>().optional(),
   bindings: z.array(moduleBindingContract),
   line: z.number().int().positive().brand<'ModuleEdgeLine'>(),
   column: z.number().int().positive().brand<'ModuleEdgeColumn'>(),

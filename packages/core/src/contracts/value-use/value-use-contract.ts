@@ -17,10 +17,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { moduleSpecifierContract } from '@assayer/shared/contracts';
 
 export const valueUseContract = z.discriminatedUnion('target', [
-  z.object({ target: z.literal('import'), specifier: moduleSpecifierContract, importedName: z.string().min(1).brand<'ValueUseImportedName'>() }),
+  z.object({ target: z.literal('import'), specifier: z.string().min(1).brand<'ValueUseSpecifier'>(), importedName: z.string().min(1).brand<'ValueUseImportedName'>() }),
   z.object({ target: z.literal('local'), name: z.string().min(1).brand<'ValueUseName'>(), startLine: z.number().int().positive().brand<'ValueUseStartLine'>() }),
   z.object({ target: z.literal('global'), name: z.string().min(1).brand<'ValueUseName'>(), member: z.string().min(1).brand<'ValueUseMember'>().optional() }),
 ]);

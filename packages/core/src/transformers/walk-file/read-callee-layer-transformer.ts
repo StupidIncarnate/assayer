@@ -25,7 +25,6 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { moduleSpecifierContract } from '@assayer/shared/contracts';
 
 import type { CalleeLink } from '../../contracts/call-site/call-site-contract';
 import { calleeLinkContract } from '../../contracts/call-site/call-site-contract';
@@ -46,7 +45,7 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
   if (Node.isImportSpecifier(declaration)) {
     return calleeLinkContract.parse({
       target: 'import',
-      specifier: moduleSpecifierContract.parse(declaration.getImportDeclaration().getModuleSpecifierValue()),
+      specifier: declaration.getImportDeclaration().getModuleSpecifierValue(),
       importedName: declaration.getName(),
     });
   }
@@ -56,7 +55,7 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
   if (Node.isImportClause(declaration) && Node.isImportDeclaration(importParent)) {
     return calleeLinkContract.parse({
       target: 'import',
-      specifier: moduleSpecifierContract.parse(importParent.getModuleSpecifierValue()),
+      specifier: importParent.getModuleSpecifierValue(),
       importedName: IMPORT_DEFAULT_NAME,
     });
   }

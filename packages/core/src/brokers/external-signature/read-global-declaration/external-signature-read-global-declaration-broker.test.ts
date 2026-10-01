@@ -2,7 +2,6 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'nod
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
 
 import { externalSignatureReadGlobalDeclarationBroker } from './external-signature-read-global-declaration-broker';
 import { externalSignatureReadGlobalDeclarationBrokerProxy } from './external-signature-read-global-declaration-broker.proxy';
@@ -126,7 +125,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: join(dir, 'tsconfig.json'),
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: 'join', called: true },
+        reference: { kind: 'builtin', specifier: 'node:path', importedName: 'join', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -153,7 +152,7 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
 
       const result = externalSignatureReadGlobalDeclarationBroker({
         tsConfigFilePath: join(dir, 'tsconfig.json'),
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: 'sep', called: false },
+        reference: { kind: 'builtin', specifier: 'node:path', importedName: 'sep', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
 
