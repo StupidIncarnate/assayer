@@ -1,33 +1,29 @@
 import * as ourModule from './typescript';
 import ourDefault from './typescript';
-// A raw `require`, not `import * as`: TS's importStar helper synthesizes a .default onto any
-// CJS module that lacks __esModule, which is every third-party package here — comparing
-// against that synthetic shape would fail every pass-through. `import x = require(...)` compiles
-// straight to `require(...)`, so pkgModule is the package's own real runtime shape.
-import pkgModule = require('typescript');
+// A raw `require`, not `import * as`: `import x = require(...)` compiles straight to `require(...)`,
+// so tsMorph is ts-morph's own real runtime module, and tsMorph.ts is the compiler it bundles.
+import tsMorph = require('ts-morph');
 
 describe('#gateway/npm/typescript', () => {
-  it('VALID: {module} => re-exports SyntaxKind as the real typescript value', () => {
-    expect(ourModule.SyntaxKind).toBe(pkgModule.SyntaxKind);
+  it("VALID: {module} => default export is the compiler ts-morph bundles, the same object", () => {
+    expect(ourDefault).toBe(tsMorph.ts);
+  });
+
+  it('VALID: {module} => re-exports SyntaxKind as the bundled compiler value', () => {
+    expect(ourModule.SyntaxKind).toBe(tsMorph.ts.SyntaxKind);
   });
 
   it.each([
-    ['findConfigFile', ourModule.findConfigFile, pkgModule.findConfigFile],
-    ['isExpression', ourModule.isExpression, pkgModule.isExpression],
-    ['isStatement', ourModule.isStatement, pkgModule.isStatement],
-    ['parseJsonConfigFileContent', ourModule.parseJsonConfigFileContent, pkgModule.parseJsonConfigFileContent],
-    ['readConfigFile', ourModule.readConfigFile, pkgModule.readConfigFile],
-    ['transform', ourModule.transform, pkgModule.transform],
-    ['transpileModule', ourModule.transpileModule, pkgModule.transpileModule],
-    ['visitEachChild', ourModule.visitEachChild, pkgModule.visitEachChild],
-  ])('VALID: {module} => re-exports %s as the real typescript function', (_name, ours, real) => {
+    ['findConfigFile', ourModule.findConfigFile, tsMorph.ts.findConfigFile],
+    ['isExpression', ourModule.isExpression, tsMorph.ts.isExpression],
+    ['isStatement', ourModule.isStatement, tsMorph.ts.isStatement],
+    ['parseJsonConfigFileContent', ourModule.parseJsonConfigFileContent, tsMorph.ts.parseJsonConfigFileContent],
+    ['readConfigFile', ourModule.readConfigFile, tsMorph.ts.readConfigFile],
+    ['resolveModuleName', ourModule.resolveModuleName, tsMorph.ts.resolveModuleName],
+    ['transform', ourModule.transform, tsMorph.ts.transform],
+    ['transpileModule', ourModule.transpileModule, tsMorph.ts.transpileModule],
+    ['visitEachChild', ourModule.visitEachChild, tsMorph.ts.visitEachChild],
+  ])('VALID: {module} => re-exports %s as the bundled compiler function', (_name, ours, real) => {
     expect(ours).toBe(real);
-  });
-
-  it("VALID: {module} => default export is typescript's own module value", () => {
-    // A namespace import's declared TYPE never carries a synthetic `.default` (`ourModule.default`
-    // does not typecheck even against `typescript` itself) even though esModuleInterop's runtime
-    // `__importStar` helper does set one — only a DEFAULT import gets the synthetic default typed.
-    expect(ourDefault).toBe(pkgModule);
   });
 });

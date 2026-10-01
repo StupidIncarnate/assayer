@@ -1,5 +1,5 @@
 /**
- * PURPOSE: The value `typescript`'s `resolveModuleName` returns, for a proxy staging that call. Pass a
+ * PURPOSE: The value the bundled compiler's `resolveModuleName` returns, for a proxy staging that call. Pass a
  * `resolvedFileName` for a specifier TypeScript finds, and omit it for a specifier that points at
  * nothing, which TypeScript reports as an undefined `resolvedModule`.
  *
@@ -7,7 +7,7 @@
  * ResolvedModuleStub({ resolvedFileName: '/repo/src/b/foo.ts' });
  * // Returns { resolvedModule: { resolvedFileName: '/repo/src/b/foo.ts', extension: '.ts', isExternalLibraryImport: false } }
  */
-import type { ResolvedModuleWithFailedLookupLocations } from 'typescript';
+import type { ResolvedModuleWithFailedLookupLocations } from '../bundled-typescript/bundled-typescript';
 
 export const ResolvedModuleStub = ({
   resolvedFileName,

@@ -1,26 +1,24 @@
 /**
- * PURPOSE: Pass-through for the npm package 'typescript'. Code outside the gateway imports typescript
- * through here instead of the raw package, so a future guard or override on typescript lands in
- * this one file and reaches every caller.
+ * PURPOSE: The `typescript` subpath of the npm gateway. Every name here is the TypeScript compiler
+ * that `ts-morph` bundles, `require('ts-morph').ts`, never the npm `typescript` package. So the walk,
+ * module resolution, the tsconfig read and harness loading all run on one compiler, whose version
+ * Assayer's own `ts-morph` fixes. The npm `typescript` package is only a peer dependency, for ts-jest.
  *
- * typescript's own root declaration is `export = ts;`, and TypeScript hard-refuses `export *`
- * against any `export =`-typed module (`TS2498`, unconditional). A consumer's tsc program (web's
- * `module: ESNext`) reaches this file's SOURCE directly, where `import mod = require(...);
- * export = mod;` is TS1202/TS1203 under that target, so this lists by name every member a caller
- * uses, the way `node/src/path/path.ts` does; plain `export {} from` syntax has no such
- * restriction. A caller that reaches for a member missing here fails typecheck (TS2339) — add the
- * name to the matching list below.
+ * The default export is that compiler object. Each named export comes from
+ * `bundled-typescript/bundled-typescript.ts`, which lifts the members callers use off the namespace.
+ * A caller that reaches for a member missing here fails typecheck (TS2305 or TS2339). Add the name to
+ * both lists.
  *
  * Two jobs are wrappers, not pass-throughs, because each reads the real disk through `ts.sys`:
  * `resolveModuleFile` resolves a module specifier, and `readNearestTsconfig` finds and reads a
  * tsconfig. Each has a proxy a test can stage.
  *
  * USAGE:
- * import * as ts from '#gateway/npm/typescript';
- * import ts from '#gateway/npm/typescript'; // typescript.test.ts pins this to `require('typescript')`
+ * import ts from '#gateway/npm/typescript';
+ * // ts is require('ts-morph').ts; typescript.test.ts proves it is the same object
  */
 
-export { default } from 'typescript';
+export { ts as default } from 'ts-morph';
 export { readNearestTsconfig } from './read-nearest-tsconfig/read-nearest-tsconfig';
 export { resolveModuleFile } from './resolve-module-file/resolve-module-file';
 export {
@@ -104,14 +102,17 @@ export {
   isVariableDeclaration,
   isVariableStatement,
   isWhileStatement,
+  parseConfigFileTextToJson,
   parseJsonConfigFileContent,
   parseJsonText,
   readConfigFile,
+  readJsonConfigFile,
+  resolveModuleName,
   sys,
   transform,
   transpileModule,
   visitEachChild,
-} from 'typescript';
+} from './bundled-typescript/bundled-typescript';
 export type {
   BindingName,
   CompilerOptions,
@@ -130,6 +131,7 @@ export type {
   ParseConfigFileHost,
   Program,
   PropertyName,
+  ResolvedModuleWithFailedLookupLocations,
   SourceFile,
   Statement,
   TransformationContext,
@@ -137,4 +139,4 @@ export type {
   TypeAliasDeclaration,
   TypeReference,
   VariableStatement,
-} from 'typescript';
+} from './bundled-typescript/bundled-typescript';

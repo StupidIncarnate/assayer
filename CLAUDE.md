@@ -208,18 +208,16 @@ details inside `dev:stop` matter and are not incidental:
 refuses it. Nothing publishes it yet. Fix these problems before that flag
 comes off:
 
-- Assayer runs on two copies of TypeScript. ts-morph bundles its own copy,
-  and the walk and the coverage IDs use it. Core's module resolution, its
-  tsconfig read and its harness loading call the separate `typescript`
-  package, and ts-jest compiles the code under test with that package too.
-  In a consumer repo the two copies can be different versions. They can
-  then disagree about one file: a probe site can miss its node, and the
-  resolved imports can depend on the consumer's installed TypeScript
-  without any cache key changing. The fix is decided. Every analysis-side
-  call goes through ts-morph's own `ts` export. ts-jest's `compiler`
-  option points at that same export. `typescript` becomes a
-  `peerDependency` of core and of `@assayer/npm`, kept only because ts-jest
-  requires it. Both packages still declare it as a regular dependency.
+- ts-jest compiles the code under test with a different TypeScript than
+  the analyzer uses. The analyzer runs on the copy ts-morph bundles: the
+  walk, the coverage IDs, module resolution, the tsconfig read and harness
+  loading all go through `#gateway/npm/typescript`, which is ts-morph's
+  `ts`. ts-jest still loads the `typescript` package, which core and
+  `@assayer/npm` declare only as a `peerDependency`. In a consumer repo
+  that is the consumer's own version. If it differs from ts-morph's copy,
+  a probe site the analyzer recorded can miss its node in ts-jest's parse.
+  The fix: `run-execute-cases-broker` sets ts-jest's `compiler` option to
+  `packages/core/bundled-typescript.js`, which exports ts-morph's `ts`.
 - Core depends on `@assayer/shared`, which is also private.
 
 ## Constraints that shape every implementation decision

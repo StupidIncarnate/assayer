@@ -9,8 +9,8 @@
  * resolveModuleFile({ specifier: '../b/foo', containingFile: '/repo/src/a/x.ts', options: {} });
  * // Returns '/repo/src/b/foo.ts', or undefined when the specifier points at nothing
  */
-import { resolveModuleName, sys } from 'typescript';
-import type { CompilerOptions } from 'typescript';
+import { resolveModuleName, sys } from '../bundled-typescript/bundled-typescript';
+import type { CompilerOptions } from '../bundled-typescript/bundled-typescript';
 
 export const resolveModuleFile = ({
   specifier,

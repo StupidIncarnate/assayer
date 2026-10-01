@@ -1,4 +1,4 @@
-import { findConfigFile, parseJsonText, readJsonConfigFile } from 'typescript';
+import { findConfigFile, parseJsonText, readJsonConfigFile } from '../bundled-typescript/bundled-typescript';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
 

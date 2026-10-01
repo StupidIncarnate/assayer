@@ -1,8 +1,7 @@
-import { ModuleResolutionKind } from 'typescript';
+import { ModuleResolutionKind } from '../bundled-typescript/bundled-typescript';
 import { resolveModuleFile } from './resolve-module-file';
 
-// Real resolution over the real disk, against this folder's own files and the installed `typescript`
-// package, with no proxy: it proves the wrapper hands `ts.sys` to the real resolver.
+// Real resolution over the real disk, against this folder's own files, with no proxy: it proves the wrapper hands `ts.sys` to the real resolver.
 const NODE10 = { moduleResolution: ModuleResolutionKind.Node10 };
 
 describe('resolveModuleFile against the real disk', () => {

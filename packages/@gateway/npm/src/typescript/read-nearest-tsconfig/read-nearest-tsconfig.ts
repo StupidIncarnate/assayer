@@ -17,8 +17,8 @@ import {
   parseJsonConfigFileContent,
   readJsonConfigFile,
   sys,
-} from 'typescript';
-import type { CompilerOptions } from 'typescript';
+} from '../bundled-typescript/bundled-typescript';
+import type { CompilerOptions } from '../bundled-typescript/bundled-typescript';
 
 export const readNearestTsconfig = ({
   searchPath,

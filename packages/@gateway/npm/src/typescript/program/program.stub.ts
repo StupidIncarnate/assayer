@@ -6,7 +6,7 @@
  * const program = ProgramStub({ code: 'const a = 1;', fileName: 'a.ts' });
  * // Returns a real ts.Program whose getSourceFile('a.ts') has the given text
  */
-import * as ts from 'typescript';
+import { ts } from 'ts-morph';
 
 export const ProgramStub = ({
   code = 'const a = 1;',

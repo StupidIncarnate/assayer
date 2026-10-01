@@ -39,7 +39,8 @@
     "!dist/package.json",
     "probe-runtime.js",
     "probe-transformer.js",
-    "harness-registrar.js"
+    "harness-registrar.js",
+    "bundled-typescript.js"
   ],
   "scripts": {
     "prepack": "node ../../scripts/build-workspaces.mjs --tsc-only",
@@ -59,8 +60,10 @@
     "jest": "^30.0.4",
     "ts-jest": "^29.4.0",
     "ts-morph": "^26.0.0",
-    "typescript": "^5.8.3",
     "zod": "^4.6.5"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.3 <6"
   },
   "imports": {
     "#gateway/npm/*": "@assayer/npm/*",

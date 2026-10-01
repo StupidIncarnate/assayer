@@ -1,4 +1,4 @@
-import { resolveModuleName } from 'typescript';
+import { resolveModuleName } from '../bundled-typescript/bundled-typescript';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
 import { ResolvedModuleStub } from './resolved-module.stub';
