@@ -71,4 +71,14 @@ module.exports = [
         },
     },
     ...dungeonmasterTestConfigs.fileOverrides,
+    {
+        // These three brand rules autofix under ward's `--fix`. They stay off repo-wide until the
+        // brands-gateways epic's brand waves add every brand in order (EPIC item B-9 turns them on).
+        files: ['**/*.ts', '**/*.tsx'],
+        rules: {
+            '@dungeonmaster/require-object-contract-brands': 'off',
+            '@dungeonmaster/require-object-contract-brands-indexed': 'off',
+            '@dungeonmaster/enforce-owner-field-reuse': 'off',
+        },
+    },
 ];
