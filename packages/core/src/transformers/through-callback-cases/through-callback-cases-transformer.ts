@@ -35,7 +35,7 @@
  */
 import { throughCallbackCasesContract } from '../../contracts/through-callback-cases/through-callback-cases-contract';
 import type { ThroughCallbackCases } from '../../contracts/through-callback-cases/through-callback-cases-contract';
-import { arrangeValueContract, derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
+import { arrangeBindingContract, arrangeValueContract, derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
 import type { ArrangeBinding, ArrangeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
@@ -112,7 +112,14 @@ export const throughCallbackCasesTransformer = ({
       // A REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
       // positional slots the entry's `.map` steers instead of handing it over as one argument.
       if (String(param.name) === String(arrayParam)) {
-        return [{ kind: 'array', param: param.name, value: element, ...(param.rest === true ? { rest: true } : {}) }];
+        return [
+          arrangeBindingContract.parse({
+            kind: 'array',
+            param: param.name,
+            value: element,
+            ...(param.rest === true ? { rest: true } : {}),
+          }),
+        ];
       }
 
       const fill = fillParamTransformer({ param });

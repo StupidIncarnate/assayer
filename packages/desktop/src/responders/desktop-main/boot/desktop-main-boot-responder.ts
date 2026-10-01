@@ -40,7 +40,7 @@ export const DesktopMainBootResponder = async ({
     resolveStatus: async () => statusResolveBroker({ repoPath }),
     resolveCompiledTree: async () => compiledTreeResolveBroker({ repoPath }),
     resolveCompiledFile: async ({ relPath }) =>
-      compiledFileResolveBroker({ repoPath, relPath: relPath }),
+      compiledFileResolveBroker({ repoPath, relPath: String(relPath) }),
     resolveStubs: async () => stubIndexResolveBroker({ repoPath }),
     resolveRun: async ({ relPath, onOutput }) =>
       runExecuteBroker({

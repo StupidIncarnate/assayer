@@ -27,23 +27,23 @@ import { Node } from '#gateway/npm/ts-morph';
 
 
 import type { CalleeLink } from '../../contracts/call-site/call-site-contract';
-import { calleeLinkContract } from '../../contracts/call-site/call-site-contract';
+import { callSiteContract } from '../../contracts/call-site/call-site-contract';
 
 const IMPORT_DEFAULT_NAME = 'default';
 
 export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): CalleeLink => {
   if (!Node.isIdentifier(callee)) {
-    return { target: 'unresolved' };
+    return callSiteContract.shape.callee.parse({ target: 'unresolved' });
   }
 
   const [declaration, ...rest] = callee.getSymbol()?.getDeclarations() ?? [];
 
   if (declaration === undefined || rest.length > 0) {
-    return { target: 'unresolved' };
+    return callSiteContract.shape.callee.parse({ target: 'unresolved' });
   }
 
   if (Node.isImportSpecifier(declaration)) {
-    return calleeLinkContract.parse({
+    return callSiteContract.shape.callee.parse({
       target: 'import',
       specifier: declaration.getImportDeclaration().getModuleSpecifierValue(),
       importedName: declaration.getName(),
@@ -53,7 +53,7 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
   const importParent = declaration.getParent();
 
   if (Node.isImportClause(declaration) && Node.isImportDeclaration(importParent)) {
-    return calleeLinkContract.parse({
+    return callSiteContract.shape.callee.parse({
       target: 'import',
       specifier: importParent.getModuleSpecifierValue(),
       importedName: IMPORT_DEFAULT_NAME,
@@ -76,10 +76,10 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
       : undefined;
 
   if (definition?.name === undefined || declaration.getSourceFile() !== callee.getSourceFile()) {
-    return { target: 'unresolved' };
+    return callSiteContract.shape.callee.parse({ target: 'unresolved' });
   }
 
-  return calleeLinkContract.parse({
+  return callSiteContract.shape.callee.parse({
     target: 'local',
     name: definition.name,
     startLine: definition.node.getStartLineNumber(),

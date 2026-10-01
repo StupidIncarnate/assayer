@@ -18,7 +18,7 @@
  * moduleGraphProjectionTransformer({ walked });
  * // Returns a validated FileModuleGraph: { edges: [...], references: [...] }
  */
-import { fileModuleGraphContract } from '@assayer/shared/contracts';
+import { fileModuleGraphContract, moduleReferenceContract } from '@assayer/shared/contracts';
 import type { FileModuleGraph, ModuleReference } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -32,12 +32,12 @@ export const moduleGraphProjectionTransformer = ({ walked }: { walked: WalkFileR
     scope.calls.flatMap((call) =>
       call.callee.target === 'import'
         ? [
-            {
+            moduleReferenceContract.parse({
               specifier: call.callee.specifier,
               importedName: call.callee.importedName,
               line: call.position.line,
               column: call.position.column,
-            },
+            }),
           ]
         : [],
     ),

@@ -40,7 +40,7 @@
  * // Returns { analysis: FunctionAnalysis (entry.access { kind: 'through-caller', callerName }),
  * //   unreachableExits: [{ line, guardLines, welded? }, …], unfillable: [{ param, type }, …] }
  */
-import { derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
+import { arrangeBindingContract, derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
 import type { ArrangeBinding, FunctionAnalysis } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
@@ -103,7 +103,7 @@ export const throughCallerCasesTransformer = ({
       const steered = byCallerParam.get(param.name);
 
       if (steered !== undefined) {
-        return [{ ...steered, param: param.name }];
+        return [arrangeBindingContract.parse({ ...steered, param: param.name })];
       }
 
       const fill = fillParamTransformer({ param });

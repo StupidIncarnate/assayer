@@ -34,7 +34,7 @@ export const isDomainEmptyGuard = ({ domain }: { domain?: ValueDomain }): boolea
   const boundsCross =
     domain.min !== undefined &&
     domain.max !== undefined &&
-    (domain.min > domain.max || (domain.min === domain.max && (domain.minExclusive || domain.maxExclusive)));
+    (domain.min > domain.max || (Number(domain.min) === Number(domain.max) && (domain.minExclusive || domain.maxExclusive)));
 
   // `undefined` is "nothing was said about length", which proves nothing. Only a stated axis that no
   // length survives is a proof.

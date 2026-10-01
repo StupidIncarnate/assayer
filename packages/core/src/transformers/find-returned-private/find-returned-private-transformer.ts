@@ -38,7 +38,7 @@ export const findReturnedPrivateTransformer = ({
   const call = scope.calls.find(
     (candidate) =>
       candidate.callee.target === 'local' &&
-      candidate.position.line === exit.line &&
+      Number(candidate.position.line) === Number(exit.line) &&
       candidate.guardPath.length === exit.guardPath.length &&
       candidate.guardPath.every((step, index) => {
         const exitStep = exit.guardPath[index];
@@ -63,7 +63,7 @@ export const findReturnedPrivateTransformer = ({
     (candidate) =>
       candidate.access.kind === 'unreachable' &&
       String(candidate.name) === String(calleeName) &&
-      candidate.startLine === calleeLine &&
+      Number(candidate.startLine) === Number(calleeLine) &&
       candidate.branches.length > 0,
   );
 

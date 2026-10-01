@@ -1,6 +1,7 @@
 import { anonymousEntryLabelTransformer } from './anonymous-entry-label-transformer';
 import { ParamDescriptorStub } from '../../contracts/param-descriptor/param-descriptor.stub';
 import { AnonymousReachStub } from '../../contracts/anonymous-reach/anonymous-reach.stub';
+import { anonymousReachContract } from '../../contracts/anonymous-reach/anonymous-reach-contract';
 
 const ELEMENT_PARAM = ParamDescriptorStub({ name: 'n', type: { kind: 'number' } });
 
@@ -35,7 +36,7 @@ describe('anonymousEntryLabelTransformer', () => {
     it('EMPTY: {a reach naming neither receiver nor callee} => the arrow alone', () => {
       const result = anonymousEntryLabelTransformer({
         host: 'boot',
-        reach: { kind: 'argument' },
+        reach: anonymousReachContract.parse({ kind: 'argument' }),
         params: [ELEMENT_PARAM],
         line: 4,
       });
@@ -48,7 +49,7 @@ describe('anonymousEntryLabelTransformer', () => {
     it('VALID: {a returned closure} => the return that hands it out', () => {
       const result = anonymousEntryLabelTransformer({
         host: 'makeClassifier',
-        reach: { kind: 'return' },
+        reach: AnonymousReachStub({ kind: 'return' }),
         params: [ELEMENT_PARAM],
         line: 2,
       });
@@ -59,7 +60,7 @@ describe('anonymousEntryLabelTransformer', () => {
     it('VALID: {an IIFE} => the invocation shape', () => {
       const result = anonymousEntryLabelTransformer({
         host: 'boot',
-        reach: { kind: 'invocation' },
+        reach: AnonymousReachStub({ kind: 'invocation' }),
         params: [ELEMENT_PARAM],
         line: 3,
       });
@@ -73,7 +74,7 @@ describe('anonymousEntryLabelTransformer', () => {
     // and every surface already names the file above the entry.
     it('VALID: {no host} => the reach alone, never the internal module root', () => {
       const result = anonymousEntryLabelTransformer({
-        reach: { kind: 'invocation' },
+        reach: AnonymousReachStub({ kind: 'invocation' }),
         params: [ELEMENT_PARAM],
         line: 3,
       });
@@ -99,7 +100,7 @@ describe('anonymousEntryLabelTransformer', () => {
 
     it('EMPTY: {no params} => an empty parameter list, never a missing one', () => {
       const result = anonymousEntryLabelTransformer({
-        reach: { kind: 'invocation' },
+        reach: AnonymousReachStub({ kind: 'invocation' }),
         params: [],
         line: 1,
       });

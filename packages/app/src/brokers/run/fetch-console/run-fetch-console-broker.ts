@@ -11,7 +11,6 @@
  */
 import { window } from '#gateway/browser/window';
 import { preloadBridgeStatics } from '../../../statics/preload-bridge/preload-bridge-statics';
-import { runConsoleContract } from '@assayer/shared/contracts';
 
 export const runFetchConsoleBroker = async ({ relPath }: { relPath: string }): Promise<string | undefined> => {
   const bridge = window.assayerBridge;
@@ -22,5 +21,13 @@ export const runFetchConsoleBroker = async ({ relPath }: { relPath: string }): P
 
   const raw: unknown = await bridge.getSavedConsole({ relPath: String(relPath) });
 
-  return raw === undefined || raw === null ? undefined : runConsoleContract.parse(raw);
+  if (raw === undefined || raw === null) {
+    return undefined;
+  }
+
+  if (typeof raw !== 'string') {
+    throw new Error(`Saved run console must be a string, received ${typeof raw}`);
+  }
+
+  return raw;
 };

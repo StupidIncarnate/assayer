@@ -22,7 +22,6 @@ import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export type ArrangeValue = RepresentativeValue | ArrangeValue[] | { [key: string]: ArrangeValue };
 
@@ -30,6 +29,6 @@ export const arrangeValueContract: z.ZodType<ArrangeValue> = z.lazy(() =>
   z.union([
     representativeValueContract,
     z.array(arrangeValueContract),
-    z.record(symbolNameContract, arrangeValueContract),
+    z.record(z.string().min(1), arrangeValueContract),
   ]),
 );

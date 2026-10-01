@@ -77,7 +77,7 @@ export const demandsForPropertiesTransformer = ({
       const values = direct.flatMap((leaf) => {
         const armValues = typeToRangeTransformer({
           type: property.type,
-          predicateKind: String(leaf.predicate.kind),
+          predicateKind: leaf.predicate.kind,
           ...(leaf.predicate.literal === undefined ? {} : { literal: leaf.predicate.literal }),
         });
 

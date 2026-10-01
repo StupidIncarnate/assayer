@@ -8,9 +8,10 @@
  * treeNodesTransformer({ relPaths: [RelPathStub({ value: 'packages/shared/src/index.ts' })] });
  * // Returns [{ name: 'packages', path: 'packages', kind: 'dir', children: [...] }]
  */
-import { treeNodeKindContract } from '@assayer/shared/contracts';
+import { compiledTreeContract } from '@assayer/shared/contracts';
 import type { TreeNode } from '@assayer/shared/contracts';
-import { treeNodeNameContract } from '../../contracts/tree-node-name/tree-node-name-contract';
+
+const treeNodeContract = compiledTreeContract.shape.nodes.element;
 
 export const treeNodesTransformer = ({ relPaths }: { relPaths: readonly string[] }): TreeNode[] => {
   const roots: TreeNode[] = [];
@@ -26,11 +27,7 @@ export const treeNodesTransformer = ({ relPaths }: { relPaths: readonly string[]
       const nodePath = accumulatedPath;
 
       if (index === segments.length - 1) {
-        siblings.push({
-          name: treeNodeNameContract.parse(segment),
-          path: nodePath,
-          kind: treeNodeKindContract.parse('file'),
-        });
+        siblings.push(treeNodeContract.parse({ name: segment, path: nodePath, kind: 'file' }));
         continue;
       }
 
@@ -40,13 +37,14 @@ export const treeNodesTransformer = ({ relPaths }: { relPaths: readonly string[]
         continue;
       }
 
-      const children: TreeNode[] = [];
-      siblings.push({
-        name: treeNodeNameContract.parse(segment),
+      const dirNode = treeNodeContract.parse({
+        name: segment,
         path: nodePath,
-        kind: treeNodeKindContract.parse('dir'),
-        children,
+        kind: 'dir',
+        children: [],
       });
+      const children = dirNode.children ?? [];
+      siblings.push(dirNode);
       childrenByPath.set(nodePath, children);
       siblings = children;
     }
