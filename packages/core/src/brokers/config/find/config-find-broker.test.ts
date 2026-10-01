@@ -6,7 +6,7 @@ describe('configFindBroker', () => {
     it('VALID: {startDir: "/a/b/c/d"} => finds assayer.config.json 3 levels up at "/a"', async () => {
       const proxy = configFindBrokerProxy();
 
-      proxy.configLivesIn({ levelsBelow: 3 });
+      proxy.configLivesIn({ configDir: '/a', emptyDirs: ['/a/b/c/d', '/a/b/c', '/a/b'] });
 
       const result = await configFindBroker({ startDir: '/a/b/c/d' });
 
@@ -22,7 +22,7 @@ describe('configFindBroker', () => {
     it('EMPTY: {startDir: "/a/b/c/d"} => returns { found: false } when no assayer.config.json exists up to the filesystem root', async () => {
       const proxy = configFindBrokerProxy();
 
-      proxy.neverFound();
+      proxy.neverFound({ searchedDirs: ['/a/b/c/d', '/a/b/c', '/a/b', '/a', '/'] });
 
       const result = await configFindBroker({ startDir: '/a/b/c/d' });
 

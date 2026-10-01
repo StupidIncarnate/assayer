@@ -1,18 +1,28 @@
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const configFindBrokerProxy = (): {
-  configLivesIn: (params: { levelsBelow: number }) => void;
-  neverFound: () => void;
+  configLivesIn: ({ configDir, emptyDirs }: { configDir: string; emptyDirs: readonly string[] }) => void;
+  neverFound: ({ searchedDirs }: { searchedDirs: readonly string[] }) => void;
 } => {
   const existsProxy = pathExistsProxy();
 
-
   return {
-    configLivesIn: ({ levelsBelow }: { levelsBelow: number }): void => {
-      Array.from({ length: levelsBelow }).forEach(() => { existsProxy.fails(); });
+    configLivesIn: ({
+      configDir,
+      emptyDirs,
+    }: {
+      configDir: string;
+      emptyDirs: readonly string[];
+    }): void => {
+      emptyDirs.forEach((dir) => {
+        existsProxy.missing({ path: `${dir}/assayer.config.json` });
+      });
+      existsProxy.present({ path: `${configDir}/assayer.config.json` });
     },
-    neverFound: (): void => {
-      Array.from({ length: 20 }).forEach(() => { existsProxy.fails(); });
+    neverFound: ({ searchedDirs }: { searchedDirs: readonly string[] }): void => {
+      searchedDirs.forEach((dir) => {
+        existsProxy.missing({ path: `${dir}/assayer.config.json` });
+      });
     },
   };
 };

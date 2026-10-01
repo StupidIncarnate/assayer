@@ -1,19 +1,31 @@
-import { fsReaddirAdapterProxy } from '../../../adapters/fs/readdir/fs-readdir-adapter.proxy';
+import { readdirEntriesProxy } from '#gateway/node/fs__promises/readdir-entries/readdir-entries.proxy';
 
 export const compileWalkWorkingTreeBrokerProxy = (): {
-  queueDir: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }) => void;
-  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (ENOENT and the
-  // like) propagates to the caller unmodified. This stages that rejection.
-  dirReadThrows: ({ error }: { error: Error }) => void;
+  queueDir: ({
+    path,
+    entries,
+  }: {
+    path: string;
+    entries: readonly { name: string; kind: 'file' | 'directory' }[];
+  }) => void;
+  // The read is deliberately unwrapped -- no try/catch -- so a filesystem rejection (EACCES and the
+  // like) propagates to the caller unmodified. This stages that rejection for one directory.
+  dirReadDenied: ({ path }: { path: string }) => void;
 } => {
-  const fsReaddirProxy = fsReaddirAdapterProxy();
+  const readdirProxy = readdirEntriesProxy();
 
   return {
-    queueDir: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }): void => {
-      fsReaddirProxy.returns({ entries });
+    queueDir: ({
+      path,
+      entries,
+    }: {
+      path: string;
+      entries: readonly { name: string; kind: 'file' | 'directory' }[];
+    }): void => {
+      readdirProxy.returns({ path, entries });
     },
-    dirReadThrows: ({ error }: { error: Error }): void => {
-      fsReaddirProxy.throws({ error });
+    dirReadDenied: ({ path }: { path: string }): void => {
+      readdirProxy.denied({ path });
     },
   };
 };

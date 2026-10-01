@@ -6,13 +6,20 @@ describe('compileWalkWorkingTreeBroker', () => {
     it('VALID: {root: two nested subdirs each containing one file} => returns both files absolute paths in DFS order', async () => {
       const proxy = compileWalkWorkingTreeBrokerProxy();
       proxy.queueDir({
+        path: '/repo/smoke-repo',
         entries: [
-          { name: 'a', isDirectory: true },
-          { name: 'b', isDirectory: true },
+          { name: 'a', kind: 'directory' },
+          { name: 'b', kind: 'directory' },
         ],
       });
-      proxy.queueDir({ entries: [{ name: 'f1.ts', isDirectory: false }] });
-      proxy.queueDir({ entries: [{ name: 'f2.ts', isDirectory: false }] });
+      proxy.queueDir({
+        path: '/repo/smoke-repo/a',
+        entries: [{ name: 'f1.ts', kind: 'file' }],
+      });
+      proxy.queueDir({
+        path: '/repo/smoke-repo/b',
+        entries: [{ name: 'f2.ts', kind: 'file' }],
+      });
 
       const result = await compileWalkWorkingTreeBroker({ root: '/repo/smoke-repo' });
 
@@ -24,12 +31,16 @@ describe('compileWalkWorkingTreeBroker', () => {
     it('EDGE: {root: a dir containing node_modules alongside src} => excludes every path under node_modules', async () => {
       const proxy = compileWalkWorkingTreeBrokerProxy();
       proxy.queueDir({
+        path: '/repo/smoke-repo',
         entries: [
-          { name: 'src', isDirectory: true },
-          { name: 'node_modules', isDirectory: true },
+          { name: 'src', kind: 'directory' },
+          { name: 'node_modules', kind: 'directory' },
         ],
       });
-      proxy.queueDir({ entries: [{ name: 'x.ts', isDirectory: false }] });
+      proxy.queueDir({
+        path: '/repo/smoke-repo/src',
+        entries: [{ name: 'x.ts', kind: 'file' }],
+      });
 
       const result = await compileWalkWorkingTreeBroker({ root: '/repo/smoke-repo' });
 
@@ -40,10 +51,10 @@ describe('compileWalkWorkingTreeBroker', () => {
   describe('a directory that cannot be read', () => {
     it("ERROR: {root: unreadable directory} => propagates the filesystem error unmodified, since the read is never wrapped in try/catch", async () => {
       const proxy = compileWalkWorkingTreeBrokerProxy();
-      proxy.dirReadThrows({ error: new Error('EACCES: permission denied') });
+      proxy.dirReadDenied({ path: '/repo/smoke-repo' });
 
       await expect(compileWalkWorkingTreeBroker({ root: '/repo/smoke-repo' })).rejects.toThrow(
-        /^EACCES: permission denied$/u
+        /^EACCES: op '\/repo\/smoke-repo'$/u
       );
     });
   });
