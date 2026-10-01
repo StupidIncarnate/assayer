@@ -1,5 +1,5 @@
 {
-  "name": "assayer-monorepo",
+  "name": "@assayer/monorepo",
   "version": "1.0.0",
   "description": "Test enforcement + generation for TypeScript repos, maintained by LLMs.",
   "private": true,

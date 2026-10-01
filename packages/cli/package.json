@@ -15,9 +15,9 @@
     "zod": "^4.6.5"
   },
   "imports": {
-    "#gateway/npm/*": "@assayer-monorepo/npm/*",
-    "#gateway/node/*": "@assayer-monorepo/node/*",
-    "#gateway/browser/*": "@assayer-monorepo/browser/*",
-    "#gateway/bin/*": "@assayer-monorepo/bin/*"
+    "#gateway/npm/*": "@assayer/npm/*",
+    "#gateway/node/*": "@assayer/node/*",
+    "#gateway/browser/*": "@assayer/browser/*",
+    "#gateway/bin/*": "@assayer/bin/*"
   }
 }

@@ -81,4 +81,14 @@ module.exports = [
             '@dungeonmaster/enforce-owner-field-reuse': 'off',
         },
     },
+    {
+        // Without a `scope` option these rules find the repo scope by walking up from the plugin's own
+        // folder. The plugin is a `file:` link into the dungeonmaster checkout, so that walk finds
+        // `@dungeonmaster` and every `@assayer/*` workspace import reads as a raw npm import.
+        files: ['**/*.ts', '**/*.tsx'],
+        rules: {
+            '@dungeonmaster/raw-import-ban': ['error', { scope: '@assayer' }],
+            '@dungeonmaster/bin-program-spawn-ban': ['error', { scope: '@assayer' }],
+        },
+    },
 ];

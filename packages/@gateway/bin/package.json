@@ -1,13 +1,13 @@
 {
-  "name": "@assayer-monorepo/bin",
+  "name": "@assayer/bin",
   "version": "0.1.0",
   "description": "Gateway package: programs installed on the machine, run through spawn",
   "sideEffects": false,
   "imports": {
-    "#gateway/npm/*": "@assayer-monorepo/npm/*",
-    "#gateway/node/*": "@assayer-monorepo/node/*",
-    "#gateway/browser/*": "@assayer-monorepo/browser/*",
-    "#gateway/bin/*": "@assayer-monorepo/bin/*"
+    "#gateway/npm/*": "@assayer/npm/*",
+    "#gateway/node/*": "@assayer/node/*",
+    "#gateway/browser/*": "@assayer/browser/*",
+    "#gateway/bin/*": "@assayer/bin/*"
   },
   "exports": {
     "./package.json": "./package.json",
