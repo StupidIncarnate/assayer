@@ -8,4 +8,4 @@
 
 import { DesktopPreloadFlow } from '../flows/desktop-preload/desktop-preload-flow';
 
-export const StartDesktopPreload = (): void => DesktopPreloadFlow();
+export const StartDesktopPreload = (): void => { DesktopPreloadFlow(); };

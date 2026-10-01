@@ -11,3 +11,4 @@
 // Subpath export entry for @assayer/core/transformers
 
 export * from './src/transformers/stub-view/stub-view-transformer';
+export * from './src/transformers/walk-file/walk-file-transformer';

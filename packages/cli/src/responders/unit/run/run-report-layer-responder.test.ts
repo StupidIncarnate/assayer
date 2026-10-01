@@ -1,4 +1,4 @@
-import { caseInterpretBroker, probeRuntimeCreateBroker } from '@assayer/core/adapters';
+import { caseInterpretBroker, probeRuntimeCreateBroker } from '@assayer/core/brokers';
 import { RunResultStub, CaseResultStub, DarkSpotStub, EntryGapStub, LintEntryStub, DerivedTestCaseStub, CoverageIdStub } from '@assayer/shared/contracts';
 
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';

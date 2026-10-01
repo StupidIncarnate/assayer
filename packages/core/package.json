@@ -9,12 +9,6 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./adapters": {
-      "source": "./adapters.ts",
-      "import": "./dist/adapters.js",
-      "require": "./dist/adapters.js",
-      "types": "./dist/adapters.d.ts"
-    },
     "./brokers": {
       "source": "./brokers.ts",
       "import": "./dist/brokers.js",

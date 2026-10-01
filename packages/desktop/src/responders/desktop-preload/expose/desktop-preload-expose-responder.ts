@@ -11,7 +11,7 @@ import { desktopBridgeExposeBroker } from '../../../brokers/desktop-bridge/expos
 import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
 
 export const DesktopPreloadExposeResponder = (): void =>
-  desktopBridgeExposeBroker({
+  { desktopBridgeExposeBroker({
     bridgeKey: desktopBridgeStatics.bridge.key,
     statusChannel: desktopBridgeStatics.channels.status,
     compiledTreeChannel: desktopBridgeStatics.channels.compiledTree,
@@ -21,4 +21,4 @@ export const DesktopPreloadExposeResponder = (): void =>
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
     savedConsoleChannel: desktopBridgeStatics.channels.savedConsole,
     runOutputChannel: desktopBridgeStatics.channels.runOutput,
-  });
+  }); };
