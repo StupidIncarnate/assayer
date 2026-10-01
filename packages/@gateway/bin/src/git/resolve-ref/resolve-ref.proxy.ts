@@ -2,7 +2,7 @@ import { gitRunProxy } from '../git-run/git-run.proxy';
 import type { ArgMatcher } from '../../gateway-test-support/arg-matcher';
 
 export const resolveRefProxy = (): {
-  setupResolves: (params: { ref: string; short?: boolean; sha: string }) => void;
+  setupResolves: (params: { ref: string; short?: boolean; sha: string; stderr?: string }) => void;
   setupMissing: (params: { ref: string; short?: boolean; output: string }) => void;
   setupNotFound: (params: { ref: string; short?: boolean }) => void;
   getCallsFor: (params: { ref: ArgMatcher; short?: boolean }) => readonly unknown[][];
@@ -10,11 +10,22 @@ export const resolveRefProxy = (): {
   const runProxy = gitRunProxy();
 
   return {
-    setupResolves: ({ ref, short, sha }: { ref: string; short?: boolean; sha: string }): void => {
+    setupResolves: ({
+      ref,
+      short,
+      sha,
+      stderr,
+    }: {
+      ref: string;
+      short?: boolean;
+      sha: string;
+      stderr?: string;
+    }): void => {
       runProxy.setupResult({
         args: short === true ? ['rev-parse', '--short', ref] : ['rev-parse', ref],
         exitCode: 0,
         output: `${sha}\n`,
+        ...(stderr === undefined ? {} : { stderr }),
       });
     },
 

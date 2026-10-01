@@ -1,6 +1,7 @@
 /**
  * PURPOSE: Lists every entry in a ref's tree, recursively, as git stored it at that ref. Each git
- * line reads `<mode> <type> <sha>\t<path>`, and each becomes one record. Nothing is read from the
+ * line reads `<mode> <type> <sha>\t<path>`, and each becomes one record. Only git's stdout is
+ * parsed, so a warning git prints on stderr never becomes a record. Nothing is read from the
  * working tree. Returns `null` when git exits non-zero, such as for a ref that does not exist.
  * Reach for `catFileBlob` to read one entry's contents by its sha.
  *
@@ -18,13 +19,13 @@ export const lsTree = async ({
   cwd: string;
   ref: string;
 }): Promise<{ mode: string; type: string; sha: string; path: string }[] | null> => {
-  const { exitCode, output } = await gitRun({ args: ['ls-tree', '-r', ref], cwd });
+  const { exitCode, stdout } = await gitRun({ args: ['ls-tree', '-r', ref], cwd });
 
   if (exitCode !== 0) {
     return null;
   }
 
-  return output
+  return stdout
     .split('\n')
     .filter((line) => line.length > 0)
     .map((line) => {

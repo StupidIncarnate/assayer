@@ -1,5 +1,6 @@
 /**
  * PURPOSE: Reads one blob's contents by its sha, exactly as git stored them, with no trimming.
+ * The contents are git's stdout alone, so a warning git prints on stderr never lands in them.
  * Nothing is read from the working tree. Returns `null` when git exits non-zero, such as for a sha
  * that names no blob. Reach for `lsTree` first to find the sha of each file at a ref.
  *
@@ -17,7 +18,7 @@ export const catFileBlob = async ({
   cwd: string;
   sha: string;
 }): Promise<string | null> => {
-  const { exitCode, output } = await gitRun({ args: ['cat-file', 'blob', sha], cwd });
+  const { exitCode, stdout } = await gitRun({ args: ['cat-file', 'blob', sha], cwd });
 
-  return exitCode === 0 ? output : null;
+  return exitCode === 0 ? stdout : null;
 };

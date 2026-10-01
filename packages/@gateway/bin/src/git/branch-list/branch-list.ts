@@ -20,13 +20,13 @@ export const branchList = async ({
   cwd: string;
   patterns: readonly string[];
 }): Promise<string[] | null> => {
-  const { exitCode, output } = await gitRun({ args: ['branch', '--list', ...patterns], cwd });
+  const { exitCode, stdout } = await gitRun({ args: ['branch', '--list', ...patterns], cwd });
 
   if (exitCode !== 0) {
     return null;
   }
 
-  return output
+  return stdout
     .split('\n')
     .map((line) => line.slice(MARKER_LENGTH).trim())
     .filter((name) => name.length > 0);

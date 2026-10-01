@@ -3,6 +3,15 @@ import { branchListProxy } from './branch-list.proxy';
 import { GitNotInstalledError } from '../git-run/git-not-installed.error';
 
 describe('branchList()', () => {
+  it('VALID: {one branch, a warning on stderr} => returns names from stdout alone', async () => {
+    const proxy = branchListProxy();
+    proxy.setupBranches({ patterns: ['main', 'master'], output: '* main\n', stderr: "warning: refname 'main' is ambiguous.\n" });
+
+    const result = await branchList({ cwd: '/repo', patterns: ['main', 'master'] });
+
+    expect(result).toStrictEqual(['main']);
+  });
+
   it('VALID: {one branch, HEAD on it} => returns its name without the marker', async () => {
     const proxy = branchListProxy();
     proxy.setupBranches({ patterns: ['main', 'master'], output: '* main\n' });

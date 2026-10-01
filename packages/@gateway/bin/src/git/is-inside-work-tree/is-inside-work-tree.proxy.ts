@@ -3,7 +3,7 @@ import { gitRunProxy } from '../git-run/git-run.proxy';
 const ARGS = ['rev-parse', '--is-inside-work-tree'];
 
 export const isInsideWorkTreeProxy = (): {
-  setupInside: () => void;
+  setupInside: (params?: { stderr?: string }) => void;
   setupInsideGitDir: () => void;
   setupNotRepo: () => void;
   setupNotFound: () => void;
@@ -12,8 +12,8 @@ export const isInsideWorkTreeProxy = (): {
   const runProxy = gitRunProxy();
 
   return {
-    setupInside: (): void => {
-      runProxy.setupResult({ args: ARGS, exitCode: 0, output: 'true\n' });
+    setupInside: ({ stderr }: { stderr?: string } = {}): void => {
+      runProxy.setupResult({ args: ARGS, exitCode: 0, output: 'true\n', ...(stderr === undefined ? {} : { stderr }) });
     },
     // Inside a repository's `.git` directory, git exits 0 but prints `false`.
     setupInsideGitDir: (): void => {

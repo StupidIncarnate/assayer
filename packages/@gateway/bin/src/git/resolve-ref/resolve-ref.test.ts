@@ -3,6 +3,19 @@ import { resolveRefProxy } from './resolve-ref.proxy';
 import { GitNotInstalledError } from '../git-run/git-not-installed.error';
 
 describe('resolveRef()', () => {
+  it('VALID: {ref: "main", a warning on stderr} => returns the sha from stdout alone', async () => {
+    const proxy = resolveRefProxy();
+    proxy.setupResolves({
+      ref: 'main',
+      sha: '9fceb02f1a3e4c98d9c8b1e6f2a7d5c3b0e1f4a2',
+      stderr: "warning: refname 'main' is ambiguous.\n",
+    });
+
+    const result = await resolveRef({ cwd: '/repo', ref: 'main' });
+
+    expect(result).toBe('9fceb02f1a3e4c98d9c8b1e6f2a7d5c3b0e1f4a2');
+  });
+
   it('VALID: {ref: "master"} => returns the trimmed full sha', async () => {
     const proxy = resolveRefProxy();
     proxy.setupResolves({ ref: 'master', sha: '9fceb02f1a3e4c98d9c8b1e6f2a7d5c3b0e1f4a2' });

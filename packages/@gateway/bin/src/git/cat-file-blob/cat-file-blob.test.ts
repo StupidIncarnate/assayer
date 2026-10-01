@@ -3,6 +3,19 @@ import { catFileBlobProxy } from './cat-file-blob.proxy';
 import { GitNotInstalledError } from '../git-run/git-not-installed.error';
 
 describe('catFileBlob()', () => {
+  it('VALID: {a committed blob, a warning on stderr} => returns the blob contents from stdout alone', async () => {
+    const proxy = catFileBlobProxy();
+    proxy.setupBlob({
+      sha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4',
+      contents: 'export const x = 1;\n',
+      stderr: "warning: refname 'main' is ambiguous.\n",
+    });
+
+    const result = await catFileBlob({ cwd: '/repo', sha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4' });
+
+    expect(result).toBe('export const x = 1;\n');
+  });
+
   it('VALID: {a committed blob} => returns its exact contents, trailing newline kept', async () => {
     const proxy = catFileBlobProxy();
     proxy.setupBlob({

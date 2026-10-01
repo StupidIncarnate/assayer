@@ -3,6 +3,15 @@ import { currentBranchProxy } from './current-branch.proxy';
 import { GitNotInstalledError } from '../git-run/git-not-installed.error';
 
 describe('currentBranch()', () => {
+  it('VALID: {branch: "main", a warning on stderr} => returns the branch from stdout alone', async () => {
+    const proxy = currentBranchProxy();
+    proxy.setupBranch({ branch: 'main\n', stderr: "warning: refname 'main' is ambiguous.\n" });
+
+    const result = await currentBranch({ cwd: '/repo' });
+
+    expect(result).toBe('main');
+  });
+
   it('VALID: {branch: "main"} => returns "main"', async () => {
     const proxy = currentBranchProxy();
     proxy.setupBranch({ branch: 'main' });

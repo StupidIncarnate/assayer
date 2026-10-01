@@ -23,12 +23,12 @@ export const resolveRef = async ({
   short?: boolean;
 }): Promise<string | null> => {
   const args = short === true ? ['rev-parse', '--short', ref] : ['rev-parse', ref];
-  const { exitCode, output } = await gitRun({ args, cwd });
+  const { exitCode, stdout } = await gitRun({ args, cwd });
 
   if (exitCode !== 0) {
     return null;
   }
 
-  const sha = output.trim();
+  const sha = stdout.trim();
   return sha.length === 0 ? null : sha;
 };

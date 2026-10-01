@@ -11,7 +11,7 @@
 import { gitRun } from '../git-run/git-run';
 
 export const isInsideWorkTree = async ({ cwd }: { cwd: string }): Promise<boolean> => {
-  const { exitCode, output } = await gitRun({ args: ['rev-parse', '--is-inside-work-tree'], cwd });
+  const { exitCode, stdout } = await gitRun({ args: ['rev-parse', '--is-inside-work-tree'], cwd });
 
-  return exitCode === 0 && output.trim() === 'true';
+  return exitCode === 0 && stdout.trim() === 'true';
 };

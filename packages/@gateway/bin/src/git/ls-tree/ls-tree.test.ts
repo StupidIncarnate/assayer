@@ -3,6 +3,26 @@ import { lsTreeProxy } from './ls-tree.proxy';
 import { GitNotInstalledError } from '../git-run/git-not-installed.error';
 
 describe('lsTree()', () => {
+  it('VALID: {one file, a warning on stderr} => returns records from stdout alone', async () => {
+    const proxy = lsTreeProxy();
+    proxy.setupTree({
+      ref: 'HEAD',
+      output: '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4\tpackages/shared/index.ts\n',
+      stderr: "warning: refname 'main' is ambiguous.\n",
+    });
+
+    const result = await lsTree({ cwd: '/repo', ref: 'HEAD' });
+
+    expect(result).toStrictEqual([
+      {
+        mode: '100644',
+        type: 'blob',
+        sha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4',
+        path: 'packages/shared/index.ts',
+      },
+    ]);
+  });
+
   it('VALID: {a tree with two files} => returns one record per entry', async () => {
     const proxy = lsTreeProxy();
     proxy.setupTree({

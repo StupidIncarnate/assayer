@@ -2,7 +2,7 @@ import { gitRunProxy } from '../git-run/git-run.proxy';
 import type { ArgMatcher } from '../../gateway-test-support/arg-matcher';
 
 export const catFileBlobProxy = (): {
-  setupBlob: (params: { sha: string; contents: string }) => void;
+  setupBlob: (params: { sha: string; contents: string; stderr?: string }) => void;
   setupFailure: (params: { sha: string; exitCode: number; output: string }) => void;
   setupNotFound: (params: { sha: string }) => void;
   getCallsFor: (params: { sha: ArgMatcher }) => readonly unknown[][];
@@ -10,8 +10,21 @@ export const catFileBlobProxy = (): {
   const runProxy = gitRunProxy();
 
   return {
-    setupBlob: ({ sha, contents }: { sha: string; contents: string }): void => {
-      runProxy.setupResult({ args: ['cat-file', 'blob', sha], exitCode: 0, output: contents });
+    setupBlob: ({
+      sha,
+      contents,
+      stderr,
+    }: {
+      sha: string;
+      contents: string;
+      stderr?: string;
+    }): void => {
+      runProxy.setupResult({
+        args: ['cat-file', 'blob', sha],
+        exitCode: 0,
+        output: contents,
+        ...(stderr === undefined ? {} : { stderr }),
+      });
     },
 
     setupFailure: ({ sha, exitCode, output }: { sha: string; exitCode: number; output: string }): void => {

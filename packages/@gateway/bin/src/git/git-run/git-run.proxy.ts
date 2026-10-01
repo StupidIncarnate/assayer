@@ -10,6 +10,9 @@ import type { ArgsMatcher } from '../../gateway-test-support/arg-matcher';
 // `args`: `run.setupSuccess`/`setupError` without a `cwd` key is a prefix match, so any cwd matches.
 // `getCallsFor` reads back the cwd each call really used.
 //
+// `output` is staged as what git prints on stdout. `stderr` is what git prints on stderr, empty
+// unless given, so a test can prove a parser reads stdout alone.
+//
 // `timedOut` is not staged: `run`'s real body sets it ONLY from its OWN internal timer, armed by a
 // `timeout` param this gateway's `*-run.ts` wrappers never pass to `run`, so no spawn-level staging
 // can produce it.
@@ -20,6 +23,7 @@ export const gitRunProxy = (): {
     args: string[];
     exitCode: number;
     output: string;
+    stderr?: string;
     signal?: NodeJS.Signals;
   }) => void;
   setupNotFound: (params: { args: string[] }) => void;
@@ -27,6 +31,7 @@ export const gitRunProxy = (): {
     args: ArgsMatcher;
     exitCode: number;
     output: string;
+    stderr?: string;
     signal?: NodeJS.Signals;
   }) => void;
   throwsMatchingArgs: (params: { args: ArgsMatcher }) => void;
@@ -38,18 +43,20 @@ export const gitRunProxy = (): {
     args,
     exitCode,
     output,
+    stderr = '',
     signal,
   }: {
     args: string[] | ArgsMatcher;
     exitCode: number;
     output: string;
+    stderr?: string;
     signal?: NodeJS.Signals;
   }): void => {
     if (signal !== undefined) {
-      run.setupSignalKill({ command: COMMAND, args, signal, stdout: output, stderr: '' });
+      run.setupSignalKill({ command: COMMAND, args, signal, stdout: output, stderr });
       return;
     }
-    run.setupSuccess({ command: COMMAND, args, exitCode, stdout: output, stderr: '' });
+    run.setupSuccess({ command: COMMAND, args, exitCode, stdout: output, stderr });
   };
 
   // `run`'s real body wraps spawn's own `'error'` event into RunNotFoundError, reading `code` and

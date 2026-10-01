@@ -3,6 +3,15 @@ import { isInsideWorkTreeProxy } from './is-inside-work-tree.proxy';
 import { GitNotInstalledError } from '../git-run/git-not-installed.error';
 
 describe('isInsideWorkTree()', () => {
+  it('VALID: {inside a working tree, a warning on stderr} => returns true from stdout alone', async () => {
+    const proxy = isInsideWorkTreeProxy();
+    proxy.setupInside({ stderr: 'warning: safe.directory is not set\n' });
+
+    const result = await isInsideWorkTree({ cwd: '/repo' });
+
+    expect(result).toBe(true);
+  });
+
   it('VALID: {inside a working tree} => returns true', async () => {
     const proxy = isInsideWorkTreeProxy();
     proxy.setupInside();
