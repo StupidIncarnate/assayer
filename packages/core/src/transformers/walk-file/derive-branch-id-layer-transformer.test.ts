@@ -8,7 +8,7 @@ import { deriveBranchIdLayerTransformerProxy } from './derive-branch-id-layer-tr
 const CLASSIFY_SCOPE = [SymbolNameStub({ value: 'classify' })];
 const NESTED_SCOPE = [SymbolNameStub({ value: 'Classifier' }), SymbolNameStub({ value: 'classify' })];
 
-describe('deriveBranchIdLayerAdapter', () => {
+describe('deriveBranchIdLayerTransformer', () => {
   describe('the id it derives', () => {
     it('VALID: {if (value > 5), scope classify} => the scope path joined to the condition projection', () => {
       deriveBranchIdLayerTransformerProxy();

@@ -2,7 +2,7 @@
  * PURPOSE: Reads the CLI's own package.json version and returns it branded as AssayerVersion.
  *
  * USAGE:
- * await packageJsonReadAdapter();
+ * await packageJsonReadBroker();
  * // Returns the branded AssayerVersion parsed from the CLI's package.json "version" field
  */
 import { readFile } from 'fs/promises';

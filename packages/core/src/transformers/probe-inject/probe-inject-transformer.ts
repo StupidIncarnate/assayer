@@ -17,7 +17,7 @@
  *   standing up a ts-jest instance.
  *
  * USAGE:
- * jestProbeInjectAdapter({ ts, context, sourceFile, sites: plan.sites });
+ * probeInjectTransformer({ ts, context, sourceFile, sites: plan.sites });
  * // Returns the SourceFile with each site's expression wrapped in __P.c / __P.x
  */
 import type TS from '#gateway/npm/typescript';

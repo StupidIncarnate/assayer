@@ -7,7 +7,7 @@
  *   descent model could not otherwise express.
  *
  * USAGE:
- * deriveBranchIdLayerAdapter({ node: ifStatement, scopePath: ['Classifier', 'classify'] });
+ * deriveBranchIdLayerTransformer({ node: ifStatement, scopePath: ['Classifier', 'classify'] });
  * // Returns 'Classifier/classify/if:BinaryExpression,id:value,GreaterThanToken,num:5'
  */
 import type { IfStatement } from '#gateway/npm/ts-morph';

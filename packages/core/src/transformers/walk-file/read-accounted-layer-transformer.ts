@@ -12,7 +12,7 @@
  *   follows it at all — the code runs on both arms. One predicate cannot answer both.
  *
  * USAGE:
- * readAccountedLayerAdapter({ node: block.getStatements().at(-1) });
+ * readAccountedLayerTransformer({ node: block.getStatements().at(-1) });
  * // Returns true when this statement's exits are already covered, so the scope owes none
  */
 import { Node } from '#gateway/npm/ts-morph';

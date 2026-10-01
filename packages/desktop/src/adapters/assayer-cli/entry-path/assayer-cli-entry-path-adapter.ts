@@ -4,7 +4,7 @@
  *
  *   Find-up rather than a counted `../..` because this module runs from BOTH src (ts-jest) and dist,
  *   and dist's extra level silently shifts every fixed relative path — the same trap
- *   `analyzer-roots-resolve-adapter` documents.
+ *   `analyzer-roots-resolve-broker` documents.
  *
  *   Resolved by PATH rather than by importing the CLI, because that dependency cannot exist: the CLI
  *   already depends on the desktop (it launches the window), so desktop → cli would be a cycle. The

@@ -8,10 +8,10 @@ describe('coreRuntimeTransformer', () => {
         setupFile: '/core/probe-runtime.js',
         astTransformer: '/core/probe-transformer.js',
         registrar: '/core/harness-registrar.js',
-        interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',
-        resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
-        probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
-        probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+        interpretCaseModule: '/core/src/brokers/case/interpret/case-interpret-broker',
+        resolveEntryModule: '/core/src/brokers/case/resolve-entry/case-resolve-entry-broker',
+        probeRuntimeModule: '/core/src/brokers/probe-runtime/create/probe-runtime-create-broker',
+        probeInjectModule: '/core/src/transformers/probe-inject/probe-inject-transformer',
         harnessModule: '/core/index',
       });
     });
@@ -22,10 +22,10 @@ describe('coreRuntimeTransformer', () => {
         setupFile: '/core/probe-runtime.js',
         astTransformer: '/core/probe-transformer.js',
         registrar: '/core/harness-registrar.js',
-        interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',
-        resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
-        probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
-        probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+        interpretCaseModule: '/core/src/brokers/case/interpret/case-interpret-broker',
+        resolveEntryModule: '/core/src/brokers/case/resolve-entry/case-resolve-entry-broker',
+        probeRuntimeModule: '/core/src/brokers/probe-runtime/create/probe-runtime-create-broker',
+        probeInjectModule: '/core/src/transformers/probe-inject/probe-inject-transformer',
         harnessModule: '/core/index',
       });
     });
@@ -40,10 +40,10 @@ describe('coreRuntimeTransformer', () => {
         setupFile: '/core/probe-runtime.js',
         astTransformer: '/core/probe-transformer.js',
         registrar: '/core/harness-registrar.js',
-        interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',
-        resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
-        probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
-        probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+        interpretCaseModule: '/core/dist/src/brokers/case/interpret/case-interpret-broker',
+        resolveEntryModule: '/core/dist/src/brokers/case/resolve-entry/case-resolve-entry-broker',
+        probeRuntimeModule: '/core/dist/src/brokers/probe-runtime/create/probe-runtime-create-broker',
+        probeInjectModule: '/core/dist/src/transformers/probe-inject/probe-inject-transformer',
         harnessModule: '/core/dist/index',
       });
     });
@@ -54,10 +54,10 @@ describe('coreRuntimeTransformer', () => {
         setupFile: '/core/probe-runtime.js',
         astTransformer: '/core/probe-transformer.js',
         registrar: '/core/harness-registrar.js',
-        interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',
-        resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
-        probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
-        probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+        interpretCaseModule: '/core/dist/src/brokers/case/interpret/case-interpret-broker',
+        resolveEntryModule: '/core/dist/src/brokers/case/resolve-entry/case-resolve-entry-broker',
+        probeRuntimeModule: '/core/dist/src/brokers/probe-runtime/create/probe-runtime-create-broker',
+        probeInjectModule: '/core/dist/src/transformers/probe-inject/probe-inject-transformer',
         harnessModule: '/core/dist/index',
       });
     });

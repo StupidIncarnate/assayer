@@ -11,7 +11,7 @@
  *   its own — no ancestor-climbing, no ownership filters.
  *
  * USAGE:
- * walkNodeLayerAdapter({ node: sourceFile, context });
+ * walkNodeLayerTransformer({ node: sourceFile, context });
  * // Returns { scopes, looseBranches, looseExits, nodes } for the whole subtree
  */
 import type { Node } from '#gateway/npm/ts-morph';

@@ -27,7 +27,7 @@ const ALL_RETURN_SOURCE =
 const FALLS_OUT_SOURCE =
   "function routeLabel(method: string) {\n  switch (method) {\n    case 'get':\n      noop();\n      break;\n    default:\n      noop();\n  }\n}\ndeclare function noop(): void;\n";
 
-describe('handleSwitchLayerAdapter', () => {
+describe('handleSwitchLayerTransformer', () => {
   describe('the eq-branches it emits', () => {
     it('VALID: {two literal cases plus a default} => one eq-branch per CASE, none for the default', () => {
       handleSwitchLayerTransformerProxy();

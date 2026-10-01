@@ -3,7 +3,7 @@ import { createElement } from '#gateway/npm/react';
 import { themedRenderMiddleware } from './themed-render-middleware';
 import { themedRenderMiddlewareProxy } from './themed-render-middleware.proxy';
 
-describe('testingLibraryRenderAdapter', () => {
+describe('themedRenderMiddleware', () => {
   describe('rendering an element', () => {
     it('VALID: {ui} => renders the element inside a Mantine provider', () => {
       themedRenderMiddlewareProxy();

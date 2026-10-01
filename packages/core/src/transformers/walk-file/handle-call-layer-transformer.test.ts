@@ -32,7 +32,7 @@ const callOf = ({ source }: { source: string }): CallExpression =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression);
 
-describe('handleCallLayerAdapter', () => {
+describe('handleCallLayerTransformer', () => {
   describe('the call edge it records', () => {
     it('VALID: {a call passing the caller`s param straight in} => a local edge with a param-ref, unguarded', () => {
       handleCallLayerTransformerProxy();

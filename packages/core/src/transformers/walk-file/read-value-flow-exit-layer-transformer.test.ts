@@ -16,7 +16,7 @@ const BRANCH = '*module*/classify/ternary:BinaryExpression,id:n,GreaterThanToken
 const THEN_EXIT = '*module*/classify/return@ternary:BinaryExpression,id:n,GreaterThanToken,num:5#then';
 const ELSE_EXIT = '*module*/classify/return@ternary:BinaryExpression,id:n,GreaterThanToken,num:5#else';
 
-describe('readValueFlowExitLayerAdapter', () => {
+describe('readValueFlowExitLayerTransformer', () => {
   describe('the tail pattern it matches', () => {
     it('VALID: {`const label = n > 5 ? a : b; return label`} => splits into a ternary branch and then/else return exits', () => {
       readValueFlowExitLayerTransformerProxy();

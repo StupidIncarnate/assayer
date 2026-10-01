@@ -22,7 +22,7 @@
  *   that count inside a marked region would trade one lie for another.
  *
  * USAGE:
- * codemirrorViewAdapter({ value: 'const x = 1;', markers: [{ line: 1, count: 2 }] });
+ * SourceEditorLayerWidget({ value: 'const x = 1;', markers: [{ line: 1, count: 2 }] });
  * // Returns a read-only CodeMirror ReactElement with line numbers, TS highlighting, and a '2' count on line 1
  */
 import { createElement } from '#gateway/npm/react';

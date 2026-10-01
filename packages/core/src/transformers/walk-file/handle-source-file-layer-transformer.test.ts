@@ -21,7 +21,7 @@ const MODULE_SCOPE = ScopeRecordStub({
   endLine: 1,
 });
 
-describe('handleSourceFileLayerAdapter', () => {
+describe('handleSourceFileLayerTransformer', () => {
   describe('the module scope it opens', () => {
     it('EMPTY: {empty file} => opens a parameterless void module scope spanning line 1', () => {
       handleSourceFileLayerTransformerProxy();

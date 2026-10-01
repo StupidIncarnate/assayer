@@ -1,7 +1,7 @@
 import { packageJsonReadBroker } from './package-json-read-broker';
 import { packageJsonReadBrokerProxy } from './package-json-read-broker.proxy';
 
-describe('packageJsonReadAdapter', () => {
+describe('packageJsonReadBroker', () => {
   describe('valid package.json', () => {
     it('VALID: {cli package.json} => returns the current assayer version', async () => {
       packageJsonReadBrokerProxy();

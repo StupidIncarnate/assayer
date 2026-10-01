@@ -10,7 +10,7 @@ const SOURCE = 'const x = a && b;';
 const LEAF_A = ProbeSiteStub({ id: 'f#leaf.0', kind: 'cond', start: 10, end: 11 });
 const LEAF_B = ProbeSiteStub({ id: 'f#leaf.1', kind: 'cond', start: 15, end: 16 });
 
-describe('probeVisitNodeLayerAdapter', () => {
+describe('probeVisitNodeLayerTransformer', () => {
   describe('recursing into children', () => {
     // Wrapping each operand IN PLACE is the whole short-circuit story: `__P.c(b)` sits on the right
     // of `&&`, so the language skips it exactly when it would have skipped `b`.

@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { readPropertyPathLayerTransformer } from './read-property-path-layer-transformer';
 import { readPropertyPathLayerTransformerProxy } from './read-property-path-layer-transformer.proxy';
 
-describe('readPropertyPathLayerAdapter', () => {
+describe('readPropertyPathLayerTransformer', () => {
   it('VALID: {config.mode} => root is config and the chain is one member', () => {
     readPropertyPathLayerTransformerProxy();
     const project = new Project({ useInMemoryFileSystem: true });

@@ -10,7 +10,7 @@
  *   makes the announcement worth reading when it does appear.
  *
  * USAGE:
- * const controller = processStdoutCompileProgressAdapter();
+ * const controller = compileProgressRenderBroker();
  * await compileRunBroker({ ..., onProgress: (event) => controller.render({ event }) });
  * // Writes 'Assayer is updating caches\n' once a file is genuinely compiled, then one
  * // progress-bar line per namespace, in first-seen order, on every subsequent event.

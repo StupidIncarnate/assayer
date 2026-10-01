@@ -15,7 +15,7 @@
  *   emits one guarded exit per arm instead. Any other expression keeps the single-exit path verbatim.
  *
  * USAGE:
- * handleExitLayerAdapter({ node: returnStatement, context });
+ * handleExitLayerTransformer({ node: returnStatement, context });
  * // Returns a HandlerResult with one exit carrying the guard path that reached it
  */
 import { Node } from '#gateway/npm/ts-morph';

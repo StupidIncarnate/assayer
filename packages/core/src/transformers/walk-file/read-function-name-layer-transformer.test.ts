@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { readFunctionNameLayerTransformer } from './read-function-name-layer-transformer';
 import { readFunctionNameLayerTransformerProxy } from './read-function-name-layer-transformer.proxy';
 
-describe('readFunctionNameLayerAdapter', () => {
+describe('readFunctionNameLayerTransformer', () => {
   describe('names carried by the declaration', () => {
     it('VALID: {function declaration} => its own name', () => {
       readFunctionNameLayerTransformerProxy();

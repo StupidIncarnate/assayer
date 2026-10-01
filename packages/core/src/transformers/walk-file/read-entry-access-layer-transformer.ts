@@ -19,7 +19,7 @@
  *   the module property is `go`, and a runner reaching for `runIt` would find nothing there.
  *
  * USAGE:
- * readEntryAccessLayerAdapter({ node: methodDeclaration, context });
+ * readEntryAccessLayerTransformer({ node: methodDeclaration, context });
  * // Returns { kind: 'method', className: 'Classifier', constructable: true }
  */
 import { Node } from '#gateway/npm/ts-morph';

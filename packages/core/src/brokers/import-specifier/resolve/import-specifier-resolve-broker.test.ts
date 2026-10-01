@@ -9,7 +9,7 @@ import { importSpecifierResolveBrokerProxy } from './import-specifier-resolve-br
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 
-describe('typescriptResolveModuleAdapter', () => {
+describe('importSpecifierResolveBroker', () => {
   describe('a relative specifier that resolves to a sibling file', () => {
     it('VALID: {specifier "../b/foo" from src/a/caller.ts} => resolves to the sibling absolute path', () => {
       importSpecifierResolveBrokerProxy();

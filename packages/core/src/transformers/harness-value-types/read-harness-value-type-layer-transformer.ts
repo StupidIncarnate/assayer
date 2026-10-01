@@ -3,7 +3,7 @@
  *   TypeFact — the raw type-checker readout (primitive flavor, a resolved literal value, a union of
  *   member facts, an ARRAY of its element type, a CALLABLE, or an OBJECT enumerating its named
  *   properties), recursing through union members, array elements and object properties so enumerated
- *   shapes are read by this one function. It MIRRORS `read-type-fact-layer-adapter` in the walk-file
+ *   shapes are read by this one function. It MIRRORS `read-type-fact-layer-transformer` in the walk-file
  *   action flavor for flavor, but adapters cannot import an adapter in a sibling action, so this reader
  *   owns its own thin ts-morph read while sharing the semantic half — `typeDescriptorTransformer`, the
  *   sole place the TypeFact -> TypeDescriptor union-fanout rule lives. A harness expression has no
@@ -17,7 +17,7 @@
  *   self-referential supplied type the same way the walk reader does, marking it `truncated`.
  *
  * USAGE:
- * readHarnessValueTypeLayerAdapter({ type: expression.getType() });
+ * readHarnessValueTypeLayerTransformer({ type: expression.getType() });
  * // Returns { flavor: 'callable', text: '(message: string) => string' }
  */
 import type { Type } from '#gateway/npm/ts-morph';

@@ -12,7 +12,7 @@
  *   rather than blunt only because this channel carries one thing to one subscriber.
  *
  * USAGE:
- * electronPreloadBridgeAdapter({
+ * desktopBridgeExposeBroker({
  *   bridgeKey: 'assayerBridge',
  *   statusChannel: 'assayer:status',
  *   compiledTreeChannel: 'assayer:compiled-tree',

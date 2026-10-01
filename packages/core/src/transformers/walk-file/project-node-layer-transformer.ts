@@ -15,7 +15,7 @@
  *   the same grammar rather than three hand-rolled ones.
  *
  * USAGE:
- * projectNodeLayerAdapter({ node: ifStatement.getExpression() });
+ * projectNodeLayerTransformer({ node: ifStatement.getExpression() });
  * // Returns 'BinaryExpression,id:name,EqualsEqualsEqualsToken,str:blah' (branded AstProjection)
  */
 import { Node } from '#gateway/npm/ts-morph';

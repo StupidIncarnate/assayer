@@ -22,7 +22,7 @@
  *   happens.
  *
  * USAGE:
- * handleIfLayerAdapter({ node: ifStatement, context });
+ * handleIfLayerTransformer({ node: ifStatement, context });
  * // Returns a HandlerResult with the branch, per-arm descents, and any completion exits
  */
 import { Node } from '#gateway/npm/ts-morph';

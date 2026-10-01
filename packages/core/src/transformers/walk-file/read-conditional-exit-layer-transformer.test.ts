@@ -22,7 +22,7 @@ const INNER_SEG = 'ternary:BinaryExpression,id:value,GreaterThanEqualsToken,num:
 const OUTER = `classify/${OUTER_SEG}`;
 const INNER = `classify/${INNER_SEG}`;
 
-describe('readConditionalExitLayerAdapter', () => {
+describe('readConditionalExitLayerTransformer', () => {
   describe('the sentinel for a non-ternary', () => {
     it('VALID: {a plain string return} => not conditional, so the caller keeps its single exit', () => {
       readConditionalExitLayerTransformerProxy();

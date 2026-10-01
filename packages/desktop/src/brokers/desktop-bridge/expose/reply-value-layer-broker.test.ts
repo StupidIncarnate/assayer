@@ -1,7 +1,7 @@
 import { replyValueLayerBroker } from './reply-value-layer-broker';
 import { replyValueLayerBrokerProxy } from './reply-value-layer-broker.proxy';
 
-describe('replyValueLayerAdapter', () => {
+describe('replyValueLayerBroker', () => {
   describe('successful replies', () => {
     it('VALID: {success reply carrying a payload} => returns the payload', () => {
       replyValueLayerBrokerProxy();

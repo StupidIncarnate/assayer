@@ -2,7 +2,7 @@
  * PURPOSE: Finds the nearest ancestor directory containing a marker file, walking UP from a starting
  *   directory. Find-up rather than a counted `../..` because the same module runs from BOTH `src`
  *   (ts-jest, tsx) and `dist`, whose extra level silently shifts every fixed relative path — the
- *   trap `analyzer-roots-resolve-adapter` already documents.
+ *   trap `analyzer-roots-resolve-broker` already documents.
  *
  *   Returns undefined when no ancestor carries the marker, so a caller must say what that means
  *   rather than receive a wrong path that looks right.

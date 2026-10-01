@@ -8,7 +8,7 @@ const EXIT = CoverageIdStub({ value: 'grade/return@then' });
 const OC_THEN = CoverageIdStub({ value: 'len/return@then' });
 const OC_ELSE = CoverageIdStub({ value: 'len/return@else' });
 
-describe('jestProbeRuntimeAdapter', () => {
+describe('probeRuntimeCreateBroker', () => {
   describe('returning values untouched', () => {
     // The whole reason instrumentation is semantically invisible: the probe is a pass-through, so
     // `__P.c(id, a) && __P.c(id2, b)` evaluates exactly as `a && b` did.

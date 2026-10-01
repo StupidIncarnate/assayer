@@ -10,7 +10,7 @@
  *   scope and asks for no descents — a re-export forwards names, it does not branch.
  *
  * USAGE:
- * handleExportLayerAdapter({ node: exportDeclaration, context });
+ * handleExportLayerTransformer({ node: exportDeclaration, context });
  * // Returns a HandlerResult with one moduleEdge (or none, for a local export list) and no descents
  */
 import type { ExportDeclaration } from '#gateway/npm/ts-morph';

@@ -5,7 +5,7 @@
  *   main-process I/O boundary.
  *
  * USAGE:
- * await electronDesktopBootAdapter({
+ * await desktopBootBroker({
  *   statusChannel: 'assayer:status',
  *   compiledTreeChannel: 'assayer:compiled-tree',
  *   compiledFileChannel: 'assayer:compiled-file',

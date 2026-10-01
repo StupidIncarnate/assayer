@@ -4,7 +4,7 @@ import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub'
 import { readExportFlagLayerTransformer } from './read-export-flag-layer-transformer';
 import { readExportFlagLayerTransformerProxy } from './read-export-flag-layer-transformer.proxy';
 
-describe('readExportFlagLayerAdapter', () => {
+describe('readExportFlagLayerTransformer', () => {
   describe('function declarations', () => {
     it('VALID: {export function} => true', () => {
       readExportFlagLayerTransformerProxy();

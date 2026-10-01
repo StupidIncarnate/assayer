@@ -9,7 +9,7 @@
  *   the missing bridge with the actionable message.
  *
  * USAGE:
- * const unsubscribe = assayerBridgeOnRunOutputAdapter({ onChunk: ({ chunk }) => append(chunk) });
+ * const unsubscribe = runSubscribeOutputBroker({ onChunk: ({ chunk }) => append(chunk) });
  * // Returns the unsubscribe; call it to stop listening
  */
 import { window } from '#gateway/browser/window';

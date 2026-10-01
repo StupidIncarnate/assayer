@@ -22,7 +22,7 @@
  *   channel itself stays flat and unclaimed.
  *
  * USAGE:
- * handleMemberAccessLayerAdapter({ node: propertyAccess, context });
+ * handleMemberAccessLayerTransformer({ node: propertyAccess, context });
  * // Returns a HandlerResult with one global use or one env read (or neither) and the child descents
  */
 import { Node } from '#gateway/npm/ts-morph';

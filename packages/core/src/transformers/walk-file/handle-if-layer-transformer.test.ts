@@ -35,7 +35,7 @@ const THEN_RETURNS_SOURCE =
 const NEITHER_ARM_RETURNS_SOURCE =
   'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  } else {\n    noop();\n  }\n}\n';
 
-describe('handleIfLayerAdapter', () => {
+describe('handleIfLayerTransformer', () => {
   describe('the branch it emits', () => {
     it('VALID: {if (value > 5) with value declared a number param} => one if-branch keyed on the condition', () => {
       handleIfLayerTransformerProxy();

@@ -5,7 +5,7 @@
  *   LITERAL of alternating text segments and substitution facts, a CALLABLE, or an OBJECT enumerating
  *   its named properties), recursing through union members, array elements, tuple positions, template
  *   substitutions and object properties so enumerated shapes are read by this one function. It is the
- *   external reader's OWN boundary read: it MIRRORS `read-type-fact-layer-adapter` in the walk-file
+ *   external reader's OWN boundary read: it MIRRORS `read-type-fact-layer-transformer` in the walk-file
  *   action flavor for flavor, but adapters cannot import an adapter in a sibling action, so the external
  *   reader owns this thin ts-morph read while sharing the semantic half — `typeDescriptorTransformer`,
  *   the sole place the TypeFact -> TypeDescriptor union-fanout rule lives. A declared external type has
@@ -39,7 +39,7 @@
  *   empty property list that is the reader stopping stays distinguishable from an empty declaration.
  *
  * USAGE:
- * readSignatureTypeLayerAdapter({ type: signature.getReturnType() });
+ * readSignatureTypeLayerBroker({ type: signature.getReturnType() });
  * // Returns { flavor: 'union', members: [{ flavor: 'literal', value: 'get' }, ...], text: '"get" | "post"' }
  */
 import { Node } from '#gateway/npm/ts-morph';

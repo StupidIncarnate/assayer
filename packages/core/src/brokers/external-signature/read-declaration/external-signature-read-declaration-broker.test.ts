@@ -10,7 +10,7 @@ import { externalSignatureReadDeclarationBrokerProxy } from './external-signatur
 
 const TSCONFIG = '{ "compilerOptions": { "strict": true, "moduleResolution": "node" } }';
 
-describe('tsMorphReadExternalSignatureAdapter', () => {
+describe('externalSignatureReadDeclarationBroker', () => {
   describe('a function declaration export', () => {
     it('VALID: {export declare function fnDecl(name: string, count: number): boolean} => params + return read from the declaration node', () => {
       externalSignatureReadDeclarationBrokerProxy();

@@ -18,7 +18,7 @@
  *   file's text, so a reformatted or renamed-on-import harness classifies identically.
  *
  * USAGE:
- * typescriptHarnessGateAdapter({ source: "import { assayerHarness } from '@assayer/core';\nassayerHarness({ inputs: {} });" });
+ * isAssayerHarnessGuard({ source: "import { assayerHarness } from '@assayer/core';\nassayerHarness({ inputs: {} });" });
  * // Returns true — imported and called, so this file is Assayer's
  */
 import ts from '#gateway/npm/typescript';

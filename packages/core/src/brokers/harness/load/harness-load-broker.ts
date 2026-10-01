@@ -18,7 +18,7 @@
  *   a P1 naming the file; a gated harness that cannot be read is never silently skipped.
  *
  * USAGE:
- * typescriptLoadHarnessAdapter({ source, fileName: 'src/audit.harness.ts' });
+ * harnessLoadBroker({ source, fileName: 'src/audit.harness.ts' });
  * // Returns { ok: true, declarations: [{ inputs: { audit: { report: [Function] } } }] }
  * // or { ok: false, message: "cannot find module 'fs'" }
  */

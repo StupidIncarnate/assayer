@@ -20,7 +20,7 @@
  *   second pass and the runtime observation could key under an id the analyzer never produced.
  *
  * USAGE:
- * readConditionTreeLayerAdapter({ condition: ifStatement.getExpression(), context, branchCoverageId, path: [] });
+ * readConditionTreeLayerTransformer({ condition: ifStatement.getExpression(), context, branchCoverageId, path: [] });
  * // Returns { condition: { kind: 'and', left: …, right: … }, sites: [{ id, kind: 'cond', start, end }] }
  */
 import { Node, SyntaxKind } from '#gateway/npm/ts-morph';

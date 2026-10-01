@@ -1,6 +1,6 @@
 /**
  * PURPOSE: The RUN-side registrar a colocated harness registers into — the twin of the sandbox
- *   `typescript-load-harness-adapter` binds at compile time. Jest maps `@assayer/core` to this file for
+ *   `harness-load-broker` binds at compile time. Jest maps `@assayer/core` to this file for
  *   the duration of a run, so the harness's own `import { assayerHarness } from '@assayer/core'` reaches
  *   a collector this process owns, whatever copy of the package the harness would otherwise resolve.
  *
@@ -12,7 +12,7 @@
  *   recorded keys for and the declaration a run resolves values from cannot disagree about what the file
  *   said. This file is plain JS at the package root because Jest maps to a path on disk. The behaviour
  *   lives in the typed, unit-tested `assayerHarness`. Its module path arrives in the
- *   `__assayerCoreRuntime` Jest global, which `jest-run-cli-adapter` sets, and it points into the same
+ *   `__assayerCoreRuntime` Jest global, which `run-execute-cases-broker` sets, and it points into the same
  *   tree, source or dist, that the run's broker was loaded from.
  *
  * USAGE:
@@ -23,7 +23,7 @@ const runtime = globalThis.__assayerCoreRuntime;
 
 if (runtime === undefined) {
   throw new Error(
-    "assayer: harness-registrar.js ran without the __assayerCoreRuntime Jest global. jest-run-cli-adapter sets it; this file is only loaded by Assayer's own runner.",
+    "assayer: harness-registrar.js ran without the __assayerCoreRuntime Jest global. run-execute-cases-broker sets it; this file is only loaded by Assayer's own runner.",
   );
 }
 

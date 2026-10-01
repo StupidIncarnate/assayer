@@ -7,7 +7,7 @@ import { handleClassLayerTransformerProxy } from './handle-class-layer-transform
 
 const MODULE_CONTEXT = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false });
 
-describe('handleClassLayerAdapter', () => {
+describe('handleClassLayerTransformer', () => {
   describe('naming scope', () => {
     it('VALID: {class} => opens NO scope record, because a class holds no control flow', () => {
       handleClassLayerTransformerProxy();

@@ -4,7 +4,7 @@ import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub'
 import { readEntryAccessLayerTransformer } from './read-entry-access-layer-transformer';
 import { readEntryAccessLayerTransformerProxy } from './read-entry-access-layer-transformer.proxy';
 
-describe('readEntryAccessLayerAdapter', () => {
+describe('readEntryAccessLayerTransformer', () => {
   describe('function declarations', () => {
     it('VALID: {export function} => named', () => {
       readEntryAccessLayerTransformerProxy();

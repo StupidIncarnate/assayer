@@ -4,7 +4,7 @@ import { TypeFactStub } from '../../../contracts/type-fact/type-fact.stub';
 import { readSignatureTypeLayerBroker } from './read-signature-type-layer-broker';
 import { readSignatureTypeLayerBrokerProxy } from './read-signature-type-layer-broker.proxy';
 
-describe('readSignatureTypeLayerAdapter', () => {
+describe('readSignatureTypeLayerBroker', () => {
   describe('primitive types', () => {
     it('VALID: {string return} => string fact', () => {
       readSignatureTypeLayerBrokerProxy();
@@ -196,7 +196,7 @@ describe('readSignatureTypeLayerAdapter', () => {
     });
 
     // A `type X = { … }` alias names an ANONYMOUS `__type` object symbol and hangs the real name on the
-    // ALIAS symbol instead — the same split the walk reader (`read-type-fact-layer-adapter`) resolves.
+    // ALIAS symbol instead — the same split the walk reader (`read-type-fact-layer-transformer`) resolves.
     // Reading only the raw symbol would spell every alias-declared external shape keyless and drop it
     // out of the stub index, which keys on `typeName`.
     it('VALID: {a type-alias object param} => the ALIAS name, not the anonymous __type symbol', () => {

@@ -9,7 +9,7 @@
  *   handler depends on it, and putting it beside the recursion would make the proxy graph circular.
  *
  * USAGE:
- * handlerResultLayerAdapter({ descents, opensScope });
+ * handlerResultLayerTransformer({ descents, opensScope });
  * // Returns { branches: [], exits: [], nodes: [], descents, opensScope }
  */
 import type { Node } from '#gateway/npm/ts-morph';

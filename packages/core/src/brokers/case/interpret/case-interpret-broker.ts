@@ -55,7 +55,7 @@
  *   `failed` sends them to the wrong one.
  *
  * USAGE:
- * jestInterpretCaseAdapter({ entry, entryName, exitIds, testCase, probe, harness });
+ * caseInterpretBroker({ entry, entryName, exitIds, testCase, probe, harness });
  * // Returns { entryName, testCase, status: 'passed', observedPath, trace }
  */
 import { caseResultContract } from '@assayer/shared/contracts';

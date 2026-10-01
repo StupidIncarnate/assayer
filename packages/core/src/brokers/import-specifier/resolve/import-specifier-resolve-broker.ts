@@ -7,7 +7,7 @@
  *   name upstream because they do not resolve without ambient node types.
  *
  * USAGE:
- * typescriptResolveModuleAdapter({ specifier: '../b/foo', containingFile: '/repo/src/a/x.ts', options });
+ * importSpecifierResolveBroker({ specifier: '../b/foo', containingFile: '/repo/src/a/x.ts', options });
  * // Returns { resolved: true, fileName: '/repo/src/b/foo.ts' } or { resolved: false }
  */
 import ts from '#gateway/npm/typescript';

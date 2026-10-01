@@ -52,7 +52,7 @@ const IMPORTS_SUBPATH = [
   'assayerHarness({ inputs: { audit: { report: (message: string): string => message } } });',
 ].join('\n');
 
-describe('typescriptLoadHarnessAdapter', () => {
+describe('harnessLoadBroker', () => {
   describe('reading a harness by running it', () => {
     it('VALID: {one assayerHarness call} => returns the declaration it registered', () => {
       harnessLoadBrokerProxy();

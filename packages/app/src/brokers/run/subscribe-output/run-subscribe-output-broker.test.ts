@@ -3,7 +3,7 @@ import { RunConsoleStub } from '@assayer/shared/contracts';
 import { runSubscribeOutputBroker } from './run-subscribe-output-broker';
 import { runSubscribeOutputBrokerProxy } from './run-subscribe-output-broker.proxy';
 
-describe('assayerBridgeOnRunOutputAdapter', () => {
+describe('runSubscribeOutputBroker', () => {
   describe('a subscription over the bridge', () => {
     it('VALID: {the CLI writes a chunk} => the chunk reaches the subscriber', () => {
       const proxy = runSubscribeOutputBrokerProxy();

@@ -12,7 +12,7 @@
  *   run failed against correct code. Fallthrough is still not desugared.
  *
  * USAGE:
- * desugarSwitchLayerAdapter({ switchStatement, scopePath: ['*module*', 'routeLabel'] });
+ * desugarSwitchLayerTransformer({ switchStatement, scopePath: ['*module*', 'routeLabel'] });
  * // Returns { discName: 'method', caseInfos: [{ clause, literalValue: 'get', caseToken: 'str:get', branchCoverageId }], defaultClause }
  */
 import { Node } from '#gateway/npm/ts-morph';

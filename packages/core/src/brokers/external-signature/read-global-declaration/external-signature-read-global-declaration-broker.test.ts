@@ -14,7 +14,7 @@ const NODE_TYPES =
   `declare var process: { env: ProcessEnv; cwd(): string; hrtime(): readonly [number, number]; release: \`v\${number}\` };\n` +
   "declare module 'node:path' {\n  export function join(...paths: string[]): string;\n  export const sep: string;\n}\n";
 
-describe('tsMorphReadGlobalSignatureAdapter', () => {
+describe('externalSignatureReadGlobalDeclarationBroker', () => {
   describe('a called global method', () => {
     it('VALID: {process.cwd()} => its declared signature, keyed to the resolving .d.ts', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();

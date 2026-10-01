@@ -12,7 +12,7 @@ const accessOf = ({ source }: { source: string }): PropertyAccessExpression =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.PropertyAccessExpression);
 
-describe('handleMemberAccessLayerAdapter', () => {
+describe('handleMemberAccessLayerTransformer', () => {
   describe('the global use it records', () => {
     it('VALID: {console.log(x)} => one called global use carrying the member and the arg shape', () => {
       handleMemberAccessLayerTransformerProxy();

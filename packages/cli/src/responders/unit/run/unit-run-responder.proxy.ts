@@ -14,7 +14,7 @@ export const UnitRunResponderProxy = (): {
 } => {
   // Bare-called for enforce-proxy-child-creation: the cross-package proxy chain cannot intercept
   // core's I/O from here (the ts-jest collector only walks RELATIVE imports), so the direct
-  // registerMock below is what actually drives this. analyzerRootsResolveAdapter is a pure __dirname
+  // registerMock below is what actually drives this. analyzerRootsResolveBroker is a pure __dirname
   // walk with no I/O and is left to run for real.
   runPathsBrokerProxy();
   runConsoleSaveBrokerProxy();

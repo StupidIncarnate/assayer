@@ -19,7 +19,7 @@
  *   cache key. ONE reusable project per tsconfig, exactly like the external-signature reader.
  *
  * USAGE:
- * tsMorphReadGlobalSignatureAdapter({ tsConfigFilePath, reference: { kind: 'global', name: 'console', member: 'log', called: true } });
+ * externalSignatureReadGlobalDeclarationBroker({ tsConfigFilePath, reference: { kind: 'global', name: 'console', member: 'log', called: true } });
  * // Returns { usable: true, result: 'signature', signature, declPath } | { usable: true, result: 'type', type, declPath } | { usable: false }
  */
 import { dirname, join as joinPath } from '#gateway/node/path';

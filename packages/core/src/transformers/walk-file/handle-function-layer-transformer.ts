@@ -11,7 +11,7 @@
  *   analyzer to a new callable shape means adding it here and routing it in `dispatch-node`.
  *
  * USAGE:
- * handleFunctionLayerAdapter({ node: functionDeclaration, context });
+ * handleFunctionLayerTransformer({ node: functionDeclaration, context });
  * // Returns a HandlerResult opening the function's scope and descending its body
  */
 import type {

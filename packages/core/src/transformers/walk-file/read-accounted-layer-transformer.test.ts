@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { readAccountedLayerTransformer } from './read-accounted-layer-transformer';
 import { readAccountedLayerTransformerProxy } from './read-accounted-layer-transformer.proxy';
 
-describe('readAccountedLayerAdapter', () => {
+describe('readAccountedLayerTransformer', () => {
   describe('anything that always exits is accounted for', () => {
     it('VALID: {return statement} => true', () => {
       readAccountedLayerTransformerProxy();

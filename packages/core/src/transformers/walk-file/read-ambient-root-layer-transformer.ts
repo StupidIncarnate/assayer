@@ -14,7 +14,7 @@
  *   — is a candidate the walk records WITHOUT resolving, keeping the hermetic project untouched (§5.10).
  *
  * USAGE:
- * readAmbientRootLayerAdapter({ node: identifier });
+ * readAmbientRootLayerTransformer({ node: identifier });
  * // Returns true for `process`/`console`, false for `Number`/a local binding/a non-identifier
  */
 import { Node } from '#gateway/npm/ts-morph';

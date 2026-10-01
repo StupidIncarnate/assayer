@@ -20,7 +20,7 @@ const INNER = CoverageIdStub({ value: 'funnel/inner@then' });
 const SURFACE = CoverageIdStub({ value: 'funnel/surface@top' });
 const OTHER = CoverageIdStub({ value: 'funnel/other@else' });
 
-describe('jestInterpretCaseAdapter', () => {
+describe('caseInterpretBroker', () => {
   describe('judging against the PREDICTED exit', () => {
     it('VALID: {the entry reaches the predicted exit} => passes, recording the observed exit', () => {
       caseInterpretBrokerProxy();

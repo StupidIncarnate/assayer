@@ -33,7 +33,7 @@
  *   undefined` and a callback of the wrong signature both validate today by the first three rules alone
  *   — a key is a key whatever it is bound to — so this is where the VALUE half of the declaration is
  *   finally read, off the harness's own AST via `suppliedTypes` (`compile-harness-graph-broker` reads it
- *   with `ts-morph-read-harness-value-types-adapter`, the same conjunction of file and key this
+ *   with `harness-value-types-transformer`, the same conjunction of file and key this
  *   transformer already walks). `undefined` needs no special rule: it reads as the opaque `unknown`
  *   kind (`is-type-compatible`'s own doc), which fails unless the declared type itself admits it — the
  *   same clause that already lets an opaque DECLARED type through untouched. This is Assayer

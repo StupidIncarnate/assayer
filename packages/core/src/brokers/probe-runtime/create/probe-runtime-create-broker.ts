@@ -13,7 +13,7 @@
  *   Boolean() IS that leaf's `truthy` predicate.
  *
  * USAGE:
- * const probe = jestProbeRuntimeAdapter();
+ * const probe = probeRuntimeCreateBroker();
  * probe.c('grade/if:x#leaf.0', score > 5);   // records, returns the value
  * // probe.events => [{ id, kind: 'cond', outcome: true, valueText: 'true' }]
  */

@@ -18,7 +18,7 @@
  *   `Db|string`, or wrapping a member in redundant parens, renders identically.
  *
  * USAGE:
- * readDeclaredTypeTextLayerAdapter({ node: param.getTypeNodeOrThrow() });
+ * readDeclaredTypeTextLayerTransformer({ node: param.getTypeNodeOrThrow() });
  * // Returns 'Db | string' for `db: Db | string` — where the checker alone answers 'any'
  */
 import { Node } from '#gateway/npm/ts-morph';

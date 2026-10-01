@@ -31,7 +31,7 @@ export const PrecheckRunResponderProxy = (): {
 } => {
   // Bare-called to satisfy enforce-proxy-child-creation. analyzerHashBroker is a cross-package
   // core broker the responder calls directly, so (like the layer responders below) we registerMock
-  // it directly to give it a deterministic hash — the analyzerRootsResolveAdapter it consumes is a
+  // it directly to give it a deterministic hash — the analyzerRootsResolveBroker it consumes is a
   // pure __dirname path computation with no I/O, so it is left to run for real.
   analyzerHashBrokerProxy();
   analyzerRootsResolveBrokerProxy();

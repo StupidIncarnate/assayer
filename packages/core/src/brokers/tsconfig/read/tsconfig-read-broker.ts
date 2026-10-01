@@ -8,7 +8,7 @@
  *   defaults (and external type reading is skipped).
  *
  * USAGE:
- * typescriptReadConfigAdapter({ searchPath: '/repo' });
+ * tsconfigReadBroker({ searchPath: '/repo' });
  * // Returns { options: ts.CompilerOptions, tsconfigHash: ContentHash, configFilePath?: FilePath }
  */
 import { createHash } from '#gateway/node/crypto';

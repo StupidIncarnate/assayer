@@ -5,7 +5,7 @@ import { readDeclaredTypeTextLayerTransformerProxy } from './read-declared-type-
 
 const IMPORT = "import type { Db } from './db';\n";
 
-describe('readDeclaredTypeTextLayerAdapter', () => {
+describe('readDeclaredTypeTextLayerTransformer', () => {
   describe('a declaration the checker collapses', () => {
     // The defect this unit exists for: `Db` is imported, so the hermetic walk types it `any` (§5.10),
     // and `any` ABSORBS a union — the checker answers `any` for the whole parameter. An invoice naming

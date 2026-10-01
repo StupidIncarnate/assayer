@@ -35,7 +35,7 @@
  *   `target`'s own type.
  *
  * USAGE:
- * readConditionLayerAdapter({ condition: ifStatement.getExpression() });
+ * readConditionLayerTransformer({ condition: ifStatement.getExpression() });
  * // Returns { operandNode, operandName: 'name', predicate: { kind: 'length-eq', literal: 0 } }
  */
 import { Node } from '#gateway/npm/ts-morph';

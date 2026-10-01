@@ -4,7 +4,7 @@ import { desktopBootBroker } from './desktop-boot-broker';
 import { desktopBootBrokerProxy } from './desktop-boot-broker.proxy';
 import { DesktopStatusStub } from '../../../contracts/desktop-status/desktop-status.stub';
 
-describe('electronDesktopBootAdapter', () => {
+describe('desktopBootBroker', () => {
   describe('booting the main process', () => {
     it('VALID: {every channel + resolver} => boots the window, returns success, and registers every IPC handler', async () => {
       const proxy = desktopBootBrokerProxy();

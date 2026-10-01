@@ -15,7 +15,7 @@
  *   deriving a fact from the SPELLING of an identity string.
  *
  * USAGE:
- * readFunctionNameLayerAdapter({ node: arrowFunction });
+ * readFunctionNameLayerTransformer({ node: arrowFunction });
  * // Returns { name: 'classify', anonymous: false }, or a structural projection with anonymous: true
  */
 import { Node } from '#gateway/npm/ts-morph';

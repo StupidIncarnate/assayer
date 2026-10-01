@@ -27,7 +27,7 @@
  *
  *   An `array` or `harness` binding marked `rest` is not one argument at the call site: the interpreter
  *   SPREADS its resolved value across the tail positional slots the rest parameter stands for
- *   (`jestInterpretCaseAdapter`), so `tally(11, ...[6,9])` is the call that happens and `tally(11, [6,9])`
+ *   (`caseInterpretBroker`), so `tally(11, ...[6,9])` is the call that happens and `tally(11, [6,9])`
  *   — what one bracketed token beside `size` would otherwise print — is one that never does. Both
  *   consumers of this text build exactly that call string (`${entryName}(${arrangeText})`), so the `...`
  *   prefix is what keeps it truthful, the same reason the module-case rendering above refuses to print an

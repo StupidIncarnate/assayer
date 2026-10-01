@@ -11,7 +11,7 @@ import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';
 import { walkFactsLayerTransformer } from './walk-facts-layer-transformer';
 import { walkFactsLayerTransformerProxy } from './walk-facts-layer-transformer.proxy';
 
-describe('walkFactsLayerAdapter', () => {
+describe('walkFactsLayerTransformer', () => {
   describe('merging', () => {
     it('EMPTY: {no facts} => an empty fact set', () => {
       walkFactsLayerTransformerProxy();

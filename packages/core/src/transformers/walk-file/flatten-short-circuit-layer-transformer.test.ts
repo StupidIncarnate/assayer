@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { flattenShortCircuitLayerTransformer } from './flatten-short-circuit-layer-transformer';
 import { flattenShortCircuitLayerTransformerProxy } from './flatten-short-circuit-layer-transformer.proxy';
 
-describe('flattenShortCircuitLayerAdapter', () => {
+describe('flattenShortCircuitLayerTransformer', () => {
   describe('a same-operator spine', () => {
     it('VALID: {`a || b || c`} => three operands in source order', () => {
       flattenShortCircuitLayerTransformerProxy();

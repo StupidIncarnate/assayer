@@ -27,7 +27,7 @@
  *   would put a FAILING case against correct code, which reads as the analyzer being wrong.
  *
  * USAGE:
- * readEnvOperandLayerAdapter({ node: operandIdentifier });
+ * readEnvOperandLayerTransformer({ node: operandIdentifier });
  * // Returns 'VALUE' for `const value = Number(process.env.VALUE)`, or undefined
  */
 import { Node } from '#gateway/npm/ts-morph';

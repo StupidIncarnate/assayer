@@ -22,7 +22,7 @@ const enumOf = ({ source }: { source: string }): EnumDeclaration =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.EnumDeclaration);
 
-describe('handleTypeDeclarationLayerAdapter', () => {
+describe('handleTypeDeclarationLayerTransformer', () => {
   describe('the shape it records', () => {
     it('VALID: {an interface no signature mentions} => one named object shape with its full property list', () => {
       handleTypeDeclarationLayerTransformerProxy();

@@ -12,7 +12,7 @@
  *   it does not branch.
  *
  * USAGE:
- * handleDynamicImportLayerAdapter({ node: dynamicImportCall, context });
+ * handleDynamicImportLayerTransformer({ node: dynamicImportCall, context });
  * // Returns a HandlerResult with one moduleEdge and the argument's child descents
  */
 import { Node } from '#gateway/npm/ts-morph';

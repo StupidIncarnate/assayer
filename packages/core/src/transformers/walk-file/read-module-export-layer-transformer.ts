@@ -17,7 +17,7 @@
  *   declaration this can key on; its caller answers that shape directly.
  *
  * USAGE:
- * readModuleExportLayerAdapter({ node: arrowFunction });
+ * readModuleExportLayerTransformer({ node: arrowFunction });
  * // Returns 'default' for `const runIt = …; export default runIt`, 'runIt' for `export const runIt`,
  * // and undefined for a private helper
  */

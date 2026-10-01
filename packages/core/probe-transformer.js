@@ -7,11 +7,11 @@
  *   exist only in the emitted JS.
  *
  *   Plain JS at the package root because ts-jest requires this from disk and reads
- *   `name`/`version`/`factory` off it. The injection itself lives in `jestProbeInjectAdapter`, which is
- *   typed and unit-tested; this is only the ceremony plus the plan lookup. The adapter's module path
- *   arrives as the `probeInjectModule` option, which `jest-run-cli-adapter` sets. It points into the same
+ *   `name`/`version`/`factory` off it. The injection itself lives in `probeInjectTransformer`, which is
+ *   typed and unit-tested; this is only the ceremony plus the plan lookup. The transformer's module path
+ *   arrives as the `probeInjectModule` option, which `run-execute-cases-broker` sets. It points into the same
  *   tree, source or dist, that the run's broker was loaded from. ts-jest hands `options` only to
- *   `factory`, so the adapter is required there.
+ *   `factory`, so the transformer is required there.
  *
  * USAGE:
  * // ts-jest config: astTransformers: { before: [{ path: '<core>/probe-transformer.js', options: { probeDir, analyzerContentHash, probeInjectModule } }] }
@@ -36,11 +36,11 @@ exports.factory = (compilerInstance, options) => {
 
   if (probeInjectModule === undefined) {
     throw new Error(
-      "assayer: probe-transformer.js ran without its probeInjectModule option. jest-run-cli-adapter sets it; this file is only loaded by Assayer's own runner.",
+      "assayer: probe-transformer.js ran without its probeInjectModule option. run-execute-cases-broker sets it; this file is only loaded by Assayer's own runner.",
     );
   }
 
-  const { jestProbeInjectAdapter } = require(probeInjectModule);
+  const { probeInjectTransformer } = require(probeInjectModule);
 
   return (context) => (sourceFile) => {
     // Look the plan up by the hash of the text we were actually handed. A stale read is therefore
@@ -56,6 +56,6 @@ exports.factory = (compilerInstance, options) => {
 
     const plan = JSON.parse(readFileSync(planPath, 'utf8'));
 
-    return jestProbeInjectAdapter({ ts, context, sourceFile, sites: plan.sites });
+    return probeInjectTransformer({ ts, context, sourceFile, sites: plan.sites });
   };
 };

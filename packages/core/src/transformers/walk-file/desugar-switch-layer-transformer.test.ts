@@ -10,7 +10,7 @@ const CLASSIFY_SCOPE = [SymbolNameStub({ value: 'classify' })];
 const STRING_SWITCH_SOURCE =
   "function routeLabel(method: string) {\n  switch (method) {\n    case 'get':\n      return 'Fetch';\n    case 'post':\n      return 'Create';\n    default:\n      return 'Other';\n  }\n}\n";
 
-describe('desugarSwitchLayerAdapter', () => {
+describe('desugarSwitchLayerTransformer', () => {
   describe('the discriminant it reads', () => {
     it('VALID: {switch (method)} => the discriminant symbol name and its node', () => {
       desugarSwitchLayerTransformerProxy();

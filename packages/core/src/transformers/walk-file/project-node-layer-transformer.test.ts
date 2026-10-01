@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { projectNodeLayerTransformer } from './project-node-layer-transformer';
 import { projectNodeLayerTransformerProxy } from './project-node-layer-transformer.proxy';
 
-describe('projectNodeLayerAdapter', () => {
+describe('projectNodeLayerTransformer', () => {
   describe('condition projections', () => {
     it('VALID: {name.length === 0} => kinds plus symbol names plus literal values', () => {
       projectNodeLayerTransformerProxy();

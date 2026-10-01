@@ -54,7 +54,7 @@ const ASSIGNED_NOT_A_BARE_STATEMENT = [
   'const result = assayerHarness({ inputs: {} });',
 ].join('\n');
 
-describe('typescriptHarnessGateAdapter', () => {
+describe('isAssayerHarnessGuard', () => {
   describe('a file that registers with Assayer', () => {
     it('VALID: {imports assayerHarness from @assayer/core and calls it} => returns true', () => {
       isAssayerHarnessGuardProxy();

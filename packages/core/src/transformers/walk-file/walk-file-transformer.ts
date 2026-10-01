@@ -9,7 +9,7 @@
  *   functions of what this returns, so nothing downstream imports ts-morph and nothing re-parses.
  *
  * USAGE:
- * tsMorphWalkFileAdapter({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
+ * walkFileTransformer({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
  * // Returns a validated WalkFileResult: { success: true, scopes: [...], nodes: [...] }
  */
 import { Project } from '#gateway/npm/ts-morph';

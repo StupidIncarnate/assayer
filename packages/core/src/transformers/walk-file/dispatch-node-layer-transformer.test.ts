@@ -7,7 +7,7 @@ import { dispatchNodeLayerTransformerProxy } from './dispatch-node-layer-transfo
 
 const MODULE_CONTEXT = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false });
 
-describe('dispatchNodeLayerAdapter', () => {
+describe('dispatchNodeLayerTransformer', () => {
   describe('claimed kinds', () => {
     it('VALID: {source file} => routed to the module-scope handler', () => {
       dispatchNodeLayerTransformerProxy();

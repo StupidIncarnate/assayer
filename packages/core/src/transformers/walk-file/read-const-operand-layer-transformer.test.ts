@@ -14,7 +14,7 @@ const operandOf = ({ source }: { source: string }): Node => {
   return Node.isPropertyAccessExpression(left) && left.getName() === 'length' ? left.getExpression() : left;
 };
 
-describe('readConstOperandLayerAdapter', () => {
+describe('readConstOperandLayerTransformer', () => {
   describe('a same-file const welded to a literal', () => {
     it('VALID: {const level = 7} => the welded scalar value', () => {
       readConstOperandLayerTransformerProxy();

@@ -21,7 +21,7 @@
  *   orphan plain `return x` exit is emitted. A block that does not match keeps its descent-only shape.
  *
  * USAGE:
- * handleBlockLayerAdapter({ statements, context });
+ * handleBlockLayerTransformer({ statements, context });
  * // Returns a HandlerResult descending each statement with its own guard and tail flag
  */
 import { Node } from '#gateway/npm/ts-morph';

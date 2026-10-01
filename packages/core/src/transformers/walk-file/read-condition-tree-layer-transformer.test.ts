@@ -39,7 +39,7 @@ const ROUTE_CONTEXT = WalkContextStub({
   exported: true,
 });
 
-describe('readConditionTreeLayerAdapter', () => {
+describe('readConditionTreeLayerTransformer', () => {
   describe('a single comparison is a one-leaf tree', () => {
     it('VALID: {score > 5} => one leaf at the root, carrying its operand, type and predicate', () => {
       readConditionTreeLayerTransformerProxy();

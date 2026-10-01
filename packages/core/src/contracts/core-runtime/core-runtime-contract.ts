@@ -4,7 +4,7 @@
  *   `registrar`) name plain-JS files at core's package root, the same in both trees. The five module
  *   paths carry no extension and point into the chosen tree.
  *
- *   `jestRunCliAdapter` builds the nested Jest config from this object, and the generated test file
+ *   `runExecuteCasesBroker` builds the nested Jest config from this object, and the generated test file
  *   requires two of its module paths. Reach for this over `filePathContract` when the question is which
  *   tree a run loads, not where one file sits.
  *

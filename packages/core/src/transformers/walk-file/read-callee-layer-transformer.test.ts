@@ -13,7 +13,7 @@ const calleeOf = ({ source }: { source: string }): Node =>
     .getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression)
     .getExpression();
 
-describe('readCalleeLayerAdapter', () => {
+describe('readCalleeLayerTransformer', () => {
   describe('a same-file function declaration', () => {
     it('VALID: {a call to a function declared in this file} => a local link matched by name and line', () => {
       readCalleeLayerTransformerProxy();

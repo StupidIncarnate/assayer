@@ -19,7 +19,7 @@
  *   NOT folded — the analyzer evaluates no arithmetic — so it stays honestly undriven.
  *
  * USAGE:
- * readConstOperandLayerAdapter({ node: operandIdentifier });
+ * readConstOperandLayerTransformer({ node: operandIdentifier });
  * // Returns { value: 7 } for `const level = 7`, { length: 3 } for `const items = [1, 2, 3]`, or undefined
  */
 import { Node, VariableDeclarationKind } from '#gateway/npm/ts-morph';

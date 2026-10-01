@@ -19,7 +19,7 @@
  *   Asking the checker for the identifier's declaration is the only question with an answer.
  *
  * USAGE:
- * readCalleeLayerAdapter({ callee: callExpression.getExpression() });
+ * readCalleeLayerTransformer({ callee: callExpression.getExpression() });
  * // Returns { target: 'local', name: 'inner', startLine: 2 },
  * //         { target: 'import', specifier: './other', importedName: 'foo' }, or { target: 'unresolved' }
  */

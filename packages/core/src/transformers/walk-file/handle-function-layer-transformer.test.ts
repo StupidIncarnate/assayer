@@ -7,7 +7,7 @@ import { handleFunctionLayerTransformerProxy } from './handle-function-layer-tra
 
 const MODULE_CONTEXT = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false });
 
-describe('handleFunctionLayerAdapter', () => {
+describe('handleFunctionLayerTransformer', () => {
   describe('the scope it opens', () => {
     it('VALID: {exported function} => opens a scope carrying its signature off the type graph', () => {
       handleFunctionLayerTransformerProxy();

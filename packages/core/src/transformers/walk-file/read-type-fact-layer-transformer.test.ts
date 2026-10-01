@@ -4,7 +4,7 @@ import { TypeFactStub } from '../../contracts/type-fact/type-fact.stub';
 import { readTypeFactLayerTransformer } from './read-type-fact-layer-transformer';
 import { readTypeFactLayerTransformerProxy } from './read-type-fact-layer-transformer.proxy';
 
-describe('readTypeFactLayerAdapter', () => {
+describe('readTypeFactLayerTransformer', () => {
   describe('primitive types', () => {
     it('VALID: {string param} => string fact', () => {
       readTypeFactLayerTransformerProxy();

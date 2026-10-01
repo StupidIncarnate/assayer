@@ -20,7 +20,7 @@
  *   block handler drops the pair from its normal descent and folds the facts in.
  *
  * USAGE:
- * readValueFlowExitLayerAdapter({ statements: block.getStatements(), context });
+ * readValueFlowExitLayerTransformer({ statements: block.getStatements(), context });
  * // { matched: true, result: <split facts>, consumed: [decl, exit] } when the tail pattern + gate hold,
  * //   { matched: false, result: <empty>, consumed: [] } otherwise
  */

@@ -28,7 +28,7 @@
  *   syntax error from the same walk.
  *
  * USAGE:
- * analyzeFileBroker({ walked: tsMorphWalkFileAdapter({ source, relPath }), relPath });
+ * analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
  * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], gaps: [...], darkSpots: [...], undriven: [...] }
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';

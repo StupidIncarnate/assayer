@@ -10,7 +10,7 @@
  *   layer owns only the structural walk down the chain.
  *
  * USAGE:
- * readPropertyPathLayerAdapter({ node: propertyAccessExpression });
+ * readPropertyPathLayerTransformer({ node: propertyAccessExpression });
  * // Returns { root, path: ['mode'] } — path left-to-right from the root outward
  */
 import { Node } from '#gateway/npm/ts-morph';

@@ -16,7 +16,7 @@
  *   reader is invoiced for a shape the file next door describes in full.
  *
  * USAGE:
- * handleClassLayerAdapter({ node: classDeclaration, context });
+ * handleClassLayerTransformer({ node: classDeclaration, context });
  * // Returns a HandlerResult descending the class's members under its name
  */
 import { Node } from '#gateway/npm/ts-morph';

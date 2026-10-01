@@ -6,7 +6,7 @@
  *   `return` is a syntax error, so its exits are always completions rather than returns.
  *
  * USAGE:
- * handleSourceFileLayerAdapter({ node: sourceFile, context });
+ * handleSourceFileLayerTransformer({ node: sourceFile, context });
  * // Returns a HandlerResult opening the `*module*` scope and descending the file's statements
  */
 import type { SourceFile } from '#gateway/npm/ts-morph';

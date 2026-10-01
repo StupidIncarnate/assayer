@@ -4,7 +4,7 @@ import { SourceEditorLayerWidget } from './source-editor-layer-widget';
 import { SourceEditorLayerWidgetProxy } from './source-editor-layer-widget.proxy';
 import { document } from '#gateway/browser/document';
 
-describe('codemirrorViewAdapter', () => {
+describe('SourceEditorLayerWidget', () => {
   describe('rendering source', () => {
     it('VALID: {value: "const x = 1;"} => renders the value as read-only editor content', () => {
       SourceEditorLayerWidgetProxy();

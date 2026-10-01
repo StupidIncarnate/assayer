@@ -18,7 +18,7 @@ const ORELSE_CONTEXT = WalkContextStub({
   exported: true,
 });
 
-describe('readNullishLeafLayerAdapter', () => {
+describe('readNullishLeafLayerTransformer', () => {
   describe('a bare param operand', () => {
     it('VALID: {`a` from `a ?? b`, a: string | null} => a non-nullish leaf carrying the operand name and type', () => {
       readNullishLeafLayerTransformerProxy();

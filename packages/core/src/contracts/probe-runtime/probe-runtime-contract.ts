@@ -12,7 +12,7 @@
  *   invisible, short-circuit included.
  *
  * USAGE:
- * const probe: ProbeRuntime = jestProbeRuntimeAdapter();
+ * const probe: ProbeRuntime = probeRuntimeCreateBroker();
  * // probe.c(id, value) records and returns value
  */
 import { z } from '#gateway/npm/zod';

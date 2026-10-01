@@ -12,7 +12,7 @@ const variableOf = ({ source }: { source: string }): VariableStatement =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.VariableStatement);
 
-describe('handleVariableLayerAdapter', () => {
+describe('handleVariableLayerTransformer', () => {
   describe('the value use it records', () => {
     it('VALID: {const bound to an imported name} => one import value use naming the specifier and imported name', () => {
       handleVariableLayerTransformerProxy();

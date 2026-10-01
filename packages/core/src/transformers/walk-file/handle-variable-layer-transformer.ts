@@ -15,7 +15,7 @@
  *   initializer is never dropped.
  *
  * USAGE:
- * handleVariableLayerAdapter({ node: variableStatement, context });
+ * handleVariableLayerTransformer({ node: variableStatement, context });
  * // Returns a HandlerResult with the value uses it found and the child descents
  */
 import { Node } from '#gateway/npm/ts-morph';

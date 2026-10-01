@@ -6,7 +6,7 @@ import { walkNodeLayerTransformerProxy } from './walk-node-layer-transformer.pro
 
 const SEED = WalkContextStub({ scopePath: [], guardPath: [], params: [], exported: false });
 
-describe('walkNodeLayerAdapter', () => {
+describe('walkNodeLayerTransformer', () => {
   describe('recursion', () => {
     it('VALID: {nested functions} => reaches every depth, since it calls itself per descent', () => {
       walkNodeLayerTransformerProxy();

@@ -3,7 +3,7 @@
  *   responder tests can render UI without importing testing-library or Mantine directly.
  *
  * USAGE:
- * const { getByTestId } = testingLibraryRenderAdapter({ ui: someElement });
+ * const { getByTestId } = themedRenderMiddleware({ ui: someElement });
  * // Returns the RenderResult from @testing-library/react
  */
 import { createElement } from '#gateway/npm/react';

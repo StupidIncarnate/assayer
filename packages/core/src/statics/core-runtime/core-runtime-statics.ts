@@ -11,7 +11,7 @@
  *
  * USAGE:
  * coreRuntimeStatics.modules.interpretCase;
- * // 'src/adapters/jest/interpret-case/jest-interpret-case-adapter'
+ * // 'src/brokers/case/interpret/case-interpret-broker'
  */
 export const coreRuntimeStatics = {
   trees: ['source', 'dist'],
@@ -27,10 +27,10 @@ export const coreRuntimeStatics = {
     registrar: 'harness-registrar.js',
   },
   modules: {
-    interpretCase: 'src/adapters/jest/interpret-case/jest-interpret-case-adapter',
-    resolveEntry: 'src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
-    probeRuntime: 'src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
-    probeInject: 'src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+    interpretCase: 'src/brokers/case/interpret/case-interpret-broker',
+    resolveEntry: 'src/brokers/case/resolve-entry/case-resolve-entry-broker',
+    probeRuntime: 'src/brokers/probe-runtime/create/probe-runtime-create-broker',
+    probeInject: 'src/transformers/probe-inject/probe-inject-transformer',
     harness: 'index',
   },
   sourceExportConditions: ['source', 'node', 'node-addons'],

@@ -5,7 +5,7 @@
  *   desktop re-parses a caller through when it composes cross-file predicates at serve time.
  *
  * USAGE:
- * import { jestProbeInjectAdapter, tsMorphWalkFileAdapter } from '@assayer/core/adapters';
+ * import { probeInjectTransformer, walkFileTransformer } from '@assayer/core/adapters';
  */
 
 // Subpath export entry for @assayer/core/adapters

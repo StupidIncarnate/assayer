@@ -10,7 +10,7 @@
  *   as one silently guards that code by an arm it does not depend on.
  *
  * USAGE:
- * readTerminalLayerAdapter({ node: block.getStatements().at(-1) });
+ * readTerminalLayerTransformer({ node: block.getStatements().at(-1) });
  * // Returns true only when nothing after this statement can possibly run
  */
 import { Node } from '#gateway/npm/ts-morph';

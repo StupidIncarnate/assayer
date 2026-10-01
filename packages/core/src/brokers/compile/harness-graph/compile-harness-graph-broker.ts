@@ -19,7 +19,7 @@
  *   index is the inventory of what was declared and the errors are what says the declaration is wrong.
  *
  *   Validation also reads each key's SUPPLIED value at its STATIC type, off the harness's own AST —
- *   `ts-morph-read-harness-value-types-adapter`, a second, narrower read of the SAME source
+ *   `harness-value-types-transformer`, a second, narrower read of the SAME source
  *   `typescript/load-harness` already loaded (a callback is `[Function]` after the sandbox runs, so only
  *   the declaration answers what it IS). That fact is transient — reconciled against the target's
  *   declared param type inside `harness-validate-transformer` and never written into the persisted

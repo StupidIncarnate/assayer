@@ -10,7 +10,7 @@
  *   trusted, which is worse than having no map at all.
  *
  * USAGE:
- * dispatchNodeLayerAdapter({ node, context });
+ * dispatchNodeLayerTransformer({ node, context });
  * // Returns { branches, exits, nodes, descents, opensScope? } — never recurses itself
  */
 import { Node } from '#gateway/npm/ts-morph';

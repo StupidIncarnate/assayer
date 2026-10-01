@@ -33,7 +33,7 @@
  *   keep its single-exit path unchanged.
  *
  * USAGE:
- * readConditionalExitLayerAdapter({ expression: returnStatement.getExpression(), kind: 'return', context });
+ * readConditionalExitLayerTransformer({ expression: returnStatement.getExpression(), kind: 'return', context });
  * // { conditional: true, result: <the split's branches/exits/probeSites/nodes/descents> } for a ternary
  * //   or a `&&`/`||` chain; { conditional: false, result: <empty> } otherwise
  */

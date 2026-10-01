@@ -31,7 +31,7 @@
  *   config means one compiler, reused: the same 13 files then cost what one does.
  *
  * USAGE:
- * jestRunCliAdapter({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
+ * runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
  * // Returns { passed: true } when every generated case reached the exit derivation predicted
  */
 import { runCLI } from '@jest/core';

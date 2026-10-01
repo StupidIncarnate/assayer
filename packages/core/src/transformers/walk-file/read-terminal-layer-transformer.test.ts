@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { readTerminalLayerTransformer } from './read-terminal-layer-transformer';
 import { readTerminalLayerTransformerProxy } from './read-terminal-layer-transformer.proxy';
 
-describe('readTerminalLayerAdapter', () => {
+describe('readTerminalLayerTransformer', () => {
   describe('explicit exits', () => {
     it('VALID: {return statement} => true', () => {
       readTerminalLayerTransformerProxy();

@@ -10,7 +10,7 @@
  *   projection.
  *
  * USAGE:
- * readCallArgsLayerAdapter({ args: callExpression.getArguments() });
+ * readCallArgsLayerTransformer({ args: callExpression.getArguments() });
  * // Returns [{ kind: 'param-ref', paramName: 'value' }, { kind: 'literal', value: 3 }, { kind: 'opaque' }]
  */
 import { Node } from '#gateway/npm/ts-morph';

@@ -4,8 +4,8 @@
  *   member facts, an ARRAY of its element type, a TUPLE of one fact per fixed position, a TEMPLATE
  *   LITERAL of alternating text segments and substitution facts, or a CALLABLE), recursing through union
  *   members, array elements, tuple positions and template substitutions. It mirrors
- *   `read-signature-type-layer-adapter` in the sibling external-signature action: adapters cannot import
- *   an adapter in a sibling action, so this reader owns its thin ts-morph read while sharing the semantic
+ *   `read-signature-type-layer-broker` in the sibling external-signature action: a broker cannot import
+ *   a layer file in a sibling action, so this reader owns its thin ts-morph read while sharing the semantic
  *   half — `typeDescriptorTransformer`, the sole place the TypeFact -> TypeDescriptor union-fanout rule
  *   lives. An ambient OBJECT shape is not enumerated here — a global's declared shape is read one member
  *   at a time, each member access probed on its own — so a non-callable, non-array, non-tuple object
@@ -31,7 +31,7 @@
  *   degrading to `unknown`.
  *
  * USAGE:
- * readGlobalTypeLayerAdapter({ type: propertyAccess.getType() });
+ * readGlobalTypeLayerBroker({ type: propertyAccess.getType() });
  * // Returns { flavor: 'other', text: 'NodeJS.ProcessEnv' } or a union/array/tuple/template/primitive/callable fact
  */
 import { Node } from '#gateway/npm/ts-morph';

@@ -3,7 +3,7 @@
  *   branded ContentHash contract used to key the content-hash cache.
  *
  * USAGE:
- * cryptoSha256Adapter({ content: 'abc' });
+ * contentHashTransformer({ content: 'abc' });
  * // Returns a validated ContentHash (lowercase 64-hex sha256 digest)
  */
 import { createHash } from '#gateway/node/crypto';

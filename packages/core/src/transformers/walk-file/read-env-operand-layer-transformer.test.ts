@@ -14,7 +14,7 @@ const operandOf = ({ source }: { source: string }): Node => {
   return Node.isBinaryExpression(condition) ? condition.getLeft() : condition;
 };
 
-describe('readEnvOperandLayerAdapter', () => {
+describe('readEnvOperandLayerTransformer', () => {
   describe('the supported rung — one hop through Number()', () => {
     it('VALID: {const value = Number(process.env.VALUE)} => the env var the operand reads', () => {
       readEnvOperandLayerTransformerProxy();

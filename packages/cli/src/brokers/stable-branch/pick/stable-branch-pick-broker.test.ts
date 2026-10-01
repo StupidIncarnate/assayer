@@ -2,7 +2,7 @@ import { BranchNameStub } from '@assayer/shared/contracts';
 import { stableBranchPickBroker } from './stable-branch-pick-broker';
 import { stableBranchPickBrokerProxy } from './stable-branch-pick-broker.proxy';
 
-describe('readlineStableBranchPickAdapter', () => {
+describe('stableBranchPickBroker', () => {
   describe('prompt rendering', () => {
     it('VALID: {candidates: [main, develop, feature-x], preselected: main} => prompt lists all three with main marked as default', async () => {
       const proxy = stableBranchPickBrokerProxy();

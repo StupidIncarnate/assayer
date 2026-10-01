@@ -4,7 +4,7 @@ import { TypeFactStub } from '../../contracts/type-fact/type-fact.stub';
 import { readHarnessValueTypeLayerTransformer } from './read-harness-value-type-layer-transformer';
 import { readHarnessValueTypeLayerTransformerProxy } from './read-harness-value-type-layer-transformer.proxy';
 
-describe('readHarnessValueTypeLayerAdapter', () => {
+describe('readHarnessValueTypeLayerTransformer', () => {
   describe('primitive types', () => {
     it('VALID: {a string-typed expression} => string fact', () => {
       readHarnessValueTypeLayerTransformerProxy();

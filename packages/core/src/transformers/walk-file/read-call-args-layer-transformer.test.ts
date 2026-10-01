@@ -10,7 +10,7 @@ const argsOf = ({ source }: { source: string }): Node[] =>
     .getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression)
     .getArguments();
 
-describe('readCallArgsLayerAdapter', () => {
+describe('readCallArgsLayerTransformer', () => {
   describe('a parameter passed straight through', () => {
     it('VALID: {a call passing the caller`s own param} => a param-ref naming it', () => {
       readCallArgsLayerTransformerProxy();

@@ -21,7 +21,7 @@ const typeAndNodeOf = ({ source }: { source: string }): { type: Type; typeNode: 
   return { type: declaration.getType(), typeNode: declaration.getTypeNodeOrThrow() };
 };
 
-describe('readGlobalTypeLayerAdapter', () => {
+describe('readGlobalTypeLayerBroker', () => {
   describe('primitive types', () => {
     it('VALID: {a string} => a string fact', () => {
       readGlobalTypeLayerBrokerProxy();

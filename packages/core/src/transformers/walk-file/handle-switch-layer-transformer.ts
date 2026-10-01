@@ -21,7 +21,7 @@
  *   rather than inventing one.
  *
  * USAGE:
- * handleSwitchLayerAdapter({ node: switchStatement, context });
+ * handleSwitchLayerTransformer({ node: switchStatement, context });
  * // Returns a HandlerResult with one branch per literal case and per-clause descents
  */
 import { Node } from '#gateway/npm/ts-morph';

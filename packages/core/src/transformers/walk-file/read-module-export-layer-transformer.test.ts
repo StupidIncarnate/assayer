@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { readModuleExportLayerTransformer } from './read-module-export-layer-transformer';
 import { readModuleExportLayerTransformerProxy } from './read-module-export-layer-transformer.proxy';
 
-describe('readModuleExportLayerAdapter', () => {
+describe('readModuleExportLayerTransformer', () => {
   describe('the export keyword on the declaration', () => {
     it('VALID: {export const f} => f', () => {
       readModuleExportLayerTransformerProxy();

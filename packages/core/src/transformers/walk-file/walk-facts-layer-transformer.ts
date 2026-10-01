@@ -6,11 +6,11 @@
  *   claimed on the way back up by whichever node opened it. Everything else here — nodes, probe sites,
  *   module edges, declared shapes, global uses, env reads, reached and invoked functions — is FLAT: a
  *   fact about the file that no scope ever claims. The vocabulary a handler answers in lives in
- *   `handler-result-layer-adapter`; adding a channel means adding it there, in `walk-facts-contract`,
+ *   `handler-result-layer-transformer`; adding a channel means adding it there, in `walk-facts-contract`,
  *   and here.
  *
  * USAGE:
- * walkFactsLayerAdapter({ facts: descents.map(walk) });
+ * walkFactsLayerTransformer({ facts: descents.map(walk) });
  * // Returns one WalkFacts with every scope, loose branch, loose exit and node concatenated in order
  */
 import type { WalkFacts } from '../../contracts/walk-facts/walk-facts-contract';

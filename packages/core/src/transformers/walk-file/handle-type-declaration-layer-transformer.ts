@@ -21,7 +21,7 @@
  *   dropped, and it opens no scope: a type declaration holds no control flow.
  *
  * USAGE:
- * handleTypeDeclarationLayerAdapter({ node: interfaceDeclaration, context });
+ * handleTypeDeclarationLayerTransformer({ node: interfaceDeclaration, context });
  * // Returns a HandlerResult with one declaredShape and its children as descents
  */
 import { Node } from '#gateway/npm/ts-morph';

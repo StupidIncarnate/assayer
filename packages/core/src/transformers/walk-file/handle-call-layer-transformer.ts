@@ -14,7 +14,7 @@
  *   member-access handler feeds for `console.log(...)`.
  *
  * USAGE:
- * handleCallLayerAdapter({ node: callExpression, context });
+ * handleCallLayerTransformer({ node: callExpression, context });
  * // Returns a HandlerResult with one call and the child descents
  */
 import { Node } from '#gateway/npm/ts-morph';

@@ -10,7 +10,7 @@
  *   mis-caches).
  *
  * USAGE:
- * analyzerRootsResolveAdapter();
+ * analyzerRootsResolveBroker();
  * // Returns [<root>/packages/core/src, <root>/packages/shared/src] as branded FilePath[]
  */
 import { existsSync } from 'fs';

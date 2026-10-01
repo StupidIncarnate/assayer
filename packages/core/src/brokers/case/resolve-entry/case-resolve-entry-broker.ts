@@ -31,7 +31,7 @@
  *   property to find.
  *
  * USAGE:
- * jestResolveEntryAdapter({ subject, name: 'classify', access: { kind: 'method', className: 'Classifier', constructable: true }, requireFresh });
+ * caseResolveEntryBroker({ subject, name: 'classify', access: { kind: 'method', className: 'Classifier', constructable: true }, requireFresh });
  * // Returns the bound method, or undefined when the module does not carry it
  */
 import type { EntryAccess } from '@assayer/shared/contracts';

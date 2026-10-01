@@ -3,7 +3,7 @@ import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 import { readConditionLayerTransformer } from './read-condition-layer-transformer';
 import { readConditionLayerTransformerProxy } from './read-condition-layer-transformer.proxy';
 
-describe('readConditionLayerAdapter', () => {
+describe('readConditionLayerTransformer', () => {
   describe('the operand it reads', () => {
     it('VALID: {name.length === 0} => the operand is name itself, not the .length access', () => {
       readConditionLayerTransformerProxy();

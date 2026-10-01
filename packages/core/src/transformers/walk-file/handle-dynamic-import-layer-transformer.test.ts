@@ -12,7 +12,7 @@ const dynamicImportOf = ({ source }: { source: string }): CallExpression =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression);
 
-describe('handleDynamicImportLayerAdapter', () => {
+describe('handleDynamicImportLayerTransformer', () => {
   describe('the module edge it records', () => {
     it('VALID: {a dynamic import of a string literal} => an ordinary import edge carrying the literal specifier and no bindings', () => {
       handleDynamicImportLayerTransformerProxy();

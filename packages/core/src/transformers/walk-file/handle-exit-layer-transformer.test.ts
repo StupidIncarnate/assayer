@@ -18,7 +18,7 @@ const GUARDED_CONTEXT = WalkContextStub({
   exported: true,
 });
 
-describe('handleExitLayerAdapter', () => {
+describe('handleExitLayerTransformer', () => {
   describe('the exit it emits', () => {
     it('VALID: {unguarded return} => one return exit keyed @top', () => {
       handleExitLayerTransformerProxy();

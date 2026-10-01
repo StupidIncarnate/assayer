@@ -23,7 +23,7 @@ const NON_TAIL_CONTEXT = WalkContextStub({
 const EARLY_RETURN_SOURCE =
   'function classify(value: number) {\n  if (value > 5) {\n    return "big";\n  }\n  return "small";\n}\n';
 
-describe('handleBlockLayerAdapter', () => {
+describe('handleBlockLayerTransformer', () => {
   describe('early return: a statement after an escaping if inherits that if\'s surviving arm', () => {
     it("VALID: {if whose then-arm returns, then a statement} => the survivor is guarded by that if's ELSE", () => {
       handleBlockLayerTransformerProxy();

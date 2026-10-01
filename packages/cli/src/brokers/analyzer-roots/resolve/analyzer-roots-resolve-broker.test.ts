@@ -3,7 +3,7 @@ import { FilePathStub } from '@assayer/core/contracts';
 import { analyzerRootsResolveBroker } from './analyzer-roots-resolve-broker';
 import { analyzerRootsResolveBrokerProxy } from './analyzer-roots-resolve-broker.proxy';
 
-describe('analyzerRootsResolveAdapter', () => {
+describe('analyzerRootsResolveBroker', () => {
   describe('resolving the analyzer source roots', () => {
     it('VALID: {default from = this module, inside the monorepo} => the core and shared src roots', () => {
       analyzerRootsResolveBrokerProxy();

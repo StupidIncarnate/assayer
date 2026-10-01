@@ -6,7 +6,7 @@
  *   preselected candidate instead of waiting forever for a line that will never come.
  *
  * USAGE:
- * await readlineStableBranchPickAdapter({
+ * await stableBranchPickBroker({
  *   candidates: [BranchNameStub({ value: 'main' }), BranchNameStub({ value: 'develop' })],
  *   preselected: BranchNameStub({ value: 'main' }),
  * });

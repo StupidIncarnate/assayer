@@ -11,7 +11,7 @@ class Classifier {
   }
 }
 
-describe('jestResolveEntryAdapter', () => {
+describe('caseResolveEntryBroker', () => {
   describe('named exports', () => {
     it('VALID: {a named export} => resolves the module property, which drives', () => {
       caseResolveEntryBrokerProxy();

@@ -1,7 +1,7 @@
 import { harnessValueTypesTransformer } from './harness-value-types-transformer';
 import { harnessValueTypesTransformerProxy } from './harness-value-types-transformer.proxy';
 
-describe('tsMorphReadHarnessValueTypesAdapter', () => {
+describe('harnessValueTypesTransformer', () => {
   describe('a plain property value', () => {
     it('VALID: {report: undefined} => one entry naming its opaque "undefined" type', () => {
       harnessValueTypesTransformerProxy();

@@ -1,7 +1,7 @@
 import { desktopBridgeExposeBroker } from './desktop-bridge-expose-broker';
 import { desktopBridgeExposeBrokerProxy } from './desktop-bridge-expose-broker.proxy';
 
-describe('electronPreloadBridgeAdapter', () => {
+describe('desktopBridgeExposeBroker', () => {
   describe('exposing the bridge', () => {
     it('VALID: {bridgeKey, statusChannel, compiledTreeChannel, compiledFileChannel} => exposes the bridge and returns success', () => {
       desktopBridgeExposeBrokerProxy();

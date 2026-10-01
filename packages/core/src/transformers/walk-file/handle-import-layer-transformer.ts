@@ -10,7 +10,7 @@
  *   `import './x'` side-effect import contributes an edge with no bindings.
  *
  * USAGE:
- * handleImportLayerAdapter({ node: importDeclaration, context });
+ * handleImportLayerTransformer({ node: importDeclaration, context });
  * // Returns a HandlerResult with one moduleEdge and no descents
  */
 import type { ImportDeclaration } from '#gateway/npm/ts-morph';

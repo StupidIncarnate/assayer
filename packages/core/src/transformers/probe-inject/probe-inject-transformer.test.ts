@@ -13,7 +13,7 @@ const SOURCE = 'if (score > 5) { return 1; }';
 const COND_SITE = ProbeSiteStub({ id: 'f/if:x#leaf', kind: 'cond', start: 4, end: 13 });
 const EXIT_SITE = ProbeSiteStub({ id: 'f/return@then', kind: 'exit', start: 24, end: 25 });
 
-describe('jestProbeInjectAdapter', () => {
+describe('probeInjectTransformer', () => {
   describe('wrapping sites', () => {
     it('VALID: {a cond site over the condition} => wraps it in __P.c with its coverage id', () => {
       probeInjectTransformerProxy();

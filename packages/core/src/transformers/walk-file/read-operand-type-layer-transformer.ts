@@ -15,7 +15,7 @@
  *   a provably-constant `const` should really widen at all.
  *
  * USAGE:
- * readOperandTypeLayerAdapter({ node: operandNode, context, name: 'value' });
+ * readOperandTypeLayerTransformer({ node: operandNode, context, name: 'value' });
  * // Returns the operand's TypeDescriptor, or an unknown descriptor when it cannot be read
  */
 import type { Node } from '#gateway/npm/ts-morph';

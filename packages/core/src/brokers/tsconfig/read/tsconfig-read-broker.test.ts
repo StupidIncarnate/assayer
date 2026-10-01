@@ -8,7 +8,7 @@ import { tsconfigReadBrokerProxy } from './tsconfig-read-broker.proxy';
 
 const EMPTY_HASH = createHash('sha256').update('', 'utf8').digest('hex');
 
-describe('typescriptReadConfigAdapter', () => {
+describe('tsconfigReadBroker', () => {
   describe('a tsconfig is present at the search path', () => {
     it('VALID: {searchPath with a strict tsconfig} => parses the strict flag from options', () => {
       tsconfigReadBrokerProxy();

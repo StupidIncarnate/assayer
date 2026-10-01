@@ -19,7 +19,7 @@
  *   only mean anything against the exact bytes they were computed from.
  *
  * USAGE:
- * probeVisitNodeLayerAdapter({ ts, context, sourceFile, sites, node });
+ * probeVisitNodeLayerTransformer({ ts, context, sourceFile, sites, node });
  * // Returns the node, with `score > 5` rewritten to `__P.c('…#leaf.0', score > 5)`
  */
 import type TS from '#gateway/npm/typescript';

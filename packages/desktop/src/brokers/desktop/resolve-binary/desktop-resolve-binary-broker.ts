@@ -3,7 +3,7 @@
  *   launcher context (not the Electron runtime), its module export IS the binary path string.
  *
  * USAGE:
- * electronBinaryPathAdapter();
+ * desktopResolveBinaryBroker();
  * // Returns the ExecutablePath to the Electron binary
  */
 import electron from 'electron';

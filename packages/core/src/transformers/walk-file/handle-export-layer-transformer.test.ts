@@ -12,7 +12,7 @@ const exportOf = ({ source }: { source: string }): ExportDeclaration =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.ExportDeclaration);
 
-describe('handleExportLayerAdapter', () => {
+describe('handleExportLayerTransformer', () => {
   describe('the re-export edge it records', () => {
     it('VALID: {a renamed named re-export} => one reexport edge carrying the source name and alias', () => {
       handleExportLayerTransformerProxy();

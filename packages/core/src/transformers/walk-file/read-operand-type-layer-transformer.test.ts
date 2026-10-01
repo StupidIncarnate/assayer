@@ -31,7 +31,7 @@ const UNION_PARAM_CONTEXT = WalkContextStub({
   exported: true,
 });
 
-describe('readOperandTypeLayerAdapter', () => {
+describe('readOperandTypeLayerTransformer', () => {
   describe('a param keeps its DECLARED descriptor', () => {
     it('VALID: {operand named after a param} => the declared descriptor, NOT the type graph readout', () => {
       readOperandTypeLayerTransformerProxy();

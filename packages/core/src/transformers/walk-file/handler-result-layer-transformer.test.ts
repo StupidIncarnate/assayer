@@ -3,7 +3,7 @@ import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
 import { handlerResultLayerTransformerProxy } from './handler-result-layer-transformer.proxy';
 
-describe('handlerResultLayerAdapter', () => {
+describe('handlerResultLayerTransformer', () => {
   describe('defaults', () => {
     it('EMPTY: {nothing contributed} => every list empty and no scope opened', () => {
       handlerResultLayerTransformerProxy();

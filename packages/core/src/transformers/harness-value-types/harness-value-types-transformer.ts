@@ -23,7 +23,7 @@
  *   the same silent skip `harness-keys` gives a shape it cannot enumerate.
  *
  * USAGE:
- * tsMorphReadHarnessValueTypesAdapter({ source, fileName: 'src/audit.harness.ts' });
+ * harnessValueTypesTransformer({ source, fileName: 'src/audit.harness.ts' });
  * // Returns [{ entry: 'audit', param: 'report', type: { kind: 'unknown', text: 'undefined' } }]
  */
 import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';

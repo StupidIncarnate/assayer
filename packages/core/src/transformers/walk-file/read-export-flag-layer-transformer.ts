@@ -14,7 +14,7 @@
  *   just as surely as `export const runIt`, and the statement that says so sits elsewhere in the file.
  *
  * USAGE:
- * readExportFlagLayerAdapter({ node: arrowFunction, context });
+ * readExportFlagLayerTransformer({ node: arrowFunction, context });
  * // Returns true for `export const classify = () => …`, false for a nested helper
  */
 import { Node } from '#gateway/npm/ts-morph';

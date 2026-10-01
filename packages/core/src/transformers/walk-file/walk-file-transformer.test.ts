@@ -10,7 +10,7 @@ const IMPORTS_AND_CALL_SINGLE = "import { foo } from './y';\nexport function run
 const IMPORTS_AND_CALL_DOUBLE = 'import { foo } from "./y";\nexport function run(): void {\n  foo();\n}\n';
 const IMPORTS_AND_CALL_MINIFIED = "import {foo} from './y';export function run():void{foo();}";
 
-describe('tsMorphWalkFileAdapter', () => {
+describe('walkFileTransformer', () => {
   describe('module scope', () => {
     it('EMPTY: {empty file} => a lone module scope whose only exit is the file ending', () => {
       walkFileTransformerProxy();
@@ -96,7 +96,7 @@ describe('tsMorphWalkFileAdapter', () => {
 
   describe('nullable parameter types', () => {
     // The parse turns on strict-null-checks, so `string | null` arrives as a genuine two-member union
-    // instead of collapsing to plain `string`. `read-type-fact-layer-adapter` has no dedicated case for
+    // instead of collapsing to plain `string`. `read-type-fact-layer-transformer` has no dedicated case for
     // the null type, so that member reads through the generic opaque path as `{ kind: 'unknown', text:
     // 'null' }`, sitting beside the real `{ kind: 'string' }` member.
     it('VALID: {a parameter declared string | null} => a real two-member union, not collapsed to string', () => {

@@ -46,7 +46,7 @@
  *   absorbed the union before it could be read as one.
  *
  * USAGE:
- * readTypeFactLayerAdapter({ type: param.getType(), typeNode: param.getTypeNode() });
+ * readTypeFactLayerTransformer({ type: param.getType(), typeNode: param.getTypeNode() });
  * // Returns { flavor: 'union', members: [{ flavor: 'literal', value: 'get' }, …], text: '"get" | "post"' }
  */
 import { Node } from '#gateway/npm/ts-morph';

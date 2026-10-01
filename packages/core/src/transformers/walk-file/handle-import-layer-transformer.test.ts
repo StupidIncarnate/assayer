@@ -12,7 +12,7 @@ const importOf = ({ source }: { source: string }): ImportDeclaration =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.ImportDeclaration);
 
-describe('handleImportLayerAdapter', () => {
+describe('handleImportLayerTransformer', () => {
   describe('the module edge it records', () => {
     it('VALID: {a default plus renamed named import} => one import edge carrying every binding and its position', () => {
       handleImportLayerTransformerProxy();

@@ -589,7 +589,7 @@ describe('causeArrangeTransformer', () => {
       });
     });
 
-    // A5: `jestInterpretCaseAdapter` applies an `array` binding as ONE positional argument, which is
+    // A5: `caseInterpretBroker` applies an `array` binding as ONE positional argument, which is
     // wrong for a REST parameter — its array must SPREAD across the tail positional slots it stands
     // for. The binding carries `rest: true` so the interpreter can tell the two apart; a plain array
     // param (above) carries no such flag.

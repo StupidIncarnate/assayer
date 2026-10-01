@@ -8,7 +8,7 @@
  *   text is the version of this that can be wrong, and it is why the failure is carried, not thrown.
  *
  * USAGE:
- * replyValueLayerAdapter({ reply: { success: true, valueRaw: 3 } });
+ * replyValueLayerBroker({ reply: { success: true, valueRaw: 3 } });
  * // Returns 3 — or throws Error(message) when the reply is a failure
  */
 import { ipcReplyContract } from '../../../contracts/ipc-reply/ipc-reply-contract';

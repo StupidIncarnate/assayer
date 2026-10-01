@@ -15,7 +15,7 @@ const firstNumericLiteral = ({ source }: { source: string }): Node =>
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.NumericLiteral);
 
-describe('readAmbientRootLayerAdapter', () => {
+describe('readAmbientRootLayerTransformer', () => {
   describe('ambient host globals the hermetic project cannot type', () => {
     it('VALID: {process, zero declarations} => is a candidate', () => {
       readAmbientRootLayerTransformerProxy();

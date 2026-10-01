@@ -1,7 +1,7 @@
 import { contentHashTransformer } from './content-hash-transformer';
 import { contentHashTransformerProxy } from './content-hash-transformer.proxy';
 
-describe('cryptoSha256Adapter', () => {
+describe('contentHashTransformer', () => {
   describe('hashing content', () => {
     it('VALID: {content: "abc"} => both calls return the same known sha256 digest', () => {
       contentHashTransformerProxy();

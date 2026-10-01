@@ -12,7 +12,7 @@
  *   `read-conditional-exit` returns as descents.
  *
  * USAGE:
- * flattenShortCircuitLayerAdapter({ expression: orChain, operator: SyntaxKind.BarBarToken });
+ * flattenShortCircuitLayerTransformer({ expression: orChain, operator: SyntaxKind.BarBarToken });
  * // Returns [a, b, c] — the operands in source order
  */
 import type { SyntaxKind } from '#gateway/npm/ts-morph';

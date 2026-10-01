@@ -3,7 +3,7 @@ import { CompileProgressEventStub } from '@assayer/core/contracts';
 import { compileProgressRenderBroker } from './compile-progress-render-broker';
 import { compileProgressRenderBrokerProxy } from './compile-progress-render-broker.proxy';
 
-describe('processStdoutCompileProgressAdapter', () => {
+describe('compileProgressRenderBroker', () => {
   describe('first event of a compile', () => {
     // Planning is not compiling. Files are planned on every run — the working tree has no commit to
     // diff against — so announcing here would announce every run, whether or not anything is written.

@@ -13,7 +13,7 @@
  *   and the set is sorted by name so the blob stays byte-identical.
  *
  * USAGE:
- * declaredTypesProjectionTransformer({ walked: tsMorphWalkFileAdapter({ source, relPath }) });
+ * declaredTypesProjectionTransformer({ walked: walkFileTransformer({ source, relPath }) });
  * // Returns [{ name: 'Config', properties: [{ name: 'mode', type: {...} }, ...] }]
  */
 import type { DeclaredType } from '@assayer/shared/contracts';

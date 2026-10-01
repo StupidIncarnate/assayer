@@ -15,7 +15,7 @@
  *   controlling operand's span already carries the exit probe, and injection wraps a span once.
  *
  * USAGE:
- * readNullishLeafLayerAdapter({ operand: nullishChain.getLeft(), context, branchCoverageId });
+ * readNullishLeafLayerTransformer({ operand: nullishChain.getLeft(), context, branchCoverageId });
  * // Returns { condition: { kind: 'leaf', predicate: { kind: 'non-nullish' }, … }, sites: [{ id, kind: 'cond', … }] }
  */
 import { Node } from '#gateway/npm/ts-morph';

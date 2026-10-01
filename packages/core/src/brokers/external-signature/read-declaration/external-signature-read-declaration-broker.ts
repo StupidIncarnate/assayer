@@ -13,7 +13,7 @@
  *   serializable facts is pure, so every importer reuses the same resolved program.
  *
  * USAGE:
- * tsMorphReadExternalSignatureAdapter({ tsConfigFilePath, dtsPath, exportName });
+ * externalSignatureReadDeclarationBroker({ tsConfigFilePath, dtsPath, exportName });
  * // Returns { usable: true, signature: { params: [...], returnType: {...} } } or { usable: false }
  */
 import { Node, Project } from '#gateway/npm/ts-morph';
