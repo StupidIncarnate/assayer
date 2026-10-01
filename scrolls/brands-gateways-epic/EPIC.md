@@ -197,6 +197,24 @@ flowchart LR
   R --> Z[Phase Z<br/>docs and the finish]
 ```
 
+### What runs in parallel
+
+At most eight agents run at once (D8). Two things decide what may overlap: who edits which files (rule 6), and
+which step needs compiled output or a quiet tree. A script `apply`, a build, a full ward run and a `run-all.sh`
+segment each need the tree to themselves, so no agent edits anything while one runs.
+
+| Phase | Runs in parallel | Runs alone or in order |
+|---|---|---|
+| 0 | Planners and script ports, which only write item files or `scripts/` | Builds, installs and the baseline ward run |
+| G | Every G item, one gateway folder each. Two items in one gateway package may share it only with disjoint folders; its `package.json` is staged line by line. | The gateway build after each item, and a dungeonmaster build, which changes the rules under every agent |
+| M | M-2 batches, one package per agent | M-1's `apply`, one package at a time, each its own commit |
+| A | A-1, SD-2 and SD-3 (planning and scripts on copies). After the scripts apply, A-4's hand batches, one package per agent. | A-2's re-home `apply`, with core's walk-file folder as its own run and commit. A-3 after A-2. A-6 after A-4. A-7 last. |
+| X | Nothing within a package: each script runs leaves first, shared, core, desktop, cli, app, then `hydration-recipes`. X-4 hand batches run one package per agent. | Each package's X-1 to X-3, and the build after X-1 |
+| C | C-1's reviewer beside C-2 and C-3 dry runs | Each `apply` |
+| B | B-2 and SD-4 together, before B-3 | B-3 to B-6 and B-8 to B-9: `run-all.sh` segments, alone, one after another. B-7 fixer rounds: one agent per batch from `queue.cjs`, leaf packages first. |
+| R | R-2's scan batches, one rule and one package per agent | R-1's `apply` |
+| Z | Z-1 and Z-2's hand sweep, on disjoint files | Z-3, last |
+
 The script-development items (SD) run beside any phase. They write only under `$H/scripts/` and `$A/tmp/`, never
 `packages/`, so they collide with no one. Each must be ready before the item that needs it.
 
