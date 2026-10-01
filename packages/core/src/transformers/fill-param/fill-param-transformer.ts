@@ -69,7 +69,7 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
     const elements = arrayArrangeTransformer({ element: type.element, count: arrayCardinalityStatics.counts.one });
 
     return elements === undefined
-      ? fillParamResultContract.parse(unfillable)
+      ? unfillable
       : fillParamResultContract.parse({
           kind: 'filled',
           binding: arrangeBindingContract.parse({
@@ -84,7 +84,7 @@ export const fillParamTransformer = ({ param }: { param: ParamDescriptor }): Fil
   const value = isTypeFillableGuard({ type }) ? fillValueTransformer({ type }) : undefined;
 
   if (value === undefined) {
-    return fillParamResultContract.parse(unfillable);
+    return unfillable;
   }
 
   // Read off the VALUE, not `type.kind`: a `tuple` fills as a real array (one element per fixed

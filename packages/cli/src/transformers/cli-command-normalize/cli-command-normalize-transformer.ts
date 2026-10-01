@@ -10,37 +10,36 @@
  * cliCommandNormalizeTransformer({});
  * // Returns 'bare' as branded CliCommand
  */
-import { cliCommandContract } from '../../contracts/cli-command/cli-command-contract';
 import type { CliCommand } from '../../contracts/cli-command/cli-command-contract';
 
 export const cliCommandNormalizeTransformer = ({ arg }: { arg?: string }): CliCommand => {
   if (arg === 'help' || arg === '--help' || arg === '-h') {
-    return cliCommandContract.parse('help');
+    return 'help';
   }
 
   if (arg === 'version' || arg === '--version' || arg === '-v') {
-    return cliCommandContract.parse('version');
+    return 'version';
   }
 
   if (arg === 'docs') {
-    return cliCommandContract.parse('docs');
+    return 'docs';
   }
 
   if (arg === 'status') {
-    return cliCommandContract.parse('status');
+    return 'status';
   }
 
   if (arg === 'unit') {
-    return cliCommandContract.parse('unit');
+    return 'unit';
   }
 
   if (arg === 'detail') {
-    return cliCommandContract.parse('detail');
+    return 'detail';
   }
 
   if (arg === undefined) {
-    return cliCommandContract.parse('bare');
+    return 'bare';
   }
 
-  return cliCommandContract.parse('unknown');
+  return 'unknown';
 };
