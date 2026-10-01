@@ -6,7 +6,7 @@ import type { AssayerCacheManifestStub, StubIndexStub, StubOverlayStub } from '@
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
 import { cacheLoadStubIndexBrokerProxy } from '../../cache/load-stub-index/cache-load-stub-index-broker.proxy';
 import { repoSourceRootBrokerProxy } from '../../repo/source-root/repo-source-root-broker.proxy';
-import { nodeFsCacheManifestExistsAdapterProxy } from '../../../adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const stubIndexResolveBrokerProxy = (): {
   setup: (params: {
@@ -18,7 +18,7 @@ export const stubIndexResolveBrokerProxy = (): {
   withOverlays: (params: { overlays: readonly ReturnType<typeof StubOverlayStub>[] }) => void;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
-  const existsProxy = nodeFsCacheManifestExistsAdapterProxy();
+  const existsProxy = pathExistsProxy();
   const indexProxy = cacheLoadStubIndexBrokerProxy();
   // Bare-called: repoSourceRootBroker resolves a root through a config-load mock; its default is
   // enough for the combine, and the overlay read itself is mocked at the broker seam below.

@@ -1,10 +1,10 @@
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const configLoadBrokerProxy = (): {
   hasContent: ({ content }: { content: string }) => void;
   readThrows: ({ error }: { error: Error }) => void;
 } => {
-  const fsProxy = fsReadFileAdapterProxy();
+  const fsProxy = readFileProxy();
 
   return {
     hasContent: ({ content }: { content: string }): void => {

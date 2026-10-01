@@ -1,8 +1,8 @@
-import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
 import { themedRenderMiddleware } from '../../../middleware/themed-render/themed-render-middleware';
 import { StubsPageResponder } from './stubs-page-responder';
 import { StubsPageResponderProxy } from './stubs-page-responder.proxy';
 import { StubViewStub } from '@assayer/shared/contracts';
+import { createElement } from '#gateway/npm/react';
 
 describe('StubsPageResponder', () => {
   describe('rendering the stubs page', () => {
@@ -11,7 +11,7 @@ describe('StubsPageResponder', () => {
       proxy.setupView({ view: StubViewStub() });
 
       const { findByTestId } = themedRenderMiddleware({
-        ui: reactCreateElementAdapter({ component: StubsPageResponder }),
+        ui: createElement(StubsPageResponder),
       });
       const panel = await findByTestId('STUB_REPOSITORY');
 

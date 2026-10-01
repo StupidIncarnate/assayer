@@ -2,12 +2,12 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { RunResultStub } from '@assayer/shared/contracts';
 
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 import { runLoadBroker } from '../load/run-load-broker';
 import { runLoadBrokerProxy } from '../load/run-load-broker.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const runFindBrokerProxy = (): {
   savedRun: ({ run }: { run: unknown }) => void;
@@ -18,8 +18,8 @@ export const runFindBrokerProxy = (): {
   // runLoadBroker is REPLACED wholesale rather than driven through its own proxy: it and this broker
   // both read through fsExistsAdapter/fsReadFileAdapter, so one shared mock cannot serve a source
   // file and a run.json at once.
-  fsExistsAdapterProxy();
-  fsReadFileAdapterProxy();
+  pathExistsProxy();
+  readFileProxy();
   runIdBrokerProxy();
   runLoadBrokerProxy();
 

@@ -1,9 +1,6 @@
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
-import { pathBasenameAdapterProxy } from '../../../adapters/path/basename/path-basename-adapter.proxy';
-import { pathDirnameAdapterProxy } from '../../../adapters/path/dirname/path-dirname-adapter.proxy';
-import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
 import { compileWalkWorkingTreeBrokerProxy } from '../../compile/walk-working-tree/compile-walk-working-tree-broker.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const stubOverlayLoadBrokerProxy = (): {
   dirExists: () => void;
@@ -15,11 +12,8 @@ export const stubOverlayLoadBrokerProxy = (): {
   readThrows: (params: { error: Error }) => void;
 } => {
   const walkProxy = compileWalkWorkingTreeBrokerProxy();
-  const existsProxy = fsExistsAdapterProxy();
-  const readFileProxy = fsReadFileAdapterProxy();
-  pathRelativeAdapterProxy();
-  pathDirnameAdapterProxy();
-  pathBasenameAdapterProxy();
+  const existsProxy = pathExistsProxy();
+  const readFileGateway = readFileProxy();
 
   // The load broker checks `objects/` then `env/` in that order, so the two existence outcomes are
   // queued in call order. Unqueued checks fall through to the proxy default (the directory exists).
@@ -34,10 +28,10 @@ export const stubOverlayLoadBrokerProxy = (): {
       walkProxy.queueDir({ entries });
     },
     queueFileContent: ({ content }: { content: string }): void => {
-      readFileProxy.returns({ content });
+      readFileGateway.returns({ content });
     },
     readThrows: ({ error }: { error: Error }): void => {
-      readFileProxy.throws({ error });
+      readFileGateway.throws({ error });
     },
   };
 };

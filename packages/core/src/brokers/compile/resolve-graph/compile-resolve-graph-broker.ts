@@ -26,25 +26,17 @@
  *   cacheDir: '/repo/.assayer/cache', files: [{ relPath: 'src/a.ts', contentHash }] });
  * // Returns { index: ResolvedIndex, errors: [{ relPath, line, column, message }] }
  */
-import {
-  columnNumberContract,
-  compiledFileBlobContract,
-  lineNumberContract,
-  moduleSpecifierContract,
-  relPathContract,
-  resolvedEdgeContract,
-  resolvedIndexContract,
-  symbolNameContract,
-} from '@assayer/shared/contracts';
+import { columnNumberContract, compiledFileBlobContract, lineNumberContract, moduleSpecifierContract, relPathContract, resolvedEdgeContract, resolvedIndexContract, symbolNameContract, packageNameContract } from '@assayer/shared/contracts';
 import type { ColumnNumber, ContentHash, LineNumber, RelPath, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { nodeModuleBuiltinsAdapter } from '../../../adapters/node-module/builtins/node-module-builtins-adapter';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { externalSignatureReadBroker } from '../../external-signature/read/external-signature-read-broker';
 import { externalSignatureReadGlobalBroker } from '../../external-signature/read-global/external-signature-read-global-broker';
 import { resolveSpecifierLayerBroker } from './resolve-specifier-layer-broker';
+import { readFile } from '#gateway/node/fs__promises';
+import { builtinModules } from '#gateway/node/module';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const compileResolveGraphBroker = async ({
   root,
@@ -61,11 +53,11 @@ export const compileResolveGraphBroker = async ({
   errors: { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[];
 }> => {
   const { options, tsconfigHash, configFilePath } = tsconfigReadBroker({ searchPath: root });
-  const builtins = new Set(nodeModuleBuiltinsAdapter().map(String));
+  const builtins = new Set(builtinModules.map((name) => packageNameContract.parse(name)).map(String));
 
   const blobs = await Promise.all(
     files.map(async (file) => {
-      const raw = await fsReadFileAdapter({ path: `${blobsDir}/${String(file.contentHash)}.json` });
+      const raw = fileContentsContract.parse(await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
       return compiledFileBlobContract.parse(JSON.parse(String(raw)));
     }),
   );

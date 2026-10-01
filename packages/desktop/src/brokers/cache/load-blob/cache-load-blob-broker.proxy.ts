@@ -1,11 +1,11 @@
-import { nodeFsReadCacheBlobAdapterProxy } from '../../../adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.proxy';
 import type { CompiledFileBlobStub } from '@assayer/shared/contracts';
+import { readJsonFileProxy } from '#gateway/node/fs__promises/read-json-file/read-json-file.proxy';
 
 export const cacheLoadBlobBrokerProxy = (): {
   resolves: (params: { blob: ReturnType<typeof CompiledFileBlobStub> }) => void;
   rejects: (params: { error: Error }) => void;
 } => {
-  const adapterProxy = nodeFsReadCacheBlobAdapterProxy();
+  const adapterProxy = readJsonFileProxy();
 
   return {
     resolves: ({ blob }): void => {

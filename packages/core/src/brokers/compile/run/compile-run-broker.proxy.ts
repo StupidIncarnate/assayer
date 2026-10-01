@@ -11,7 +11,6 @@ import type { FileCount, NamespaceName } from '@assayer/shared/contracts';
 import { PropertyGuardStub } from '../../../contracts/property-guard/property-guard.stub';
 
 import { compileResolveRootBrokerProxy } from '../resolve-root/compile-resolve-root-broker.proxy';
-import { pathBasenameAdapterProxy } from '../../../adapters/path/basename/path-basename-adapter.proxy';
 import { gitCurrentBranchBrokerProxy } from '../../git/current-branch/git-current-branch-broker.proxy';
 import { compilePlanCurrentBrokerProxy } from '../plan-current/compile-plan-current-broker.proxy';
 import { processTargetsLayerBrokerProxy } from './process-targets-layer-broker.proxy';
@@ -51,7 +50,6 @@ export const compileRunBrokerProxy = (): {
   getHarnessGraphWriteOrder: () => readonly NamespaceName[];
 } => {
   compileResolveRootBrokerProxy();
-  pathBasenameAdapterProxy();
   const currentBranchProxy = gitCurrentBranchBrokerProxy();
   const planCurrentProxy = compilePlanCurrentBrokerProxy();
   const processCurrentProxy = processTargetsLayerBrokerProxy();

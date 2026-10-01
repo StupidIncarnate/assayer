@@ -1,5 +1,5 @@
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { stubIndexWriteBrokerProxy } from '../../stub-index/write/stub-index-write-broker.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const compileStubGraphBrokerProxy = (): {
   queueBlob: ({ blob }: { blob: unknown }) => void;
@@ -13,13 +13,13 @@ export const compileStubGraphBrokerProxy = (): {
   // Blob loading runs through the REAL fsReadFileAdapter with only the underlying readFile mocked; each
   // queued blob is one file's on-disk record. The write runs through the REAL stubIndexWriteBroker with
   // only its fs adapters mocked, so the written content and tmp path can be read back.
-  const readFileProxy = fsReadFileAdapterProxy();
+  const readFileGateway = readFileProxy();
   const writeProxy = stubIndexWriteBrokerProxy();
   writeProxy.succeeds();
 
   return {
     queueBlob: ({ blob }: { blob: unknown }): void => {
-      readFileProxy.returns({ content: JSON.stringify(blob) });
+      readFileGateway.returns({ content: JSON.stringify(blob) });
     },
     getWrittenIndex: ({ path }: { path: string }): unknown => writeProxy.getWrittenIndex({ path }),
     getWrittenPaths: (): unknown[] => writeProxy.getWrittenPaths(),

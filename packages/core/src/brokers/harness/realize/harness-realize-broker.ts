@@ -49,8 +49,6 @@
 import { fileAnalysisContract, relPathContract } from '@assayer/shared/contracts';
 import type { EntryLabel, FileAnalysis, SymbolName, TypeText } from '@assayer/shared/contracts';
 
-import { fsExistsSyncAdapter } from '../../../adapters/fs/exists-sync/fs-exists-sync-adapter';
-import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessLoadBroker } from '../load/harness-load-broker';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -61,6 +59,8 @@ import { harnessKeysTransformer } from '../../../transformers/harness-keys/harne
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 import { inputGapTransformer } from '../../../transformers/input-gap/input-gap-transformer';
 import { undrivenBranchTransformer } from '../../../transformers/undriven-branch/undriven-branch-transformer';
+import { existsSync, readFileSync } from '#gateway/node/fs';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const harnessRealizeBroker = ({
   analysis,
@@ -90,11 +90,11 @@ export const harnessRealizeBroker = ({
 
   const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
 
-  if (!fsExistsSyncAdapter({ path: harnessPath })) {
+  if (!existsSync(harnessPath)) {
     return analysis;
   }
 
-  const source = String(fsReadFileSyncAdapter({ path: harnessPath }));
+  const source = String(fileContentsContract.parse(readFileSync(harnessPath)));
 
   if (!isAssayerHarnessGuard({ source })) {
     return analysis;

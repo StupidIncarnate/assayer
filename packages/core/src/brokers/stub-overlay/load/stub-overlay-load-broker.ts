@@ -12,18 +12,17 @@
  * await stubOverlayLoadBroker({ repoRoot: '/repo/smoke-repo' });
  * // Returns a readonly StubOverlay[] sorted by key — the committed corrections found under the root
  */
-import { stubOverlayContract } from '@assayer/shared/contracts';
+import { stubOverlayContract, relPathContract } from '@assayer/shared/contracts';
 import type { StubOverlay } from '@assayer/shared/contracts';
 
 import { stubOverlayObjectFileContract } from '../../../contracts/stub-overlay-object-file/stub-overlay-object-file-contract';
 import { stubOverlayEnvFileContract } from '../../../contracts/stub-overlay-env-file/stub-overlay-env-file-contract';
 
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { pathBasenameAdapter } from '../../../adapters/path/basename/path-basename-adapter';
-import { pathDirnameAdapter } from '../../../adapters/path/dirname/path-dirname-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { basename, dirname, relative } from '#gateway/node/path';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
+import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 
 const JSON_EXT = '.json';
 
@@ -31,10 +30,10 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
   const objectsRoot = `${repoRoot}/assayer/stubs/objects`;
   const envRoot = `${repoRoot}/assayer/stubs/env`;
 
-  const objectAbs = (await fsExistsAdapter({ path: objectsRoot }))
+  const objectAbs = (await pathExists(objectsRoot))
     ? await compileWalkWorkingTreeBroker({ root: objectsRoot })
     : [];
-  const envAbs = (await fsExistsAdapter({ path: envRoot }))
+  const envAbs = (await pathExists(envRoot))
     ? await compileWalkWorkingTreeBroker({ root: envRoot })
     : [];
 
@@ -42,10 +41,10 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
     objectAbs
       .filter((abs) => String(abs).endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromObjects = pathRelativeAdapter({ from: objectsRoot, to: String(abs) });
-        const definitionRelPath = pathDirnameAdapter({ path: String(relFromObjects) });
-        const typeName = String(pathBasenameAdapter({ path: String(relFromObjects) })).slice(0, -JSON_EXT.length);
-        const raw = await fsReadFileAdapter({ path: String(abs) });
+        const relFromObjects = relPathContract.parse(relative(objectsRoot, String(abs)));
+        const definitionRelPath = filePathContract.parse(dirname(String(relFromObjects)));
+        const typeName = String(filePathContract.parse(basename(String(relFromObjects)))).slice(0, -JSON_EXT.length);
+        const raw = fileContentsContract.parse(await readFile(String(abs)));
         const file = stubOverlayObjectFileContract.parse(JSON.parse(String(raw)));
         const properties = Object.entries(file.properties)
           .map(([name, spec]) => ({ name, values: spec.values }))
@@ -64,9 +63,9 @@ export const stubOverlayLoadBroker = async ({ repoRoot }: { repoRoot: string }):
     envAbs
       .filter((abs) => String(abs).endsWith(JSON_EXT))
       .map(async (abs) => {
-        const relFromEnv = pathRelativeAdapter({ from: envRoot, to: String(abs) });
-        const property = String(pathBasenameAdapter({ path: String(relFromEnv) })).slice(0, -JSON_EXT.length);
-        const raw = await fsReadFileAdapter({ path: String(abs) });
+        const relFromEnv = relPathContract.parse(relative(envRoot, String(abs)));
+        const property = String(filePathContract.parse(basename(String(relFromEnv)))).slice(0, -JSON_EXT.length);
+        const raw = fileContentsContract.parse(await readFile(String(abs)));
         const file = stubOverlayEnvFileContract.parse(JSON.parse(String(raw)));
 
         return stubOverlayContract.parse({

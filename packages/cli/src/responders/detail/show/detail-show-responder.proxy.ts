@@ -4,7 +4,6 @@ import { runLoadBrokerProxy } from '@assayer/core/testing';
 import { RunResultStub } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { utilParseArgsAdapterProxy } from '../../../adapters/util/parse-args/util-parse-args-adapter.proxy';
 
 export const DetailShowResponderProxy = (): {
   savedRun: ({ run }: { run: RunResult }) => void;
@@ -14,7 +13,6 @@ export const DetailShowResponderProxy = (): {
   // I/O from here (the ts-jest collector only walks RELATIVE imports), so the direct registerMock
   // below is what drives this. utilParseArgsAdapter is pure argv parsing and runs for real.
   runLoadBrokerProxy();
-  utilParseArgsAdapterProxy();
 
   const handle = registerMock({ fn: runLoadBroker });
 

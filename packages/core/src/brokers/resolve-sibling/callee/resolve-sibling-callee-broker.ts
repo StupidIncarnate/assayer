@@ -19,10 +19,12 @@
 import type { RelPath } from '@assayer/shared/contracts';
 
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
-import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
+import { readFileSync } from '#gateway/node/fs';
+import { relative } from '#gateway/node/path';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
+import { relPathContract } from '@assayer/shared/contracts';
 
 export const resolveSiblingCalleeBroker = ({
   specifier,
@@ -42,13 +44,13 @@ export const resolveSiblingCalleeBroker = ({
   }
 
   const fileName = String(resolved.fileName);
-  const relPath = pathRelativeAdapter({ from: root, to: fileName });
+  const relPath = relPathContract.parse(relative(root, fileName));
 
   if (String(relPath).startsWith('..') || fileName.includes('/node_modules/')) {
     return undefined;
   }
 
-  const source = fsReadFileSyncAdapter({ path: fileName });
+  const source = fileContentsContract.parse(readFileSync(fileName));
 
   return { walked: walkFileTransformer({ source: String(source), relPath: String(relPath) }), relPath, source };
 };

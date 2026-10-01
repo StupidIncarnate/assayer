@@ -47,7 +47,6 @@ import type {
 } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { harnessValueTypesTransformer } from '../../../transformers/harness-value-types/harness-value-types-transformer';
 import { harnessLoadBroker } from '../../harness/load/harness-load-broker';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
@@ -55,6 +54,8 @@ import { harnessKeysTransformer } from '../../../transformers/harness-keys/harne
 import { harnessTargetTransformer } from '../../../transformers/harness-target/harness-target-transformer';
 import { harnessValidateTransformer } from '../../../transformers/harness-validate/harness-validate-transformer';
 import { harnessIndexWriteBroker } from '../../harness-index/write/harness-index-write-broker';
+import { readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 const HARNESS_LINE = 1;
 const HARNESS_COLUMN = 1;
@@ -157,7 +158,7 @@ export const compileHarnessGraphBroker = async ({
   const targets = [...new Set(recorded.map((harness) => String(harness.targetRelPath)))];
   const analysed = await Promise.all(
     targets.map(async (target) => {
-      const raw = await fsReadFileAdapter({ path: `${blobsDir}/${String(hashByRelPath.get(target))}.json` });
+      const raw = fileContentsContract.parse(await readFile(`${blobsDir}/${String(hashByRelPath.get(target))}.json`));
 
       return [target, compiledFileBlobContract.parse(JSON.parse(String(raw)))] as const;
     }),

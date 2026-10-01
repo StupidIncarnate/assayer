@@ -17,10 +17,10 @@
  */
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { runIdBroker } from '../id/run-id-broker';
 import { runLoadBroker } from '../load/run-load-broker';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runFindBroker = async ({
   configDir,
@@ -33,11 +33,11 @@ export const runFindBroker = async ({
 }): Promise<RunResult | undefined> => {
   const absPath = `${root}/${relPath}`;
 
-  if (!(await fsExistsAdapter({ path: absPath }))) {
+  if (!(await pathExists(absPath))) {
     return undefined;
   }
 
-  const source = String(await fsReadFileAdapter({ path: absPath }));
+  const source = String(fileContentsContract.parse(await readFile(absPath)));
 
   return runLoadBroker({ configDir, runId: String(await runIdBroker({ root, relPath, source })) });
 };

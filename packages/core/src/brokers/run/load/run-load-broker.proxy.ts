@@ -2,17 +2,17 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { RunResultStub } from '@assayer/shared/contracts';
 
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const runLoadBrokerProxy = (): {
   savedRun: ({ run }: { run: unknown }) => void;
   noSuchRun: () => void;
   readThrows: ({ error }: { error: Error }) => void;
 } => {
-  fsExistsAdapterProxy();
-  fsReadFileAdapterProxy();
+  pathExistsProxy();
+  readFileProxy();
 
   const existsHandle = registerMock({ fn: fsExistsAdapter });
   const readHandle = registerMock({ fn: fsReadFileAdapter });

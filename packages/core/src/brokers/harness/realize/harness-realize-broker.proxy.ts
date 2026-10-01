@@ -1,7 +1,7 @@
-import { fsExistsSyncAdapterProxy } from '../../../adapters/fs/exists-sync/fs-exists-sync-adapter.proxy';
-import { fsReadFileSyncAdapterProxy } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy';
 import { isAssayerHarnessGuardProxy } from '../../../guards/is-assayer-harness/is-assayer-harness-guard.proxy';
 import { harnessLoadBrokerProxy } from '../load/harness-load-broker.proxy';
+import { existsSyncProxy } from '#gateway/node/fs/exists-sync/exists-sync.proxy';
+import { readFileSyncProxy } from '#gateway/node/fs/read-file-sync/read-file-sync.proxy';
 
 export const harnessRealizeBrokerProxy = (): {
   setupHarness: ({ source }: { source: string }) => void;
@@ -12,8 +12,8 @@ export const harnessRealizeBrokerProxy = (): {
   // colocated file is exactly what a unit test has no filesystem for.
   isAssayerHarnessGuardProxy();
   harnessLoadBrokerProxy();
-  const exists = fsExistsSyncAdapterProxy();
-  const read = fsReadFileSyncAdapterProxy();
+  const exists = existsSyncProxy();
+  const read = readFileSyncProxy();
 
   return {
     // The colocated harness both EXISTS and reads back `source` — the pair a realize needs. Queued once,

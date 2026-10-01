@@ -19,9 +19,9 @@
 import { runConsoleContract } from '@assayer/shared/contracts';
 import type { RunConsole } from '@assayer/shared/contracts';
 
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { runIdBroker } from '../id/run-id-broker';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runConsoleFindBroker = async ({
   configDir,
@@ -34,17 +34,17 @@ export const runConsoleFindBroker = async ({
 }): Promise<RunConsole | undefined> => {
   const absPath = `${root}/${relPath}`;
 
-  if (!(await fsExistsAdapter({ path: absPath }))) {
+  if (!(await pathExists(absPath))) {
     return undefined;
   }
 
-  const source = String(await fsReadFileAdapter({ path: absPath }));
+  const source = String(fileContentsContract.parse(await readFile(absPath)));
   const runId = String(await runIdBroker({ root, relPath, source }));
   const path = `${configDir}/.assayer/cache/runs/${runId}/console.txt`;
 
-  if (!(await fsExistsAdapter({ path }))) {
+  if (!(await pathExists(path))) {
     return undefined;
   }
 
-  return runConsoleContract.parse(String(await fsReadFileAdapter({ path })));
+  return runConsoleContract.parse(String(fileContentsContract.parse(await readFile(path))));
 };

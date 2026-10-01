@@ -1,0 +1,510 @@
+{
+  "summary": {
+    "package": "desktop",
+    "mode": "apply",
+    "root": "/home/brutus-home/projects/assayer",
+    "adaptersInlined": 6,
+    "adaptersLeft": 2,
+    "skipped": 2,
+    "editsDone": 28,
+    "editsLeft": 32
+  },
+  "adapters": [
+    {
+      "adapter": "assayerCliEntryPathAdapter",
+      "path": "packages/desktop/src/adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter parameter has a default value",
+      "notes": "`findUpSync` answers the same joined path the adapter built, or null. The search starts from the caller's `__dirname`; a find-up does not care about depth. One of P0-9 cluster E's red find-up tests."
+    },
+    {
+      "adapter": "electronMainEntryPathAdapter",
+      "path": "packages/desktop/src/adapters/electron/main-entry-path/electron-main-entry-path-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "Path string counts folders from `__dirname`. The caller `brokers/desktop/launch/` sits three levels under `src/`, the same depth as the adapter, so the four `..` stay right from `src` and from `dist/src`."
+    },
+    {
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "path": "packages/desktop/src/adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "The `.assayer/cache/manifest.json` path template moves into both callers. `pathExists` rethrows errors other than ENOENT and ENOTDIR."
+    },
+    {
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "path": "packages/desktop/src/adapters/node-fs/read-cache-blob/node-fs-read-cache-blob-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "The blob path template moves into the caller. A bad JSON file now throws `Invalid JSON in <path>` instead of the raw `JSON.parse` message."
+    },
+    {
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "path": "packages/desktop/src/adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "Same JSON-error text change as the blob row."
+    },
+    {
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "path": "packages/desktop/src/adapters/node-fs/read-resolved-index/node-fs-read-resolved-index-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "Answers null where the adapter answered undefined; the caller maps it."
+    },
+    {
+      "adapter": "nodeFsReadSourceAdapter",
+      "path": "packages/desktop/src/adapters/node-fs/read-source/node-fs-read-source-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter catches errors in a shape the script does not translate (see the row notes)",
+      "notes": "The adapter turned EVERY read error into undefined; `readFileIfExists` answers null only for a missing file and rethrows the rest. The caller decides whether that change is wanted. The `fileContentsContract` parse moves into the caller."
+    },
+    {
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "path": "packages/desktop/src/adapters/node-fs/read-stub-index/node-fs-read-stub-index-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "Answers null where the adapter answered undefined; the caller maps it."
+    }
+  ],
+  "skipped": [
+    {
+      "pkg": "desktop",
+      "adapter": "nodeChildProcessExecAdapter",
+      "adapterPath": "packages/desktop/src/adapters/node-child-process/exec/node-child-process-exec-adapter.ts",
+      "reason": "gateway gap: GAP: no #gateway/node/child_process wrapper runs to completion with a merged env, stdin ignored, an output callback per stdout and stderr chunk, and stdout and stderr answered apart. run has no chunk callback; stream has no env and no stdout callback."
+    },
+    {
+      "pkg": "desktop",
+      "adapter": "nodeChildProcessSpawnAdapter",
+      "adapterPath": "packages/desktop/src/adapters/node-child-process/spawn/node-child-process-spawn-adapter.ts",
+      "reason": "gateway gap: GAP: no #gateway/node/child_process wrapper launches a detached child with stdio: 'ignore', calls unref(), and logs a start failure. spawnDetached needs file descriptors and never unrefs; runFireAndForget takes a shell string."
+    }
+  ],
+  "left": [
+    {
+      "file": "packages/desktop/src/brokers/cache/load-blob/cache-load-blob-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([isBlobPath]).resolves('{}');); readJsonFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-blob/cache-load-blob-broker.proxy.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "what": "proxy: adapterProxy.returns(...): no gateway-proxy method provably does what returns does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-blob/cache-load-blob-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "what": "proxy: adapterProxy.throws(...): no gateway-proxy method provably does what throws does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-manifest/cache-load-manifest-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([isManifestPath]).resolves('{}');); readJsonFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-manifest/cache-load-manifest-broker.proxy.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "what": "proxy: adapterProxy.returns(...): no gateway-proxy method provably does what returns does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-manifest/cache-load-manifest-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "what": "proxy: adapterProxy.throws(...): no gateway-proxy method provably does what throws does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "proxy: the adapter proxy answered by default (accessHandle .calledWith([isResolvedIndexPath]) .rejects(new Error('ENOENT: no such file or directory'));); readJsonFileIfExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "proxy: the adapter proxy answered by default (readHandle.calledWith([isResolvedIndexPath]).resolves('{}');); readJsonFileIfExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.proxy.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "proxy: adapterProxy.returns(...): adapter-proxy method returns has a body the script does not read"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "proxy: adapterProxy.absent(...): no gateway-proxy method provably does what absent does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "proxy: the adapter proxy answered by default (accessHandle.calledWith([isStubIndexPath]).rejects(new Error('ENOENT: no such file or directory'));); readJsonFileIfExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "proxy: the adapter proxy answered by default (readHandle.calledWith([isStubIndexPath]).resolves('{}');); readJsonFileIfExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.proxy.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "proxy: adapterProxy.returns(...): adapter-proxy method returns has a body the script does not read"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "proxy: adapterProxy.absent(...): no gateway-proxy method provably does what absent does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-file/resolve/compiled-file-resolve-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "nodeFsReadSourceAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-file/resolve/compiled-file-resolve-broker.proxy.ts",
+      "line": 46,
+      "endLine": 46,
+      "adapter": "nodeFsReadSourceAdapter",
+      "what": "proxy: the adapter catches errors in a shape the script does not translate (see the row notes)"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-file/resolve/compiled-file-resolve-broker.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "nodeFsReadSourceAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-file/resolve/compiled-file-resolve-broker.ts",
+      "line": 61,
+      "endLine": 61,
+      "adapter": "nodeFsReadSourceAdapter",
+      "what": "call: the adapter catches errors in a shape the script does not translate (see the row notes)"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy.ts",
+      "line": 11,
+      "endLine": 11,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([isManifestPath]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: existsProxy.exists(...): no gateway-proxy method provably does what exists does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy.ts",
+      "line": 19,
+      "endLine": 19,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: existsProxy.exists(...): no gateway-proxy method provably does what exists does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: existsProxy.missing(...): no gateway-proxy method provably does what missing does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/run/execute/run-execute-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "assayerCliEntryPathAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/desktop/src/brokers/run/execute/run-execute-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "assayerCliEntryPathAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/desktop/src/brokers/run/execute/run-execute-broker.proxy.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "assayerCliEntryPathAdapter",
+      "what": "proxy: the adapter parameter has a default value"
+    },
+    {
+      "file": "packages/desktop/src/brokers/run/execute/run-execute-broker.proxy.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "assayerCliEntryPathAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/desktop/src/brokers/run/execute/run-execute-broker.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "assayerCliEntryPathAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/desktop/src/brokers/run/execute/run-execute-broker.ts",
+      "line": 39,
+      "endLine": 39,
+      "adapter": "assayerCliEntryPathAdapter",
+      "what": "call: the adapter parameter has a default value"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([isManifestPath]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.proxy.ts",
+      "line": 37,
+      "endLine": 37,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: existsProxy.exists(...): no gateway-proxy method provably does what exists does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.proxy.ts",
+      "line": 42,
+      "endLine": 42,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: existsProxy.exists(...): no gateway-proxy method provably does what exists does"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.proxy.ts",
+      "line": 47,
+      "endLine": 47,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: existsProxy.missing(...): no gateway-proxy method provably does what missing does"
+    }
+  ],
+  "done": [
+    {
+      "file": "packages/desktop/src/brokers/cache/load-blob/cache-load-blob-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-blob/cache-load-blob-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-blob/cache-load-blob-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-blob/cache-load-blob-broker.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "nodeFsReadCacheBlobAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-manifest/cache-load-manifest-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-manifest/cache-load-manifest-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-manifest/cache-load-manifest-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-manifest/cache-load-manifest-broker.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "nodeFsReadCacheManifestAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-resolved-index/cache-load-resolved-index-broker.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "nodeFsReadResolvedIndexAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/cache/load-stub-index/cache-load-stub-index-broker.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "nodeFsReadStubIndexAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy.ts",
+      "line": 11,
+      "endLine": 11,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/compiled-tree/resolve/compiled-tree-resolve-broker.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/launch/desktop-launch-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "electronMainEntryPathAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/launch/desktop-launch-broker.proxy.ts",
+      "line": 6,
+      "endLine": 6,
+      "adapter": "electronMainEntryPathAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/launch/desktop-launch-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "electronMainEntryPathAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/launch/desktop-launch-broker.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "electronMainEntryPathAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/desktop/src/brokers/stub-index/resolve/stub-index-resolve-broker.ts",
+      "line": 32,
+      "endLine": 32,
+      "adapter": "nodeFsCacheManifestExistsAdapter",
+      "what": "call"
+    }
+  ]
+}

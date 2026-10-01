@@ -9,6 +9,7 @@
  */
 import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
 import { AppShellWidget } from '../../../widgets/app-shell/app-shell-widget';
+import { createElement } from '#gateway/npm/react';
 
 export const ShellPageResponder = (): ReturnType<typeof reactCreateElementAdapter> =>
-  reactCreateElementAdapter({ component: AppShellWidget });
+  createElement(AppShellWidget);

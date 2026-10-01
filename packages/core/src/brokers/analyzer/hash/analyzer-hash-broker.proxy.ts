@@ -2,10 +2,9 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { compileWalkWorkingTreeBrokerProxy } from '../../compile/walk-working-tree/compile-walk-working-tree-broker.proxy';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
-import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
 import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const analyzerHashBrokerProxy = (): {
   walkReturns: ({ paths }: { paths: string[] }) => void;
@@ -15,8 +14,7 @@ export const analyzerHashBrokerProxy = (): {
   readThrows: ({ error }: { error: Error }) => void;
 } => {
   compileWalkWorkingTreeBrokerProxy();
-  fsReadFileAdapterProxy();
-  pathRelativeAdapterProxy();
+  readFileProxy();
   contentHashTransformerProxy();
 
   const walkHandle = registerMock({ fn: compileWalkWorkingTreeBroker });

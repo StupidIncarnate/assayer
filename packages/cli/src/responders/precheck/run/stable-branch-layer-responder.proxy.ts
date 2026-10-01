@@ -4,9 +4,9 @@ import { gitDetectStableBranchBrokerProxy, configStableBranchSaveBrokerProxy } f
 import { assayerConfigContract, branchNameContract, fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount, BranchNameStub } from '@assayer/shared/contracts';
 
-import { processStdoutIsTtyAdapterProxy } from '../../../adapters/process-stdout/is-tty/process-stdout-is-tty-adapter.proxy';
 import { stableBranchPickBroker } from '../../../brokers/stable-branch/pick/stable-branch-pick-broker';
 import { stableBranchPickBrokerProxy } from '../../../brokers/stable-branch/pick/stable-branch-pick-broker.proxy';
+import { stdoutProxy } from '#gateway/node/process/stdout/stdout.proxy';
 
 type BranchName = ReturnType<typeof BranchNameStub>;
 
@@ -38,8 +38,8 @@ export const StableBranchLayerResponderProxy = (): {
   const pickerProxy = stableBranchPickBrokerProxy();
   // Same-package proxy that toggles the real process.stdout.isTTY global, so composing it genuinely
   // drives the responder's TTY gate. Default to non-TTY; interactive tests opt in via enableTty().
-  const ttyProxy = processStdoutIsTtyAdapterProxy();
-  ttyProxy.disableTty();
+  const ttyProxy = stdoutProxy();
+  ttyProxy.setupIsTty({ value: false });
 
   const gitDetectHandle = registerMock({ fn: gitDetectStableBranchBroker });
   const configSaveHandle = registerMock({ fn: configStableBranchSaveBroker });
@@ -88,10 +88,10 @@ export const StableBranchLayerResponderProxy = (): {
     wasSaveCalled: (): boolean => configSaveHandle.callsMatching([]).length > 0,
     getSavedConfigJson: (): unknown => savedConfig.json,
     enableTty: (): void => {
-      ttyProxy.enableTty();
+      ttyProxy.setupIsTty({ value: true });
     },
     disableTty: (): void => {
-      ttyProxy.disableTty();
+      ttyProxy.setupIsTty({ value: false });
     },
     promptWritten: (): boolean => pickerProxy.promptWasWritten(),
   };

@@ -1,6 +1,6 @@
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
-import { nodeFsCacheManifestExistsAdapterProxy } from '../../../adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter.proxy';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const compiledTreeResolveBrokerProxy = (): {
   setupManifest: (params: { manifest: ReturnType<typeof AssayerCacheManifestStub> }) => void;
@@ -8,7 +8,7 @@ export const compiledTreeResolveBrokerProxy = (): {
   setupMissingManifest: () => void;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
-  const existsProxy = nodeFsCacheManifestExistsAdapterProxy();
+  const existsProxy = pathExistsProxy();
 
   return {
     setupManifest: ({ manifest }): void => {

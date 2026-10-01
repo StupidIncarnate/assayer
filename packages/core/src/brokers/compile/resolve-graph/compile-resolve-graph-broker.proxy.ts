@@ -3,8 +3,6 @@ import { contentHashContract } from '@assayer/shared/contracts';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
-import { nodeModuleBuiltinsAdapterProxy } from '../../../adapters/node-module/builtins/node-module-builtins-adapter.proxy';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { externalSignatureReadBroker } from '../../external-signature/read/external-signature-read-broker';
@@ -12,6 +10,7 @@ import { externalSignatureReadBrokerProxy } from '../../external-signature/read/
 import { externalSignatureReadGlobalBroker } from '../../external-signature/read-global/external-signature-read-global-broker';
 import { externalSignatureReadGlobalBrokerProxy } from '../../external-signature/read-global/external-signature-read-global-broker.proxy';
 import { resolveSpecifierLayerBrokerProxy } from './resolve-specifier-layer-broker.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
@@ -36,9 +35,8 @@ export const compileResolveGraphBrokerProxy = (): {
   // a composing broker's own source reads keep working (the adapter module is not auto-replaced). Each
   // queued blob is one file's on-disk record. Config reading is mocked to a fixed tsconfigHash; module
   // resolution is staged through the layer proxy; the builtins list and the sha256 hasher run REAL.
-  const readFileProxy = fsReadFileAdapterProxy();
+  const readFileGateway = readFileProxy();
   tsconfigReadBrokerProxy();
-  nodeModuleBuiltinsAdapterProxy();
   contentHashTransformerProxy();
   const layerProxy = resolveSpecifierLayerBrokerProxy();
 
@@ -59,7 +57,7 @@ export const compileResolveGraphBrokerProxy = (): {
 
   return {
     queueBlob: ({ blob }: { blob: unknown }): void => {
-      readFileProxy.returns({ content: JSON.stringify(blob) });
+      readFileGateway.returns({ content: JSON.stringify(blob) });
     },
     configHash: ({ tsconfigHash }: { tsconfigHash: string }): void => {
       readConfigHandle.calledWith([]).returns({ options: {}, tsconfigHash: contentHashContract.parse(tsconfigHash) });

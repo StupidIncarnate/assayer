@@ -1,10 +1,10 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 // The broker reads TWO files through one pair of adapters — the source (to derive the content-keyed
 // run id) and then console.txt. The report path always CONTAINS `console.txt`; the source (and the
@@ -28,8 +28,8 @@ export const runConsoleFindBrokerProxy = (): {
   consoleReadThrows: ({ error }: { error: Error }) => void;
   getReadArgs: () => readonly unknown[];
 } => {
-  fsExistsAdapterProxy();
-  fsReadFileAdapterProxy();
+  pathExistsProxy();
+  readFileProxy();
   runIdBrokerProxy();
 
   const existsHandle = registerMock({ fn: fsExistsAdapter });

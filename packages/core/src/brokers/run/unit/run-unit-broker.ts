@@ -31,9 +31,7 @@ import { relPathContract, runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { runExecuteCasesBroker } from '../execute-cases/run-execute-cases-broker';
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
@@ -50,6 +48,8 @@ import { paramTypeResolveBroker } from '../../param-type/resolve/param-type-reso
 import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runUnitBroker = async ({
   cacheDir,
@@ -186,7 +186,7 @@ export const runUnitBroker = async ({
   // means the runner itself died and the run is over with nothing to report. Said plainly here rather
   // than surfaced as an ENOENT on a cache path nobody chose to care about: the reader's file is fine,
   // Assayer's runner is not, and only one of those is actionable.
-  if (!(await fsExistsAdapter({ path: resultPath }))) {
+  if (!(await pathExists(resultPath))) {
     throw new Error(
       `assayer: the runner crashed while running ${relPath} and wrote no result.\n` +
         `  ${String(caseSet.entries.length)} drivable entr${caseSet.entries.length === 1 ? 'y was' : 'ies were'} ` +
@@ -199,5 +199,5 @@ export const runUnitBroker = async ({
 
   // Read back the ARTIFACT, not Jest's reporting: the verdict is already in it, and raw runner output
   // is never what a human sees.
-  return runResultContract.parse(JSON.parse(await fsReadFileAdapter({ path: resultPath })));
+  return runResultContract.parse(JSON.parse(fileContentsContract.parse(await readFile(resultPath))));
 };

@@ -24,12 +24,12 @@ import { stubViewTransformer } from '@assayer/core/transformers';
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
 import { cacheLoadStubIndexBroker } from '../../cache/load-stub-index/cache-load-stub-index-broker';
 import { repoSourceRootBroker } from '../../repo/source-root/repo-source-root-broker';
-import { nodeFsCacheManifestExistsAdapter } from '../../../adapters/node-fs/cache-manifest-exists/node-fs-cache-manifest-exists-adapter';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
 import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
+import { pathExists } from '#gateway/node/fs__promises';
 
 export const stubIndexResolveBroker = async ({ repoPath }: { repoPath: RepoPath }): Promise<StubView> => {
-  const manifestExists = await nodeFsCacheManifestExistsAdapter({ repoPath });
+  const manifestExists = await pathExists(`${repoPath}/.assayer/cache/manifest.json`);
 
   if (!manifestExists) {
     return stubViewContract.parse({ objectStubs: [], envStubs: [] });

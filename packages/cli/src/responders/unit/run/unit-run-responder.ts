@@ -45,11 +45,12 @@
 import { runConsoleSaveBroker, runPathsBroker } from '@assayer/core/brokers';
 
 import { analyzerRootsResolveBroker } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker';
-import { utilParseArgsAdapter } from '../../../adapters/util/parse-args/util-parse-args-adapter';
 import { cliUsageStatics } from '../../../statics/cli-usage/cli-usage-statics';
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
+import { parseArgs } from '#gateway/node/util';
+import { cliPositionalContract } from '../../../contracts/cli-positional/cli-positional-contract';
 
 export const UnitRunResponder = async ({
   configDir,
@@ -66,7 +67,7 @@ export const UnitRunResponder = async ({
   deadSurface: string;
   inputGaps: string;
 }): Promise<CliOutput> => {
-  const paths = utilParseArgsAdapter({ argv }).map(String);
+  const paths = parseArgs({ args: [...argv], strict: true, allowPositionals: true }).positionals.map((positional) => cliPositionalContract.parse(positional)).map(String);
 
   if (paths.length === 0) {
     throw new CliExactOutputError({

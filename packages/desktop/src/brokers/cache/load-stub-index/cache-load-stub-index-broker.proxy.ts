@@ -1,12 +1,12 @@
 import type { StubIndexStub } from '@assayer/shared/contracts';
+import { readJsonFileIfExistsProxy } from '#gateway/node/fs__promises/read-json-file-if-exists/read-json-file-if-exists.proxy';
 
-import { nodeFsReadStubIndexAdapterProxy } from '../../../adapters/node-fs/read-stub-index/node-fs-read-stub-index-adapter.proxy';
 
 export const cacheLoadStubIndexBrokerProxy = (): {
   resolves: (params: { index: ReturnType<typeof StubIndexStub> }) => void;
   absent: () => void;
 } => {
-  const adapterProxy = nodeFsReadStubIndexAdapterProxy();
+  const adapterProxy = readJsonFileIfExistsProxy();
 
   return {
     resolves: ({ index }): void => {

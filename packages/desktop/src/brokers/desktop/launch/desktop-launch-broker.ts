@@ -9,12 +9,13 @@
  */
 
 import { desktopResolveBinaryBroker } from '../resolve-binary/desktop-resolve-binary-broker';
-import { electronMainEntryPathAdapter } from '../../../adapters/electron/main-entry-path/electron-main-entry-path-adapter';
 import { nodeChildProcessSpawnAdapter } from '../../../adapters/node-child-process/spawn/node-child-process-spawn-adapter';
+import { join } from '#gateway/node/path';
+import { executablePathContract } from '../../../contracts/executable-path/executable-path-contract';
 
 export const desktopLaunchBroker = ({ repoPath }: { repoPath: string }): void => {
   const electronBinary = desktopResolveBinaryBroker();
-  const mainEntry = electronMainEntryPathAdapter();
+  const mainEntry = executablePathContract.parse(join(__dirname, '..', '..', '..', '..', 'bin', 'desktop-main.js'));
 
   return nodeChildProcessSpawnAdapter({
     command: electronBinary,

@@ -3,10 +3,10 @@ import { RunResultStub, fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 import { runUnitBroker } from '../unit/run-unit-broker';
 import { runUnitBrokerProxy } from '../unit/run-unit-broker.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const runEachLayerBrokerProxy = (): {
   setupSource: ({ source }: { source: string }) => void;
@@ -19,7 +19,7 @@ export const runEachLayerBrokerProxy = (): {
   // the source would come back where JSON was expected.
   runIdBrokerProxy();
   runUnitBrokerProxy();
-  fsReadFileAdapterProxy();
+  readFileProxy();
 
   const runHandle = registerMock({ fn: runUnitBroker });
   const readHandle = registerMock({ fn: fsReadFileAdapter });

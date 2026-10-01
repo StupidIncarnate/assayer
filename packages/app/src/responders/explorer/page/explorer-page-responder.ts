@@ -9,6 +9,7 @@
  */
 import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
 import { SurfaceExplorerWidget } from '../../../widgets/surface-explorer/surface-explorer-widget';
+import { createElement } from '#gateway/npm/react';
 
 export const ExplorerPageResponder = (): ReturnType<typeof reactCreateElementAdapter> =>
-  reactCreateElementAdapter({ component: SurfaceExplorerWidget });
+  createElement(SurfaceExplorerWidget);

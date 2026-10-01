@@ -1,12 +1,12 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
 import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
 import { externalSignatureReadGlobalDeclarationBrokerProxy } from '../read-global-declaration/external-signature-read-global-declaration-broker.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const externalSignatureReadGlobalBrokerProxy = (): {
   cacheMiss: () => void;
@@ -24,7 +24,7 @@ export const externalSignatureReadGlobalBrokerProxy = (): {
   // The cache existence check and atomic write run through the REAL fs adapters with only their
   // underlying node calls mocked; the sha256 hasher runs REAL so the cache key is a true content hash;
   // the ts-morph global read is REPLACED wholesale so these tests cover caching only.
-  const existsProxy = fsExistsAdapterProxy();
+  const existsProxy = pathExistsProxy();
   const mkdirProxy = fsMkdirAdapterProxy();
   const writeFileProxy = fsWriteFileAdapterProxy();
   const renameProxy = fsRenameAdapterProxy();

@@ -1,5 +1,5 @@
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const manifestLoadBrokerProxy = (): {
   present: ({ manifestJson }: { manifestJson: string }) => void;
@@ -9,8 +9,8 @@ export const manifestLoadBrokerProxy = (): {
   // the like) propagates to the caller unmodified. This stages that rejection.
   readThrows: ({ error }: { error: Error }) => void;
 } => {
-  const existsProxy = fsExistsAdapterProxy();
-  const readProxy = fsReadFileAdapterProxy();
+  const existsProxy = pathExistsProxy();
+  const readProxy = readFileProxy();
 
   return {
     present: ({ manifestJson }: { manifestJson: string }): void => {

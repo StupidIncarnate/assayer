@@ -1,9 +1,9 @@
-import { testingLibraryRenderHookAdapter } from '../../adapters/testing-library/render-hook/testing-library-render-hook-adapter';
 import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
 
 import { useStubIndexBinding } from './use-stub-index-binding';
 import { useStubIndexBindingProxy } from './use-stub-index-binding.proxy';
 import { StubViewStub } from '@assayer/shared/contracts';
+import { renderHook } from '#gateway/npm/testing-library__react';
 
 describe('useStubIndexBinding', () => {
   describe('successful fetch', () => {
@@ -12,9 +12,7 @@ describe('useStubIndexBinding', () => {
       const view = StubViewStub();
       proxy.setupView({ view });
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useStubIndexBinding(),
-      });
+      const { result } = renderHook(() => useStubIndexBinding());
       const currentState = (): ReturnType<typeof useStubIndexBinding> => result.current;
 
       await testingLibraryWaitForAdapter({
@@ -37,9 +35,7 @@ describe('useStubIndexBinding', () => {
       const view = StubViewStub();
       proxy.setupView({ view });
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useStubIndexBinding(),
-      });
+      const { result } = renderHook(() => useStubIndexBinding());
 
       expect(result.current).toStrictEqual({ data: null, loading: true, error: null });
     });
@@ -51,9 +47,7 @@ describe('useStubIndexBinding', () => {
       const error = new Error('bridge failed');
       proxy.rejects({ error });
 
-      const { result } = testingLibraryRenderHookAdapter({
-        renderCallback: () => useStubIndexBinding(),
-      });
+      const { result } = renderHook(() => useStubIndexBinding());
       const currentState = (): ReturnType<typeof useStubIndexBinding> => result.current;
 
       await testingLibraryWaitForAdapter({

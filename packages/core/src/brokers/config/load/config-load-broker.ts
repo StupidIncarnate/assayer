@@ -8,11 +8,12 @@
  * // Returns { success: true, data: AssayerConfig } or
  * // { success: false, message: string, line: LineNumber, column: ColumnNumber }
  */
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { jsonParseErrorSourcePositionTransformer } from '../../../transformers/json-parse-error-source-position/json-parse-error-source-position-transformer';
 import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
+import { readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const configLoadBroker = async ({
   configPath,
@@ -21,7 +22,7 @@ export const configLoadBroker = async ({
 }): Promise<
   { success: true; data: AssayerConfig } | ({ success: false; message: string } & SourcePosition)
 > => {
-  const text = await fsReadFileAdapter({ path: configPath });
+  const text = fileContentsContract.parse(await readFile(configPath));
 
   try {
     const parsed = JSON.parse(String(text)) as unknown;

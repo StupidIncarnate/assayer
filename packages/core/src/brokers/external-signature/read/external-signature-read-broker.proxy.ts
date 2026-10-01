@@ -3,13 +3,13 @@ import { fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
 import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
 import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
 import { externalSignatureReadDeclarationBrokerProxy } from '../read-declaration/external-signature-read-declaration-broker.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const externalSignatureReadBrokerProxy = (): {
   cacheMiss: ({ dtsContent }: { dtsContent: string }) => void;
@@ -28,8 +28,8 @@ export const externalSignatureReadBrokerProxy = (): {
   // only their underlying node calls mocked; the sha256 hasher runs REAL so the cache key is a true
   // content hash; the ts-morph read is REPLACED wholesale so the broker's own tests cover caching,
   // not type reading (the adapter's tests cover that).
-  const readFileProxy = fsReadFileAdapterProxy();
-  const existsProxy = fsExistsAdapterProxy();
+  const readFileGateway = readFileProxy();
+  const existsProxy = pathExistsProxy();
   const mkdirProxy = fsMkdirAdapterProxy();
   const writeFileProxy = fsWriteFileAdapterProxy();
   const renameProxy = fsRenameAdapterProxy();
@@ -41,16 +41,16 @@ export const externalSignatureReadBrokerProxy = (): {
 
   return {
     cacheMiss: ({ dtsContent }: { dtsContent: string }): void => {
-      readFileProxy.returns({ content: dtsContent });
+      readFileGateway.returns({ content: dtsContent });
       existsProxy.fails();
       mkdirProxy.succeeds();
       writeFileProxy.succeeds();
       renameProxy.succeeds();
     },
     cacheHit: ({ dtsContent, signatureJson }: { dtsContent: string; signatureJson: string }): void => {
-      readFileProxy.returns({ content: dtsContent });
+      readFileGateway.returns({ content: dtsContent });
       existsProxy.succeeds();
-      readFileProxy.returns({ content: signatureJson });
+      readFileGateway.returns({ content: signatureJson });
     },
     readsSignature: ({ signature }: { signature: unknown }): void => {
       readHandle.calledWith([]).returns({ usable: true, signature });

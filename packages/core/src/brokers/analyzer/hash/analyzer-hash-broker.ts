@@ -12,11 +12,13 @@
  * // Returns a ContentHash that changes iff a hashed source file's path or content changes
  */
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { isSourceFileIncludedGuard } from '../../../guards/is-source-file-included/is-source-file-included-guard';
 import type { ContentHash } from '@assayer/shared/contracts';
+import { readFile } from '#gateway/node/fs__promises';
+import { relative } from '#gateway/node/path';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
+import { relPathContract } from '@assayer/shared/contracts';
 
 export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promise<ContentHash> => {
   const rootHashes = await Promise.all(
@@ -25,8 +27,8 @@ export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promis
       const sources = files.map(String).filter((path) => isSourceFileIncludedGuard({ relPath: path }));
       const entries = await Promise.all(
         sources.map(async (path) => {
-          const content = await fsReadFileAdapter({ path });
-          const relPath = pathRelativeAdapter({ from: root, to: path });
+          const content = fileContentsContract.parse(await readFile(path));
+          const relPath = relPathContract.parse(relative(root, path));
           return `${String(relPath)}:${String(contentHashTransformer({ content: String(content) }))}`;
         }),
       );

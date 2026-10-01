@@ -20,8 +20,8 @@ import type { CompiledFileBlob, PackageName, RelPath } from '@assayer/shared/con
 
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
+import { relative } from '#gateway/node/path';
 
 type ResolveOptions = Parameters<typeof importSpecifierResolveBroker>[0]['options'];
 
@@ -61,7 +61,7 @@ export const resolveSpecifierLayerBroker = ({
   }
 
   const fileName = String(resolved.fileName);
-  const rel = String(pathRelativeAdapter({ from: root, to: fileName }));
+  const rel = String(relPathContract.parse(relative(root, fileName)));
   const outsideRoot = rel.startsWith('..');
   const inNodeModules = fileName.includes('/node_modules/');
 

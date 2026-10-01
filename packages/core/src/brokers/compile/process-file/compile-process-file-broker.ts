@@ -17,7 +17,6 @@
  * // { reused: false, error: { line, column, message } } when the source fails to parse
  */
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
@@ -29,6 +28,7 @@ import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
+import { pathExists } from '#gateway/node/fs__promises';
 
 export const compileProcessFileBroker = async ({
   relPath,
@@ -46,7 +46,7 @@ export const compileProcessFileBroker = async ({
   const contentHash = contentHashTransformer({ content });
   const blobPath = `${blobsDir}/${contentHash}.json`;
 
-  if (await fsExistsAdapter({ path: blobPath })) {
+  if (await pathExists(blobPath)) {
     return { reused: true, contentHash };
   }
 

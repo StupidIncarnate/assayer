@@ -33,7 +33,6 @@ import { gitCurrentBranchBroker } from '../../git/current-branch/git-current-bra
 import { manifestWriteBroker } from '../../manifest/write/manifest-write-broker';
 import { resolvedIndexWriteBroker } from '../../resolved-index/write/resolved-index-write-broker';
 
-import { pathBasenameAdapter } from '../../../adapters/path/basename/path-basename-adapter';
 
 import { compileResolveGraphBroker } from '../resolve-graph/compile-resolve-graph-broker';
 import { compileStubGraphBroker } from '../stub-graph/compile-stub-graph-broker';
@@ -43,6 +42,8 @@ import { stubOverlayReconcileBroker } from '../../stub-overlay/reconcile/stub-ov
 import { stubContradictionsTransformer } from '../../../transformers/stub-contradictions/stub-contradictions-transformer';
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';
+import { basename } from '#gateway/node/path';
+import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 
 export const compileRunBroker = async ({
   configDir,
@@ -60,8 +61,8 @@ export const compileRunBroker = async ({
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<CompileResult> => {
   const root = compileResolveRootBroker({ repoRoot: config.repoRoot, configDir });
-  const rootFolderName = pathBasenameAdapter({ path: String(root) });
-  const repoName = pathBasenameAdapter({ path: configDir });
+  const rootFolderName = filePathContract.parse(basename(String(root)));
+  const repoName = filePathContract.parse(basename(configDir));
   const blobsDir = `${configDir}/.assayer/cache/blobs`;
 
   const currentBranch = await gitCurrentBranchBroker({ repoRoot: String(root) });

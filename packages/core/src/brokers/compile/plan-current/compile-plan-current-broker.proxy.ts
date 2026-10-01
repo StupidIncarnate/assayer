@@ -1,7 +1,6 @@
 import { compileWalkWorkingTreeBrokerProxy } from '../../compile/walk-working-tree/compile-walk-working-tree-broker.proxy';
 import { harnessClassifyBrokerProxy } from '../../harness/classify/harness-classify-broker.proxy';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
-import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const compilePlanCurrentBrokerProxy = (): {
   queueDir: ({ entries }: { entries: readonly { name: string; isDirectory: boolean }[] }) => void;
@@ -11,8 +10,7 @@ export const compilePlanCurrentBrokerProxy = (): {
   readThrows: ({ error }: { error: Error }) => void;
 } => {
   const walkProxy = compileWalkWorkingTreeBrokerProxy();
-  const readFileProxy = fsReadFileAdapterProxy();
-  pathRelativeAdapterProxy();
+  const readFileGateway = readFileProxy();
   harnessClassifyBrokerProxy();
 
   return {
@@ -20,10 +18,10 @@ export const compilePlanCurrentBrokerProxy = (): {
       walkProxy.queueDir({ entries });
     },
     queueFileContent: ({ content }: { content: string }): void => {
-      readFileProxy.returns({ content });
+      readFileGateway.returns({ content });
     },
     readThrows: ({ error }: { error: Error }): void => {
-      readFileProxy.throws({ error });
+      readFileGateway.throws({ error });
     },
   };
 };

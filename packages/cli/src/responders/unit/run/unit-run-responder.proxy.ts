@@ -5,7 +5,6 @@ import { RunResultStub, RelPathStub, RunIdStub, RunConsoleStub } from '@assayer/
 import type { RunResult, RelPath, RunId, RunConsole } from '@assayer/shared/contracts';
 
 import { analyzerRootsResolveBrokerProxy } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker.proxy';
-import { utilParseArgsAdapterProxy } from '../../../adapters/util/parse-args/util-parse-args-adapter.proxy';
 
 export const UnitRunResponderProxy = (): {
   runsReturn: ({ runs }: { runs: readonly RunResult[] }) => void;
@@ -19,7 +18,6 @@ export const UnitRunResponderProxy = (): {
   runPathsBrokerProxy();
   runConsoleSaveBrokerProxy();
   analyzerRootsResolveBrokerProxy();
-  utilParseArgsAdapterProxy();
 
   const handle = registerMock({ fn: runPathsBroker });
   // Mocked for the same reason runPathsBroker is: it writes to disk, and this responder's tests are

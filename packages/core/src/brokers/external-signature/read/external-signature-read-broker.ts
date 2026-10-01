@@ -16,12 +16,12 @@ import type { ExternalSignature, SymbolName } from '@assayer/shared/contracts';
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
 import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const externalSignatureReadBroker = async ({
   tsConfigFilePath,
@@ -34,13 +34,13 @@ export const externalSignatureReadBroker = async ({
   exportName: SymbolName;
   cacheDir: string;
 }): Promise<{ usable: true; signature: ExternalSignature } | { usable: false }> => {
-  const dtsContent = String(await fsReadFileAdapter({ path: String(dtsPath) }));
+  const dtsContent = String(fileContentsContract.parse(await readFile(String(dtsPath))));
   const declHash = contentHashTransformer({ content: `${String(exportName)}\n${dtsContent}` });
   const dir = `${cacheDir}/external-signatures`;
   const cachePath = `${dir}/${String(declHash)}.json`;
 
-  if (await fsExistsAdapter({ path: cachePath })) {
-    const cached = String(await fsReadFileAdapter({ path: cachePath }));
+  if (await pathExists(cachePath)) {
+    const cached = String(fileContentsContract.parse(await readFile(cachePath)));
 
     return { usable: true, signature: externalSignatureContract.parse(JSON.parse(cached) as unknown) };
   }

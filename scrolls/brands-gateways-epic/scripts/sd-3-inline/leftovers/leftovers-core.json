@@ -1,0 +1,3175 @@
+{
+  "summary": {
+    "package": "core",
+    "mode": "apply",
+    "root": "/home/brutus-home/projects/assayer",
+    "adaptersInlined": 9,
+    "adaptersLeft": 7,
+    "skipped": 0,
+    "editsDone": 170,
+    "editsLeft": 264
+  },
+  "adapters": [
+    {
+      "adapter": "fsExistsSyncAdapter",
+      "path": "packages/core/src/adapters/fs/exists-sync/fs-exists-sync-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose"
+    },
+    {
+      "adapter": "fsExistsAdapter",
+      "path": "packages/core/src/adapters/fs/exists/fs-exists-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "`pathExists` rethrows any error other than ENOENT or ENOTDIR, where the adapter returned false for every error. Callers compose `pathExistsProxy`."
+    },
+    {
+      "adapter": "fsFindUpAdapter",
+      "path": "packages/core/src/adapters/fs/find-up/fs-find-up-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter calls itself; the gateway call answers a different shape (see the row notes)",
+      "notes": "`findUpSync` returns the marker file path or null; the adapter returned the folder holding it or undefined. The caller wraps the result in `dirname` and maps null to undefined. Clears one of P0-9 cluster E's red find-up tests."
+    },
+    {
+      "adapter": "fsMkdirAdapter",
+      "path": "packages/core/src/adapters/fs/mkdir/fs-mkdir-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter body is several statements around a raw call; the script inlines only an expression body",
+      "notes": "Returns void, so each caller drops its `AdapterResult` handling."
+    },
+    {
+      "adapter": "fsReadFileSyncAdapter",
+      "path": "packages/core/src/adapters/fs/read-file-sync/fs-read-file-sync-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "Same `fileContentsContract` parse moves into the two callers."
+    },
+    {
+      "adapter": "fsReadFileAdapter",
+      "path": "packages/core/src/adapters/fs/read-file/fs-read-file-adapter.ts",
+      "recipe": "expr",
+      "proxy": "compose",
+      "notes": "The gateway returns a plain string. Each caller parses it with `fileContentsContract` where it needs `FileContents`."
+    },
+    {
+      "adapter": "fsReaddirAdapter",
+      "path": "packages/core/src/adapters/fs/readdir/fs-readdir-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter reshapes what readdir answers (`entries.map`); readdirEntries answers its own shape (see the row notes)",
+      "notes": "The gateway entry is `{ name, kind }`. The caller maps `kind === 'directory'` into `dirEntryContract`'s `isDirectory`."
+    },
+    {
+      "adapter": "fsRenameAdapter",
+      "path": "packages/core/src/adapters/fs/rename/fs-rename-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter body is several statements around a raw call; the script inlines only an expression body",
+      "notes": "Returns void; callers drop `AdapterResult`."
+    },
+    {
+      "adapter": "fsRmAdapter",
+      "path": "packages/core/src/adapters/fs/rm/fs-rm-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter body is several statements around a raw call; the script inlines only an expression body",
+      "notes": "Returns void; the caller drops `AdapterResult`."
+    },
+    {
+      "adapter": "fsWriteFileAdapter",
+      "path": "packages/core/src/adapters/fs/write-file/fs-write-file-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the adapter body is several statements around a raw call; the script inlines only an expression body",
+      "notes": "Returns void; callers drop `AdapterResult`."
+    },
+    {
+      "adapter": "gitExecAdapter",
+      "path": "packages/core/src/adapters/git/exec/git-exec-adapter.ts",
+      "recipe": "left",
+      "proxy": "left",
+      "reason": "the row names several gateway calls; each call site picks its own (see the row notes)",
+      "notes": "G-1: each caller catches `GitNotInstalledError` where it falls back silently today. Exit-code checks become null or false checks, because the gateway functions answer null (or false, for `isInsideWorkTree`) on a failed git call. The detached-HEAD fallback text stays in `git-current-branch-broker`. P1 text for a missing git keeps its exact words."
+    },
+    {
+      "adapter": "nodeModuleBuiltinsAdapter",
+      "path": "packages/core/src/adapters/node-module/builtins/node-module-builtins-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "Each caller maps the names through `packageNameContract`. One caller is `packages/core/test/harnesses/syntax-traits.ts`."
+    },
+    {
+      "adapter": "pathBasenameAdapter",
+      "path": "packages/core/src/adapters/path/basename/path-basename-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "A pass-through with no proxy. The `filePathContract` parse moves into each caller."
+    },
+    {
+      "adapter": "pathDirnameAdapter",
+      "path": "packages/core/src/adapters/path/dirname/path-dirname-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "Same as basename."
+    },
+    {
+      "adapter": "pathRelativeAdapter",
+      "path": "packages/core/src/adapters/path/relative/path-relative-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "The `relPathContract` parse moves into each caller."
+    },
+    {
+      "adapter": "pathResolveAdapter",
+      "path": "packages/core/src/adapters/path/resolve/path-resolve-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "The `filePathContract` parse moves into the caller."
+    }
+  ],
+  "skipped": [],
+  "left": [
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.test.ts",
+      "line": 48,
+      "endLine": 48,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/harness-graph/compile-harness-graph-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/harness-graph/compile-harness-graph-broker.proxy.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.proxy.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.proxy.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.throws(...): throws stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.test.ts",
+      "line": 108,
+      "endLine": 108,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsRenameAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.succeeds(...): succeeds stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 34,
+      "endLine": 34,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 42,
+      "endLine": 42,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.callCount(...): no gateway-proxy method provably does what callCount does"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 85,
+      "endLine": 85,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 87,
+      "endLine": 87,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 88,
+      "endLine": 88,
+      "adapter": "fsRenameAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.proxy.ts",
+      "line": 34,
+      "endLine": 34,
+      "adapter": "fsReadFileAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.proxy.ts",
+      "line": 38,
+      "endLine": 38,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.proxy.ts",
+      "line": 60,
+      "endLine": 60,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/resolve-specifier-layer-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "pathRelativeAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/stub-graph/compile-stub-graph-broker.proxy.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsReadFileAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/stub-graph/compile-stub-graph-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/stub-graph/compile-stub-graph-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/walk-working-tree/compile-walk-working-tree-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsReaddirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/walk-working-tree/compile-walk-working-tree-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "fsReaddirAdapter",
+      "what": "proxy: the adapter reshapes what readdir answers (`entries.map`); readdirEntries answers its own shape (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/walk-working-tree/compile-walk-working-tree-broker.ts",
+      "line": 10,
+      "endLine": 10,
+      "adapter": "fsReaddirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/walk-working-tree/compile-walk-working-tree-broker.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsReaddirAdapter",
+      "what": "call: the adapter reshapes what readdir answers (`entries.map`); readdirEntries answers its own shape (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.proxy.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.proxy.ts",
+      "line": 11,
+      "endLine": 11,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.proxy.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/config/generate/config-generate-broker.ts",
+      "line": 23,
+      "endLine": 26,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.proxy.ts",
+      "line": 11,
+      "endLine": 11,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: fsProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: fsProxy.throws(...): throws stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.test.ts",
+      "line": 61,
+      "endLine": 61,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/config/stable-branch-save/config-stable-branch-save-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/config/stable-branch-save/config-stable-branch-save-broker.proxy.ts",
+      "line": 10,
+      "endLine": 10,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/config/stable-branch-save/config-stable-branch-save-broker.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/config/stable-branch-save/config-stable-branch-save-broker.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 5,
+      "endLine": 5,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 6,
+      "endLine": 6,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 27,
+      "endLine": 27,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 29,
+      "endLine": 29,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 30,
+      "endLine": 30,
+      "adapter": "fsRenameAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 39,
+      "endLine": 39,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 45,
+      "endLine": 45,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.succeeds(...): succeeds stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 19,
+      "endLine": 19,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 65,
+      "endLine": 65,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 67,
+      "endLine": 67,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 68,
+      "endLine": 68,
+      "adapter": "fsRenameAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 6,
+      "endLine": 6,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 32,
+      "endLine": 32,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 33,
+      "endLine": 33,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 34,
+      "endLine": 34,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 35,
+      "endLine": 35,
+      "adapter": "fsRenameAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 44,
+      "endLine": 44,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 45,
+      "endLine": 45,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 51,
+      "endLine": 51,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 52,
+      "endLine": 52,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.succeeds(...): succeeds stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 53,
+      "endLine": 53,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 19,
+      "endLine": 19,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 54,
+      "endLine": 54,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 56,
+      "endLine": 56,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 57,
+      "endLine": 57,
+      "adapter": "fsRenameAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/git/cat-file/git-cat-file-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/cat-file/git-cat-file-broker.proxy.ts",
+      "line": 6,
+      "endLine": 6,
+      "adapter": "gitExecAdapter",
+      "what": "proxy: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/cat-file/git-cat-file-broker.ts",
+      "line": 11,
+      "endLine": 11,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/cat-file/git-cat-file-broker.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "gitExecAdapter",
+      "what": "call: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/current-branch/git-current-branch-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/current-branch/git-current-branch-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "gitExecAdapter",
+      "what": "proxy: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/current-branch/git-current-branch-broker.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/current-branch/git-current-branch-broker.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "gitExecAdapter",
+      "what": "call: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/current-branch/git-current-branch-broker.ts",
+      "line": 29,
+      "endLine": 29,
+      "adapter": "gitExecAdapter",
+      "what": "call: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/detect-stable-branch/git-detect-stable-branch-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/detect-stable-branch/git-detect-stable-branch-broker.proxy.ts",
+      "line": 8,
+      "endLine": 8,
+      "adapter": "gitExecAdapter",
+      "what": "proxy: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/detect-stable-branch/git-detect-stable-branch-broker.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/detect-stable-branch/git-detect-stable-branch-broker.ts",
+      "line": 24,
+      "endLine": 27,
+      "adapter": "gitExecAdapter",
+      "what": "call: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/detect-stable-branch/git-detect-stable-branch-broker.ts",
+      "line": 33,
+      "endLine": 36,
+      "adapter": "gitExecAdapter",
+      "what": "call: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/ls-tree/git-ls-tree-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/ls-tree/git-ls-tree-broker.proxy.ts",
+      "line": 6,
+      "endLine": 6,
+      "adapter": "gitExecAdapter",
+      "what": "proxy: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/ls-tree/git-ls-tree-broker.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/ls-tree/git-ls-tree-broker.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "gitExecAdapter",
+      "what": "call: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/resolve-commit/git-resolve-commit-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/resolve-commit/git-resolve-commit-broker.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "gitExecAdapter",
+      "what": "proxy: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/git/resolve-commit/git-resolve-commit-broker.ts",
+      "line": 10,
+      "endLine": 10,
+      "adapter": "gitExecAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/git/resolve-commit/git-resolve-commit-broker.ts",
+      "line": 19,
+      "endLine": 19,
+      "adapter": "gitExecAdapter",
+      "what": "call: the row names several gateway calls; each call site picks its own (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.proxy.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "fsRenameAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.ts",
+      "line": 50,
+      "endLine": 50,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/harness-index/write/harness-index-write-broker.ts",
+      "line": 51,
+      "endLine": 51,
+      "adapter": "fsRenameAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsExistsSyncAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).returns(false);); existsSyncProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).returns('');); readFileSyncProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsExistsSyncAdapter",
+      "what": "proxy: exists.exists(...): exists stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "proxy: read.returns(...): no gateway-proxy method provably does what returns does"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 26,
+      "endLine": 26,
+      "adapter": "fsExistsSyncAdapter",
+      "what": "proxy: exists.missing(...): missing stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.succeeds(...): succeeds stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.succeeds(...): succeeds stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.succeeds(...): succeeds stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 29,
+      "endLine": 29,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readProxy.throws(...): throws stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.test.ts",
+      "line": 93,
+      "endLine": 93,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/trash/manifest-trash-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsRmAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/trash/manifest-trash-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "fsRmAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/trash/manifest-trash-broker.ts",
+      "line": 10,
+      "endLine": 10,
+      "adapter": "fsRmAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/trash/manifest-trash-broker.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsRmAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.proxy.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.proxy.ts",
+      "line": 26,
+      "endLine": 26,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.proxy.ts",
+      "line": 27,
+      "endLine": 27,
+      "adapter": "fsRenameAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.ts",
+      "line": 11,
+      "endLine": 11,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.ts",
+      "line": 60,
+      "endLine": 60,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/write/manifest-write-broker.ts",
+      "line": 61,
+      "endLine": 61,
+      "adapter": "fsRenameAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.proxy.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "pathRelativeAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).returns('');); readFileSyncProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.proxy.ts",
+      "line": 38,
+      "endLine": 38,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "proxy: reads.returns(...): no gateway-proxy method provably does what returns does"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.proxy.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.proxy.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsRenameAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.ts",
+      "line": 27,
+      "endLine": 27,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.ts",
+      "line": 38,
+      "endLine": 38,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/resolved-index/write/resolved-index-write-broker.ts",
+      "line": 39,
+      "endLine": 39,
+      "adapter": "fsRenameAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsReadFileAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 32,
+      "endLine": 32,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 35,
+      "endLine": 35,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 36,
+      "endLine": 36,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.test.ts",
+      "line": 61,
+      "endLine": 61,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.test.ts",
+      "line": 72,
+      "endLine": 72,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.ts",
+      "line": 39,
+      "endLine": 39,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-save/run-console-save-broker.ts",
+      "line": 40,
+      "endLine": 40,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/cross-file-probes/run-cross-file-probes-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/cross-file-probes/run-cross-file-probes-broker.proxy.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/cross-file-probes/run-cross-file-probes-broker.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/cross-file-probes/run-cross-file-probes-broker.ts",
+      "line": 78,
+      "endLine": 78,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 5,
+      "endLine": 5,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 19,
+      "endLine": 19,
+      "adapter": "fsExistsAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 19,
+      "endLine": 19,
+      "adapter": "fsReadFileAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 26,
+      "endLine": 26,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "fsReadFileAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 29,
+      "endLine": 29,
+      "adapter": "fsReadFileAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 32,
+      "endLine": 32,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.test.ts",
+      "line": 42,
+      "endLine": 42,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 5,
+      "endLine": 5,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.test.ts",
+      "line": 93,
+      "endLine": 93,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 5,
+      "endLine": 5,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.test.ts",
+      "line": 32,
+      "endLine": 32,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.proxy.ts",
+      "line": 5,
+      "endLine": 5,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.proxy.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "fsReadFileAdapter",
+      "what": "a comment names the adapter"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.proxy.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.test.ts",
+      "line": 60,
+      "endLine": 60,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-paths-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsFindUpAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-paths-broker.proxy.ts",
+      "line": 5,
+      "endLine": 5,
+      "adapter": "fsFindUpAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-paths-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsFindUpAdapter",
+      "what": "proxy: the adapter calls itself; the gateway call answers a different shape (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-paths-broker.proxy.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "fsFindUpAdapter",
+      "what": "proxy: registerMock on the adapter itself; compose the gateway proxy and stage by path"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-paths-broker.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsFindUpAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-paths-broker.ts",
+      "line": 33,
+      "endLine": 33,
+      "adapter": "fsFindUpAdapter",
+      "what": "call: the adapter calls itself; the gateway call answers a different shape (see the row notes)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 5,
+      "endLine": 5,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 43,
+      "endLine": 43,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 66,
+      "endLine": 66,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 67,
+      "endLine": 67,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 68,
+      "endLine": 68,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 71,
+      "endLine": 71,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: reads.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 74,
+      "endLine": 74,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: exists.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 81,
+      "endLine": 81,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: reads.throws(...): throws stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.test.ts",
+      "line": 259,
+      "endLine": 259,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 34,
+      "endLine": 34,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 35,
+      "endLine": 35,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 133,
+      "endLine": 133,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 134,
+      "endLine": 134,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 136,
+      "endLine": 136,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 152,
+      "endLine": 152,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 159,
+      "endLine": 162,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 171,
+      "endLine": 181,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.proxy.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.proxy.ts",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter proxy kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsMkdirAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.proxy.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "fsWriteFileAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.proxy.ts",
+      "line": 24,
+      "endLine": 24,
+      "adapter": "fsRenameAdapter",
+      "what": "proxy: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsMkdirAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "fsWriteFileAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsRenameAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.ts",
+      "line": 28,
+      "endLine": 28,
+      "adapter": "fsMkdirAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.ts",
+      "line": 40,
+      "endLine": 40,
+      "adapter": "fsWriteFileAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-index/write/stub-index-write-broker.ts",
+      "line": 41,
+      "endLine": 41,
+      "adapter": "fsRenameAdapter",
+      "what": "call: the adapter body is several statements around a raw call; the script inlines only an expression body"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves(undefined);); pathExistsProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: the adapter proxy answered by default (handle.calledWith([]).resolves('');); readFileProxy stages nothing until asked, so stage what this caller reads"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.succeeds(...): succeeds stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: existsProxy.fails(...): fails stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.returns(...): returns stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 34,
+      "endLine": 34,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: readFileProxy.throws(...): throws stages with no path; the gateway proxy stages by path, so the caller must name one"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.test.ts",
+      "line": 76,
+      "endLine": 76,
+      "adapter": "fsReadFileAdapter",
+      "what": "a string names the adapter (a test title or message)"
+    }
+  ],
+  "done": [
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.proxy.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "pathRelativeAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.ts",
+      "line": 30,
+      "endLine": 30,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/analyzer/hash/analyzer-hash-broker.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "pathRelativeAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/harness-graph/compile-harness-graph-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/harness-graph/compile-harness-graph-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/harness-graph/compile-harness-graph-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/harness-graph/compile-harness-graph-broker.ts",
+      "line": 161,
+      "endLine": 161,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.proxy.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.proxy.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "pathRelativeAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.ts",
+      "line": 41,
+      "endLine": 41,
+      "adapter": "pathRelativeAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/plan-current/compile-plan-current-broker.ts",
+      "line": 54,
+      "endLine": 54,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/process-file/compile-process-file-broker.ts",
+      "line": 49,
+      "endLine": 49,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeModuleBuiltinsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.proxy.ts",
+      "line": 38,
+      "endLine": 38,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.proxy.ts",
+      "line": 40,
+      "endLine": 40,
+      "adapter": "nodeModuleBuiltinsAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeModuleBuiltinsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.ts",
+      "line": 56,
+      "endLine": 56,
+      "adapter": "nodeModuleBuiltinsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/compile-resolve-graph-broker.ts",
+      "line": 60,
+      "endLine": 60,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/resolve-specifier-layer-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/resolve-specifier-layer-broker.proxy.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "pathRelativeAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/resolve-specifier-layer-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-graph/resolve-specifier-layer-broker.ts",
+      "line": 64,
+      "endLine": 64,
+      "adapter": "pathRelativeAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-root/compile-resolve-root-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathResolveAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-root/compile-resolve-root-broker.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "pathResolveAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-root/compile-resolve-root-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathResolveAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/resolve-root/compile-resolve-root-broker.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "pathResolveAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/run/compile-run-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathBasenameAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/run/compile-run-broker.proxy.ts",
+      "line": 53,
+      "endLine": 53,
+      "adapter": "pathBasenameAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/run/compile-run-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathBasenameAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/run/compile-run-broker.ts",
+      "line": 64,
+      "endLine": 64,
+      "adapter": "pathBasenameAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/run/compile-run-broker.ts",
+      "line": 65,
+      "endLine": 65,
+      "adapter": "pathBasenameAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/stub-graph/compile-stub-graph-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/stub-graph/compile-stub-graph-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/stub-graph/compile-stub-graph-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/stub-graph/compile-stub-graph-broker.ts",
+      "line": 66,
+      "endLine": 66,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathDirnameAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.proxy.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "pathDirnameAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathDirnameAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.ts",
+      "line": 23,
+      "endLine": 23,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/config/find/config-find-broker.ts",
+      "line": 33,
+      "endLine": 33,
+      "adapter": "pathDirnameAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/config/load/config-load-broker.ts",
+      "line": 25,
+      "endLine": 25,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.proxy.ts",
+      "line": 27,
+      "endLine": 27,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global/external-signature-read-global-broker.ts",
+      "line": 64,
+      "endLine": 64,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.proxy.ts",
+      "line": 32,
+      "endLine": 32,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 37,
+      "endLine": 37,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 42,
+      "endLine": 42,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read/external-signature-read-broker.ts",
+      "line": 43,
+      "endLine": 43,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsSyncAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsExistsSyncAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsSyncAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.ts",
+      "line": 93,
+      "endLine": 93,
+      "adapter": "fsExistsSyncAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/realize/harness-realize-broker.ts",
+      "line": 97,
+      "endLine": 97,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 12,
+      "endLine": 12,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.proxy.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.ts",
+      "line": 34,
+      "endLine": 34,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/manifest/load/manifest-load-broker.ts",
+      "line": 38,
+      "endLine": 38,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "pathRelativeAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.ts",
+      "line": 47,
+      "endLine": 47,
+      "adapter": "pathRelativeAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/resolve-sibling/callee/resolve-sibling-callee-broker.ts",
+      "line": 53,
+      "endLine": 53,
+      "adapter": "fsReadFileSyncAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 31,
+      "endLine": 31,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.proxy.ts",
+      "line": 32,
+      "endLine": 32,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.ts",
+      "line": 37,
+      "endLine": 37,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.ts",
+      "line": 41,
+      "endLine": 41,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.ts",
+      "line": 45,
+      "endLine": 45,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/console-find/run-console-find-broker.ts",
+      "line": 49,
+      "endLine": 49,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.ts",
+      "line": 36,
+      "endLine": 36,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/find/run-find-broker.ts",
+      "line": 40,
+      "endLine": 40,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.proxy.ts",
+      "line": 21,
+      "endLine": 21,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.ts",
+      "line": 46,
+      "endLine": 46,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/id/run-id-broker.ts",
+      "line": 47,
+      "endLine": 47,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.ts",
+      "line": 29,
+      "endLine": 29,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/load/run-load-broker.ts",
+      "line": 33,
+      "endLine": 33,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.proxy.ts",
+      "line": 22,
+      "endLine": 22,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/paths/run-each-layer-broker.ts",
+      "line": 42,
+      "endLine": 42,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 66,
+      "endLine": 66,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.proxy.ts",
+      "line": 68,
+      "endLine": 68,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 189,
+      "endLine": 189,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.ts",
+      "line": 202,
+      "endLine": 202,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathBasenameAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathDirnameAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "fsExistsAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 16,
+      "endLine": 16,
+      "adapter": "fsReadFileAdapter",
+      "what": "proxy: compose swap"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "pathBasenameAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "pathDirnameAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.proxy.ts",
+      "line": 17,
+      "endLine": 17,
+      "adapter": "pathRelativeAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsExistsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "fsReadFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathBasenameAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathDirnameAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "pathRelativeAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 33,
+      "endLine": 33,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 36,
+      "endLine": 36,
+      "adapter": "fsExistsAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 44,
+      "endLine": 44,
+      "adapter": "pathRelativeAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 45,
+      "endLine": 45,
+      "adapter": "pathDirnameAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 46,
+      "endLine": 46,
+      "adapter": "pathBasenameAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 47,
+      "endLine": 47,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 66,
+      "endLine": 66,
+      "adapter": "pathRelativeAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 67,
+      "endLine": 67,
+      "adapter": "pathBasenameAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/src/brokers/stub-overlay/load/stub-overlay-load-broker.ts",
+      "line": 68,
+      "endLine": 68,
+      "adapter": "fsReadFileAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/core/test/harnesses/syntax-traits.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "nodeModuleBuiltinsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/core/test/harnesses/syntax-traits.ts",
+      "line": 44,
+      "endLine": 44,
+      "adapter": "nodeModuleBuiltinsAdapter",
+      "what": "call"
+    }
+  ]
+}

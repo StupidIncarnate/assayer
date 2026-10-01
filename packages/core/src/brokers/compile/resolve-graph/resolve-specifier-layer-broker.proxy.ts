@@ -2,7 +2,6 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
-import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 
 export const resolveSpecifierLayerBrokerProxy = (): {
@@ -18,7 +17,6 @@ export const resolveSpecifierLayerBrokerProxy = (): {
   // because resolution against a real filesystem is exactly what a unit test cannot stage — the caller
   // says where a specifier lands instead.
   importSpecifierResolveBrokerProxy();
-  pathRelativeAdapterProxy();
 
   const resolveHandle = registerMock({ fn: importSpecifierResolveBroker });
   resolveHandle.calledWith([]).returns({ resolved: false });

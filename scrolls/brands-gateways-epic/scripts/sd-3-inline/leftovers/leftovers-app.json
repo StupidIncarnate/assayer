@@ -1,0 +1,921 @@
+{
+  "summary": {
+    "package": "app",
+    "mode": "apply",
+    "root": "/home/brutus-home/projects/assayer",
+    "adaptersInlined": 11,
+    "adaptersLeft": 0,
+    "skipped": 0,
+    "editsDone": 63,
+    "editsLeft": 55
+  },
+  "adapters": [
+    {
+      "adapter": "assayerBridgeGetCompiledFileAdapter",
+      "path": "packages/app/src/adapters/assayer-bridge/get-compiled-file/assayer-bridge-get-compiled-file-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "transplant",
+      "notes": "The caller broker is a one-line delegation, so the adapter body replaces it. The bridge staging in the adapter proxy (it writes onto `window.assayerBridge`) moves into the broker proxy. The browser window gateway is a pass-through with no proxy. Never stub the bridge outside tests (CLAUDE.md)."
+    },
+    {
+      "adapter": "assayerBridgeGetCompiledTreeAdapter",
+      "path": "packages/app/src/adapters/assayer-bridge/get-compiled-tree/assayer-bridge-get-compiled-tree-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "transplant",
+      "notes": "The caller broker is a one-line delegation, so the adapter body replaces it. The bridge staging in the adapter proxy (it writes onto `window.assayerBridge`) moves into the broker proxy. The browser window gateway is a pass-through with no proxy. Never stub the bridge outside tests (CLAUDE.md)."
+    },
+    {
+      "adapter": "assayerBridgeGetSavedConsoleAdapter",
+      "path": "packages/app/src/adapters/assayer-bridge/get-saved-console/assayer-bridge-get-saved-console-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "transplant",
+      "notes": "The caller broker is a one-line delegation, so the adapter body replaces it. The bridge staging in the adapter proxy (it writes onto `window.assayerBridge`) moves into the broker proxy. The browser window gateway is a pass-through with no proxy. Never stub the bridge outside tests (CLAUDE.md)."
+    },
+    {
+      "adapter": "assayerBridgeGetSavedRunAdapter",
+      "path": "packages/app/src/adapters/assayer-bridge/get-saved-run/assayer-bridge-get-saved-run-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "transplant",
+      "notes": "The caller broker is a one-line delegation, so the adapter body replaces it. The bridge staging in the adapter proxy (it writes onto `window.assayerBridge`) moves into the broker proxy. The browser window gateway is a pass-through with no proxy. Never stub the bridge outside tests (CLAUDE.md)."
+    },
+    {
+      "adapter": "assayerBridgeGetStatusAdapter",
+      "path": "packages/app/src/adapters/assayer-bridge/get-status/assayer-bridge-get-status-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "transplant",
+      "notes": "The caller broker is a one-line delegation, so the adapter body replaces it. The bridge staging in the adapter proxy (it writes onto `window.assayerBridge`) moves into the broker proxy. The browser window gateway is a pass-through with no proxy. Never stub the bridge outside tests (CLAUDE.md)."
+    },
+    {
+      "adapter": "assayerBridgeGetStubsAdapter",
+      "path": "packages/app/src/adapters/assayer-bridge/get-stubs/assayer-bridge-get-stubs-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "transplant",
+      "notes": "The caller broker is a one-line delegation, so the adapter body replaces it. The bridge staging in the adapter proxy (it writes onto `window.assayerBridge`) moves into the broker proxy. The browser window gateway is a pass-through with no proxy. Never stub the bridge outside tests (CLAUDE.md)."
+    },
+    {
+      "adapter": "assayerBridgeRunFileAdapter",
+      "path": "packages/app/src/adapters/assayer-bridge/run-file/assayer-bridge-run-file-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "transplant",
+      "notes": "The caller broker is a one-line delegation, so the adapter body replaces it. The bridge staging in the adapter proxy (it writes onto `window.assayerBridge`) moves into the broker proxy. The browser window gateway is a pass-through with no proxy. Never stub the bridge outside tests (CLAUDE.md)."
+    },
+    {
+      "adapter": "reactDomMountAdapter",
+      "path": "packages/app/src/adapters/react-dom/mount/react-dom-mount-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "drop",
+      "notes": "The responder takes the mount body and `appThemeStatics`. Its `AdapterResult` return goes away. A middleware cannot take it, because a responder may not import `middleware/`."
+    },
+    {
+      "adapter": "reactCreateElementAdapter",
+      "path": "packages/app/src/adapters/react/create-element/react-create-element-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop"
+    },
+    {
+      "adapter": "testingLibraryRenderHookAdapter",
+      "path": "packages/app/src/adapters/testing-library/render-hook/testing-library-render-hook-adapter.ts",
+      "recipe": "expr",
+      "proxy": "drop",
+      "notes": "Test support only (4 test files)."
+    },
+    {
+      "adapter": "testingLibraryWaitForAdapter",
+      "path": "packages/app/src/adapters/testing-library/wait-for/testing-library-wait-for-adapter.ts",
+      "recipe": "transplant",
+      "proxy": "drop",
+      "notes": "Test support only (6 test files)."
+    }
+  ],
+  "skipped": [],
+  "left": [
+    {
+      "file": "packages/app/src/bindings/use-assayer-status/use-assayer-status-binding.test.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-assayer-status/use-assayer-status-binding.test.ts",
+      "line": 18,
+      "endLine": 22,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.test.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.test.ts",
+      "line": 18,
+      "endLine": 22,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.test.ts",
+      "line": 53,
+      "endLine": 57,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 21,
+      "endLine": 25,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 37,
+      "endLine": 41,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 68,
+      "endLine": 72,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 87,
+      "endLine": 91,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 110,
+      "endLine": 114,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 118,
+      "endLine": 122,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 137,
+      "endLine": 141,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 145,
+      "endLine": 149,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-stub-index/use-stub-index-binding.test.ts",
+      "line": 1,
+      "endLine": 1,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-stub-index/use-stub-index-binding.test.ts",
+      "line": 18,
+      "endLine": 22,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/bindings/use-stub-index/use-stub-index-binding.test.ts",
+      "line": 53,
+      "endLine": 57,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/responders/app/mount/app-mount-responder.ts",
+      "line": 10,
+      "endLine": 10,
+      "adapter": "reactDomMountAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/responders/app/mount/app-mount-responder.ts",
+      "line": 20,
+      "endLine": 20,
+      "adapter": "reactDomMountAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/responders/explorer/page/explorer-page-responder.ts",
+      "line": 10,
+      "endLine": 10,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/responders/explorer/page/explorer-page-responder.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "reactCreateElementAdapter",
+      "what": "a type names the adapter (typeof)"
+    },
+    {
+      "file": "packages/app/src/responders/shell/page/shell-page-responder.ts",
+      "line": 10,
+      "endLine": 10,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/responders/shell/page/shell-page-responder.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "reactCreateElementAdapter",
+      "what": "a type names the adapter (typeof)"
+    },
+    {
+      "file": "packages/app/src/responders/stubs/page/stubs-page-responder.ts",
+      "line": 9,
+      "endLine": 9,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/responders/stubs/page/stubs-page-responder.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "reactCreateElementAdapter",
+      "what": "a type names the adapter (typeof)"
+    },
+    {
+      "file": "packages/app/src/widgets/stub-repository/stub-repository-widget.test.tsx",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/widgets/stub-repository/stub-repository-widget.test.tsx",
+      "line": 37,
+      "endLine": 41,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/stub-repository/stub-repository-widget.test.tsx",
+      "line": 85,
+      "endLine": 89,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/stub-repository/stub-repository-widget.test.tsx",
+      "line": 110,
+      "endLine": 114,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/stub-repository/stub-repository-widget.test.tsx",
+      "line": 132,
+      "endLine": 136,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/stub-repository/stub-repository-widget.test.tsx",
+      "line": 151,
+      "endLine": 155,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/stub-repository/stub-repository-widget.test.tsx",
+      "line": 183,
+      "endLine": 187,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 2,
+      "endLine": 2,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "import of the adapter kept: the file still names it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 27,
+      "endLine": 31,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 49,
+      "endLine": 53,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 86,
+      "endLine": 90,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 107,
+      "endLine": 111,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 162,
+      "endLine": 166,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 170,
+      "endLine": 174,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 190,
+      "endLine": 194,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 198,
+      "endLine": 202,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 219,
+      "endLine": 223,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 242,
+      "endLine": 246,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 271,
+      "endLine": 275,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 278,
+      "endLine": 282,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 299,
+      "endLine": 303,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 308,
+      "endLine": 312,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 335,
+      "endLine": 339,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 343,
+      "endLine": 347,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 368,
+      "endLine": 372,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 376,
+      "endLine": 380,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 405,
+      "endLine": 409,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 413,
+      "endLine": 417,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 436,
+      "endLine": 440,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    },
+    {
+      "file": "packages/app/src/widgets/surface-explorer/surface-explorer-widget.test.tsx",
+      "line": 445,
+      "endLine": 449,
+      "adapter": "testingLibraryWaitForAdapter",
+      "what": "call: the adapter body is several statements, and this caller does more than delegate to it"
+    }
+  ],
+  "done": [
+    {
+      "file": "packages/app/src/bindings/use-assayer-status/use-assayer-status-binding.test.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/bindings/use-assayer-status/use-assayer-status-binding.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.test.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.test.ts",
+      "line": 38,
+      "endLine": 38,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-compiled-tree/use-compiled-tree-binding.test.ts",
+      "line": 50,
+      "endLine": 50,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 18,
+      "endLine": 18,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 34,
+      "endLine": 34,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 49,
+      "endLine": 49,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 65,
+      "endLine": 65,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 84,
+      "endLine": 84,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 107,
+      "endLine": 107,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-file-run/use-file-run-binding.test.ts",
+      "line": 134,
+      "endLine": 134,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-stub-index/use-stub-index-binding.test.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/bindings/use-stub-index/use-stub-index-binding.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-stub-index/use-stub-index-binding.test.ts",
+      "line": 38,
+      "endLine": 38,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/bindings/use-stub-index/use-stub-index-binding.test.ts",
+      "line": 50,
+      "endLine": 50,
+      "adapter": "testingLibraryRenderHookAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-file/fetch/compiled-file-fetch-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetCompiledFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-file/fetch/compiled-file-fetch-broker.proxy.ts",
+      "line": 8,
+      "endLine": 26,
+      "adapter": "assayerBridgeGetCompiledFileAdapter",
+      "what": "proxy: adapter proxy body moved into the caller proxy"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-file/fetch/compiled-file-fetch-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetCompiledFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-file/fetch/compiled-file-fetch-broker.ts",
+      "line": 18,
+      "endLine": 28,
+      "adapter": "assayerBridgeGetCompiledFileAdapter",
+      "what": "call: the caller takes the adapter body"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-tree/fetch/compiled-tree-fetch-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetCompiledTreeAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-tree/fetch/compiled-tree-fetch-broker.proxy.ts",
+      "line": 8,
+      "endLine": 31,
+      "adapter": "assayerBridgeGetCompiledTreeAdapter",
+      "what": "proxy: adapter proxy body moved into the caller proxy"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-tree/fetch/compiled-tree-fetch-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetCompiledTreeAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/compiled-tree/fetch/compiled-tree-fetch-broker.ts",
+      "line": 14,
+      "endLine": 24,
+      "adapter": "assayerBridgeGetCompiledTreeAdapter",
+      "what": "call: the caller takes the adapter body"
+    },
+    {
+      "file": "packages/app/src/brokers/run/execute/run-execute-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeRunFileAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/run/execute/run-execute-broker.proxy.ts",
+      "line": 8,
+      "endLine": 34,
+      "adapter": "assayerBridgeRunFileAdapter",
+      "what": "proxy: adapter proxy body moved into the caller proxy"
+    },
+    {
+      "file": "packages/app/src/brokers/run/execute/run-execute-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeRunFileAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/run/execute/run-execute-broker.ts",
+      "line": 14,
+      "endLine": 24,
+      "adapter": "assayerBridgeRunFileAdapter",
+      "what": "call: the caller takes the adapter body"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-console/run-fetch-console-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetSavedConsoleAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-console/run-fetch-console-broker.proxy.ts",
+      "line": 8,
+      "endLine": 26,
+      "adapter": "assayerBridgeGetSavedConsoleAdapter",
+      "what": "proxy: adapter proxy body moved into the caller proxy"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-console/run-fetch-console-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetSavedConsoleAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-console/run-fetch-console-broker.ts",
+      "line": 17,
+      "endLine": 27,
+      "adapter": "assayerBridgeGetSavedConsoleAdapter",
+      "what": "call: the caller takes the adapter body"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-saved/run-fetch-saved-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetSavedRunAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-saved/run-fetch-saved-broker.proxy.ts",
+      "line": 8,
+      "endLine": 26,
+      "adapter": "assayerBridgeGetSavedRunAdapter",
+      "what": "proxy: adapter proxy body moved into the caller proxy"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-saved/run-fetch-saved-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetSavedRunAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/run/fetch-saved/run-fetch-saved-broker.ts",
+      "line": 16,
+      "endLine": 26,
+      "adapter": "assayerBridgeGetSavedRunAdapter",
+      "what": "call: the caller takes the adapter body"
+    },
+    {
+      "file": "packages/app/src/brokers/status/fetch/status-fetch-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetStatusAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/status/fetch/status-fetch-broker.proxy.ts",
+      "line": 7,
+      "endLine": 24,
+      "adapter": "assayerBridgeGetStatusAdapter",
+      "what": "proxy: adapter proxy body moved into the caller proxy"
+    },
+    {
+      "file": "packages/app/src/brokers/status/fetch/status-fetch-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetStatusAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/status/fetch/status-fetch-broker.ts",
+      "line": 14,
+      "endLine": 24,
+      "adapter": "assayerBridgeGetStatusAdapter",
+      "what": "call: the caller takes the adapter body"
+    },
+    {
+      "file": "packages/app/src/brokers/stub-index/fetch/stub-index-fetch-broker.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetStubsAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/stub-index/fetch/stub-index-fetch-broker.proxy.ts",
+      "line": 8,
+      "endLine": 31,
+      "adapter": "assayerBridgeGetStubsAdapter",
+      "what": "proxy: adapter proxy body moved into the caller proxy"
+    },
+    {
+      "file": "packages/app/src/brokers/stub-index/fetch/stub-index-fetch-broker.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "assayerBridgeGetStubsAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/brokers/stub-index/fetch/stub-index-fetch-broker.ts",
+      "line": 14,
+      "endLine": 24,
+      "adapter": "assayerBridgeGetStubsAdapter",
+      "what": "call: the caller takes the adapter body"
+    },
+    {
+      "file": "packages/app/src/responders/app/mount/app-mount-responder.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "reactDomMountAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/responders/app/mount/app-mount-responder.proxy.ts",
+      "line": 3,
+      "endLine": 3,
+      "adapter": "reactDomMountAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/app/src/responders/app/mount/app-mount-responder.test.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/responders/app/mount/app-mount-responder.test.ts",
+      "line": 13,
+      "endLine": 13,
+      "adapter": "reactCreateElementAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/responders/explorer/page/explorer-page-responder.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/responders/explorer/page/explorer-page-responder.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "reactCreateElementAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/app/src/responders/explorer/page/explorer-page-responder.test.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/responders/explorer/page/explorer-page-responder.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "reactCreateElementAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/responders/explorer/page/explorer-page-responder.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "reactCreateElementAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/responders/shell/page/shell-page-responder.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/responders/shell/page/shell-page-responder.proxy.ts",
+      "line": 4,
+      "endLine": 4,
+      "adapter": "reactCreateElementAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/app/src/responders/shell/page/shell-page-responder.ts",
+      "line": 15,
+      "endLine": 15,
+      "adapter": "reactCreateElementAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/responders/stubs/page/stubs-page-responder.proxy.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter proxy dropped"
+    },
+    {
+      "file": "packages/app/src/responders/stubs/page/stubs-page-responder.proxy.ts",
+      "line": 7,
+      "endLine": 7,
+      "adapter": "reactCreateElementAdapter",
+      "what": "proxy: compose dropped (pass-through, no gateway proxy)"
+    },
+    {
+      "file": "packages/app/src/responders/stubs/page/stubs-page-responder.test.ts",
+      "line": 0,
+      "endLine": 0,
+      "adapter": "reactCreateElementAdapter",
+      "what": "import of the adapter dropped"
+    },
+    {
+      "file": "packages/app/src/responders/stubs/page/stubs-page-responder.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "reactCreateElementAdapter",
+      "what": "call"
+    },
+    {
+      "file": "packages/app/src/responders/stubs/page/stubs-page-responder.ts",
+      "line": 14,
+      "endLine": 14,
+      "adapter": "reactCreateElementAdapter",
+      "what": "call"
+    }
+  ]
+}

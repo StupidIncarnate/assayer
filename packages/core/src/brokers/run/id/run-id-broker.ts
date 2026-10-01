@@ -28,10 +28,10 @@ import { relPathContract, runIdContract } from '@assayer/shared/contracts';
 import type { RunId } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runIdBroker = async ({
   root,
@@ -43,8 +43,8 @@ export const runIdBroker = async ({
   source: string;
 }): Promise<RunId> => {
   const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
-  const harnessSource = (await fsExistsAdapter({ path: harnessPath }))
-    ? String(await fsReadFileAdapter({ path: harnessPath }))
+  const harnessSource = (await pathExists(harnessPath))
+    ? String(fileContentsContract.parse(await readFile(harnessPath)))
     : undefined;
   const harnessDigest =
     harnessSource !== undefined && isAssayerHarnessGuard({ source: harnessSource })

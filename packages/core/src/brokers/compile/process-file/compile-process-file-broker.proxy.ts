@@ -1,4 +1,3 @@
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
@@ -6,6 +5,7 @@ import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-f
 import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import type { FileCount } from '@assayer/shared/contracts';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const compileProcessFileBrokerProxy = (): {
   blobExists: () => void;
@@ -18,7 +18,7 @@ export const compileProcessFileBrokerProxy = (): {
   wasWriteCalled: () => boolean;
   processedCount: () => FileCount;
 } => {
-  const existsProxy = fsExistsAdapterProxy();
+  const existsProxy = pathExistsProxy();
   const mkdirProxy = fsMkdirAdapterProxy();
   const writeFileProxy = fsWriteFileAdapterProxy();
   const renameProxy = fsRenameAdapterProxy();

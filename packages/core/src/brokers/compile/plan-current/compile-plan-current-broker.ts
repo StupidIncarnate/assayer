@@ -16,11 +16,13 @@
  */
 import { compileWalkWorkingTreeBroker } from '../../compile/walk-working-tree/compile-walk-working-tree-broker';
 import { harnessClassifyBroker } from '../../harness/classify/harness-classify-broker';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { isSourceFileIncludedGuard } from '../../../guards/is-source-file-included/is-source-file-included-guard';
 import type { RelPath } from '@assayer/shared/contracts';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
+import { readFile } from '#gateway/node/fs__promises';
+import { relative } from '#gateway/node/path';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
+import { relPathContract } from '@assayer/shared/contracts';
 
 export const compilePlanCurrentBroker = async ({
   root,
@@ -36,7 +38,7 @@ export const compilePlanCurrentBroker = async ({
 
   const relPathed = absPaths.map((abs) => ({
     abs,
-    relPath: pathRelativeAdapter({ from: root, to: String(abs) }),
+    relPath: relPathContract.parse(relative(root, String(abs))),
   }));
 
   const included = relPathed.filter((r) =>
@@ -49,7 +51,7 @@ export const compilePlanCurrentBroker = async ({
   const planned = await Promise.all(
     included.map(async (r) => ({
       relPath: r.relPath,
-      content: await fsReadFileAdapter({ path: String(r.abs) }),
+      content: fileContentsContract.parse(await readFile(String(r.abs))),
     }))
   );
 

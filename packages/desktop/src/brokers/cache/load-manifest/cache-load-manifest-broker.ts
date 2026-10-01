@@ -9,15 +9,15 @@
 import { assayerCacheManifestContract } from '@assayer/shared/contracts';
 import type { AssayerCacheManifest } from '@assayer/shared/contracts';
 
-import { nodeFsReadCacheManifestAdapter } from '../../../adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter';
 import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
+import { readJsonFile } from '#gateway/node/fs__promises';
 
 export const cacheLoadManifestBroker = async ({
   repoPath,
 }: {
   repoPath: RepoPath;
 }): Promise<AssayerCacheManifest> => {
-  const raw = await nodeFsReadCacheManifestAdapter({ repoPath });
+  const raw = await readJsonFile(`${repoPath}/.assayer/cache/manifest.json`);
 
   return assayerCacheManifestContract.parse(raw);
 };

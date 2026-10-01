@@ -1,13 +1,11 @@
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
-import { pathDirnameAdapterProxy } from '../../../adapters/path/dirname/path-dirname-adapter.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 
 export const configFindBrokerProxy = (): {
   configLivesIn: (params: { levelsBelow: number }) => void;
   neverFound: () => void;
 } => {
-  const existsProxy = fsExistsAdapterProxy();
+  const existsProxy = pathExistsProxy();
 
-  pathDirnameAdapterProxy();
 
   return {
     configLivesIn: ({ levelsBelow }: { levelsBelow: number }): void => {

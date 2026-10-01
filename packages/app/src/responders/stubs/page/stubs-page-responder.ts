@@ -8,6 +8,7 @@
  */
 import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
 import { StubRepositoryWidget } from '../../../widgets/stub-repository/stub-repository-widget';
+import { createElement } from '#gateway/npm/react';
 
 export const StubsPageResponder = (): ReturnType<typeof reactCreateElementAdapter> =>
-  reactCreateElementAdapter({ component: StubRepositoryWidget });
+  createElement(StubRepositoryWidget);

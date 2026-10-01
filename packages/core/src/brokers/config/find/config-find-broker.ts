@@ -10,8 +10,8 @@
  */
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { pathDirnameAdapter } from '../../../adapters/path/dirname/path-dirname-adapter';
+import { pathExists } from '#gateway/node/fs__promises';
+import { dirname } from '#gateway/node/path';
 
 export const configFindBroker = async ({
   startDir,
@@ -20,7 +20,7 @@ export const configFindBroker = async ({
 }): Promise<{ found: true; configDir: FilePath; configPath: FilePath } | { found: false }> => {
   const configPath = `${startDir}/assayer.config.json`;
 
-  const exists = await fsExistsAdapter({ path: configPath });
+  const exists = await pathExists(configPath);
 
   if (exists) {
     return {
@@ -30,7 +30,7 @@ export const configFindBroker = async ({
     };
   }
 
-  const parent = pathDirnameAdapter({ path: startDir });
+  const parent = filePathContract.parse(dirname(startDir));
 
   if (String(parent) === startDir) {
     return { found: false };

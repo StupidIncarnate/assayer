@@ -13,8 +13,8 @@
  */
 import { assayerCacheManifestContract } from '@assayer/shared/contracts';
 import type { AssayerCacheManifest } from '@assayer/shared/contracts';
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
+import { pathExists, readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const manifestLoadBroker = async ({
   configDir,
@@ -31,11 +31,11 @@ export const manifestLoadBroker = async ({
 > => {
   const manifestPath = `${configDir}/.assayer/cache/manifest.json`;
 
-  if (!(await fsExistsAdapter({ path: manifestPath }))) {
+  if (!(await pathExists(manifestPath))) {
     return { status: 'missing' };
   }
 
-  const text = await fsReadFileAdapter({ path: manifestPath });
+  const text = fileContentsContract.parse(await readFile(manifestPath));
 
   try {
     const json: unknown = JSON.parse(String(text));

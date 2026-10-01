@@ -39,13 +39,14 @@ import {
 import type { ContentHash, RelPath, ResolvedIndex, StubIndex } from '@assayer/shared/contracts';
 
 import type { PropertyGuard } from '../../../contracts/property-guard/property-guard-contract';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
 import { envGuessedValuesTransformer } from '../../../transformers/env-guessed-values/env-guessed-values-transformer';
 import { gatherEnvReadsTransformer } from '../../../transformers/gather-env-reads/gather-env-reads-transformer';
 import { gatherPropertyGuardsTransformer } from '../../../transformers/gather-property-guards/gather-property-guards-transformer';
 import { gatherTypeReadsTransformer } from '../../../transformers/gather-type-reads/gather-type-reads-transformer';
 import { stubIndexWriteBroker } from '../../stub-index/write/stub-index-write-broker';
+import { readFile } from '#gateway/node/fs__promises';
+import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const compileStubGraphBroker = async ({
   configDir,
@@ -62,7 +63,7 @@ export const compileStubGraphBroker = async ({
 }): Promise<{ index: StubIndex; guards: PropertyGuard[] }> => {
   const blobs = await Promise.all(
     files.map(async (file) => {
-      const raw = await fsReadFileAdapter({ path: `${blobsDir}/${String(file.contentHash)}.json` });
+      const raw = fileContentsContract.parse(await readFile(`${blobsDir}/${String(file.contentHash)}.json`));
       return compiledFileBlobContract.parse(JSON.parse(String(raw)));
     }),
   );

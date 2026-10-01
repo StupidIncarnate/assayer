@@ -1,11 +1,11 @@
-import { nodeFsReadCacheManifestAdapterProxy } from '../../../adapters/node-fs/read-cache-manifest/node-fs-read-cache-manifest-adapter.proxy';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts';
+import { readJsonFileProxy } from '#gateway/node/fs__promises/read-json-file/read-json-file.proxy';
 
 export const cacheLoadManifestBrokerProxy = (): {
   resolves: (params: { manifest: ReturnType<typeof AssayerCacheManifestStub> }) => void;
   rejects: (params: { error: Error }) => void;
 } => {
-  const adapterProxy = nodeFsReadCacheManifestAdapterProxy();
+  const adapterProxy = readJsonFileProxy();
 
   return {
     resolves: ({ manifest }): void => {

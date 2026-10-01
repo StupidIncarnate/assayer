@@ -22,10 +22,9 @@
 import { readFileSync } from '#gateway/node/fs';
 import { resolve, join } from '#gateway/node/path';
 
-import { entryAccessContract, branchNodeContract } from '@assayer/shared/contracts';
+import { entryAccessContract, branchNodeContract, packageNameContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
-import { nodeModuleBuiltinsAdapter } from '../../src/adapters/node-module/builtins/node-module-builtins-adapter';
 import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
 import { composeCrossFileMapBroker } from '../../src/brokers/compose/cross-file-map/compose-cross-file-map-broker';
@@ -35,13 +34,14 @@ import { paramTypeResolveBroker } from '../../src/brokers/param-type/resolve/par
 import { stubRealizeBroker } from '../../src/brokers/stub/realize/stub-realize-broker';
 import { conditionLeavesTransformer } from '../../src/transformers/condition-leaves/condition-leaves-transformer';
 import { moduleGraphProjectionTransformer } from '../../src/transformers/module-graph-projection/module-graph-projection-transformer';
+import { builtinModules } from '#gateway/node/module';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
 const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
 
 // The authoritative node-builtin name set, so a specifier like `path` (no `node:` prefix) still
 // classifies as a builtin exactly as the resolver's own builtin check does — never as a package.
-const BUILTINS = new Set(nodeModuleBuiltinsAdapter().map(String));
+const BUILTINS = new Set(builtinModules.map((name) => packageNameContract.parse(name)).map(String));
 
 // Closed and literal, so a specimen declaring a trait that does not exist fails to typecheck rather
 // than silently never matching. `darkspot:*` is enumerated rather than open for the same reason: a

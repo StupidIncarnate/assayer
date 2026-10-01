@@ -1,9 +1,7 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
-import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
-import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
 import { runExecuteCasesBrokerProxy } from '../execute-cases/run-execute-cases-broker.proxy';
 import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
@@ -16,6 +14,8 @@ import { stubRealizeBrokerProxy } from '../../stub/realize/stub-realize-broker.p
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
 import { runCrossFileProbesBrokerProxy } from '../cross-file-probes/run-cross-file-probes-broker.proxy';
+import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
+import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const runUnitBrokerProxy = (): {
   setupSavedRun: ({ run }: { run: unknown }) => void;
@@ -63,9 +63,9 @@ export const runUnitBrokerProxy = (): {
   overlayLoadHandle.calledWith([]).resolves([]);
 
   const runner = runExecuteCasesBrokerProxy();
-  const exists = fsExistsAdapterProxy();
+  const exists = pathExistsProxy();
   const writes = fsWriteFileAdapterProxy();
-  const reads = fsReadFileAdapterProxy();
+  const reads = readFileProxy();
 
   return {
     setupSavedRun: ({ run }: { run: unknown }): void => { reads.returns({ content: JSON.stringify(run) }); },

@@ -12,8 +12,8 @@
 import { resolvedIndexContract } from '@assayer/shared/contracts';
 import type { NamespaceName, ResolvedIndex } from '@assayer/shared/contracts';
 
-import { nodeFsReadResolvedIndexAdapter } from '../../../adapters/node-fs/read-resolved-index/node-fs-read-resolved-index-adapter';
 import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
+import { readJsonFileIfExists } from '#gateway/node/fs__promises';
 
 export const cacheLoadResolvedIndexBroker = async ({
   repoPath,
@@ -22,7 +22,7 @@ export const cacheLoadResolvedIndexBroker = async ({
   repoPath: RepoPath;
   namespace: NamespaceName;
 }): Promise<ResolvedIndex | undefined> => {
-  const raw = await nodeFsReadResolvedIndexAdapter({ repoPath, namespace });
+  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/resolved/${String(namespace)}.json`)) ?? undefined;
 
   if (raw === undefined) {
     return undefined;
