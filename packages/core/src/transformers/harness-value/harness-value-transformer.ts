@@ -16,7 +16,6 @@
  * harnessValueTransformer({ declarations, key: harnessKeyPathContract.parse('inputs.audit.report') });
  * // Returns { found: true, value: [Function] }, or { found: false } when nothing declared that key
  */
-import type { HarnessKeyPath } from '@assayer/shared/contracts';
 
 import type { HarnessDeclaration } from '../../contracts/harness-declaration/harness-declaration-contract';
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
@@ -28,7 +27,7 @@ export const harnessValueTransformer = ({
   key,
 }: {
   declarations: readonly HarnessDeclaration[];
-  key: HarnessKeyPath;
+  key: string;
 }): HarnessValueResult => {
   const [root, entry, param, ...rest] = String(key).split(harnessModuleStatics.keySeparator);
 

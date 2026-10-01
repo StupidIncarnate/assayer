@@ -110,7 +110,6 @@ export * from './harness-file/harness-file-contract';
 
 export * from './harness-index/harness-index-contract';
 
-export * from './harness-key-path/harness-key-path-contract';
 
 export * from './external-signature/external-signature-contract';
 

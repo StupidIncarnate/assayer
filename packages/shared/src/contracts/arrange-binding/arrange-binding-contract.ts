@@ -45,7 +45,6 @@ import { z } from '#gateway/npm/zod';
 
 import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
 import { envValueContract } from '../env-value/env-value-contract';
-import { harnessKeyPathContract } from '../harness-key-path/harness-key-path-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 export const arrangeBindingContract = z.discriminatedUnion('kind', [
@@ -74,7 +73,7 @@ export const arrangeBindingContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('harness'),
     param: z.string().min(1).brand<'ArrangeBindingParam'>(),
-    key: harnessKeyPathContract,
+    key: z.string().min(1).brand<'ArrangeBindingKey'>(),
     // Present only when this key realizes a REST parameter — see the PURPOSE doc above.
     rest: z.boolean().optional(),
   }),

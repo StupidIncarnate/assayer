@@ -1,4 +1,3 @@
-import { harnessKeyPathContract } from '@assayer/shared/contracts';
 
 import { harnessValueTransformer } from './harness-value-transformer';
 
@@ -12,7 +11,7 @@ describe('harnessValueTransformer', () => {
     it('VALID: {inputs.audit.report} => the registered value', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { report: REPORT } } }],
-        key: harnessKeyPathContract.parse('inputs.audit.report'),
+        key: 'inputs.audit.report',
       });
 
       expect(result).toStrictEqual({ found: true, value: 'the-report-value' });
@@ -21,7 +20,7 @@ describe('harnessValueTransformer', () => {
     it('VALID: {a key declared as undefined} => found, since an explicit undefined is a supplied value', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { report: undefined } } }],
-        key: harnessKeyPathContract.parse('inputs.audit.report'),
+        key: 'inputs.audit.report',
       });
 
       expect(result).toStrictEqual({ found: true, value: undefined });
@@ -30,7 +29,7 @@ describe('harnessValueTransformer', () => {
     it('VALID: {two declarations of one key} => the LAST one, the call the author left in force', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { report: REPORT } } }, { inputs: { audit: { report: OTHER } } }],
-        key: harnessKeyPathContract.parse('inputs.audit.report'),
+        key: 'inputs.audit.report',
       });
 
       expect(result).toStrictEqual({ found: true, value: 'the-other-value' });
@@ -39,7 +38,7 @@ describe('harnessValueTransformer', () => {
     it('VALID: {two declarations of different entries} => each key resolves against its own declaration', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { report: REPORT } } }, { inputs: { tally: { emit: OTHER } } }],
-        key: harnessKeyPathContract.parse('inputs.tally.emit'),
+        key: 'inputs.tally.emit',
       });
 
       expect(result).toStrictEqual({ found: true, value: 'the-other-value' });
@@ -50,7 +49,7 @@ describe('harnessValueTransformer', () => {
     it('EMPTY: {no declarations} => not found', () => {
       const result = harnessValueTransformer({
         declarations: [],
-        key: harnessKeyPathContract.parse('inputs.audit.report'),
+        key: 'inputs.audit.report',
       });
 
       expect(result).toStrictEqual({ found: false });
@@ -59,7 +58,7 @@ describe('harnessValueTransformer', () => {
     it('INVALID: {the entry is declared, the parameter is not} => not found', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { emit: REPORT } } }],
-        key: harnessKeyPathContract.parse('inputs.audit.report'),
+        key: 'inputs.audit.report',
       });
 
       expect(result).toStrictEqual({ found: false });
@@ -68,7 +67,7 @@ describe('harnessValueTransformer', () => {
     it('INVALID: {an entry nothing declared} => not found', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { tally: { report: REPORT } } }],
-        key: harnessKeyPathContract.parse('inputs.audit.report'),
+        key: 'inputs.audit.report',
       });
 
       expect(result).toStrictEqual({ found: false });
@@ -79,7 +78,7 @@ describe('harnessValueTransformer', () => {
     it('INVALID: {a path rooted elsewhere} => not found', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { report: REPORT } } }],
-        key: harnessKeyPathContract.parse('states.audit.report'),
+        key: 'states.audit.report',
       });
 
       expect(result).toStrictEqual({ found: false });
@@ -88,7 +87,7 @@ describe('harnessValueTransformer', () => {
     it('INVALID: {a two-segment path} => not found, since it names no parameter', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { report: REPORT } } }],
-        key: harnessKeyPathContract.parse('inputs.audit'),
+        key: 'inputs.audit',
       });
 
       expect(result).toStrictEqual({ found: false });
@@ -97,7 +96,7 @@ describe('harnessValueTransformer', () => {
     it('INVALID: {a four-segment path} => not found, since inputs nest exactly two deep', () => {
       const result = harnessValueTransformer({
         declarations: [{ inputs: { audit: { report: REPORT } } }],
-        key: harnessKeyPathContract.parse('inputs.audit.report.extra'),
+        key: 'inputs.audit.report.extra',
       });
 
       expect(result).toStrictEqual({ found: false });
