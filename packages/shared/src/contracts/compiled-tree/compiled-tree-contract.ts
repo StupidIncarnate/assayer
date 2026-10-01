@@ -11,7 +11,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { repoNameContract } from '../repo-name/repo-name-contract';
 import { treeNodeKindContract } from '../tree-node-kind/tree-node-kind-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';
 
@@ -35,7 +34,7 @@ const treeNodeContract: z.ZodType<TreeNode> = z.lazy(() =>
 
 export const compiledTreeContract = z.object({
   summary: z.object({
-    repoName: repoNameContract,
+    repoName: z.string().min(1).brand<'CompiledTreeSummaryRepoName'>(),
     branchName: z.string().min(1).brand<'CompiledTreeSummaryBranchName'>(),
     rootFolderName: z.string().min(1).brand<'CompiledTreeSummaryRootFolderName'>(),
     tsCount: z.number().int().nonnegative().brand<'CompiledTreeSummaryTsCount'>(),

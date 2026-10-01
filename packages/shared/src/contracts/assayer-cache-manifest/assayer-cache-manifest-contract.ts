@@ -18,7 +18,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { contentHashContract } from '../content-hash/content-hash-contract';
-import { repoNameContract } from '../repo-name/repo-name-contract';
 
 export const assayerCacheManifestContract = z.object({
   assayerVersion: z.string().min(1).brand<'AssayerVersion'>(),
@@ -36,7 +35,7 @@ export const assayerCacheManifestContract = z.object({
       }),
     )
     .brand<'NamespaceMap'>(),
-  repoName: repoNameContract,
+  repoName: z.string().min(1).brand<'AssayerCacheManifestRepoName'>(),
   rootFolderName: z.string().min(1).brand<'AssayerCacheManifestRootFolderName'>(),
 });
 
