@@ -80,7 +80,7 @@
  * //   arrangements: [[{ kind: 'param', param: 'score', value: 6 }, …], …] }
  */
 import { arrangeValueContract, envValueContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -235,13 +235,13 @@ export const causeArrangeTransformer = ({
   // Which local bindings are environment reads, keyed by the same operand name the values above are.
   // Read off the leaves rather than passed in, because the leaf is where the walk recorded it.
   const envByOperand = envDrivable
-    ? requirements.reduce<Map<string, EnvVarName>>((acc, requirement) => {
+    ? requirements.reduce<Map<string, string>>((acc, requirement) => {
         const operand = requirement.leaf.operandParamName;
         const envVarName = requirement.leaf.operandEnvVarName;
 
         return operand === undefined || envVarName === undefined ? acc : acc.set(operand, envVarName);
-      }, new Map<string, EnvVarName>())
-    : new Map<string, EnvVarName>();
+      }, new Map<string, string>())
+    : new Map<string, string>();
 
   const operandChoices = [...domainByOperand.entries()].flatMap(([operand, domain]) => {
     const values = domainValuesTransformer({ domain });

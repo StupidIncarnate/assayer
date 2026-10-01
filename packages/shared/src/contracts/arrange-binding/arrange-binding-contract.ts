@@ -45,7 +45,6 @@ import { z } from '#gateway/npm/zod';
 
 import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
 import { envValueContract } from '../env-value/env-value-contract';
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { harnessKeyPathContract } from '../harness-key-path/harness-key-path-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
@@ -57,7 +56,7 @@ export const arrangeBindingContract = z.discriminatedUnion('kind', [
   }),
   z.object({
     kind: z.literal('env'),
-    name: envVarNameContract,
+    name: z.string().min(1).brand<'ArrangeBindingName'>(),
     value: envValueContract,
   }),
   z.object({

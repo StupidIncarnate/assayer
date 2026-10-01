@@ -16,13 +16,12 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
 export const envStubContract = z.object({
   key: stubEntryContract.shape.key,
-  property: envVarNameContract,
+  property: z.string().min(1).brand<'EnvStubProperty'>(),
   values: z.array(representativeValueContract),
   guessed: z.boolean(),
   readers: z.array(z.string().min(1).brand<'EnvStubReaders'>()),

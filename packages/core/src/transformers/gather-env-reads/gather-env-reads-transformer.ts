@@ -17,8 +17,7 @@
  * gatherEnvReadsTransformer({ blobs });
  * // Returns [{ property: 'CODE', literals: [1, 2], readers: ['src/multi-read.ts'] }, …]
  */
-import { envVarNameContract } from '@assayer/shared/contracts';
-import type { CompiledFileBlob, EnvVarName, RepresentativeValue } from '@assayer/shared/contracts';
+import type { CompiledFileBlob, RepresentativeValue } from '@assayer/shared/contracts';
 
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
 
@@ -26,7 +25,7 @@ export const gatherEnvReadsTransformer = ({
   blobs,
 }: {
   blobs: CompiledFileBlob[];
-}): { property: EnvVarName; literals: RepresentativeValue[]; readers: string[] }[] => {
+}): { property: string; literals: RepresentativeValue[]; readers: string[] }[] => {
   const reads = [...blobs]
     .sort((a, b) => (String(a.relPath) < String(b.relPath) ? -1 : 1))
     .flatMap((blob) => {
@@ -64,6 +63,6 @@ export const gatherEnvReadsTransformer = ({
       .sort((a, b) => (a < b ? -1 : 1))
       .map((reader) => reader);
 
-    return { property: envVarNameContract.parse(property), literals, readers };
+    return { property: property, literals, readers };
   });
 };

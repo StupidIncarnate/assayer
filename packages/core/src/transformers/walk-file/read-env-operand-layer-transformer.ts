@@ -32,12 +32,10 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { envVarNameContract } from '@assayer/shared/contracts';
-import type { EnvVarName } from '@assayer/shared/contracts';
 
 import { envSourceStatics } from '../../statics/env-source/env-source-statics';
 
-export const readEnvOperandLayerTransformer = ({ node }: { node: Node }): EnvVarName | undefined => {
+export const readEnvOperandLayerTransformer = ({ node }: { node: Node }): string | undefined => {
   if (!Node.isIdentifier(node)) {
     return undefined;
   }
@@ -102,5 +100,5 @@ export const readEnvOperandLayerTransformer = ({ node }: { node: Node }): EnvVar
     return undefined;
   }
 
-  return envVarNameContract.parse(argument.getName());
+  return argument.getName();
 };
