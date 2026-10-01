@@ -20,8 +20,8 @@
 import { z } from '#gateway/npm/zod';
 
 export const ipcReplyContract = z.discriminatedUnion('success', [
-  z.object({ success: z.literal(true), valueRaw: z.unknown() }),
-  z.object({ success: z.literal(false), message: z.string().brand<'IpcReplyMessage'>() }),
+  z.object({ success: z.literal(true), valueRaw: z.unknown() }).brand<'IpcReply'>(),
+  z.object({ success: z.literal(false), message: z.string().brand<'IpcReplyMessage'>() }).brand<'IpcReply'>(),
 ]);
 
 export type IpcReply = z.infer<typeof ipcReplyContract>;
