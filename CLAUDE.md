@@ -467,10 +467,12 @@ is rebuilt on demand, never hand-edited:
   every colocated `<basename>.harness.ts` file that registers with Assayer.
   It records the source file the harness applies to, and the sorted list of
   (entry, parameter) pairs it supplies values for. This index is keyed on
-  the repo layout, the tsconfig, and a third hash computed over the harness
-  files' own bytes. A harness file is classified out of the analyzed
-  surface, so neither of the other two hashes changes when someone edits a
-  harness. Only the KEYS are cached here. The values themselves are
+  three hashes. The first covers the repo layout and the second covers the
+  tsconfig files. The third covers every harness file's path and bytes, plus
+  the analysis options of the tsconfig that owns that harness, because
+  Assayer reads each supplied value's type under those options. A harness
+  file is classified out of the analyzed surface, so the first two hashes do
+  not change when someone edits a harness. The third one does. Only the KEYS are cached here. The values themselves are
   callbacks, and Assayer resolves them by loading the harness file again at
   run time.
 

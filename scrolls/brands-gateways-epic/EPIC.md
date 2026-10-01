@@ -510,7 +510,7 @@ item in its subject.
 | PE-12 | The run-unit integration test's first real run pays the CommonJS worker's cold start (15.7 s alone, near the 30 s timeout under load). Cut the cold start or give the file one warm-up at its cause. | active, with an agent | |
 | PE-13 | `packages/core/ts-resolver.js`, the nested Jest's resolver, still resolves with the nearest tsconfig, not the importing file's owner. Move it to the owner rule PE-9 built. | active, with an agent | |
 | PE-14 | A run-unit test that proves options from a real owning tsconfig reach the walk (PE-9b found no test asserts it). | active, with an agent | |
-| PE-15 | Core CLAUDE.md section 4 names `brokers/tsconfig/read`, which PE-9 removed; it should name `brokers/tsconfig/owner`. Root CLAUDE.md's harness-index sentence should say the key covers each harness owner's options. | active, with an agent | |
+| PE-15 | Core CLAUDE.md section 4 names `brokers/tsconfig/read`, which PE-9 removed; it should name `brokers/tsconfig/owner`. Root CLAUDE.md's harness-index sentence should say the key covers each harness owner's options. | done | the PE-15 commit |
 | PE-16 | The desktop window loads its page from `packages/app/dist/index.html`, outside the `@assayer/desktop` tarball. Ship the app bundle with desktop or make `@assayer/app` a dependency. | active, with an agent | |
 | PE-17 | Clean build, full ward and `test:syntax` on `post-epic`, then merge into `master` | planned, after PE-10 to PE-15 | |
 | PE-18 | After the user merges dungeonmaster's TypeScript 6 upgrade (`DEF-271` step 1): run assayer's full ward and `test:syntax` on the new tooling, and fix anything it changes | planned, waits on the user | |

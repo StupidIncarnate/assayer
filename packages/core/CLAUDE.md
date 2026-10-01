@@ -447,8 +447,9 @@ it as `envReads`, and the stub stitch (section 9) aggregates these into
 per-property environment stubs.
 
 **Change import resolution (the stitch).** Touch
-`brokers/compile/resolve-graph`, plus `brokers/tsconfig/read`
-and `brokers/import-specifier/resolve`.
+`brokers/compile/resolve-graph`, plus `brokers/tsconfig/owner`
+(finds the tsconfig that owns a file, the way tsserver does, and returns its
+compiler options) and `brokers/import-specifier/resolve`.
 
 **Change the stub index** (the per-property value demands computed over
 declared types). Touch `brokers/compile/stub-graph`, the twin stitch pass
