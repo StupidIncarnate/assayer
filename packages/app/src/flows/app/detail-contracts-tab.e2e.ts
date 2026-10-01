@@ -1,7 +1,8 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer detail panel's CONTRACTS tab — the
- *   resolved external import rendered as a typed input/output contract. Compiles the smoke-repo
- *   syntax-repository into a PER-TEST temp cache, launches the REAL built Electron app, selects
+ *   resolved external import rendered as a typed input/output contract. Reads the smoke-repo
+ *   syntax-repository cache that globalSetup compiles once, through the REAL built Electron app the
+ *   e2e fixture keeps warm, selects
  *   happy-path/npm-package/uses-package/uses-package.ts, opens the Contracts tab, and asserts the symbol, its `pkg <name>`
  *   source, the structured `name: type` input line, and the `returns <type>` output — the typed black
  *   box carried across the real IPC crossing.
@@ -40,7 +41,7 @@ const USES_PACKAGE_CONTRACT_OUTPUT = 'returns string';
 
 test.describe('Compiled Surface Explorer — Contracts tab', () => {
   test('VALID: {happy-path/npm-package/uses-package/uses-package.ts selected} => the Contracts tab renders the resolved external package import as an input/output contract — the typed black box across the real IPC crossing', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${USES_PACKAGE}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
@@ -61,7 +62,7 @@ test.describe('Compiled Surface Explorer — Contracts tab', () => {
   });
 
   test('VALID: {compile+launch once, walk the local/builtin/global edge shapes} => each renders its own source form and typed contract, and an import-free file shows the empty prompt', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
+    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
 
     // LOCAL import: the source names the specifier AND the resolved definition path, and the stitch
     // attached the target file's own `() => string` signature (a no-arg input, a `string` return).

@@ -134,6 +134,11 @@ export const desktopBootBroker = async ({
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      // A headless window renders offscreen. A plain hidden window repaints about once a second, even
+      // with backgroundThrottling off, and Playwright waits for two repaints before every click or
+      // hover, so each action costs about 2s. An offscreen window repaints at 60fps and never appears on
+      // the display.
+      offscreen: getEnv('ASSAYER_HEADLESS') === '1',
     },
   });
   await window.loadURL(rendererUrl);

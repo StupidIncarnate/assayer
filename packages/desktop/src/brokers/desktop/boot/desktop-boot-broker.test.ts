@@ -418,7 +418,7 @@ describe('desktopBootBroker', () => {
       expect(proxy.loadedUrls({ url: 'http://localhost:6273' })).toStrictEqual([['http://localhost:6273']]);
     });
 
-    it('VALID: {no ASSAYER_HEADLESS} => opens a visible window', async () => {
+    it('VALID: {no ASSAYER_HEADLESS} => opens a visible window that renders onscreen', async () => {
       const proxy = desktopBootBrokerProxy();
       proxy.setupBoot({ dev: false, headless: false });
 
@@ -452,13 +452,14 @@ describe('desktopBootBroker', () => {
               contextIsolation: true,
               nodeIntegration: false,
               sandbox: false,
+              offscreen: false,
             },
           },
         ],
       ]);
     });
 
-    it('VALID: {ASSAYER_HEADLESS is 1} => opens a hidden window', async () => {
+    it('VALID: {ASSAYER_HEADLESS is 1} => opens a hidden window that renders offscreen', async () => {
       const proxy = desktopBootBrokerProxy();
       proxy.setupBoot({ dev: false, headless: true });
 
@@ -492,6 +493,7 @@ describe('desktopBootBroker', () => {
               contextIsolation: true,
               nodeIntegration: false,
               sandbox: false,
+              offscreen: true,
             },
           },
         ],
