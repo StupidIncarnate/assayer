@@ -1,4 +1,4 @@
-import { runCLI } from '@jest/core';
+import { runCLI } from '#gateway/npm/jest__core';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';

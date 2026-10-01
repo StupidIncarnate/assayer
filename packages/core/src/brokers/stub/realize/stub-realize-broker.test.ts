@@ -46,8 +46,8 @@ const DEAD_SURFACE_SOURCE =
 const MIXED_ENTRIES_SOURCE =
   "interface Config {\n  mode: string;\n}\n\nexport function decide(config: Config): string {\n  if (config.mode === 'a') {\n    return 'x';\n  }\n\n  return 'y';\n}\n\nexport function grade(n: number): string {\n  if (n > 5) {\n    return 'p';\n  }\n\n  return 'f';\n}\n";
 
-// The import never resolves to an in-repo sibling (no proxy.setupTypeDefinition call), so `Config`
-// stays exactly as opaque as the per-file walk left it.
+// The import resolves to no file at all (proxy.importResolvesToNothing), so `Config` stays exactly as
+// opaque as the per-file walk left it.
 const UNRESOLVABLE_CROSS_FILE_SOURCE =
   "import { Config } from './types';\n\nexport function decideA(config: Config): string {\n  if (config.mode === 'a') {\n    return 'x';\n  }\n\n  return 'y';\n}\n";
 
@@ -147,7 +147,7 @@ describe('stubRealizeBroker', () => {
   describe('a cross-file object type resolved through the import', () => {
     it("VALID: {config: Config from './types', if (config.mode === 'a')} => both arms driven, region filled", () => {
       const proxy = stubRealizeBrokerProxy();
-      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
+      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
 
@@ -179,7 +179,7 @@ describe('stubRealizeBroker', () => {
     // beside two cases that plainly drive the entry.
     it("VALID: {config: Config from './types'} => the input gap the per-file analysis invoiced is cleared", () => {
       const proxy = stubRealizeBrokerProxy();
-      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE });
+      proxy.setupTypeDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
 
@@ -192,13 +192,13 @@ describe('stubRealizeBroker', () => {
     });
   });
 
-  // The import names a real specifier, but nothing resolves it to an in-repo sibling — the proxy's
-  // module resolver defaults to "not resolved" until a test wires `setupTypeDefinition`. `Config` stays
-  // exactly as opaque as the per-file walk left it, so the entry stays admitted UNDRIVEN and its gap
-  // stands, precisely as compose leaves an unresolvable cross-file guard.
+  // The import names a real specifier, but it resolves to no file. `Config` stays exactly as opaque as
+  // the per-file walk left it, so the entry stays admitted UNDRIVEN and its gap stands, precisely as
+  // compose leaves an unresolvable cross-file guard.
   describe('a cross-file object type whose import cannot resolve', () => {
     it("VALID: {config: Config from './types', nothing resolves it} => the analysis passes through unchanged", () => {
-      stubRealizeBrokerProxy();
+      const proxy = stubRealizeBrokerProxy();
+      proxy.importResolvesToNothing({ specifier: './types' });
       const walked = walkFileTransformer({ source: UNRESOLVABLE_CROSS_FILE_SOURCE, relPath: 'src/caller.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/caller.ts' });
 

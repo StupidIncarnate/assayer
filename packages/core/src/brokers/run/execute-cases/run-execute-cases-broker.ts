@@ -34,7 +34,7 @@
  * runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
  * // Returns { passed: true } when every generated case reached the exit derivation predicted
  */
-import { runCLI } from '@jest/core';
+import { runCLI } from '#gateway/npm/jest__core';
 import { dirname } from '#gateway/node/path';
 
 import { coreRuntimeStatics } from '../../../statics/core-runtime/core-runtime-statics';

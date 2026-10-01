@@ -55,13 +55,12 @@ export const runUnitBrokerProxy = (): {
   setupNoHarness: ({ path }: { path: string }) => void;
 } => {
   analyzeFileBrokerProxy();
-  // The imported-type resolution runs REAL with its sibling resolve staged to "no sibling", so it is a
-  // same-reference no-op for a target whose parameters name no resolvable reference.
+  // The imported-type resolution, both cross-file overlays and the sibling instrumentation run REAL.
+  // None of their sibling resolves is staged, so a target that imports nothing never reaches one, and
+  // a target that does reaches an unstaged call, which throws.
   paramTypeResolveBrokerProxy();
   composeCrossFilePredicatesBrokerProxy();
   stubRealizeBrokerProxy();
-  // The cross-file-map fold and its sibling-instrumentation run REAL; their sibling resolve is staged to
-  // "no sibling", so both are same-reference no-ops for a target with no cross-file map reach.
   composeCrossFileMapBrokerProxy();
   // The harness overlay runs REAL. A test that stages a harness via setupHarness below reaches it; one
   // that stages nothing reaches an unstaged read of the colocated file.
@@ -100,6 +99,7 @@ export const runUnitBrokerProxy = (): {
       writes.succeeds({ path: `${cacheDir}/probes/${contentHash}.json` });
       writes.succeeds({ path: `${runDir}/assayer.test.js` });
       writes.succeeds({ path: `${runDir}/run.json` });
+      runner.succeeds({ runDir });
     },
     setupSavedRun: ({ cacheDir, runId, run }: { cacheDir: string; runId: string; run: unknown }): void => {
       const path = `${cacheDir}/runs/${runId}/run.json`;

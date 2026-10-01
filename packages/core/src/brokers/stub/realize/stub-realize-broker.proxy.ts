@@ -3,7 +3,9 @@ import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broke
 import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/resolve-sibling-callee-broker.proxy';
 
 export const stubRealizeBrokerProxy = (): {
-  setupTypeDefinition: ({ fileName, source }: { fileName: string; source: string }) => void;
+  // `specifier` is the import path the file under test spells (e.g. './types').
+  setupTypeDefinition: ({ fileName, source, specifier }: { fileName: string; source: string; specifier: string }) => void;
+  importResolvesToNothing: ({ specifier }: { specifier: string }) => void;
 } => {
   // The analyze, tsconfig read, and hash run REAL — the same real pipeline compose uses. Only the
   // sibling resolve is staged, because resolving a cross-file type against a real filesystem is exactly
@@ -15,9 +17,13 @@ export const stubRealizeBrokerProxy = (): {
 
   return {
     // A cross-file type's definition both RESOLVES to `fileName` and READS back `source` — the pair a
-    // cross-file object read needs. Queued once so several type definitions wire in read order.
-    setupTypeDefinition: ({ fileName, source }: { fileName: string; source: string }): void => {
-      sibling.resolvesToSibling({ fileName, source });
+    // cross-file object read needs. Each one answers one resolve of its specifier.
+    setupTypeDefinition: ({ fileName, source, specifier }: { fileName: string; source: string; specifier: string }): void => {
+      sibling.resolvesToSibling({ fileName, source, specifier });
+    },
+    // The import names a specifier that resolves to no file at all, so the type stays opaque.
+    importResolvesToNothing: ({ specifier }: { specifier: string }): void => {
+      sibling.resolvesToNothing({ specifier });
     },
   };
 };

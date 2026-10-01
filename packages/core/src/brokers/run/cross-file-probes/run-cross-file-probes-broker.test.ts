@@ -17,6 +17,7 @@ describe('runCrossFileProbesBroker', () => {
       proxy.setupSibling({
         fileName: '/repo/src/band-reading.ts',
         source: CHILD_SOURCE,
+        specifier: './band-reading',
         probeDir: '/repo/.assayer/cache/probes',
       });
       const walked = walkFileTransformer({ source: PARENT_SOURCE, relPath: 'src/cross-file-map.ts' });

@@ -4,15 +4,18 @@ import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/re
 import { writeFileProxy } from '#gateway/node/fs__promises/write-file/write-file.proxy';
 
 export const runCrossFileProbesBrokerProxy = (): {
-  // Stages the sibling's resolve and read, and the write of its probe plan at
-  // `<probeDir>/<content hash of source>.json`. Any other write throws.
+  // Stages the resolve of `specifier` (the import path the target source spells), the sibling's read,
+  // and the write of its probe plan at `<probeDir>/<content hash of source>.json`. Any other write
+  // throws.
   setupSibling: ({
     fileName,
     source,
+    specifier,
     probeDir,
   }: {
     fileName: string;
     source: string;
+    specifier: string;
     probeDir: string;
   }) => void;
   // Every plan path this broker wrote under `probeDir`, in call order. A test asking WHICH sibling got
@@ -31,13 +34,15 @@ export const runCrossFileProbesBrokerProxy = (): {
     setupSibling: ({
       fileName,
       source,
+      specifier,
       probeDir,
     }: {
       fileName: string;
       source: string;
+      specifier: string;
       probeDir: string;
     }): void => {
-      sibling.resolvesToSibling({ fileName, source });
+      sibling.resolvesToSibling({ fileName, source, specifier });
       writes.succeeds({ path: `${probeDir}/${String(contentHashTransformer({ content: source }))}.json` });
     },
     getWrittenPaths: ({ probeDir }: { probeDir: string }): unknown[] =>
