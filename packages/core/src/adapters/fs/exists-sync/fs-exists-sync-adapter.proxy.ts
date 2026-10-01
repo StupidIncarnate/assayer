@@ -2,19 +2,17 @@ import { existsSync } from 'fs';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 export const fsExistsSyncAdapterProxy = (): {
-  exists: () => void;
-  missing: () => void;
+  exists: ({ path }: { path: string }) => void;
+  missing: ({ path }: { path: string }) => void;
 } => {
   const handle = registerMock({ fn: existsSync });
 
-  handle.calledWith([]).returns(false);
-
   return {
-    exists: (): void => {
-      handle.onceFor([]).returns(true);
+    exists: ({ path }: { path: string }): void => {
+      handle.onceFor([path]).returns(true);
     },
-    missing: (): void => {
-      handle.onceFor([]).returns(false);
+    missing: ({ path }: { path: string }): void => {
+      handle.onceFor([path]).returns(false);
     },
   };
 };

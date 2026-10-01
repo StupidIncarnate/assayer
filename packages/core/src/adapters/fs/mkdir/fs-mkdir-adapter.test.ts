@@ -6,7 +6,7 @@ describe('fsMkdirAdapter', () => {
     it('VALID: {path: "/repo/a/b/c"} => creates every missing parent directory and returns { success: true }', async () => {
       const proxy = fsMkdirAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/repo/a/b/c' });
 
       const result = await fsMkdirAdapter({ path: '/repo/a/b/c' });
 
@@ -22,7 +22,7 @@ describe('fsMkdirAdapter', () => {
     it('EDGE: {path: "/repo/existing"} => returns { success: true } without throwing', async () => {
       const proxy = fsMkdirAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/repo/existing' });
 
       const result = await fsMkdirAdapter({ path: '/repo/existing' });
 

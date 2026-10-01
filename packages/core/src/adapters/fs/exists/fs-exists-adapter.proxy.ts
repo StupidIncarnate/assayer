@@ -4,20 +4,18 @@ import { fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
 export const fsExistsAdapterProxy = (): {
-  succeeds: () => void;
-  fails: () => void;
+  succeeds: ({ path }: { path: string }) => void;
+  fails: ({ path }: { path: string }) => void;
   callCount: () => FileCount;
 } => {
   const handle = registerMock({ fn: access });
 
-  handle.calledWith([]).resolves(undefined);
-
   return {
-    succeeds: (): void => {
-      handle.onceFor([]).resolves(undefined);
+    succeeds: ({ path }: { path: string }): void => {
+      handle.onceFor([path]).resolves(undefined);
     },
-    fails: (): void => {
-      handle.onceFor([]).rejects(new Error('ENOENT: no such file or directory'));
+    fails: ({ path }: { path: string }): void => {
+      handle.onceFor([path]).rejects(new Error('ENOENT: no such file or directory'));
     },
     callCount: (): FileCount => fileCountContract.parse(handle.callsMatching([]).length),
   };

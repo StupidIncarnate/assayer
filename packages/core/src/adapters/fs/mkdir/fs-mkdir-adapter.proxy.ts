@@ -9,20 +9,18 @@ import { mkdir } from 'fs/promises';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
 export const fsMkdirAdapterProxy = (): {
-  succeeds: () => void;
-  throws: ({ error }: { error: Error }) => void;
+  succeeds: ({ path }: { path: string }) => void;
+  throws: ({ error, path }: { error: Error; path: string }) => void;
   getMkdirArgs: ({ path }: { path: string }) => readonly unknown[];
 } => {
   const handle = registerMock({ fn: mkdir });
 
-  handle.calledWith([]).resolves(undefined);
-
   return {
-    succeeds: (): void => {
-      handle.onceFor([]).resolves(undefined);
+    succeeds: ({ path }: { path: string }): void => {
+      handle.onceFor([path]).resolves(undefined);
     },
-    throws: ({ error }: { error: Error }): void => {
-      handle.onceFor([]).rejects(error);
+    throws: ({ error, path }: { error: Error; path: string }): void => {
+      handle.onceFor([path]).rejects(error);
     },
     // Answers for the asked-for directory only. A caller that creates several directories gets the
     // one it named, never whichever mkdir happened to run last.

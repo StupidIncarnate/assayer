@@ -6,7 +6,7 @@ describe('fsExistsAdapter', () => {
     it('VALID: {existing path} => returns true', async () => {
       const proxy = fsExistsAdapterProxy();
 
-      proxy.succeeds();
+      proxy.succeeds({ path: '/repo/a.ts' });
 
       await expect(fsExistsAdapter({ path: '/repo/a.ts' })).resolves.toBe(true);
     });
@@ -16,7 +16,7 @@ describe('fsExistsAdapter', () => {
     it('EMPTY: {missing path} => returns false', async () => {
       const proxy = fsExistsAdapterProxy();
 
-      proxy.fails();
+      proxy.fails({ path: '/nope' });
 
       await expect(fsExistsAdapter({ path: '/nope' })).resolves.toBe(false);
     });
