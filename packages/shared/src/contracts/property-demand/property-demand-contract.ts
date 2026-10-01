@@ -22,7 +22,7 @@
  * });
  * // Returns a validated PropertyDemand (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { arrayCardinalityContract } from '../array-cardinality/array-cardinality-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';

@@ -9,7 +9,7 @@
  * syntaxKindNameContract.parse('IfStatement');
  * // Returns a validated SyntaxKindName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const syntaxKindNameContract = z.string().min(1).brand<'SyntaxKindName'>();
 

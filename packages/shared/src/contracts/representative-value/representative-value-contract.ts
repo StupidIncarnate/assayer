@@ -11,7 +11,7 @@
  * representativeValueContract.parse('');
  * // Returns a validated RepresentativeValue (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 // `null` is unioned OUTSIDE the brand on purpose: `.brand()` intersects a phantom property onto its
 // output, and `null & { brand }` collapses to `never`, so branding a union that includes null would

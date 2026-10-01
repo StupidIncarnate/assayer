@@ -10,7 +10,7 @@
  * declaredTypeContract.parse({ name: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] });
  * // Returns a validated DeclaredType (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';

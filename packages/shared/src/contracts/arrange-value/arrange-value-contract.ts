@@ -18,7 +18,7 @@
  * arrangeValueContract.parse({ db: { host: 'x' } });   // a nested object value
  * // Returns a validated ArrangeValue
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';

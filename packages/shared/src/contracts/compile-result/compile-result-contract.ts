@@ -10,7 +10,7 @@
  * });
  * // Returns a validated CompileResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { compileStatusContract } from '../compile-status/compile-status-contract';
 import { namespaceNameContract } from '../namespace-name/namespace-name-contract';

@@ -6,7 +6,7 @@
  * const mode = compileModeContract.parse('net-new');
  * // Returns a validated CompileMode (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const compileModeContract = z.enum(['net-new', 'incremental', 'skipped']).brand<'CompileMode'>();
 

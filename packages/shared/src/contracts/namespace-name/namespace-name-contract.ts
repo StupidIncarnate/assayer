@@ -6,7 +6,7 @@
  * const namespace = namespaceNameContract.parse('master');
  * // Returns a validated NamespaceName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const namespaceNameContract = z.string().min(1).brand<'NamespaceName'>();
 

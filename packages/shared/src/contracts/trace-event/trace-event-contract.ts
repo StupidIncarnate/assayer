@@ -21,7 +21,7 @@
  * traceEventContract.parse({ id: 'grade/if:…#leaf.0', kind: 'cond', outcome: true, valueText: 'true' });
  * // Returns a validated TraceEvent (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { traceValueTextContract } from '../trace-value-text/trace-value-text-contract';

@@ -16,7 +16,7 @@
  * });
  * // Returns a validated ObjectStub (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { propertyDemandContract } from '../property-demand/property-demand-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';

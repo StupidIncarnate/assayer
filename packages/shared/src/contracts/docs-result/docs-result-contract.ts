@@ -6,7 +6,7 @@
  * docsResultContract.parse({ topic: docsTopicContract.parse('overview'), body: '# Assayer' });
  * // Returns a validated DocsResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { docsTopicContract } from '../docs-topic/docs-topic-contract';
 

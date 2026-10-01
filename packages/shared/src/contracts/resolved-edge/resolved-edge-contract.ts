@@ -21,7 +21,7 @@
  * });
  * // Returns a validated ResolvedEdge (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { externalSignatureContract } from '../external-signature/external-signature-contract';

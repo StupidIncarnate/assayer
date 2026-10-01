@@ -34,7 +34,7 @@
  * fileAnalysisContract.parse({ functions: [], enrichment: [], gaps: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [] });
  * // Returns a validated FileAnalysis (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';
 import { declaredTypeContract } from '../declared-type/declared-type-contract';

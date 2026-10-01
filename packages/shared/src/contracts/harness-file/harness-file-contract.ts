@@ -16,7 +16,7 @@
  * });
  * // Returns a validated HarnessFile (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { harnessInputKeyContract } from '../harness-input-key/harness-input-key-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';

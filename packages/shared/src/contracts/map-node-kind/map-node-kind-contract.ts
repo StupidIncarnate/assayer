@@ -6,7 +6,7 @@
  * const kind = mapNodeKindContract.parse('function');
  * // Returns a validated MapNodeKind (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const mapNodeKindContract = z.enum(['function', 'if', 'switch', 'ternary']).brand<'MapNodeKind'>();
 

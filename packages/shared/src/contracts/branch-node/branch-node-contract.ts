@@ -18,7 +18,7 @@
  * });
  * // Returns a validated BranchNode (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { conditionNodeContract } from '../condition-node/condition-node-contract';
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';

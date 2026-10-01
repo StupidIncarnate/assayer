@@ -10,7 +10,7 @@
  * arrangeTextContract.parse('LEVEL="6"');
  * // Returns a validated ArrangeText (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const arrangeTextContract = z.string().brand<'ArrangeText'>();
 

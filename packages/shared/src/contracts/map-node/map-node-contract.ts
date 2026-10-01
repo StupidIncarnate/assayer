@@ -6,7 +6,7 @@
  * mapNodeContract.parse({ kind: 'function', startLine: 1, endLine: 5 });
  * // Returns a validated MapNode (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { mapNodeKindContract } from '../map-node-kind/map-node-kind-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';

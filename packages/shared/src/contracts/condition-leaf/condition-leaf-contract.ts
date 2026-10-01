@@ -55,7 +55,7 @@
  * });
  * // Returns a validated ConditionLeaf (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { constLengthContract } from '../const-length/const-length-contract';

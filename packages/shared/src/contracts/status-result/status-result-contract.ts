@@ -6,7 +6,7 @@
  * statusResultContract.parse({ version: '1.0.0', message: 'Assayer core online' });
  * // Returns a validated StatusResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const statusResultContract = z.object({
   version: z.string().min(1).brand<'AssayerVersion'>(),

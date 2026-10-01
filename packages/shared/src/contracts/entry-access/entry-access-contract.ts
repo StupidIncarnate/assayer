@@ -38,7 +38,7 @@
  * entryAccessContract.parse({ kind: 'method', className: 'Classifier', constructable: true });
  * // Returns a validated EntryAccess (discriminated on `kind`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 

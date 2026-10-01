@@ -9,7 +9,7 @@
  * stubViewContract.parse({ objectStubs: [], envStubs: [] });
  * // Returns a validated StubView
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { envStubContract } from '../env-stub/env-stub-contract';
 import { objectStubContract } from '../object-stub/object-stub-contract';

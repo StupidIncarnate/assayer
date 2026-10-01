@@ -22,7 +22,7 @@
  * entryGapContract.parse({ name: 'find', reason: 'its class needs constructor arguments…' });
  * // Returns a validated EntryGap (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 

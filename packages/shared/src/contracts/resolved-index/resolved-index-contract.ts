@@ -14,7 +14,7 @@
  * });
  * // Returns a validated ResolvedIndex (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { resolvedEdgeContract } from '../resolved-edge/resolved-edge-contract';

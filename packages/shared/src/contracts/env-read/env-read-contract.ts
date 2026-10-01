@@ -13,7 +13,7 @@
  * envReadContract.parse({ property: 'MODE', literals: ['production'] });
  * // Returns a validated EnvRead (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';

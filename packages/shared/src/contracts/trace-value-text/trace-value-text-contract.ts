@@ -10,7 +10,7 @@
  * traceValueTextContract.parse("'pass'");
  * // Returns a validated TraceValueText (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const traceValueTextContract = z.string().min(1).brand<'TraceValueText'>();
 

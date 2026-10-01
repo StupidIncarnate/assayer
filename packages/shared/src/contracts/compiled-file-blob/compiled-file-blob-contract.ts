@@ -11,7 +11,7 @@
  * });
  * // Returns a validated CompiledFileBlob (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { relPathContract } from '../rel-path/rel-path-contract';
 import { contentHashContract } from '../content-hash/content-hash-contract';

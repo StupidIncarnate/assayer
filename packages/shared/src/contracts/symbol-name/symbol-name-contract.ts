@@ -7,7 +7,7 @@
  * symbolNameContract.parse('formatGreeting');
  * // Returns a validated SymbolName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const symbolNameContract = z.string().min(1).brand<'SymbolName'>();
 

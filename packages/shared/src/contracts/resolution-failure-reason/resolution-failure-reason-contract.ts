@@ -10,7 +10,7 @@
  * resolutionFailureReasonContract.parse('cannot-resolve-specifier');
  * // Returns a validated ResolutionFailureReason (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const resolutionFailureReasonContract = z
   .enum(['cannot-resolve-specifier', 'dynamic-or-computed-specifier', 'no-usable-types'])

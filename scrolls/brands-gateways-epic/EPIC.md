@@ -241,7 +241,7 @@ committed copy is `$H/scripts/a18-codemod/`.
 | ID | What | Who | How | Needs | Status |
 |---|---|---|---|---|---|
 | SD-1 | Port the codemod. Three hard-coded spots change. `ROOT=process.cwd()` takes `--root`. `tmp/a18-codemod` takes `--out-dir`. `a18-census.config.js` must require `@dungeonmaster/eslint-plugin` instead of dungeonmaster's own source. Prove it with a dry run on `shared`. | Agent (sonnet) | Writes only in `$H/scripts/`. | P0-8 | done. `node $H/scripts/a18-codemod/run.cjs <pkg> --root $A --out-dir $A/tmp/a18-codemod`, plus `--apply`. The census passes `scope: '@assayer'`. The dry run on shared would swap all 87 raw `zod` imports to `#gateway/npm/zod`, with 0 rejected |
-| M-1 | Run it per package in this order: shared, core, desktop, cli, app. Skip `hydration-recipes`, which has no outside calls. | Script | `node $H/scripts/a18-codemod/run.cjs <pkg>`, read the report, then add `--apply`. Each package is its own commit. | SD-1, Phase G | todo |
+| M-1 | Run it per package in this order: shared, core, desktop, cli, app. Skip `hydration-recipes`, which has no outside calls. | Script | `node $H/scripts/a18-codemod/run.cjs <pkg>`, read the report, then add `--apply`. Each package is its own commit. | SD-1, Phase G | active. shared done: 87 raw `zod` imports to `#gateway/npm/zod`, 0 rejected; ward typecheck and unit PASS, lint left with 87 `ban-test-support-in-production` hits for Phase X (`1790834004883-c7b0`). |
 | M-2 | The hand queue from M-1's REJECTED files. The codemod skips anything a test or proxy mocks raw, and those mocks go in Phase A. It also covers platform globals in 6 production files: `process` in desktop and cli, and `document`, `location` and `globalThis` in app. Also the harness spawns of `process.execPath` (2 cli harnesses, app `smoke-cache.harness.ts`). Also D5's CSS move and app's Playwright harnesses. | Agents | Batches come from M-1's leftovers. | M-1 | todo |
 
 ### Phase A: adapters, re-homed or inlined
@@ -425,4 +425,5 @@ One row per script run that changed files. The operator fills it in as the work 
 |---|---|---|---|---|
 | P0-6 | `node $H/scripts/p0-6/plain-brand-residue.cjs --root=$A`, then `apply` | 22 | 0 | the P0-5 and P0-6 commit |
 | P0-9 A | `node $H/scripts/p0-9-zod4-messages.cjs`, reading run `1790832052277-4919` | 94 test files, 133 assertions | 3, fixed by hand | the P0-9 A commit |
+| M-1 shared | `node $H/scripts/a18-codemod/run.cjs shared --root $A --out-dir $A/tmp/a18-codemod`, then `--apply` | 87 | 0 | the M-1 shared commit |
 | P0-3 | `python3 $H/scripts/p0-3/rename-scope.py`, then `apply`, then `npm install` | 11 `package.json` files and `package-lock.json` | 0 | the P0-3 commit |

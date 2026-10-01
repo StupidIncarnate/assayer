@@ -8,7 +8,7 @@
  * lineEnrichmentContract.parse({ line: 2, symbol: 'name.length', typeText: 'number', range: ['', 'a'] });
  * // Returns a validated LineEnrichment (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';

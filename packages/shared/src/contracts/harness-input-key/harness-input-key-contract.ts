@@ -12,7 +12,7 @@
  * harnessInputKeyContract.parse({ entry: 'audit', param: 'report' });
  * // Returns a validated HarnessInputKey (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 

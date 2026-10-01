@@ -16,7 +16,7 @@
  * anonymousReachContract.parse({ kind: 'argument', receiver: 'items', method: 'map' });
  * // Returns a validated AnonymousReach (discriminated on `kind`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 

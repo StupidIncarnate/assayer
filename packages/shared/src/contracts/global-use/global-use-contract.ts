@@ -22,7 +22,7 @@
  * globalUseContract.parse({ name: 'console', member: 'log', called: true, args: [{ kind: 'opaque' }], line: 1, column: 1, scopePath: ['*module*'] });
  * // Returns a validated GlobalUse (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';

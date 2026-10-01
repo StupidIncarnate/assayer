@@ -15,7 +15,7 @@
  * });
  * // Returns a validated StubIndex (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { envStubContract } from '../env-stub/env-stub-contract';

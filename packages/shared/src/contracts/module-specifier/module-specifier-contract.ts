@@ -8,7 +8,7 @@
  * moduleSpecifierContract.parse('./other');
  * // Returns a validated ModuleSpecifier (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const moduleSpecifierContract = z.string().min(1).brand<'ModuleSpecifier'>();
 

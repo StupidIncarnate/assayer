@@ -10,7 +10,7 @@
  * });
  * // Returns a validated ExitNode (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 import { guardStepContract } from '../guard-step/guard-step-contract';

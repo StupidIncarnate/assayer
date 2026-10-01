@@ -20,7 +20,7 @@
  * lintEntryContract.parse({ rule: 'dead-surface', name: 'decide', message: 'nothing calls it…', startLine: 1, endLine: 7 });
  * // Returns a validated LintEntry (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';

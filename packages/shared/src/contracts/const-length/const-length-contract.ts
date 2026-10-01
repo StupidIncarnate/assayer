@@ -7,7 +7,7 @@
  * const length = constLengthContract.parse(3);
  * // Returns a validated ConstLength (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const constLengthContract = z.number().int().nonnegative().brand<'ConstLength'>();
 

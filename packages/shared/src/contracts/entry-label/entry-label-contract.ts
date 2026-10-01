@@ -16,7 +16,7 @@
  * entryLabelContract.parse('rescale › items.map((n) => …) L2');
  * // Returns a validated EntryLabel (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const entryLabelContract = z.string().min(1).brand<'EntryLabel'>();
 

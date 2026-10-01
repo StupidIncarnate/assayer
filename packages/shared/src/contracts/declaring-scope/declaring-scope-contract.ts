@@ -24,7 +24,7 @@
  * });
  * // Returns a validated DeclaringScope (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';

@@ -16,7 +16,7 @@
  * runConsoleContract.parse('packages/a.ts  3/3 passed');
  * // Returns a branded RunConsole
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const runConsoleContract = z.string().brand<'RunConsole'>();
 

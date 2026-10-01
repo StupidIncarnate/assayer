@@ -10,7 +10,7 @@
  * templateTextContract.parse('');
  * // Returns a validated TemplateText (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const templateTextContract = z.string().brand<'TemplateText'>();
 

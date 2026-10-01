@@ -39,7 +39,7 @@
  * const config = assayerConfigContract.parse({});
  * // Returns a validated AssayerConfig with defaults applied (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const assayerConfigContract = z.object({
   version: z.literal('1').default('1').brand<'ConfigSchemaVersion'>(),

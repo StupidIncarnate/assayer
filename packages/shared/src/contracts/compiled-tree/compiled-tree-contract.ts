@@ -9,7 +9,7 @@
  * });
  * // Returns a validated CompiledTree (recursive children, branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { repoNameContract } from '../repo-name/repo-name-contract';
 import { namespaceNameContract } from '../namespace-name/namespace-name-contract';

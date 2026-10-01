@@ -8,7 +8,7 @@
  * );
  * // Returns a validated ContentHash (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const contentHashContract = z
   .string()

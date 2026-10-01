@@ -7,7 +7,7 @@
  * coverageIdContract.parse('formatGreeting/if:name.length===0');
  * // Returns a validated CoverageId (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const coverageIdContract = z.string().min(1).brand<'CoverageId'>();
 

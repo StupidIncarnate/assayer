@@ -25,7 +25,7 @@
  * });
  * // Returns a validated ModuleEdge (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';

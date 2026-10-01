@@ -6,7 +6,7 @@
  * const branch = branchNameContract.parse('master');
  * // Returns a validated BranchName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const branchNameContract = z.string().min(1).brand<'BranchName'>();
 

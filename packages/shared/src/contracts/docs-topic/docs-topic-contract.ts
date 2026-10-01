@@ -6,7 +6,7 @@
  * const topic = docsTopicContract.parse('overview');
  * // Returns a validated DocsTopic (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const docsTopicContract = z.string().min(1).brand<'DocsTopic'>();
 

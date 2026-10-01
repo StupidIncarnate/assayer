@@ -14,7 +14,7 @@
  * });
  * // Returns a validated EnvStub (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { relPathContract } from '../rel-path/rel-path-contract';

@@ -10,7 +10,7 @@
  * fileModuleGraphContract.parse({ edges: [], references: [] });
  * // Returns a validated FileModuleGraph
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { envReadContract } from '../env-read/env-read-contract';
 import { globalUseContract } from '../global-use/global-use-contract';

@@ -12,7 +12,7 @@
  * harnessKeyPathContract.parse('inputs.audit.report');
  * // Returns a validated HarnessKeyPath (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const harnessKeyPathContract = z.string().min(1).brand<'HarnessKeyPath'>();
 

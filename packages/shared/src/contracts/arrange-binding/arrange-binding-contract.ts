@@ -41,7 +41,7 @@
  * arrangeBindingContract.parse({ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } });
  * // Returns a validated ArrangeBinding (discriminated on `kind`)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { arrangeValueContract } from '../arrange-value/arrange-value-contract';
 import { envValueContract } from '../env-value/env-value-contract';

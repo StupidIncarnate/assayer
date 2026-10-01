@@ -10,7 +10,7 @@
  * stubKeyContract.parse('process.env#MODE');
  * // Returns a validated StubKey (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const stubKeyContract = z.string().min(1).brand<'StubKey'>();
 

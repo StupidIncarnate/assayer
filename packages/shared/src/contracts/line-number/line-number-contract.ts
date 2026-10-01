@@ -5,7 +5,7 @@
  * const line = lineNumberContract.parse(42);
  * // Returns a validated LineNumber (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const lineNumberContract = z.number().int().positive().brand<'LineNumber'>();
 

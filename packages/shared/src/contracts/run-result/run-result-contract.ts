@@ -32,7 +32,7 @@
  * runResultContract.parse({ runId: 'r-17840…', relPath: 'src/happy-path/boolean/and/and.ts', cases: [...], gaps: [], darkSpots: [], undriven: [] });
  * // Returns a validated RunResult (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { caseResultContract } from '../case-result/case-result-contract';
 import { darkSpotContract } from '../dark-spot/dark-spot-contract';

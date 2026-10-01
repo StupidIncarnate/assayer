@@ -29,7 +29,7 @@
  * });
  * // Returns a validated UndrivenEntry (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { entryLabelContract } from '../entry-label/entry-label-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';

@@ -8,7 +8,7 @@
  * packageNameContract.parse('react');
  * // Returns a validated PackageName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const packageNameContract = z.string().min(1).brand<'PackageName'>();
 

@@ -10,7 +10,7 @@
  * moduleReferenceContract.parse({ specifier: './other', importedName: 'foo', line: 5, column: 10 });
  * // Returns a validated ModuleReference (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { columnNumberContract } from '../column-number/column-number-contract';
 import { lineNumberContract } from '../line-number/line-number-contract';

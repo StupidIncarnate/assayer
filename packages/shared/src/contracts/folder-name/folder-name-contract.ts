@@ -6,7 +6,7 @@
  * const name = folderNameContract.parse('smoke-repo');
  * // Returns a validated FolderName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const folderNameContract = z.string().min(1).brand<'FolderName'>();
 

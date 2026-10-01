@@ -7,7 +7,7 @@
  * typeTextContract.parse('void');
  * // Returns a validated TypeText (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const typeTextContract = z.string().min(1).brand<'TypeText'>();
 

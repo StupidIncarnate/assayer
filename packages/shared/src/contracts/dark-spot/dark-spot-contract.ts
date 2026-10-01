@@ -13,7 +13,7 @@
  * });
  * // Returns a validated DarkSpot (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '../line-number/line-number-contract';
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';

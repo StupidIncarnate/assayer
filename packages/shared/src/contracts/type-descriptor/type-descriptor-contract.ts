@@ -32,7 +32,7 @@
  * typeDescriptorContract.parse({ kind: 'callable', text: '(message: string) => string' });
  * // Returns a validated TypeDescriptor (recursive discriminated union)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';

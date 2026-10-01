@@ -12,7 +12,7 @@
  * envValueContract.parse('6');
  * // Returns a validated EnvValue (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const envValueContract = z.string().brand<'EnvValue'>();
 

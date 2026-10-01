@@ -10,7 +10,7 @@
  * const runId = runIdContract.parse('b94b9541e49b3f0b…');
  * // Returns a validated RunId (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const runIdContract = z.string().min(1).brand<'RunId'>();
 

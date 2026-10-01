@@ -5,7 +5,7 @@
  * const count = fileCountContract.parse(42);
  * // Returns a validated FileCount (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const fileCountContract = z.number().int().nonnegative().brand<'FileCount'>();
 

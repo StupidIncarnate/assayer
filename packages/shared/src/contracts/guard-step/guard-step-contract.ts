@@ -7,7 +7,7 @@
  * guardStepContract.parse({ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'then' });
  * // Returns a validated GuardStep (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';
 

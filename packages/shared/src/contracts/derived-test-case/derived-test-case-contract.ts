@@ -29,7 +29,7 @@
  * });
  * // Returns a validated DerivedTestCase (branded fields; salient defaults to true)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { arrangeBindingContract } from '../arrange-binding/arrange-binding-contract';
 import { coverageIdContract } from '../coverage-id/coverage-id-contract';

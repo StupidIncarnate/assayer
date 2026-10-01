@@ -6,7 +6,7 @@
  * const name = repoNameContract.parse('assayer');
  * // Returns a validated RepoName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const repoNameContract = z.string().min(1).brand<'RepoName'>();
 

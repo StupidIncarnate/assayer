@@ -22,7 +22,7 @@
  * paramDescriptorContract.parse({ name: 'report', type: { kind: 'callable', text: '() => void' }, optional: true });
  * // Returns a validated ParamDescriptor (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';

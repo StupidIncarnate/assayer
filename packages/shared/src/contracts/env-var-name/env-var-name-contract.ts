@@ -13,7 +13,7 @@
  * envVarNameContract.parse('VALUE');
  * // Returns a validated EnvVarName (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const envVarNameContract = z.string().min(1).brand<'EnvVarName'>();
 

@@ -10,7 +10,7 @@
  * });
  * // Returns a validated SourceLine (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { lineNumberContract } from '../line-number/line-number-contract';
 

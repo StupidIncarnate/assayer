@@ -13,7 +13,7 @@
  * });
  * // Returns a validated ExternalSignature (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';

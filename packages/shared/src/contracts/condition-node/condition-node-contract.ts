@@ -20,7 +20,7 @@
  * });
  * // Returns a validated ConditionNode (recursive discriminated union)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { conditionLeafContract } from '../condition-leaf/condition-leaf-contract';
 import type { ConditionLeaf } from '../condition-leaf/condition-leaf-contract';

@@ -6,7 +6,7 @@
  * const column = columnNumberContract.parse(10);
  * // Returns a validated ColumnNumber (branded)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 export const columnNumberContract = z.number().int().positive().brand<'ColumnNumber'>();
 

@@ -25,7 +25,7 @@
  * predicateContract.parse({ kind: 'eq', literal: 'blocked' });
  * // Returns a validated Predicate (branded fields)
  */
-import { z } from 'zod';
+import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
