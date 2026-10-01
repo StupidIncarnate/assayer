@@ -1,12 +1,11 @@
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { UndrivenCauseStub } from '../../contracts/undriven-cause/undriven-cause.stub';
 import { WalkFileResultStub } from '../../contracts/walk-file-result/walk-file-result.stub';
 import { undrivenProjectionTransformer } from './undriven-projection-transformer';
 
-const MODULE_NAME = SymbolNameStub({ value: '*module*' });
+const MODULE_NAME = '*module*';
 
 const MODULE_REASON =
   'nothing about it varies, so no case could drive its branches anywhere they do not ' +
@@ -79,7 +78,7 @@ describe('undrivenProjectionTransformer', () => {
     it('VALID: {cause unread-comparison, operand mode} => the reason names the comparison, not the opaque-operand text', () => {
       const result = undrivenProjectionTransformer({
         walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
-        undrivenModules: [{ name: MODULE_NAME, cause: 'unread-comparison', operand: SymbolNameStub({ value: 'mode' }) }],
+        undrivenModules: [{ name: MODULE_NAME, cause: 'unread-comparison', operand: 'mode' }],
       });
 
       expect(result).toStrictEqual([{ name: '*module*', reason: MODULE_REASON_UNREAD_COMPARISON, startLine: 1, endLine: 8 }]);
@@ -119,7 +118,7 @@ describe('undrivenProjectionTransformer', () => {
       const result = undrivenProjectionTransformer({
         walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
         undrivenModules: [
-          { name: MODULE_NAME, cause: 'unarrangeable-typeof-member', operand: SymbolNameStub({ value: 'mode' }) },
+          { name: MODULE_NAME, cause: 'unarrangeable-typeof-member', operand: 'mode' },
         ],
       });
 
@@ -213,7 +212,7 @@ describe('undrivenProjectionTransformer', () => {
 
       const result = undrivenProjectionTransformer({
         walked,
-        undrivenModules: [{ name: SymbolNameStub({ value: 'inner' }), cause: UndrivenCauseStub() }],
+        undrivenModules: [{ name: 'inner', cause: UndrivenCauseStub() }],
       });
 
       expect(result).toStrictEqual([]);

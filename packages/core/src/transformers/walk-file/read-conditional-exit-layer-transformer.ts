@@ -41,6 +41,7 @@ import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { branchNodeContract, exitNodeContract, guardStepContract } from '@assayer/shared/contracts';
 
+import type { ConditionalExitReadout } from '../../contracts/conditional-exit-readout/conditional-exit-readout-contract';
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../contracts/walk-node/walk-node-contract';
@@ -52,14 +53,6 @@ import { handlerResultLayerTransformer } from './handler-result-layer-transforme
 import { projectNodeLayerTransformer } from './project-node-layer-transformer';
 import { readConditionTreeLayerTransformer } from './read-condition-tree-layer-transformer';
 import { readNullishLeafLayerTransformer } from './read-nullish-leaf-layer-transformer';
-
-// `conditional` discriminates, but `result` is present on BOTH outcomes (empty on the sentinel) so a
-// caller reads its fields without narrowing. The false case's empty result is never consumed — callers
-// gate on `conditional` and keep their single-exit path.
-export interface ConditionalExitReadout {
-  conditional: boolean;
-  result: ReturnType<typeof handlerResultLayerTransformer>;
-}
 
 export const readConditionalExitLayerTransformer = ({
   expression,

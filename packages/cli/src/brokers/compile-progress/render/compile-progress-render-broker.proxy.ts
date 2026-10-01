@@ -1,19 +1,15 @@
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import { stdout } from '#gateway/node/process';
+import { stdoutProxy } from '#gateway/node/process/stdout/stdout.proxy';
 
 export const compileProgressRenderBrokerProxy = (): {
-  getWrites: () => unknown[];
+  getWrites: () => string[];
   enableTty: () => void;
 } => {
-  stdout.isTTY = false;
-
-  const writeSpy = registerSpyOn({ object: stdout, method: 'write' });
-  writeSpy.calledWith([]).implement(() => true);
+  const stdoutGateway = stdoutProxy();
 
   return {
-    getWrites: (): unknown[] => writeSpy.callsMatching([]).map((call) => String(call[0])),
+    getWrites: (): string[] => stdoutGateway.getWrites().map((chunk) => String(chunk)),
     enableTty: (): void => {
-      stdout.isTTY = true;
+      stdoutGateway.setupIsTty({ value: true });
     },
   };
 };

@@ -10,7 +10,7 @@ const THEN_EXIT = '*module*/len/return@ternary:PropertyAccessExpression,id:s,Que
 const ELSE_EXIT = '*module*/len/return@ternary:PropertyAccessExpression,id:s,QuestionDotToken,id:length#else';
 
 // The hermetic walk parses with strict-null-checks on, so `string | null` arrives as a genuine
-// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-adapter` has no
+// two-member union rather than collapsing to plain `string`. `read-type-fact-layer-transformer` has no
 // dedicated case for the null type, so its member reads through the generic opaque path as `{ kind:
 // 'unknown', text: 'null' }`, sitting beside the real `{ kind: 'string' }` member. Same shape for
 // `number | undefined`, with `undefined` in place of `null`.

@@ -5,75 +5,24 @@
  *
  *   Everything is optional and defaults to empty, so a handler states only what it contributes: the
  *   class handler names descents, the exit handler names exits, and neither mentions the other's
- *   fields. This is deliberately a LEAF — it imports nothing else in the walk — because every
- *   handler depends on it, and putting it beside the recursion would make the proxy graph circular.
+ *   fields. This is a LEAF: it imports no other walk transformer, only contracts. Every
+ *   handler imports it, so a dependency on the walk recursion would make the import graph circular.
  *
  * USAGE:
  * handlerResultLayerTransformer({ descents, opensScope });
  * // Returns { branches: [], exits: [], nodes: [], descents, opensScope }
  */
-import type { Node } from '#gateway/npm/ts-morph';
-
-import type {
-  BranchNode,
-  EnvRead,
-  ExitNode,
-  GlobalUse,
-  LineNumber,
-  ModuleEdge,
-  SymbolName,
-} from '@assayer/shared/contracts';
+import type { BranchNode, EnvRead, ExitNode, GlobalUse, ModuleEdge } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { DeclaredShape } from '../../contracts/declared-shape/declared-shape-contract';
+import type { Descent } from '../../contracts/descent/descent-contract';
+import type { HandlerResult } from '../../contracts/handler-result/handler-result-contract';
 import type { InvokedFn } from '../../contracts/invoked-fn/invoked-fn-contract';
 import type { ProbeSite } from '../../contracts/probe-site/probe-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { ValueUse } from '../../contracts/value-use/value-use-contract';
-import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import type { WalkNode } from '../../contracts/walk-node/walk-node-contract';
-
-export interface Descent {
-  node: Node;
-  context: WalkContext;
-}
-
-export interface HandlerResult {
-  branches: BranchNode[];
-  exits: ExitNode[];
-  /** The calls this node made — loose, claimed by the enclosing scope like branches and exits. */
-  calls: CallSite[];
-  /** The value uses this node made — loose, claimed by the enclosing scope on its own channel. */
-  valueUses: ValueUse[];
-  /** The exported top-level binding names this node declared — loose, claimed on its own channel. */
-  exportedBindings: SymbolName[];
-  nodes: WalkNode[];
-  /** Where the instrumenter must wrap, keyed by the id the analyzer already derived. */
-  probeSites: ProbeSite[];
-  /** Import/re-export edges this node declared — flat file-level facts, never scope-claimed. */
-  moduleEdges: ModuleEdge[];
-  /** The type shapes this node DECLARED (`interface Config`, `type Config = { … }`) — each the declared
-   * NAME beside the descriptor it denotes. Flat file-level facts, never scope-claimed, because a
-   * declaration belongs to the file whether or not any signature mentions it. */
-  declaredShapes: DeclaredShape[];
-  /** Ambient-external identifiers this node used (`console`, `process`) — flat file-level facts. */
-  globalUses: GlobalUse[];
-  /** `process.env.<X>` property reads this node made — flat file-level facts, never scope-claimed. */
-  envReads: EnvRead[];
-  /** Start lines of inline functions this node reached other than by a named call — a returned
-   * function or an immediately-invoked one. Flat file-level facts, never scope-claimed. */
-  reachedFns: LineNumber[];
-  /** Each IIFE this node invoked in place (`((n) => …)(x)`) — its start line plus the invocation
-   * arguments a follower welds onto the arrow's params. A parallel channel to `reachedFns` that only
-   * the invoked-in-place case populates; flat file-level facts, never scope-claimed. */
-  invokedFns: InvokedFn[];
-  descents: Descent[];
-  /**
-   * Passed in with empty branches/exits — the walk fills them from the scope body's loose facts.
-   * A handler cannot know its own branches: they are only discovered by descending.
-   */
-  opensScope?: ScopeRecord;
-}
 
 export const handlerResultLayerTransformer = ({
   branches,
@@ -96,14 +45,14 @@ export const handlerResultLayerTransformer = ({
   exits?: ExitNode[];
   calls?: CallSite[];
   valueUses?: ValueUse[];
-  exportedBindings?: SymbolName[];
+  exportedBindings?: string[];
   nodes?: WalkNode[];
   probeSites?: ProbeSite[];
   moduleEdges?: ModuleEdge[];
   declaredShapes?: DeclaredShape[];
   globalUses?: GlobalUse[];
   envReads?: EnvRead[];
-  reachedFns?: LineNumber[];
+  reachedFns?: number[];
   invokedFns?: InvokedFn[];
   descents?: Descent[];
   opensScope?: ScopeRecord;

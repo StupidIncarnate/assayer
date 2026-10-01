@@ -15,10 +15,9 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { lineNumberContract, representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
-
 import type { CallArg } from '../../contracts/call-site/call-site-contract';
 import { readCalleeLayerTransformer } from './read-callee-layer-transformer';
+import { callSiteContract } from '../../contracts/call-site/call-site-contract';
 
 export const readCallArgsLayerTransformer = ({ args }: { args: Node[] }): CallArg[] =>
   args.map((arg): CallArg => {
@@ -26,7 +25,7 @@ export const readCallArgsLayerTransformer = ({ args }: { args: Node[] }): CallAr
       const [declaration, ...rest] = arg.getSymbol()?.getDeclarations() ?? [];
 
       if (declaration !== undefined && rest.length === 0 && Node.isParameterDeclaration(declaration)) {
-        return { kind: 'param-ref', paramName: symbolNameContract.parse(declaration.getName()) };
+        return callSiteContract.shape.args.element.parse({ kind: 'param-ref', paramName: declaration.getName() });
       }
 
       // A bare identifier the checker resolves to a nameable callee — an imported binding or a same-file
@@ -35,27 +34,27 @@ export const readCallArgsLayerTransformer = ({ args }: { args: Node[] }): CallAr
       // const, a variable) comes back `unresolved` and stays `opaque`, exactly as before.
       const callee = readCalleeLayerTransformer({ callee: arg });
 
-      return callee.target === 'unresolved' ? { kind: 'opaque' } : { kind: 'fn-ref', callee };
+      return callee.target === 'unresolved' ? callSiteContract.shape.args.element.parse({ kind: 'opaque' }) : callSiteContract.shape.args.element.parse({ kind: 'fn-ref', callee });
     }
 
     // An inline function-like argument is a scope the walk opens elsewhere; record the LINK by its
     // start line (the key `follow-calls` matches a scope record by), so a callback the code genuinely
     // reaches is never mistaken for dead surface.
     if (Node.isArrowFunction(arg) || Node.isFunctionExpression(arg)) {
-      return { kind: 'callback', startLine: lineNumberContract.parse(arg.getStartLineNumber()) };
+      return callSiteContract.shape.args.element.parse({ kind: 'callback', startLine: arg.getStartLineNumber() });
     }
 
     if (Node.isStringLiteral(arg) || Node.isNumericLiteral(arg)) {
-      return { kind: 'literal', value: representativeValueContract.parse(arg.getLiteralValue()) };
+      return callSiteContract.shape.args.element.parse({ kind: 'literal', value: arg.getLiteralValue() });
     }
 
     if (Node.isTrueLiteral(arg)) {
-      return { kind: 'literal', value: representativeValueContract.parse(true) };
+      return callSiteContract.shape.args.element.parse({ kind: 'literal', value: true });
     }
 
     if (Node.isFalseLiteral(arg)) {
-      return { kind: 'literal', value: representativeValueContract.parse(false) };
+      return callSiteContract.shape.args.element.parse({ kind: 'literal', value: false });
     }
 
-    return { kind: 'opaque' };
+    return callSiteContract.shape.args.element.parse({ kind: 'opaque' });
   });

@@ -1,14 +1,12 @@
 import { DeclaringScopeStub } from '@assayer/shared/contracts/declaring-scope/declaring-scope.stub';
 import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
 import { HarnessInputKeyStub } from '@assayer/shared/contracts/harness-input-key/harness-input-key.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { harnessValidateTransformer } from './harness-validate-transformer';
 
-const HARNESS = RelPathStub({ value: 'src/audit.harness.ts' });
-const TARGET = RelPathStub({ value: 'src/audit.ts' });
+const HARNESS = 'src/audit.harness.ts';
+const TARGET = 'src/audit.ts';
 
 const AUDIT_ENTRY = EntrySignatureStub({
   name: 'audit',
@@ -286,7 +284,7 @@ describe('harnessValidateTransformer', () => {
         entries: [AUDIT_ENTRY],
         declaringScopes: [],
         suppliedTypes: [
-          { entry: SymbolNameStub({ value: 'audit' }), param: SymbolNameStub({ value: 'report' }), type: TypeDescriptorStub({ kind: 'unknown', text: 'undefined' }) },
+          { entry: 'audit', param: 'report', type: TypeDescriptorStub({ kind: 'unknown', text: 'undefined' }) },
         ],
       });
 
@@ -317,8 +315,8 @@ describe('harnessValidateTransformer', () => {
         declaringScopes: [],
         suppliedTypes: [
           {
-            entry: SymbolNameStub({ value: 'audit' }),
-            param: SymbolNameStub({ value: 'report' }),
+            entry: 'audit',
+            param: 'report',
             type: TypeDescriptorStub({ kind: 'callable', text: '(n: number) => void' }),
           },
         ],
@@ -336,8 +334,8 @@ describe('harnessValidateTransformer', () => {
         declaringScopes: [],
         suppliedTypes: [
           {
-            entry: SymbolNameStub({ value: 'audit' }),
-            param: SymbolNameStub({ value: 'report' }),
+            entry: 'audit',
+            param: 'report',
             type: TypeDescriptorStub({ kind: 'callable', text: '(message: string) => string' }),
           },
         ],
@@ -371,7 +369,7 @@ describe('harnessValidateTransformer', () => {
         entries: [],
         declaringScopes: [BUILD_SCOPE],
         suppliedTypes: [
-          { entry: SymbolNameStub({ value: 'build' }), param: SymbolNameStub({ value: 'report' }), type: TypeDescriptorStub({ kind: 'unknown', text: 'undefined' }) },
+          { entry: 'build', param: 'report', type: TypeDescriptorStub({ kind: 'unknown', text: 'undefined' }) },
         ],
       });
 

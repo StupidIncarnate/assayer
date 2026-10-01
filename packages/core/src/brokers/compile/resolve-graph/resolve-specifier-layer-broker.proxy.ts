@@ -1,8 +1,4 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-
-import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 
 export const resolveSpecifierLayerBrokerProxy = (): {
   // Each resolve is staged by the specifier the caller asks for. Following a re-export barrel resolves
@@ -13,26 +9,19 @@ export const resolveSpecifierLayerBrokerProxy = (): {
   resolvesLocalOnce: ({ specifier, fileName }: { specifier: string; fileName: string }) => void;
   resolvesUnresolved: ({ specifier }: { specifier: string }) => void;
 } => {
-  // The path `relative` call runs REAL (deterministic path math). The module resolver stays replaced:
-  // it runs `ts.resolveModuleName` over `ts.sys`, which reads the real disk, and no gateway proxy can
-  // stage `ts.sys`. The caller says where a specifier lands instead.
-  importSpecifierResolveBrokerProxy();
-
-  const resolveHandle = registerMock({ fn: importSpecifierResolveBroker });
+  // The path `relative` call runs REAL (deterministic path math). The module resolver runs REAL too,
+  // over the typescript gateway's resolver, which its proxy stages per specifier.
+  const resolveProxy = importSpecifierResolveBrokerProxy();
 
   return {
     resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
-      resolveHandle
-        .calledWith([{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+      resolveProxy.resolvesTo({ specifier, fileName });
     },
     resolvesLocalOnce: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
-      resolveHandle
-        .onceFor([{ specifier }])
-        .returns({ resolved: true, fileName: FilePathStub({ value: fileName }) });
+      resolveProxy.resolvesToOnce({ specifier, fileName });
     },
     resolvesUnresolved: ({ specifier }: { specifier: string }): void => {
-      resolveHandle.calledWith([{ specifier }]).returns({ resolved: false });
+      resolveProxy.resolvesToNothing({ specifier });
     },
   };
 };

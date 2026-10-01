@@ -23,6 +23,6 @@ export const resolvedIndexContract = z.object({
   layoutHash: contentHashContract,
   tsconfigHash: contentHashContract,
   edges: z.array(resolvedEdgeContract),
-});
+}).brand<'ResolvedIndex'>();
 
 export type ResolvedIndex = z.infer<typeof resolvedIndexContract>;

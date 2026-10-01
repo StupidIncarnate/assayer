@@ -40,8 +40,8 @@
  * // Returns { analysis: FunctionAnalysis (entry.access { kind: 'through-caller', callerName }),
  * //   unreachableExits: [{ line, guardLines, welded? }, …], unfillable: [{ param, type }, …] }
  */
-import { derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, FunctionAnalysis, SymbolName } from '@assayer/shared/contracts';
+import { arrangeBindingContract, derivedTestCaseContract, entryAccessContract, functionAnalysisContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, FunctionAnalysis } from '@assayer/shared/contracts';
 
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
@@ -60,7 +60,7 @@ export const throughCallerCasesTransformer = ({
   callee: ScopeRecord;
   caller: ScopeRecord;
   call: CallSite;
-  harness?: { entry: SymbolName; params: readonly SymbolName[] };
+  harness?: { entry: string; params: readonly string[] };
 }): {
   analysis: FunctionAnalysis;
   unreachableExits: ReturnType<typeof deriveCasesTransformer>['unreachableExits'];
@@ -86,7 +86,7 @@ export const throughCallerCasesTransformer = ({
     // Every binding the callee's own derivation produced for a STEERED param, keyed by the CALLER param
     // that carries it — the whole binding, not just a value, so a harness key path rebases exactly as a
     // scalar value does. Excludes `env`, which names no `param` to key by and never carries one.
-    const byCallerParam = new Map<SymbolName, Exclude<ArrangeBinding, { kind: 'env' }>>(
+    const byCallerParam = new Map<string, Exclude<ArrangeBinding, { kind: 'env' }>>(
       testCase.arrange.flatMap((binding) => {
         if (binding.kind === 'env') {
           return [];
@@ -103,7 +103,7 @@ export const throughCallerCasesTransformer = ({
       const steered = byCallerParam.get(param.name);
 
       if (steered !== undefined) {
-        return [{ ...steered, param: param.name }];
+        return [arrangeBindingContract.parse({ ...steered, param: param.name })];
       }
 
       const fill = fillParamTransformer({ param });

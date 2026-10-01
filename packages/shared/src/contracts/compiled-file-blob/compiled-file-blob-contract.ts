@@ -13,7 +13,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { contentHashContract } from '../content-hash/content-hash-contract';
 import { mapNodeContract } from '../map-node/map-node-contract';
 import { sourceLineContract } from '../source-line/source-line-contract';
@@ -21,7 +20,7 @@ import { fileAnalysisContract } from '../file-analysis/file-analysis-contract';
 import { fileModuleGraphContract } from '../file-module-graph/file-module-graph-contract';
 
 export const compiledFileBlobContract = z.object({
-  relPath: relPathContract,
+  relPath: z.string().min(1).brand<'CompiledFileBlobRelPath'>(),
   contentHash: contentHashContract,
   nodes: z.array(mapNodeContract),
   // Raw per-line source for DISPLAY only (the code viewer / raw-blob view). Never read by analysis.
@@ -31,6 +30,6 @@ export const compiledFileBlobContract = z.object({
   // calls) — the per-file input a later cross-file stitch pass resolves. Empty when the file has none.
   // `prefault` parses the fallback through the graph contract, so its own defaults fill in the rest.
   moduleGraph: fileModuleGraphContract.prefault({ edges: [], references: [] }),
-});
+}).brand<'CompiledFileBlob'>();
 
 export type CompiledFileBlob = z.infer<typeof compiledFileBlobContract>;

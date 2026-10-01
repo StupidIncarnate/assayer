@@ -45,9 +45,6 @@ import type {
 } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { caseSignatureContract } from '../../../contracts/case-signature/case-signature-contract';
-import type { CaseSignature } from '../../../contracts/case-signature/case-signature-contract';
-import type { PredictedOutput } from '../../../contracts/predicted-output/predicted-output-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { appliedParamsTransformer } from '../../../transformers/applied-params/applied-params-transformer';
@@ -124,7 +121,7 @@ export const stubRealizeBroker = ({
 
       const edge = walked.moduleEdges.find(
         (candidate) =>
-          String(candidate.kind) === 'import' &&
+          candidate.kind === 'import' &&
           candidate.specifier !== undefined &&
           candidate.bindings.some(
             (binding) => binding.kind === 'named' && String(binding.alias ?? binding.name) === typeRef,
@@ -143,7 +140,7 @@ export const stubRealizeBroker = ({
         return [];
       }
 
-      const definitionRelPath = String(sibling.relPath);
+      const definitionRelPath = sibling.relPath;
       const declaredType: DeclaredType | undefined = analyzeFileBroker({ walked: sibling.walked, relPath: definitionRelPath }).declaredTypes.find(
         (declared) => String(declared.name) === typeRef,
       );
@@ -250,7 +247,7 @@ export const stubRealizeBroker = ({
             : arrangeBindingContract.parse({
                 kind: 'object',
                 param: param.name,
-                value: Object.fromEntries(objectArrange.properties.map((property) => [String(property.name), property.value])),
+                value: Object.fromEntries(objectArrange.properties.map((property) => [property.name, property.value])),
               }),
         };
       });
@@ -269,13 +266,13 @@ export const stubRealizeBroker = ({
 
     // Feasible buckets in enumeration order, de-duplicated by (exit, arrange), then marked salient — the
     // first per predicted output is the execution representative — exactly as derive-cases does.
-    const seen = new Set<CaseSignature>();
+    const seen = new Set<string>();
     const feasible = evaluated.flatMap((entry) => {
       if (entry.exit === undefined || entry.unreachable || entry.unfillable) {
         return [];
       }
 
-      const signature = caseSignatureContract.parse(`${String(entry.exit.coverageId)}::${JSON.stringify(entry.arrange)}`);
+      const signature = `${String(entry.exit.coverageId)}::${JSON.stringify(entry.arrange)}`;
 
       if (seen.has(signature)) {
         return [];
@@ -285,7 +282,7 @@ export const stubRealizeBroker = ({
       return [{ reachesPath: [entry.exit.coverageId], arrange: entry.arrange, predictedOutput: predictedOutputTransformer({ reachesPath: [entry.exit.coverageId] }) }];
     });
 
-    const salientSeen = new Set<PredictedOutput>();
+    const salientSeen = new Set<string>();
     const cases: DerivedTestCase[] = feasible.map((entry) => {
       const salient = !salientSeen.has(entry.predictedOutput);
       salientSeen.add(entry.predictedOutput);

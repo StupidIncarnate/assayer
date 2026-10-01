@@ -24,7 +24,6 @@ import type { RunResult } from '@assayer/shared/contracts';
 
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
-import type { CliOutput } from '../../../contracts/cli-output/cli-output-contract';
 
 export const RunReportLayerResponder = async ({
   configDir,
@@ -38,25 +37,25 @@ export const RunReportLayerResponder = async ({
   darkSpots: string;
   deadSurface: string;
   inputGaps: string;
-}): Promise<CliOutput> => {
+}): Promise<string> => {
   await Promise.all(
     runs.map(async (run) =>
       runConsoleSaveBroker({
         configDir,
         runId: String(run.runId),
-        console: String(unitReportFormatTransformer({ runs: [run] })),
+        console: unitReportFormatTransformer({ runs: [run] }),
       }),
     ),
   );
 
   const report = unitReportFormatTransformer({ runs: [...runs] });
-  const failed = runs.some((run) => run.cases.some((testCase) => String(testCase.status) !== 'passed'));
+  const failed = runs.some((run) => run.cases.some((testCase) => testCase.status !== 'passed'));
   const darkened = darkSpots === 'error' && runs.some((run) => run.darkSpots.length > 0);
   const linted = deadSurface === 'error' && runs.some((run) => run.lints.length > 0);
   const gapped = inputGaps === 'error' && runs.some((run) => run.gaps.length > 0);
 
   if (failed || darkened || linted || gapped) {
-    throw new CliExactOutputError({ message: String(report) });
+    throw new CliExactOutputError({ message: report });
   }
 
   return report;

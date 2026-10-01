@@ -36,16 +36,6 @@ import { z } from '#gateway/npm/zod';
 
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import type { RepresentativeValue } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
-import type { SymbolName } from '../symbol-name/symbol-name-contract';
-import { templateTextContract } from '../template-text/template-text-contract';
-import type { TemplateText } from '../template-text/template-text-contract';
-import { typeTextContract } from '../type-text/type-text-contract';
-import type { TypeText } from '../type-text/type-text-contract';
-
-// A known element COUNT, carried for a future fixed-length rung — optional and unused for now, so a
-// descriptor omits it rather than inventing a length it cannot know.
-const arrayCardinalityContract = z.number().int().nonnegative().brand<'ArrayCardinality'>();
 
 export type TypeDescriptor =
   | { kind: 'string' }
@@ -53,7 +43,9 @@ export type TypeDescriptor =
   | { kind: 'boolean' }
   | { kind: 'literal'; value: RepresentativeValue }
   | { kind: 'union'; members: TypeDescriptor[] }
-  | { kind: 'array'; element: TypeDescriptor; cardinality?: z.infer<typeof arrayCardinalityContract> | undefined }
+  // `cardinality` is a known element COUNT, carried for a future fixed-length rung. It is optional and
+  // unused for now, so a descriptor omits it rather than inventing a length it cannot know.
+  | { kind: 'array'; element: TypeDescriptor; cardinality?: (number & z.core.$brand<'TypeDescriptorCardinality'>) | undefined }
   // Fixed-length and HETEROGENEOUS: one descriptor per position, never one shared element type. This is
   // the whole difference from `array` — `readonly [string, number]` fills index 0 from a string and
   // index 1 from a number, which one shared `element` type could not express.
@@ -61,7 +53,7 @@ export type TypeDescriptor =
   // The checker's own `texts`/`types` split for a template literal type: `texts` is the literal
   // segments in source order, `types` is one descriptor per substitution between them, and
   // `texts.length` is always `types.length + 1`.
-  | { kind: 'template'; texts: TemplateText[]; types: TypeDescriptor[] }
+  | { kind: 'template'; texts: string[]; types: TypeDescriptor[] }
   /**
    * `truncated` is true when the reader STOPPED enumerating because the type re-entered its own path
    * (`interface Tree { label: string; next: Tree }` — the inner `Tree`), so the empty property list is
@@ -75,11 +67,11 @@ export type TypeDescriptor =
    */
   | {
       kind: 'object';
-      typeName?: SymbolName | undefined;
+      typeName?: string | undefined;
       truncated?: boolean | undefined;
-      properties: { name: SymbolName; type: TypeDescriptor; optional?: boolean | undefined }[];
+      properties: { name: string; type: TypeDescriptor; optional?: boolean | undefined }[];
     }
-  | { kind: 'callable'; text: TypeText }
+  | { kind: 'callable'; text: string }
   /**
    * `typeRef` is the type-reference NAME the declaration spelled (`Config` for `config: Config`), kept
    * only when the opaque type was written as a plain reference. It is the identifier's resolved
@@ -90,32 +82,62 @@ export type TypeDescriptor =
    * `typeArgs` carries the reference's type ARGUMENTS in order, so `Box<string>` says what the
    * declaration's `T` stands for. A generic declaration denotes nothing constructible without them.
    */
-  | { kind: 'unknown'; text: TypeText; typeRef?: SymbolName | undefined; typeArgs?: TypeDescriptor[] | undefined };
+  | { kind: 'unknown'; text: string; typeRef?: string | undefined; typeArgs?: TypeDescriptor[] | undefined };
 
-export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.lazy(() =>
-  z.discriminatedUnion('kind', [
-    z.object({ kind: z.literal('string') }),
-    z.object({ kind: z.literal('number') }),
-    z.object({ kind: z.literal('boolean') }),
-    z.object({ kind: z.literal('literal'), value: representativeValueContract }),
-    z.object({ kind: z.literal('union'), members: z.array(typeDescriptorContract) }),
-    z.object({ kind: z.literal('array'), element: typeDescriptorContract, cardinality: arrayCardinalityContract.optional() }),
-    z.object({ kind: z.literal('tuple'), elements: z.array(typeDescriptorContract) }),
-    z.object({ kind: z.literal('template'), texts: z.array(templateTextContract), types: z.array(typeDescriptorContract) }),
-    z.object({
-      kind: z.literal('object'),
-      typeName: symbolNameContract.optional(),
-      truncated: z.boolean().optional(),
-      properties: z.array(
-        z.object({ name: symbolNameContract, type: typeDescriptorContract, optional: z.boolean().optional() }),
-      ),
-    }),
-    z.object({ kind: z.literal('callable'), text: typeTextContract }),
-    z.object({
-      kind: z.literal('unknown'),
-      text: typeTextContract,
-      typeRef: symbolNameContract.optional(),
-      typeArgs: z.array(typeDescriptorContract).optional(),
-    }),
-  ]),
-);
+// Each self-reference is a getter whose return type wraps `z.core.$ZodType<TypeDescriptor>`, so the
+// lookup of `typeDescriptorContract` waits until a parse runs.
+export const typeDescriptorContract: z.ZodType<TypeDescriptor> = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('string') }).brand<'TypeDescriptor'>(),
+  z.object({ kind: z.literal('number') }).brand<'TypeDescriptor'>(),
+  z.object({ kind: z.literal('boolean') }).brand<'TypeDescriptor'>(),
+  z.object({ kind: z.literal('literal'), value: representativeValueContract }).brand<'TypeDescriptor'>(),
+  z.object({
+    kind: z.literal('union'),
+    get members(): z.ZodArray<z.core.$ZodType<TypeDescriptor>> {
+      return z.array(typeDescriptorContract);
+    },
+  }).brand<'TypeDescriptor'>(),
+  z.object({
+    kind: z.literal('array'),
+    get element(): z.core.$ZodType<TypeDescriptor> {
+      return typeDescriptorContract;
+    },
+    cardinality: z.number().int().nonnegative().brand<'TypeDescriptorCardinality'>().optional(),
+  }).brand<'TypeDescriptor'>(),
+  z.object({
+    kind: z.literal('tuple'),
+    get elements(): z.ZodArray<z.core.$ZodType<TypeDescriptor>> {
+      return z.array(typeDescriptorContract);
+    },
+  }).brand<'TypeDescriptor'>(),
+  z.object({
+    kind: z.literal('template'),
+    texts: z.array(z.string().brand<'TypeDescriptorTexts'>()),
+    get types(): z.ZodArray<z.core.$ZodType<TypeDescriptor>> {
+      return z.array(typeDescriptorContract);
+    },
+  }).brand<'TypeDescriptor'>(),
+  z.object({
+    kind: z.literal('object'),
+    typeName: z.string().min(1).brand<'TypeDescriptorTypeName'>().optional(),
+    truncated: z.boolean().optional(),
+    properties: z.array(
+      z.object({
+        name: z.string().min(1).brand<'TypeDescriptorPropertiesName'>(),
+        get type(): z.core.$ZodType<TypeDescriptor> {
+          return typeDescriptorContract;
+        },
+        optional: z.boolean().optional(),
+      }).brand<'TypeDescriptorProperties'>(),
+    ),
+  }).brand<'TypeDescriptor'>(),
+  z.object({ kind: z.literal('callable'), text: z.string().min(1).brand<'TypeDescriptorText'>() }).brand<'TypeDescriptor'>(),
+  z.object({
+    kind: z.literal('unknown'),
+    text: z.string().min(1).brand<'TypeDescriptorText'>(),
+    typeRef: z.string().min(1).brand<'TypeDescriptorTypeRef'>().optional(),
+    get typeArgs(): z.ZodOptional<z.ZodArray<z.core.$ZodType<TypeDescriptor>>> {
+      return z.array(typeDescriptorContract).optional();
+    },
+  }).brand<'TypeDescriptor'>(),
+]);

@@ -16,12 +16,9 @@
  * await runConsoleFindBroker({ configDir: '/repo', root: '/repo/smoke-repo', relPath: 'src/a.ts' });
  * // Returns the RunConsole for the file's CURRENT bytes, or undefined
  */
-import { runConsoleContract } from '@assayer/shared/contracts';
-import type { RunConsole } from '@assayer/shared/contracts';
 
 import { runIdBroker } from '../id/run-id-broker';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runConsoleFindBroker = async ({
   configDir,
@@ -31,14 +28,14 @@ export const runConsoleFindBroker = async ({
   configDir: string;
   root: string;
   relPath: string;
-}): Promise<RunConsole | undefined> => {
+}): Promise<string | undefined> => {
   const absPath = `${root}/${relPath}`;
 
   if (!(await pathExists(absPath))) {
     return undefined;
   }
 
-  const source = String(fileContentsContract.parse(await readFile(absPath)));
+  const source = (await readFile(absPath));
   const runId = String(await runIdBroker({ root, relPath, source }));
   const path = `${configDir}/.assayer/cache/runs/${runId}/console.txt`;
 
@@ -46,5 +43,5 @@ export const runConsoleFindBroker = async ({
     return undefined;
   }
 
-  return runConsoleContract.parse(String(fileContentsContract.parse(await readFile(path))));
+  return (readFile(path));
 };

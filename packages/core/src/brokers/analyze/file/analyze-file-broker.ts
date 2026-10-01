@@ -32,8 +32,8 @@
  * // Returns a validated FileAnalysis: { functions: [...], enrichment: [...], gaps: [...], darkSpots: [...], undriven: [...] }
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
-import { entryLabelContract, fileAnalysisContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { EntryLabel, FileAnalysis, SymbolName, TypeText } from '@assayer/shared/contracts';
+import { fileAnalysisContract } from '@assayer/shared/contracts';
+import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { analysisProjectionTransformer } from '../../../transformers/analysis-projection/analysis-projection-transformer';
@@ -93,12 +93,12 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // own entry: it cannot be reached without calling the host, so its steering values FUNNEL into the
   // host's own case set. The follower returns those funnel cases keyed by the host's name + declaration
   // line, and they REPLACE the host's plain derived cases here — the host becomes the only entry.
-  const funnelByHost = new Map(followed.funnels.map((funnel) => [`${String(funnel.host)}@${String(funnel.hostLine)}`, funnel.cases]));
+  const funnelByHost = new Map(followed.funnels.map((funnel) => [`${funnel.host}@${String(funnel.hostLine)}`, funnel.cases]));
 
   // The fill seam's refusals from every DRIVING route, grouped by the entry that owes the invoice. A
   // funnelled private or callback is no entry of its own, so its refusal is filed against the host a
   // reader can drive and carries `owner` naming where the parameter is actually declared.
-  const followedRefusals = new Map<SymbolName, { param: SymbolName; type: TypeText; owner?: EntryLabel }[]>();
+  const followedRefusals = new Map<string, { param: string; type: string; owner?: string }[]>();
   followed.refusals.forEach((refusal) => {
     const existing = followedRefusals.get(refusal.entryName) ?? [];
 
@@ -219,9 +219,9 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   const derivedNames = new Set(derived.map(({ fn }) => String(fn.entry.name)));
   const followedCaseCounts = new Map(followed.followedEntries.map((entry) => [String(entry.entry.name), entry.cases.length]));
   const followedGaps = [...followedRefusals.entries()].flatMap(([entryName, unfillable]) =>
-    derivedNames.has(String(entryName))
+    derivedNames.has(entryName)
       ? []
-      : inputGapTransformer({ entryName, unfillable, hasCases: (followedCaseCounts.get(String(entryName)) ?? 0) > 0 }),
+      : inputGapTransformer({ entryName, unfillable, hasCases: (followedCaseCounts.get(entryName) ?? 0) > 0 }),
   );
 
   // PRECEDENCE, never a merge: an entry that carries an INPUT gap has its undriven admissions dropped.
@@ -240,7 +240,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     const displayName =
       fn.entry.access.kind === 'module' && relPath !== undefined
         ? moduleEntryLabelTransformer({ ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }), relPath })
-        : entryLabelContract.parse(String(fn.entry.name));
+        : String(fn.entry.name);
 
     return unreachableLintTransformer({ name: fn.entry.name, displayName, unreachableExits: result.unreachableExits });
   });
@@ -254,11 +254,11 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     const isModule = access.kind === 'module';
 
     return unreachableLintTransformer({
-      name: isModule ? symbolNameContract.parse('*module*') : name,
+      name: isModule ? '*module*' : name,
       displayName:
         isModule && relPath !== undefined
           ? moduleEntryLabelTransformer({ relPath })
-          : label ?? entryLabelContract.parse(String(name)),
+          : label ?? name,
       unreachableExits,
     });
   });
@@ -271,7 +271,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
     funnel.unreachable.flatMap((entry) =>
       unreachableLintTransformer({
         name: funnel.host,
-        displayName: entryLabelContract.parse(String(entry.displayName)),
+        displayName: entry.displayName,
         unreachableExits: [{ line: entry.line, guardLines: entry.guardLines, ...(entry.welded === undefined ? {} : { welded: entry.welded }) }],
       }),
     ),

@@ -25,21 +25,17 @@
  */
 import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { conditionNodeContract, coverageIdContract } from '@assayer/shared/contracts';
-import type { ConditionNode, CoverageId } from '@assayer/shared/contracts';
+import { conditionNodeContract, coverageContract } from '@assayer/shared/contracts';
+import type { Coverage } from '@assayer/shared/contracts';
 
+import { conditionTreeReadoutContract } from '../../contracts/condition-tree-readout/condition-tree-readout-contract';
+import type { ConditionTreeReadout } from '../../contracts/condition-tree-readout/condition-tree-readout-contract';
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
-import type { ProbeSite } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { readConditionLayerTransformer } from './read-condition-layer-transformer';
 import { readConstOperandLayerTransformer } from './read-const-operand-layer-transformer';
 import { readEnvOperandLayerTransformer } from './read-env-operand-layer-transformer';
 import { readOperandTypeLayerTransformer } from './read-operand-type-layer-transformer';
-
-export interface ConditionTreeReadout {
-  condition: ConditionNode;
-  sites: ProbeSite[];
-}
 
 export const readConditionTreeLayerTransformer = ({
   condition,
@@ -49,7 +45,7 @@ export const readConditionTreeLayerTransformer = ({
 }: {
   condition: Node;
   context: WalkContext;
-  branchCoverageId: CoverageId;
+  branchCoverageId: Coverage['id'];
   path: number[];
 }): ConditionTreeReadout => {
   // Parens are formatting, so they must be invisible to identity: unwrap WITHOUT consuming a path
@@ -72,10 +68,10 @@ export const readConditionTreeLayerTransformer = ({
       path: [...path, 0],
     });
 
-    return {
+    return conditionTreeReadoutContract.parse({
       condition: conditionNodeContract.parse({ kind: 'not', operand: operand.condition }),
       sites: operand.sites,
-    };
+    });
   }
 
   if (Node.isBinaryExpression(condition)) {
@@ -95,19 +91,19 @@ export const readConditionTreeLayerTransformer = ({
         path: [...path, 1],
       });
 
-      return {
+      return conditionTreeReadoutContract.parse({
         condition: conditionNodeContract.parse({
           kind: operator === SyntaxKind.AmpersandAmpersandToken ? 'and' : 'or',
           left: left.condition,
           right: right.condition,
         }),
         sites: [...left.sites, ...right.sites],
-      };
+      });
     }
   }
 
   const readout = readConditionLayerTransformer({ condition });
-  const id = coverageIdContract.parse(`${branchCoverageId}#leaf${path.map((index) => `.${index}`).join('')}`);
+  const id = coverageContract.shape.id.parse(`${branchCoverageId}#leaf${path.map((index) => `.${index}`).join('')}`);
   // WHERE the operand's value came from — a different question from what its type is, asked of a
   // different reader. Recorded wherever it is true; whether an entry can be driven through it is
   // policy, and policy lives in the projections.
@@ -131,7 +127,7 @@ export const readConditionTreeLayerTransformer = ({
   // the root as `name` would return the whole object descriptor instead of `string`.
   const operandParamName = readout.operandName ?? readout.operandRootName;
 
-  return {
+  return conditionTreeReadoutContract.parse({
     condition: conditionNodeContract.parse({
       kind: 'leaf',
       id,
@@ -156,5 +152,5 @@ export const readConditionTreeLayerTransformer = ({
     sites: [
       probeSiteContract.parse({ id, kind: 'cond', start: condition.getStart(), end: condition.getEnd() }),
     ],
-  };
+  });
 };

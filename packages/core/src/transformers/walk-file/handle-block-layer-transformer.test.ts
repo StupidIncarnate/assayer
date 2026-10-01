@@ -185,7 +185,7 @@ describe('handleBlockLayerTransformer', () => {
       const result = handleBlockLayerTransformer({ statements, context: TAIL_CONTEXT });
 
       expect({
-        branchKinds: result.branches.map((branch) => String(branch.kind)),
+        branchKinds: result.branches.map((branch) => branch.kind),
         exitIds: result.exits.map((exit) => String(exit.coverageId)),
         descentKinds: result.descents.map((descent) => descent.node.getKindName()),
       }).toStrictEqual({

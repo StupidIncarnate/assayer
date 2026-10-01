@@ -79,8 +79,10 @@
  * // Returns { unreachable: false, unfillable: [],
  * //   arrangements: [[{ kind: 'param', param: 'score', value: 6 }, …], …] }
  */
-import { arrangeValueContract, envValueContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, DerivedTestCase, EnvVarName, ParamDescriptor, RepresentativeValue, SymbolName, TypeText } from '@assayer/shared/contracts';
+import { causeArrangeContract } from '../../contracts/cause-arrange/cause-arrange-contract';
+import type { CauseArrange } from '../../contracts/cause-arrange/cause-arrange-contract';
+import { arrangeBindingContract, arrangeValueContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
@@ -109,17 +111,13 @@ export const causeArrangeTransformer = ({
   requirements: ConditionCause['requirements'];
   params: ParamDescriptor[];
   envDrivable: boolean;
-  harness?: { entry: SymbolName; params: readonly SymbolName[] } | undefined;
-}): {
-  unreachable: boolean;
-  arrangements: DerivedTestCase['arrange'][];
-  unfillable: { param: SymbolName; type: TypeText }[];
-} => {
+  harness?: { entry: string; params: readonly string[] } | undefined;
+}): CauseArrange => {
   // A WELDED operand is a single-value domain to start from — `{members:[7]}` for a scalar const,
   // `{lengthMin:3, lengthMax:3}` for an array const's length. The guard arm values below intersect onto
   // it, so `{7} ∩ (>5)` stays `{7}` (the arm is reachable) while `{7} ∩ (<=5)` is empty (unreachable).
   // It is not an input a case sets; the analyzer evaluates it, so no `env`/`param` binding carries it.
-  const constSeed = requirements.reduce<Map<SymbolName, ValueDomain>>((acc, requirement) => {
+  const constSeed = requirements.reduce<Map<string, ValueDomain>>((acc, requirement) => {
     const operand = requirement.leaf.operandParamName;
 
     if (operand === undefined) {
@@ -136,9 +134,9 @@ export const causeArrangeTransformer = ({
     }
 
     return acc;
-  }, new Map<SymbolName, ValueDomain>());
+  }, new Map<string, ValueDomain>());
 
-  const domainByOperand = requirements.reduce<Map<SymbolName, ValueDomain>>((acc, requirement) => {
+  const domainByOperand = requirements.reduce<Map<string, ValueDomain>>((acc, requirement) => {
     const operand = requirement.leaf.operandParamName;
 
     if (operand === undefined) {
@@ -162,7 +160,7 @@ export const causeArrangeTransformer = ({
   const unreachable = [...domainByOperand.values()].some((domain) => isDomainEmptyGuard({ domain }));
 
   if (unreachable) {
-    return { unreachable: true, arrangements: [], unfillable: [] };
+    return causeArrangeContract.parse({ unreachable: true, arrangements: [], unfillable: [] });
   }
 
   // The parameters a harness SUPPLIES, keyed by name — each one already answered, so it never reaches
@@ -175,16 +173,16 @@ export const causeArrangeTransformer = ({
     harness === undefined
       ? []
       : harness.params.map((param) => {
-          const isRest = params.find((candidate) => String(candidate.name) === String(param))?.rest === true;
+          const isRest = params.find((candidate) => String(candidate.name) === param)?.rest === true;
 
           return [
-            String(param),
-            {
-              kind: 'harness' as const,
+            param,
+            arrangeBindingContract.parse({
+              kind: 'harness',
               param,
               key: harnessKeyPathTransformer({ entry: harness.entry, param }),
               ...(isRest ? { rest: true } : {}),
-            },
+            }),
           ] as const;
         }),
   );
@@ -225,7 +223,7 @@ export const causeArrangeTransformer = ({
   );
 
   if (unfillable.length > 0) {
-    return { unreachable: false, arrangements: [], unfillable };
+    return causeArrangeContract.parse({ unreachable: false, arrangements: [], unfillable });
   }
 
   const fillByParam = new Map(
@@ -235,13 +233,13 @@ export const causeArrangeTransformer = ({
   // Which local bindings are environment reads, keyed by the same operand name the values above are.
   // Read off the leaves rather than passed in, because the leaf is where the walk recorded it.
   const envByOperand = envDrivable
-    ? requirements.reduce<Map<SymbolName, EnvVarName>>((acc, requirement) => {
+    ? requirements.reduce<Map<string, string>>((acc, requirement) => {
         const operand = requirement.leaf.operandParamName;
         const envVarName = requirement.leaf.operandEnvVarName;
 
         return operand === undefined || envVarName === undefined ? acc : acc.set(operand, envVarName);
-      }, new Map<SymbolName, EnvVarName>())
-    : new Map<SymbolName, EnvVarName>();
+      }, new Map<string, string>())
+    : new Map<string, string>();
 
   const operandChoices = [...domainByOperand.entries()].flatMap(([operand, domain]) => {
     const values = domainValuesTransformer({ domain });
@@ -249,10 +247,10 @@ export const causeArrangeTransformer = ({
     return values.length === 0 ? [] : [{ operand, values }];
   });
 
-  const bindings = operandChoices.reduce<Map<SymbolName, RepresentativeValue>[]>(
+  const bindings = operandChoices.reduce<Map<string, RepresentativeValue>[]>(
     (combos, choice) =>
       combos.flatMap((combo) => choice.values.map((value) => new Map(combo).set(choice.operand, value))),
-    [new Map<SymbolName, RepresentativeValue>()],
+    [new Map<string, RepresentativeValue>()],
   );
 
   // Each array param is a fan-out axis over cardinality: `array-arrange` builds a real array of each
@@ -274,7 +272,7 @@ export const causeArrangeTransformer = ({
 
     if (lengths !== undefined) {
       const [length] = lengths;
-      const value = length === undefined ? undefined : arrayArrangeTransformer({ element: type.element, count: Number(length) });
+      const value = length === undefined ? undefined : arrayArrangeTransformer({ element: type.element, count: length });
 
       return value === undefined ? [] : [{ param: param.name, values: [value] }];
     }
@@ -297,9 +295,9 @@ export const causeArrangeTransformer = ({
   // The cartesian across array params, the ArrangeValue[] twin of `bindings`. Seeded with one empty
   // combo, so a cause with no array param yields exactly one (empty) array combo and the arrangement
   // count is unchanged.
-  const arrayCombos = arrayChoices.reduce<Map<SymbolName, ArrangeValue[]>[]>(
+  const arrayCombos = arrayChoices.reduce<Map<string, ArrangeValue[]>[]>(
     (combos, choice) => combos.flatMap((combo) => choice.values.map((value) => new Map(combo).set(choice.param, value))),
-    [new Map<SymbolName, ArrangeValue[]>()],
+    [new Map<string, ArrangeValue[]>()],
   );
 
   // Looked up once, below, to check each built binding against the SAME descriptor it was derived
@@ -325,13 +323,20 @@ export const causeArrangeTransformer = ({
           // REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
           // positional slots instead of handing it over as one argument.
           if (arrayValue !== undefined) {
-            return [{ kind: 'array', param: param.name, value: arrayValue, ...(param.rest === true ? { rest: true } : {}) }];
+            return [
+              arrangeBindingContract.parse({
+                kind: 'array',
+                param: param.name,
+                value: arrayValue,
+                ...(param.rest === true ? { rest: true } : {}),
+              }),
+            ];
           }
 
           const existing = bound.get(param.name);
 
           if (existing !== undefined) {
-            return [{ kind: 'param', param: param.name, value: existing }];
+            return [arrangeBindingContract.parse({ kind: 'param', param: param.name, value: existing })];
           }
 
           // Unconstrained: the seam's fill, already proven present by the refusal check above.
@@ -347,7 +352,7 @@ export const causeArrangeTransformer = ({
 
           return value === undefined
             ? []
-            : [{ kind: 'env' as const, name: envVarName, value: envValueContract.parse(String(value)) }];
+            : [arrangeBindingContract.parse({ kind: 'env', name: envVarName, value: String(value) })];
         }),
       ];
 
@@ -376,7 +381,7 @@ export const causeArrangeTransformer = ({
           if (param !== undefined && !isTypeFillableGuard({ type: param.type, value })) {
             throw new Error(
               `cause-arrange built a \`${binding.kind}\` value for \`${String(binding.param)}\` that does not satisfy ` +
-                `its own declared type \`${String(param.declaredText ?? typeTextTransformer({ type: param.type }))}\`: ` +
+                `its own declared type \`${(param.declaredText ?? typeTextTransformer({ type: param.type }))}\`: ` +
                 `${JSON.stringify(binding.value)}. Assayer contradicted a type it read itself — its own invariant ` +
                 'broken, never the reader\'s debt.',
             );
@@ -387,5 +392,5 @@ export const causeArrangeTransformer = ({
     }),
   );
 
-  return { unreachable: false, unfillable: [], arrangements };
+  return causeArrangeContract.parse({ unreachable: false, unfillable: [], arrangements });
 };

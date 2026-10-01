@@ -6,11 +6,13 @@ export const composeCrossFilePredicatesBrokerProxy = (): {
   // only the import that named it.
   setupSibling: ({ fileName, source, specifier }: { fileName: string; source: string; specifier: string }) => void;
   resolvesTo: ({ fileName, specifier }: { fileName: string; specifier: string }) => void;
+  // The tsconfig search starts at `root` and finds nothing, so the compiler options are empty.
+  noTsconfigAt: ({ root }: { root: string }) => void;
 } => {
-  // The tsconfig read runs REAL; the sibling resolve is staged, since resolving a specifier against a
-  // real filesystem is exactly what a unit test cannot do — the caller says where a specifier lands and
-  // what its source is instead.
-  tsconfigReadBrokerProxy();
+  // The tsconfig read and the sibling resolve are staged, since each reads the real filesystem, which a
+  // unit test cannot do. The caller says where a specifier lands, what its source is, and that no
+  // tsconfig sits at the root.
+  const tsconfigProxy = tsconfigReadBrokerProxy();
   const sibling = resolveSiblingCalleeBrokerProxy();
 
   return {
@@ -23,6 +25,9 @@ export const composeCrossFilePredicatesBrokerProxy = (): {
     // compose skips as non-local.
     resolvesTo: ({ fileName, specifier }: { fileName: string; specifier: string }): void => {
       sibling.resolvesToOutside({ fileName, specifier });
+    },
+    noTsconfigAt: ({ root }: { root: string }): void => {
+      tsconfigProxy.noTsconfigAt({ searchPath: root });
     },
   };
 };

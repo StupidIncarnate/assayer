@@ -57,29 +57,24 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { columnNumberContract } from '../column-number/column-number-contract';
-import { constLengthContract } from '../const-length/const-length-contract';
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const conditionLeafContract = z.object({
   kind: z.literal('leaf'),
-  id: coverageIdContract,
-  operandParamName: symbolNameContract.optional(),
-  operandPropertyPath: z.array(symbolNameContract).min(1).optional(),
-  operandTypeRef: symbolNameContract.optional(),
-  operandEnvVarName: envVarNameContract.optional(),
+  id: coverageContract.shape.id,
+  operandParamName: z.string().min(1).brand<'ConditionLeafOperandParamName'>().optional(),
+  operandPropertyPath: z.array(z.string().min(1).brand<'ConditionLeafOperandPropertyPath'>()).min(1).optional(),
+  operandTypeRef: z.string().min(1).brand<'ConditionLeafOperandTypeRef'>().optional(),
+  operandEnvVarName: z.string().min(1).brand<'ConditionLeafOperandEnvVarName'>().optional(),
   operandConstValue: representativeValueContract.optional(),
-  operandConstLength: constLengthContract.optional(),
-  operandCallPosition: z.object({ line: lineNumberContract, column: columnNumberContract }).optional(),
+  operandConstLength: z.number().int().nonnegative().brand<'ConditionLeafOperandConstLength'>().optional(),
+  operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).brand<'ConditionLeafOperandCallPosition'>().optional(),
   operandIsTypeof: z.literal(true).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,
-});
+}).brand<'ConditionLeaf'>();
 
 export type ConditionLeaf = z.infer<typeof conditionLeafContract>;

@@ -11,14 +11,13 @@
  * await externalSignatureReadBroker({ tsConfigFilePath, dtsPath, exportName, cacheDir: '/repo/.assayer/cache' });
  * // Returns { usable: true, signature: { params, returnType } } or { usable: false }
  */
+import { externalSignatureReadResultContract } from '../../../contracts/external-signature-read-result/external-signature-read-result-contract';
+import type { ExternalSignatureReadResult } from '../../../contracts/external-signature-read-result/external-signature-read-result-contract';
 import { externalSignatureContract } from '@assayer/shared/contracts';
-import type { ExternalSignature, SymbolName } from '@assayer/shared/contracts';
 
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
 import { ensureDir, pathExists, readFile, rename, writeFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const externalSignatureReadBroker = async ({
   tsConfigFilePath,
@@ -26,26 +25,26 @@ export const externalSignatureReadBroker = async ({
   exportName,
   cacheDir,
 }: {
-  tsConfigFilePath: FilePath;
-  dtsPath: FilePath;
-  exportName: SymbolName;
+  tsConfigFilePath: string;
+  dtsPath: string;
+  exportName: string;
   cacheDir: string;
-}): Promise<{ usable: true; signature: ExternalSignature } | { usable: false }> => {
-  const dtsContent = String(fileContentsContract.parse(await readFile(String(dtsPath))));
-  const declHash = contentHashTransformer({ content: `${String(exportName)}\n${dtsContent}` });
+}): Promise<ExternalSignatureReadResult> => {
+  const dtsContent = (await readFile(dtsPath));
+  const declHash = contentHashTransformer({ content: `${exportName}\n${dtsContent}` });
   const dir = `${cacheDir}/external-signatures`;
-  const cachePath = `${dir}/${String(declHash)}.json`;
+  const cachePath = `${dir}/${declHash}.json`;
 
   if (await pathExists(cachePath)) {
-    const cached = String(fileContentsContract.parse(await readFile(cachePath)));
+    const cached = (await readFile(cachePath));
 
-    return { usable: true, signature: externalSignatureContract.parse(JSON.parse(cached) as unknown) };
+    return externalSignatureReadResultContract.parse({ usable: true, signature: externalSignatureContract.parse(JSON.parse(cached) as unknown) });
   }
 
   const read = externalSignatureReadDeclarationBroker({ tsConfigFilePath, dtsPath, exportName });
 
   if (!read.usable) {
-    return { usable: false };
+    return externalSignatureReadResultContract.parse({ usable: false });
   }
 
   await ensureDir(dir);
@@ -53,5 +52,5 @@ export const externalSignatureReadBroker = async ({
   await writeFile(tmpPath, JSON.stringify(read.signature));
   await rename(tmpPath, cachePath);
 
-  return { usable: true, signature: read.signature };
+  return externalSignatureReadResultContract.parse({ usable: true, signature: read.signature });
 };

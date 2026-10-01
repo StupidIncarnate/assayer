@@ -21,13 +21,14 @@
  *   resolveSavedRun,
  *   resolveSavedConsole,
  * });
- * // Returns { success: true } once the window has loaded
+ * // Resolves once the window has loaded
  */
+import { app, BrowserWindow, Menu, ipcMain } from '#gateway/npm/electron';
+import type { IpcMainInvokeEvent } from '#gateway/npm/electron';
 import { join } from '#gateway/node/path';
+import { getEnv, getPlatform } from '#gateway/node/process';
 import { pathToFileURL } from '#gateway/node/url';
-import { app, BrowserWindow, Menu, ipcMain } from 'electron';
-import type { IpcMainInvokeEvent } from 'electron';
-import type { CompiledTree, CompiledFileView, RunConsole, RunResult, StubView } from '@assayer/shared/contracts';
+import type { CompiledTree, CompiledFileView, RunResult, StubView } from '@assayer/shared/contracts';
 
 import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
@@ -66,11 +67,11 @@ export const desktopBootBroker = async ({
     onOutput: (params: { chunk: string }) => void;
   }) => Promise<RunResult>;
   resolveSavedRun: (params: { relPath: unknown }) => Promise<RunResult | undefined>;
-  resolveSavedConsole: (params: { relPath: unknown }) => Promise<RunConsole | undefined>;
+  resolveSavedConsole: (params: { relPath: unknown }) => Promise<string | undefined>;
 }): Promise<void> => {
   const preloadPath = join(__dirname, '../../../../bin/desktop-preload.js');
   const rendererUrl =
-    process.env.ASSAYER_DEV === '1'
+    getEnv('ASSAYER_DEV') === '1'
       ? 'http://localhost:6273'
       : pathToFileURL(join(__dirname, '../../../../../../app/dist/index.html')).href;
 
@@ -125,7 +126,7 @@ export const desktopBootBroker = async ({
     // Headless for e2e: there is no Xvfb here, so tests set ASSAYER_HEADLESS=1 to create the
     // window hidden (Playwright still drives a hidden BrowserWindow) — it never pops up on the
     // developer's display. Production launches leave the flag unset, so the window shows normally.
-    show: process.env.ASSAYER_HEADLESS !== '1',
+    show: getEnv('ASSAYER_HEADLESS') !== '1',
     // sandbox:false so the tsc-emitted multi-file preload can `require` its own modules;
     // contextIsolation + nodeIntegration:false keep the renderer boundary secure.
     webPreferences: {
@@ -133,14 +134,18 @@ export const desktopBootBroker = async ({
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      // A headless window renders offscreen. A plain hidden window repaints about once a second, even
+      // with backgroundThrottling off, and Playwright waits for two repaints before every click or
+      // hover, so each action costs about 2s. An offscreen window repaints at 60fps and never appears on
+      // the display.
+      offscreen: getEnv('ASSAYER_HEADLESS') === '1',
     },
   });
   await window.loadURL(rendererUrl);
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
+    if (getPlatform() !== 'darwin') {
       app.quit();
     }
   });
-
 };

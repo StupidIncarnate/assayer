@@ -16,7 +16,7 @@
  * // Returns the rebased ConditionNode, or undefined when a leaf cannot be mapped onto a caller param
  */
 import { conditionNodeContract } from '@assayer/shared/contracts';
-import type { ConditionNode, CoverageId, SymbolName } from '@assayer/shared/contracts';
+import type { ConditionNode, Coverage } from '@assayer/shared/contracts';
 
 export const rebasePredicateConditionTransformer = ({
   node,
@@ -25,9 +25,9 @@ export const rebasePredicateConditionTransformer = ({
   toCallerParam,
 }: {
   node: ConditionNode;
-  branchCoverageId: CoverageId;
+  branchCoverageId: Coverage['id'];
   path: number[];
-  toCallerParam: Map<SymbolName, SymbolName>;
+  toCallerParam: Map<string, string>;
 }): ConditionNode | undefined => {
   if (node.kind === 'leaf') {
     const callerParam = node.operandParamName === undefined ? undefined : toCallerParam.get(node.operandParamName);

@@ -58,8 +58,10 @@
  * caseInterpretBroker({ entry, entryName, exitIds, testCase, probe, harness });
  * // Returns { entryName, testCase, status: 'passed', observedPath, trace }
  */
+import { deleteEnv, getEnv, setEnv } from '#gateway/node/process';
+
 import { caseResultContract } from '@assayer/shared/contracts';
-import type { CaseResult, CoverageId, DerivedTestCase } from '@assayer/shared/contracts';
+import type { CaseResult, DerivedTestCase, Coverage } from '@assayer/shared/contracts';
 
 import type { HarnessDeclaration } from '../../../contracts/harness-declaration/harness-declaration-contract';
 import type { ProbeRuntime } from '../../../contracts/probe-runtime/probe-runtime-contract';
@@ -75,7 +77,7 @@ export const caseInterpretBroker = ({
 }: {
   entry: unknown;
   entryName: string;
-  exitIds: CoverageId[];
+  exitIds: Coverage['id'][];
   testCase: DerivedTestCase;
   probe: ProbeRuntime;
   harness?: readonly HarnessDeclaration[] | undefined;
@@ -154,11 +156,11 @@ export const caseInterpretBroker = ({
   const envBindings = testCase.arrange.flatMap((binding) => (binding.kind === 'env' ? [binding] : []));
   // Snapshotted BEFORE the first write, so the restore below puts back what was there rather than
   // what this case put there.
-  const restore = envBindings.map((binding) => ({ name: binding.name, prior: process.env[binding.name] }));
+  const restore = envBindings.map((binding) => ({ name: binding.name, prior: getEnv(binding.name) }));
 
   try {
     for (const binding of envBindings) {
-      process.env[binding.name] = binding.value;
+      setEnv(binding.name, binding.value);
     }
 
     Reflect.apply(entry, undefined, args);
@@ -173,9 +175,9 @@ export const caseInterpretBroker = ({
   } finally {
     for (const { name, prior } of restore) {
       if (prior === undefined) {
-        Reflect.deleteProperty(process.env, name);
+        deleteEnv(name);
       } else {
-        process.env[name] = prior;
+        setEnv(name, prior);
       }
     }
   }

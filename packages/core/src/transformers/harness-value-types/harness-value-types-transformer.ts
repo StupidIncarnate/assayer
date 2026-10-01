@@ -28,8 +28,7 @@
  */
 import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { symbolNameContract } from '@assayer/shared/contracts';
-import type { SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { TypeDescriptor } from '@assayer/shared/contracts';
 
 import { typeDescriptorTransformer } from '../type-descriptor/type-descriptor-transformer';
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
@@ -41,7 +40,7 @@ export const harnessValueTypesTransformer = ({
 }: {
   source: string;
   fileName: string;
-}): { entry: SymbolName; param: SymbolName; type: TypeDescriptor }[] => {
+}): { entry: string; param: string; type: TypeDescriptor }[] => {
   const project = new Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile(fileName, source);
 
@@ -57,7 +56,7 @@ export const harnessValueTypesTransformer = ({
     );
   });
 
-  const found: { entry: SymbolName; param: SymbolName; type: TypeDescriptor }[] = [];
+  const found: { entry: string; param: string; type: TypeDescriptor }[] = [];
 
   calls.forEach((call) => {
     const [arg] = call.getArguments();
@@ -89,7 +88,7 @@ export const harnessValueTypesTransformer = ({
         return;
       }
 
-      const entry = symbolNameContract.parse(entryProp.getName());
+      const entry = entryProp.getName();
 
       entryValue.getProperties().forEach((paramProp) => {
         // A plain value (`report: cb`) reads its initializer's type. A computed key or a spread names no
@@ -102,7 +101,7 @@ export const harnessValueTypesTransformer = ({
             return;
           }
 
-          const param = symbolNameContract.parse(paramProp.getName());
+          const param = paramProp.getName();
           const type = typeDescriptorTransformer({ fact: readHarnessValueTypeLayerTransformer({ type: initializer.getType() }) });
 
           found.push({ entry, param, type });
@@ -112,7 +111,7 @@ export const harnessValueTypesTransformer = ({
         // A shorthand (`{ report }`) and a method shorthand (`{ report(m) {...} }`) read the property
         // node's own type directly — ts-morph types either kind of node through the same checker.
         if (Node.isShorthandPropertyAssignment(paramProp) || Node.isMethodDeclaration(paramProp)) {
-          const param = symbolNameContract.parse(paramProp.getName());
+          const param = paramProp.getName();
           const type = typeDescriptorTransformer({ fact: readHarnessValueTypeLayerTransformer({ type: paramProp.getType() }) });
 
           found.push({ entry, param, type });

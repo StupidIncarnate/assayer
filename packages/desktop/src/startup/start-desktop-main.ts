@@ -7,7 +7,6 @@
  */
 
 import { DesktopMainFlow } from '../flows/desktop-main/desktop-main-flow';
-import type { RepoPath } from '../contracts/repo-path/repo-path-contract';
 
-export const StartDesktopMain = async ({ repoPath }: { repoPath: RepoPath }): Promise<void> =>
+export const StartDesktopMain = async ({ repoPath }: { repoPath: string }): Promise<void> =>
   DesktopMainFlow({ repoPath });

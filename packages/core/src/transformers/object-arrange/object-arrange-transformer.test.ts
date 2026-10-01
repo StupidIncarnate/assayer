@@ -1,4 +1,3 @@
-import { symbolNameContract } from '@assayer/shared/contracts';
 import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 import { DeclaredTypeStub } from '@assayer/shared/contracts/declared-type/declared-type.stub';
 import { PropertyDemandStub } from '@assayer/shared/contracts/property-demand/property-demand.stub';
@@ -136,7 +135,7 @@ const nestedModeLeaf = ConditionLeafStub({
   predicate: { kind: 'eq', literal: 'a' },
 });
 
-const CONFIG = symbolNameContract.parse('config');
+const CONFIG = 'config';
 
 describe('objectArrangeTransformer', () => {
   describe('an uncorrected property (derived demand, non-authoritative)', () => {
@@ -191,7 +190,7 @@ describe('objectArrangeTransformer', () => {
         declaredType: modeOnly,
         demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['a', 'dev', 'prod', 'staging'] } })],
         requirements: [{ leaf: modeLeaf, want: true }],
-        corrected: [symbolNameContract.parse('mode')],
+        corrected: ['mode'],
       });
 
       expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: 'a' }] });
@@ -203,7 +202,7 @@ describe('objectArrangeTransformer', () => {
         declaredType: modeOnly,
         demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['a', 'dev', 'prod', 'staging'] } })],
         requirements: [{ leaf: modeLeaf, want: false }],
-        corrected: [symbolNameContract.parse('mode')],
+        corrected: ['mode'],
       });
 
       expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: 'dev' }] });
@@ -217,7 +216,7 @@ describe('objectArrangeTransformer', () => {
         declaredType: modeOnly,
         demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['dev', 'prod'] } })],
         requirements: [{ leaf: modeLeaf, want: true }],
-        corrected: [symbolNameContract.parse('mode')],
+        corrected: ['mode'],
       });
 
       expect(result).toStrictEqual({ unreachable: true, unfillable: false, properties: [{ name: 'mode', value: 'dev' }] });
@@ -499,7 +498,7 @@ describe('objectArrangeTransformer', () => {
         declaredType: modeNullable,
         demands: [PropertyDemandStub({ name: 'mode', demand: { kind: 'demanded', values: ['x', null] } })],
         requirements: [{ leaf: modeNonNullishLeaf, want: false }],
-        corrected: [symbolNameContract.parse('mode')],
+        corrected: ['mode'],
       });
 
       expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'mode', value: null }] });

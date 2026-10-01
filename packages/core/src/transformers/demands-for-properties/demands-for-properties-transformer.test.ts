@@ -1,4 +1,3 @@
-import { symbolNameContract } from '@assayer/shared/contracts';
 import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 
 import { demandsForPropertiesTransformer } from './demands-for-properties-transformer';
@@ -7,7 +6,7 @@ describe('demandsForPropertiesTransformer', () => {
   describe('a one-segment path', () => {
     it("VALID: {mode: string, config.mode === 'a'} => mode demanded ['a', 'abc123']", () => {
       const result = demandsForPropertiesTransformer({
-        properties: [{ name: symbolNameContract.parse('mode'), type: { kind: 'string' } }],
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
         leaves: [
           ConditionLeafStub({
             operandPropertyPath: ['mode'],
@@ -22,7 +21,7 @@ describe('demandsForPropertiesTransformer', () => {
 
     it('EMPTY: {a property no leaf reaches} => unknown', () => {
       const result = demandsForPropertiesTransformer({
-        properties: [{ name: symbolNameContract.parse('mode'), type: { kind: 'string' } }],
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
         leaves: [],
       });
 
@@ -35,8 +34,8 @@ describe('demandsForPropertiesTransformer', () => {
       const result = demandsForPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
-            type: { kind: 'object', properties: [{ name: symbolNameContract.parse('retry'), type: { kind: 'number' } }] },
+            name: 'db',
+            type: { kind: 'object', properties: [{ name: 'retry', type: { kind: 'number' } }] },
           },
         ],
         leaves: [
@@ -57,13 +56,13 @@ describe('demandsForPropertiesTransformer', () => {
       const result = demandsForPropertiesTransformer({
         properties: [
           {
-            name: symbolNameContract.parse('db'),
+            name: 'db',
             type: {
               kind: 'object',
               properties: [
                 {
-                  name: symbolNameContract.parse('retry'),
-                  type: { kind: 'object', properties: [{ name: symbolNameContract.parse('backoff'), type: { kind: 'number' } }] },
+                  name: 'retry',
+                  type: { kind: 'object', properties: [{ name: 'backoff', type: { kind: 'number' } }] },
                 },
               ],
             },
@@ -99,7 +98,7 @@ describe('demandsForPropertiesTransformer', () => {
     // read naming a property the type does not declare.
     it("EDGE: {mode: string, path ['mode','sub']} => mode stays unknown, the path cannot continue into a scalar", () => {
       const result = demandsForPropertiesTransformer({
-        properties: [{ name: symbolNameContract.parse('mode'), type: { kind: 'string' } }],
+        properties: [{ name: 'mode', type: { kind: 'string' } }],
         leaves: [
           ConditionLeafStub({
             operandPropertyPath: ['mode', 'sub'],
@@ -117,8 +116,8 @@ describe('demandsForPropertiesTransformer', () => {
     it('VALID: {properties declared out of order} => returned sorted alphabetically', () => {
       const result = demandsForPropertiesTransformer({
         properties: [
-          { name: symbolNameContract.parse('retries'), type: { kind: 'number' } },
-          { name: symbolNameContract.parse('mode'), type: { kind: 'string' } },
+          { name: 'retries', type: { kind: 'number' } },
+          { name: 'mode', type: { kind: 'string' } },
         ],
         leaves: [],
       });

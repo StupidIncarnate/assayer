@@ -18,8 +18,8 @@
  * // Returns the config's directory, the resolved source root and the config itself; throws
  * // CliExactOutputError (from whichever layer failed) without running the later stages
  */
-import type { AssayerConfig } from '@assayer/shared/contracts';
-import type { FilePath } from '@assayer/core/contracts';
+import { precheckRunResultContract } from '../../../contracts/precheck-run-result/precheck-run-result-contract';
+import type { PrecheckRunResult } from '../../../contracts/precheck-run-result/precheck-run-result-contract';
 import { analyzerHashBroker, compileResolveRootBroker } from '@assayer/core/brokers';
 
 import { ConfigResolveLayerResponder } from './config-resolve-layer-responder';
@@ -31,7 +31,7 @@ export const PrecheckRunResponder = async ({
   repoPath,
 }: {
   repoPath: string;
-}): Promise<{ configDir: FilePath; root: FilePath; config: AssayerConfig }> => {
+}): Promise<PrecheckRunResult> => {
   const resolved = await ConfigResolveLayerResponder({ repoPath });
   const config = await StableBranchLayerResponder({
     config: resolved.config,
@@ -45,9 +45,9 @@ export const PrecheckRunResponder = async ({
 
   await CompileRunLayerResponder({ config, configDir: resolved.configDir, assayerVersion });
 
-  return {
+  return precheckRunResultContract.parse({
     configDir: resolved.configDir,
     root: compileResolveRootBroker({ repoRoot: config.repoRoot, configDir: String(resolved.configDir) }),
     config,
-  };
+  });
 };

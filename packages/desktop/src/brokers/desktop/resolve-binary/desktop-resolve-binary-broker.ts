@@ -6,17 +6,14 @@
  * desktopResolveBinaryBroker();
  * // Returns the ExecutablePath to the Electron binary
  */
-import electron from 'electron';
+import electron from '#gateway/npm/electron';
 
-import { executablePathContract } from '../../../contracts/executable-path/executable-path-contract';
-import type { ExecutablePath } from '../../../contracts/executable-path/executable-path-contract';
-
-export const desktopResolveBinaryBroker = (): ExecutablePath => {
+export const desktopResolveBinaryBroker = (): string => {
   const binaryPath: unknown = electron;
 
   if (typeof binaryPath !== 'string') {
     throw new Error('Electron binary path unavailable — not running in a Node launcher context');
   }
 
-  return executablePathContract.parse(binaryPath);
+  return binaryPath;
 };

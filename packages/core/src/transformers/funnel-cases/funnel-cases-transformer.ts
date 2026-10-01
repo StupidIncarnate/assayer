@@ -38,8 +38,10 @@
  * funnelCasesTransformer({ surface: pipeline, callbacks: [{ callback: cbA, arrayParam: 'xs' }, { callback: cbB, arrayParam: 'ys' }] });
  * // Returns { cases, unfillable } — the cartesian of each callback's empty/single/pair shapes, plus what they refused.
  */
-import { derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, CoverageId, DerivedTestCase, EntryLabel, SymbolName, TypeText } from '@assayer/shared/contracts';
+import { funnelCasesContract } from '../../contracts/funnel-cases/funnel-cases-contract';
+import type { FunnelCases } from '../../contracts/funnel-cases/funnel-cases-contract';
+import { arrangeBindingContract, derivedTestCaseContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, Coverage } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -51,13 +53,13 @@ export const funnelCasesTransformer = ({
   callbacks,
 }: {
   surface: ScopeRecord;
-  callbacks: { callback: ScopeRecord; arrayParam: SymbolName; label?: EntryLabel | undefined }[];
-}): { cases: DerivedTestCase[]; unfillable: { param: SymbolName; type: TypeText; owner: EntryLabel }[] } => {
+  callbacks: { callback: ScopeRecord; arrayParam: string; label?: string | undefined }[];
+}): FunnelCases => {
   // The surface is branchless with a single exit (the caller gates on that); its one exit is the tail
   // every funnel path returns through.
   const surfaceExit = surface.exits[0]?.coverageId;
   if (surfaceExit === undefined || callbacks.length === 0) {
-    return { cases: [], unfillable: [] };
+    return funnelCasesContract.parse({ cases: [], unfillable: [] });
   }
 
   // The callbacks fire in source order — each `const scaled = xs.map(…)` evaluates top-to-bottom, so the
@@ -77,7 +79,7 @@ export const funnelCasesTransformer = ({
     throughCallbackCasesTransformer({ callback, entry: surface, arrayParam, ...(label === undefined ? {} : { label }) }),
   );
 
-  const contributionLists: { arrayParam: SymbolName; value: ArrangeValue[]; subPath: CoverageId[] }[][] = ordered.map(
+  const contributionLists: { arrayParam: string; value: ArrangeValue[]; subPath: Coverage['id'][] }[][] = ordered.map(
     ({ arrayParam }, callbackIndex) => {
       // The callback's own per-element cases — each lays ONE steered element into the array param and
       // predicts the single callback exit that element reaches.
@@ -85,7 +87,7 @@ export const funnelCasesTransformer = ({
 
       // The steered element list each per-element case laid into the array param — a one-element list.
       const steered = perElement.map((testCase): ArrangeValue[] => {
-        const binding = testCase.arrange.find((entry) => entry.kind === 'array' && String(entry.param) === String(arrayParam));
+        const binding = testCase.arrange.find((entry) => entry.kind === 'array' && String(entry.param) === arrayParam);
         return binding !== undefined && binding.kind === 'array' ? binding.value : [];
       });
 
@@ -119,7 +121,7 @@ export const funnelCasesTransformer = ({
   // that callback's own funnel; for N it is every combination of the callbacks' array shapes, because the
   // callbacks fire over INDEPENDENT arrays and every pairing is a distinct input to the surface. The seed
   // carries the empty combination so the reduce folds each callback's list onto it in order.
-  const seed: { arrayParam: SymbolName; value: ArrangeValue[]; subPath: CoverageId[] }[][] = [[]];
+  const seed: { arrayParam: string; value: ArrangeValue[]; subPath: Coverage['id'][] }[][] = [[]];
   const combinations = contributionLists.reduce(
     (acc, list) => acc.flatMap((combo) => list.map((item) => [...combo, item])),
     seed,
@@ -130,7 +132,7 @@ export const funnelCasesTransformer = ({
     // through the shared fill seam so the surface stays callable — a sibling ARRAY param takes a real
     // array, not a scalar that throws — and a param the seam REFUSES drops the case, since a surface
     // that cannot be called derives nothing rather than something built on a placeholder.
-    const valueByParam = new Map(combo.map((contribution) => [String(contribution.arrayParam), contribution.value] as const));
+    const valueByParam = new Map(combo.map((contribution) => [contribution.arrayParam, contribution.value] as const));
 
     const arrange = surfaceParams.flatMap((param): ArrangeBinding[] => {
       const value = valueByParam.get(String(param.name));
@@ -138,7 +140,9 @@ export const funnelCasesTransformer = ({
       // A REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
       // positional slots the funnel steers instead of handing it over as one argument.
       if (value !== undefined) {
-        return [{ kind: 'array', param: param.name, value, ...(param.rest === true ? { rest: true } : {}) }];
+        return [
+          arrangeBindingContract.parse({ kind: 'array', param: param.name, value, ...(param.rest === true ? { rest: true } : {}) }),
+        ];
       }
 
       const fill = fillParamTransformer({ param });
@@ -160,5 +164,5 @@ export const funnelCasesTransformer = ({
       : [];
   });
 
-  return { cases, unfillable: built.flatMap((entry) => entry.unfillable) };
+  return funnelCasesContract.parse({ cases, unfillable: built.flatMap((entry) => entry.unfillable) });
 };

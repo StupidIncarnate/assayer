@@ -27,38 +27,35 @@ import { dirname, join as joinPath } from '#gateway/node/path';
 import { Node, Project } from '#gateway/npm/ts-morph';
 
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
-import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ExternalSignature, TypeDescriptor } from '@assayer/shared/contracts';
 
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { readGlobalTypeLayerBroker } from './read-global-type-layer-broker';
 
 type GlobalReference =
-  | { kind: 'global'; name: SymbolName; member?: SymbolName; called: boolean }
-  | { kind: 'builtin'; specifier: ModuleSpecifier; importedName: SymbolName; called: boolean };
+  | { kind: 'global'; name: string; member?: string; called: boolean }
+  | { kind: 'builtin'; specifier: string; importedName: string; called: boolean };
 
 // `declText` is the FULL TEXT of the `.d.ts` the type was declared in — carried out of ts-morph (which
 // holds it in memory even for the standard `lib.*.d.ts`, whose on-disk path is a virtual one no fs read
 // can open), so the cache can key on the resolving declaration's bytes without touching the filesystem.
 type GlobalSignatureResult =
-  | { usable: true; result: 'signature'; signature: ExternalSignature; declText: FileContents }
-  | { usable: true; result: 'type'; type: TypeDescriptor; declText: FileContents }
+  | { usable: true; result: 'signature'; signature: ExternalSignature; declText: string }
+  | { usable: true; result: 'type'; type: TypeDescriptor; declText: string }
   | { usable: false };
 
-const globalProjectByConfig = new Map<FilePath, Project>();
+const globalProjectByConfig = new Map<string, Project>();
 const PROBE_PATH = '__assayer_global_probe__.ts';
 
 export const externalSignatureReadGlobalDeclarationBroker = ({
   tsConfigFilePath,
   reference,
 }: {
-  tsConfigFilePath: FilePath;
+  tsConfigFilePath: string;
   reference: GlobalReference;
 }): GlobalSignatureResult => {
   const existing = globalProjectByConfig.get(tsConfigFilePath);
-  const project = existing ?? new Project({ tsConfigFilePath: String(tsConfigFilePath), skipAddingFilesFromTsConfig: true });
+  const project = existing ?? new Project({ tsConfigFilePath, skipAddingFilesFromTsConfig: true });
   if (existing === undefined) {
     globalProjectByConfig.set(tsConfigFilePath, project);
   }
@@ -67,16 +64,16 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
   // reduce to reading the type of the LAST statement's expression in a throwaway probe source.
   const probeSource =
     reference.kind === 'builtin'
-      ? `import { ${String(reference.importedName)} } from '${String(reference.specifier)}';\n${String(reference.importedName)};\n`
+      ? `import { ${reference.importedName} } from '${reference.specifier}';\n${reference.importedName};\n`
       : reference.member === undefined
-        ? `${String(reference.name)};\n`
-        : `${String(reference.name)}.${String(reference.member)};\n`;
+        ? `${reference.name};\n`
+        : `${reference.name}.${reference.member};\n`;
 
   const {called} = reference;
 
   // The probe sits next to the tsconfig so the project's `@types` resolution (rooted at the tsconfig
   // dir) sees `@types/node`, exactly as a real source file would.
-  const probePath = joinPath(dirname(String(tsConfigFilePath)), PROBE_PATH);
+  const probePath = joinPath(dirname(tsConfigFilePath), PROBE_PATH);
   const probe = project.createSourceFile(probePath, probeSource, { overwrite: true });
   const statement = probe.getStatements().at(-1);
 
@@ -128,7 +125,7 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
       usable: true,
       result: 'signature',
       signature: externalSignatureContract.parse({ params, returnType }),
-      declText: fileContentsContract.parse(declFile.getFullText()),
+      declText: declFile.getFullText(),
     };
   }
 
@@ -155,6 +152,6 @@ export const externalSignatureReadGlobalDeclarationBroker = ({
     usable: true,
     result: 'type',
     type: typeDescriptorTransformer({ fact: readGlobalTypeLayerBroker({ type: expression.getType(), typeNode: memberTypeNode }) }),
-    declText: fileContentsContract.parse(rootDeclaration.getSourceFile().getFullText()),
+    declText: rootDeclaration.getSourceFile().getFullText(),
   };
 };

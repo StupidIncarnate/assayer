@@ -8,8 +8,6 @@
  * normalizeSourceTextTransformer({ text: 'name.length ===\n  0' });
  * // Returns 'name.length === 0' (branded NormalizedSource)
  */
-import { normalizedSourceContract } from '../../contracts/normalized-source/normalized-source-contract';
-import type { NormalizedSource } from '../../contracts/normalized-source/normalized-source-contract';
 
-export const normalizeSourceTextTransformer = ({ text }: { text: string }): NormalizedSource =>
-  normalizedSourceContract.parse(text.replace(/\s+/gu, ' ').trim());
+export const normalizeSourceTextTransformer = ({ text }: { text: string }): string =>
+  text.replace(/\s+/gu, ' ').trim();

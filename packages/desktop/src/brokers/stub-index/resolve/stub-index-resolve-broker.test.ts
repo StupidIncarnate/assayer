@@ -4,7 +4,6 @@ import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stu
 
 import { stubIndexResolveBroker } from './stub-index-resolve-broker';
 import { stubIndexResolveBrokerProxy } from './stub-index-resolve-broker.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 describe('stubIndexResolveBroker', () => {
   it('VALID: {stub index on disk, no overlay} => returns the derived stubs as the merged StubView', async () => {
@@ -17,7 +16,7 @@ describe('stubIndexResolveBroker', () => {
       index,
     });
 
-    const result = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+    const result = await stubIndexResolveBroker({ repoPath: '/repo' });
 
     expect(result).toStrictEqual({ objectStubs: [ObjectStubStub()], envStubs: [] });
   });
@@ -37,7 +36,7 @@ describe('stubIndexResolveBroker', () => {
       properties: { mode: ['dev', 'prod', 'staging'] },
     });
 
-    const result = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+    const result = await stubIndexResolveBroker({ repoPath: '/repo' });
 
     expect(result).toStrictEqual({
       objectStubs: [
@@ -51,7 +50,7 @@ describe('stubIndexResolveBroker', () => {
     const proxy = stubIndexResolveBrokerProxy();
     proxy.setupMissingManifest({ repoPath: '/repo' });
 
-    const result = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+    const result = await stubIndexResolveBroker({ repoPath: '/repo' });
 
     expect(result).toStrictEqual({ objectStubs: [], envStubs: [] });
   });
@@ -64,7 +63,7 @@ describe('stubIndexResolveBroker', () => {
       manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
     });
 
-    const result = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+    const result = await stubIndexResolveBroker({ repoPath: '/repo' });
 
     expect(result).toStrictEqual({ objectStubs: [], envStubs: [] });
   });

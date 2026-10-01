@@ -160,7 +160,7 @@ describe('handleExitLayerTransformer', () => {
       const result = handleExitLayerTransformer({ node, context: UNGUARDED_CONTEXT });
 
       expect({
-        branchKinds: result.branches.map((branch) => String(branch.kind)),
+        branchKinds: result.branches.map((branch) => branch.kind),
         nodes: result.nodes.map((walkNode) => ({ kind: String(walkNode.kind), handled: walkNode.handled })),
       }).toStrictEqual({
         branchKinds: ['ternary'],

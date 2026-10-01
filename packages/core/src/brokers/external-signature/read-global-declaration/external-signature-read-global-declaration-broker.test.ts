@@ -1,11 +1,7 @@
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
+import { ensureDirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { ModuleSpecifierStub } from '@assayer/shared/contracts/module-specifier/module-specifier.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
-
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadGlobalDeclarationBroker } from './external-signature-read-global-declaration-broker';
 import { externalSignatureReadGlobalDeclarationBrokerProxy } from './external-signature-read-global-declaration-broker.proxy';
 
@@ -21,13 +17,13 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
       writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'cwd' }), called: true },
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
+        reference: { kind: 'global', name: 'process', member: 'cwd', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -45,13 +41,13 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
       writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'env' }), called: false },
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
+        reference: { kind: 'global', name: 'process', member: 'env', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -71,13 +67,13 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
       writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'hrtime' }), called: true },
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
+        reference: { kind: 'global', name: 'process', member: 'hrtime', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -98,13 +94,13 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
       writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'process' }), member: SymbolNameStub({ value: 'release' }), called: false },
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
+        reference: { kind: 'global', name: 'process', member: 'release', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -122,13 +118,13 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
       writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: SymbolNameStub({ value: 'join' }), called: true },
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
+        reference: { kind: 'builtin', specifier: 'node:path', importedName: 'join', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -149,13 +145,13 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
       writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'builtin', specifier: ModuleSpecifierStub({ value: 'node:path' }), importedName: SymbolNameStub({ value: 'sep' }), called: false },
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
+        reference: { kind: 'builtin', specifier: 'node:path', importedName: 'sep', called: false },
       });
       rmSync(dir, { recursive: true, force: true });
 
@@ -173,13 +169,13 @@ describe('externalSignatureReadGlobalDeclarationBroker', () => {
       externalSignatureReadGlobalDeclarationBrokerProxy();
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-global-')));
       writeFileSync(join(dir, 'tsconfig.json'), TSCONFIG);
-      mkdirSync(join(dir, 'node_modules', '@types', 'node'), { recursive: true });
+      ensureDirSync(join(dir, 'node_modules', '@types', 'node'));
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'package.json'), '{ "name": "@types/node", "version": "1.0.0", "types": "index.d.ts" }');
       writeFileSync(join(dir, 'node_modules', '@types', 'node', 'index.d.ts'), NODE_TYPES);
 
       const result = externalSignatureReadGlobalDeclarationBroker({
-        tsConfigFilePath: FilePathStub({ value: join(dir, 'tsconfig.json') }),
-        reference: { kind: 'global', name: SymbolNameStub({ value: 'zzzNoSuchGlobal' }), member: SymbolNameStub({ value: 'foo' }), called: true },
+        tsConfigFilePath: join(dir, 'tsconfig.json'),
+        reference: { kind: 'global', name: 'zzzNoSuchGlobal', member: 'foo', called: true },
       });
       rmSync(dir, { recursive: true, force: true });
 

@@ -1,6 +1,5 @@
 import { cacheLoadBlobBroker } from './cache-load-blob-broker';
 import { cacheLoadBlobBrokerProxy } from './cache-load-blob-broker.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 
 describe('cacheLoadBlobBroker', () => {
@@ -11,7 +10,7 @@ describe('cacheLoadBlobBroker', () => {
       proxy.resolves({ repoPath: '/repo', contentHash: 'abc123', blob });
 
       const result = await cacheLoadBlobBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
+        repoPath: '/repo',
         contentHash: 'abc123',
       });
 
@@ -26,7 +25,7 @@ describe('cacheLoadBlobBroker', () => {
 
       await expect(
         cacheLoadBlobBroker({
-          repoPath: RepoPathStub({ value: '/repo' }),
+          repoPath: '/repo',
           contentHash: 'abc123',
         }),
       ).rejects.toThrow(/ENOENT/u);

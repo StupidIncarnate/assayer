@@ -45,8 +45,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
-import type { SymbolName, TemplateText } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../../contracts/type-fact/type-fact-contract';
 
@@ -57,9 +56,9 @@ export const readSignatureTypeLayerBroker = ({
 }: {
   type: Type;
   typeNode?: TypeNode | undefined;
-  seen?: ReadonlySet<SymbolName>;
+  seen?: ReadonlySet<string>;
 }): TypeFact => {
-  const onPath = seen ?? new Set<SymbolName>();
+  const onPath = seen ?? new Set<string>();
 
   if (type.isString()) {
     return { flavor: 'string' };
@@ -86,7 +85,7 @@ export const readSignatureTypeLayerBroker = ({
     return {
       flavor: 'union',
       members: type.getUnionTypes().map((member) => readSignatureTypeLayerBroker({ type: member, seen: onPath })),
-      text: typeTextContract.parse(type.getText()),
+      text: type.getText(),
     };
   }
   // A template literal type whose every substitution is a closed set of literals already collapsed into
@@ -94,7 +93,7 @@ export const readSignatureTypeLayerBroker = ({
   // reaches here needs its own type node to read: the union recursion above does not thread one per
   // member, so a template literal type reached that way stays opaque instead of guessing at its structure.
   if (type.isTemplateLiteral() && typeNode !== undefined && Node.isTemplateLiteralTypeNode(typeNode)) {
-    const spans = typeNode.getTemplateSpans().map((span): { text: TemplateText; fact: TypeFact } => {
+    const spans = typeNode.getTemplateSpans().map((span): { text: string; fact: TypeFact } => {
       const [substitutionNode, literalNode] = span.getChildren();
       // The literal segment AFTER this substitution — the checker's own cooked text, read off the
       // TemplateMiddle/TemplateTail node the same way `getLiteralValue()` reads an ordinary literal's
@@ -106,10 +105,10 @@ export const readSignatureTypeLayerBroker = ({
       // literal) — `getChildren()`'s array type just cannot say so. The opaque fallback below is
       // unreached in practice; it exists only so this stays total if that ever stopped holding.
       return {
-        text: templateTextContract.parse(text),
+        text,
         fact:
           substitutionNode === undefined
-            ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+            ? { flavor: 'other', text: 'unknown' }
             : readSignatureTypeLayerBroker({
                 type: substitutionNode.getType(),
                 ...(Node.isTypeNode(substitutionNode) ? { typeNode: substitutionNode } : {}),
@@ -122,7 +121,7 @@ export const readSignatureTypeLayerBroker = ({
       flavor: 'template',
       // The head segment (before the first substitution) plus each span's trailing segment, in source
       // order — always one more text than there are substitutions, even when a segment is empty.
-      texts: [templateTextContract.parse(typeNode.getHead().getLiteralText()), ...spans.map((span) => span.text)],
+      texts: [typeNode.getHead().getLiteralText(), ...spans.map((span) => span.text)],
       types: spans.map((span) => span.fact),
     };
   }
@@ -173,7 +172,7 @@ export const readSignatureTypeLayerBroker = ({
   // property list, indistinguishable from an empty interface, and a METHOD comes back as an object
   // named after itself, which then keys a stub on a type that does not exist.
   if (type.getCallSignatures().length > 0) {
-    return { flavor: 'callable', text: typeTextContract.parse(type.getText()) };
+    return { flavor: 'callable', text: type.getText() };
   }
   // An INTERSECTION reads through this SAME branch as a plain object — see the PURPOSE doc for why
   // `getProperties()`/`getSymbol()`/`getAliasSymbol()` already answer correctly with no merge logic of
@@ -187,7 +186,7 @@ export const readSignatureTypeLayerBroker = ({
     const rawName = type.getSymbol()?.getName();
     const aliasName = type.getAliasSymbol()?.getName();
     const declaredName = rawName === undefined || rawName === '__type' ? aliasName : rawName;
-    const typeName = declaredName === undefined ? undefined : symbolNameContract.parse(declaredName);
+    const typeName = declaredName === undefined ? undefined : declaredName;
 
     // MARKED, because only the reader knows the empty property list is where it stopped rather than
     // what the type declares.
@@ -199,7 +198,7 @@ export const readSignatureTypeLayerBroker = ({
     const location = type.getSymbol()?.getDeclarations()[0];
     const properties = type
       .getProperties()
-      .map((symbol): { name: SymbolName; fact: TypeFact; optional?: boolean } => {
+      .map((symbol): { name: string; fact: TypeFact; optional?: boolean } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
         // A property with no declaration at all, and no owning type symbol to fall back to either,
         // has nowhere for the reader to look up a type. `unknown` is the honest answer, not a fallback
@@ -216,10 +215,10 @@ export const readSignatureTypeLayerBroker = ({
         const propertyNode = propertyDeclaration?.getTypeNode();
 
         return {
-          name: symbolNameContract.parse(symbol.getName()),
+          name: symbol.getName(),
           fact:
             declaration === undefined
-              ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+              ? { flavor: 'other', text: 'unknown' }
               : readSignatureTypeLayerBroker({
                   type: symbol.getTypeAtLocation(declaration),
                   ...(propertyNode === undefined ? {} : { typeNode: propertyNode }),
@@ -228,9 +227,9 @@ export const readSignatureTypeLayerBroker = ({
           ...(optional ? { optional: true } : {}),
         };
       })
-      .sort((a, b) => (String(a.name) < String(b.name) ? -1 : String(a.name) > String(b.name) ? 1 : 0));
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
     return { flavor: 'object', ...(typeName === undefined ? {} : { typeName }), properties };
   }
-  return { flavor: 'other', text: typeTextContract.parse(type.getText()) };
+  return { flavor: 'other', text: type.getText() };
 };

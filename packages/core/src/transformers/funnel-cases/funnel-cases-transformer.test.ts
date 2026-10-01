@@ -1,4 +1,3 @@
-import { entryLabelContract, symbolNameContract } from '@assayer/shared/contracts';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
@@ -49,7 +48,7 @@ describe('funnelCasesTransformer', () => {
     });
 
     it('VALID: {items.map((n) => …)} => empty, one per distinguished element, and the arm-crossing pair, each pathing through the surface exit', () => {
-      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
+      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: 'items' }] });
 
       expect(result).toStrictEqual({
         cases: [
@@ -85,7 +84,7 @@ describe('funnelCasesTransformer', () => {
     it('VALID: {items.map((n) => …)} => every funnelled binding is marked rest: true', () => {
       const result = funnelCasesTransformer({
         surface: REST_SURFACE,
-        callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }],
+        callbacks: [{ callback: CALLBACK, arrayParam: 'items' }],
       });
 
       expect(result).toStrictEqual({
@@ -146,8 +145,8 @@ describe('funnelCasesTransformer', () => {
         callbacks: [
           {
             callback: SINK_CALLBACK,
-            arrayParam: symbolNameContract.parse('items'),
-            label: entryLabelContract.parse('run › items.map((sink) => …) L2'),
+            arrayParam: 'items',
+            label: 'run › items.map((sink) => …) L2',
           },
         ],
       });
@@ -163,7 +162,7 @@ describe('funnelCasesTransformer', () => {
     it('VALID: {an unlabelled callback} => the refusal is tagged with the callback`s own name', () => {
       const result = funnelCasesTransformer({
         surface: SURFACE,
-        callbacks: [{ callback: SINK_CALLBACK, arrayParam: symbolNameContract.parse('items') }],
+        callbacks: [{ callback: SINK_CALLBACK, arrayParam: 'items' }],
       });
 
       expect(result).toStrictEqual({
@@ -191,7 +190,7 @@ describe('funnelCasesTransformer', () => {
     });
 
     it('VALID: {surface also takes factor} => factor is filled representatively in every funnel case, in surface param order', () => {
-      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
+      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: 'items' }] });
 
       expect(result).toStrictEqual({
         cases: [
@@ -252,7 +251,7 @@ describe('funnelCasesTransformer', () => {
     });
 
     it('VALID: {surface also takes an unfillable sink} => every combination drops, no case and no refusal reported here', () => {
-      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
+      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: 'items' }] });
 
       expect(result).toStrictEqual({ cases: [], unfillable: [] });
     });
@@ -271,7 +270,7 @@ describe('funnelCasesTransformer', () => {
     });
 
     it('EMPTY: {surface has no exits} => no funnel cases', () => {
-      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: symbolNameContract.parse('items') }] });
+      const result = funnelCasesTransformer({ surface: SURFACE, callbacks: [{ callback: CALLBACK, arrayParam: 'items' }] });
 
       expect(result).toStrictEqual({ cases: [], unfillable: [] });
     });
@@ -337,8 +336,8 @@ describe('funnelCasesTransformer', () => {
       const result = funnelCasesTransformer({
         surface: SURFACE,
         callbacks: [
-          { callback: CALLBACK, arrayParam: symbolNameContract.parse('items') },
-          { callback: CALLBACK_B, arrayParam: symbolNameContract.parse('others') },
+          { callback: CALLBACK, arrayParam: 'items' },
+          { callback: CALLBACK_B, arrayParam: 'others' },
         ],
       });
 

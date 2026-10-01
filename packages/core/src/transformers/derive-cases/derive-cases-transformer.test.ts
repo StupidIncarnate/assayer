@@ -1,4 +1,3 @@
-import { symbolNameContract } from '@assayer/shared/contracts';
 import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
@@ -1189,7 +1188,7 @@ describe('deriveCasesTransformer', () => {
         branches: [BranchNodeStub()],
         exits: [ExitNodeStub()],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('formatGreeting'), params: [symbolNameContract.parse('report')] },
+        harness: { entry: 'formatGreeting', params: ['report'] },
       });
 
       expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
@@ -1243,7 +1242,7 @@ describe('deriveCasesTransformer', () => {
         branches: [],
         exits: [ExitNodeStub({ coverageId: 'collect/return@top', guardPath: [], line: 1 })],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('collect'), params: [symbolNameContract.parse('sinks')] },
+        harness: { entry: 'collect', params: ['sinks'] },
       });
 
       expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({

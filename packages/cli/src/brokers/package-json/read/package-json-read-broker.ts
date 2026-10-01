@@ -8,12 +8,10 @@
 import { readFile } from '#gateway/node/fs__promises';
 import { join } from '#gateway/node/path';
 import { z } from '#gateway/npm/zod';
-import { assayerVersionContract } from '../../../contracts/assayer-version/assayer-version-contract';
-import type { AssayerVersion } from '../../../contracts/assayer-version/assayer-version-contract';
 
-const packageJsonVersionFieldContract = z.object({ version: assayerVersionContract });
+const packageJsonVersionFieldContract = z.object({ version: z.string().min(1).brand<'PackageJsonVersionFieldVersion'>() });
 
-export const packageJsonReadBroker = async (): Promise<AssayerVersion> => {
+export const packageJsonReadBroker = async (): Promise<string> => {
   const packageJsonPath = join(__dirname, '../../../../package.json');
   const contents = await readFile(packageJsonPath);
   const { version } = packageJsonVersionFieldContract.parse(JSON.parse(contents));

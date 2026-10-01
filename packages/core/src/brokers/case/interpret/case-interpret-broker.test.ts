@@ -4,7 +4,8 @@ import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case
 import { ProbeRuntimeStub } from '../../../contracts/probe-runtime/probe-runtime.stub';
 import { caseInterpretBroker } from './case-interpret-broker';
 import { caseInterpretBrokerProxy } from './case-interpret-broker.proxy';
-import { getEnv } from '#gateway/node/process';
+import { deleteEnv, getEnv, setEnv } from '#gateway/node/process';
+import { HarnessDeclarationStub } from '../../../contracts/harness-declaration/harness-declaration.stub';
 
 const THEN = CoverageIdStub({ value: 'grade/return@then' });
 const ELSE = CoverageIdStub({ value: 'grade/return@else' });
@@ -231,7 +232,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: { grade: { report: 'the-declared-value' } } }],
+        harness: [HarnessDeclarationStub({ inputs: { grade: { report: 'the-declared-value' } } })],
       });
 
       expect(result).toStrictEqual({
@@ -264,7 +265,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: { collect: { sinks: ['sink-a', 'sink-b'] } } }],
+        harness: [HarnessDeclarationStub({ inputs: { collect: { sinks: ['sink-a', 'sink-b'] } } })],
       });
 
       expect(result).toStrictEqual({
@@ -292,7 +293,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: { grade: { emit: 'the-other-value' } } }],
+        harness: [HarnessDeclarationStub({ inputs: { grade: { emit: 'the-other-value' } } })],
       });
 
       expect(result).toStrictEqual({
@@ -356,7 +357,7 @@ describe('caseInterpretBroker', () => {
         exitIds: [THEN, ELSE],
         testCase,
         probe,
-        harness: [{ inputs: {} }],
+        harness: [HarnessDeclarationStub({ inputs: {} })],
       });
 
       expect(result).toStrictEqual({
@@ -379,7 +380,7 @@ describe('caseInterpretBroker', () => {
     it('VALID: {an env binding, no prior value} => visible to the entry, then restored to absent', () => {
       caseInterpretBrokerProxy();
       const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_ABSENT';
-      Reflect.deleteProperty(process.env, NAME);
+      deleteEnv(NAME);
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
@@ -404,7 +405,7 @@ describe('caseInterpretBroker', () => {
     it('VALID: {an env binding, a prior value} => visible to the entry, then restored to the prior value', () => {
       caseInterpretBrokerProxy();
       const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_PRIOR';
-      process.env[NAME] = 'prior-value';
+      setEnv(NAME, 'prior-value');
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
@@ -416,7 +417,7 @@ describe('caseInterpretBroker', () => {
         probe,
       });
       const restoredValue = getEnv(NAME);
-      Reflect.deleteProperty(process.env, NAME);
+      deleteEnv(NAME);
 
       expect(result).toStrictEqual({
         entryName: 'grade',
@@ -433,7 +434,7 @@ describe('caseInterpretBroker', () => {
     it('ERROR: {the entry throws with an env binding set} => still restored to the prior value', () => {
       caseInterpretBrokerProxy();
       const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_THROW';
-      process.env[NAME] = 'prior-value';
+      setEnv(NAME, 'prior-value');
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
@@ -447,7 +448,7 @@ describe('caseInterpretBroker', () => {
         probe,
       });
       const restoredValue = getEnv(NAME);
-      Reflect.deleteProperty(process.env, NAME);
+      deleteEnv(NAME);
 
       expect(result).toStrictEqual({
         entryName: 'grade',

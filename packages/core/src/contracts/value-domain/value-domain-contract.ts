@@ -47,17 +47,17 @@ import { z } from '#gateway/npm/zod';
 import { representativeValueContract } from '@assayer/shared/contracts';
 
 export const valueDomainContract = z.object({
-  min: z.number().brand<'DomainBound'>().optional(),
+  min: z.number().brand<'ValueDomainMin'>().optional(),
   minExclusive: z.boolean().default(false),
-  max: z.number().brand<'DomainBound'>().optional(),
+  max: z.number().brand<'ValueDomainMax'>().optional(),
   maxExclusive: z.boolean().default(false),
-  lengthMin: z.number().brand<'LengthBound'>().optional(),
+  lengthMin: z.number().brand<'ValueDomainLengthMin'>().optional(),
   lengthMinExclusive: z.boolean().default(false),
-  lengthMax: z.number().brand<'LengthBound'>().optional(),
+  lengthMax: z.number().brand<'ValueDomainLengthMax'>().optional(),
   lengthMaxExclusive: z.boolean().default(false),
-  lengthExcluded: z.array(z.number().brand<'LengthBound'>()).default([]),
+  lengthExcluded: z.array(z.number().brand<'ValueDomainLengthExcluded'>()).default([]),
   members: z.array(representativeValueContract).optional(),
   excluded: z.array(representativeValueContract).default([]),
-});
+}).brand<'ValueDomain'>();
 
 export type ValueDomain = z.infer<typeof valueDomainContract>;

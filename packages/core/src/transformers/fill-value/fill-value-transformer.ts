@@ -75,7 +75,7 @@ export const fillValueTransformer = ({ type }: { type: TypeDescriptor }): Arrang
     const entries = owed.flatMap((property) => {
       const value = fillValueTransformer({ type: property.type });
 
-      return value === undefined ? [] : [[String(property.name), value] as const];
+      return value === undefined ? [] : [[property.name, value] as const];
     });
 
     // One unfillable required property refuses the whole object, which is what `is-type-fillable`

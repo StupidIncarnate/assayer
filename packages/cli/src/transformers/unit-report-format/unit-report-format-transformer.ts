@@ -38,19 +38,17 @@
  */
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
-import { cliOutputContract } from '../../contracts/cli-output/cli-output-contract';
-import type { CliOutput } from '../../contracts/cli-output/cli-output-contract';
 import type { RunResult } from '@assayer/shared/contracts';
 import { darkSpotLineFormatTransformer } from '../dark-spot-line-format/dark-spot-line-format-transformer';
 import { gapLineFormatTransformer } from '../gap-line-format/gap-line-format-transformer';
 import { lintLineFormatTransformer } from '../lint-line-format/lint-line-format-transformer';
 import { undrivenLineFormatTransformer } from '../undriven-line-format/undriven-line-format-transformer';
 
-export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult[] }): CliOutput => {
+export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult[] }): string => {
   const lines = runs.flatMap((run) => {
     // Everything that did not pass, in case order — an ERROR and a FAIL are equally unresolved, and
     // interleaving them by outcome would scramble the order the cases were derived in.
-    const unresolved = run.cases.filter((testCase) => String(testCase.status) !== 'passed');
+    const unresolved = run.cases.filter((testCase) => testCase.status !== 'passed');
     const header = `${String(run.relPath)}  ${run.cases.length - unresolved.length}/${run.cases.length} passed`;
 
     const failed = unresolved.map((testCase) => {
@@ -59,7 +57,7 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
       // An errored case never reached an exit, so it has no predicted-versus-observed pair to show;
       // printing one would invite a comparison against a run that produced no observation at all. Its
       // message IS the finding, and it names the arrange the reader has to fix.
-      return String(testCase.status) === 'errored'
+      return testCase.status === 'errored'
         ? [`  ERROR ${String(testCase.entryName)}(${args})`, `    ${String(testCase.message ?? 'no verdict was produced')}`].join('\n')
         : [
             `  FAIL ${String(testCase.entryName)}(${args})`,
@@ -79,5 +77,5 @@ export const unitReportFormatTransformer = ({ runs }: { runs: readonly RunResult
     return [header, ...failed, ...gaps, ...darkSpots, ...undriven, ...lints, ...link];
   });
 
-  return cliOutputContract.parse(lines.join('\n'));
+  return lines.join('\n');
 };

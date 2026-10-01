@@ -1,3 +1,4 @@
+import { ErrorStub } from '#gateway/browser/Error/error.stub';
 import { screen } from '#gateway/npm/testing-library__react';
 import userEvent from '#gateway/npm/testing-library__user-event';
 import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
@@ -14,7 +15,6 @@ import { RawBlobViewerWidgetProxy } from '../raw-blob-viewer/raw-blob-viewer-wid
 import { RunConsoleWidgetProxy } from '../run-console/run-console-widget.proxy';
 import type { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import type { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
-import type { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 import { console } from '#gateway/browser/console';
 
 export const SurfaceExplorerWidgetProxy = (): {
@@ -23,7 +23,7 @@ export const SurfaceExplorerWidgetProxy = (): {
   setupFile: (params: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }) => void;
   failFile: () => void;
   failRun: (params: { message: string }) => void;
-  setupSavedConsole: (params: { console: ReturnType<typeof RunConsoleStub> }) => void;
+  setupSavedConsole: (params: { console: string }) => void;
   clickFile: (params: { label: string }) => Promise<void>;
   clickRun: () => Promise<void>;
   hideRunConsole: () => Promise<void>;
@@ -58,7 +58,7 @@ export const SurfaceExplorerWidgetProxy = (): {
     // Takes the message a real resolver would raise, so the test can assert the widget prints THAT
     // sentence rather than one the widget composed.
     failTree: ({ message }: { message: string }): void => {
-      treeProxy.rejects({ error: new Error(message) });
+      treeProxy.rejects({ error: ErrorStub({ message }) });
     },
     setupFile: ({ relPath, fileView }: { relPath: string; fileView: ReturnType<typeof CompiledFileViewStub> }): void => {
       fileProxy.setupFile({ relPath, fileView });
@@ -69,7 +69,7 @@ export const SurfaceExplorerWidgetProxy = (): {
     failRun: ({ message }: { message: string }): void => {
       runProxy.runFails({ message });
     },
-    setupSavedConsole: ({ console: consoleText }: { console: ReturnType<typeof RunConsoleStub> }): void => {
+    setupSavedConsole: ({ console: consoleText }: { console: string }): void => {
       runProxy.setupSavedConsole({ console: consoleText });
     },
     clickFile: async ({ label }: { label: string }): Promise<void> => {

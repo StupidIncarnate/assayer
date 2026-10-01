@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { CodeViewerWidget } from './code-viewer-widget';
 import { CodeViewerWidgetProxy } from './code-viewer-widget.proxy';
 import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
@@ -75,7 +76,7 @@ describe('CodeViewerWidget', () => {
         ],
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const gutterElementTexts = Array.from(
         document.querySelectorAll('.cm-lineNumbers .cm-gutterElement'),
@@ -90,9 +91,7 @@ describe('CodeViewerWidget', () => {
         displayLines: [{ n: 1, text: 'export const foo = 1;', hash: STUB_HASH }],
       });
 
-      const { getByRole } = themedRenderMiddleware({
-        ui: <CodeViewerWidget fileView={fileView} />,
-      });
+      const { getByRole } = render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const editor = getByRole('textbox');
       const highlightedTokens = editor.querySelectorAll('.cm-line span');
@@ -106,9 +105,7 @@ describe('CodeViewerWidget', () => {
         displayLines: [{ n: 1, text: 'const cached = true;', hash: STUB_HASH }],
       });
 
-      const { getByRole } = themedRenderMiddleware({
-        ui: <CodeViewerWidget fileView={fileView} />,
-      });
+      const { getByRole } = render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(getByRole('textbox').textContent).toBe('const cached = true;');
     });
@@ -124,7 +121,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const shaded = Array.from(document.querySelectorAll('.cm-dark-spot')).map((element) => element.textContent);
 
@@ -139,7 +136,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const icons = Array.from(document.querySelectorAll('[data-testid="DARK_SPOT_ICON"]')).map((element) => ({
         text: element.textContent,
@@ -162,7 +159,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [] }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-dark-spot'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="DARK_SPOT_ICON"]'))).toStrictEqual([]);
@@ -174,7 +171,7 @@ describe('CodeViewerWidget', () => {
       CodeViewerWidgetProxy();
       const fileView = CompiledFileViewStub({ displayLines: LOOP_DISPLAY_LINES });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-dark-spot'))).toStrictEqual([]);
     });
@@ -193,7 +190,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const counts = Array.from(document.querySelectorAll('.cm-test-counts .cm-gutterElement')).map(
         (element) => element.textContent,
@@ -211,7 +208,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [NESTED_UNDRIVEN] }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const shaded = Array.from(document.querySelectorAll('.cm-undriven')).map((element) => element.textContent);
 
@@ -234,7 +231,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [NESTED_UNDRIVEN] }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       const icons = Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]')).map((element) => ({
         text: element.textContent,
@@ -262,7 +259,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect({
         undrivenShaded: Array.from(document.querySelectorAll('.cm-undriven')).map((element) => element.textContent),
@@ -302,7 +299,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-undriven'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]'))).toStrictEqual([]);
@@ -315,7 +312,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [] }),
       });
 
-      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
+      render(<CodeViewerWidget fileView={fileView} />, { wrapper: MantineProvider });
 
       expect(Array.from(document.querySelectorAll('.cm-undriven'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]'))).toStrictEqual([]);
@@ -326,9 +323,7 @@ describe('CodeViewerWidget', () => {
     it('EMPTY: {fileView: null} => renders the placeholder prompt in EXPLORER_CODE with no editor', () => {
       CodeViewerWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <CodeViewerWidget fileView={null} />,
-      });
+      const { getByTestId } = render(<CodeViewerWidget fileView={null} />, { wrapper: MantineProvider });
 
       expect(getByTestId('EXPLORER_CODE').textContent).toBe('Select a file to view its compiled source');
       expect(Array.from(document.querySelectorAll('[role="textbox"]'))).toStrictEqual([]);

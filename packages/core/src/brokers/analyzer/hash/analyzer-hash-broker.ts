@@ -21,8 +21,6 @@ import { coreRuntimeStatics } from '../../../statics/core-runtime/core-runtime-s
 import type { ContentHash } from '@assayer/shared/contracts';
 import { readFile } from '#gateway/node/fs__promises';
 import { basename, relative } from '#gateway/node/path';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
-import { relPathContract } from '@assayer/shared/contracts';
 
 export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promise<ContentHash> => {
   const rootHashes = await Promise.all(
@@ -30,15 +28,15 @@ export const analyzerHashBroker = async ({ roots }: { roots: string[] }): Promis
       const tree = basename(root) === coreRuntimeStatics.layout.distFolder ? 'dist' : 'source';
       const files = await compileWalkWorkingTreeBroker({ root });
       const codeFiles = files
-        .map((path) => ({ path: String(path), relPath: relPathContract.parse(relative(root, String(path))) }))
-        .filter(({ relPath }) => isAnalyzerCodeFileGuard({ relPath: String(relPath), tree }));
+        .map((path) => ({ path, relPath: relative(root, path) }))
+        .filter(({ relPath }) => isAnalyzerCodeFileGuard({ relPath, tree }));
       const entries = await Promise.all(
         codeFiles.map(async ({ path, relPath }) => {
-          const content = fileContentsContract.parse(await readFile(path));
-          return `${String(relPath)}:${String(contentHashTransformer({ content: String(content) }))}`;
+          const content = (await readFile(path));
+          return `${relPath}:${contentHashTransformer({ content })}`;
         }),
       );
-      return String(contentHashTransformer({ content: [...entries].sort().join('\n') }));
+      return contentHashTransformer({ content: [...entries].sort().join('\n') });
     }),
   );
 

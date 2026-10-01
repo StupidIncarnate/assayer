@@ -17,9 +17,9 @@
  * crossFileMapReachesTransformer({ walked });
  * // Returns [{ host, arrayParam: 'items', specifier: './band-reading', importedName: 'bandReading' }]
  */
-import type { ModuleSpecifier, SymbolName } from '@assayer/shared/contracts';
 
-import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
+import { crossFileMapReachesContract } from '../../contracts/cross-file-map-reaches/cross-file-map-reaches-contract';
+import type { CrossFileMapReaches } from '../../contracts/cross-file-map-reaches/cross-file-map-reaches-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
 
 // Array iteration methods whose callback's FIRST parameter is the element — the same set `follow-calls`
@@ -31,9 +31,9 @@ export const crossFileMapReachesTransformer = ({
   walked,
 }: {
   walked: WalkFileResult;
-}): { host: ScopeRecord; arrayParam: SymbolName; specifier: ModuleSpecifier; importedName: SymbolName }[] => {
+}): CrossFileMapReaches => {
   if (!walked.success) {
-    return [];
+    return crossFileMapReachesContract.parse([]);
   }
 
   // A funnel host is branchless with a single exit — its one exit is the tail every folded path returns
@@ -42,7 +42,7 @@ export const crossFileMapReachesTransformer = ({
     (scope) => scope.access.kind === 'named' && scope.branches.length === 0 && scope.exits.length === 1,
   );
 
-  return hosts.flatMap((host) =>
+  return crossFileMapReachesContract.parse(hosts.flatMap((host) =>
     host.calls.flatMap((call) => {
       if (call.method === undefined || !ITERATION_METHODS.has(String(call.method)) || call.guardPath.length !== 0) {
         return [];
@@ -65,5 +65,5 @@ export const crossFileMapReachesTransformer = ({
 
       return [{ host, arrayParam: arrayParam.name, specifier: arg.callee.specifier, importedName: arg.callee.importedName }];
     }),
-  );
+  ));
 };

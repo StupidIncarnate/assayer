@@ -72,7 +72,7 @@ export const runPathsBrokerProxy = (): {
             root,
             cacheDir,
             coreRoot: dirname(join(__dirname, 'probe-runtime.js')),
-            analyzerContentHash: String(analyzerContentHash),
+            analyzerContentHash,
             results: [],
           },
         ])

@@ -13,7 +13,7 @@
  *   the tree resolver.
  *
  * USAGE:
- * const view = await stubIndexResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+ * const view = await stubIndexResolveBroker({ repoPath: '/repo' });
  * // Returns the validated StubView (derived stubs merged with the committed overlay) for the current namespace
  */
 import { stubViewContract } from '@assayer/shared/contracts';
@@ -25,10 +25,9 @@ import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-ma
 import { cacheLoadStubIndexBroker } from '../../cache/load-stub-index/cache-load-stub-index-broker';
 import { repoSourceRootBroker } from '../../repo/source-root/repo-source-root-broker';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 import { pathExists } from '#gateway/node/fs__promises';
 
-export const stubIndexResolveBroker = async ({ repoPath }: { repoPath: RepoPath }): Promise<StubView> => {
+export const stubIndexResolveBroker = async ({ repoPath }: { repoPath: string }): Promise<StubView> => {
   const manifestExists = await pathExists(`${repoPath}/.assayer/cache/manifest.json`);
 
   if (!manifestExists) {
@@ -46,7 +45,7 @@ export const stubIndexResolveBroker = async ({ repoPath }: { repoPath: RepoPath 
   // The overlay is read from the SOURCE repo root (committed there), the derived index from the cache
   // dir --repo points at — combined here at read time, never re-derived and never persisted merged.
   const root = await repoSourceRootBroker({ repoPath });
-  const overlays = await stubOverlayLoadBroker({ repoRoot: String(root) });
+  const overlays = await stubOverlayLoadBroker({ repoRoot: root });
 
   return stubViewTransformer({ index, overlays });
 };

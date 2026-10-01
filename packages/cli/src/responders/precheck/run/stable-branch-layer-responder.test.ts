@@ -1,5 +1,4 @@
 import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
-import { FilePathStub } from '@assayer/core/contracts/file-path/file-path.stub';
 
 import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
@@ -18,7 +17,7 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
@@ -35,7 +34,7 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
@@ -52,7 +51,7 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
@@ -72,7 +71,7 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
@@ -102,7 +101,7 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 
@@ -133,7 +132,7 @@ describe('StableBranchLayerResponder', () => {
 
       const result = await StableBranchLayerResponder({
         config,
-        configPath: FilePathStub({ value: '/repo/assayer.config.json' }),
+        configPath: '/repo/assayer.config.json',
         repoRoot: '/repo',
       });
 

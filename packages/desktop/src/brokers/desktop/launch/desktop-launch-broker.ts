@@ -13,11 +13,10 @@ import { desktopResolveBinaryBroker } from '../resolve-binary/desktop-resolve-bi
 import { spawnFireAndForget } from '#gateway/node/child_process';
 import { join } from '#gateway/node/path';
 import { stderr } from '#gateway/node/process';
-import { executablePathContract } from '../../../contracts/executable-path/executable-path-contract';
 
 export const desktopLaunchBroker = ({ repoPath }: { repoPath: string }): void => {
   const command = desktopResolveBinaryBroker();
-  const mainEntry = executablePathContract.parse(join(__dirname, '..', '..', '..', '..', 'bin', 'desktop-main.js'));
+  const mainEntry = join(__dirname, '..', '..', '..', '..', 'bin', 'desktop-main.js');
   const args = [mainEntry, '--repo', repoPath];
 
   spawnFireAndForget({

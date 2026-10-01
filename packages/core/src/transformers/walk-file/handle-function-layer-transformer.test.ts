@@ -331,7 +331,7 @@ describe('handleFunctionLayerTransformer', () => {
 
       const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
 
-      expect(result.branches.map((branch) => String(branch.kind))).toStrictEqual(['ternary']);
+      expect(result.branches.map((branch) => branch.kind)).toStrictEqual(['ternary']);
     });
 
     it('VALID: {`(value) => value > 5 ? a : b`} => descends the condition and each arm, not the whole body', () => {
@@ -383,8 +383,8 @@ describe('handleFunctionLayerTransformer', () => {
       const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
 
       expect({
-        branchKinds: result.branches.map((branch) => String(branch.kind)),
-        exitKinds: result.exits.map((exit) => String(exit.kind)),
+        branchKinds: result.branches.map((branch) => branch.kind),
+        exitKinds: result.exits.map((exit) => exit.kind),
       }).toStrictEqual({ branchKinds: ['ternary'], exitKinds: ['return', 'return'] });
     });
   });

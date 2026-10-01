@@ -13,10 +13,10 @@
 import { z } from '#gateway/npm/zod';
 
 export const orderedBoundsContract = z.object({
-  min: z.number().brand<'OrderedBound'>().optional(),
+  min: z.number().brand<'OrderedBoundsMin'>().optional(),
   minExclusive: z.boolean().default(false),
-  max: z.number().brand<'OrderedBound'>().optional(),
+  max: z.number().brand<'OrderedBoundsMax'>().optional(),
   maxExclusive: z.boolean().default(false),
-});
+}).brand<'OrderedBounds'>();
 
 export type OrderedBounds = z.infer<typeof orderedBoundsContract>;

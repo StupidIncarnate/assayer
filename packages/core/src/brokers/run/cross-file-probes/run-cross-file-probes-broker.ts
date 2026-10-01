@@ -19,7 +19,6 @@
  * await runCrossFileProbesBroker({ walked, root: '/repo', relPath: 'src/cross-file-map.ts', probeDir: '/repo/.assayer/cache/probes' });
  * // Writes '<probeDir>/<siblingContentHash>.json' for each mapped imported callee, returns ['src/band-reading.ts']
  */
-import type { RelPath } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
@@ -39,7 +38,7 @@ export const runCrossFileProbesBroker = async ({
   root: string;
   relPath: string;
   probeDir: string;
-}): Promise<RelPath[]> => {
+}): Promise<string[]> => {
   if (!walked.success) {
     return [];
   }
@@ -62,14 +61,14 @@ export const runCrossFileProbesBroker = async ({
       return [];
     }
 
-    const contentHash = contentHashTransformer({ content: String(sibling.source) });
+    const contentHash = contentHashTransformer({ content: sibling.source });
 
     return [
       {
         relPath: sibling.relPath,
-        path: `${probeDir}/${String(contentHash)}.json`,
+        path: `${probeDir}/${contentHash}.json`,
         content: JSON.stringify(
-          probePlanProjectionTransformer({ walked: sibling.walked, relPath: String(sibling.relPath), contentHash: String(contentHash) }),
+          probePlanProjectionTransformer({ walked: sibling.walked, relPath: sibling.relPath, contentHash }),
         ),
       },
     ];

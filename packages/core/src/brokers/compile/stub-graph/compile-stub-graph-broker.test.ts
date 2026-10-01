@@ -1,7 +1,6 @@
 import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { compileStubGraphBroker } from './compile-stub-graph-broker';
@@ -9,7 +8,7 @@ import { compileStubGraphBrokerProxy } from './compile-stub-graph-broker.proxy';
 
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 const HASH = ContentHashStub();
-const BLOB_PATH = `/blobs/${String(HASH)}.json`;
+const BLOB_PATH = `/blobs/${HASH}.json`;
 
 const CONFIG_BLOB = CompiledFileBlobStub({
   relPath: 'src/config/config.ts',
@@ -88,7 +87,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({
@@ -120,7 +119,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
       expect(result.guards).toStrictEqual([
@@ -145,7 +144,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
       expect(proxy.getIndexRenames({ configDir: '/repo', namespace: 'feature-x' })).toStrictEqual([
@@ -167,7 +166,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/config/config.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/config/config.ts', contentHash: HASH }],
       });
 
       expect(proxy.getWrittenIndex({ path: '/repo/.assayer/cache/stubs/feature-x.json.tmp' })).toStrictEqual(
@@ -187,7 +186,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/plain.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/plain.ts', contentHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({ layoutHash: EMPTY_HASH, tsconfigHash: EMPTY_HASH, objectStubs: [], envStubs: [] });
@@ -215,7 +214,7 @@ describe('compileStubGraphBroker', () => {
         namespace: 'feature-x',
         blobsDir: '/blobs',
         resolvedIndex: ResolvedIndexStub(),
-        files: [{ relPath: RelPathStub({ value: 'src/flags/flags.ts' }), contentHash: HASH }],
+        files: [{ relPath: 'src/flags/flags.ts', contentHash: HASH }],
       });
 
       expect(result.index).toStrictEqual({

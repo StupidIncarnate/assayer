@@ -10,8 +10,6 @@
  */
 import type { RepresentativeValue } from '@assayer/shared/contracts';
 
-import { astProjectionContract } from '../../contracts/ast-projection/ast-projection-contract';
-import type { AstProjection } from '../../contracts/ast-projection/ast-projection-contract';
 
-export const literalTokenTransformer = ({ value }: { value: RepresentativeValue }): AstProjection =>
-  astProjectionContract.parse(typeof value === 'string' ? `str:${value}` : `num:${value}`);
+export const literalTokenTransformer = ({ value }: { value: RepresentativeValue }): string =>
+  (typeof value === 'string' ? `str:${value}` : `num:${value}`);

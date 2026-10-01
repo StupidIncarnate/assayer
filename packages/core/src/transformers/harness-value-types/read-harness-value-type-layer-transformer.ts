@@ -22,13 +22,12 @@
  */
 import type { Type } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract, typeTextContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
 
-export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Type; seen?: ReadonlySet<SymbolName> }): TypeFact => {
-  const onPath = seen ?? new Set<SymbolName>();
+export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Type; seen?: ReadonlySet<string> }): TypeFact => {
+  const onPath = seen ?? new Set<string>();
 
   if (type.isString()) {
     return { flavor: 'string' };
@@ -54,7 +53,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
     return {
       flavor: 'union',
       members: type.getUnionTypes().map((member) => readHarnessValueTypeLayerTransformer({ type: member, seen: onPath })),
-      text: typeTextContract.parse(type.getText()),
+      text: type.getText(),
     };
   }
   // Arrays are objects too, so this MUST precede the object branch.
@@ -64,7 +63,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
   // A function type is an object to the checker too, so this MUST precede the object branch — a supplied
   // callback comes back with an empty property list otherwise, indistinguishable from an empty interface.
   if (type.getCallSignatures().length > 0) {
-    return { flavor: 'callable', text: typeTextContract.parse(type.getText()) };
+    return { flavor: 'callable', text: type.getText() };
   }
   if (type.isObject()) {
     // `__type` is the anonymous symbol a `type X = { … }` alias produces; `__object` is its OBJECT
@@ -73,7 +72,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
     // types, never a value expression). Neither is a real declared name.
     const rawName = type.getSymbol()?.getName();
     const typeName =
-      rawName === undefined || rawName === '__type' || rawName === '__object' ? undefined : symbolNameContract.parse(rawName);
+      rawName === undefined || rawName === '__type' || rawName === '__object' ? undefined : rawName;
 
     // MARKED, because only the reader knows the empty property list is where it stopped rather than
     // what the type declares.
@@ -85,21 +84,21 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
     const location = type.getSymbol()?.getDeclarations()[0];
     const properties = type
       .getProperties()
-      .map((symbol): { name: SymbolName; fact: TypeFact } => {
+      .map((symbol): { name: string; fact: TypeFact } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
 
         return {
-          name: symbolNameContract.parse(symbol.getName()),
+          name: symbol.getName(),
           fact:
             declaration === undefined
-              ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+              ? { flavor: 'other', text: 'unknown' }
               : readHarnessValueTypeLayerTransformer({ type: symbol.getTypeAtLocation(declaration), seen: nextSeen }),
         };
       })
-      .sort((a, b) => (String(a.name) < String(b.name) ? -1 : String(a.name) > String(b.name) ? 1 : 0));
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
     return { flavor: 'object', ...(typeName === undefined ? {} : { typeName }), properties };
   }
 
-  return { flavor: 'other', text: typeTextContract.parse(type.getText()) };
+  return { flavor: 'other', text: type.getText() };
 };

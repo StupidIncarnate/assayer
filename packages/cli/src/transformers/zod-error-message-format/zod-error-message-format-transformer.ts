@@ -8,13 +8,11 @@
  * });
  * // Returns 'repoRoot: Invalid input: expected string, received number'
  */
-import { cliErrorMessageContract } from '../../contracts/cli-error-message/cli-error-message-contract';
-import type { CliErrorMessage } from '../../contracts/cli-error-message/cli-error-message-contract';
 
 export const zodErrorMessageFormatTransformer = ({
   issues,
 }: {
   issues: readonly { path: string; message: string }[];
-}): CliErrorMessage => {
-  return cliErrorMessageContract.parse(issues.map((issue) => `${issue.path}: ${issue.message}`).join('\n'));
+}): string => {
+  return issues.map((issue) => `${issue.path}: ${issue.message}`).join('\n');
 };

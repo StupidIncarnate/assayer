@@ -12,7 +12,6 @@
  * runConsoleStatusTransformer({ running: false, failed: true });
  * // Returns 'failed'
  */
-import { runConsoleStatusContract } from '../../contracts/run-console-status/run-console-status-contract';
 import type { RunConsoleStatus } from '../../contracts/run-console-status/run-console-status-contract';
 
 export const runConsoleStatusTransformer = ({
@@ -23,12 +22,12 @@ export const runConsoleStatusTransformer = ({
   failed: boolean;
 }): RunConsoleStatus => {
   if (running) {
-    return runConsoleStatusContract.parse('running');
+    return 'running';
   }
 
   if (failed) {
-    return runConsoleStatusContract.parse('failed');
+    return 'failed';
   }
 
-  return runConsoleStatusContract.parse('finished');
+  return 'finished';
 };

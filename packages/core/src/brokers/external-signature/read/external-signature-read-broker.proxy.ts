@@ -1,6 +1,4 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { fileCountContract } from '@assayer/shared/contracts';
-import type { FileCount } from '@assayer/shared/contracts';
 
 import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
 import { externalSignatureReadDeclarationBrokerProxy } from '../read-declaration/external-signature-read-declaration-broker.proxy';
@@ -44,7 +42,7 @@ export const externalSignatureReadBrokerProxy = (): {
   }) => void;
   readsSignature: ({ exportName, signature }: { exportName: string; signature: unknown }) => void;
   readsNoUsableTypes: ({ exportName }: { exportName: string }) => void;
-  signatureReadCount: () => FileCount;
+  signatureReadCount: () => number;
   wasWritten: () => boolean;
   // The signature the broker cached. One call writes exactly one file, into
   // `<cacheDir>/external-signatures/`, so that directory is the address. The file's own NAME is a hash
@@ -85,7 +83,7 @@ export const externalSignatureReadBrokerProxy = (): {
     readsNoUsableTypes: ({ exportName }: { exportName: string }): void => {
       readHandle.calledWith([{ exportName }]).returns({ usable: false });
     },
-    signatureReadCount: (): FileCount => fileCountContract.parse(readHandle.callsMatching([]).length),
+    signatureReadCount: (): number => readHandle.callsMatching([]).length,
     wasWritten: (): boolean =>
       writeFileGateway.getCallsFor({ path: isSignatureCachePath }).length > 0,
     getWrittenSignature: (): unknown =>

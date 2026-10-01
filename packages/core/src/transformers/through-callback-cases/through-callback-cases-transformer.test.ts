@@ -1,4 +1,3 @@
-import { entryLabelContract, symbolNameContract } from '@assayer/shared/contracts';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
@@ -45,13 +44,13 @@ describe('throughCallbackCasesTransformer', () => {
     });
 
     it('VALID: {a callback branch on n} => a through-caller entry naming the entry the runner drives', () => {
-      const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
+      const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: 'items' });
 
       expect(result.analysis.entry.access).toStrictEqual({ kind: 'through-caller', callerName: 'run' });
     });
 
     it('VALID: {a callback branch on n} => each arm steers the single element of the array the entry receives', () => {
-      const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
+      const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: 'items' });
 
       expect(result.analysis.cases).toStrictEqual([
         { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
@@ -75,7 +74,7 @@ describe('throughCallbackCasesTransformer', () => {
       const result = throughCallbackCasesTransformer({
         callback: CALLBACK,
         entry: REST_ENTRY,
-        arrayParam: symbolNameContract.parse('items'),
+        arrayParam: 'items',
       });
 
       expect(result.analysis.cases).toStrictEqual([
@@ -111,8 +110,8 @@ describe('throughCallbackCasesTransformer', () => {
       const result = throughCallbackCasesTransformer({
         callback: SINK_CALLBACK,
         entry: ENTRY,
-        arrayParam: symbolNameContract.parse('items'),
-        label: entryLabelContract.parse('run › items.map((sink) => …) L2'),
+        arrayParam: 'items',
+        label: 'run › items.map((sink) => …) L2',
       });
 
       expect({ cases: result.analysis.cases, unfillable: result.unfillable }).toStrictEqual({
@@ -154,13 +153,13 @@ describe('throughCallbackCasesTransformer', () => {
     });
 
     it('VALID: {cb(n) returns n > 5} => the predicate signature rides onto the entry the analysis carries', () => {
-      const result = throughCallbackCasesTransformer({ callback: PREDICATE_CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
+      const result = throughCallbackCasesTransformer({ callback: PREDICATE_CALLBACK, entry: ENTRY, arrayParam: 'items' });
 
       expect(result.analysis.predicateSignature).toStrictEqual(PREDICATE);
     });
 
     it('VALID: {cb(n) returns n > 5} => splits into a satisfying and a violating element, each its own single-element array', () => {
-      const result = throughCallbackCasesTransformer({ callback: PREDICATE_CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
+      const result = throughCallbackCasesTransformer({ callback: PREDICATE_CALLBACK, entry: ENTRY, arrayParam: 'items' });
 
       expect(result.analysis.cases).toStrictEqual([
         { reachesPath: ['cb/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
@@ -225,7 +224,7 @@ describe('throughCallbackCasesTransformer', () => {
       const result = throughCallbackCasesTransformer({
         callback: OBJECT_CALLBACK,
         entry: OBJECT_ENTRY,
-        arrayParam: symbolNameContract.parse('items'),
+        arrayParam: 'items',
       });
 
       expect(result.analysis.cases).toStrictEqual([
@@ -285,7 +284,7 @@ describe('throughCallbackCasesTransformer', () => {
       const result = throughCallbackCasesTransformer({
         callback: ARRAY_CALLBACK,
         entry: ARRAY_ENTRY,
-        arrayParam: symbolNameContract.parse('items'),
+        arrayParam: 'items',
       });
 
       expect(result.analysis.cases).toStrictEqual([
@@ -311,7 +310,7 @@ describe('throughCallbackCasesTransformer', () => {
     });
 
     it('VALID: {entry also takes factor} => factor is filled representatively, in entry param order', () => {
-      const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: symbolNameContract.parse('items') });
+      const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: 'items' });
 
       expect(result.analysis.cases).toStrictEqual([
         {

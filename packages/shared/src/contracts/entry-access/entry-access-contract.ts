@@ -40,16 +40,15 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
 
 export const entryAccessContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('named'), exportedName: symbolNameContract.optional() }),
-  z.object({ kind: z.literal('default') }),
-  z.object({ kind: z.literal('method'), className: symbolNameContract, constructable: z.boolean() }),
-  z.object({ kind: z.literal('constructor'), className: symbolNameContract }),
-  z.object({ kind: z.literal('module') }),
-  z.object({ kind: z.literal('unreachable') }),
-  z.object({ kind: z.literal('through-caller'), callerName: symbolNameContract }),
+  z.object({ kind: z.literal('named'), exportedName: z.string().min(1).brand<'EntryAccessExportedName'>().optional() }).brand<'EntryAccess'>(),
+  z.object({ kind: z.literal('default') }).brand<'EntryAccess'>(),
+  z.object({ kind: z.literal('method'), className: z.string().min(1).brand<'EntryAccessClassName'>(), constructable: z.boolean() }).brand<'EntryAccess'>(),
+  z.object({ kind: z.literal('constructor'), className: z.string().min(1).brand<'EntryAccessClassName'>() }).brand<'EntryAccess'>(),
+  z.object({ kind: z.literal('module') }).brand<'EntryAccess'>(),
+  z.object({ kind: z.literal('unreachable') }).brand<'EntryAccess'>(),
+  z.object({ kind: z.literal('through-caller'), callerName: z.string().min(1).brand<'EntryAccessCallerName'>() }).brand<'EntryAccess'>(),
 ]);
 
 export type EntryAccess = z.infer<typeof entryAccessContract>;

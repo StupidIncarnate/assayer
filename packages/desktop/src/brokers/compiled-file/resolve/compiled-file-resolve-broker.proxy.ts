@@ -35,6 +35,7 @@ export const compiledFileResolveBrokerProxy = (): {
   sourceMissing: (params: { root: string; relPath: string }) => void;
   siblingResolvesTo: (params: { fileName: string; source: string; specifier: string }) => void;
   harnessReads: (params: { path: string; source: string }) => void;
+  noTsconfigAt: (params: { root: string }) => void;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
   const blobProxy = cacheLoadBlobBrokerProxy();
@@ -45,9 +46,9 @@ export const compiledFileResolveBrokerProxy = (): {
   // The overlays run for real. Each sibling file an overlay resolves and reads is staged through the
   // compose proxy, since every overlay resolves a sibling through the same seam. The stub overlay proxy
   // stages the committed-corrections folder and the harness proxy stages the colocated harness file.
-  paramTypeResolveBrokerProxy();
-  stubRealizeBrokerProxy();
-  composeCrossFileMapBrokerProxy();
+  const paramTypeProxy = paramTypeResolveBrokerProxy();
+  const stubRealizeProxy = stubRealizeBrokerProxy();
+  const crossFileMapProxy = composeCrossFileMapBrokerProxy();
   const composeProxy = composeCrossFilePredicatesBrokerProxy();
   const overlayProxy = stubOverlayLoadBrokerProxy();
   const harnessProxy = harnessRealizeBrokerProxy();
@@ -85,6 +86,14 @@ export const compiledFileResolveBrokerProxy = (): {
     // The colocated harness file at `path` exists and holds `source`.
     harnessReads: ({ path, source }): void => {
       harnessProxy.setupHarness({ path, source });
+    },
+    // The tsconfig search every overlay runs from the source root `root` finds nothing, so the
+    // compiler options are empty.
+    noTsconfigAt: ({ root }): void => {
+      paramTypeProxy.noTsconfigAt({ root });
+      stubRealizeProxy.noTsconfigAt({ root });
+      crossFileMapProxy.noTsconfigAt({ root });
+      composeProxy.noTsconfigAt({ root });
     },
   };
 };

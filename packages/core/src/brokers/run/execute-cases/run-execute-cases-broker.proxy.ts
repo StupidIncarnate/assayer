@@ -17,12 +17,12 @@ export const runExecuteCasesBrokerProxy = (): {
     // executing. A run directory no scenario staged reaches an unstaged call, which throws.
     succeeds: ({ runDir }: { runDir: string }): void => {
       handle
-        .calledWith([{ _: [String(testPathPatternTransformer({ runDir }))] }])
+        .calledWith([{ _: [testPathPatternTransformer({ runDir })] }])
         .resolves({ results: { success: true } });
     },
     fails: ({ runDir }: { runDir: string }): void => {
       handle
-        .calledWith([{ _: [String(testPathPatternTransformer({ runDir }))] }])
+        .calledWith([{ _: [testPathPatternTransformer({ runDir })] }])
         .resolves({ results: { success: false } });
     },
     // Addressed on the argv's positionals, so a test driving two runs reads each run's own config

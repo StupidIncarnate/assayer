@@ -8,11 +8,11 @@ import { compiledFileResolveBrokerProxy } from '../../../brokers/compiled-file/r
 import { stubIndexResolveBrokerProxy } from '../../../brokers/stub-index/resolve/stub-index-resolve-broker.proxy';
 import { repoSourceRootBrokerProxy } from '../../../brokers/repo/source-root/repo-source-root-broker.proxy';
 import { runExecuteBrokerProxy } from '../../../brokers/run/execute/run-execute-broker.proxy';
-import { desktopBridgeStatics } from '../../../statics/desktop-bridge/desktop-bridge-statics';
 
 export const DesktopMainBootResponderProxy = (): {
-  handledChannels: () => unknown[];
-  invokeCompiledFileHandler: (params: { relPath?: unknown }) => Promise<unknown>;
+  setupBoot: () => void;
+  handledChannels: () => readonly string[];
+  invokeHandler: (params: { channel: string; relPath?: unknown }) => Promise<unknown>;
 } => {
   const bootProxy = desktopBootBrokerProxy();
   statusResolveBrokerProxy();
@@ -27,8 +27,16 @@ export const DesktopMainBootResponderProxy = (): {
   runConsoleFindBrokerProxy();
 
   return {
-    handledChannels: (): unknown[] => bootProxy.handledChannels(),
-    invokeCompiledFileHandler: async ({ relPath }: { relPath?: unknown }): Promise<unknown> =>
-      bootProxy.invokeHandler({ channel: desktopBridgeStatics.channels.compiledFile, arg: relPath }),
+    setupBoot: (): void => {
+      bootProxy.setupBoot({ dev: false, headless: false });
+    },
+    handledChannels: (): readonly string[] => bootProxy.handledChannels(),
+    invokeHandler: async ({
+      channel,
+      relPath,
+    }: {
+      channel: string;
+      relPath?: unknown;
+    }): Promise<unknown> => bootProxy.invokeHandler({ channel, arg: relPath }),
   };
 };

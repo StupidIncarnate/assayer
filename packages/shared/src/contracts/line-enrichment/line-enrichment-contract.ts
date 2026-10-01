@@ -10,16 +10,13 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { lineNumberContract } from '../line-number/line-number-contract';
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
-import { typeTextContract } from '../type-text/type-text-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 export const lineEnrichmentContract = z.object({
-  line: lineNumberContract,
-  symbol: symbolNameContract,
-  typeText: typeTextContract,
+  line: z.number().int().positive().brand<'LineEnrichmentLine'>(),
+  symbol: z.string().min(1).brand<'LineEnrichmentSymbol'>(),
+  typeText: z.string().min(1).brand<'LineEnrichmentTypeText'>(),
   range: z.array(representativeValueContract).optional(),
-});
+}).brand<'LineEnrichment'>();
 
 export type LineEnrichment = z.infer<typeof lineEnrichmentContract>;

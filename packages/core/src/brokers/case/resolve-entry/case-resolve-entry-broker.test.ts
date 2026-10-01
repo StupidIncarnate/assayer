@@ -37,6 +37,18 @@ describe('caseResolveEntryBroker', () => {
       expect(result).toBe(undefined);
     });
 
+    it('EDGE: {the named property is not a function} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { classify: 5 },
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'named' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
     // `export { classify as decide }` puts it on the module under `decide`; reaching for the local
     // name finds nothing there and reports a perfectly callable entry as uncallable.
     it('VALID: {a renamed export} => resolves the EXPORTED property, not the local name', () => {
@@ -202,6 +214,18 @@ describe('caseResolveEntryBroker', () => {
       });
 
       expect((result as (value: number) => boolean)(6)).toBe(true);
+    });
+
+    it('EDGE: {the caller property is not a function} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { outer: 'not callable' },
+        name: 'inner',
+        access: EntryAccessStub({ kind: 'through-caller', callerName: 'outer' }),
+      });
+
+      expect(result).toBe(undefined);
     });
 
     it('EMPTY: {the caller is not on the module} => undefined', () => {

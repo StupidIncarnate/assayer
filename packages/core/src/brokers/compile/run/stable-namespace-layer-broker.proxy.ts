@@ -1,7 +1,6 @@
 import { compilePlanStableBrokerProxy } from '../plan-stable/compile-plan-stable-broker.proxy';
 import { gitResolveCommitBrokerProxy } from '../../git/resolve-commit/git-resolve-commit-broker.proxy';
 import { processTargetsLayerBrokerProxy } from './process-targets-layer-broker.proxy';
-import type { FileCount } from '@assayer/shared/contracts';
 
 export const stableNamespaceLayerBrokerProxy = (): {
   unchanged: (params: { ref: string; sha: string }) => void;
@@ -18,7 +17,7 @@ export const stableNamespaceLayerBrokerProxy = (): {
     blobs: readonly { blobSha: string; content: string }[];
     blobsDir: string;
   }) => void;
-  processedCount: () => FileCount;
+  processedCount: () => number;
 } => {
   const planStableProxy = compilePlanStableBrokerProxy();
   const resolveCommitProxy = gitResolveCommitBrokerProxy();
@@ -65,6 +64,6 @@ export const stableNamespaceLayerBrokerProxy = (): {
         processTargetsProxy.queueCleanWrite({ blobsDir, content });
       });
     },
-    processedCount: (): FileCount => processTargetsProxy.processedCount(),
+    processedCount: (): number => processTargetsProxy.processedCount(),
   };
 };

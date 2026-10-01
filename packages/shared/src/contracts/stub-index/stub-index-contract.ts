@@ -26,6 +26,6 @@ export const stubIndexContract = z.object({
   tsconfigHash: contentHashContract,
   objectStubs: z.array(objectStubContract),
   envStubs: z.array(envStubContract),
-});
+}).brand<'StubIndex'>();
 
 export type StubIndex = z.infer<typeof stubIndexContract>;

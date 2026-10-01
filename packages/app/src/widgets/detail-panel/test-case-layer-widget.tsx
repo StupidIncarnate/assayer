@@ -10,7 +10,7 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Group, Text } from '#gateway/npm/mantine__core';
-import type { FunctionAnalysis, LineNumber, RunResult } from '@assayer/shared/contracts';
+import type { FunctionAnalysis, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
 import { caseRunResultTransformer } from '../../transformers/case-run-result/case-run-result-transformer';
@@ -26,7 +26,7 @@ export interface TestCaseLayerWidgetProps {
   driver: string;
   entryLabel: string;
   isModule: boolean;
-  hoveredLine?: LineNumber | null | undefined;
+  hoveredLine?: number | null | undefined;
   run?: RunResult | undefined;
   runMode?: RunMode | undefined;
 }
@@ -48,7 +48,7 @@ export const TestCaseLayerWidget = ({
     reachesPath: testCase.reachesPath,
   });
   const isMatch = active && touched.some((line) => line === hoveredLine);
-  const status = String(caseRunStatusTransformer({ run, testCase }));
+  const status = caseRunStatusTransformer({ run, testCase });
   const result = caseRunResultTransformer({ run, testCase });
   // A case the run did not pass never reached the exit on this row, so the row says
   // `predicted` rather than `reaches`. Printing the derived exit as though the run
@@ -90,9 +90,9 @@ export const TestCaseLayerWidget = ({
             data-testid="CASE_STATUS"
             fz="xs"
             fw={600}
-            c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
+            c={runStatusStatics.colour[status]}
           >
-            {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
+            {`${runStatusStatics.marker[status]} `}
           </Text>
           {isModule
             ? `${entryLabel} → ${reach}`

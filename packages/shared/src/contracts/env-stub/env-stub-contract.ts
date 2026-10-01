@@ -16,17 +16,15 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
-import { stubKeyContract } from '../stub-key/stub-key-contract';
+import { stubEntryContract } from '../stub-entry/stub-entry-contract';
 
 export const envStubContract = z.object({
-  key: stubKeyContract,
-  property: envVarNameContract,
+  key: stubEntryContract.shape.key,
+  property: z.string().min(1).brand<'EnvStubProperty'>(),
   values: z.array(representativeValueContract),
   guessed: z.boolean(),
-  readers: z.array(relPathContract),
-});
+  readers: z.array(z.string().min(1).brand<'EnvStubReaders'>()),
+}).brand<'EnvStub'>();
 
 export type EnvStub = z.infer<typeof envStubContract>;

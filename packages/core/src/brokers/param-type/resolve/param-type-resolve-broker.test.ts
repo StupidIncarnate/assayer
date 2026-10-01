@@ -43,6 +43,7 @@ describe('paramTypeResolveBroker', () => {
   describe('a NON-BRANCHING reader of an imported object type', () => {
     it('VALID: {return config.mode} => the declared shape is filled and the false gap is gone', () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: OBJECT_READER_SOURCE, relPath: 'src/reader.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/reader.ts' });
@@ -82,6 +83,7 @@ describe('paramTypeResolveBroker', () => {
     // stub on the READER rather than on the definition, and the committed correction would stop matching.
     it('VALID: {a resolved sibling shape} => the reader still declares no type of its own', () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: OBJECT_READER_SOURCE, relPath: 'src/reader.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/reader.ts' });
@@ -95,6 +97,7 @@ describe('paramTypeResolveBroker', () => {
   describe('an imported object ARRAY beside no branch at all', () => {
     it('VALID: {configs: Config[]} => the element shape resolves and the cardinality fan-out runs', () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: ARRAY_READER_SOURCE, relPath: 'src/total.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/total.ts' });
@@ -139,6 +142,7 @@ describe('paramTypeResolveBroker', () => {
   describe('an imported alias to a SCALAR', () => {
     it('VALID: {type Id = string} => the parameter is a string and derives its case', () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: SCALAR_ALIAS_SOURCE, relPath: 'src/echo.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/echo.ts' });
@@ -169,6 +173,7 @@ describe('paramTypeResolveBroker', () => {
     // one exit while its input reaches the other.
     it("VALID: {type Level = 'low' | 'high'} => the else arm enumerates 'high', not the guard's own literal", () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: UNION_ALIAS_SOURCE, relPath: 'src/shout.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/shout.ts' });
@@ -197,6 +202,7 @@ describe('paramTypeResolveBroker', () => {
   describe('an imported alias to a LITERAL UNION a BRANCHLESS predicate compares against', () => {
     it("VALID: {isHigh = (level: Level): boolean => level === 'high'} => both return values derive, the gap is gone", () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({
         source: "import type { Level } from './types';\n\nexport const isHigh = (level: Level): boolean => level === 'high';\n",
@@ -243,6 +249,7 @@ describe('paramTypeResolveBroker', () => {
   describe('a BRANCHING reader of an object-member property of an imported type', () => {
     it("VALID: {if (config.mode === 'a') on an imported Config} => the leaf's operandType becomes mode's real type, string — not any", () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.setupDefinition({ fileName: '/repo/src/types.ts', source: TYPES_SOURCE, specifier: './types' });
       const walked = walkFileTransformer({ source: OBJECT_MEMBER_READER_SOURCE, relPath: 'src/decide-a.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/decide-a.ts' });
@@ -289,6 +296,7 @@ describe('paramTypeResolveBroker', () => {
   describe('a type no in-repo file declares', () => {
     it('VALID: {an import that resolves outside the repo} => the refusal stands and the analysis is unchanged', () => {
       const proxy = paramTypeResolveBrokerProxy();
+      proxy.noTsconfigAt({ root: '/repo' });
       proxy.resolvesOutsideRepo({ fileName: '/repo/node_modules/some-package/index.d.ts', specifier: 'some-package' });
       const walked = walkFileTransformer({ source: PACKAGE_READER_SOURCE, relPath: 'src/render.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/render.ts' });

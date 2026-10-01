@@ -24,11 +24,11 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { symbolNameContract } from '../symbol-name/symbol-name-contract';
+import { entrySignatureContract } from '../entry-signature/entry-signature-contract';
 
 export const entryGapContract = z.object({
-  name: symbolNameContract,
-  reason: z.string().min(1).brand<'GapReason'>(),
-});
+  name: entrySignatureContract.shape.name,
+  reason: z.string().min(1).brand<'EntryGapReason'>(),
+}).brand<'EntryGap'>();
 
 export type EntryGap = z.infer<typeof entryGapContract>;

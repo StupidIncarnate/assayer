@@ -20,7 +20,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { CallExpression } from '#gateway/npm/ts-morph';
 
-import { globalUseContract, lineNumberContract, symbolNameContract } from '@assayer/shared/contracts';
+import { globalUseContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../../contracts/call-site/call-site-contract';
 import { invokedFnContract } from '../../contracts/invoked-fn/invoked-fn-contract';
@@ -48,7 +48,7 @@ export const handleCallLayerTransformer = ({
   const receiverExpr = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : undefined;
   const memberInfo =
     receiverExpr !== undefined && Node.isPropertyAccessExpression(callee) && Node.isIdentifier(receiverExpr)
-      ? { receiver: symbolNameContract.parse(receiverExpr.getText()), method: symbolNameContract.parse(callee.getName()) }
+      ? { receiver: receiverExpr.getText(), method: callee.getName() }
       : {};
 
   // An immediately-invoked inline function — `((n) => …)(x)` — REACHES that function. Unwrap the
@@ -57,7 +57,7 @@ export const handleCallLayerTransformer = ({
   const invokedInline = Node.isParenthesizedExpression(callee) ? callee.getExpression() : callee;
   const reachedFns =
     Node.isArrowFunction(invokedInline) || Node.isFunctionExpression(invokedInline)
-      ? [lineNumberContract.parse(invokedInline.getStartLineNumber())]
+      ? [invokedInline.getStartLineNumber()]
       : [];
 
   // The parallel channel `reachedFns` cannot carry: the invocation's arguments welded onto the

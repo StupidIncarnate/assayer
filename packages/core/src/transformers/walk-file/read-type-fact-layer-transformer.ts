@@ -52,8 +52,7 @@
 import { Node } from '#gateway/npm/ts-morph';
 import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract, templateTextContract, typeTextContract } from '@assayer/shared/contracts';
-import type { SymbolName, TemplateText } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
 import { readDeclaredTypeTextLayerTransformer } from './read-declared-type-text-layer-transformer';
@@ -67,10 +66,10 @@ export const readTypeFactLayerTransformer = ({
   type: Type;
   typeNode?: TypeNode | undefined;
   widen?: boolean;
-  seen?: ReadonlySet<SymbolName>;
+  seen?: ReadonlySet<string>;
 }): TypeFact => {
   const readType = widen === true ? type.getBaseTypeOfLiteralType() : type;
-  const onPath = seen ?? new Set<SymbolName>();
+  const onPath = seen ?? new Set<string>();
 
   if (readType.isString()) {
     return { flavor: 'string' };
@@ -97,7 +96,7 @@ export const readTypeFactLayerTransformer = ({
     return {
       flavor: 'union',
       members: readType.getUnionTypes().map((member) => readTypeFactLayerTransformer({ type: member, seen: onPath })),
-      text: typeTextContract.parse(readType.getText()),
+      text: readType.getText(),
     };
   }
   // A template literal type whose every substitution is a closed set of literals (`` `${'a'|'b'}-x` ``)
@@ -107,7 +106,7 @@ export const readTypeFactLayerTransformer = ({
   // does not thread one per member, so a template literal type reached that way stays opaque instead of
   // guessing at its structure.
   if (readType.isTemplateLiteral() && typeNode !== undefined && Node.isTemplateLiteralTypeNode(typeNode)) {
-    const spans = typeNode.getTemplateSpans().map((span): { text: TemplateText; fact: TypeFact } => {
+    const spans = typeNode.getTemplateSpans().map((span): { text: string; fact: TypeFact } => {
       const [substitutionNode, literalNode] = span.getChildren();
       // The literal segment AFTER this substitution — the checker's own cooked text, read off the
       // TemplateMiddle/TemplateTail node the same way `getLiteralValue()` reads an ordinary literal's
@@ -119,10 +118,10 @@ export const readTypeFactLayerTransformer = ({
       // literal) — `getChildren()`'s array type just cannot say so. The opaque fallback below is
       // unreached in practice; it exists only so this stays total if that ever stopped holding.
       return {
-        text: templateTextContract.parse(text),
+        text,
         fact:
           substitutionNode === undefined
-            ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+            ? { flavor: 'other', text: 'unknown' }
             : readTypeFactLayerTransformer({
                 type: substitutionNode.getType(),
                 ...(Node.isTypeNode(substitutionNode) ? { typeNode: substitutionNode } : {}),
@@ -135,7 +134,7 @@ export const readTypeFactLayerTransformer = ({
       flavor: 'template',
       // The head segment (before the first substitution) plus each span's trailing segment, in source
       // order — always one more text than there are substitutions, even when a segment is empty.
-      texts: [templateTextContract.parse(typeNode.getHead().getLiteralText()), ...spans.map((span) => span.text)],
+      texts: [typeNode.getHead().getLiteralText(), ...spans.map((span) => span.text)],
       types: spans.map((span) => span.fact),
     };
   }
@@ -187,7 +186,7 @@ export const readTypeFactLayerTransformer = ({
   // same ordering reason the array check does. Enumerated as an object a callback comes back with an
   // empty property list, indistinguishable from an empty interface.
   if (readType.getCallSignatures().length > 0) {
-    return { flavor: 'callable', text: typeTextContract.parse(readType.getText()) };
+    return { flavor: 'callable', text: readType.getText() };
   }
   // An INTERSECTION reads through this SAME branch as a plain object — see the PURPOSE doc for why
   // `getProperties()`/`getSymbol()`/`getAliasSymbol()` already answer correctly with no merge logic
@@ -201,7 +200,7 @@ export const readTypeFactLayerTransformer = ({
     const rawName = readType.getSymbol()?.getName();
     const aliasName = readType.getAliasSymbol()?.getName();
     const declaredName = rawName === undefined || rawName === '__type' ? aliasName : rawName;
-    const typeName = declaredName === undefined ? undefined : symbolNameContract.parse(declaredName);
+    const typeName = declaredName === undefined ? undefined : declaredName;
 
     // A type already on the current path re-entered — truncate to a reference-only object so a
     // recursive shape (`interface Tree { next: Tree }`) terminates instead of recursing forever. The
@@ -215,7 +214,7 @@ export const readTypeFactLayerTransformer = ({
     const location = readType.getSymbol()?.getDeclarations()[0];
     const properties = readType
       .getProperties()
-      .map((symbol): { name: SymbolName; fact: TypeFact } => {
+      .map((symbol): { name: string; fact: TypeFact } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
         // A TUPLE's numeric-index properties (`0`, `1`, `length` on `readonly [string, number]`) carry
         // no declaration of their own AND the tuple type itself carries no symbol to fall back to — the
@@ -237,10 +236,10 @@ export const readTypeFactLayerTransformer = ({
           declaration.hasQuestionToken();
 
         return {
-          name: symbolNameContract.parse(symbol.getName()),
+          name: symbol.getName(),
           fact:
             declaration === undefined
-              ? { flavor: 'other', text: typeTextContract.parse('unknown') }
+              ? { flavor: 'other', text: 'unknown' }
               : readTypeFactLayerTransformer({
                   type: symbol.getTypeAtLocation(declaration),
                   ...(propertyNode === undefined ? {} : { typeNode: propertyNode }),
@@ -251,7 +250,7 @@ export const readTypeFactLayerTransformer = ({
       })
       // Sorted by property name so the enumeration is byte-identical run to run (getProperties order
       // is declaration order, which formatting could reshuffle).
-      .sort((a, b) => (String(a.name) < String(b.name) ? -1 : String(a.name) > String(b.name) ? 1 : 0));
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
     return { flavor: 'object', ...(typeName === undefined ? {} : { typeName }), properties };
   }
@@ -265,7 +264,7 @@ export const readTypeFactLayerTransformer = ({
   // `read-condition` makes for an object-member operand's root type — and it is a foreign key a
   // consume-time overlay resolves against the definition, never display.
   const reference = typeNode !== undefined && Node.isTypeReference(typeNode) ? typeNode : undefined;
-  const typeRef = reference === undefined ? undefined : symbolNameContract.parse(reference.getTypeName().getText());
+  const typeRef = reference === undefined ? undefined : reference.getTypeName().getText();
   // The reference's type ARGUMENTS, read through this same function so `Box<Config>` carries a nested
   // reference exactly as `config: Config` does. They are what a generic declaration's type PARAMETERS
   // stand for: `type Box<T> = { value: T }` denotes nothing constructible until a reference says what
@@ -279,7 +278,7 @@ export const readTypeFactLayerTransformer = ({
     flavor: 'other',
     text:
       typeNode === undefined
-        ? typeTextContract.parse(readType.getText())
+        ? readType.getText()
         : readDeclaredTypeTextLayerTransformer({ node: typeNode }),
     ...(typeRef === undefined ? {} : { typeRef }),
     ...(typeArgs === undefined || typeArgs.length === 0 ? {} : { typeArgs }),

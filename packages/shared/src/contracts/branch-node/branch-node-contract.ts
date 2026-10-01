@@ -21,18 +21,17 @@
 import { z } from '#gateway/npm/zod';
 
 import { conditionNodeContract } from '../condition-node/condition-node-contract';
-import { coverageIdContract } from '../coverage-id/coverage-id-contract';
-import { lineNumberContract } from '../line-number/line-number-contract';
+import { coverageContract } from '../coverage/coverage-contract';
 
 export const branchNodeContract = z.object({
-  coverageId: coverageIdContract,
+  coverageId: coverageContract.shape.id,
   // Exactly the kinds the walk EMITS — a handler exists for each. Syntax the walk cannot follow is a
   // dark spot, not a branch, so naming a kind here that nothing emits would oblige every consumer to
   // handle a case that cannot occur. Add a kind when its handler lands, never before.
-  kind: z.enum(['if', 'switch', 'ternary']).brand<'BranchKind'>(),
+  kind: z.enum(['if', 'switch', 'ternary']),
   condition: conditionNodeContract,
-  startLine: lineNumberContract,
-  endLine: lineNumberContract,
-});
+  startLine: z.number().int().positive().brand<'BranchNodeStartLine'>(),
+  endLine: z.number().int().positive().brand<'BranchNodeEndLine'>(),
+}).brand<'BranchNode'>();
 
 export type BranchNode = z.infer<typeof branchNodeContract>;

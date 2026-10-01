@@ -12,8 +12,6 @@
  * harnessTargetTransformer({ relPath: 'src/audit.harness.ts', sources: ['src/audit.ts'] });
  * // Returns 'src/audit.ts', or undefined when neither spelling is in the analysed set
  */
-import { relPathContract } from '@assayer/shared/contracts';
-import type { RelPath } from '@assayer/shared/contracts';
 
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
 
@@ -24,13 +22,13 @@ export const harnessTargetTransformer = ({
   relPath,
   sources,
 }: {
-  relPath: RelPath;
-  sources: readonly RelPath[];
-}): RelPath | undefined => {
-  const base = String(relPath).slice(0, -harnessModuleStatics.fileSuffix.length);
-  const known = new Set(sources.map((source) => String(source)));
+  relPath: string;
+  sources: readonly string[];
+}): string | undefined => {
+  const base = relPath.slice(0, -harnessModuleStatics.fileSuffix.length);
+  const known = new Set(sources.map((source) => source));
 
   return [`${base}${TS_EXTENSION}`, `${base}${TSX_EXTENSION}`]
     .filter((candidate) => known.has(candidate))
-    .map((candidate) => relPathContract.parse(candidate))[0];
+    .map((candidate) => candidate)[0];
 };

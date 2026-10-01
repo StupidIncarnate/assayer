@@ -59,6 +59,6 @@ export const fileAnalysisContract = z.object({
   declaredTypes: z.array(declaredTypeContract),
   // Same-file scopes a driving route folded into one of `functions` — see PURPOSE above.
   declaringScopes: z.array(declaringScopeContract),
-});
+}).brand<'FileAnalysis'>();
 
 export type FileAnalysis = z.infer<typeof fileAnalysisContract>;

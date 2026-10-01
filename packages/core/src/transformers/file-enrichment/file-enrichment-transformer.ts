@@ -16,6 +16,7 @@
  * fileEnrichmentTransformer({ functions: composed });
  * // Returns the enrichment rows: [{ line, symbol, typeText, range? }, …]
  */
+import { lineEnrichmentContract } from '@assayer/shared/contracts';
 import type { BranchNode, EntrySignature, FileAnalysis } from '@assayer/shared/contracts';
 
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
@@ -29,11 +30,13 @@ export const fileEnrichmentTransformer = ({
   functions: { entry: EntrySignature; branches: BranchNode[] }[];
 }): FileAnalysis['enrichment'] =>
   functions.flatMap((fn) => [
-    ...fn.entry.params.map((param) => ({
-      line: fn.entry.line,
-      symbol: param.name,
-      typeText: typeTextTransformer({ type: param.type }),
-    })),
+    ...fn.entry.params.map((param) =>
+      lineEnrichmentContract.parse({
+        line: fn.entry.line,
+        symbol: param.name,
+        typeText: typeTextTransformer({ type: param.type }),
+      }),
+    ),
     // Enrichment shows a PARAM's type + representative range on the branch line — once per LEAF, so
     // `if (score > 5 && bonus > 1)` enriches both operands. Reading the branch as a single operand
     // showed neither: a compound condition had no param name to report at all.
@@ -50,7 +53,7 @@ export const fileEnrichmentTransformer = ({
           ...(leaf.predicate.literal === undefined ? {} : { literal: leaf.predicate.literal }),
         });
         return [
-          {
+          lineEnrichmentContract.parse({
             line: branch.startLine,
             symbol: leaf.operandParamName,
             typeText: typeTextTransformer({ type: leaf.operandType }),
@@ -60,7 +63,7 @@ export const fileEnrichmentTransformer = ({
               ...domainValuesTransformer({ domain: armValues.satisfying }),
               ...domainValuesTransformer({ domain: armValues.violating }),
             ],
-          },
+          }),
         ];
       }),
     ),

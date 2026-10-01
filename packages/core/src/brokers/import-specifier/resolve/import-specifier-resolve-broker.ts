@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Resolves one module specifier against a containing file with the npm `typescript`
- *   resolver (`resolveModuleName` over `ts.sys`) — the same algorithm `tsc` runs, so relative
+ *   resolver, through the gateway's `resolveModuleFile` — the same algorithm `tsc` runs, so relative
  *   spellings and path aliases collapse to one canonical file. Returns the resolved absolute file
  *   name when TypeScript finds one, or `{ resolved: false }` when the specifier points at nothing (a
  *   broken import). The caller classifies local vs package from the file name; builtins are matched by
@@ -10,10 +10,10 @@
  * importSpecifierResolveBroker({ specifier: '../b/foo', containingFile: '/repo/src/a/x.ts', options });
  * // Returns { resolved: true, fileName: '/repo/src/b/foo.ts' } or { resolved: false }
  */
-import ts from '#gateway/npm/typescript';
-
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
+import { importSpecifierResolveResultContract } from '../../../contracts/import-specifier-resolve-result/import-specifier-resolve-result-contract';
+import type { ImportSpecifierResolveResult } from '../../../contracts/import-specifier-resolve-result/import-specifier-resolve-result-contract';
+import { resolveModuleFile } from '#gateway/npm/typescript';
+import type { CompilerOptions } from '#gateway/npm/typescript';
 
 export const importSpecifierResolveBroker = ({
   specifier,
@@ -22,14 +22,13 @@ export const importSpecifierResolveBroker = ({
 }: {
   specifier: string;
   containingFile: string;
-  options: ts.CompilerOptions;
-}): { resolved: false } | { resolved: true; fileName: FilePath } => {
-  const result = ts.resolveModuleName(specifier, containingFile, options, ts.sys);
-  const {resolvedModule} = result;
+  options: CompilerOptions;
+}): ImportSpecifierResolveResult => {
+  const fileName = resolveModuleFile({ specifier, containingFile, options });
 
-  if (resolvedModule === undefined) {
-    return { resolved: false };
+  if (fileName === undefined) {
+    return importSpecifierResolveResultContract.parse({ resolved: false });
   }
 
-  return { resolved: true, fileName: filePathContract.parse(resolvedModule.resolvedFileName) };
+  return importSpecifierResolveResultContract.parse({ resolved: true, fileName });
 };

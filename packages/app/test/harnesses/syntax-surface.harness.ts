@@ -17,8 +17,6 @@
  */
 import { readFileSync, walkFilesSync } from '#gateway/node/fs';
 import { basename, dirname, join, relative, sep } from '#gateway/node/path';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
-import { FolderNameStub } from '@assayer/shared/contracts/folder-name/folder-name.stub';
 
 import { isAssayerHarnessGuard } from '../../../core/src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../core/src/statics/harness-module/harness-module-statics';
@@ -49,8 +47,8 @@ const isAnalysedSourceFile = (entry: { name: string; parentPath: string }): bool
 
 export const syntaxSurfaceHarness = (): {
   surfaceHeaderPattern: () => RegExp;
-  fileLeaves: () => ReturnType<typeof RelPathStub>[];
-  dirNames: () => ReturnType<typeof FolderNameStub>[];
+  fileLeaves: () => string[];
+  dirNames: () => string[];
 } => ({
   // The header pins the compiled surface's file counts: `ts N tsx M`, where N/M come from the same
   // inclusion rule the compiler uses (a `.ts`/`.tsx` that is not a colocated `.test.ts`/`.test.tsx`).
@@ -70,12 +68,12 @@ export const syntaxSurfaceHarness = (): {
   // The FILE_TREE_FILE leaves are the specimen basenames — duplicates included (in-function.ts ×3,
   // in-class.ts ×2, pure-statement.ts ×2), sorted, matching the tree the manifest relPaths build. Both
   // `.ts` and `.tsx` specimens are leaves, exactly as both feed the header's `ts N tsx M` counts.
-  fileLeaves: (): ReturnType<typeof RelPathStub>[] =>
+  fileLeaves: (): string[] =>
     catalogueFiles()
       .filter((entry) => isAnalysedSourceFile(entry))
       .map((entry) => entry.name)
       .sort()
-      .map((value) => RelPathStub({ value })),
+      .map((value) => value),
 
   // The FILE_TREE_DIR nodes are the directory nodes the tree renders — one per DISTINCT directory PATH on
   // the way to a specimen. Deduping the full smoke-repo-relative paths collapses a shared prefix
@@ -83,7 +81,7 @@ export const syntaxSurfaceHarness = (): {
   // paths that share a basename stay distinct — in-function ×3, in-class/length/pure-statement/unreachable
   // ×2 — each rendered showing that basename, exactly as the tree does. Projected to the basename and
   // sorted to match the asserted [...dirNames].sort().
-  dirNames: (): ReturnType<typeof FolderNameStub>[] => {
+  dirNames: (): string[] => {
     const dirPaths = new Set(
       catalogueFiles()
         .filter((entry) => isAnalysedSourceFile(entry))
@@ -95,6 +93,6 @@ export const syntaxSurfaceHarness = (): {
     return [...dirPaths]
       .map((dirPath) => dirPath.slice(dirPath.lastIndexOf(sep) + 1))
       .sort()
-      .map((value) => FolderNameStub({ value }));
+      .map((value) => value);
   },
 });

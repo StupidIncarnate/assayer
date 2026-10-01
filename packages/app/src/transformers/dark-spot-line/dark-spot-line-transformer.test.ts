@@ -6,7 +6,7 @@ describe('darkSpotLineTransformer', () => {
     it('VALID: {stub dark spot} => names the kind, the span, the scope, and what it costs', () => {
       const result = darkSpotLineTransformer({ darkSpot: DarkSpotStub() });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
       );
     });
@@ -23,7 +23,7 @@ describe('darkSpotLineTransformer', () => {
         }),
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'DARK ForOfStatement at L4-L6 in *module*/sumAll — Assayer has no handler for it, so nothing inside it is covered',
       );
     });
@@ -33,7 +33,7 @@ describe('darkSpotLineTransformer', () => {
         darkSpot: DarkSpotStub({ kind: 'TryStatement', scopePath: ['*module*', 'Classifier', 'classify'] }),
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'DARK TryStatement at L3-L5 in *module*/Classifier/classify — Assayer has no handler for it, so nothing inside it is covered',
       );
     });
@@ -42,7 +42,7 @@ describe('darkSpotLineTransformer', () => {
     it('EMPTY: {scopePath: []} => renders with an empty scope rather than throwing', () => {
       const result = darkSpotLineTransformer({ darkSpot: DarkSpotStub({ scopePath: [] }) });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'DARK ForStatement at L3-L5 in  — Assayer has no handler for it, so nothing inside it is covered',
       );
     });
@@ -50,7 +50,7 @@ describe('darkSpotLineTransformer', () => {
     it('EDGE: {a single-line dark spot} => states the same line at both ends of the span', () => {
       const result = darkSpotLineTransformer({ darkSpot: DarkSpotStub({ startLine: 7, endLine: 7 }) });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'DARK ForStatement at L7-L7 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
       );
     });

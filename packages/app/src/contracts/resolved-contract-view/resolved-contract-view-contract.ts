@@ -15,13 +15,12 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { resolvedEdgeLineContract } from '../resolved-edge-line/resolved-edge-line-contract';
 
 export const resolvedContractViewContract = z.object({
-  symbol: resolvedEdgeLineContract,
-  source: resolvedEdgeLineContract,
-  inputs: z.array(resolvedEdgeLineContract),
-  output: resolvedEdgeLineContract.optional(),
-});
+  symbol: z.string().min(1).brand<'ResolvedContractViewSymbol'>(),
+  source: z.string().min(1).brand<'ResolvedContractViewSource'>(),
+  inputs: z.array(z.string().min(1).brand<'ResolvedContractViewInputs'>()),
+  output: z.string().min(1).brand<'ResolvedContractViewOutput'>().optional(),
+}).brand<'ResolvedContractView'>();
 
 export type ResolvedContractView = z.infer<typeof resolvedContractViewContract>;

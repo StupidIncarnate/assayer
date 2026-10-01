@@ -20,7 +20,7 @@
 import type { RunResult } from '@assayer/shared/contracts';
 
 export const bucketVerdict = ({ result }: { result: RunResult }): 'happy-path' | 'sad-path' =>
-  (result.cases.length === 0 || result.cases.every((testCase) => String(testCase.status) === 'passed')) &&
+  (result.cases.length === 0 || result.cases.every((testCase) => testCase.status === 'passed')) &&
   result.gaps.length === 0 &&
   result.darkSpots.length === 0 &&
   result.undriven.length === 0 &&

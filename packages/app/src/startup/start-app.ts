@@ -8,4 +8,4 @@
 
 import { AppMountFlow } from '../flows/app-mount/app-mount-flow';
 
-export const StartApp = (): void => AppMountFlow();
+export const StartApp = (): void => { AppMountFlow(); };

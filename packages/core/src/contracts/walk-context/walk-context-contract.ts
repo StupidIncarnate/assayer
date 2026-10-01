@@ -22,15 +22,15 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { guardStepContract, paramDescriptorContract, symbolNameContract } from '@assayer/shared/contracts';
+import { guardStepContract, paramDescriptorContract } from '@assayer/shared/contracts';
 
 export const walkContextContract = z.object({
-  scopePath: z.array(symbolNameContract),
+  scopePath: z.array(z.string().min(1).brand<'WalkContextScopePath'>()),
   guardPath: z.array(guardStepContract),
   params: z.array(paramDescriptorContract),
   exported: z.boolean(),
   tail: z.boolean(),
-  enclosingClass: z.object({ name: symbolNameContract, constructable: z.boolean() }).optional(),
-});
+  enclosingClass: z.object({ name: z.string().min(1).brand<'WalkContextEnclosingClassName'>(), constructable: z.boolean() }).brand<'WalkContextEnclosingClass'>().optional(),
+}).brand<'WalkContext'>();
 
 export type WalkContext = z.infer<typeof walkContextContract>;

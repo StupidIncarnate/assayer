@@ -39,15 +39,15 @@
  * // Returns [{ name: 'audit', reason: '`audit` derives no case, because Assayer cannot construct…' }]
  */
 import { entryGapContract } from '@assayer/shared/contracts';
-import type { EntryGap, EntryLabel, SymbolName, TypeText } from '@assayer/shared/contracts';
+import type { EntryGap } from '@assayer/shared/contracts';
 
 export const inputGapTransformer = ({
   entryName,
   unfillable,
   hasCases = false,
 }: {
-  entryName: SymbolName;
-  unfillable: readonly { param: SymbolName; type: TypeText; owner?: EntryLabel | undefined }[];
+  entryName: string;
+  unfillable: readonly { param: string; type: string; owner?: string | undefined }[];
   // Whether the entry ALSO derived at least one real case alongside this refusal. Optional so a caller
   // that has not threaded the fact through yet falls back to the prior "derives no case" wording — true
   // for every producer that has, false or absent for one that has not caught up.
@@ -63,17 +63,17 @@ export const inputGapTransformer = ({
   const owned = unfillable.map((entry) => ({
     param: entry.param,
     type: entry.type,
-    ownerName: entry.owner === undefined ? String(entryName) : String(entry.owner),
+    ownerName: entry.owner === undefined ? entryName : entry.owner,
   }));
-  const distinct = [...new Map(owned.map((entry) => [`${entry.ownerName}.${String(entry.param)}`, entry])).values()];
+  const distinct = [...new Map(owned.map((entry) => [`${entry.ownerName}.${entry.param}`, entry])).values()];
 
   // Both lists are built from the same refusals in the same order, so the sentence and the harness
   // snippet always name the same parameters — the reader never has to reconcile two lists.
   const refused = distinct
     .map(
       (entry) =>
-        `\`${String(entry.param)}: ${String(entry.type)}\`${ 
-        entry.ownerName === String(entryName) ? '' : ` on \`${entry.ownerName}\``}`,
+        `\`${entry.param}: ${entry.type}\`${ 
+        entry.ownerName === entryName ? '' : ` on \`${entry.ownerName}\``}`,
     )
     .join(', ');
   // Grouped by declaring scope, because that is how the harness is keyed: an input belongs to the
@@ -83,7 +83,7 @@ export const inputGapTransformer = ({
       (ownerName) =>
         `${ownerName}: { ${distinct
           .filter((entry) => entry.ownerName === ownerName)
-          .map((entry) => `${String(entry.param)}: <a ${String(entry.type)}>`)
+          .map((entry) => `${entry.param}: <a ${entry.type}>`)
           .join(', ')} }`,
     )
     .join(', ');
@@ -93,9 +93,9 @@ export const inputGapTransformer = ({
       name: entryName,
       reason:
         `${hasCases
-          ? `\`${String(entryName)}\` derives a case, but not every one it could: Assayer cannot ` +
+          ? `\`${entryName}\` derives a case, but not every one it could: Assayer cannot ` +
             'construct an input it still needs. '
-          : `\`${String(entryName)}\` derives no case, because Assayer cannot construct an input it needs. ` 
+          : `\`${entryName}\` derives no case, because Assayer cannot construct an input it needs. ` 
         }It builds inputs out of declared DATA — a scalar, a union, an array, or an object shape whose ` +
         `every property is itself one — and refuses anything that bottoms out in a function or in a type ` +
         `carrying nothing but its name: ${refused}. Substituting a stand-in would be worse than deriving ` +
@@ -105,7 +105,7 @@ export const inputGapTransformer = ({
         `with a \`.harness.ts\` extension, and declare the input: \`import { assayerHarness } from ` +
         `'@assayer/core'; assayerHarness({ inputs: { ${inputs} } });\`. ` +
         `Assayer then builds them from that declaration instead of refusing them; anything else still ` +
-        `standing between \`${String(entryName)}\` and a case is reported on its own line.`,
+        `standing between \`${entryName}\` and a case is reported on its own line.`,
     }),
   ];
 };

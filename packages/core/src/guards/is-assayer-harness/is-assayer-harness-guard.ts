@@ -23,11 +23,13 @@
  */
 import ts from '#gateway/npm/typescript';
 
-import { symbolNameContract } from '@assayer/shared/contracts';
-
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
 
-export const isAssayerHarnessGuard = ({ source }: { source: string }): boolean => {
+export const isAssayerHarnessGuard = ({ source }: { source?: string }): boolean => {
+  if (source === undefined) {
+    return false;
+  }
+
   const sourceFile = ts.createSourceFile('harness.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 
   const coreBindings = sourceFile.statements.flatMap((statement) => {
@@ -54,14 +56,14 @@ export const isAssayerHarnessGuard = ({ source }: { source: string }): boolean =
       ts.isNamedImports(bindings)
         ? bindings.elements
             .filter((element) => (element.propertyName?.text ?? element.name.text) === harnessModuleStatics.registrar)
-            .map((element) => symbolNameContract.parse(element.name.text))
+            .map((element) => element.name.text)
         : [],
     ),
   );
 
   const namespaceNames = new Set(
     coreBindings.flatMap((bindings) =>
-      ts.isNamespaceImport(bindings) ? [symbolNameContract.parse(bindings.name.text)] : [],
+      ts.isNamespaceImport(bindings) ? [bindings.name.text] : [],
     ),
   );
 
@@ -73,14 +75,14 @@ export const isAssayerHarnessGuard = ({ source }: { source: string }): boolean =
     const callee = statement.expression.expression;
 
     if (ts.isIdentifier(callee)) {
-      return directNames.has(symbolNameContract.parse(callee.text));
+      return directNames.has(callee.text);
     }
 
     return (
       ts.isPropertyAccessExpression(callee) &&
       ts.isIdentifier(callee.expression) &&
       callee.name.text === harnessModuleStatics.registrar &&
-      namespaceNames.has(symbolNameContract.parse(callee.expression.text))
+      namespaceNames.has(callee.expression.text)
     );
   });
 };

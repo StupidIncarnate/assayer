@@ -126,16 +126,6 @@ module.exports = [
     },
     ...dungeonmasterTestConfigs.fileOverrides,
     {
-        // These three brand rules autofix under ward's `--fix`. They stay off repo-wide until the
-        // brands-gateways epic's brand waves add every brand in order (EPIC item B-9 turns them on).
-        files: ['**/*.ts', '**/*.tsx'],
-        rules: {
-            '@dungeonmaster/require-object-contract-brands': 'off',
-            '@dungeonmaster/require-object-contract-brands-indexed': 'off',
-            '@dungeonmaster/enforce-owner-field-reuse': 'off',
-        },
-    },
-    {
         // Without a `scope` option these rules find the repo scope by walking up from the plugin's own
         // folder. The plugin is a `file:` link into the dungeonmaster checkout, so that walk finds
         // `@dungeonmaster` and every `@assayer/*` workspace import reads as a raw npm import.

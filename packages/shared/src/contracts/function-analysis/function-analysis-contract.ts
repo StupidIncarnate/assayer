@@ -28,6 +28,6 @@ export const functionAnalysisContract = z.object({
   exits: z.array(exitNodeContract),
   cases: z.array(derivedTestCaseContract),
   predicateSignature: conditionNodeContract.optional(),
-});
+}).brand<'FunctionAnalysis'>();
 
 export type FunctionAnalysis = z.infer<typeof functionAnalysisContract>;

@@ -1,4 +1,4 @@
-import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
@@ -6,7 +6,7 @@ import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { deriveCasesRequestTransformer } from './derive-cases-request-transformer';
 
-const VALUE = symbolNameContract.parse('value');
+const VALUE = 'value';
 const THREE = representativeValueContract.parse(3);
 
 const BRANCH = BranchNodeStub({
@@ -112,7 +112,7 @@ describe('deriveCasesRequestTransformer', () => {
         params: SCOPE.params,
         welds: undefined,
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('inner'), params: [symbolNameContract.parse('cb')] },
+        harness: { entry: 'inner', params: ['cb'] },
       });
 
       expect(result.harness).toStrictEqual({ entry: 'inner', params: ['cb'] });

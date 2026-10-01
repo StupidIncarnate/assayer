@@ -11,13 +11,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import {
-  columnNumberContract,
-  envReadContract,
-  globalUseContract,
-  lineNumberContract,
-  moduleEdgeContract,
-} from '@assayer/shared/contracts';
+import { envReadContract, globalUseContract, moduleEdgeContract } from '@assayer/shared/contracts';
 
 import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
 import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
@@ -48,19 +42,19 @@ export const walkFileResultContract = z.discriminatedUnion('success', [
     envReads: z.array(envReadContract),
     // The start lines of inline functions the file reaches WITHOUT a named call — returned to a caller
     // or immediately invoked — so a follower never mistakes a reached callback for dead surface.
-    reachedFns: z.array(lineNumberContract),
+    reachedFns: z.array(z.number().int().positive().brand<'WalkFileResultReachedFns'>()),
     // The parallel channel only IIFEs populate: each invoked-in-place function (`((n) => …)(x)`) with
     // the invocation arguments welded onto its params — what a follower welds to drive the arrow.
     invokedFns: z.array(invokedFnContract),
-  }),
+  }).brand<'WalkFileResult'>(),
   z.object({
     success: z.literal(false),
     error: z.object({
-      line: lineNumberContract,
-      column: columnNumberContract,
-      message: z.string().min(1).brand<'ExtractErrorMessage'>(),
-    }),
-  }),
+      line: z.number().int().positive().brand<'WalkFileResultErrorLine'>(),
+      column: z.number().int().positive().brand<'WalkFileResultErrorColumn'>(),
+      message: z.string().min(1).brand<'WalkFileResultErrorMessage'>(),
+    }).brand<'WalkFileResultError'>(),
+  }).brand<'WalkFileResult'>(),
 ]);
 
 export type WalkFileResult = z.infer<typeof walkFileResultContract>;

@@ -13,7 +13,6 @@ import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
 import { readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const configLoadBroker = async ({
   configPath,
@@ -22,12 +21,11 @@ export const configLoadBroker = async ({
 }): Promise<
   { success: true; data: AssayerConfig } | ({ success: false; message: string } & SourcePosition)
 > => {
-  const text = fileContentsContract.parse(await readFile(configPath));
+  const text = (await readFile(configPath));
 
   try {
-    const parsed = JSON.parse(String(text)) as unknown;
 
-    return { success: true, data: assayerConfigContract.parse(parsed) };
+    return { success: true, data: assayerConfigContract.parse(JSON.parse(text)) };
   } catch (error: unknown) {
     if (!(error instanceof SyntaxError)) {
       throw error;
@@ -35,14 +33,9 @@ export const configLoadBroker = async ({
 
     const position = jsonParseErrorSourcePositionTransformer({
       message: error.message,
-      text: String(text),
+      text,
     });
 
-    return {
-      success: false,
-      message: error.message,
-      line: position.line,
-      column: position.column,
-    };
+    return { success: false, message: error.message, ...position };
   }
 };

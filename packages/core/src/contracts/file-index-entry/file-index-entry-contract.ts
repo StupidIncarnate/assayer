@@ -8,10 +8,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { relPathContract } from '@assayer/shared/contracts';
 
 export const fileIndexEntryContract = z.object({
-  relPath: relPathContract,
-});
+  relPath: z.string().min(1).brand<'FileIndexEntryRelPath'>(),
+}).brand<'FileIndexEntry'>();
 
 export type FileIndexEntry = z.infer<typeof fileIndexEntryContract>;

@@ -1,9 +1,7 @@
-import { NamespaceNameStub } from '@assayer/shared/contracts/namespace-name/namespace-name.stub';
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 
 import { cacheLoadResolvedIndexBroker } from './cache-load-resolved-index-broker';
 import { cacheLoadResolvedIndexBrokerProxy } from './cache-load-resolved-index-broker.proxy';
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 
 describe('cacheLoadResolvedIndexBroker', () => {
   describe('present index', () => {
@@ -13,8 +11,8 @@ describe('cacheLoadResolvedIndexBroker', () => {
       proxy.resolves({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await cacheLoadResolvedIndexBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
-        namespace: NamespaceNameStub({ value: 'main' }),
+        repoPath: '/repo',
+        namespace: 'main',
       });
 
       expect(result).toStrictEqual(index);
@@ -27,8 +25,8 @@ describe('cacheLoadResolvedIndexBroker', () => {
       proxy.absent({ repoPath: '/repo', namespace: 'main' });
 
       const result = await cacheLoadResolvedIndexBroker({
-        repoPath: RepoPathStub({ value: '/repo' }),
-        namespace: NamespaceNameStub({ value: 'main' }),
+        repoPath: '/repo',
+        namespace: 'main',
       });
 
       expect(result).toBe(undefined);

@@ -9,12 +9,11 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Text } from '#gateway/npm/mantine__core';
-import type { ObjectStub } from '@assayer/shared/contracts';
 
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';
 
 export interface StubReadersLayerWidgetProps {
-  readers: ObjectStub['readers'];
+  readers: readonly string[];
 }
 
 export const StubReadersLayerWidget = ({ readers }: StubReadersLayerWidgetProps): ReactElement => (
@@ -28,8 +27,8 @@ export const StubReadersLayerWidget = ({ readers }: StubReadersLayerWidgetProps)
       </Text>
     ) : (
       readers.map((reader) => (
-        <Text key={String(reader)} data-testid="STUB_READER" ff="monospace" fz="xs" c="gray.5">
-          {String(reader)}
+        <Text key={reader} data-testid="STUB_READER" ff="monospace" fz="xs" c="gray.5">
+          {reader}
         </Text>
       ))
     )}

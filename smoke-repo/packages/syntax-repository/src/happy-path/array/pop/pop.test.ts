@@ -8,7 +8,7 @@ const source = readFileSync(join(__dirname, 'pop.ts'), 'utf8');
 const relPath = 'src/happy-path/array/pop/pop.ts';
 
 // The hermetic walk parses with strict-null-checks on, so `number | undefined` arrives as a genuine
-// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-adapter` has no
+// two-member union rather than collapsing to plain `number`. `read-type-fact-layer-transformer` has no
 // dedicated case for the undefined type, so its member reads through the generic opaque path as
 // `{ kind: 'unknown', text: 'undefined' }`, sitting beside the real `{ kind: 'number' }` member.
 const OPTIONAL_NUMBER = { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] };

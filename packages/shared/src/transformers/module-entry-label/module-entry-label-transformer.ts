@@ -20,22 +20,19 @@
  * moduleEntryLabelTransformer({ exportName, relPath: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts' });
  * // Returns 'message' when exportName is set, else 'uses-greeting.ts'
  */
-import { entryLabelContract } from '../../contracts/entry-label/entry-label-contract';
-import type { EntryLabel } from '../../contracts/entry-label/entry-label-contract';
-import type { SymbolName } from '../../contracts/symbol-name/symbol-name-contract';
 
 export const moduleEntryLabelTransformer = ({
   exportName,
   relPath,
 }: {
-  exportName?: SymbolName;
+  exportName?: string;
   relPath: string;
-}): EntryLabel => {
+}): string => {
   if (exportName !== undefined) {
-    return entryLabelContract.parse(String(exportName));
+    return exportName;
   }
 
   const basename = relPath.split('/').filter((segment) => segment.length > 0).at(-1);
 
-  return entryLabelContract.parse(basename === undefined || basename.length === 0 ? relPath : basename);
+  return (basename === undefined || basename.length === 0 ? relPath : basename);
 };

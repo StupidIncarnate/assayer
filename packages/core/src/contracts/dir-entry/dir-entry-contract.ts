@@ -11,6 +11,6 @@ import { z } from '#gateway/npm/zod';
 export const dirEntryContract = z.object({
   name: z.string().min(1).brand<'DirEntryName'>(),
   isDirectory: z.boolean(),
-});
+}).brand<'DirEntry'>();
 
 export type DirEntry = z.infer<typeof dirEntryContract>;

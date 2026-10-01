@@ -16,12 +16,10 @@ import { mkdtempSync, ensureDirSync, writeFileSync, realpathSync, rmSync } from 
 import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 const VENDORED_PKG_JSON = '{ "name": "vendored-pkg", "version": "1.0.0", "types": "index.d.ts" }';
@@ -52,17 +50,17 @@ export const resolveGraphHarness = (): {
   resolveBrokenRepo: () => Promise<ResolveResult>;
   resolveDynamicRepo: () => Promise<ResolveResult>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
   return {
     afterEach: (): void => {
-      dirs.forEach((dir) => { rmSync(String(dir), { recursive: true, force: true }); });
+      dirs.forEach((dir) => { rmSync(dir, { recursive: true, force: true }); });
       dirs.length = 0;
     },
 
     resolveMixedRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stitch-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
@@ -79,15 +77,15 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: contentHashTransformer({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
 
     resolveTypedRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-typed-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'node_modules', 'vendored-pkg'));
       writeFileSync(join(dir, 'node_modules', 'vendored-pkg', 'package.json'), VENDORED_PKG_JSON);
@@ -105,15 +103,15 @@ export const resolveGraphHarness = (): {
         blobsDir,
         cacheDir: join(dir, '.assayer', 'cache'),
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: contentHashTransformer({ content: CALLER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/a/caller.ts', contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
 
     resolveBarrelRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-barrel-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'src', 'b'));
       ensureDirSync(join(dir, 'src', 'barrel'));
@@ -130,16 +128,16 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/barrel/index.ts' }), contentHash: contentHashTransformer({ content: BARREL_SRC }) },
-          { relPath: RelPathStub({ value: 'src/c/user.ts' }), contentHash: contentHashTransformer({ content: USER_SRC }) },
+          { relPath: 'src/b/foo.ts', contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: 'src/barrel/index.ts', contentHash: contentHashTransformer({ content: BARREL_SRC }) },
+          { relPath: 'src/c/user.ts', contentHash: contentHashTransformer({ content: USER_SRC }) },
         ],
       });
     },
 
     resolveBrokenRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-broken-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'broken.ts'), BROKEN_SRC);
@@ -149,13 +147,13 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/broken.ts' }), contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
+        files: [{ relPath: 'src/broken.ts', contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
       });
     },
 
     resolveDynamicRepo: async (): Promise<ResolveResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-dynamic-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       ensureDirSync(join(dir, 'src'));
       writeFileSync(join(dir, 'src', 'dynamic.ts'), DYNAMIC_SRC);
@@ -165,7 +163,7 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/dynamic.ts' }), contentHash: contentHashTransformer({ content: DYNAMIC_SRC }) }],
+        files: [{ relPath: 'src/dynamic.ts', contentHash: contentHashTransformer({ content: DYNAMIC_SRC }) }],
       });
     },
   };

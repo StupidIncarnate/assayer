@@ -40,21 +40,12 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { Predicate, SymbolName } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
+
+import type { ConditionReadout } from '../../contracts/condition-readout/condition-readout-contract';
 
 import { predicateTransformer } from '../predicate/predicate-transformer';
 import { readPropertyPathLayerTransformer } from './read-property-path-layer-transformer';
-
-export interface ConditionReadout {
-  operandNode: Node;
-  operandName?: SymbolName;
-  operandRootName?: SymbolName;
-  operandPropertyPath?: SymbolName[];
-  operandTypeRef?: SymbolName;
-  operandIsTypeof?: true;
-  predicate: Predicate;
-}
 
 export const readConditionLayerTransformer = ({ condition }: { condition: Node }): ConditionReadout => {
   const binary = Node.isBinaryExpression(condition) ? condition : undefined;
@@ -88,7 +79,7 @@ export const readConditionLayerTransformer = ({ condition }: { condition: Node }
               : Node.isNullLiteral(right)
                 ? representativeValueContract.parse(null)
                 : undefined;
-  const operandName = Node.isIdentifier(operandNode) ? symbolNameContract.parse(operandNode.getText()) : undefined;
+  const operandName = Node.isIdentifier(operandNode) ? operandNode.getText() : undefined;
   const operandIsTypeof = typeOfExpr === undefined ? undefined : true;
 
   // An object-member operand is read PAST the property access: the leftmost identifier is the root the
@@ -98,11 +89,11 @@ export const readConditionLayerTransformer = ({ condition }: { condition: Node }
     ? readPropertyPathLayerTransformer({ node: operandNode })
     : undefined;
   const rootNode = property?.root;
-  const operandRootName = rootNode !== undefined && Node.isIdentifier(rootNode) ? symbolNameContract.parse(rootNode.getText()) : undefined;
+  const operandRootName = rootNode !== undefined && Node.isIdentifier(rootNode) ? rootNode.getText() : undefined;
   const rootParam = rootNode?.getSymbol()?.getDeclarations().find((declaration) => Node.isParameterDeclaration(declaration));
   const rootTypeNode = rootParam !== undefined && Node.isParameterDeclaration(rootParam) ? rootParam.getTypeNode() : undefined;
   const operandTypeRef =
-    rootTypeNode !== undefined && Node.isTypeReference(rootTypeNode) ? symbolNameContract.parse(rootTypeNode.getTypeName().getText()) : undefined;
+    rootTypeNode !== undefined && Node.isTypeReference(rootTypeNode) ? rootTypeNode.getTypeName().getText() : undefined;
 
   return {
     operandNode,

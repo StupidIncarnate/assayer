@@ -14,8 +14,9 @@
  * // [{ relPath: 'assayer/stubs/objects/src/config/config.ts/Config.json', line: 1, column: 1,
  * //    message: "type 'src/config/config.ts#Config' no longer exists (renamed, moved, or deleted) — rectify this stub" }]
  */
-import { columnNumberContract, lineNumberContract, relPathContract } from '@assayer/shared/contracts';
-import type { ColumnNumber, LineNumber, RelPath, StubIndex, StubOverlay } from '@assayer/shared/contracts';
+import { stubOverlayReconcileResultContract } from '../../../contracts/stub-overlay-reconcile-result/stub-overlay-reconcile-result-contract';
+import type { StubOverlayReconcileResult } from '../../../contracts/stub-overlay-reconcile-result/stub-overlay-reconcile-result-contract';
+import type { StubIndex, StubOverlay } from '@assayer/shared/contracts';
 
 const OVERLAY_LINE = 1;
 const OVERLAY_COLUMN = 1;
@@ -26,7 +27,7 @@ export const stubOverlayReconcileBroker = ({
 }: {
   index: StubIndex;
   overlays: readonly StubOverlay[];
-}): readonly { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[] => {
+}): StubOverlayReconcileResult => {
   const objectByKey = new Map(index.objectStubs.map((stub) => [String(stub.key), stub]));
   const envByKey = new Map(index.envStubs.map((stub) => [String(stub.key), stub]));
 
@@ -43,7 +44,7 @@ export const stubOverlayReconcileBroker = ({
         ];
       }
 
-      const known = new Set(stub.properties.map((property) => String(property.name)));
+      const known = new Set(stub.properties.map((property) => property.name));
 
       return overlay.properties
         .filter((property) => !known.has(String(property.name)))
@@ -65,12 +66,12 @@ export const stubOverlayReconcileBroker = ({
       : [];
   });
 
-  return raw
+  return stubOverlayReconcileResultContract.parse(raw
     .map((entry) => ({
-      relPath: relPathContract.parse(String(entry.overlayPath)),
-      line: lineNumberContract.parse(OVERLAY_LINE),
-      column: columnNumberContract.parse(OVERLAY_COLUMN),
+      relPath: String(entry.overlayPath),
+      line: OVERLAY_LINE,
+      column: OVERLAY_COLUMN,
       message: entry.message,
     }))
-    .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
+    .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1)));
 };

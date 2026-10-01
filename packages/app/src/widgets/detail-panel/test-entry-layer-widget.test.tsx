@@ -1,9 +1,9 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { TestEntryLayerWidget } from './test-entry-layer-widget';
 import { TestEntryLayerWidgetProxy } from './test-entry-layer-widget.proxy';
 import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 const NAMED_FUNCTION = FunctionAnalysisStub({
   entry: EntrySignatureStub({
@@ -53,9 +53,7 @@ describe('TestEntryLayerWidget', () => {
     it('VALID: {two params, two cases} => the title carries the param list and the full case count, one row per case', () => {
       TestEntryLayerWidgetProxy();
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
-        ui: <TestEntryLayerWidget fn={NAMED_FUNCTION} />,
-      });
+      const { getByTestId, getAllByTestId } = render(<TestEntryLayerWidget fn={NAMED_FUNCTION} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('decide(a, b) · 2 cases');
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
@@ -69,9 +67,7 @@ describe('TestEntryLayerWidget', () => {
     it('VALID: {module entry with export message} => a bare label with no parens, and the row names the label', () => {
       TestEntryLayerWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <TestEntryLayerWidget fn={MODULE_ENTRY} relPath={RelPathStub({ value: 'src/message.ts' })} />,
-      });
+      const { getByTestId } = render(<TestEntryLayerWidget fn={MODULE_ENTRY} relPath={'src/message.ts'} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message → reaches L4');
@@ -82,9 +78,7 @@ describe('TestEntryLayerWidget', () => {
     it('VALID: {inner driven through outer} => the title is its own name, the row names the caller', () => {
       TestEntryLayerWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <TestEntryLayerWidget fn={THROUGH_CALLER_ENTRY} />,
-      });
+      const { getByTestId } = render(<TestEntryLayerWidget fn={THROUGH_CALLER_ENTRY} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('inner(n) · 1 cases');
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6) → reaches L4');

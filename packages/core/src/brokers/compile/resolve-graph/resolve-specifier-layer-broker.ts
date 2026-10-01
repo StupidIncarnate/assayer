@@ -15,11 +15,8 @@
  *   options, blobsByRelPath, builtins, seen: new Set() });
  * // Returns { kind: 'local', relPath } | { kind: 'package', packageName } | { kind: 'builtin', packageName } | { kind: 'unresolved' }
  */
-import { packageNameContract, relPathContract } from '@assayer/shared/contracts';
-import type { CompiledFileBlob, PackageName, RelPath } from '@assayer/shared/contracts';
+import type { CompiledFileBlob } from '@assayer/shared/contracts';
 
-import { filePathContract } from '../../../contracts/file-path/file-path-contract';
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 import { relative } from '#gateway/node/path';
 
@@ -44,14 +41,14 @@ export const resolveSpecifierLayerBroker = ({
   builtins: ReadonlySet<string>;
   seen: ReadonlySet<string>;
 }):
-  | { kind: 'local'; relPath: RelPath }
-  | { kind: 'package'; packageName: PackageName; dtsPath: FilePath }
-  | { kind: 'builtin'; packageName: PackageName }
+  | { kind: 'local'; relPath: string }
+  | { kind: 'package'; packageName: string; dtsPath: string }
+  | { kind: 'builtin'; packageName: string }
   | { kind: 'unresolved' } => {
   const bareBuiltin = specifier.startsWith('node:') ? specifier.slice('node:'.length) : specifier;
 
   if (specifier.startsWith('node:') || builtins.has(bareBuiltin)) {
-    return { kind: 'builtin', packageName: packageNameContract.parse(bareBuiltin) };
+    return { kind: 'builtin', packageName: bareBuiltin };
   }
 
   const resolved = importSpecifierResolveBroker({ specifier, containingFile, options });
@@ -61,7 +58,7 @@ export const resolveSpecifierLayerBroker = ({
   }
 
   const fileName = String(resolved.fileName);
-  const rel = String(relPathContract.parse(relative(root, fileName)));
+  const rel = relative(root, fileName);
   const outsideRoot = rel.startsWith('..');
   const inNodeModules = fileName.includes('/node_modules/');
 
@@ -71,10 +68,10 @@ export const resolveSpecifierLayerBroker = ({
 
     // The resolved `.d.ts` path rides ALONG the classification so the stitch can read the declared
     // signature; it is absolute and machine-specific, so it never enters the persisted edge.
-    return { kind: 'package', packageName: packageNameContract.parse(packageName), dtsPath: filePathContract.parse(fileName) };
+    return { kind: 'package', packageName, dtsPath: fileName };
   }
 
-  const relPath = relPathContract.parse(rel);
+  const relPath = rel;
   const blob = blobsByRelPath.get(rel);
 
   if (importedName === undefined || seen.has(rel) || blob === undefined) {

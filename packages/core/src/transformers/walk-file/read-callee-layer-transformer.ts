@@ -25,39 +25,39 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { lineNumberContract, moduleSpecifierContract, symbolNameContract } from '@assayer/shared/contracts';
 
 import type { CalleeLink } from '../../contracts/call-site/call-site-contract';
+import { callSiteContract } from '../../contracts/call-site/call-site-contract';
 
 const IMPORT_DEFAULT_NAME = 'default';
 
 export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): CalleeLink => {
   if (!Node.isIdentifier(callee)) {
-    return { target: 'unresolved' };
+    return callSiteContract.shape.callee.parse({ target: 'unresolved' });
   }
 
   const [declaration, ...rest] = callee.getSymbol()?.getDeclarations() ?? [];
 
   if (declaration === undefined || rest.length > 0) {
-    return { target: 'unresolved' };
+    return callSiteContract.shape.callee.parse({ target: 'unresolved' });
   }
 
   if (Node.isImportSpecifier(declaration)) {
-    return {
+    return callSiteContract.shape.callee.parse({
       target: 'import',
-      specifier: moduleSpecifierContract.parse(declaration.getImportDeclaration().getModuleSpecifierValue()),
-      importedName: symbolNameContract.parse(declaration.getName()),
-    };
+      specifier: declaration.getImportDeclaration().getModuleSpecifierValue(),
+      importedName: declaration.getName(),
+    });
   }
 
   const importParent = declaration.getParent();
 
   if (Node.isImportClause(declaration) && Node.isImportDeclaration(importParent)) {
-    return {
+    return callSiteContract.shape.callee.parse({
       target: 'import',
-      specifier: moduleSpecifierContract.parse(importParent.getModuleSpecifierValue()),
-      importedName: symbolNameContract.parse(IMPORT_DEFAULT_NAME),
-    };
+      specifier: importParent.getModuleSpecifierValue(),
+      importedName: IMPORT_DEFAULT_NAME,
+    });
   }
 
   // A `const`/`let` bound to an arrow or function expression declares a function exactly as a
@@ -76,12 +76,12 @@ export const readCalleeLayerTransformer = ({ callee }: { callee: Node }): Callee
       : undefined;
 
   if (definition?.name === undefined || declaration.getSourceFile() !== callee.getSourceFile()) {
-    return { target: 'unresolved' };
+    return callSiteContract.shape.callee.parse({ target: 'unresolved' });
   }
 
-  return {
+  return callSiteContract.shape.callee.parse({
     target: 'local',
-    name: symbolNameContract.parse(definition.name),
-    startLine: lineNumberContract.parse(definition.node.getStartLineNumber()),
-  };
+    name: definition.name,
+    startLine: definition.node.getStartLineNumber(),
+  });
 };

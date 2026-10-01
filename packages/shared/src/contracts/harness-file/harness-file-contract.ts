@@ -19,12 +19,11 @@
 import { z } from '#gateway/npm/zod';
 
 import { harnessInputKeyContract } from '../harness-input-key/harness-input-key-contract';
-import { relPathContract } from '../rel-path/rel-path-contract';
 
 export const harnessFileContract = z.object({
-  relPath: relPathContract,
-  targetRelPath: relPathContract,
+  relPath: z.string().min(1).brand<'HarnessFileRelPath'>(),
+  targetRelPath: z.string().min(1).brand<'HarnessFileTargetRelPath'>(),
   keys: z.array(harnessInputKeyContract),
-});
+}).brand<'HarnessFile'>();
 
 export type HarnessFile = z.infer<typeof harnessFileContract>;

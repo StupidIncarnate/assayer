@@ -11,9 +11,8 @@
  * // Returns { mode: 'skipped', targets: [], harnesses: [] } when previousCommit still matches the
  * // ref's commit, or { mode: 'net-new' | 'incremental', targets: [...], harnesses: [...] } otherwise
  */
-import { compileModeContract } from '@assayer/shared/contracts';
-import type { CompileMode, RelPath } from '@assayer/shared/contracts';
-import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
+import { compilePlanStableResultContract } from '../../../contracts/compile-plan-stable-result/compile-plan-stable-result-contract';
+import type { CompilePlanStableResult } from '../../../contracts/compile-plan-stable-result/compile-plan-stable-result-contract';
 
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
 import { gitLsTreeBroker } from '../../git/ls-tree/git-ls-tree-broker';
@@ -31,15 +30,11 @@ export const compilePlanStableBroker = async ({
   ref: string;
   previousCommit?: string;
   exclude?: readonly string[];
-}): Promise<{
-  mode: CompileMode;
-  targets: { relPath: RelPath; content: FileContents }[];
-  harnesses: { relPath: RelPath; content: FileContents }[];
-}> => {
+}): Promise<CompilePlanStableResult> => {
   const currentCommit = await gitResolveCommitBroker({ repoRoot, ref });
 
   if (previousCommit !== undefined && currentCommit !== undefined && previousCommit === currentCommit) {
-    return { mode: compileModeContract.parse('skipped'), targets: [], harnesses: [] };
+    return compilePlanStableResultContract.parse({ mode: 'skipped', targets: [], harnesses: [] });
   }
 
   const entries = await gitLsTreeBroker({ repoRoot, ref });
@@ -50,7 +45,7 @@ export const compilePlanStableBroker = async ({
       content: await gitCatFileBroker({ repoRoot, blobSha: entry.blobSha }),
     })),
   );
-  const mode = compileModeContract.parse(previousCommit === undefined ? 'net-new' : 'incremental');
+  const mode = previousCommit === undefined ? 'net-new' : 'incremental';
 
-  return { mode, ...harnessClassifyBroker({ files: planned }) };
+  return compilePlanStableResultContract.parse({ mode, ...harnessClassifyBroker({ files: planned }) });
 };

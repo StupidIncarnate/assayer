@@ -12,6 +12,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-export const runVerdictContract = z.object({ passed: z.boolean() });
+export const runVerdictContract = z.object({ passed: z.boolean() }).brand<'RunVerdict'>();
 
 export type RunVerdict = z.infer<typeof runVerdictContract>;

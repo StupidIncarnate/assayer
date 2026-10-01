@@ -22,7 +22,7 @@ describe('UnitRunResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(String(result)).toBe('src/a.ts  1/1 passed');
+      expect(result).toBe('src/a.ts  1/1 passed');
     });
 
     it('VALID: {several paths} => one run per path, in the order given, each in the report', async () => {
@@ -45,7 +45,7 @@ describe('UnitRunResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(String(result)).toBe('src/a.ts  1/1 passed\nsrc/b.ts  1/1 passed');
+      expect(result).toBe('src/a.ts  1/1 passed\nsrc/b.ts  1/1 passed');
       expect(proxy.getRunPathsCalls()).toStrictEqual([
         {
           relPaths: ['src/a.ts', 'src/b.ts'],

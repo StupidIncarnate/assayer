@@ -16,39 +16,24 @@
  * // Returns { discName: 'method', caseInfos: [{ clause, literalValue: 'get', caseToken: 'str:get', branchCoverageId }], defaultClause }
  */
 import { Node } from '#gateway/npm/ts-morph';
-import type { CaseClause, DefaultClause, SwitchStatement } from '#gateway/npm/ts-morph';
+import type { SwitchStatement } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract, symbolNameContract } from '@assayer/shared/contracts';
-import type { CoverageId, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
-import type { AstProjection } from '../../contracts/ast-projection/ast-projection-contract';
+import type { DesugaredSwitch } from '../../contracts/desugared-switch/desugared-switch-contract';
 import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
 import { literalTokenTransformer } from '../literal-token/literal-token-transformer';
 import { projectNodeLayerTransformer } from './project-node-layer-transformer';
-
-export interface SwitchCaseInfo {
-  clause: CaseClause;
-  literalValue?: RepresentativeValue;
-  caseToken: AstProjection;
-  branchCoverageId: CoverageId;
-}
-
-export interface DesugaredSwitch {
-  discName?: SymbolName;
-  discNode: Node;
-  caseInfos: SwitchCaseInfo[];
-  defaultClause?: DefaultClause;
-}
 
 export const desugarSwitchLayerTransformer = ({
   switchStatement,
   scopePath,
 }: {
   switchStatement: SwitchStatement;
-  scopePath: SymbolName[];
+  scopePath: string[];
 }): DesugaredSwitch => {
   const discNode = switchStatement.getExpression();
-  const discName = Node.isIdentifier(discNode) ? symbolNameContract.parse(discNode.getText()) : undefined;
+  const discName = Node.isIdentifier(discNode) ? discNode.getText() : undefined;
   const discProjection = projectNodeLayerTransformer({ node: discNode });
   const clauses = switchStatement.getClauses();
 

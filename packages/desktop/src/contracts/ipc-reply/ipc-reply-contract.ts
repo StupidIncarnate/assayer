@@ -8,10 +8,11 @@
  *   tell an LLM exactly what to fix. A handler that ANSWERS with this contract never sets the flag,
  *   so the message the preload re-throws is byte-for-byte the one the broker wrote.
  *
- *   `valueRaw` is a deliberate passthrough: this contract validates the ENVELOPE, never the payload.
- *   Every channel carries a different shape, and each renderer-side adapter already parses the one it
- *   asked for into its own contract — re-stating those five shapes here would be a second encoding of
- *   them, which is the thing that lets two copies disagree.
+ *   `valueRaw` is checked only as JSON: this contract validates the ENVELOPE, never the payload's
+ *   shape. Every channel carries a different shape, and each renderer-side adapter already parses the
+ *   one it asked for into its own contract. Re-stating those shapes here would be a second encoding of
+ *   them, which is the thing that lets two copies disagree. `valueRaw` is optional because a saved run
+ *   that never ran answers `undefined`.
  *
  * USAGE:
  * ipcReplyContract.parse({ success: true, valueRaw: { verdicts: [] } });
@@ -20,8 +21,8 @@
 import { z } from '#gateway/npm/zod';
 
 export const ipcReplyContract = z.discriminatedUnion('success', [
-  z.object({ success: z.literal(true), valueRaw: z.unknown() }),
-  z.object({ success: z.literal(false), message: z.string().brand<'IpcReplyMessage'>() }),
+  z.object({ success: z.literal(true), valueRaw: z.json().optional() }).brand<'IpcReply'>(),
+  z.object({ success: z.literal(false), message: z.string().brand<'IpcReplyMessage'>() }).brand<'IpcReply'>(),
 ]);
 
 export type IpcReply = z.infer<typeof ipcReplyContract>;

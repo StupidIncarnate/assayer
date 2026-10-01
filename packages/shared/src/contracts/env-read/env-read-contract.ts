@@ -15,12 +15,11 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { envVarNameContract } from '../env-var-name/env-var-name-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 
 export const envReadContract = z.object({
-  property: envVarNameContract,
+  property: z.string().min(1).brand<'EnvReadProperty'>(),
   literals: z.array(representativeValueContract),
-});
+}).brand<'EnvRead'>();
 
 export type EnvRead = z.infer<typeof envReadContract>;

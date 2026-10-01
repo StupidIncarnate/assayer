@@ -30,7 +30,7 @@ describe('RunReportLayerResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(String(result)).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed');
+      expect(result).toBe('packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed');
     });
   });
 
@@ -195,7 +195,7 @@ describe('RunReportLayerResponder', () => {
 
       // The real formatter renders the throw verbatim as the ERROR block a reader acts on: the arrange
       // and the message, with no predicted/observed pair the run never produced.
-      expect(String(unitReportFormatTransformer({ runs }))).toBe(report);
+      expect(unitReportFormatTransformer({ runs })).toBe(report);
 
       await expect(
         RunReportLayerResponder({ configDir: '/repo', runs, darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
@@ -237,7 +237,7 @@ describe('RunReportLayerResponder', () => {
         '    reached classify/return@else\n' +
         '  assayer detail r-soundness-net';
 
-      expect(String(unitReportFormatTransformer({ runs }))).toBe(report);
+      expect(unitReportFormatTransformer({ runs })).toBe(report);
 
       await expect(
         RunReportLayerResponder({ configDir: '/repo', runs, darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' }),
@@ -278,7 +278,7 @@ describe('RunReportLayerResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
       );
@@ -299,7 +299,7 @@ describe('RunReportLayerResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  DARK ForStatement at L3-L5 in sumAll — Assayer has no handler for it, so nothing inside it is covered',
       );
@@ -338,7 +338,7 @@ describe('RunReportLayerResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  LINT decide — nothing in this file calls it, so it is dead surface',
       );
@@ -357,7 +357,7 @@ describe('RunReportLayerResponder', () => {
         inputGaps: 'error',
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  LINT decide — nothing in this file calls it, so it is dead surface',
       );
@@ -397,7 +397,7 @@ describe('RunReportLayerResponder', () => {
         inputGaps: 'warn',
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  GAP find — its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
       );
@@ -418,7 +418,7 @@ describe('RunReportLayerResponder', () => {
         inputGaps: 'off',
       });
 
-      expect(String(result)).toBe(
+      expect(result).toBe(
         'packages/syntax-repository/src/happy-path/boolean/and/and.ts  1/1 passed\n' +
           '  GAP find — its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
       );

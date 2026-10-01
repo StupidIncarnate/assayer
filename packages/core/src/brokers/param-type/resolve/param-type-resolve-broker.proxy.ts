@@ -6,12 +6,14 @@ export const paramTypeResolveBrokerProxy = (): {
   // `specifier` is the import path the file under test spells (e.g. './types').
   setupDefinition: ({ fileName, source, specifier }: { fileName: string; source: string; specifier: string }) => void;
   resolvesOutsideRepo: ({ fileName, specifier }: { fileName: string; specifier: string }) => void;
+  // The tsconfig search starts at `root` and finds nothing, so the compiler options are empty.
+  noTsconfigAt: ({ root }: { root: string }) => void;
 } => {
-  // The analyze and the tsconfig read run REAL — re-projecting the file from its retyped walk is the
-  // behaviour under test, not a dependency to stage. Only the sibling definition is staged, through the
-  // layer broker's own proxy.
+  // The analyze runs REAL — re-projecting the file from its retyped walk is the behaviour under test,
+  // not a dependency to stage. The tsconfig read and the sibling definition are staged, since each reads
+  // the real filesystem.
   analyzeFileBrokerProxy();
-  tsconfigReadBrokerProxy();
+  const tsconfigProxy = tsconfigReadBrokerProxy();
   const refs = resolveTypeRefLayerBrokerProxy();
 
   return {
@@ -23,6 +25,9 @@ export const paramTypeResolveBrokerProxy = (): {
     // so it stays opaque and whatever the per-file derivation refused stays refused.
     resolvesOutsideRepo: ({ fileName, specifier }: { fileName: string; specifier: string }): void => {
       refs.resolvesOutsideRepo({ fileName, specifier });
+    },
+    noTsconfigAt: ({ root }: { root: string }): void => {
+      tsconfigProxy.noTsconfigAt({ searchPath: root });
     },
   };
 };

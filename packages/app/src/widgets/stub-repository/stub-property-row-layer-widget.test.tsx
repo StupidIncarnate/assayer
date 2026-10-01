@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { StubPropertyRowLayerWidget } from './stub-property-row-layer-widget';
 import { StubPropertyRowLayerWidgetProxy } from './stub-property-row-layer-widget.proxy';
 import { FlatPropertyDemandStub } from '../../contracts/flat-property-demand/flat-property-demand.stub';
@@ -12,9 +13,7 @@ describe('StubPropertyRowLayerWidget', () => {
         demand: { kind: 'demanded', values: ['a', 'b'] },
       });
 
-      const { getByTestId, getAllByTestId, queryByTestId } = themedRenderMiddleware({
-        ui: <StubPropertyRowLayerWidget property={property} />,
-      });
+      const { getByTestId, getAllByTestId, queryByTestId } = render(<StubPropertyRowLayerWidget property={property} />, { wrapper: MantineProvider });
 
       expect(getByTestId('STUB_PROPERTY').getAttribute('data-propname')).toBe('mode');
       expect(getAllByTestId('STUB_PROPERTY_VALUE').map((element) => element.textContent)).toStrictEqual(['a', 'b']);
@@ -27,9 +26,7 @@ describe('StubPropertyRowLayerWidget', () => {
       StubPropertyRowLayerWidgetProxy();
       const property = FlatPropertyDemandStub({ name: 'retries', demand: { kind: 'unknown' } });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({
-        ui: <StubPropertyRowLayerWidget property={property} />,
-      });
+      const { getByTestId, queryByTestId } = render(<StubPropertyRowLayerWidget property={property} />, { wrapper: MantineProvider });
 
       expect(getByTestId('STUB_PROPERTY').getAttribute('data-propname')).toBe('retries');
       expect(getByTestId('STUB_UNKNOWN').textContent).toBe('unknown');

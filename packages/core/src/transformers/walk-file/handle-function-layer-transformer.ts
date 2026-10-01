@@ -117,8 +117,8 @@ export const handleFunctionLayerTransformer = ({
     // parameter serializes exactly as it always did.
     const declared = typeNode === undefined ? undefined : readDeclaredTypeTextLayerTransformer({ node: typeNode });
     const rendered =
-      type.kind === 'unknown' && type.typeRef !== undefined ? String(type.typeRef) : String(typeTextTransformer({ type }));
-    const declaredText = declared === undefined || String(declared) === rendered ? undefined : declared;
+      type.kind === 'unknown' && type.typeRef !== undefined ? type.typeRef : typeTextTransformer({ type });
+    const declaredText = declared === undefined || declared === rendered ? undefined : declared;
 
     return paramDescriptorContract.parse({
       name: param.getName(),

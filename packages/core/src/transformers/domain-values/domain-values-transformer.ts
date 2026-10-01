@@ -58,7 +58,7 @@ export const domainValuesTransformer = ({ domain }: { domain: ValueDomain }): Re
   if (lengths !== undefined) {
     return lengths
       .map((length) => {
-        const size = Number(length);
+        const size = length;
         return representativeValueContract.parse(PATTERN.repeat(Math.ceil(size / PATTERN.length)).slice(0, size));
       })
       .filter((candidate) => !domain.excluded.includes(candidate))

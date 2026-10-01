@@ -159,11 +159,11 @@ describe('compileHarnessGraphBroker (integration)', () => {
       expect({
         firstBlob: passes.first.blob,
         secondBlob: passes.second.blob,
-        contentHashHeld: String(passes.second.contentHash) === String(passes.first.contentHash),
-        layoutHeld: String(passes.second.index.layoutHash) === String(passes.first.index.layoutHash),
-        tsconfigHeld: String(passes.second.index.tsconfigHash) === String(passes.first.index.tsconfigHash),
-        firstHarnessHash: String(passes.first.index.harnessHash),
-        secondHarnessHash: String(passes.second.index.harnessHash),
+        contentHashHeld: passes.second.contentHash === passes.first.contentHash,
+        layoutHeld: passes.second.index.layoutHash === passes.first.index.layoutHash,
+        tsconfigHeld: passes.second.index.tsconfigHash === passes.first.index.tsconfigHash,
+        firstHarnessHash: passes.first.index.harnessHash,
+        secondHarnessHash: passes.second.index.harnessHash,
         firstKeys: passes.first.index.harnesses.flatMap((harness) => harness.keys),
         secondKeys: passes.second.index.harnesses.flatMap((harness) => harness.keys),
       }).toStrictEqual({
@@ -246,7 +246,7 @@ describe('compileHarnessGraphBroker (integration)', () => {
       expect({
         secondBlob: passes.second.blob,
         index: JSON.stringify(passes.second.index) === JSON.stringify(passes.first.index),
-        harnessHash: String(passes.second.index.harnessHash),
+        harnessHash: passes.second.index.harnessHash,
       }).toStrictEqual({ secondBlob: 'reused', index: true, harnessHash: HASH_FOR_BOTH });
     });
 

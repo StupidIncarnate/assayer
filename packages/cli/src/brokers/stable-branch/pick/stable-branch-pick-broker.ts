@@ -7,23 +7,21 @@
  *
  * USAGE:
  * await stableBranchPickBroker({
- *   candidates: [BranchNameStub({ value: 'main' }), BranchNameStub({ value: 'develop' })],
- *   preselected: BranchNameStub({ value: 'main' }),
+ *   candidates: ['main', 'develop'],
+ *   preselected: 'main',
  * });
- * // Prompts on stdin/stdout; returns the matched BranchName or the preselected one
+ * // Prompts on stdin/stdout; returns the matched branch name or the preselected one
  */
 import { question } from '#gateway/node/readline';
 import { getStdin, stdout } from '#gateway/node/process';
-import { branchNameContract } from '@assayer/shared/contracts';
-import type { BranchName } from '@assayer/shared/contracts';
 
 export const stableBranchPickBroker = async ({
   candidates,
   preselected,
 }: {
-  candidates: readonly BranchName[];
-  preselected: BranchName;
-}): Promise<BranchName> => {
+  candidates: readonly string[];
+  preselected: string;
+}): Promise<string> => {
   const candidateLines = candidates
     .map((candidate) => `  ${candidate}${candidate === preselected ? ' (default)' : ''}`)
     .join('\n');
@@ -39,5 +37,5 @@ export const stableBranchPickBroker = async ({
   });
   const match = candidates.find((candidate) => candidate === answer);
 
-  return branchNameContract.parse(match === undefined ? preselected : match);
+  return (match === undefined ? preselected : match);
 };

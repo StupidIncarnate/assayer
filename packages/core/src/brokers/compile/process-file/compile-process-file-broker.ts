@@ -22,9 +22,9 @@ import { mapProjectionTransformer } from '../../../transformers/map-projection/m
 import { moduleGraphProjectionTransformer } from '../../../transformers/module-graph-projection/module-graph-projection-transformer';
 
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
-import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
+import { compiledFileBlobContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
-import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
+import type { MapExtractResult } from '../../../contracts/map-extract-result/map-extract-result-contract';
 import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
 
 export const compileProcessFileBroker = async ({
@@ -38,7 +38,7 @@ export const compileProcessFileBroker = async ({
 }): Promise<
   | { reused: true; contentHash: ContentHash }
   | { reused: false; contentHash: ContentHash }
-  | { reused: false; error: { message: string } & SourcePosition }
+  | { reused: false; error: Extract<MapExtractResult, { success: false }>['error'] }
 > => {
   const contentHash = contentHashTransformer({ content });
   const blobPath = `${blobsDir}/${contentHash}.json`;
@@ -53,11 +53,7 @@ export const compileProcessFileBroker = async ({
   if (!extracted.success) {
     return {
       reused: false,
-      error: {
-        line: extracted.error.line,
-        column: extracted.error.column,
-        message: String(extracted.error.message),
-      },
+      error: extracted.error,
     };
   }
 
@@ -71,7 +67,7 @@ export const compileProcessFileBroker = async ({
   const moduleGraph = moduleGraphProjectionTransformer({ walked });
 
   const blob = compiledFileBlobContract.parse({
-    relPath: relPathContract.parse(relPath),
+    relPath,
     contentHash,
     nodes: extracted.nodes,
     displayLines,

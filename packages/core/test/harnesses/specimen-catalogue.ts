@@ -27,8 +27,6 @@ import { existsSync, readFileSync, walkFilesSync } from '#gateway/node/fs';
 import { resolve, join, relative, sep, basename, dirname, extname } from '#gateway/node/path';
 
 import { Project, ts } from '#gateway/npm/ts-morph';
-import { relPathContract } from '@assayer/shared/contracts';
-import type { RelPath } from '@assayer/shared/contracts';
 
 import { isAssayerHarnessGuard } from '../../src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../src/statics/harness-module/harness-module-statics';
@@ -52,13 +50,13 @@ const isAnalysedSourceFile = (entry: { name: string; parentPath: string }): bool
   (entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'));
 
 export const specimenCatalogue = (): {
-  relPaths: () => RelPath[];
-  roots: () => { relPath: RelPath; bucket: 'happy-path' | 'sad-path' }[];
-  children: () => RelPath[];
+  relPaths: () => string[];
+  roots: () => { relPath: string; bucket: 'happy-path' | 'sad-path' }[];
+  children: () => string[];
   structuralErrors: () => string[];
   syntacticErrors: (params: { relPath: string }) => string[];
 } => ({
-  relPaths: (): RelPath[] =>
+  relPaths: (): string[] =>
     [
       ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.ts' }),
       ...walkFilesSync({ rootPath: CATALOGUE_DIR, suffix: '.tsx' }),
@@ -69,27 +67,27 @@ export const specimenCatalogue = (): {
       // not change shape with the OS that produced it.
       .map((entry) => relative(SMOKE_REPO, join(entry.parentPath, entry.name)).split(sep).join('/'))
       .sort()
-      .map((relPath) => relPathContract.parse(relPath)),
+      .map((relPath) => relPath),
 
   // The EPONYMOUS specimens — a file that names its own folder (`boolean/and/and.ts`) — paired with
   // the bucket their path declares. These are the roots whose run verdict the bucket claims; the
   // driver checks each against it. Compared by BASENAME MINUS ITS OWN EXTENSION, so a `.tsx` root
   // (`component/component.tsx`) is recognized exactly as a `.ts` one is.
-  roots: (): { relPath: RelPath; bucket: 'happy-path' | 'sad-path' }[] =>
+  roots: (): { relPath: string; bucket: 'happy-path' | 'sad-path' }[] =>
     specimenCatalogue()
       .relPaths()
-      .filter((relPath) => basename(String(relPath), extname(String(relPath))) === basename(dirname(String(relPath))))
+      .filter((relPath) => basename(relPath, extname(relPath)) === basename(dirname(relPath)))
       .map((relPath) => ({
         relPath,
-        bucket: relative(CATALOGUE_DIR, join(SMOKE_REPO, String(relPath))).split(sep)[0] as 'happy-path' | 'sad-path',
+        bucket: relative(CATALOGUE_DIR, join(SMOKE_REPO, relPath)).split(sep)[0] as 'happy-path' | 'sad-path',
       })),
 
   // The helper CHILDREN — every other file in an example folder (`uses-greeting/greeting.ts`). They
   // ride their root and are never checked against a bucket on their own.
-  children: (): RelPath[] =>
+  children: (): string[] =>
     specimenCatalogue()
       .relPaths()
-      .filter((relPath) => basename(String(relPath), extname(String(relPath))) !== basename(dirname(String(relPath)))),
+      .filter((relPath) => basename(relPath, extname(relPath)) !== basename(dirname(relPath))),
 
   // The `<bucket>/…/<name>/<name>.{ts,tsx}` invariant, checked off disk and returned as named
   // violations so the test asserts an empty list. Every specimen sits under a known bucket and owes
@@ -102,7 +100,7 @@ export const specimenCatalogue = (): {
     specimenCatalogue()
       .relPaths()
       .flatMap((relPath): string[] => {
-        const rel = String(relPath);
+        const rel = relPath;
         const abs = join(SMOKE_REPO, rel);
         const [bucket] = relative(CATALOGUE_DIR, abs).split(sep);
         const ext = extname(rel);

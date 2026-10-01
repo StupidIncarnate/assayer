@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { ExplorerHeaderWidget } from './explorer-header-widget';
 import { ExplorerHeaderWidgetProxy } from './explorer-header-widget.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
@@ -17,9 +18,7 @@ describe('ExplorerHeaderWidget', () => {
         },
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <ExplorerHeaderWidget summary={summary} />,
-      });
+      const { getByTestId } = render(<ExplorerHeaderWidget summary={summary} />, { wrapper: MantineProvider });
 
       expect(getByTestId('EXPLORER_HEADER').textContent).toBe(
         'Assayer | smoke-repo assayer/master | ts 12 tsx 4',

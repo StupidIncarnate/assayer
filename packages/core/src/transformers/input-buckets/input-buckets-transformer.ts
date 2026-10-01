@@ -23,6 +23,8 @@
  * inputBucketsTransformer({ branches, returnPredicate });
  * // Returns [{ requirements: [{ leaf, want }, …], arms: [{ branchCoverageId, arm }], predWant? }, …]
  */
+import { inputBucketsContract } from '../../contracts/input-buckets/input-buckets-contract';
+import type { InputBuckets } from '../../contracts/input-buckets/input-buckets-contract';
 import { guardStepContract } from '@assayer/shared/contracts';
 import type { BranchNode, ConditionNode, GuardStep } from '@assayer/shared/contracts';
 
@@ -35,7 +37,7 @@ export const inputBucketsTransformer = ({
 }: {
   branches: BranchNode[];
   returnPredicate?: ConditionNode;
-}): { requirements: ConditionCause['requirements']; arms: GuardStep[]; predWant?: boolean }[] => {
+}): InputBuckets => {
   // One axis per branch: each arm's causes, each cause a partial-bucket option carrying that arm's
   // requirements and the single guard step it takes. `then` = condition wanted true, `else` = false.
   const branchAxes = branches.map((branch) =>
@@ -64,7 +66,7 @@ export const inputBucketsTransformer = ({
   // predicate's true and false returns — tagged with predWant and carrying NO extra arm, since the
   // return value is not a control-flow branch and never appears on any exit's guard path.
   if (returnPredicate === undefined) {
-    return branchBuckets;
+    return inputBucketsContract.parse(branchBuckets);
   }
 
   const predicateOptions = [true, false].flatMap((predWant) =>
@@ -74,11 +76,11 @@ export const inputBucketsTransformer = ({
     })),
   );
 
-  return branchBuckets.flatMap((bucket) =>
+  return inputBucketsContract.parse(branchBuckets.flatMap((bucket) =>
     predicateOptions.map((option) => ({
       requirements: [...bucket.requirements, ...option.requirements],
       arms: bucket.arms,
       predWant: option.predWant,
     })),
-  );
+  ));
 };

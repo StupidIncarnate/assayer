@@ -4,7 +4,7 @@
  *
  * USAGE:
  * const blob = await cacheLoadBlobBroker({
- *   repoPath: RepoPathStub({ value: '/repo' }),
+ *   repoPath: '/repo',
  *   contentHash: 'abc123',
  * });
  * // Returns a validated CompiledFileBlob; throws if the file is missing or fails validation.
@@ -12,14 +12,13 @@
 import { compiledFileBlobContract } from '@assayer/shared/contracts';
 import type { CompiledFileBlob } from '@assayer/shared/contracts';
 
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 import { readJsonFile } from '#gateway/node/fs__promises';
 
 export const cacheLoadBlobBroker = async ({
   repoPath,
   contentHash,
 }: {
-  repoPath: RepoPath;
+  repoPath: string;
   contentHash: string;
 }): Promise<CompiledFileBlob> => {
   const raw = await readJsonFile(`${repoPath}/.assayer/cache/blobs/${contentHash}.json`);

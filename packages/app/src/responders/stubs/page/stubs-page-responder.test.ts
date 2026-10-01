@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { StubsPageResponder } from './stubs-page-responder';
 import { StubsPageResponderProxy } from './stubs-page-responder.proxy';
 import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
@@ -10,9 +11,7 @@ describe('StubsPageResponder', () => {
       const proxy = StubsPageResponderProxy();
       proxy.setupView({ view: StubViewStub() });
 
-      const { findByTestId } = themedRenderMiddleware({
-        ui: createElement(StubsPageResponder),
-      });
+      const { findByTestId } = render(createElement(StubsPageResponder), { wrapper: MantineProvider });
       const panel = await findByTestId('STUB_REPOSITORY');
 
       expect(panel).toBeInTheDocument();

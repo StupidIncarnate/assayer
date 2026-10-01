@@ -34,12 +34,8 @@ import {
 
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
-import { CliFileTextStub } from '../../src/contracts/cli-file-text/cli-file-text.stub';
-import type { CliFileText } from '../../src/contracts/cli-file-text/cli-file-text-contract';
-import { BranchNameStub } from '@assayer/shared/contracts/branch-name/branch-name.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
-import type { BranchName, RelPath, ContentHash } from '@assayer/shared/contracts';
+import type { ContentHash } from '@assayer/shared/contracts';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { execPath } from '#gateway/node/process';
@@ -67,17 +63,17 @@ export const assayerCompileHarness = (): {
     sources: readonly { relPath: string; source: string }[];
     message: string;
   }) => Promise<void>;
-  headBranch: () => Promise<CliFileText>;
-  read: ({ relPath }: { relPath: string }) => CliFileText;
+  headBranch: () => Promise<string>;
+  read: ({ relPath }: { relPath: string }) => string;
   exists: ({ relPath }: { relPath: string }) => boolean;
-  manifestNamespaceNames: () => readonly BranchName[];
-  manifestRelPaths: ({ namespace }: { namespace: string }) => readonly RelPath[];
+  manifestNamespaceNames: () => readonly string[];
+  manifestRelPaths: ({ namespace }: { namespace: string }) => readonly string[];
   manifestContentHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
   manifestNamespaceHasCommit: ({ namespace }: { namespace: string }) => boolean;
   blobHashes: () => readonly ContentHash[];
-  readBlobText: ({ hash }: { hash: string }) => CliFileText;
-  blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }) => CliFileText;
-  concatAllBlobs: () => CliFileText;
+  readBlobText: ({ hash }: { hash: string }) => string;
+  blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }) => string;
+  concatAllBlobs: () => string;
 } => {
   let dir = '';
 
@@ -169,27 +165,27 @@ export const assayerCompileHarness = (): {
         throw new Error(`git branch ${stableBranch} failed in ${dir}: ${branchRun.output}`);
       }
     },
-    headBranch: async (): Promise<CliFileText> =>
-      CliFileTextStub({ value: (await currentBranch({ cwd: dir })) ?? '' }),
-    read: ({ relPath }: { relPath: string }): CliFileText =>
-      CliFileTextStub({ value: readFileSync(join(dir, relPath)) }),
+    headBranch: async (): Promise<string> =>
+      ((await currentBranch({ cwd: dir })) ?? ''),
+    read: ({ relPath }: { relPath: string }): string =>
+      readFileSync(join(dir, relPath)),
     exists: ({ relPath }: { relPath: string }): boolean => existsSync(join(dir, relPath)),
-    manifestNamespaceNames: (): readonly BranchName[] => {
+    manifestNamespaceNames: (): readonly string[] => {
       const manifest = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       return Object.keys(manifest.namespaces)
         .sort((a, b) => (a < b ? -1 : 1))
-        .map((name) => BranchNameStub({ value: name }));
+        .map((name) => name);
     },
-    manifestRelPaths: ({ namespace }: { namespace: string }): readonly RelPath[] => {
+    manifestRelPaths: ({ namespace }: { namespace: string }): readonly string[] => {
       const manifest = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       return (manifest.namespaces[namespace]?.files ?? [])
         .map((file) => String(file.relPath))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-        .map((relPath) => RelPathStub({ value: relPath }));
+        .map((relPath) => relPath);
     },
     manifestContentHash: ({
       namespace,
@@ -226,11 +222,9 @@ export const assayerCompileHarness = (): {
         .sort((a, b) => (a < b ? -1 : 1))
         .map((hash) => ContentHashStub({ value: hash }));
     },
-    readBlobText: ({ hash }: { hash: string }): CliFileText =>
-      CliFileTextStub({
-        value: readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${hash}.json`)),
-      }),
-    blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }): CliFileText => {
+    readBlobText: ({ hash }: { hash: string }): string =>
+      readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${hash}.json`)),
+    blobSourceText: ({ namespace, relPath }: { namespace: string; relPath: string }): string => {
       const manifest = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
@@ -241,17 +235,17 @@ export const assayerCompileHarness = (): {
         throw new Error(`no manifest entry for ${relPath} in namespace ${namespace}`);
       }
       const blob = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${String(entry.contentHash)}.json`)),
+        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${entry.contentHash}.json`)),
       ) as Blob;
-      return CliFileTextStub({ value: blob.displayLines.map((line) => String(line.text)).join('\n') });
+      return blob.displayLines.map((line) => String(line.text)).join('\n');
     },
-    concatAllBlobs: (): CliFileText => {
+    concatAllBlobs: (): string => {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       const names = readdirSync(blobsDir)
         .filter((name) => name.endsWith('.json'))
         .sort((a, b) => (a < b ? -1 : 1));
       const joined = names.map((name) => readFileSync(join(blobsDir, name))).join('\n');
-      return CliFileTextStub({ value: joined });
+      return joined;
     },
   };
 };

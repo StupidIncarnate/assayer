@@ -1,12 +1,12 @@
 /**
- * PURPOSE: Renders a CompileProgressEvent stream to process.stdout as one progress bar per
+ * PURPOSE: Renders a CompileProgressEvent stream to stdout as one progress bar per
  *   namespace (stable branch first, current branch second — first-seen order is stable),
  *   redrawing every bar line each time an event arrives.
  *
  *   It renders NOTHING until a file is actually compiled (the first `reused: false` event). The
  *   working-tree namespace re-reads and re-hashes every file every run — it has no commit to diff
  *   against — so events arrive for files nobody touched, and announcing "updating caches" for them
- *   claimed work that never happened. A run that writes nothing now says nothing, which is what
+ *   claimed work that never happened. A run that writes nothing says nothing, which is what
  *   makes the announcement worth reading when it does appear.
  *
  * USAGE:
@@ -16,7 +16,7 @@
  * // progress-bar line per namespace, in first-seen order, on every subsequent event.
  */
 import type { CompileProgressEvent } from '@assayer/core/contracts';
-import type { NamespaceName, BranchName, FileCount } from '@assayer/shared/contracts';
+import { stdout } from '#gateway/node/process';
 
 import { progressBarLineFormatTransformer } from '../../../transformers/progress-bar-line-format/progress-bar-line-format-transformer';
 
@@ -26,8 +26,8 @@ export const compileProgressRenderBroker = (): {
   let headerWritten = false;
   let compiledAnything = false;
   let previousLineCount = 0;
-  const order: NamespaceName[] = [];
-  const bars = new Map<NamespaceName, { label: BranchName; current: FileCount; max: FileCount }>();
+  const order: string[] = [];
+  const bars = new Map<string, { label: string; current: number; max: number }>();
 
   return {
     render: ({ event }: { event: CompileProgressEvent }): void => {
@@ -51,13 +51,13 @@ export const compileProgressRenderBroker = (): {
       }
 
       if (!headerWritten) {
-        process.stdout.write('Assayer is updating caches\n');
+        stdout.write('Assayer is updating caches\n');
         headerWritten = true;
       }
 
-      const isTty = process.stdout.isTTY;
+      const isTty = stdout.isTTY;
       if (isTty && previousLineCount > 0) {
-        process.stdout.write(`[${previousLineCount}A`);
+        stdout.write(`[${previousLineCount}A`);
       }
 
       order.forEach((seenNamespace) => {
@@ -70,7 +70,7 @@ export const compileProgressRenderBroker = (): {
           current: bar.current,
           max: bar.max,
         });
-        process.stdout.write(`${line}\n`);
+        stdout.write(`${line}\n`);
       });
 
       previousLineCount = order.length;

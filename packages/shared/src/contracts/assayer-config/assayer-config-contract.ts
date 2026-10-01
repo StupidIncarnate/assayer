@@ -42,14 +42,14 @@
 import { z } from '#gateway/npm/zod';
 
 export const assayerConfigContract = z.object({
-  version: z.literal('1').default('1').brand<'ConfigSchemaVersion'>(),
-  repoRoot: z.string().min(1).default('.').brand<'RepoRootPath'>(),
-  exclude: z.array(z.string().min(1).brand<'GlobPattern'>()).default([]).brand<'GlobPatternList'>(),
-  stableBranch: z.string().min(1).brand<'StableBranchName'>().optional(),
-  darkSpots: z.enum(['warn', 'error']).default('warn').brand<'DarkSpotSeverity'>(),
-  deadSurface: z.enum(['off', 'warn', 'error']).default('error').brand<'DeadSurfaceSeverity'>(),
-  inputGaps: z.enum(['off', 'warn', 'error']).default('error').brand<'InputGapSeverity'>(),
-  runMode: z.enum(['thorough', 'intelligent']).default('thorough').brand<'RunMode'>(),
-});
+  version: z.literal('1').default('1'),
+  repoRoot: z.string().min(1).default('.').brand<'AssayerConfigRepoRoot'>(),
+  exclude: z.array(z.string().min(1).brand<'AssayerConfigExclude'>()).default([]).brand<'AssayerConfigExclude'>(),
+  stableBranch: z.string().min(1).brand<'AssayerConfigStableBranch'>().optional(),
+  darkSpots: z.enum(['warn', 'error']).default('warn'),
+  deadSurface: z.enum(['off', 'warn', 'error']).default('error'),
+  inputGaps: z.enum(['off', 'warn', 'error']).default('error'),
+  runMode: z.enum(['thorough', 'intelligent']).default('thorough'),
+}).brand<'AssayerConfig'>();
 
 export type AssayerConfig = z.infer<typeof assayerConfigContract>;

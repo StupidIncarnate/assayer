@@ -1,3 +1,4 @@
+import { ErrorStub } from '#gateway/browser/Error/error.stub';
 import { useStubIndexBindingProxy } from '../../bindings/use-stub-index/use-stub-index-binding.proxy';
 import { StubEnvCardLayerWidgetProxy } from './stub-env-card-layer-widget.proxy';
 import { StubObjectCardLayerWidgetProxy } from './stub-object-card-layer-widget.proxy';
@@ -18,7 +19,7 @@ export const StubRepositoryWidgetProxy = (): {
     // Takes the message a real resolver would raise, so the test can assert the widget prints THAT
     // sentence rather than one the widget composed.
     failView: ({ message }: { message: string }): void => {
-      bindingProxy.rejects({ error: new Error(message) });
+      bindingProxy.rejects({ error: ErrorStub({ message }) });
     },
   };
 };

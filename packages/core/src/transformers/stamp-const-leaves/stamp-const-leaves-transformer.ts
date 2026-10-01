@@ -16,14 +16,14 @@
  * stampConstLeavesTransformer({ condition: decideIfTree, welds: new Map([['value', 3]]) });
  * // Returns a ConditionNode identical to the input but with `value` leaves carrying operandConstValue: 3
  */
-import type { ConditionNode, RepresentativeValue, SymbolName } from '@assayer/shared/contracts';
+import type { ConditionNode, RepresentativeValue } from '@assayer/shared/contracts';
 
 export const stampConstLeavesTransformer = ({
   condition,
   welds,
 }: {
   condition: ConditionNode;
-  welds: Map<SymbolName, RepresentativeValue>;
+  welds: Map<string, RepresentativeValue>;
 }): ConditionNode => {
   if (condition.kind === 'leaf') {
     const weld = condition.operandParamName === undefined ? undefined : welds.get(condition.operandParamName);

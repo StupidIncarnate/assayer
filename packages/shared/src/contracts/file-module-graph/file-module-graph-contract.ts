@@ -28,6 +28,6 @@ export const fileModuleGraphContract = z.object({
   // into per-property env stubs. `process.env` is an object; each property is a slot whose values are
   // guessed from the branch literals. Empty when the file reads none; defaulted for the same reason.
   envReads: z.array(envReadContract).default([]),
-});
+}).brand<'FileModuleGraph'>();
 
 export type FileModuleGraph = z.infer<typeof fileModuleGraphContract>;

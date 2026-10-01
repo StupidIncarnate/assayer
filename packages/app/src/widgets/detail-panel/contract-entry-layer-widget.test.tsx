@@ -1,4 +1,5 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
 import { ContractEntryLayerWidgetProxy } from './contract-entry-layer-widget.proxy';
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
@@ -18,7 +19,7 @@ describe('ContractEntryLayerWidget', () => {
         },
       });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <ContractEntryLayerWidget edge={edge} /> });
+      const { getByTestId } = render(<ContractEntryLayerWidget edge={edge} />, { wrapper: MantineProvider });
 
       expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greeting');
       expect(getByTestId('CONTRACT_SOURCE').textContent).toBe("import './greeting' → src/greeting.ts");
@@ -43,7 +44,7 @@ describe('ContractEntryLayerWidget', () => {
         },
       });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <ContractEntryLayerWidget edge={edge} /> });
+      const { getByTestId } = render(<ContractEntryLayerWidget edge={edge} />, { wrapper: MantineProvider });
 
       expect(getByTestId('CONTRACT_SOURCE').textContent).toBe('pkg vendored-pkg');
       expect(getByTestId('CONTRACT_INPUT').textContent).toBe('name: string');
@@ -57,7 +58,7 @@ describe('ContractEntryLayerWidget', () => {
         target: { kind: 'package', packageName: 'vendored-pkg' },
       });
 
-      const { queryByTestId } = themedRenderMiddleware({ ui: <ContractEntryLayerWidget edge={edge} /> });
+      const { queryByTestId } = render(<ContractEntryLayerWidget edge={edge} />, { wrapper: MantineProvider });
 
       expect(queryByTestId('CONTRACT_OUTPUT')).toBe(null);
     });

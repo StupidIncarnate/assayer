@@ -27,7 +27,9 @@
  * });
  * // Returns { members: ['abc123'] }
  */
-import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
+import { typeofDomainContract } from '../../contracts/typeof-domain/typeof-domain-contract';
+import type { TypeofDomain } from '../../contracts/typeof-domain/typeof-domain-contract';
+import type { TypeDescriptor } from '@assayer/shared/contracts';
 
 import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
 import { typeofTagTransformer } from '../typeof-tag/typeof-tag-transformer';
@@ -41,14 +43,14 @@ export const typeofDomainTransformer = ({
   type: TypeDescriptor;
   tag: TypeofTag;
   wantMatch: boolean;
-}): { members?: RepresentativeValue[] } => {
+}): TypeofDomain => {
   const members = type.kind === 'union' ? type.members : [type];
   const tags = members.map((member) => typeofTagTransformer({ type: member }));
   const determinate = tags.some((memberTag) => memberTag !== undefined);
   const side = members.filter((_member, index) => (wantMatch ? tags[index] === tag : tags[index] !== undefined && tags[index] !== tag));
 
   if (side.length === 0) {
-    return determinate ? { members: [] } : {};
+    return determinate ? typeofDomainContract.parse({ members: [] }) : typeofDomainContract.parse({});
   }
 
   const values = side.flatMap((member) => {
@@ -57,5 +59,5 @@ export const typeofDomainTransformer = ({
     return value === undefined ? [] : [value];
   });
 
-  return values.length === 0 ? {} : { members: values };
+  return values.length === 0 ? typeofDomainContract.parse({}) : typeofDomainContract.parse({ members: values });
 };

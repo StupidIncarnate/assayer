@@ -5,7 +5,7 @@ describe('runConsoleStatusTransformer', () => {
     it('VALID: {running} => running', () => {
       const result = runConsoleStatusTransformer({ running: true, failed: false });
 
-      expect(String(result)).toBe('running');
+      expect(result).toBe('running');
     });
 
     // Running is the more recent truth: the console is being written to right now, whatever a
@@ -13,7 +13,7 @@ describe('runConsoleStatusTransformer', () => {
     it('EDGE: {running and failed} => running outranks the failure', () => {
       const result = runConsoleStatusTransformer({ running: true, failed: true });
 
-      expect(String(result)).toBe('running');
+      expect(result).toBe('running');
     });
   });
 
@@ -21,7 +21,7 @@ describe('runConsoleStatusTransformer', () => {
     it('VALID: {neither running nor failed} => finished', () => {
       const result = runConsoleStatusTransformer({ running: false, failed: false });
 
-      expect(String(result)).toBe('finished');
+      expect(result).toBe('finished');
     });
 
     // A run that could not happen writes no output, exactly as a quiet successful run does. Calling
@@ -29,7 +29,7 @@ describe('runConsoleStatusTransformer', () => {
     it('ERROR: {failed} => failed rather than finished', () => {
       const result = runConsoleStatusTransformer({ running: false, failed: true });
 
-      expect(String(result)).toBe('failed');
+      expect(result).toBe('failed');
     });
   });
 });

@@ -1,6 +1,7 @@
+import { MantineProvider } from '#gateway/npm/mantine__core';
+import { render } from '#gateway/npm/testing-library__react';
 import userEvent from '#gateway/npm/testing-library__user-event';
 
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { DetailPanelWidget } from './detail-panel-widget';
 import { DetailPanelWidgetProxy } from './detail-panel-widget.proxy';
 import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
@@ -10,9 +11,7 @@ import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/en
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
-import { LineNumberStub } from '@assayer/shared/contracts/line-number/line-number.stub';
 import { LintEntryStub } from '@assayer/shared/contracts/lint-entry/lint-entry.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolved-edge.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
@@ -152,9 +151,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} />,
-      });
+      const { getByTestId, getAllByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TAB_ENRICHMENT').textContent).toBe('Enrichment');
       expect(getByTestId('TAB_TESTS').textContent).toBe('Tests');
@@ -169,9 +166,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {no run} => every case reads not-run rather than blank', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
-      });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-status'))).toStrictEqual([
         'not-run',
@@ -183,9 +178,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a driven module entry with one export} => title and case read the export name, no ()', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts' })} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={'src/happy-path/import-local/uses-greeting/uses-greeting.ts'} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message → reaches L4');
@@ -196,9 +189,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a driven module entry with no export} => title and case read the file basename', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/node-global/uses-console/uses-console.ts' })} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={'src/happy-path/node-global/uses-console/uses-console.ts'} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('uses-console.ts · 1 cases');
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run uses-console.ts → reaches L4');
@@ -210,9 +201,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {an anonymous callback entry} => the title reads its callsite label, never the structural projection', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe(
         'rescale › items.map((n) => …) L2 · 1 cases',
@@ -225,9 +214,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {an anonymous callback entry} => the case row names the caller and its argument', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run rescale([101]) → reaches L4');
     });
@@ -237,9 +224,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a named private driven through its caller} => the title is its own name, the row is the caller', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={THROUGH_CALLER_ANALYSIS} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={THROUGH_CALLER_ANALYSIS} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('inner(n) · 1 cases');
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6) → reaches L4');
@@ -252,7 +237,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {an enrichment row with no range} => renders the symbol and type with no range suffix', async () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} />, { wrapper: MantineProvider });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L1  name: string');
@@ -263,7 +248,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'x', typeText: 'number', range: [0, 1] }] });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L2  x: number  → { 0, 1 }');
@@ -272,9 +257,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {hoveredLine equal to the row line} => marks the row matched', async () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 1 })} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={1} />, { wrapper: MantineProvider });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_ROW').getAttribute('data-match')).toBe('true');
@@ -283,9 +266,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {hoveredLine not equal to the row line} => marks the row unmatched', async () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 9 })} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={9} />, { wrapper: MantineProvider });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_ROW').getAttribute('data-match')).toBe('false');
@@ -295,7 +276,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ enrichment: [] });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_EMPTY').textContent).toBe('No enrichment for this file');
@@ -307,9 +288,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 3 })} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} hoveredLine={3} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('true');
     });
@@ -318,9 +297,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 2 })} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} hoveredLine={2} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('true');
     });
@@ -329,9 +306,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 9 })} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} hoveredLine={9} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('false');
     });
@@ -349,9 +324,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('passed');
     });
@@ -367,9 +340,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('failed');
     });
@@ -389,9 +360,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('errored');
     });
@@ -412,9 +381,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('CASE_OUTCOME').textContent).toBe(
         'threw before reaching an exit: items.map is not a function',
@@ -482,7 +449,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} run={run} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('CASE_OUTCOME').textContent).toBe('reached L6');
     });
@@ -502,9 +469,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('ERROR formatGreeting("") → predicted L3');
     });
@@ -522,9 +487,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { queryAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
-      });
+      const { queryAllByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('CASE_OUTCOME')).toStrictEqual([]);
     });
@@ -535,9 +498,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_GAP').textContent).toBe('GAP find — needs a harness');
     });
@@ -549,7 +510,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }] });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_GAP').textContent).toBe('GAP audit — the fill seam refuses `report`');
     });
@@ -566,9 +527,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} run={run} />,
-      });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={analysis} run={run} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('RUN_GAP').map((element) => element.textContent)).toStrictEqual([
         'GAP audit — the fill seam refuses `report`',
@@ -584,7 +543,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ darkSpots: [LOOP_DARK_SPOT] });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
     });
@@ -596,7 +555,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
       expect(getByTestId('TESTS_EMPTY').textContent).toBe('No entries in this file');
@@ -610,9 +569,7 @@ describe('DetailPanelWidget', () => {
       const analysis = FileAnalysisStub({ darkSpots: [LOOP_DARK_SPOT] });
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_GAP').textContent).toBe('GAP find — needs a harness');
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
@@ -624,7 +581,7 @@ describe('DetailPanelWidget', () => {
         darkSpots: [LOOP_DARK_SPOT, DarkSpotStub({ kind: 'TryStatement', scopePath: ['load'], startLine: 9, endLine: 12 })],
       });
 
-      const { getAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('DARK_SPOT').map((element) => element.textContent)).toStrictEqual([
         LOOP_DARK_SPOT_TEXT,
@@ -635,9 +592,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis with no dark spots} => no dark-spot row is rendered', () => {
       DetailPanelWidgetProxy();
 
-      const { queryAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
-      });
+      const { queryAllByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('DARK_SPOT')).toStrictEqual([]);
     });
@@ -649,7 +604,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ undriven: [UndrivenEntryStub({ name: 'inner', reason: 'it is not exported' })] });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getByTestId('UNDRIVEN').textContent).toBe('UNDRIVEN inner — it is not exported');
     });
@@ -664,9 +619,7 @@ describe('DetailPanelWidget', () => {
         undriven: [UndrivenEntryStub({ name: '*module*', label: 'welded-const.ts' })],
       });
 
-      const { queryAllByTestId, getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} />,
-      });
+      const { queryAllByTestId, getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('TEST_CASE_ROW')).toStrictEqual([]);
       expect(queryAllByTestId('TEST_ENTRY')).toStrictEqual([]);
@@ -683,7 +636,7 @@ describe('DetailPanelWidget', () => {
         undriven: [UndrivenEntryStub({ name: '*module*' })],
       });
 
-      const { queryAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { queryAllByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('TESTS_EMPTY')).toStrictEqual([]);
     });
@@ -697,7 +650,7 @@ describe('DetailPanelWidget', () => {
         undriven: [UndrivenEntryStub({ name: '*module*' })],
       });
 
-      const { queryAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { queryAllByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('RUN_BUTTON')).toStrictEqual([]);
       expect(queryAllByTestId('TESTS_HINT')).toStrictEqual([]);
@@ -709,9 +662,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ undriven: [UndrivenEntryStub({ name: 'inner', reason: 'it is not exported' })] });
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} />,
-      });
+      const { getByTestId, getAllByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
         'not run formatGreeting("") → reaches L3',
@@ -730,9 +681,7 @@ describe('DetailPanelWidget', () => {
       });
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={analysis} run={run} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} run={run} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_GAP').textContent).toBe('GAP find — needs a harness');
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
@@ -742,9 +691,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis with nothing undriven} => no undriven row is rendered', () => {
       DetailPanelWidgetProxy();
 
-      const { queryAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
-      });
+      const { queryAllByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('UNDRIVEN')).toStrictEqual([]);
     });
@@ -757,7 +704,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ lints: [LintEntryStub({ name: 'unused', message: 'nothing calls it' })] });
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getByTestId('LINT').textContent).toBe('LINT unused — nothing calls it');
     });
@@ -768,7 +715,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ functions: [], lints: [LintEntryStub()] });
 
-      const { queryAllByTestId, getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { queryAllByTestId, getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('TESTS_EMPTY')).toStrictEqual([]);
       expect(getByTestId('LINT').textContent).toBe('LINT decide — nothing in this file calls it, so it is dead surface');
@@ -777,7 +724,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis with no lints} => no lint row is rendered', () => {
       DetailPanelWidgetProxy();
 
-      const { queryAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
+      const { queryAllByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('LINT')).toStrictEqual([]);
     });
@@ -799,9 +746,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />, { wrapper: MantineProvider });
       await detail.openContractsTab();
 
       expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greeting');
@@ -827,9 +772,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />, { wrapper: MantineProvider });
       await detail.openContractsTab();
 
       expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greet');
@@ -856,9 +799,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />, { wrapper: MantineProvider });
       await detail.openContractsTab();
 
       expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('console.log');
@@ -877,9 +818,7 @@ describe('DetailPanelWidget', () => {
         target: { kind: 'global', name: 'process', member: 'env', type: { kind: 'unknown', text: 'ProcessEnv' } },
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />, { wrapper: MantineProvider });
       await detail.openContractsTab();
 
       expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('process.env');
@@ -901,9 +840,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub({ functions: [], enrichment: [] })} resolvedEdges={[edge]} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub({ functions: [], enrichment: [] })} resolvedEdges={[edge]} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TESTS_EMPTY').textContent).toBe('No entries in this file');
 
@@ -915,9 +852,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {no resolvedEdges} => the Contracts tab reads its empty prompt', async () => {
       const detail = DetailPanelWidgetProxy();
 
-      const { getByTestId, queryAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
-      });
+      const { getByTestId, queryAllByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} />, { wrapper: MantineProvider });
       await detail.openContractsTab();
 
       expect(queryAllByTestId('CONTRACT_ENTRY')).toStrictEqual([]);
@@ -930,16 +865,14 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       let ran = false;
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: (
+      const { getByTestId } = render((
           <DetailPanelWidget
             analysis={FileAnalysisStub()}
             onRun={() => {
               ran = true;
             }}
           />
-        ),
-      });
+        ), { wrapper: MantineProvider });
       getByTestId('RUN_BUTTON').click();
 
       expect(ran).toBe(true);
@@ -950,9 +883,7 @@ describe('DetailPanelWidget', () => {
     it('ERROR: {a run that could not happen} => the reason is shown', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={FileAnalysisStub()} runError={new Error('the CLI is not built')} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} runError={new Error('the CLI is not built')} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_ERROR').textContent).toBe('the CLI is not built');
     });
@@ -962,9 +893,7 @@ describe('DetailPanelWidget', () => {
     it('ERROR: {a run that could not happen, no entries} => the reason is still shown', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={undefined} runError={new Error('the CLI is not built')} />,
-      });
+      const { getByTestId } = render(<DetailPanelWidget analysis={undefined} runError={new Error('the CLI is not built')} />, { wrapper: MantineProvider });
 
       expect(getByTestId('RUN_ERROR').textContent).toBe('the CLI is not built');
     });
@@ -976,9 +905,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a salient case beside its grayed breadth twin} => only the salient row carries the INTELLIGENT badge', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />,
-      });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('INTELLIGENT_BADGE').map((element) => element.textContent)).toStrictEqual([
         'INTELLIGENT',
@@ -990,9 +917,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a salient case beside its breadth twin} => both rows render, badge never in the row text', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/x/thing.ts' })} />,
-      });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
         'not run thing → reaches L4',
@@ -1005,9 +930,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const {runMode} = StatusViewStub({ runMode: 'thorough' });
 
-      const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />,
-      });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
         'true',
@@ -1021,9 +944,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const {runMode} = StatusViewStub({ runMode: 'intelligent' });
 
-      const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />,
-      });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
         'true',
@@ -1036,9 +957,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {no runMode prop} => defaults to thorough, every row live', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = themedRenderMiddleware({
-        ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />,
-      });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
         'true',
@@ -1051,7 +970,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis: undefined} => renders the empty tests prompt', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={undefined} /> });
+      const { getByTestId } = render(<DetailPanelWidget analysis={undefined} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TESTS_EMPTY').textContent).toBe('No entries in this file');
     });

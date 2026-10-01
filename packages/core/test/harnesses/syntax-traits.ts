@@ -22,7 +22,7 @@
 import { readFileSync } from '#gateway/node/fs';
 import { resolve, join } from '#gateway/node/path';
 
-import { entryAccessContract, branchNodeContract, packageNameContract } from '@assayer/shared/contracts';
+import { entryAccessContract, branchNodeContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
@@ -41,7 +41,7 @@ const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
 
 // The authoritative node-builtin name set, so a specifier like `path` (no `node:` prefix) still
 // classifies as a builtin exactly as the resolver's own builtin check does — never as a package.
-const BUILTINS = new Set(builtinModules.map((name) => packageNameContract.parse(name)).map(String));
+const BUILTINS = new Set(builtinModules.map((name) => name).map(String));
 
 // Closed and literal, so a specimen declaring a trait that does not exist fails to typecheck rather
 // than silently never matching. `darkspot:*` is enumerated rather than open for the same reason: a

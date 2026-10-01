@@ -3,16 +3,16 @@
  *   P1-grade error naming the available topics. Backs the `assayer docs <topic>` command.
  *
  * USAGE:
- * docsGetBroker({ topic: docsTopicContract.parse('overview') });
+ * docsGetBroker({ topic: 'overview' });
  * // Returns a validated DocsResult { topic, body }; throws on an unknown topic
  */
 import { docsResultContract } from '@assayer/shared/contracts';
-import type { DocsResult, DocsTopic } from '@assayer/shared/contracts';
+import type { DocsResult } from '@assayer/shared/contracts';
 
 import { docsCatalogStatics } from '../../../statics/docs-catalog/docs-catalog-statics';
 
-export const docsGetBroker = ({ topic }: { topic: DocsTopic }): DocsResult => {
-  const requested = String(topic);
+export const docsGetBroker = ({ topic }: { topic: string }): DocsResult => {
+  const requested = topic;
   const match = docsCatalogStatics.topics.find((entry) => entry.key === requested);
 
   if (match === undefined) {

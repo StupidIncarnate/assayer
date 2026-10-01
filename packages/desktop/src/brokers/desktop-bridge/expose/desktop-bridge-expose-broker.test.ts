@@ -3,10 +3,10 @@ import { desktopBridgeExposeBrokerProxy } from './desktop-bridge-expose-broker.p
 
 describe('desktopBridgeExposeBroker', () => {
   describe('exposing the bridge', () => {
-    it('VALID: {bridgeKey, statusChannel, compiledTreeChannel, compiledFileChannel} => exposes the bridge and returns success', () => {
-      desktopBridgeExposeBrokerProxy();
+    it('VALID: {bridgeKey, statusChannel, compiledTreeChannel, compiledFileChannel} => exposes the bridge under the bridge key', () => {
+      const proxy = desktopBridgeExposeBrokerProxy();
 
-      const result = desktopBridgeExposeBroker({
+      desktopBridgeExposeBroker({
         bridgeKey: 'assayerBridge',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
@@ -14,11 +14,11 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
-      expect(result).toBeUndefined();
+      expect(proxy.exposedBridgeKeys()).toStrictEqual(['assayerBridge']);
     });
   });
 
@@ -34,13 +34,13 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetCompiledTree();
 
-      expect(proxy.invokedArgs()).toStrictEqual([['assayer:compiled-tree']]);
+      expect(proxy.invokedArgsFor({ channel: 'assayer:compiled-tree' })).toStrictEqual([['assayer:compiled-tree']]);
     });
   });
 
@@ -56,13 +56,13 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetCompiledFile({ relPath: 'src/index.ts' });
 
-      expect(proxy.invokedArgs()).toStrictEqual([['assayer:compiled-file', 'src/index.ts']]);
+      expect(proxy.invokedArgsFor({ channel: 'assayer:compiled-file' })).toStrictEqual([['assayer:compiled-file', 'src/index.ts']]);
     });
   });
 
@@ -78,13 +78,13 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetMergedView();
 
-      expect(proxy.invokedArgs()).toStrictEqual([['assayer:stubs']]);
+      expect(proxy.invokedArgsFor({ channel: 'assayer:stubs' })).toStrictEqual([['assayer:stubs']]);
     });
   });
 
@@ -100,13 +100,13 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerRunFile({ relPath: 'src/index.ts' });
 
-      expect(proxy.invokedArgs()).toStrictEqual([['assayer:run', 'src/index.ts']]);
+      expect(proxy.invokedArgsFor({ channel: 'assayer:run' })).toStrictEqual([['assayer:run', 'src/index.ts']]);
     });
 
     it('VALID: {main answers a run result} => resolves with the payload, unwrapped from the reply', async () => {
@@ -121,7 +121,7 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -149,7 +149,7 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
@@ -173,7 +173,7 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
       proxy.triggerOnRunOutput();
@@ -196,7 +196,7 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
       proxy.triggerOnRunOutput();
@@ -220,13 +220,13 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-      savedConsoleChannel: 'assayer:saved-console',
+        savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetSavedRun({ relPath: 'src/index.ts' });
 
-      expect(proxy.invokedArgs()).toStrictEqual([['assayer:saved-run', 'src/index.ts']]);
+      expect(proxy.invokedArgsFor({ channel: 'assayer:saved-run' })).toStrictEqual([['assayer:saved-run', 'src/index.ts']]);
     });
   });
 
@@ -244,13 +244,13 @@ describe('desktopBridgeExposeBroker', () => {
         stubsChannel: 'assayer:stubs',
         runChannel: 'assayer:run',
         savedRunChannel: 'assayer:saved-run',
-        savedConsoleChannel: 'assayer:saved-console',
+          savedConsoleChannel: 'assayer:saved-console',
         runOutputChannel: 'assayer:run-output',
       });
 
       await proxy.triggerGetSavedConsole({ relPath: 'src/index.ts' });
 
-      expect(proxy.invokedArgs()).toStrictEqual([['assayer:saved-console', 'src/index.ts']]);
+      expect(proxy.invokedArgsFor({ channel: 'assayer:saved-console' })).toStrictEqual([['assayer:saved-console', 'src/index.ts']]);
     });
   });
 });

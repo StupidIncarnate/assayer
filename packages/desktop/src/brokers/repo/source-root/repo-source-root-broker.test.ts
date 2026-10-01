@@ -1,4 +1,3 @@
-import { RepoPathStub } from '../../../contracts/repo-path/repo-path.stub';
 import { repoSourceRootBroker } from './repo-source-root-broker';
 import { repoSourceRootBrokerProxy } from './repo-source-root-broker.proxy';
 
@@ -8,9 +7,9 @@ describe('repoSourceRootBroker', () => {
       const proxy = repoSourceRootBrokerProxy();
       proxy.configHasRepoRoot({ repoPath: '/repo', repoRoot: '.' });
 
-      const result = await repoSourceRootBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+      const result = await repoSourceRootBroker({ repoPath: '/repo' });
 
-      expect(String(result)).toBe('/repo');
+      expect(result).toBe('/repo');
     });
   });
 
@@ -21,9 +20,9 @@ describe('repoSourceRootBroker', () => {
       const proxy = repoSourceRootBrokerProxy();
       proxy.configHasRepoRoot({ repoPath: '/repo', repoRoot: './smoke-repo' });
 
-      const result = await repoSourceRootBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
+      const result = await repoSourceRootBroker({ repoPath: '/repo' });
 
-      expect(String(result)).toBe('/repo/smoke-repo');
+      expect(result).toBe('/repo/smoke-repo');
     });
   });
 
@@ -32,7 +31,7 @@ describe('repoSourceRootBroker', () => {
       const proxy = repoSourceRootBrokerProxy();
       proxy.configUnreadable({ repoPath: '/repo' });
 
-      await expect(repoSourceRootBroker({ repoPath: RepoPathStub({ value: '/repo' }) })).rejects.toThrow(
+      await expect(repoSourceRootBroker({ repoPath: '/repo' })).rejects.toThrow(
         /assayer status/u,
       );
     });

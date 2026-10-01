@@ -1,7 +1,5 @@
 import { ExternalSignatureStub } from '@assayer/shared/contracts/external-signature/external-signature.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
-import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 import { externalSignatureReadBroker } from './external-signature-read-broker';
 import { externalSignatureReadBrokerProxy } from './external-signature-read-broker.proxy';
 
@@ -21,9 +19,9 @@ describe('externalSignatureReadBroker', () => {
       proxy.readsSignature({ exportName: 'greet', signature });
 
       const result = await externalSignatureReadBroker({
-        tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
-        dtsPath: FilePathStub({ value: '/repo/node_modules/pkg/index.d.ts' }),
-        exportName: SymbolNameStub({ value: 'greet' }),
+        tsConfigFilePath: '/repo/tsconfig.json',
+        dtsPath: '/repo/node_modules/pkg/index.d.ts',
+        exportName: 'greet',
         cacheDir: '/repo/.assayer/cache',
       });
 
@@ -46,9 +44,9 @@ describe('externalSignatureReadBroker', () => {
       });
 
       const result = await externalSignatureReadBroker({
-        tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
-        dtsPath: FilePathStub({ value: '/repo/node_modules/pkg/index.d.ts' }),
-        exportName: SymbolNameStub({ value: 'greet' }),
+        tsConfigFilePath: '/repo/tsconfig.json',
+        dtsPath: '/repo/node_modules/pkg/index.d.ts',
+        exportName: 'greet',
         cacheDir: '/repo/.assayer/cache',
       });
 
@@ -69,9 +67,9 @@ describe('externalSignatureReadBroker', () => {
       proxy.readsNoUsableTypes({ exportName: 'config' });
 
       const result = await externalSignatureReadBroker({
-        tsConfigFilePath: FilePathStub({ value: '/repo/tsconfig.json' }),
-        dtsPath: FilePathStub({ value: '/repo/node_modules/pkg/index.d.ts' }),
-        exportName: SymbolNameStub({ value: 'config' }),
+        tsConfigFilePath: '/repo/tsconfig.json',
+        dtsPath: '/repo/node_modules/pkg/index.d.ts',
+        exportName: 'config',
         cacheDir: '/repo/.assayer/cache',
       });
 

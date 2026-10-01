@@ -27,7 +27,7 @@
  * await runUnitBroker({ cacheDir, coreRoot, repoRoot, relPath, absPath, source, runId, analyzerContentHash });
  * // Returns { runId, relPath, cases: [{ status, observedPath, trace }], gaps, darkSpots, undriven }
  */
-import { relPathContract, runResultContract } from '@assayer/shared/contracts';
+import { runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
@@ -47,7 +47,6 @@ import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
 import { ensureDir, pathExists, readFile, writeFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runUnitBroker = async ({
   cacheDir,
@@ -125,7 +124,7 @@ export const runUnitBroker = async ({
     modulePath: absPath,
     // Where a colocated harness WOULD be, always: the projection names it only when some case actually
     // reaches for a supplied input, so the two facts cannot drift apart.
-    harnessPath: `${repoRoot}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`,
+    harnessPath: `${repoRoot}/${harnessPathTransformer({ relPath })}`,
   });
 
   await ensureDir(probeDir);
@@ -197,5 +196,5 @@ export const runUnitBroker = async ({
 
   // Read back the ARTIFACT, not Jest's reporting: the verdict is already in it, and raw runner output
   // is never what a human sees.
-  return runResultContract.parse(JSON.parse(fileContentsContract.parse(await readFile(resultPath))));
+  return runResultContract.parse(JSON.parse((await readFile(resultPath))));
 };

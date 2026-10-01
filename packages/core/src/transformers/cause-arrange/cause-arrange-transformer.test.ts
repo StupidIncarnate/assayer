@@ -1,7 +1,8 @@
-import { symbolNameContract } from '@assayer/shared/contracts';
 import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
+
+import { ConditionCauseStub } from '../../contracts/condition-cause/condition-cause.stub';
 
 import { causeArrangeTransformer } from './cause-arrange-transformer';
 
@@ -37,10 +38,10 @@ describe('causeArrangeTransformer', () => {
   describe('binding requirements to values', () => {
     it('VALID: {two operands, both wanted} => one arrangement satisfying both', () => {
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           { leaf: SCORE_LEAF, want: true },
           { leaf: BONUS_LEAF, want: true },
-        ],
+        ] }),
         params: NUMBER_PARAMS,
         envDrivable: false,
       });
@@ -59,7 +60,7 @@ describe('causeArrangeTransformer', () => {
 
     it('VALID: {want false} => the VIOLATING value, which is how negation is realized', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: SCORE_LEAF, want: false }],
+        ...ConditionCauseStub({ requirements: [{ leaf: SCORE_LEAF, want: false }] }),
         params: NUMBER_PARAMS,
         envDrivable: false,
       });
@@ -90,7 +91,7 @@ describe('causeArrangeTransformer', () => {
       });
 
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           {
             leaf: ConditionLeafStub({
               id: 'x#leaf',
@@ -100,7 +101,7 @@ describe('causeArrangeTransformer', () => {
             }),
             want: false,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'status', type: unionType })],
         envDrivable: false,
       });
@@ -128,7 +129,7 @@ describe('causeArrangeTransformer', () => {
       });
 
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           {
             leaf: ConditionLeafStub({
               id: 'g#leaf',
@@ -147,7 +148,7 @@ describe('causeArrangeTransformer', () => {
             }),
             want: false,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'method', type: unionType })],
         envDrivable: false,
       });
@@ -164,7 +165,7 @@ describe('causeArrangeTransformer', () => {
     // that stood in for them reached a different exit and failed a case against correct code.
     it('VALID: {<= 100 and > 10 on one operand} => a value inside the band, not a fill', () => {
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           {
             leaf: ConditionLeafStub({
               id: 'b#leaf.0',
@@ -183,7 +184,7 @@ describe('causeArrangeTransformer', () => {
             }),
             want: true,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'size', type: { kind: 'number' } })],
         envDrivable: false,
       });
@@ -200,7 +201,7 @@ describe('causeArrangeTransformer', () => {
     // than as the dead branch it is.
     it('EDGE: {contradictory requirements on one operand} => unreachable, with no arrangement', () => {
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           { leaf: SCORE_LEAF, want: true },
           {
             leaf: ConditionLeafStub({
@@ -211,7 +212,7 @@ describe('causeArrangeTransformer', () => {
             }),
             want: true,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })],
         envDrivable: false,
       });
@@ -233,7 +234,7 @@ describe('causeArrangeTransformer', () => {
 
     it('VALID: {const 7, guard > 5, want true} => the live arm arranges the constant itself', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: CONST_LEAF, want: true }],
+        ...ConditionCauseStub({ requirements: [{ leaf: CONST_LEAF, want: true }] }),
         params: [ParamDescriptorStub({ name: 'level', type: { kind: 'number' } })],
         envDrivable: false,
       });
@@ -247,7 +248,7 @@ describe('causeArrangeTransformer', () => {
 
     it('EDGE: {const 7, guard > 5, want false} => unreachable, since 7 cannot violate its own guard', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: CONST_LEAF, want: false }],
+        ...ConditionCauseStub({ requirements: [{ leaf: CONST_LEAF, want: false }] }),
         params: [ParamDescriptorStub({ name: 'level', type: { kind: 'number' } })],
         envDrivable: false,
       });
@@ -258,7 +259,7 @@ describe('causeArrangeTransformer', () => {
     // The array twin: a const array's LENGTH seeds the domain the length guard intersects onto.
     it('EDGE: {const array of length 2, guard length===5} => unreachable, the length can never satisfy it', () => {
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           {
             leaf: ConditionLeafStub({
               id: 'y#leaf',
@@ -269,7 +270,7 @@ describe('causeArrangeTransformer', () => {
             }),
             want: true,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'xs', type: { kind: 'array', element: { kind: 'number' } } })],
         envDrivable: false,
       });
@@ -300,7 +301,7 @@ describe('causeArrangeTransformer', () => {
       });
 
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           {
             leaf: ConditionLeafStub({ id: 's#leaf', operandParamName: 'status', operandType: statusType, predicate: { kind: 'eq', literal: 'a' } }),
             want: false,
@@ -309,7 +310,7 @@ describe('causeArrangeTransformer', () => {
             leaf: ConditionLeafStub({ id: 'm#leaf', operandParamName: 'method', operandType: methodType, predicate: { kind: 'eq', literal: 'get' } }),
             want: false,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'status', type: statusType }), ParamDescriptorStub({ name: 'method', type: methodType })],
         envDrivable: false,
       });
@@ -345,7 +346,7 @@ describe('causeArrangeTransformer', () => {
     // self-contradiction that made top-level branching undrivable.
     it('VALID: {env operand, want true, envDrivable} => sets the variable to the inverse of the coercion', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: ENV_LEAF, want: true }],
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_LEAF, want: true }] }),
         params: [],
         envDrivable: true,
       });
@@ -361,7 +362,7 @@ describe('causeArrangeTransformer', () => {
 
     it('VALID: {env operand, want false} => the violating value, so the other arm is chosen', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: ENV_LEAF, want: false }],
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_LEAF, want: false }] }),
         params: [],
         envDrivable: true,
       });
@@ -378,7 +379,7 @@ describe('causeArrangeTransformer', () => {
     // it changes nothing — and a case claiming otherwise would fail against correct code.
     it('VALID: {env operand, NOT envDrivable} => no env binding, because calling cannot re-read it', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: ENV_LEAF, want: true }],
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_LEAF, want: true }] }),
         params: [],
         envDrivable: false,
       });
@@ -391,7 +392,7 @@ describe('causeArrangeTransformer', () => {
     // scope the environment could otherwise drive.
     it('VALID: {envDrivable, but the leaf names no env var} => a plain param binding, no env binding added', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        ...ConditionCauseStub({ requirements: [{ leaf: SCORE_LEAF, want: true }] }),
         params: [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })],
         envDrivable: true,
       });
@@ -407,12 +408,12 @@ describe('causeArrangeTransformer', () => {
   describe('operands that cannot be arranged', () => {
     it('EDGE: {a leaf with no operand name} => it constrains nothing and the param falls to fill', () => {
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           {
             leaf: ConditionLeafStub({ id: 'x#leaf', operandType: { kind: 'boolean' }, predicate: { kind: 'truthy' } }),
             want: true,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })],
         envDrivable: false,
       });
@@ -428,7 +429,7 @@ describe('causeArrangeTransformer', () => {
     // code the analyzer simply could not follow. Unrecognized constrains nothing, so it fills.
     it('EDGE: {an unrecognized predicate} => reachable, filled from the type', () => {
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           {
             leaf: ConditionLeafStub({
               id: 'x#leaf',
@@ -438,7 +439,7 @@ describe('causeArrangeTransformer', () => {
             }),
             want: true,
           },
-        ],
+        ] }),
         params: [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })],
         envDrivable: false,
       });
@@ -464,7 +465,7 @@ describe('causeArrangeTransformer', () => {
   describe('a param the fill seam refuses', () => {
     it('INVALID: {a callback param beside a steered scalar} => no arrangement, and the param named', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        ...ConditionCauseStub({ requirements: [{ leaf: SCORE_LEAF, want: true }] }),
         params: [
           ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
           ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
@@ -483,7 +484,7 @@ describe('causeArrangeTransformer', () => {
     // rather than being masked by a param it also could not fill.
     it('EDGE: {contradictory guards AND an unfillable param} => unreachable wins, so the lint survives', () => {
       const result = causeArrangeTransformer({
-        requirements: [
+        ...ConditionCauseStub({ requirements: [
           { leaf: SCORE_LEAF, want: true },
           {
             leaf: ConditionLeafStub({
@@ -494,7 +495,7 @@ describe('causeArrangeTransformer', () => {
             }),
             want: true,
           },
-        ],
+        ] }),
         params: [
           ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
           ParamDescriptorStub({ name: 'payload', type: { kind: 'unknown', text: 'Map<string, number>' } }),
@@ -564,7 +565,7 @@ describe('causeArrangeTransformer', () => {
     // across them.
     it('VALID: {a constrained scalar beside an array param} => the scalar value crossed with each cardinality', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        ...ConditionCauseStub({ requirements: [{ leaf: SCORE_LEAF, want: true }] }),
         params: [
           ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
           ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }),
@@ -620,13 +621,13 @@ describe('causeArrangeTransformer', () => {
     // instead, so the cause arranges rather than reporting itself unfillable.
     it('VALID: {a callback param the harness declares} => a harness binding, and nothing refused', () => {
       const result = causeArrangeTransformer({
-        requirements: [{ leaf: SCORE_LEAF, want: true }],
+        ...ConditionCauseStub({ requirements: [{ leaf: SCORE_LEAF, want: true }] }),
         params: [
           ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
           ParamDescriptorStub({ name: 'report', type: { kind: 'callable', text: '(m: string) => string' } }),
         ],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('report')] },
+        harness: { entry: 'audit', params: ['report'] },
       });
 
       expect(result).toStrictEqual({
@@ -651,7 +652,7 @@ describe('causeArrangeTransformer', () => {
           ParamDescriptorStub({ name: 'emit', type: { kind: 'callable', text: '(n: number) => void' } }),
         ],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('report')] },
+        harness: { entry: 'audit', params: ['report'] },
       });
 
       expect(result).toStrictEqual({
@@ -668,7 +669,7 @@ describe('causeArrangeTransformer', () => {
         requirements: [],
         params: [ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } })],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('audit'), params: [symbolNameContract.parse('items')] },
+        harness: { entry: 'audit', params: ['items'] },
       });
 
       expect(result).toStrictEqual({
@@ -692,7 +693,7 @@ describe('causeArrangeTransformer', () => {
           }),
         ],
         envDrivable: false,
-        harness: { entry: symbolNameContract.parse('collect'), params: [symbolNameContract.parse('sinks')] },
+        harness: { entry: 'collect', params: ['sinks'] },
       });
 
       expect(result).toStrictEqual({
@@ -721,7 +722,7 @@ describe('causeArrangeTransformer', () => {
     it('ERROR: {a number-typed domain value bound to a string-declared param} => throws, naming both types', () => {
       expect(() =>
         causeArrangeTransformer({
-          requirements: [{ leaf: DRIFTED_LEAF, want: true }],
+          ...ConditionCauseStub({ requirements: [{ leaf: DRIFTED_LEAF, want: true }] }),
           params: STRING_SCORE_PARAM,
           envDrivable: false,
         }),

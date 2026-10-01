@@ -18,16 +18,16 @@
  * readFunctionNameLayerTransformer({ node: arrowFunction });
  * // Returns { name: 'classify', anonymous: false }, or a structural projection with anonymous: true
  */
+import { readFunctionNameLayerContract } from '../../contracts/read-function-name-layer/read-function-name-layer-contract';
+import type { ReadFunctionNameLayer } from '../../contracts/read-function-name-layer/read-function-name-layer-contract';
 import { Node } from '#gateway/npm/ts-morph';
 
-import { symbolNameContract } from '@assayer/shared/contracts';
-import type { SymbolName } from '@assayer/shared/contracts';
 
 import { projectNodeLayerTransformer } from './project-node-layer-transformer';
 
-export const readFunctionNameLayerTransformer = ({ node }: { node: Node }): { name: SymbolName; anonymous: boolean } => {
+export const readFunctionNameLayerTransformer = ({ node }: { node: Node }): ReadFunctionNameLayer => {
   if (Node.isConstructorDeclaration(node)) {
-    return { name: symbolNameContract.parse('constructor'), anonymous: false };
+    return readFunctionNameLayerContract.parse({ name: 'constructor', anonymous: false });
   }
 
   if (
@@ -39,19 +39,19 @@ export const readFunctionNameLayerTransformer = ({ node }: { node: Node }): { na
   ) {
     const own = node.getName();
     if (own !== undefined && own.length > 0) {
-      return { name: symbolNameContract.parse(own), anonymous: false };
+      return readFunctionNameLayerContract.parse({ name: own, anonymous: false });
     }
   }
 
   const parent = node.getParent();
 
   if (Node.isVariableDeclaration(parent) || Node.isPropertyDeclaration(parent) || Node.isPropertyAssignment(parent)) {
-    return { name: symbolNameContract.parse(parent.getName()), anonymous: false };
+    return readFunctionNameLayerContract.parse({ name: parent.getName(), anonymous: false });
   }
 
   if (Node.isExportAssignment(parent)) {
-    return { name: symbolNameContract.parse('default'), anonymous: false };
+    return readFunctionNameLayerContract.parse({ name: 'default', anonymous: false });
   }
 
-  return { name: symbolNameContract.parse(`fn:${projectNodeLayerTransformer({ node })}`), anonymous: true };
+  return readFunctionNameLayerContract.parse({ name: `fn:${projectNodeLayerTransformer({ node })}`, anonymous: true });
 };

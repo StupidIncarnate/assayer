@@ -1,12 +1,11 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
 
 import { deriveBranchIdLayerTransformer } from './derive-branch-id-layer-transformer';
 import { deriveBranchIdLayerTransformerProxy } from './derive-branch-id-layer-transformer.proxy';
 
-const CLASSIFY_SCOPE = [SymbolNameStub({ value: 'classify' })];
-const NESTED_SCOPE = [SymbolNameStub({ value: 'Classifier' }), SymbolNameStub({ value: 'classify' })];
+const CLASSIFY_SCOPE = ['classify'];
+const NESTED_SCOPE = ['Classifier', 'classify'];
 
 describe('deriveBranchIdLayerTransformer', () => {
   describe('the id it derives', () => {

@@ -25,13 +25,11 @@ import { mkdtempSync, ensureDirSync, writeFileSync, readFileSync, realpathSync, 
 import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileStubGraphBroker } from '../../src/brokers/compile/stub-graph/compile-stub-graph-broker';
-import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
 
 const SMOKE_REPO = resolve(__dirname, '..', '..', '..', '..', 'smoke-repo');
 const CATALOGUE = 'packages/syntax-repository/src';
@@ -54,19 +52,19 @@ export const stubGraphHarness = (): {
   stubCrossFileShape: () => Promise<StubResult>;
   stubMultiRead: () => Promise<StubResult>;
 } => {
-  const dirs: ReturnType<typeof FilePathStub>[] = [];
+  const dirs: string[] = [];
 
   return {
     afterEach: (): void => {
       dirs.forEach((dir) => {
-        rmSync(String(dir), { recursive: true, force: true });
+        rmSync(dir, { recursive: true, force: true });
       });
       dirs.length = 0;
     },
 
     stubBranchLocal: async (): Promise<StubResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stub-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
 
       const content = readFileSync(join(SMOKE_REPO, BRANCH_LOCAL_REL));
@@ -76,7 +74,7 @@ export const stubGraphHarness = (): {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: BRANCH_LOCAL_REL, content, blobsDir });
 
-      const files = [{ relPath: RelPathStub({ value: BRANCH_LOCAL_REL }), contentHash: contentHashTransformer({ content }) }];
+      const files = [{ relPath: BRANCH_LOCAL_REL, contentHash: contentHashTransformer({ content }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -84,7 +82,7 @@ export const stubGraphHarness = (): {
 
     stubMultiRead: async (): Promise<StubResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stub-env-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
 
       const content = readFileSync(join(SMOKE_REPO, MULTI_READ_REL));
@@ -94,7 +92,7 @@ export const stubGraphHarness = (): {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       await compileProcessFileBroker({ relPath: MULTI_READ_REL, content, blobsDir });
 
-      const files = [{ relPath: RelPathStub({ value: MULTI_READ_REL }), contentHash: contentHashTransformer({ content }) }];
+      const files = [{ relPath: MULTI_READ_REL, contentHash: contentHashTransformer({ content }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -102,7 +100,7 @@ export const stubGraphHarness = (): {
 
     stubCrossFileShape: async (): Promise<StubResult> => {
       const dir = realpathSync(mkdtempSync(join(tmpdir(), 'assayer-stub-xf-')));
-      dirs.push(FilePathStub({ value: dir }));
+      dirs.push(dir);
       writeFileSync(join(dir, 'tsconfig.json'), NODE_TSCONFIG);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
 
@@ -112,7 +110,7 @@ export const stubGraphHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content }) };
+          return { relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 

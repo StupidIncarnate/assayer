@@ -1,6 +1,5 @@
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 
@@ -10,10 +9,11 @@ import { DesktopStatusStub } from '../../../contracts/desktop-status/desktop-sta
 
 describe('desktopBootBroker', () => {
   describe('booting the main process', () => {
-    it('VALID: {every channel + resolver} => boots the window, returns success, and registers every IPC handler', async () => {
+    it('VALID: {every channel + resolver} => boots the window and registers every IPC handler', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
 
-      const result = await desktopBootBroker({
+      await desktopBootBroker({
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -28,10 +28,9 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
-      expect(result).toBeUndefined();
       expect(proxy.handledChannels()).toStrictEqual([
         'assayer:status',
         'assayer:compiled-tree',
@@ -45,6 +44,7 @@ describe('desktopBootBroker', () => {
 
     it('VALID: {invokeHandler on compiledFileChannel with relPath} => passes relPath through to resolveCompiledFile', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
       const compiledFileView = CompiledFileViewStub();
 
       await desktopBootBroker({
@@ -66,7 +66,7 @@ describe('desktopBootBroker', () => {
         },
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:compiled-file', arg: 'src/foo.ts' });
@@ -76,6 +76,7 @@ describe('desktopBootBroker', () => {
 
     it('VALID: {invokeHandler on runChannel with relPath} => passes relPath through to resolveRun', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
       const run = RunResultStub();
 
       await desktopBootBroker({
@@ -97,7 +98,7 @@ describe('desktopBootBroker', () => {
           return Promise.resolve(run);
         },
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/boolean/and/and.ts' });
@@ -110,6 +111,7 @@ describe('desktopBootBroker', () => {
     // appear after the wait it exists to narrate.
     it('VALID: {resolveRun writes output} => each chunk is sent to the sender on the run-output channel', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
         statusChannel: 'assayer:status',
@@ -131,12 +133,12 @@ describe('desktopBootBroker', () => {
           return Promise.resolve(RunResultStub());
         },
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/boolean/and/and.ts' });
 
-      expect(proxy.sentToRenderer()).toStrictEqual([
+      expect(proxy.sentToRendererOn({ channel: 'assayer:run-output' })).toStrictEqual([
         ['assayer:run-output', 'Assayer is updating caches\n'],
         ['assayer:run-output', 'a.ts  3/3 passed\n'],
       ]);
@@ -146,6 +148,7 @@ describe('desktopBootBroker', () => {
     // start a Jest run just because someone opened the file.
     it('VALID: {invokeHandler on savedRunChannel} => answers without running anything', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
       const run = RunResultStub();
 
       await desktopBootBroker({
@@ -163,7 +166,7 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.reject(new Error('savedRun must never execute a run')),
         resolveSavedRun: async () => Promise.resolve(run),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:saved-run', arg: 'src/happy-path/boolean/and/and.ts' });
@@ -176,7 +179,8 @@ describe('desktopBootBroker', () => {
     // a terminal, since the CLI saves the same bytes.
     it('VALID: {invokeHandler on savedConsoleChannel} => answers with the saved report, running nothing', async () => {
       const proxy = desktopBootBrokerProxy();
-      const report = RunConsoleStub({ value: 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n' });
+      proxy.setupBoot({ dev: false, headless: false });
+      const report = 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n';
 
       await desktopBootBroker({
         statusChannel: 'assayer:status',
@@ -205,6 +209,7 @@ describe('desktopBootBroker', () => {
     // takes no argument — the resolver reads the whole namespace's stub repository.
     it('VALID: {invokeHandler on stubsChannel} => answers with the merged StubView', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
       const view = StubViewStub();
 
       await desktopBootBroker({
@@ -222,7 +227,7 @@ describe('desktopBootBroker', () => {
         resolveStubs: async () => Promise.resolve(view),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:stubs' });
@@ -239,6 +244,7 @@ describe('desktopBootBroker', () => {
   describe('failing resolvers', () => {
     it('ERROR: {resolveRun rejects with a P1 error} => the run handler ANSWERS with the message, verbatim', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
         statusChannel: 'assayer:status',
@@ -256,7 +262,7 @@ describe('desktopBootBroker', () => {
         resolveRun: async () =>
           Promise.reject(new Error('assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.')),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:run', arg: 'src/happy-path/switch/pure-statement/pure-statement.ts' });
@@ -269,6 +275,7 @@ describe('desktopBootBroker', () => {
 
     it('ERROR: {resolveStatus throws} => the status handler ANSWERS with the message, verbatim', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
         statusChannel: 'assayer:status',
@@ -287,7 +294,7 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:status' });
@@ -300,6 +307,7 @@ describe('desktopBootBroker', () => {
 
     it('ERROR: {resolveStubs rejects with a P1 error} => the stubs handler ANSWERS with the message, verbatim', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
         statusChannel: 'assayer:status',
@@ -317,7 +325,7 @@ describe('desktopBootBroker', () => {
           Promise.reject(new Error('assayer: cannot read /repo/assayer.config.json. Run `assayer status` in that repo to generate one.')),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:stubs' });
@@ -330,6 +338,7 @@ describe('desktopBootBroker', () => {
 
     it('ERROR: {resolveCompiledFile rejects} => the compiled-file handler ANSWERS with the message, verbatim', async () => {
       const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
         statusChannel: 'assayer:status',
@@ -346,7 +355,7 @@ describe('desktopBootBroker', () => {
         resolveCompiledFile: async () => Promise.reject(new Error('assayer: src/foo.ts is not in the compiled cache.')),
         resolveRun: async () => Promise.resolve(RunResultStub()),
         resolveSavedRun: async () => Promise.resolve(RunResultStub()),
-        resolveSavedConsole: async () => Promise.resolve(RunConsoleStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
       const result = await proxy.invokeHandler({ channel: 'assayer:compiled-file', arg: 'src/foo.ts' });
@@ -355,6 +364,196 @@ describe('desktopBootBroker', () => {
         success: false,
         message: 'assayer: src/foo.ts is not in the compiled cache.',
       });
+    });
+  });
+
+  describe('the renderer window', () => {
+    it('VALID: {no ASSAYER_DEV} => loads the built renderer file', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
+
+      await desktopBootBroker({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.loadedUrls({ url: proxy.packagedRendererUrl() })).toStrictEqual([[proxy.packagedRendererUrl()]]);
+    });
+
+    it('VALID: {ASSAYER_DEV is 1} => loads the dev server URL', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: true, headless: false });
+
+      await desktopBootBroker({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.loadedUrls({ url: 'http://localhost:6273' })).toStrictEqual([['http://localhost:6273']]);
+    });
+
+    it('VALID: {no ASSAYER_HEADLESS} => opens a visible window that renders onscreen', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
+
+      await desktopBootBroker({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.windowCallsWith({ options: { show: true } })).toStrictEqual([
+        [
+          {
+            width: 1500,
+            height: 800,
+            title: 'Assayer',
+            show: true,
+            webPreferences: {
+              preload: proxy.preloadPath(),
+              contextIsolation: true,
+              nodeIntegration: false,
+              sandbox: false,
+              offscreen: false,
+            },
+          },
+        ],
+      ]);
+    });
+
+    it('VALID: {ASSAYER_HEADLESS is 1} => opens a hidden window that renders offscreen', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: true });
+
+      await desktopBootBroker({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.windowCallsWith({ options: { show: false } })).toStrictEqual([
+        [
+          {
+            width: 1500,
+            height: 800,
+            title: 'Assayer',
+            show: false,
+            webPreferences: {
+              preload: proxy.preloadPath(),
+              contextIsolation: true,
+              nodeIntegration: false,
+              sandbox: false,
+              offscreen: true,
+            },
+          },
+        ],
+      ]);
+    });
+  });
+
+  describe('when every window is closed', () => {
+    it('VALID: {platform: linux} => quits the app', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
+      proxy.setupPlatform({ value: 'linux' });
+
+      await desktopBootBroker({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+      proxy.emitAllWindowsClosed();
+
+      expect(proxy.quitCalls()).toStrictEqual([[]]);
+    });
+
+    it('VALID: {platform: darwin} => leaves the app running', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false });
+      proxy.setupPlatform({ value: 'darwin' });
+
+      await desktopBootBroker({
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+      proxy.emitAllWindowsClosed();
+
+      expect(proxy.quitCalls()).toStrictEqual([]);
     });
   });
 });

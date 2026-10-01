@@ -23,9 +23,9 @@
  *   savedConsoleChannel: 'assayer:saved-console',
  *   runOutputChannel: 'assayer:run-output',
  * });
- * // Returns { success: true } after exposing the bridge
+ * // Exposes window.assayerBridge in the preload context
  */
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer } from '#gateway/npm/electron';
 
 import { replyValueLayerBroker } from './reply-value-layer-broker';
 
@@ -52,19 +52,22 @@ export const desktopBridgeExposeBroker = ({
 }): void => {
   contextBridge.exposeInMainWorld(bridgeKey, {
     getStatus: async (): Promise<unknown> =>
-      replyValueLayerBroker({ reply: await ipcRenderer.invoke(statusChannel) }),
+      replyValueLayerBroker({ reply: await ipcRenderer.invoke(statusChannel) }).valueRaw,
     getCompiledTree: async (): Promise<unknown> =>
-      replyValueLayerBroker({ reply: await ipcRenderer.invoke(compiledTreeChannel) }),
+      replyValueLayerBroker({ reply: await ipcRenderer.invoke(compiledTreeChannel) }).valueRaw,
     getCompiledFile: async ({ relPath }: { relPath: string }): Promise<unknown> =>
-      replyValueLayerBroker({ reply: await ipcRenderer.invoke(compiledFileChannel, relPath) }),
+      replyValueLayerBroker({ reply: await ipcRenderer.invoke(compiledFileChannel, relPath) })
+        .valueRaw,
     getStubs: async (): Promise<unknown> =>
-      replyValueLayerBroker({ reply: await ipcRenderer.invoke(stubsChannel) }),
+      replyValueLayerBroker({ reply: await ipcRenderer.invoke(stubsChannel) }).valueRaw,
     runFile: async ({ relPath }: { relPath: string }): Promise<unknown> =>
-      replyValueLayerBroker({ reply: await ipcRenderer.invoke(runChannel, relPath) }),
+      replyValueLayerBroker({ reply: await ipcRenderer.invoke(runChannel, relPath) }).valueRaw,
     getSavedRun: async ({ relPath }: { relPath: string }): Promise<unknown> =>
-      replyValueLayerBroker({ reply: await ipcRenderer.invoke(savedRunChannel, relPath) }),
+      replyValueLayerBroker({ reply: await ipcRenderer.invoke(savedRunChannel, relPath) })
+        .valueRaw,
     getSavedConsole: async ({ relPath }: { relPath: string }): Promise<unknown> =>
-      replyValueLayerBroker({ reply: await ipcRenderer.invoke(savedConsoleChannel, relPath) }),
+      replyValueLayerBroker({ reply: await ipcRenderer.invoke(savedConsoleChannel, relPath) })
+        .valueRaw,
     onRunOutput: ({ onChunk }: { onChunk: (params: { chunk: string }) => void }): (() => void) => {
       ipcRenderer.on(runOutputChannel, (_event: unknown, chunk: unknown): void => {
         onChunk({ chunk: String(chunk) });
@@ -75,5 +78,4 @@ export const desktopBridgeExposeBroker = ({
       };
     },
   });
-
 };

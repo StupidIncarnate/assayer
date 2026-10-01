@@ -1,5 +1,4 @@
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
-import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
 
 import { runFetchSavedBroker } from './run-fetch-saved-broker';
 import { runFetchSavedBrokerProxy } from './run-fetch-saved-broker.proxy';
@@ -10,7 +9,7 @@ describe('runFetchSavedBroker', () => {
       const proxy = runFetchSavedBrokerProxy();
       proxy.setupRun({ run: RunResultStub() });
 
-      const result = await runFetchSavedBroker({ relPath: RelPathStub({ value: 'src/a.ts' }) });
+      const result = await runFetchSavedBroker({ relPath: 'src/a.ts' });
 
       expect(result).toStrictEqual(RunResultStub());
     });
@@ -21,7 +20,7 @@ describe('runFetchSavedBroker', () => {
       const proxy = runFetchSavedBrokerProxy();
       proxy.neverRun();
 
-      const result = await runFetchSavedBroker({ relPath: RelPathStub({ value: 'src/a.ts' }) });
+      const result = await runFetchSavedBroker({ relPath: 'src/a.ts' });
 
       expect(result).toBe(undefined);
     });

@@ -11,7 +11,7 @@
  */
 import type { SourceFile } from '#gateway/npm/ts-morph';
 
-import { exitNodeContract, symbolNameContract } from '@assayer/shared/contracts';
+import { exitNodeContract } from '@assayer/shared/contracts';
 
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import { scopeRecordContract } from '../../contracts/scope-record/scope-record-contract';
@@ -30,7 +30,7 @@ export const handleSourceFileLayerTransformer = ({
   node: SourceFile;
   context: WalkContext;
 }): ReturnType<typeof handlerResultLayerTransformer> => {
-  const name = symbolNameContract.parse(moduleScopeStatics.name);
+  const {name} = moduleScopeStatics;
   const scoped = walkContextTransformer({ context, scopeSegment: name, params: [], exported: false });
   const statements = node.getStatements();
 

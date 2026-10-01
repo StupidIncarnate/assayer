@@ -1,10 +1,10 @@
-import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
+import { MantineProvider } from '#gateway/npm/mantine__core';
 import { StubRepositoryWidget } from './stub-repository-widget';
 import { StubRepositoryWidgetProxy } from './stub-repository-widget.proxy';
 import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub';
 import { ObjectStubStub } from '@assayer/shared/contracts/object-stub/object-stub.stub';
 import { EnvStubStub } from '@assayer/shared/contracts/env-stub/env-stub.stub';
-import { waitFor } from '#gateway/npm/testing-library__react';
+import { render, waitFor } from '#gateway/npm/testing-library__react';
 
 const CROSS_FILE_TYPES = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/types.ts';
 const READER_A = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/cross-file-shape.ts';
@@ -34,7 +34,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('STUB_UNKNOWN').textContent).toBe('unknown');
@@ -80,7 +80,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('STUB_CARD')).toBeInTheDocument();
@@ -103,7 +103,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('STUB_GUESSED').textContent).toBe('guessed');
@@ -123,7 +123,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('STUB_CARD')).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe('StubRepositoryWidget', () => {
       const proxy = StubRepositoryWidgetProxy();
       proxy.setupView({ view: StubViewStub({ objectStubs: [], envStubs: [] }) });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('STUB_EMPTY')).toBeInTheDocument();
@@ -155,7 +155,7 @@ describe('StubRepositoryWidget', () => {
       const proxy = StubRepositoryWidgetProxy();
       proxy.setupView({ view: StubViewStub({ objectStubs: [], envStubs: [] }) });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       expect(getByTestId('STUB_LOADING').textContent).toBe('Reading the stub repository…');
       expect(queryByTestId('STUB_EMPTY')).toBe(null);
@@ -170,7 +170,7 @@ describe('StubRepositoryWidget', () => {
         message: 'assayer: cannot read /repo/assayer.config.json. Run `assayer status` in that repo to generate one.',
       });
 
-      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = render(<StubRepositoryWidget />, { wrapper: MantineProvider });
 
       await waitFor(() => {
         expect(getByTestId('STUB_ERROR')).toBeInTheDocument();

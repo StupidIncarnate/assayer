@@ -32,9 +32,11 @@
  *
  * USAGE:
  * caseResolveEntryBroker({ subject, name: 'classify', access: { kind: 'method', className: 'Classifier', constructable: true }, requireFresh });
- * // Returns the bound method, or undefined when the module does not carry it
+ * // Returns the bound method, or undefined when the module does not carry it as a function
  */
 import type { EntryAccess } from '@assayer/shared/contracts';
+
+import type { DrivableEntry } from '../../../contracts/drivable-entry/drivable-entry-contract';
 
 export const caseResolveEntryBroker = ({
   subject,
@@ -46,17 +48,20 @@ export const caseResolveEntryBroker = ({
   name: string;
   access: EntryAccess;
   requireFresh?: () => unknown;
-}): unknown => {
-  // The module PROPERTY, which is the exported name when a rename put it under a different one.
+}): DrivableEntry | undefined => {
+  // The module PROPERTY, which is the exported name when a rename put it under a different one. A
+  // property that is not a function is no entry, so it resolves to undefined like a missing one.
   if (access.kind === 'named') {
-    return subject[access.exportedName === undefined ? name : String(access.exportedName)];
+    const exported = subject[access.exportedName === undefined ? name : String(access.exportedName)];
+
+    return typeof exported === 'function' ? (exported as DrivableEntry) : undefined;
   }
 
   if (access.kind === 'default') {
     const exported = subject.default;
 
     // Under CJS interop a default export can land as the module itself rather than under `default`.
-    return typeof exported === 'function' ? exported : undefined;
+    return typeof exported === 'function' ? (exported as DrivableEntry) : undefined;
   }
 
   if (access.kind === 'method') {
@@ -69,7 +74,7 @@ export const caseResolveEntryBroker = ({
     const instance = Reflect.construct(owner, []) as Record<PropertyKey, unknown>;
     const method = instance[name];
 
-    return typeof method === 'function' ? method.bind(instance) : undefined;
+    return typeof method === 'function' ? (method.bind(instance) as DrivableEntry) : undefined;
   }
 
   if (access.kind === 'module') {
@@ -77,7 +82,9 @@ export const caseResolveEntryBroker = ({
   }
 
   if (access.kind === 'through-caller') {
-    return subject[access.callerName];
+    const caller = subject[access.callerName];
+
+    return typeof caller === 'function' ? (caller as DrivableEntry) : undefined;
   }
 
   return undefined;

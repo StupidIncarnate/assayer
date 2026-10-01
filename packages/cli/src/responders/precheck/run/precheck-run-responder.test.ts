@@ -1,5 +1,4 @@
 import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
-import { filePathContract } from '@assayer/core/contracts';
 
 import { PrecheckRunResponder } from './precheck-run-responder';
 import { PrecheckRunResponderProxy } from './precheck-run-responder.proxy';
@@ -23,8 +22,8 @@ describe('PrecheckRunResponder', () => {
       const result = await PrecheckRunResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        configDir: filePathContract.parse('/repo'),
-        root: filePathContract.parse('/repo'),
+        configDir: '/repo',
+        root: '/repo',
         config,
       });
     });
@@ -41,8 +40,8 @@ describe('PrecheckRunResponder', () => {
       const result = await PrecheckRunResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        configDir: filePathContract.parse('/repo'),
-        root: filePathContract.parse('/repo/smoke-repo'),
+        configDir: '/repo',
+        root: '/repo/smoke-repo',
         config,
       });
     });

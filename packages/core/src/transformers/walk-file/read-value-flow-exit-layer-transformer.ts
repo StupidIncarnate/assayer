@@ -27,15 +27,10 @@
 import { Node, VariableDeclarationKind } from '#gateway/npm/ts-morph';
 import type { Statement } from '#gateway/npm/ts-morph';
 
+import type { ValueFlowExitReadout } from '../../contracts/value-flow-exit-readout/value-flow-exit-readout-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
 import { readConditionalExitLayerTransformer } from './read-conditional-exit-layer-transformer';
-
-export interface ValueFlowExitReadout {
-  matched: boolean;
-  result: ReturnType<typeof handlerResultLayerTransformer>;
-  consumed: Statement[];
-}
 
 const NO_MATCH: ValueFlowExitReadout = {
   matched: false,

@@ -101,7 +101,7 @@ export const runExecuteCasesBroker = async ({
     // came from a command line. `_` carries the test-path pattern — the one place THIS run is named,
     // which is what lets the config above stay identical between runs.
     {
-      _: [String(testPathPatternTransformer({ runDir }))],
+      _: [testPathPatternTransformer({ runDir })],
       $0: '',
       config: JSON.stringify(config),
       runInBand: true,

@@ -1,6 +1,3 @@
-import { EntryLabelStub } from '@assayer/shared/contracts/entry-label/entry-label.stub';
-import { SymbolNameStub } from '@assayer/shared/contracts/symbol-name/symbol-name.stub';
-import { TypeTextStub } from '@assayer/shared/contracts/type-text/type-text.stub';
 
 import { inputGapTransformer } from './input-gap-transformer';
 
@@ -88,9 +85,9 @@ describe('inputGapTransformer', () => {
   describe('a refused parameter', () => {
     it('VALID: {a callback param} => one gap keyed on the entry, invoicing the parameter by name and type', () => {
       const result = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'audit' }),
+        entryName: 'audit',
         unfillable: [
-          { param: SymbolNameStub({ value: 'report' }), type: TypeTextStub({ value: '(message: string) => string' }) },
+          { param: 'report', type: '(message: string) => string' },
         ],
       });
 
@@ -101,8 +98,8 @@ describe('inputGapTransformer', () => {
     // snippet names this entry and this input — the reader copies it without editing anything.
     it('VALID: {an object param with a callable member} => the invoice names the type and the harness that closes it', () => {
       const result = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'emit' }),
-        unfillable: [{ param: SymbolNameStub({ value: 'sink' }), type: TypeTextStub({ value: 'Sink' }) }],
+        entryName: 'emit',
+        unfillable: [{ param: 'sink', type: 'Sink' }],
       });
 
       expect(result).toStrictEqual([{ name: 'emit', reason: OBJECT_INVOICE }]);
@@ -114,10 +111,10 @@ describe('inputGapTransformer', () => {
     // input at once — two rows naming one entry would read as two debts.
     it('VALID: {two refused params} => one gap whose sentence and harness snippet name both, in order', () => {
       const result = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'wire' }),
+        entryName: 'wire',
         unfillable: [
-          { param: SymbolNameStub({ value: 'sink' }), type: TypeTextStub({ value: 'Sink' }) },
-          { param: SymbolNameStub({ value: 'payload' }), type: TypeTextStub({ value: 'Map<string, number>' }) },
+          { param: 'sink', type: 'Sink' },
+          { param: 'payload', type: 'Map<string, number>' },
         ],
       });
 
@@ -130,12 +127,12 @@ describe('inputGapTransformer', () => {
     // on the private it returns. Naming it bare would send the reader looking for a `cb` on `surface`.
     it('VALID: {a refusal owned by a folded private} => the refusal says where it lives and the snippet keys it there', () => {
       const result = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'surface' }),
+        entryName: 'surface',
         unfillable: [
           {
-            param: SymbolNameStub({ value: 'cb' }),
-            type: TypeTextStub({ value: '(n: number) => void' }),
-            owner: EntryLabelStub({ value: 'helper' }),
+            param: 'cb',
+            type: '(n: number) => void',
+            owner: 'helper',
           },
         ],
       });
@@ -145,13 +142,13 @@ describe('inputGapTransformer', () => {
 
     it('VALID: {the entry`s own refusal and a folded one} => one gap, each input under the scope that declares it', () => {
       const result = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'surface' }),
+        entryName: 'surface',
         unfillable: [
-          { param: SymbolNameStub({ value: 'size' }), type: TypeTextStub({ value: 'Sink' }) },
+          { param: 'size', type: 'Sink' },
           {
-            param: SymbolNameStub({ value: 'cb' }),
-            type: TypeTextStub({ value: '(n: number) => void' }),
-            owner: EntryLabelStub({ value: 'helper' }),
+            param: 'cb',
+            type: '(n: number) => void',
+            owner: 'helper',
           },
         ],
       });
@@ -163,14 +160,14 @@ describe('inputGapTransformer', () => {
     // (tagged with the entry). One parameter, one debt, so the invoice states it once.
     it('VALID: {the same parameter from both channels} => stated once, exactly as the untagged one alone', () => {
       const tagged = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'audit' }),
+        entryName: 'audit',
         unfillable: [
           {
-            param: SymbolNameStub({ value: 'report' }),
-            type: TypeTextStub({ value: '(message: string) => string' }),
-            owner: EntryLabelStub({ value: 'audit' }),
+            param: 'report',
+            type: '(message: string) => string',
+            owner: 'audit',
           },
-          { param: SymbolNameStub({ value: 'report' }), type: TypeTextStub({ value: '(message: string) => string' }) },
+          { param: 'report', type: '(message: string) => string' },
         ],
       });
 
@@ -184,8 +181,8 @@ describe('inputGapTransformer', () => {
     // ONE real case and is still refused a value. "Derives no case" would be false here.
     it('VALID: {hasCases: true} => the opening clause says a case exists, never "derives no case"', () => {
       const result = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'checkConfigObj' }),
-        unfillable: [{ param: SymbolNameStub({ value: 'config' }), type: TypeTextStub({ value: 'Config' }) }],
+        entryName: 'checkConfigObj',
+        unfillable: [{ param: 'config', type: 'Config' }],
         hasCases: true,
       });
 
@@ -194,8 +191,8 @@ describe('inputGapTransformer', () => {
 
     it('VALID: {hasCases: false} => the opening clause reverts to "derives no case"', () => {
       const result = inputGapTransformer({
-        entryName: SymbolNameStub({ value: 'emit' }),
-        unfillable: [{ param: SymbolNameStub({ value: 'sink' }), type: TypeTextStub({ value: 'Sink' }) }],
+        entryName: 'emit',
+        unfillable: [{ param: 'sink', type: 'Sink' }],
         hasCases: false,
       });
 
@@ -205,7 +202,7 @@ describe('inputGapTransformer', () => {
 
   describe('nothing refused', () => {
     it('EMPTY: {no refused params} => no gap, so an entry Assayer can build invoices nothing', () => {
-      expect(inputGapTransformer({ entryName: SymbolNameStub({ value: 'audit' }), unfillable: [] })).toStrictEqual([]);
+      expect(inputGapTransformer({ entryName: 'audit', unfillable: [] })).toStrictEqual([]);
     });
   });
 });

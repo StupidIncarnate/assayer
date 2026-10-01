@@ -29,7 +29,7 @@
  * appliedParamsTransformer({ params: [...], harness: ['report'] });
  * // A harness-answered trailing parameter is kept even though the seam alone would refuse it
  */
-import type { ParamDescriptor, SymbolName } from '@assayer/shared/contracts';
+import type { ParamDescriptor } from '@assayer/shared/contracts';
 
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 
@@ -38,9 +38,9 @@ export const appliedParamsTransformer = ({
   harness,
 }: {
   params: ParamDescriptor[];
-  harness?: readonly SymbolName[] | undefined;
+  harness?: readonly string[] | undefined;
 }): ParamDescriptor[] => {
-  const harnessNames = new Set((harness ?? []).map((name) => String(name)));
+  const harnessNames = new Set((harness ?? []).map((name) => name));
   const unowed = params.findIndex(
     (param) =>
       (param.optional === true || param.rest === true) &&

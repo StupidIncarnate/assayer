@@ -10,13 +10,12 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { repoPathContract } from '../repo-path/repo-path-contract';
 
 export const desktopStatusContract = z.object({
-  version: z.string().min(1).brand<'AssayerVersion'>(),
-  message: z.string().min(1).brand<'StatusMessage'>(),
-  repoPath: repoPathContract,
-  runMode: z.enum(['thorough', 'intelligent']).default('thorough').brand<'RunMode'>(),
-});
+  version: z.string().min(1).brand<'DesktopStatusVersion'>(),
+  message: z.string().min(1).brand<'DesktopStatusMessage'>(),
+  repoPath: z.string().min(1).brand<'DesktopStatusRepoPath'>(),
+  runMode: z.enum(['thorough', 'intelligent']).default('thorough'),
+}).brand<'DesktopStatus'>();
 
 export type DesktopStatus = z.infer<typeof desktopStatusContract>;

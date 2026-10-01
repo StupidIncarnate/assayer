@@ -10,19 +10,18 @@
  * // Returns the validated ResolvedIndex, or undefined when the namespace has no resolved index.
  */
 import { resolvedIndexContract } from '@assayer/shared/contracts';
-import type { NamespaceName, ResolvedIndex } from '@assayer/shared/contracts';
+import type { ResolvedIndex } from '@assayer/shared/contracts';
 
-import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
 import { readJsonFileIfExists } from '#gateway/node/fs__promises';
 
 export const cacheLoadResolvedIndexBroker = async ({
   repoPath,
   namespace,
 }: {
-  repoPath: RepoPath;
-  namespace: NamespaceName;
+  repoPath: string;
+  namespace: string;
 }): Promise<ResolvedIndex | undefined> => {
-  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/resolved/${String(namespace)}.json`)) ?? undefined;
+  const raw = (await readJsonFileIfExists(`${repoPath}/.assayer/cache/resolved/${namespace}.json`)) ?? undefined;
 
   if (raw === undefined) {
     return undefined;

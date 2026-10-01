@@ -9,9 +9,9 @@
  * // { hasGitRepo: true, candidates: [] } when neither main nor master exist, or
  * // { hasGitRepo: false } when repoRoot isn't a git working tree
  */
-import { branchNameContract } from '@assayer/shared/contracts';
-import type { BranchName } from '@assayer/shared/contracts';
 
+import { gitDetectStableBranchResultContract } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
+import type { GitDetectStableBranchResult } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
 import { GitNotInstalledError, branchList, isInsideWorkTree } from '#gateway/bin/git';
 
 export const gitDetectStableBranchBroker = async ({
@@ -19,7 +19,7 @@ export const gitDetectStableBranchBroker = async ({
 }: {
   repoRoot: string;
 }): Promise<
-  { hasGitRepo: false } | { hasGitRepo: true; candidates: BranchName[]; preselected?: BranchName }
+  GitDetectStableBranchResult
 > => {
   const inside = await isInsideWorkTree({ cwd: repoRoot }).catch((error: unknown) => {
     if (error instanceof GitNotInstalledError) {
@@ -29,7 +29,7 @@ export const gitDetectStableBranchBroker = async ({
   });
 
   if (!inside) {
-    return { hasGitRepo: false };
+    return gitDetectStableBranchResultContract.parse({ hasGitRepo: false });
   }
 
   const branches = await branchList({ cwd: repoRoot, patterns: ['main', 'master'] });
@@ -37,13 +37,13 @@ export const gitDetectStableBranchBroker = async ({
   const present = new Set(branches ?? []);
   const candidates = (['main', 'master'] as const)
     .filter((branch) => present.has(branch))
-    .map((branch) => branchNameContract.parse(branch));
+    .map((branch) => branch);
 
   const [preselected] = candidates;
 
   if (preselected === undefined) {
-    return { hasGitRepo: true, candidates: [] };
+    return gitDetectStableBranchResultContract.parse({ hasGitRepo: true, candidates: [] });
   }
 
-  return { hasGitRepo: true, candidates, preselected };
+  return gitDetectStableBranchResultContract.parse({ hasGitRepo: true, candidates, preselected });
 };

@@ -29,8 +29,6 @@ import {
 
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
-import { CliFileTextStub } from '../../src/contracts/cli-file-text/cli-file-text.stub';
-import type { CliFileText } from '../../src/contracts/cli-file-text/cli-file-text-contract';
 import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
@@ -43,7 +41,7 @@ export const assayerCliHarness = (): {
   writeCacheFile: ({ relPath, contents }: { relPath: string; contents: string }) => void;
   run: ({ argv }: { argv: readonly string[] }) => Promise<CliRunResult>;
   exists: ({ relPath }: { relPath: string }) => boolean;
-  read: ({ relPath }: { relPath: string }) => CliFileText;
+  read: ({ relPath }: { relPath: string }) => string;
 } => {
   let dir = '';
 
@@ -87,7 +85,7 @@ export const assayerCliHarness = (): {
         });
       }),
     exists: ({ relPath }: { relPath: string }): boolean => existsSync(join(dir, relPath)),
-    read: ({ relPath }: { relPath: string }): CliFileText =>
-      CliFileTextStub({ value: readFileSync(join(dir, relPath)) }),
+    read: ({ relPath }: { relPath: string }): string =>
+      readFileSync(join(dir, relPath)),
   };
 };

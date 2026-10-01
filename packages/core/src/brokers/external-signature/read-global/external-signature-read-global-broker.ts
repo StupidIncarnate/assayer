@@ -12,16 +12,15 @@
  * await externalSignatureReadGlobalBroker({ tsConfigFilePath, reference: { kind: 'global', name: 'process', member: 'env', called: false }, cacheDir });
  * // Returns { usable: true, result: 'signature', signature } | { usable: true, result: 'type', type } | { usable: false }
  */
-import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
+import type { ExternalSignature, TypeDescriptor } from '@assayer/shared/contracts';
 
-import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
 import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
 
 type GlobalReference =
-  | { kind: 'global'; name: SymbolName; member?: SymbolName; called: boolean }
-  | { kind: 'builtin'; specifier: ModuleSpecifier; importedName: SymbolName; called: boolean };
+  | { kind: 'global'; name: string; member?: string; called: boolean }
+  | { kind: 'builtin'; specifier: string; importedName: string; called: boolean };
 
 type GlobalSignatureResult =
   | { usable: true; result: 'signature'; signature: ExternalSignature }
@@ -33,7 +32,7 @@ export const externalSignatureReadGlobalBroker = async ({
   reference,
   cacheDir,
 }: {
-  tsConfigFilePath: FilePath;
+  tsConfigFilePath: string;
   reference: GlobalReference;
   cacheDir: string;
 }): Promise<GlobalSignatureResult> => {
@@ -48,12 +47,12 @@ export const externalSignatureReadGlobalBroker = async ({
   // declared type does.
   const referenceKey =
     reference.kind === 'builtin'
-      ? `b:${String(reference.specifier)} ${String(reference.importedName)} ${String(reference.called)}`
-      : `g:${String(reference.name)}.${reference.member === undefined ? '' : String(reference.member)}.${String(reference.called)}`;
+      ? `b:${reference.specifier} ${reference.importedName} ${String(reference.called)}`
+      : `g:${reference.name}.${reference.member === undefined ? '' : reference.member}.${String(reference.called)}`;
 
-  const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${String(read.declText)}` });
+  const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${read.declText}` });
   const dir = `${cacheDir}/global-signatures`;
-  const cachePath = `${dir}/${String(cacheKey)}.json`;
+  const cachePath = `${dir}/${cacheKey}.json`;
 
   const payload =
     read.result === 'signature' ? { result: 'signature', signature: read.signature } : { result: 'type', type: read.type };

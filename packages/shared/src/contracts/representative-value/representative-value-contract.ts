@@ -9,17 +9,10 @@
  *
  * USAGE:
  * representativeValueContract.parse('');
- * // Returns a validated RepresentativeValue (branded)
+ * // Returns a validated RepresentativeValue
  */
 import { z } from '#gateway/npm/zod';
 
-// `null` is unioned OUTSIDE the brand on purpose: `.brand()` intersects a phantom property onto its
-// output, and `null & { brand }` collapses to `never`, so branding a union that includes null would
-// silently drop the null arm from the type. Branding the primitives and unioning null keeps null a
-// first-class member of the output type.
-export const representativeValueContract = z
-  .union([z.string(), z.number(), z.boolean()])
-  .brand<'RepresentativeValue'>()
-  .or(z.null());
+export const representativeValueContract = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
 export type RepresentativeValue = z.infer<typeof representativeValueContract>;

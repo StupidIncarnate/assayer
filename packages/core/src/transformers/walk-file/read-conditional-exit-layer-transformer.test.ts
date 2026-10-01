@@ -199,7 +199,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
       const result = readConditionalExitLayerTransformer({ expression, kind: 'throw', context: CONTEXT });
 
-      expect(result.result.exits.map((exit) => String(exit.kind))).toStrictEqual(['throw', 'throw']);
+      expect(result.result.exits.map((exit) => exit.kind)).toStrictEqual(['throw', 'throw']);
     });
   });
 
@@ -225,7 +225,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
       const result = readConditionalExitLayerTransformer({ expression, kind: 'return', context: OR_CONTEXT });
 
-      expect(result.result.branches.map((branch) => ({ coverageId: String(branch.coverageId), kind: String(branch.kind) }))).toStrictEqual([
+      expect(result.result.branches.map((branch) => ({ coverageId: String(branch.coverageId), kind: branch.kind }))).toStrictEqual([
         { coverageId: OR_A, kind: 'ternary' },
         { coverageId: OR_B, kind: 'ternary' },
       ]);
@@ -266,7 +266,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
       const result = readConditionalExitLayerTransformer({ expression, kind: 'return', context: OR_CONTEXT });
 
-      expect(result.result.probeSites.map((site) => String(site.kind))).toStrictEqual(['exit', 'exit', 'exit']);
+      expect(result.result.probeSites.map((site) => site.kind)).toStrictEqual(['exit', 'exit', 'exit']);
     });
 
     it('VALID: {`return a || b || "d"`} => no walk node for the `||` node, operands descend', () => {

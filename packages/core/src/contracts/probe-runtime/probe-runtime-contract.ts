@@ -17,19 +17,19 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import type { CoverageId, TraceEvent } from '@assayer/shared/contracts';
+import type { TraceEvent, Coverage } from '@assayer/shared/contracts';
 
 export interface ProbeRuntime {
   events: TraceEvent[];
   reset: () => void;
-  c: (id: CoverageId, value: unknown) => unknown;
-  x: (id: CoverageId, value: unknown) => unknown;
+  c: (id: Coverage['id'], value: unknown) => unknown;
+  x: (id: Coverage['id'], value: unknown) => unknown;
   // The optional-access observation: `a?.b` becomes `__P.oc(thenId, elseId, a, (r) => r.b)`. The
   // receiver is evaluated ONCE (passed in); the accessor reads the member only on the non-null path,
   // so short-circuit holds. It fires `thenId` when the receiver is non-nullish (recording the member
   // value) and `elseId` when it is nullish (recording `undefined`), and returns the same value `a?.b`
   // would — the probe stays semantically invisible.
-  oc: (thenId: CoverageId, elseId: CoverageId, receiver: unknown, access: (receiver: unknown) => unknown) => unknown;
+  oc: (thenId: Coverage['id'], elseId: Coverage['id'], receiver: unknown, access: (receiver: unknown) => unknown) => unknown;
 }
 
 export const probeRuntimeContract = z.custom<ProbeRuntime>(

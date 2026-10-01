@@ -1,4 +1,3 @@
-import { BranchNameStub } from '@assayer/shared/contracts/branch-name/branch-name.stub';
 import { stableBranchPickBroker } from './stable-branch-pick-broker';
 import { stableBranchPickBrokerProxy } from './stable-branch-pick-broker.proxy';
 
@@ -13,9 +12,9 @@ describe('stableBranchPickBroker', () => {
   describe('prompt rendering', () => {
     it('VALID: {candidates: [main, develop, feature-x], preselected: main} => asks one prompt listing all three with main marked as default', async () => {
       const proxy = stableBranchPickBrokerProxy();
-      const main = BranchNameStub({ value: 'main' });
-      const develop = BranchNameStub({ value: 'develop' });
-      const featureX = BranchNameStub({ value: 'feature-x' });
+      const main = 'main';
+      const develop = 'develop';
+      const featureX = 'feature-x';
       proxy.answersEmpty({ prompt: PROMPT });
 
       await stableBranchPickBroker({
@@ -30,9 +29,9 @@ describe('stableBranchPickBroker', () => {
   describe('matched input', () => {
     it('VALID: {input: develop} => resolves BranchName develop', async () => {
       const proxy = stableBranchPickBrokerProxy();
-      const main = BranchNameStub({ value: 'main' });
-      const develop = BranchNameStub({ value: 'develop' });
-      const featureX = BranchNameStub({ value: 'feature-x' });
+      const main = 'main';
+      const develop = 'develop';
+      const featureX = 'feature-x';
       proxy.answersWith({ prompt: PROMPT, input: 'develop' });
 
       const result = await stableBranchPickBroker({
@@ -47,9 +46,9 @@ describe('stableBranchPickBroker', () => {
   describe('unmatched input', () => {
     it('VALID: {input: release} => resolves preselected BranchName main', async () => {
       const proxy = stableBranchPickBrokerProxy();
-      const main = BranchNameStub({ value: 'main' });
-      const develop = BranchNameStub({ value: 'develop' });
-      const featureX = BranchNameStub({ value: 'feature-x' });
+      const main = 'main';
+      const develop = 'develop';
+      const featureX = 'feature-x';
       proxy.answersWith({ prompt: PROMPT, input: 'release' });
 
       const result = await stableBranchPickBroker({
@@ -64,9 +63,9 @@ describe('stableBranchPickBroker', () => {
   describe('empty input', () => {
     it('EMPTY: {input: ""} => resolves preselected BranchName main', async () => {
       const proxy = stableBranchPickBrokerProxy();
-      const main = BranchNameStub({ value: 'main' });
-      const develop = BranchNameStub({ value: 'develop' });
-      const featureX = BranchNameStub({ value: 'feature-x' });
+      const main = 'main';
+      const develop = 'develop';
+      const featureX = 'feature-x';
       proxy.answersEmpty({ prompt: PROMPT });
 
       const result = await stableBranchPickBroker({

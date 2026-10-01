@@ -24,13 +24,10 @@
  */
 import { Node, VariableDeclarationKind } from '#gateway/npm/ts-morph';
 
-import { constLengthContract, representativeValueContract } from '@assayer/shared/contracts';
-import type { ConstLength, RepresentativeValue } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
 
-export interface ConstOperandReadout {
-  value?: RepresentativeValue;
-  length?: ConstLength;
-}
+import { constOperandReadoutContract } from '../../contracts/const-operand-readout/const-operand-readout-contract';
+import type { ConstOperandReadout } from '../../contracts/const-operand-readout/const-operand-readout-contract';
 
 export const readConstOperandLayerTransformer = ({ node }: { node: Node }): ConstOperandReadout | undefined => {
   if (!Node.isIdentifier(node)) {
@@ -67,21 +64,21 @@ export const readConstOperandLayerTransformer = ({ node }: { node: Node }): Cons
 
   // An array literal welds its LENGTH — the count a `.length` comparison is decided against.
   if (Node.isArrayLiteralExpression(initializer)) {
-    return { length: constLengthContract.parse(initializer.getElements().length) };
+    return constOperandReadoutContract.parse({ length: initializer.getElements().length });
   }
 
   // A scalar literal welds its VALUE. A computed initializer is not a literal and yields nothing —
   // the analyzer folds no arithmetic, so it stays undriven.
   if (Node.isStringLiteral(initializer) || Node.isNumericLiteral(initializer)) {
-    return { value: representativeValueContract.parse(initializer.getLiteralValue()) };
+    return constOperandReadoutContract.parse({ value: representativeValueContract.parse(initializer.getLiteralValue()) });
   }
 
   if (Node.isTrueLiteral(initializer)) {
-    return { value: representativeValueContract.parse(true) };
+    return constOperandReadoutContract.parse({ value: representativeValueContract.parse(true) });
   }
 
   if (Node.isFalseLiteral(initializer)) {
-    return { value: representativeValueContract.parse(false) };
+    return constOperandReadoutContract.parse({ value: representativeValueContract.parse(false) });
   }
 
   return undefined;

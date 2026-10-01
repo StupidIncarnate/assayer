@@ -8,7 +8,6 @@
  * // Returns the routed CliOutput (after the flow's precheck, when applicable)
  */
 import { AssayerFlow } from '../flows/assayer/assayer-flow';
-import type { CliOutput } from '../contracts/cli-output/cli-output-contract';
 
 export const StartAssayer = async ({
   argv,
@@ -16,4 +15,4 @@ export const StartAssayer = async ({
 }: {
   argv: readonly string[];
   repoPath: string;
-}): Promise<CliOutput> => AssayerFlow({ argv, repoPath });
+}): Promise<string> => AssayerFlow({ argv, repoPath });

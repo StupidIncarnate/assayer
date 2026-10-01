@@ -24,14 +24,13 @@
  * await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
  * // Returns a RunId — the same one, for the same bytes and the same harness, forever
  */
-import { relPathContract, runIdContract } from '@assayer/shared/contracts';
-import type { RunId } from '@assayer/shared/contracts';
+import { runResultContract } from '@assayer/shared/contracts';
+import type { RunResult } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
-import { fileContentsContract } from '../../../contracts/file-contents/file-contents-contract';
 
 export const runIdBroker = async ({
   root,
@@ -41,22 +40,20 @@ export const runIdBroker = async ({
   root: string;
   relPath: string;
   source: string;
-}): Promise<RunId> => {
-  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPathContract.parse(relPath) }))}`;
+}): Promise<RunResult['runId']> => {
+  const harnessPath = `${root}/${harnessPathTransformer({ relPath })}`;
   const harnessSource = (await pathExists(harnessPath))
-    ? String(fileContentsContract.parse(await readFile(harnessPath)))
+    ? (await readFile(harnessPath))
     : undefined;
   const harnessDigest =
     harnessSource !== undefined && isAssayerHarnessGuard({ source: harnessSource })
-      ? String(contentHashTransformer({ content: harnessSource }))
+      ? contentHashTransformer({ content: harnessSource })
       : undefined;
 
-  return runIdContract.parse(
-    String(
-      contentHashTransformer({
-        content:
-          harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
-      }),
-    ),
+  return runResultContract.shape.runId.parse(
+    contentHashTransformer({
+      content:
+        harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
+    }),
   );
 };

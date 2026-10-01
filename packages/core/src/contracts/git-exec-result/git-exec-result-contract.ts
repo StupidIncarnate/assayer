@@ -9,9 +9,9 @@
 import { z } from '#gateway/npm/zod';
 
 export const gitExecResultContract = z.object({
-  exitCode: z.number().int().brand<'GitExitCode'>(),
-  stdout: z.string().brand<'GitStdout'>(),
-  stderr: z.string().brand<'GitStderr'>(),
-});
+  exitCode: z.number().int().brand<'GitExecResultExitCode'>(),
+  stdout: z.string().brand<'GitExecResultStdout'>(),
+  stderr: z.string().brand<'GitExecResultStderr'>(),
+}).brand<'GitExecResult'>();
 
 export type GitExecResult = z.infer<typeof gitExecResultContract>;

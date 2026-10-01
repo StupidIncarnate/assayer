@@ -1,4 +1,3 @@
-import { symbolNameContract } from '@assayer/shared/contracts';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
@@ -122,7 +121,7 @@ describe('throughCallerCasesTransformer', () => {
         callee: SINK_CALLEE,
         caller: CALLER,
         call: CALL,
-        harness: { entry: symbolNameContract.parse('inner'), params: [symbolNameContract.parse('cb')] },
+        harness: { entry: 'inner', params: ['cb'] },
       });
 
       // `cb` is passed straight through from the CALLER's own `cb` param (`param-ref`), so once the

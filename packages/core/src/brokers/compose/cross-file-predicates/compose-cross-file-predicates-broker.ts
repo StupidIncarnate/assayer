@@ -28,7 +28,7 @@
  * // unreachable-exit lint appended
  */
 import { moduleEntryLabelTransformer } from '@assayer/shared/transformers';
-import { branchNodeContract, entryLabelContract, fileAnalysisContract } from '@assayer/shared/contracts';
+import { branchNodeContract, fileAnalysisContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
@@ -166,7 +166,7 @@ export const composeCrossFilePredicatesBroker = ({
     const displayName =
       fn.entry.access.kind === 'module'
         ? moduleEntryLabelTransformer({ ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }), relPath })
-        : entryLabelContract.parse(String(fn.entry.name));
+        : String(fn.entry.name);
 
     return {
       fn: {
