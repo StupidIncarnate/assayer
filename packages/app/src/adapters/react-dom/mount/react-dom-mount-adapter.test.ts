@@ -1,4 +1,5 @@
-import { createElement } from 'react';
+import { document } from '#gateway/browser/document';
+import { act, createElement } from 'react';
 
 import { reactDomMountAdapter } from './react-dom-mount-adapter';
 import { reactDomMountAdapterProxy } from './react-dom-mount-adapter.proxy';
@@ -9,12 +10,14 @@ describe('reactDomMountAdapter', () => {
       reactDomMountAdapterProxy();
       const container = document.createElement('div');
 
-      const result = reactDomMountAdapter({
-        container,
-        content: createElement('span', null, 'mounted'),
+      const results: unknown[] = [];
+      act(() => {
+        results.push(
+          reactDomMountAdapter({ container, content: createElement('span', null, 'mounted') }),
+        );
       });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(results).toStrictEqual([{ success: true }]);
     });
   });
 });

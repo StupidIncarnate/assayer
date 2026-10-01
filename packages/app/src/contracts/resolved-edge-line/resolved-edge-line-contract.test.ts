@@ -10,7 +10,7 @@ describe('resolvedEdgeLineContract', () => {
 
   describe('invalid input', () => {
     it('EMPTY: {""} => throws rather than rendering a blank cell', () => {
-      expect(() => resolvedEdgeLineContract.parse('')).toThrow(/at least 1/iu);
+      expect(() => resolvedEdgeLineContract.parse('')).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {a number} => throws', () => {

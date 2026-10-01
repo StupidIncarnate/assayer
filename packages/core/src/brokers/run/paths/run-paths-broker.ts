@@ -2,10 +2,10 @@
  * PURPOSE: Runs the derived cases for a set of files and returns their saved results — the seam the
  *   CLI calls, and the only one it needs.
  *
- *   It exists so no surface has to assemble a run itself. Locating core's own package root (for the
- *   built adapters and the probe runtime) and fingerprinting the analyzer are facts about ASSAYER,
- *   not about the caller: a CLI that had to know them would be a second place to get them wrong, and
- *   the desktop would then be a third.
+ *   It exists so no surface has to assemble a run itself. Locating core's own package root (where the
+ *   runner's ceremony files and run-time modules live) and fingerprinting the analyzer are facts about
+ *   ASSAYER, not about the caller: a CLI that had to know them would be a second place to get them
+ *   wrong, and the desktop would then be a third.
  *
  * USAGE:
  * await runPathsBroker({ configDir: '/repo', root: '/repo', relPaths: ['src/a.ts'], analyzerRoots: [...] });

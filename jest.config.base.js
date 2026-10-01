@@ -1,5 +1,3 @@
-const path = require('path');
-
 const base = require('@dungeonmaster/testing/jest-config-base');
 
 const [tsJest, tsJestOptions] = base.transform['^.+\\.tsx?$'];
@@ -9,14 +7,6 @@ module.exports = {
   // `source` first, so a test resolves each workspace package through its `exports` map to TypeScript
   // source, never to a built dist.
   testEnvironmentOptions: { customExportConditions: ['source', 'require', 'default'] },
-  // Builds every tsc package before any test runs, then calls the published sandbox setup that moves
-  // HOME to a temporary directory. The build exists because the integration suite's generated shim
-  // requires core's COMPILED adapters, so a stale dist would let it prove old code while the unit
-  // suite proves new source. The sandbox call is load-bearing: the published globalTeardown, which
-  // this config keeps from the base, deletes HOME recursively when the run ends. The path is absolute
-  // through __dirname, never <rootDir>, because every package config spreads this base and <rootDir>
-  // is that package.
-  globalSetup: path.join(__dirname, 'scripts/jest-global-setup.js'),
   testMatch: ['**/src/**/*.test.ts', '**/src/**/*.test.tsx', '**/bin/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json'],
   moduleNameMapper: {

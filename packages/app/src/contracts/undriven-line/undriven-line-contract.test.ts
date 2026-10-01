@@ -13,7 +13,7 @@ describe('undrivenLineContract', () => {
   describe('invalid input', () => {
     // An admission that renders as nothing is the silence the channel exists to break.
     it('EMPTY: {""} => throws rather than rendering a blank admission', () => {
-      expect(() => undrivenLineContract.parse('')).toThrow(/at least 1/iu);
+      expect(() => undrivenLineContract.parse('')).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {a number} => throws', () => {

@@ -6,19 +6,19 @@
  *   followed by `user.name` fails to compile). Here the checker sees the original AST and probes
  *   exist only in the emitted JS.
  *
- *   Plain JS at the package root — alongside the barrels — because ts-jest requires this from disk
- *   and reads `name`/`version`/`factory` off it. The injection itself lives in
- *   `jestProbeInjectAdapter`, which is typed and unit-tested; this is only the ceremony plus the
- *   plan lookup.
+ *   Plain JS at the package root because ts-jest requires this from disk and reads
+ *   `name`/`version`/`factory` off it. The injection itself lives in `jestProbeInjectAdapter`, which is
+ *   typed and unit-tested; this is only the ceremony plus the plan lookup. The adapter's module path
+ *   arrives as the `probeInjectModule` option, which `jest-run-cli-adapter` sets. It points into the same
+ *   tree, source or dist, that the run's broker was loaded from. ts-jest hands `options` only to
+ *   `factory`, so the adapter is required there.
  *
  * USAGE:
- * // ts-jest config: astTransformers: { before: [{ path: '<core>/probe-transformer.js', options: { probeDir } }] }
+ * // ts-jest config: astTransformers: { before: [{ path: '<core>/probe-transformer.js', options: { probeDir, analyzerContentHash, probeInjectModule } }] }
  */
 const { createHash } = require('node:crypto');
 const { existsSync, readFileSync } = require('node:fs');
 const { join } = require('node:path');
-
-const { jestProbeInjectAdapter } = require('./dist/adapters');
 
 exports.name = 'assayer-probe';
 
@@ -32,7 +32,15 @@ exports.version = 1;
 
 exports.factory = (compilerInstance, options) => {
   const ts = compilerInstance.configSet.compilerModule;
-  const { probeDir } = options;
+  const { probeDir, probeInjectModule } = options;
+
+  if (probeInjectModule === undefined) {
+    throw new Error(
+      "assayer: probe-transformer.js ran without its probeInjectModule option. jest-run-cli-adapter sets it; this file is only loaded by Assayer's own runner.",
+    );
+  }
+
+  const { jestProbeInjectAdapter } = require(probeInjectModule);
 
   return (context) => (sourceFile) => {
     // Look the plan up by the hash of the text we were actually handed. A stale read is therefore

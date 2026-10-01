@@ -13,7 +13,7 @@ describe('darkSpotLineContract', () => {
   describe('invalid input', () => {
     // A dark spot that renders as nothing is the silence the channel exists to break.
     it('EMPTY: {""} => throws rather than rendering a blank admission', () => {
-      expect(() => darkSpotLineContract.parse('')).toThrow(/at least 1/iu);
+      expect(() => darkSpotLineContract.parse('')).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {a number} => throws', () => {

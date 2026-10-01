@@ -1171,7 +1171,9 @@ releases it. Anything that varies the config per file strands a whole
 extra compiler in memory, roughly 370MB each, which shows up as `assayer
 unit` running out of memory partway through a real repo, not merely
 running slowly. Which run to execute travels through the test-path
-pattern instead, never through `roots` or `testMatch`. There are two ways
+pattern instead, never through `roots` or `testMatch`. The
+`__assayerCoreRuntime` global and the source-tree export condition are
+fixed for the life of one process, so they keep the config identical. There are two ways
 to break this rule, and the second looks harmless:
 
 - naming the run's own directory directly inside the config, and
@@ -1192,20 +1194,27 @@ rule above holds. The memory cost is per CONFIG, not per run, and it does
 not show up until something drives the whole specimen catalogue through
 this path at once.
 
-**The wrapped runner executes COMPILED adapters, never your TypeScript
-source directly.** The generated test file `require`s
-`<coreRoot>/dist/adapters` by absolute path, and that IS the intended
-behavior: a published core package ships `dist`, and a consumer's
-generated test file requires exactly that compiled output, so mapping it
-to the TypeScript source instead would test a path nothing in production
-actually runs. One consequence: `dist` and `src` disagreeing is a SILENT
-wrong answer. A stale `dist` folder lets the integration suite pass
-against old compiled code, while the unit suite passes separately against
-the new source, and neither one notices the other is stale.
-`jest.config.base.js` closes this gap with a `globalSetup` step that
-builds first, so every Jest path is covered, not merely `npm run ward`.
-`tsc --build` is content-hashed, so a build with nothing to do costs about
-0.2 seconds. Do not remove this step.
+**The wrapped runner loads core's run-time modules from the same tree
+`runUnitBroker` was loaded from.** The run-time modules are the typed code
+the nested Jest calls: the case interpreter, the entry resolver, the probe
+runtime, the probe injector, and `assayerHarness`.
+`coreRuntimeTransformer` picks the tree from the broker's own `__dirname`.
+When the broker runs from `src`, under ts-jest or `tsx`, the nested
+ts-jest compiles core's TypeScript source. That run also sets the `source`
+export condition, so a workspace package core imports resolves to its
+source too. When the broker runs from `dist`, as in the built CLI or a
+published install, the nested Jest loads `dist`. One run therefore reads
+one tree, so `src` and `dist` cannot disagree inside it.
+
+No Jest run builds anything. Core's unit and integration tests read
+source. The CLI integration tests are the exception: they spawn the built
+CLI binary, so they need a current build.
+
+The ceremony files are the three plain-JS files at core's package root
+that Jest loads by path: `probe-runtime.js`, `probe-transformer.js` and
+`harness-registrar.js`. Each one reads its module path from the runner's
+config and loads it. The file paths of the run-time modules and the
+ceremony files live in `statics/core-runtime`. Moving a run-time module means editing that file.
 
 **Coverage IDs are cache-internal by design.** Changing how they are
 computed only costs a fixture rewrite, never a migration for anyone

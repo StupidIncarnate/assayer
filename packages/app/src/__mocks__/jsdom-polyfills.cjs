@@ -1,4 +1,5 @@
-// jsdom does not implement matchMedia or ResizeObserver, which Mantine relies on.
+// jsdom does not implement matchMedia, which Mantine relies on. ResizeObserver comes from
+// `@dungeonmaster/testing/jsdom-polyfills`, which this package's Jest config loads first.
 if (typeof window !== 'undefined') {
   window.matchMedia =
     window.matchMedia ||
@@ -12,12 +13,4 @@ if (typeof window !== 'undefined') {
       removeEventListener: () => {},
       dispatchEvent: () => false,
     }));
-}
-
-if (typeof globalThis.ResizeObserver === 'undefined') {
-  globalThis.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
 }

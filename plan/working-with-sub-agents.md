@@ -62,22 +62,21 @@ working tree, a full run measures the tree's state at that instant, not the agen
 agents each burned twenty-plus minutes chasing failures in files they had never opened. Scoped
 runs while working. One authoritative full run by the orchestrator at the end, on a quiet tree.
 
-**In this repo, one broken package stops every package's tests.** `scripts/jest-global-setup.js`
-builds the whole monorepo before any test runs. That is deliberate, and it is there because a
-stale build otherwise lets tests pass against old compiled code. The side effect is that an
-agent working in a clean package cannot run its tests at all while a sibling package is
-mid-edit. It does not get a useful failure either. It gets zero files run.
+**No Jest run in this repo builds anything.** Unit tests read TypeScript source. Core's
+integration tests drive the wrapped Jest runner in-process, and that runner loads core's source
+too. A broken sibling package therefore fails only the tests that import it.
 
-So a scoped test run is not the safety net it looks like. Plan for it: either sequence the work
-that breaks the build, or tell the agent up front that lint and typecheck are the only gates it
-can trust, and that you will run the tests yourself at the end.
+The CLI integration tests are the exception. They spawn the built CLI binary, so they test
+whatever compiled output is on disk. Only one process may build at a time, and a dispatched
+agent never builds. Tell an agent that those tests need a current build, and that you will run
+the build and those tests yourself at the end.
 
 The failure mode to watch for is an agent reporting its work complete on the strength of a
 clean typecheck. That happened here. The package was fine to compile and had four genuinely
 failing tests, which only appeared in the orchestrator's final run.
 
-**Warn them what other agents' breakage looks like.** A shared build step means one agent's
-half-finished edit blocks everyone. Tell them: a failure naming a file you do not own is almost
+**Warn them what other agents' breakage looks like.** One agent's half-finished edit can
+break the tests of every package that imports it. Tell them: a failure naming a file you do not own is almost
 certainly someone else mid-edit. Wait, retry, and report it — never fix it.
 
 **Reference documents by content, not by number.** Entries renumber as agents delete them. Say

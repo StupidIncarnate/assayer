@@ -1,3 +1,6 @@
+import { document } from '#gateway/browser/document';
+import { act } from 'react';
+
 import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
 import { AppMountResponder } from './app-mount-responder';
 import { AppMountResponderProxy } from './app-mount-responder.proxy';
@@ -9,9 +12,12 @@ describe('AppMountResponder', () => {
       document.body.innerHTML = '<div id="root"></div>';
       const content = reactCreateElementAdapter({ component: (): null => null });
 
-      const result = AppMountResponder({ content });
+      const results: unknown[] = [];
+      act(() => {
+        results.push(AppMountResponder({ content }));
+      });
 
-      expect(result).toStrictEqual({ success: true });
+      expect(results).toStrictEqual([{ success: true }]);
     });
   });
 });

@@ -33,7 +33,7 @@ describe('resolvedContractViewContract', () => {
     it('EMPTY: {blank symbol} => throws rather than an empty inspector cell', () => {
       expect(() =>
         resolvedContractViewContract.parse({ symbol: '', source: 'global', inputs: [] }),
-      ).toThrow(/at least 1/iu);
+      ).toThrow(/Too small: expected string to have >=1 characters/u);
     });
   });
 });

@@ -1,3 +1,4 @@
+import { CoreRuntimeStub } from '../../../contracts/core-runtime/core-runtime.stub';
 import { jestRunCliAdapter } from './jest-run-cli-adapter';
 import { jestRunCliAdapterProxy } from './jest-run-cli-adapter.proxy';
 
@@ -11,7 +12,7 @@ describe('jestRunCliAdapter', () => {
         runDir: '/cache/runs/r1',
         repoRoot: '/repo',
         probeDir: '/cache/probes',
-        coreRoot: '/core',
+        runtime: CoreRuntimeStub(),
         analyzerContentHash: 'abc123',
       });
 
@@ -26,7 +27,7 @@ describe('jestRunCliAdapter', () => {
         runDir: '/cache/runs/r1',
         repoRoot: '/repo',
         probeDir: '/cache/probes',
-        coreRoot: '/core',
+        runtime: CoreRuntimeStub(),
         analyzerContentHash: 'abc123',
       });
 
@@ -37,14 +38,14 @@ describe('jestRunCliAdapter', () => {
   describe('the config it builds', () => {
     // The constraint that shapes the whole design: runCLI parses config as JSON, so the transformer
     // and setup file must be PATHS. That is why they exist as real files rather than live objects.
-    it('VALID: {run args} => an inline JSON config naming the probe transformer and runtime by path', async () => {
+    it('VALID: {a source runtime} => an inline JSON config naming the ceremony files by path, with the source condition on', async () => {
       const proxy = jestRunCliAdapterProxy();
 
       await jestRunCliAdapter({
         runDir: '/cache/runs/r1',
         repoRoot: '/repo',
         probeDir: '/cache/probes',
-        coreRoot: '/core',
+        runtime: CoreRuntimeStub(),
         analyzerContentHash: 'abc123',
       });
 
@@ -54,6 +55,22 @@ describe('jestRunCliAdapter', () => {
           // The runs PARENT, not this run's own directory — see the pattern assertion below.
           roots: ['/cache/runs'],
           testEnvironment: 'node',
+          // A source-tree run resolves a workspace package that core source imports to its TypeScript.
+          testEnvironmentOptions: { customExportConditions: ['source', 'node', 'node-addons'] },
+          // The setup file and the registrar read their module paths from this global.
+          globals: {
+            __assayerCoreRuntime: {
+              tree: 'source',
+              setupFile: '/core/probe-runtime.js',
+              astTransformer: '/core/probe-transformer.js',
+              registrar: '/core/harness-registrar.js',
+              interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',
+              resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
+              probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
+              probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+              harnessModule: '/core/index',
+            },
+          },
           setupFiles: ['/core/probe-runtime.js'],
           testMatch: ['/cache/runs/**/*.test.js'],
           // One mapped path is one module instance. Resolving `@assayer/core` from the harness and from
@@ -78,7 +95,77 @@ describe('jestRunCliAdapter', () => {
                       path: '/core/probe-transformer.js',
                       // The analyzer's content hash rides in `options`, which ts-jest folds into its
                       // cache key — invalidation by CONTENT, never by a manual version bump.
-                      options: { probeDir: '/cache/probes', analyzerContentHash: 'abc123' },
+                      options: {
+                        probeDir: '/cache/probes',
+                        analyzerContentHash: 'abc123',
+                        probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    // A dist run is what a published install does. Its config sets no export condition, because a
+    // published core ships no TypeScript for `source` to resolve to.
+    it('VALID: {a dist runtime} => no testEnvironmentOptions key, and dist module paths', async () => {
+      const proxy = jestRunCliAdapterProxy();
+
+      await jestRunCliAdapter({
+        runDir: '/cache/runs/r1',
+        repoRoot: '/repo',
+        probeDir: '/cache/probes',
+        runtime: CoreRuntimeStub({
+          tree: 'dist',
+          interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',
+          resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
+          probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
+          probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+          harnessModule: '/core/dist/index',
+        }),
+        analyzerContentHash: 'abc123',
+      });
+
+      expect(proxy.configFor({ testPathPattern: '/cache/runs/r1/' })).toBe(
+        JSON.stringify({
+          rootDir: '/repo',
+          roots: ['/cache/runs'],
+          testEnvironment: 'node',
+          globals: {
+            __assayerCoreRuntime: {
+              tree: 'dist',
+              setupFile: '/core/probe-runtime.js',
+              astTransformer: '/core/probe-transformer.js',
+              registrar: '/core/harness-registrar.js',
+              interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',
+              resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',
+              probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',
+              probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+              harnessModule: '/core/dist/index',
+            },
+          },
+          setupFiles: ['/core/probe-runtime.js'],
+          testMatch: ['/cache/runs/**/*.test.js'],
+          moduleNameMapper: { '^@assayer/core$': '/core/harness-registrar.js' },
+          reporters: [],
+          transform: {
+            '^.+\\.tsx?$': [
+              'ts-jest',
+              {
+                diagnostics: false,
+                astTransformers: {
+                  before: [
+                    {
+                      path: '/core/probe-transformer.js',
+                      options: {
+                        probeDir: '/cache/probes',
+                        analyzerContentHash: 'abc123',
+                        probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',
+                      },
                     },
                   ],
                 },
@@ -101,7 +188,7 @@ describe('jestRunCliAdapter', () => {
         runDir: '/cache/runs/r1',
         repoRoot: '/repo',
         probeDir: '/cache/probes',
-        coreRoot: '/core',
+        runtime: CoreRuntimeStub(),
         analyzerContentHash: 'abc123',
       });
       const first = proxy.configFor({ testPathPattern: '/cache/runs/r1/' });
@@ -110,7 +197,7 @@ describe('jestRunCliAdapter', () => {
         runDir: '/cache/runs/r2',
         repoRoot: '/repo',
         probeDir: '/cache/probes',
-        coreRoot: '/core',
+        runtime: CoreRuntimeStub(),
         analyzerContentHash: 'abc123',
       });
 
@@ -127,7 +214,7 @@ describe('jestRunCliAdapter', () => {
         runDir: '/cache/.assayer/runs/r1',
         repoRoot: '/repo',
         probeDir: '/cache/probes',
-        coreRoot: '/core',
+        runtime: CoreRuntimeStub(),
         analyzerContentHash: 'abc123',
       });
 

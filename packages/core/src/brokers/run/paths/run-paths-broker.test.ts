@@ -46,7 +46,7 @@ describe('runPathsBroker', () => {
   });
 
   describe('a broken install', () => {
-    // Named rather than guessed: without the package root there is no built adapter for the shim to
+    // Named rather than guessed: without the package root there is no run-time module for the shim to
     // require, and a plausible-looking wrong path would fail much later and much less legibly.
     it('ERROR: {no probe-runtime.js in any ancestor} => throws naming the incomplete install', async () => {
       const proxy = runPathsBrokerProxy();

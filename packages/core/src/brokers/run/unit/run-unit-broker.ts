@@ -20,6 +20,9 @@
  *   result is then read back from the artifact the shim wrote rather than from Jest's own reporting,
  *   so raw runner output never reaches a human.
  *
+ *   The run loads core's run-time modules from the tree this broker was loaded from: TypeScript source
+ *   when it runs from `src`, compiled output when it runs from `dist`.
+ *
  * USAGE:
  * await runUnitBroker({ cacheDir, coreRoot, repoRoot, relPath, absPath, source, runId, analyzerContentHash });
  * // Returns { runId, relPath, cases: [{ status, observedPath, trace }], gaps, darkSpots, undriven }
@@ -35,6 +38,7 @@ import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-fil
 import { jestRunCliAdapter } from '../../../adapters/jest/run-cli/jest-run-cli-adapter';
 import { tsMorphWalkFileAdapter } from '../../../adapters/ts-morph/walk-file/ts-morph-walk-file-adapter';
 import { assembleShimTransformer } from '../../../transformers/assemble-shim/assemble-shim-transformer';
+import { coreRuntimeTransformer } from '../../../transformers/core-runtime/core-runtime-transformer';
 import { caseSetProjectionTransformer } from '../../../transformers/case-set-projection/case-set-projection-transformer';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
@@ -66,6 +70,7 @@ export const runUnitBroker = async ({
   runId: string;
   analyzerContentHash: string;
 }): Promise<RunResult> => {
+  const runtime = coreRuntimeTransformer({ coreRoot, loadedFrom: __dirname });
   const walked = tsMorphWalkFileAdapter({ source, relPath });
   // First, the types: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // fill seam refuses it and the entry is invoiced for an input Assayer can build perfectly well. This
@@ -167,14 +172,15 @@ export const runUnitBroker = async ({
     path: `${runDir}/assayer.test.js`,
     content: assembleShimTransformer({
       caseSetPath,
-      adaptersPath: `${coreRoot}/dist/adapters`,
-      registrarPath: `${coreRoot}/harness-registrar.js`,
+      interpretCaseModule: runtime.interpretCaseModule,
+      resolveEntryModule: runtime.resolveEntryModule,
+      registrarPath: runtime.registrar,
       resultPath,
       runId,
     }),
   });
 
-  await jestRunCliAdapter({ runDir, repoRoot, probeDir, coreRoot, analyzerContentHash });
+  await jestRunCliAdapter({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
 
   // A FAILING case still writes the artifact — the shim's afterAll sees to that — so a missing one
   // means the runner itself died and the run is over with nothing to report. Said plainly here rather
