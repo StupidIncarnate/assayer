@@ -36,10 +36,12 @@ describe('coreRuntimeStatics', () => {
         tsJestCompilerOptions: {
           commonjs: {
             module: 'commonjs',
+            isolatedModules: true,
           },
           esm: {
             module: 'esnext',
             esModuleInterop: true,
+            isolatedModules: true,
           },
         },
         workerExecArgv: {

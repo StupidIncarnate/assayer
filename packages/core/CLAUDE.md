@@ -1286,6 +1286,24 @@ override (`commonjs` or `esnext`), and for ESM, `useESM` plus
 node kind with `isolatedModules` sends ts-jest to a transpile path that
 compiles with the installed `typescript` package instead of ts-morph's copy.
 
+**ts-jest compiles each file of a run on its own, never through a
+type-checked program.** Both overrides in
+`coreRuntimeStatics.tsJestCompilerOptions` set `isolatedModules`, so ts-jest
+calls `transpileModule` on ts-morph's TypeScript for one file at a time.
+Without it, ts-jest builds a language-service program over every file the
+consumer's root tsconfig includes before it compiles the first file, and
+builds a fresh type checker for each file that program has not seen. In
+PE-12 that program took 14 to 21 s of a worker's first run, and about 1 s of
+every later run. A real consumer pays it in proportion to the size of their
+repo. A run needs nothing from types: `diagnostics` is off, and the probe
+transformer reads only the syntax tree. The specimen run artifacts are byte
+for byte the same either way. The price is code that compiles correctly only
+as a whole program. Two cases fail at run time: an ES module that re-exports
+a type without the `type` keyword (`export { Shape } from './shape'`), which
+Node rejects when it links the module, and a `const enum` declared only in a
+`.d.ts` file, which has no value at run time. TypeScript's own
+`isolatedModules` check reports both in the consumer's code.
+
 **The nested Jest runs in a worker process, never in the caller's own.**
 Jest runs an ES module only through `vm.SourceTextModule`, which Node puts
 behind `--experimental-vm-modules`, and only a process's own command line can

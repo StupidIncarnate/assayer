@@ -158,9 +158,10 @@ describe('runExecuteCasesBroker', () => {
                 // ts-jest compiles with the TypeScript ts-morph bundles, the copy that recorded the
                 // probe offsets.
                 compiler: '/core/bundled-typescript.js',
-                // Not a node module kind, which keeps ts-jest off the transpile path that ignores
-                // `compiler`.
-                tsconfig: { module: 'commonjs' },
+                // Each file compiles on its own, so ts-jest builds no type-checked program of the
+                // consumer's repo. Not a node module kind, which keeps ts-jest off the transpile path that
+                // ignores `compiler`.
+                tsconfig: { module: 'commonjs', isolatedModules: true },
                 diagnostics: false,
                 astTransformers: {
                   before: [
@@ -220,7 +221,7 @@ describe('runExecuteCasesBroker', () => {
               'ts-jest',
               {
                 compiler: '/core/bundled-typescript.js',
-                tsconfig: { module: 'esnext', esModuleInterop: true },
+                tsconfig: { module: 'esnext', esModuleInterop: true, isolatedModules: true },
                 useESM: true,
                 diagnostics: false,
                 astTransformers: {
@@ -281,7 +282,7 @@ describe('runExecuteCasesBroker', () => {
               'ts-jest',
               {
                 compiler: '/core/bundled-typescript.js',
-                tsconfig: { module: 'commonjs' },
+                tsconfig: { module: 'commonjs', isolatedModules: true },
                 diagnostics: false,
                 astTransformers: {
                   before: [

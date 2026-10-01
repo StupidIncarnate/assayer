@@ -18,8 +18,10 @@
  *
  *   `format` is the consumer file's module format, from `moduleFormatReadBroker`. It picks the generated
  *   test file's extension, the ts-jest `module` override, and for ESM, `useESM` with the extensions Jest
- *   loads as ES modules. Neither override is a node module kind, so ts-jest always compiles with
- *   `compiler`. A CommonJS run keeps `probe-runtime.js` as its setup file. An ESM run has none: a setup
+ *   loads as ES modules. Both overrides set `isolatedModules`, so ts-jest compiles each file on its own
+ *   and never builds a type-checked program: a run needs no type information, and that program is the
+ *   bulk of a worker's first run. Neither override is a node module kind, so ts-jest always compiles
+ *   with `compiler`. A CommonJS run keeps `probe-runtime.js` as its setup file. An ESM run has none: a setup
  *   file is CommonJS, and in an ESM run of core's source it cannot `require` core's TypeScript, so the ESM
  *   test file installs the probe runtime itself before it loads the subject.
  *
@@ -111,8 +113,9 @@ export const runExecuteCasesBroker = async ({
           // The copy ts-morph bundles, so the compiler that places each probe parses with the same
           // TypeScript that recorded the probe offsets.
           compiler: runtime.compiler,
-          // Merged over the consumer's tsconfig. Never a node module kind, which with `isolatedModules`
-          // sends ts-jest to a transpile path that ignores `compiler`.
+          // Merged over the consumer's tsconfig. `isolatedModules` compiles each file on its own, so
+          // ts-jest never builds a type-checked program of the consumer's whole repo. Never a node module
+          // kind, which with `isolatedModules` sends ts-jest to a transpile path that ignores `compiler`.
           tsconfig: coreRuntimeStatics.tsJestCompilerOptions[format],
           ...(esm ? { useESM: true } : {}),
           diagnostics: false,
