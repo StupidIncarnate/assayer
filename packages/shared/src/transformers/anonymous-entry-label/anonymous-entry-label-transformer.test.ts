@@ -1,7 +1,6 @@
 import { anonymousEntryLabelTransformer } from './anonymous-entry-label-transformer';
 import { ParamDescriptorStub } from '../../contracts/param-descriptor/param-descriptor.stub';
 import { AnonymousReachStub } from '../../contracts/anonymous-reach/anonymous-reach.stub';
-import { anonymousReachContract } from '../../contracts/anonymous-reach/anonymous-reach-contract';
 
 const ELEMENT_PARAM = ParamDescriptorStub({ name: 'n', type: { kind: 'number' } });
 
@@ -23,7 +22,7 @@ describe('anonymousEntryLabelTransformer', () => {
     it('VALID: {a bare callee} => the called name, since there is no receiver to show', () => {
       const result = anonymousEntryLabelTransformer({
         host: 'boot',
-        reach: anonymousReachContract.parse({ kind: 'argument', callee: 'register' }),
+        reach: AnonymousReachStub({ kind: 'argument', callee: 'register' }),
         params: [ELEMENT_PARAM],
         line: 4,
       });
@@ -36,7 +35,7 @@ describe('anonymousEntryLabelTransformer', () => {
     it('EMPTY: {a reach naming neither receiver nor callee} => the arrow alone', () => {
       const result = anonymousEntryLabelTransformer({
         host: 'boot',
-        reach: anonymousReachContract.parse({ kind: 'argument' }),
+        reach: AnonymousReachStub({ kind: 'argument' }),
         params: [ELEMENT_PARAM],
         line: 4,
       });

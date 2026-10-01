@@ -1,9 +1,10 @@
 import { mapNodeKindContract } from './map-node-kind-contract';
+import { MapNodeKindStub } from './map-node-kind.stub';
 
 describe('mapNodeKindContract', () => {
   describe('valid map node kinds', () => {
     it('VALID: {value: "function"} => parses successfully', () => {
-      const kind = 'function';
+      const kind = MapNodeKindStub({ value: 'function' });
 
       const result = mapNodeKindContract.parse(kind);
 

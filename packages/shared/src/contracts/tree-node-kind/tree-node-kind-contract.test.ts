@@ -1,9 +1,10 @@
 import { treeNodeKindContract } from './tree-node-kind-contract';
+import { TreeNodeKindStub } from './tree-node-kind.stub';
 
 describe('treeNodeKindContract', () => {
   describe('valid tree node kinds', () => {
     it('VALID: {value: "dir"} => parses successfully', () => {
-      const kind = 'dir';
+      const kind = TreeNodeKindStub({ value: 'dir' });
 
       const result = treeNodeKindContract.parse(kind);
 
