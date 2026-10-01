@@ -24,7 +24,6 @@ import { Box, Group, Text, CloseButton, ScrollArea } from '#gateway/npm/mantine_
 
 import { runConsoleStatics } from '../../statics/run-console/run-console-statics';
 import { runConsoleStatusTransformer } from '../../transformers/run-console-status/run-console-status-transformer';
-import type { RunConsole } from '@assayer/shared/contracts';
 
 const PANEL_WIDTH = 380;
 
@@ -34,7 +33,7 @@ export const RunConsoleWidget = ({
   failed = false,
   onHide,
 }: {
-  output: RunConsole;
+  output: string;
   running: boolean;
   failed?: boolean;
   onHide: () => void;

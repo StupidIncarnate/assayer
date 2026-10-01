@@ -29,10 +29,9 @@ import { runSubscribeOutputBroker } from '../../brokers/run/subscribe-output/run
 import { runExecuteBroker } from '../../brokers/run/execute/run-execute-broker';
 import { runFetchConsoleBroker } from '../../brokers/run/fetch-console/run-fetch-console-broker';
 import { runFetchSavedBroker } from '../../brokers/run/fetch-saved/run-fetch-saved-broker';
-import { runConsoleContract } from '@assayer/shared/contracts';
-import type { RunConsole, RunResult, RelPath } from '@assayer/shared/contracts';
+import type { RunResult, RelPath } from '@assayer/shared/contracts';
 
-const EMPTY_CONSOLE = runConsoleContract.parse('');
+const EMPTY_CONSOLE = '';
 
 export const useFileRunBinding = ({
   relPath,
@@ -43,14 +42,14 @@ export const useFileRunBinding = ({
   loading: boolean;
   running: boolean;
   error: Error | null;
-  output: RunConsole;
+  output: string;
   execute: () => void;
 } => {
   const [run, setRun] = useState<RunResult | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [output, setOutput] = useState<RunConsole>(EMPTY_CONSOLE);
+  const [output, setOutput] = useState<string>(EMPTY_CONSOLE);
 
   // Subscribed for the window's lifetime, not per run: the chunks are pushed by main and would be
   // dropped by a listener that only existed between execute() and its resolution.
@@ -58,7 +57,7 @@ export const useFileRunBinding = ({
     () =>
       runSubscribeOutputBroker({
         onChunk: ({ chunk }: { chunk: string }): void => {
-          setOutput((previous) => runConsoleContract.parse(`${String(previous)}${chunk}`));
+          setOutput((previous) => `${String(previous)}${chunk}`);
         },
       }),
     [],

@@ -27,7 +27,7 @@ import { join } from '#gateway/node/path';
 import { pathToFileURL } from '#gateway/node/url';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
-import type { CompiledTree, CompiledFileView, RunConsole, RunResult, StubView } from '@assayer/shared/contracts';
+import type { CompiledTree, CompiledFileView, RunResult, StubView } from '@assayer/shared/contracts';
 
 import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
@@ -66,7 +66,7 @@ export const desktopBootBroker = async ({
     onOutput: (params: { chunk: string }) => void;
   }) => Promise<RunResult>;
   resolveSavedRun: (params: { relPath: unknown }) => Promise<RunResult | undefined>;
-  resolveSavedConsole: (params: { relPath: unknown }) => Promise<RunConsole | undefined>;
+  resolveSavedConsole: (params: { relPath: unknown }) => Promise<string | undefined>;
 }): Promise<void> => {
   const preloadPath = join(__dirname, '../../../../bin/desktop-preload.js');
   const rendererUrl =

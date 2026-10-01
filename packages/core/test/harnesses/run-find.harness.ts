@@ -27,9 +27,8 @@ import { tmpdir } from '#gateway/node/os';
 import { join } from '#gateway/node/path';
 
 import { RelPathStub } from '@assayer/shared/contracts/rel-path/rel-path.stub';
-import { RunConsoleStub } from '@assayer/shared/contracts/run-console/run-console.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
-import type { RelPath, RunConsole, RunResult } from '@assayer/shared/contracts';
+import type { RelPath, RunResult } from '@assayer/shared/contracts';
 
 import { runConsoleFindBroker } from '../../src/brokers/run/console-find/run-console-find-broker';
 import { runFindBroker } from '../../src/brokers/run/find/run-find-broker';
@@ -48,7 +47,7 @@ export const runFindHarness = (): {
   }) => Promise<{ configDir: ReturnType<typeof FilePathStub>; relPath: RelPath; runId: RunResult['runId'] }>;
   editHarness: (params: { configDir: string; harness: string }) => void;
   findRun: (params: { configDir: string; relPath: string }) => Promise<RunResult | undefined>;
-  findConsole: (params: { configDir: string; relPath: string }) => Promise<RunConsole | undefined>;
+  findConsole: (params: { configDir: string; relPath: string }) => Promise<string | undefined>;
 } => {
   const dirs: ReturnType<typeof FilePathStub>[] = [];
 
@@ -82,7 +81,7 @@ export const runFindHarness = (): {
         join(runDir, 'run.json'),
         JSON.stringify(RunResultStub({ runId, relPath: RelPathStub({ value: SOURCE_REL }) })),
       );
-      writeFileSync(join(runDir, 'console.txt'), String(RunConsoleStub({ value: `${SOURCE_REL}  1/1 passed\n` })));
+      writeFileSync(join(runDir, 'console.txt'), String(`${SOURCE_REL}  1/1 passed\n`));
 
       return { configDir, relPath: RelPathStub({ value: SOURCE_REL }), runId };
     },
@@ -94,7 +93,7 @@ export const runFindHarness = (): {
     findRun: async ({ configDir, relPath }: { configDir: string; relPath: string }): Promise<RunResult | undefined> =>
       runFindBroker({ configDir, root: configDir, relPath }),
 
-    findConsole: async ({ configDir, relPath }: { configDir: string; relPath: string }): Promise<RunConsole | undefined> =>
+    findConsole: async ({ configDir, relPath }: { configDir: string; relPath: string }): Promise<string | undefined> =>
       runConsoleFindBroker({ configDir, root: configDir, relPath }),
   };
 };

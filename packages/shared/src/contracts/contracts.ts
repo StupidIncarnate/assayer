@@ -178,6 +178,5 @@ export * from './case-result/case-result-contract';
 
 export * from './run-result/run-result-contract';
 
-export * from './run-console/run-console-contract';
 export * from './coverage/coverage-contract';
 export * from './stub-entry/stub-entry-contract';
