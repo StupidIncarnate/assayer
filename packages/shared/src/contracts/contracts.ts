@@ -82,7 +82,6 @@ export * from './global-use/global-use-contract';
 export * from './file-module-graph/file-module-graph-contract';
 
 
-export * from './resolution-failure-reason/resolution-failure-reason-contract';
 
 export * from './resolved-edge/resolved-edge-contract';
 
