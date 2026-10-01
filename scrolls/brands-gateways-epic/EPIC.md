@@ -320,8 +320,8 @@ Run them per package, leaves first: shared, core, desktop, cli, app, `hydration-
 | ID | What | Who | How | Status |
 |---|---|---|---|---|
 | C-1 | Dead contracts: app `exit-code`, shared `resolution-failure-reason`, and the 2 used only by tests. A reviewer drops any contract reached through a string, a dynamic import or a fixture. | Agent reviews, then Script | `b02-contract-index/index.cjs $FLAGS`, review, then `b02-contract-index/delete.cjs <list> $FLAGS --verify`, then `apply` | todo |
-| C-2 | Enum contracts take no brand. Drop `.brand` from the 10 branded enums and unwrap their stub calls. | Script | `b15-enum-brands-off/run.cjs $FLAGS apply`, then the `b15-stub-unwrap` commands it prints | todo |
-| C-3 | `as never` casts in tests: 59 of them. A cast goes only where the file's typecheck stays identical. | Script | `b15-as-never/run.cjs <pkg> $FLAGS apply` per package. Kept casts wait for Phase B. | todo |
+| C-2 | Enum contracts take no brand. Drop `.brand` from the 10 branded enums and unwrap their stub calls. | Script | `b15-enum-brands-off/run.cjs $FLAGS apply`, then the `b15-stub-unwrap` commands it prints | done. 10 enum contracts lost their brand (shared 6, app 2, core 1, cli 1), with 0 new diagnostics in every package's gate; `b15-stub-unwrap` unwrapped 18 stub calls. 18 enum brands inside another contract's field stay for Phase B (`tmp/phase34/b15-enum-brands-off/out/inline-enum-brands.txt`). |
+| C-3 | `as never` casts in tests: 59 of them. A cast goes only where the file's typecheck stays identical. | Script | `b15-as-never/run.cjs <pkg> $FLAGS apply` per package. Kept casts wait for Phase B. | done. 17 `as never` casts removed (shared 8, core 5, app 3, desktop 1); 18 load-bearing casts kept for Phase B (shared 16, core 1, app 1). Typecheck PASS; unit PASS 491 of 491 (`1790849448491-61c7`); `test:syntax` 117 of 117. |
 
 ### Phase B: brand waves
 
@@ -487,4 +487,6 @@ One row per script run that changed files. The operator fills it in as the work 
 | X-1 desktop, cli, app | same script, per package | 2, 1, 1 written | 0 | the X-1 rest commit |
 | X-2 | `node $E/phase34-scripts/b03-per-file-imports/rewrite.cjs $FLAGS apply` | 217 | 0 | the X-2 commit |
 | X-3 | `b03-strip-barrels/run.cjs <pkg> $FLAGS apply` for shared, core, desktop; `b03-stub-type-alias/run.cjs $FLAGS` | 6 | 0 | the X-3 commit |
+| C-2 | `b15-enum-brands-off/run.cjs $FLAGS apply`, then the three `b15-stub-unwrap` lines it printed | 19 | 18 inline enum brands | the C-2/C-3 commit |
+| C-3 | `b15-as-never/run.cjs <pkg> $FLAGS apply` for shared, core, desktop, app | 15 | 18 kept casts | the C-2/C-3 commit |
 | P0-3 | `python3 $H/scripts/p0-3/rename-scope.py`, then `apply`, then `npm install` | 11 `package.json` files and `package-lock.json` | 0 | the P0-3 commit |

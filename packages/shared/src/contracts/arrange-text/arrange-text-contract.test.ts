@@ -23,7 +23,7 @@ describe('arrangeTextContract', () => {
   describe('invalid arrange text', () => {
     it('INVALID: {value: 6} => throws validation error', () => {
       expect(() => {
-        return arrangeTextContract.parse(6 as never);
+        return arrangeTextContract.parse(6);
       }).toThrow(/Invalid input: expected string, received number/u);
     });
   });

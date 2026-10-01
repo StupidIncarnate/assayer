@@ -8,6 +8,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-export const mapNodeKindContract = z.enum(['function', 'if', 'switch', 'ternary']).brand<'MapNodeKind'>();
+export const mapNodeKindContract = z.enum(['function', 'if', 'switch', 'ternary']);
 
 export type MapNodeKind = z.infer<typeof mapNodeKindContract>;

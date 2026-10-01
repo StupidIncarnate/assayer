@@ -1,10 +1,9 @@
 import { compileModeContract } from './compile-mode-contract';
-import { CompileModeStub } from './compile-mode.stub';
 
 describe('compileModeContract', () => {
   describe('valid compile modes', () => {
     it('VALID: {value: "net-new"} => parses successfully', () => {
-      const mode = CompileModeStub({ value: 'net-new' });
+      const mode = 'net-new';
 
       const result = compileModeContract.parse(mode);
 

@@ -14,6 +14,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-export const arrayCardinalityContract = z.enum(['empty', 'one', 'many', 'max']).brand<'ArrayCardinality'>();
+export const arrayCardinalityContract = z.enum(['empty', 'one', 'many', 'max']);
 
 export type ArrayCardinality = z.infer<typeof arrayCardinalityContract>;

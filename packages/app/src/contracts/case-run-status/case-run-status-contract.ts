@@ -17,6 +17,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-export const caseRunStatusContract = z.enum(['passed', 'failed', 'errored', 'not-run']).brand<'CaseRunStatus'>();
+export const caseRunStatusContract = z.enum(['passed', 'failed', 'errored', 'not-run']);
 
 export type CaseRunStatus = z.infer<typeof caseRunStatusContract>;

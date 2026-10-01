@@ -13,7 +13,6 @@
 import { z } from '#gateway/npm/zod';
 
 export const resolutionFailureReasonContract = z
-  .enum(['cannot-resolve-specifier', 'dynamic-or-computed-specifier', 'no-usable-types'])
-  .brand<'ResolutionFailureReason'>();
+  .enum(['cannot-resolve-specifier', 'dynamic-or-computed-specifier', 'no-usable-types']);
 
 export type ResolutionFailureReason = z.infer<typeof resolutionFailureReasonContract>;

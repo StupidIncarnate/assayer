@@ -1,10 +1,9 @@
 import { arrayCardinalityContract } from './array-cardinality-contract';
-import { ArrayCardinalityStub } from './array-cardinality.stub';
 
 describe('arrayCardinalityContract', () => {
   describe('valid array cardinalities', () => {
     it('VALID: {value: "one"} => parses the single-element class', () => {
-      const cardinality = ArrayCardinalityStub({ value: 'one' });
+      const cardinality = 'one';
 
       const result = arrayCardinalityContract.parse(cardinality);
 

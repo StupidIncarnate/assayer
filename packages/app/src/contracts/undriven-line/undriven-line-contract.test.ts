@@ -17,7 +17,7 @@ describe('undrivenLineContract', () => {
     });
 
     it('INVALID: {a number} => throws', () => {
-      expect(() => undrivenLineContract.parse(123 as never)).toThrow(/expected string/iu);
+      expect(() => undrivenLineContract.parse(123)).toThrow(/expected string/iu);
     });
   });
 });

@@ -8,6 +8,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-export const compileModeContract = z.enum(['net-new', 'incremental', 'skipped']).brand<'CompileMode'>();
+export const compileModeContract = z.enum(['net-new', 'incremental', 'skipped']);
 
 export type CompileMode = z.infer<typeof compileModeContract>;

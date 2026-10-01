@@ -14,7 +14,7 @@ describe('resolvedEdgeLineContract', () => {
     });
 
     it('INVALID: {a number} => throws', () => {
-      expect(() => resolvedEdgeLineContract.parse(123 as never)).toThrow(/expected string/iu);
+      expect(() => resolvedEdgeLineContract.parse(123)).toThrow(/expected string/iu);
     });
   });
 });

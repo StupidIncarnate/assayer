@@ -23,7 +23,7 @@ describe('envValueContract', () => {
   describe('invalid env values', () => {
     it('INVALID: {value: 6} => throws validation error', () => {
       expect(() => {
-        return envValueContract.parse(6 as never);
+        return envValueContract.parse(6);
       }).toThrow(/Invalid input: expected string, received number/u);
     });
   });

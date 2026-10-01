@@ -79,7 +79,7 @@ describe('undrivenProjectionTransformer', () => {
     it('VALID: {cause unread-comparison, operand mode} => the reason names the comparison, not the opaque-operand text', () => {
       const result = undrivenProjectionTransformer({
         walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
-        undrivenModules: [{ name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unread-comparison' }), operand: SymbolNameStub({ value: 'mode' }) }],
+        undrivenModules: [{ name: MODULE_NAME, cause: 'unread-comparison', operand: SymbolNameStub({ value: 'mode' }) }],
       });
 
       expect(result).toStrictEqual([{ name: '*module*', reason: MODULE_REASON_UNREAD_COMPARISON, startLine: 1, endLine: 8 }]);
@@ -92,7 +92,7 @@ describe('undrivenProjectionTransformer', () => {
       expect(() =>
         undrivenProjectionTransformer({
           walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
-          undrivenModules: [{ name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unread-comparison' }) }],
+          undrivenModules: [{ name: MODULE_NAME, cause: 'unread-comparison' }],
         }),
       ).toThrow(/^unreachable: an 'unread-comparison' undriven module `\*module\*` carries no operand$/u);
     });
@@ -104,7 +104,7 @@ describe('undrivenProjectionTransformer', () => {
     it('VALID: {cause unarrangeable-typeof} => the reason names the typeof limit, never the opaque-operand text', () => {
       const result = undrivenProjectionTransformer({
         walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
-        undrivenModules: [{ name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unarrangeable-typeof' }) }],
+        undrivenModules: [{ name: MODULE_NAME, cause: 'unarrangeable-typeof' }],
       });
 
       expect(result).toStrictEqual([{ name: '*module*', reason: MODULE_REASON_TYPEOF, startLine: 1, endLine: 8 }]);
@@ -119,7 +119,7 @@ describe('undrivenProjectionTransformer', () => {
       const result = undrivenProjectionTransformer({
         walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
         undrivenModules: [
-          { name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }), operand: SymbolNameStub({ value: 'mode' }) },
+          { name: MODULE_NAME, cause: 'unarrangeable-typeof-member', operand: SymbolNameStub({ value: 'mode' }) },
         ],
       });
 
@@ -132,7 +132,7 @@ describe('undrivenProjectionTransformer', () => {
       expect(() =>
         undrivenProjectionTransformer({
           walked: moduleScopeWith({ branches: [BranchNodeStub()] }),
-          undrivenModules: [{ name: MODULE_NAME, cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }) }],
+          undrivenModules: [{ name: MODULE_NAME, cause: 'unarrangeable-typeof-member' }],
         }),
       ).toThrow(/^unreachable: an 'unarrangeable-typeof-member' undriven module `\*module\*` carries no operand$/u);
     });

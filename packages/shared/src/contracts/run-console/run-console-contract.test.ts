@@ -24,7 +24,7 @@ describe('runConsoleContract', () => {
   describe('invalid consoles', () => {
     it('INVALID: {a number} => throws', () => {
       expect(() => {
-        return runConsoleContract.parse(7 as never);
+        return runConsoleContract.parse(7);
       }).toThrow(/Invalid input: expected string, received number/u);
     });
   });

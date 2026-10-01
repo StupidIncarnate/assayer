@@ -41,7 +41,7 @@ describe('anonymousReachContract', () => {
   describe('invalid reach', () => {
     it('INVALID: {kind: "callback"} => throws validation error', () => {
       expect(() => {
-        return anonymousReachContract.parse({ kind: 'callback' } as never);
+        return anonymousReachContract.parse({ kind: 'callback' });
       }).toThrow(/invalid_union_discriminator|Invalid discriminator/u);
     });
   });

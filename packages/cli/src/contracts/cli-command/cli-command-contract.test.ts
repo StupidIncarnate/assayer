@@ -1,10 +1,9 @@
 import { cliCommandContract } from './cli-command-contract';
-import { CliCommandStub } from './cli-command.stub';
 
 describe('cliCommandContract', () => {
   describe('valid commands', () => {
     it('VALID: {value: "help"} => parses successfully', () => {
-      const command = CliCommandStub({ value: 'help' });
+      const command = 'help';
 
       const result = cliCommandContract.parse(command);
 

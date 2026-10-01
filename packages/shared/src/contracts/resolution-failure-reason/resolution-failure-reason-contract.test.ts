@@ -1,10 +1,9 @@
 import { resolutionFailureReasonContract } from './resolution-failure-reason-contract';
-import { ResolutionFailureReasonStub } from './resolution-failure-reason.stub';
 
 describe('resolutionFailureReasonContract', () => {
   describe('valid reasons', () => {
     it('VALID: {value: "cannot-resolve-specifier"} => parses the broken-import reason', () => {
-      const reason = ResolutionFailureReasonStub({ value: 'cannot-resolve-specifier' });
+      const reason = 'cannot-resolve-specifier';
 
       const result = resolutionFailureReasonContract.parse(reason);
 

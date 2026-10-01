@@ -18,7 +18,7 @@ describe('normalizedSourceContract', () => {
     });
 
     it('INVALID: {number} => throws', () => {
-      expect(() => normalizedSourceContract.parse(5 as never)).toThrow(/Invalid input: expected string, received number/u);
+      expect(() => normalizedSourceContract.parse(5)).toThrow(/Invalid input: expected string, received number/u);
     });
   });
 });

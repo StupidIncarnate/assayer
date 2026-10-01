@@ -17,7 +17,7 @@ describe('darkSpotLineContract', () => {
     });
 
     it('INVALID: {a number} => throws', () => {
-      expect(() => darkSpotLineContract.parse(123 as never)).toThrow(/expected string/iu);
+      expect(() => darkSpotLineContract.parse(123)).toThrow(/expected string/iu);
     });
   });
 });

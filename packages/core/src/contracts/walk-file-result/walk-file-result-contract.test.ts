@@ -25,7 +25,7 @@ describe('walkFileResultContract', () => {
       const result = WalkFileResultStub({
         success: false,
         error: { line: 3, column: 7, message: "'}' expected." },
-      } as never);
+      });
 
       const parsed = walkFileResultContract.parse(result);
 
@@ -50,7 +50,7 @@ describe('walkFileResultContract', () => {
 
     it('INVALID: {success: "yes"} => throws Invalid discriminator value', () => {
       expect(() => {
-        return walkFileResultContract.parse({ success: 'yes' } as never);
+        return walkFileResultContract.parse({ success: 'yes' });
       }).toThrow(/Invalid discriminator value/u);
     });
 

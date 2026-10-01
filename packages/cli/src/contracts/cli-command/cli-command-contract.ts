@@ -14,7 +14,6 @@
 import { z } from '#gateway/npm/zod';
 
 export const cliCommandContract = z
-  .enum(['help', 'version', 'docs', 'status', 'unit', 'detail', 'bare', 'unknown'])
-  .brand<'CliCommand'>();
+  .enum(['help', 'version', 'docs', 'status', 'unit', 'detail', 'bare', 'unknown']);
 
 export type CliCommand = z.infer<typeof cliCommandContract>;

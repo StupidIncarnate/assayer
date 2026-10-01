@@ -29,7 +29,7 @@ describe('entryLabelContract', () => {
 
     it('INVALID: {value: 6} => throws validation error', () => {
       expect(() => {
-        return entryLabelContract.parse(6 as never);
+        return entryLabelContract.parse(6);
       }).toThrow(/Invalid input: expected string, received number/u);
     });
   });

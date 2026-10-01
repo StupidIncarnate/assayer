@@ -144,7 +144,7 @@ describe('moduleGraphProjectionTransformer', () => {
       const walked = WalkFileResultStub({
         success: false,
         error: { line: 1, column: 1, message: 'boom' },
-      } as never);
+      });
 
       const result = moduleGraphProjectionTransformer({ walked });
 

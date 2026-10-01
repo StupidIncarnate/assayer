@@ -101,7 +101,7 @@ describe('undrivenBranchTransformer', () => {
         undrivenBranches: [
           {
             line: LineNumberStub({ value: 5 }),
-            cause: UndrivenCauseStub({ value: 'unread-comparison' }),
+            cause: 'unread-comparison',
             operand: SymbolNameStub({ value: 'm' }),
           },
         ],
@@ -121,7 +121,7 @@ describe('undrivenBranchTransformer', () => {
       expect(() =>
         undrivenBranchTransformer({
           entryName: SymbolNameStub({ value: 'pick' }),
-          undrivenBranches: [{ line: LineNumberStub({ value: 5 }), cause: UndrivenCauseStub({ value: 'unread-comparison' }) }],
+          undrivenBranches: [{ line: LineNumberStub({ value: 5 }), cause: 'unread-comparison' }],
         }),
       ).toThrow(/^unreachable: an 'unread-comparison' branch on line 5 of `pick` carries no operand$/u);
     });
@@ -131,7 +131,7 @@ describe('undrivenBranchTransformer', () => {
     it('VALID: {a branch on line 3 narrowing typeof} => the reason names the typeof limit, never "make it a parameter"', () => {
       const result = undrivenBranchTransformer({
         entryName: SymbolNameStub({ value: 'checkTypeof' }),
-        undrivenBranches: [{ line: LineNumberStub({ value: 3 }), cause: UndrivenCauseStub({ value: 'unarrangeable-typeof' }) }],
+        undrivenBranches: [{ line: LineNumberStub({ value: 3 }), cause: 'unarrangeable-typeof' }],
       });
 
       expect(result).toStrictEqual([
@@ -147,7 +147,7 @@ describe('undrivenBranchTransformer', () => {
         undrivenBranches: [
           {
             line: LineNumberStub({ value: 2 }),
-            cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }),
+            cause: 'unarrangeable-typeof-member',
             operand: SymbolNameStub({ value: 'target' }),
           },
         ],
@@ -165,7 +165,7 @@ describe('undrivenBranchTransformer', () => {
         undrivenBranchTransformer({
           entryName: SymbolNameStub({ value: 'choose' }),
           undrivenBranches: [
-            { line: LineNumberStub({ value: 2 }), cause: UndrivenCauseStub({ value: 'unarrangeable-typeof-member' }) },
+            { line: LineNumberStub({ value: 2 }), cause: 'unarrangeable-typeof-member' },
           ],
         }),
       ).toThrow(/^unreachable: an 'unarrangeable-typeof-member' branch on line 2 of `choose` carries no operand$/u);
@@ -216,7 +216,7 @@ describe('undrivenBranchTransformer', () => {
           { line: LineNumberStub({ value: 4 }), cause: UndrivenCauseStub(), operand: SymbolNameStub({ value: 'u' }) },
           {
             line: LineNumberStub({ value: 5 }),
-            cause: UndrivenCauseStub({ value: 'unread-comparison' }),
+            cause: 'unread-comparison',
             operand: SymbolNameStub({ value: 'm' }),
           },
         ],

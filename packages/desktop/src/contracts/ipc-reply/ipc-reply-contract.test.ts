@@ -38,7 +38,7 @@ describe('ipcReplyContract', () => {
     });
 
     it('INVALID: {success: not a boolean literal} => throws', () => {
-      expect(() => ipcReplyContract.parse({ success: 'nope' as never })).toThrow(/success/u);
+      expect(() => ipcReplyContract.parse({ success: 'nope' })).toThrow(/success/u);
     });
   });
 

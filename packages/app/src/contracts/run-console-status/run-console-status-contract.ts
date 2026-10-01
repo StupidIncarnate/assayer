@@ -14,6 +14,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-export const runConsoleStatusContract = z.enum(['running', 'finished', 'failed']).brand<'RunConsoleStatus'>();
+export const runConsoleStatusContract = z.enum(['running', 'finished', 'failed']);
 
 export type RunConsoleStatus = z.infer<typeof runConsoleStatusContract>;

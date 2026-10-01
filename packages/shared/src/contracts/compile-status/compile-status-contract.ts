@@ -8,6 +8,6 @@
  */
 import { z } from '#gateway/npm/zod';
 
-export const compileStatusContract = z.enum(['ok', 'errors']).brand<'CompileStatus'>();
+export const compileStatusContract = z.enum(['ok', 'errors']);
 
 export type CompileStatus = z.infer<typeof compileStatusContract>;
