@@ -488,6 +488,27 @@ Dungeonmaster problems found while planning. The user takes these to dungeonmast
 2. Done in PE-2: the CLI integration tests run the CLI from source through `tsx`, so they need no build
    (concession 10).
 
+## Post-epic work
+
+The epic merged into `master` at `e817760`. These items follow it, on branch `post-epic`. Each commit names its
+item in its subject.
+
+| ID | What | Status | Commits |
+|---|---|---|---|
+| PE-1 | The analyzer hash covers every file the runner loads by path, read from `coreRuntimeTransformer` | done | `76b6b80` |
+| PE-2 | CLI integration tests run the CLI from source through tsx, with no build; new `#gateway/npm/tsx` wrapper | done | `8430f80` |
+| PE-3 | Generated tests run an ESM consumer as ESM, in a worker process; per-format config; `.js`-suffix imports resolve (concessions 19 and 22, `items/pe-3.md`) | done | `ee60a80`, `0f2610f`, `3b6b93a` |
+| PE-4 | Shared, desktop and the cli pack their own `dist`; every package stays private | done | `5107256` |
+| PE-5 | Cut the first-walk library parse cost | closed, no change: the cost is `lib.dom.d.ts`, which TypeScript's default libraries load. PE-9 replaces the defaults. | none |
+| PE-6 | Dungeonmaster: ward's content-hashed build serves integration runs that opt in with `ward.integrationBuild` | done, in dungeonmaster | dungeonmaster `2b2e41967`, merged as `72c4f6338` |
+| PE-7 | `tsconfig.base.json` states the `node16` settings every config already used | done | `6b78189` |
+| PE-8 | CommonJS runs skip the ESM flag; the compile and the hash load one ts-morph; core CLAUDE.md names each runtime file | done | `9283207` |
+| PE-9 | Each file is analysed with the options of the tsconfig that owns it, found through TypeScript's own parser; symbol names are deterministic; a separate analysis-key field; the catalogue passes absolute paths (concessions 15 and 23, `items/pe-9.md`) | active. Design and build done; the first agent was stopped at its 60-minute limit and the rest split. PE-9c explained every moved specimen hash and wrote the docs. PE-9b fixes the manifest tests, integration fallout, and makes a type declared only in TypeScript's library files read as opaque (`map-param`). | not yet committed |
+
+Next, in order: commit PE-9 after a clean build, full ward and `test:syntax`; merge `post-epic` into `master`;
+then the user merges dungeonmaster's TypeScript 6 upgrade (dungeonmaster `DEF-271` step 1), and assayer moves to
+ts-morph 28 (`DEF-271` step 2), gated on the specimen hash check.
+
 ## Scripts used
 
 One row per script run that changed files. The operator fills it in as the work runs.
