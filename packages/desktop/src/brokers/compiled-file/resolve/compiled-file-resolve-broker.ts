@@ -28,9 +28,9 @@ import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-ma
 import { cacheLoadBlobBroker } from '../../cache/load-blob/cache-load-blob-broker';
 import { cacheLoadResolvedIndexBroker } from '../../cache/load-resolved-index/cache-load-resolved-index-broker';
 import { repoSourceRootBroker } from '../../repo/source-root/repo-source-root-broker';
-import { nodeFsReadSourceAdapter } from '../../../adapters/node-fs/read-source/node-fs-read-source-adapter';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
 import type { RepoPath } from '../../../contracts/repo-path/repo-path-contract';
+import { readFileIfExists } from '#gateway/node/fs__promises';
 
 export const compiledFileResolveBroker = async ({
   repoPath,
@@ -58,9 +58,9 @@ export const compiledFileResolveBroker = async ({
   // reference no-ops for a file they do not touch.
   const root = blob.analysis === undefined ? undefined : await repoSourceRootBroker({ repoPath });
   const source =
-    root === undefined ? undefined : await nodeFsReadSourceAdapter({ absPath: `${String(root)}/${String(relPath)}` });
+    root === undefined ? null : await readFileIfExists(`${String(root)}/${String(relPath)}`);
   const walked =
-    source === undefined ? undefined : walkFileTransformer({ source: String(source), relPath: String(relPath) });
+    source === null ? undefined : walkFileTransformer({ source, relPath: String(relPath) });
   // The types first: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // per-file blob refuses it and invoices an input Assayer can build. Resolving the declaration against
   // the sibling on disk is what lets every overlay below read real parameter types.

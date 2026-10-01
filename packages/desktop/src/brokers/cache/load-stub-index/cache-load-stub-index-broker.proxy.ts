@@ -1,19 +1,27 @@
 import type { StubIndexStub } from '@assayer/shared/contracts';
 import { readJsonFileIfExistsProxy } from '#gateway/node/fs__promises/read-json-file-if-exists/read-json-file-if-exists.proxy';
 
-
 export const cacheLoadStubIndexBrokerProxy = (): {
-  resolves: (params: { index: ReturnType<typeof StubIndexStub> }) => void;
-  absent: () => void;
+  resolves: (params: {
+    repoPath: string;
+    namespace: string;
+    index: ReturnType<typeof StubIndexStub>;
+  }) => void;
+  absent: (params: { repoPath: string; namespace: string }) => void;
 } => {
-  const adapterProxy = readJsonFileIfExistsProxy();
+  const readJsonIfExistsGateway = readJsonFileIfExistsProxy();
 
   return {
-    resolves: ({ index }): void => {
-      adapterProxy.returns({ content: JSON.stringify(index) });
+    resolves: ({ repoPath, namespace, index }): void => {
+      readJsonIfExistsGateway.returnsRaw({
+        path: `${repoPath}/.assayer/cache/stubs/${namespace}.json`,
+        rawContents: JSON.stringify(index),
+      });
     },
-    absent: (): void => {
-      adapterProxy.absent();
+    absent: ({ repoPath, namespace }): void => {
+      readJsonIfExistsGateway.missing({
+        path: `${repoPath}/.assayer/cache/stubs/${namespace}.json`,
+      });
     },
   };
 };

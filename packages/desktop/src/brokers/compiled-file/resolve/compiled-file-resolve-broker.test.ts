@@ -24,8 +24,9 @@ describe('compiledFileResolveBroker', () => {
       const blob = CompiledFileBlobStub();
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob });
+      proxy.setupManifest({ repoPath: '/repo', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
+      proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob });
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
@@ -51,9 +52,9 @@ describe('compiledFileResolveBroker', () => {
       const index = ResolvedIndexStub({ edges: [ownEdge, otherEdge] });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub() });
-      proxy.setupResolvedIndex({ index });
+      proxy.setupManifest({ repoPath: '/repo', manifest });
+      proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub() });
+      proxy.setupResolvedIndex({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
@@ -83,8 +84,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: FileAnalysisStub() }) });
+      proxy.setupManifest({ repoPath: '/config', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
+      proxy.sourceReads({ root: '/repo', relPath: 'src/pick.ts', content: 'export const x = 1;\n' });
+      proxy.setupBlob({ repoPath: '/config', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: FileAnalysisStub() }) });
       // Config dir is /config; the source root resolves a level away to /repo. The overlay must be
       // handed the SOURCE root, not the config dir.
       proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
@@ -106,8 +109,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/grade.ts', analysis }) });
+      proxy.setupManifest({ repoPath: '/repo', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
+      proxy.sourceReads({ root: '/repo', relPath: 'src/grade.ts', content: 'export const x = 1;\n' });
+      proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/grade.ts', analysis }) });
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
@@ -124,9 +129,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis }) });
-      proxy.sourceMissing();
+      proxy.setupManifest({ repoPath: '/repo', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
+      proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis }) });
+      proxy.sourceMissing({ root: '/repo', relPath: 'src/pick.ts' });
 
       const result = await compiledFileResolveBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
@@ -151,8 +157,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.setupManifest({ repoPath: '/config', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
+      proxy.sourceReads({ root: '/repo', relPath: 'src/pick.ts', content: 'export const x = 1;\n' });
+      proxy.setupBlob({ repoPath: '/config', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
       proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
       proxy.resolvesParamTypesTo({ analysis: typed });
 
@@ -175,8 +183,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.setupManifest({ repoPath: '/config', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
+      proxy.sourceReads({ root: '/repo', relPath: 'src/pick.ts', content: 'export const x = 1;\n' });
+      proxy.setupBlob({ repoPath: '/config', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
       proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
       proxy.arrangesTo({ analysis: realized });
 
@@ -199,8 +209,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.setupManifest({ repoPath: '/config', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
+      proxy.sourceReads({ root: '/repo', relPath: 'src/pick.ts', content: 'export const x = 1;\n' });
+      proxy.setupBlob({ repoPath: '/config', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
       proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
       proxy.mapsTo({ analysis: mapped });
 
@@ -229,8 +241,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.setupManifest({ repoPath: '/config', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/config', namespace: 'main' });
+      proxy.sourceReads({ root: '/repo', relPath: 'src/pick.ts', content: 'export const x = 1;\n' });
+      proxy.setupBlob({ repoPath: '/config', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
       proxy.sourceRootRepoRoot({ repoRoot: '../repo' });
       proxy.harnessesTo({ analysis: harnessed });
 
@@ -262,9 +276,10 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
-      proxy.setupBlob({ blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
-      proxy.sourceMissing();
+      proxy.setupManifest({ repoPath: '/repo', manifest });
+      proxy.setupNoResolvedIndex({ repoPath: '/repo', namespace: 'main' });
+      proxy.setupBlob({ repoPath: '/repo', contentHash: 'a'.repeat(64), blob: CompiledFileBlobStub({ relPath: 'src/pick.ts', analysis: persisted }) });
+      proxy.sourceMissing({ root: '/repo', relPath: 'src/pick.ts' });
       proxy.harnessesTo({ analysis: harnessed });
 
       const result = await compiledFileResolveBroker({
@@ -293,7 +308,7 @@ describe('compiledFileResolveBroker', () => {
       });
 
       const proxy = compiledFileResolveBrokerProxy();
-      proxy.setupManifest({ manifest });
+      proxy.setupManifest({ repoPath: '/repo', manifest });
 
       await expect(
         compiledFileResolveBroker({

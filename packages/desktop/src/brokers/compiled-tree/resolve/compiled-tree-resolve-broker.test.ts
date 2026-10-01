@@ -16,7 +16,7 @@ describe('compiledTreeResolveBroker', () => {
         },
       },
     });
-    proxy.setupManifest({ manifest });
+    proxy.setupManifest({ repoPath: '/repo', manifest });
 
     const result = await compiledTreeResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 
@@ -32,7 +32,7 @@ describe('compiledTreeResolveBroker', () => {
   it('EMPTY: {current namespace main with no files} => returns CompiledTree with zero counts and no nodes', async () => {
     const proxy = compiledTreeResolveBrokerProxy();
     const manifest = AssayerCacheManifestStub({ namespaces: { main: { files: [] } } });
-    proxy.setupManifest({ manifest });
+    proxy.setupManifest({ repoPath: '/repo', manifest });
 
     const result = await compiledTreeResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 
@@ -44,7 +44,7 @@ describe('compiledTreeResolveBroker', () => {
 
   it('EMPTY: {no cache manifest on disk} => returns an empty CompiledTree with placeholder summary, zero counts, and no nodes', async () => {
     const proxy = compiledTreeResolveBrokerProxy();
-    proxy.setupMissingManifest();
+    proxy.setupMissingManifest({ repoPath: '/repo' });
 
     const result = await compiledTreeResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) });
 
@@ -54,12 +54,12 @@ describe('compiledTreeResolveBroker', () => {
     });
   });
 
-  it('ERROR: {manifest load rejects} => propagates the rejection', async () => {
+  it('ERROR: {manifest disappears after the exists check} => propagates the read rejection', async () => {
     const proxy = compiledTreeResolveBrokerProxy();
-    proxy.rejects({ error: new Error('cache manifest not found') });
+    proxy.setupManifestVanishes({ repoPath: '/repo' });
 
     await expect(compiledTreeResolveBroker({ repoPath: RepoPathStub({ value: '/repo' }) })).rejects.toThrow(
-      /cache manifest not found/u,
+      /ENOENT/u,
     );
   });
 });

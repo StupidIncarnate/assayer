@@ -14,16 +14,28 @@ import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-lo
 import { cacheLoadBlobBrokerProxy } from '../../cache/load-blob/cache-load-blob-broker.proxy';
 import { cacheLoadResolvedIndexBrokerProxy } from '../../cache/load-resolved-index/cache-load-resolved-index-broker.proxy';
 import { repoSourceRootBrokerProxy } from '../../repo/source-root/repo-source-root-broker.proxy';
-import { nodeFsReadSourceAdapterProxy } from '../../../adapters/node-fs/read-source/node-fs-read-source-adapter.proxy';
+import { readFileIfExistsProxy } from '#gateway/node/fs__promises/read-file-if-exists/read-file-if-exists.proxy';
 import type { AssayerCacheManifestStub, CompiledFileBlobStub, FileAnalysisStub, ResolvedIndexStub } from '@assayer/shared/contracts';
 
 export const compiledFileResolveBrokerProxy = (): {
-  setupManifest: (params: { manifest: ReturnType<typeof AssayerCacheManifestStub> }) => void;
-  setupBlob: (params: { blob: ReturnType<typeof CompiledFileBlobStub> }) => void;
-  setupResolvedIndex: (params: { index: ReturnType<typeof ResolvedIndexStub> }) => void;
+  setupManifest: (params: {
+    repoPath: string;
+    manifest: ReturnType<typeof AssayerCacheManifestStub>;
+  }) => void;
+  setupBlob: (params: {
+    repoPath: string;
+    contentHash: string;
+    blob: ReturnType<typeof CompiledFileBlobStub>;
+  }) => void;
+  setupResolvedIndex: (params: {
+    repoPath: string;
+    namespace: string;
+    index: ReturnType<typeof ResolvedIndexStub>;
+  }) => void;
+  setupNoResolvedIndex: (params: { repoPath: string; namespace: string }) => void;
   sourceRootRepoRoot: (params: { repoRoot: string }) => void;
-  sourceReads: (params: { content: string }) => void;
-  sourceMissing: () => void;
+  sourceReads: (params: { root: string; relPath: string; content: string }) => void;
+  sourceMissing: (params: { root: string; relPath: string }) => void;
   composesTo: (params: { analysis: ReturnType<typeof FileAnalysisStub> }) => void;
   composeReceived: () => unknown;
   resolvesParamTypesTo: (params: { analysis: ReturnType<typeof FileAnalysisStub> }) => void;
@@ -37,13 +49,10 @@ export const compiledFileResolveBrokerProxy = (): {
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
   const blobProxy = cacheLoadBlobBrokerProxy();
-  // Base behaviour is "no resolved index for the namespace", so a view carries no edges unless a
-  // test wires one via setupResolvedIndex.
   const resolvedIndexProxy = cacheLoadResolvedIndexBrokerProxy();
-  // The source root resolves (config mocked) and the caller source reads by default, so a test that
-  // only cares about the cache never wires them.
+  // The source root resolves through a mocked config; each test stages the caller source it reads.
   const sourceRootProxy = repoSourceRootBrokerProxy();
-  const sourceReadProxy = nodeFsReadSourceAdapterProxy();
+  const sourceReadProxy = readFileIfExistsProxy();
   // The overlay is mocked at the seam it crosses: composing an imported predicate reaches for the
   // sibling file + tsconfig on disk, I/O a unit test cannot stage from another package. This mirrors
   // repoSourceRootBroker's proxy mocking configLoadBroker — the child proxy satisfies structure, the
@@ -102,23 +111,26 @@ export const compiledFileResolveBrokerProxy = (): {
   const harnessCalls: unknown[] = [];
 
   return {
-    setupManifest: ({ manifest }): void => {
-      manifestProxy.resolves({ manifest });
+    setupManifest: ({ repoPath, manifest }): void => {
+      manifestProxy.resolves({ repoPath, manifest });
     },
-    setupBlob: ({ blob }): void => {
-      blobProxy.resolves({ blob });
+    setupBlob: ({ repoPath, contentHash, blob }): void => {
+      blobProxy.resolves({ repoPath, contentHash, blob });
     },
-    setupResolvedIndex: ({ index }): void => {
-      resolvedIndexProxy.resolves({ index });
+    setupResolvedIndex: ({ repoPath, namespace, index }): void => {
+      resolvedIndexProxy.resolves({ repoPath, namespace, index });
+    },
+    setupNoResolvedIndex: ({ repoPath, namespace }): void => {
+      resolvedIndexProxy.absent({ repoPath, namespace });
     },
     sourceRootRepoRoot: ({ repoRoot }): void => {
       sourceRootProxy.configHasRepoRoot({ repoRoot });
     },
-    sourceReads: ({ content }): void => {
-      sourceReadProxy.returns({ content });
+    sourceReads: ({ root, relPath, content }): void => {
+      sourceReadProxy.returns({ path: `${root}/${relPath}`, contents: content });
     },
-    sourceMissing: (): void => {
-      sourceReadProxy.missing();
+    sourceMissing: ({ root, relPath }): void => {
+      sourceReadProxy.missing({ path: `${root}/${relPath}` });
     },
     composesTo: ({ analysis }): void => {
       composeHandle.onceFor([]).implement(({ root, relPath }) => {

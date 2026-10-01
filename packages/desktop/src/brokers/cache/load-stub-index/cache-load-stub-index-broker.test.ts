@@ -9,7 +9,7 @@ describe('cacheLoadStubIndexBroker', () => {
     it('VALID: {stub index on disk} => returns the validated StubIndex', async () => {
       const index = StubIndexStub();
       const proxy = cacheLoadStubIndexBrokerProxy();
-      proxy.resolves({ index });
+      proxy.resolves({ repoPath: '/repo', namespace: 'main', index });
 
       const result = await cacheLoadStubIndexBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
@@ -23,7 +23,7 @@ describe('cacheLoadStubIndexBroker', () => {
   describe('absent index', () => {
     it('EMPTY: {no stub index for the namespace} => returns undefined', async () => {
       const proxy = cacheLoadStubIndexBrokerProxy();
-      proxy.absent();
+      proxy.absent({ repoPath: '/repo', namespace: 'main' });
 
       const result = await cacheLoadStubIndexBroker({
         repoPath: RepoPathStub({ value: '/repo' }),
