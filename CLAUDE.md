@@ -205,19 +205,9 @@ details inside `dev:stop` matter and are not incidental:
 ## Known defect: core is not ready to publish
 
 `@assayer/core` is marked `"private": true` on purpose, so `npm publish`
-refuses it. Nothing publishes it yet. Fix these problems before that flag
+refuses it. Nothing publishes it yet. Fix this problem before that flag
 comes off:
 
-- ts-jest compiles the code under test with a different TypeScript than
-  the analyzer uses. The analyzer runs on the copy ts-morph bundles: the
-  walk, the coverage IDs, module resolution, the tsconfig read and harness
-  loading all go through `#gateway/npm/typescript`, which is ts-morph's
-  `ts`. ts-jest still loads the `typescript` package, which core and
-  `@assayer/npm` declare only as a `peerDependency`. In a consumer repo
-  that is the consumer's own version. If it differs from ts-morph's copy,
-  a probe site the analyzer recorded can miss its node in ts-jest's parse.
-  The fix: `run-execute-cases-broker` sets ts-jest's `compiler` option to
-  `packages/core/bundled-typescript.js`, which exports ts-morph's `ts`.
 - Core depends on `@assayer/shared`, which is also private.
 
 ## Constraints that shape every implementation decision

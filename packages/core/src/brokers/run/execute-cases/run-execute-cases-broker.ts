@@ -4,9 +4,10 @@
  *   detail behind this boundary, which is what keeps it swappable.
  *
  *   The config is INLINE JSON, which constrains the shape: Jest parses it as JSON, so the transformer,
- *   setup file and environment must be file PATHS, never live objects. The three ceremony files at core's
- *   package root (`probe-runtime.js`, `probe-transformer.js`, `harness-registrar.js`) are those paths.
- *   Each is plain JS that loads one typed module and hands the work to it.
+ *   setup file, environment and compiler must be file PATHS, never live objects. The ceremony files at
+ *   core's package root (`probe-runtime.js`, `probe-transformer.js`, `harness-registrar.js`,
+ *   `bundled-typescript.js`) are those paths. The first three are plain JS that loads one typed module and
+ *   hands the work to it. `bundled-typescript.js` is ts-jest's `compiler`: the TypeScript ts-morph bundles.
  *
  *   `runtime` says which tree those typed modules come from. The `__assayerCoreRuntime` Jest global
  *   carries the whole object to the setup file and the registrar, and the transformer's `options` carry
@@ -82,6 +83,12 @@ export const runExecuteCasesBroker = async ({
       '^.+\\.tsx?$': [
         'ts-jest',
         {
+          // The copy ts-morph bundles, so the compiler that places each probe parses with the same
+          // TypeScript that recorded the probe offsets.
+          compiler: runtime.compiler,
+          // Merged over the consumer's tsconfig. It keeps ts-jest off its transpile path for an
+          // `isolatedModules` tsconfig with a node16 or nodenext module, which ignores `compiler`.
+          tsconfig: coreRuntimeStatics.tsJestCompilerOptions,
           diagnostics: false,
           astTransformers: {
             before: [

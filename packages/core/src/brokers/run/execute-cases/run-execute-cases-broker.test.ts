@@ -65,6 +65,7 @@ describe('runExecuteCasesBroker', () => {
               setupFile: '/core/probe-runtime.js',
               astTransformer: '/core/probe-transformer.js',
               registrar: '/core/harness-registrar.js',
+              compiler: '/core/bundled-typescript.js',
               interpretCaseModule: '/core/src/brokers/case/interpret/case-interpret-broker',
               resolveEntryModule: '/core/src/brokers/case/resolve-entry/case-resolve-entry-broker',
               probeRuntimeModule: '/core/src/brokers/probe-runtime/create/probe-runtime-create-broker',
@@ -89,6 +90,11 @@ describe('runExecuteCasesBroker', () => {
             '^.+\\.tsx?$': [
               'ts-jest',
               {
+                // ts-jest compiles with the TypeScript ts-morph bundles, the copy that recorded the
+                // probe offsets.
+                compiler: '/core/bundled-typescript.js',
+                // A commonjs module keeps ts-jest off the transpile path that ignores `compiler`.
+                tsconfig: { module: 'commonjs' },
                 diagnostics: false,
                 astTransformers: {
                   before: [
@@ -143,6 +149,7 @@ describe('runExecuteCasesBroker', () => {
               setupFile: '/core/probe-runtime.js',
               astTransformer: '/core/probe-transformer.js',
               registrar: '/core/harness-registrar.js',
+              compiler: '/core/bundled-typescript.js',
               interpretCaseModule: '/core/dist/src/brokers/case/interpret/case-interpret-broker',
               resolveEntryModule: '/core/dist/src/brokers/case/resolve-entry/case-resolve-entry-broker',
               probeRuntimeModule: '/core/dist/src/brokers/probe-runtime/create/probe-runtime-create-broker',
@@ -158,6 +165,8 @@ describe('runExecuteCasesBroker', () => {
             '^.+\\.tsx?$': [
               'ts-jest',
               {
+                compiler: '/core/bundled-typescript.js',
+                tsconfig: { module: 'commonjs' },
                 diagnostics: false,
                 astTransformers: {
                   before: [

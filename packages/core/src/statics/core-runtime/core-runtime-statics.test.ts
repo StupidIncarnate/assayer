@@ -2,7 +2,7 @@ import { coreRuntimeStatics } from './core-runtime-statics';
 
 describe('coreRuntimeStatics', () => {
   describe('the file names of core\'s run-time modules', () => {
-    it('VALID: {the statics} => names the trees, the dist folder, the Jest global, the ceremony files, the modules and the source conditions', () => {
+    it('VALID: {the statics} => names the trees, the dist folder, the Jest global, the ceremony files, the modules, the source conditions and the ts-jest compiler options', () => {
       expect(coreRuntimeStatics).toStrictEqual({
         trees: ['source', 'dist'],
         layout: {
@@ -15,6 +15,7 @@ describe('coreRuntimeStatics', () => {
           setupFile: 'probe-runtime.js',
           astTransformer: 'probe-transformer.js',
           registrar: 'harness-registrar.js',
+          compiler: 'bundled-typescript.js',
         },
         modules: {
           interpretCase: 'src/brokers/case/interpret/case-interpret-broker',
@@ -24,6 +25,9 @@ describe('coreRuntimeStatics', () => {
           harness: 'index',
         },
         sourceExportConditions: ['source', 'node', 'node-addons'],
+        tsJestCompilerOptions: {
+          module: 'commonjs',
+        },
       });
     });
   });
