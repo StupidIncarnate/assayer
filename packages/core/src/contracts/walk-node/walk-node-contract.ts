@@ -15,10 +15,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { syntaxKindNameContract } from '@assayer/shared/contracts';
 
 export const walkNodeContract = z.object({
-  kind: syntaxKindNameContract,
+  kind: z.string().min(1).brand<'WalkNodeKind'>(),
   scopePath: z.array(z.string().min(1).brand<'WalkNodeScopePath'>()),
   name: z.string().min(1).brand<'WalkNodeName'>().optional(),
   startLine: z.number().int().positive().brand<'WalkNodeStartLine'>(),

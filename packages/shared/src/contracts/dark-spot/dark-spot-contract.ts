@@ -15,10 +15,9 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { syntaxKindNameContract } from '../syntax-kind-name/syntax-kind-name-contract';
 
 export const darkSpotContract = z.object({
-  kind: syntaxKindNameContract,
+  kind: z.string().min(1).brand<'DarkSpotKind'>(),
   scopePath: z.array(z.string().min(1).brand<'DarkSpotScopePath'>()),
   reason: z.enum(['unhandled-syntax']).brand<'DarkSpotReason'>(),
   startLine: z.number().int().positive().brand<'DarkSpotStartLine'>(),

@@ -111,7 +111,6 @@ export * from './harness-index/harness-index-contract';
 
 export * from './external-signature/external-signature-contract';
 
-export * from './syntax-kind-name/syntax-kind-name-contract';
 
 export * from './dark-spot/dark-spot-contract';
 
