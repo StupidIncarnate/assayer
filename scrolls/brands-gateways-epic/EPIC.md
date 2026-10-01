@@ -459,6 +459,9 @@ Dungeonmaster problems found while planning. The user takes these to dungeonmast
     files. When a consumer's proxy moves, a test file whose own text did not change keeps a cached transform that
     mocks the old path, and fails with "Cannot find module". Fixed in dungeonmaster `7f10db1`: a wrapper around ts-jest
     adds a hash of the test's merged mock calls (resolved paths, factories, source proxies) to its cache key.
+19. `enforce-proxy-child-creation` matched a created proxy to an import by name only, so one gateway subpath proxy
+    (`electronProxy`, serving `app`, `ipcMain` and the default export) read as phantom. Fixed in dungeonmaster `b410c1a`:
+    a subpath's proxy matches any import from that subpath, and default and namespace gateway imports are recorded.
 
 ## Follow-ups after the epic
 
