@@ -1,4 +1,6 @@
 import { useStubIndexBindingProxy } from '../../bindings/use-stub-index/use-stub-index-binding.proxy';
+import { StubEnvCardLayerWidgetProxy } from './stub-env-card-layer-widget.proxy';
+import { StubObjectCardLayerWidgetProxy } from './stub-object-card-layer-widget.proxy';
 import type { StubViewStub } from '@assayer/shared/contracts';
 
 export const StubRepositoryWidgetProxy = (): {
@@ -6,6 +8,8 @@ export const StubRepositoryWidgetProxy = (): {
   failView: (params: { message: string }) => void;
 } => {
   const bindingProxy = useStubIndexBindingProxy();
+  StubEnvCardLayerWidgetProxy();
+  StubObjectCardLayerWidgetProxy();
 
   return {
     setupView: ({ view }: { view: ReturnType<typeof StubViewStub> }): void => {

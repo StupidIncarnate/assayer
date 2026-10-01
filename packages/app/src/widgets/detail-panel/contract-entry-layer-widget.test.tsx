@@ -1,0 +1,64 @@
+import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
+import { ContractEntryLayerWidgetProxy } from './contract-entry-layer-widget.proxy';
+import { ExternalSignatureStub, ResolvedEdgeStub } from '@assayer/shared/contracts';
+
+describe('ContractEntryLayerWidget', () => {
+  describe('a local edge', () => {
+    it('VALID: {local edge, no params, returns string} => renders symbol, source path, a dash input and the return', () => {
+      ContractEntryLayerWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: './greeting',
+        importedName: 'greeting',
+        target: {
+          kind: 'local',
+          relPath: 'src/greeting.ts',
+          signature: ExternalSignatureStub({ params: [], returnType: { kind: 'string' } }),
+        },
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <ContractEntryLayerWidget edge={edge} /> });
+
+      expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greeting');
+      expect(getByTestId('CONTRACT_SOURCE').textContent).toBe("import './greeting' → src/greeting.ts");
+      expect(getByTestId('CONTRACT_INPUT').textContent).toBe('—');
+      expect(getByTestId('CONTRACT_OUTPUT').textContent).toBe('returns string');
+    });
+  });
+
+  describe('a package edge', () => {
+    it('VALID: {package edge with one param} => renders one input line per param', () => {
+      ContractEntryLayerWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: 'vendored-pkg',
+        importedName: 'greet',
+        target: {
+          kind: 'package',
+          packageName: 'vendored-pkg',
+          signature: ExternalSignatureStub({
+            params: [{ name: 'name', type: { kind: 'string' } }],
+            returnType: { kind: 'string' },
+          }),
+        },
+      });
+
+      const { getByTestId } = testingLibraryRenderAdapter({ ui: <ContractEntryLayerWidget edge={edge} /> });
+
+      expect(getByTestId('CONTRACT_SOURCE').textContent).toBe('pkg vendored-pkg');
+      expect(getByTestId('CONTRACT_INPUT').textContent).toBe('name: string');
+    });
+
+    it('EMPTY: {package edge with no signature and no type} => renders no output line', () => {
+      ContractEntryLayerWidgetProxy();
+      const edge = ResolvedEdgeStub({
+        specifier: 'vendored-pkg',
+        importedName: 'greet',
+        target: { kind: 'package', packageName: 'vendored-pkg' },
+      });
+
+      const { queryByTestId } = testingLibraryRenderAdapter({ ui: <ContractEntryLayerWidget edge={edge} /> });
+
+      expect(queryByTestId('CONTRACT_OUTPUT')).toBe(null);
+    });
+  });
+});

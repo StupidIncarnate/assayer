@@ -82,18 +82,14 @@
 import type { ReactElement } from 'react';
 import { Box, Tabs, Text, Stack, Button, Group } from '@mantine/core';
 import type { FileAnalysis, LineNumber, RelPath, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
-import { arrangeTextTransformer, moduleEntryLabelTransformer } from '@assayer/shared/transformers';
 
-import { caseRunResultTransformer } from '../../transformers/case-run-result/case-run-result-transformer';
-import { caseRunStatusTransformer } from '../../transformers/case-run-status/case-run-status-transformer';
-import { caseTouchedLinesTransformer } from '../../transformers/case-touched-lines/case-touched-lines-transformer';
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
 import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
-import { resolvedEdgeContractTransformer } from '../../transformers/resolved-edge-contract/resolved-edge-contract-transformer';
 import { undrivenLineTransformer } from '../../transformers/undriven-line/undriven-line-transformer';
-import { runStatusStatics } from '../../statics/run-status/run-status-statics';
-import { runModeStatics } from '../../statics/run-mode/run-mode-statics';
 import type { RunMode } from '../../contracts/status-view/status-view-contract';
+import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
+import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
+import { TestEntryLayerWidget } from './test-entry-layer-widget';
 
 export interface DetailPanelWidgetProps {
   analysis: FileAnalysis | undefined;
@@ -119,7 +115,6 @@ export const DetailPanelWidget = ({
   onRun,
 }: DetailPanelWidgetProps): ReactElement => {
   const enrichment = analysis === undefined ? [] : analysis.enrichment;
-  const active = hoveredLine !== undefined && hoveredLine !== null;
   // The gap channel has two producers and the run carries BOTH — the file's own input gaps plus the
   // access-shaped ones `case-set-projection` adds — so a run supersedes the analysis rather than
   // duplicating it. With no run, the analysis half still shows: an input Assayer cannot construct is
@@ -170,28 +165,9 @@ export const DetailPanelWidget = ({
             </Text>
           ) : (
             <Stack gap={4}>
-              {enrichment.map((row) => {
-                const isMatch = active && row.line === hoveredLine;
-                return (
-                  <Text
-                    key={`${row.line}:${row.symbol}`}
-                    data-testid="ENRICHMENT_ROW"
-                    data-match={isMatch ? 'true' : 'false'}
-                    ff="monospace"
-                    fz="xs"
-                    c={active && !isMatch ? 'dark.3' : 'gray.3'}
-                    style={{
-                      backgroundColor: isMatch ? 'var(--mantine-color-blue-9)' : undefined,
-                      borderRadius: 2,
-                      paddingInline: 4,
-                    }}
-                  >
-                    {`L${row.line}  ${row.symbol}: ${row.typeText}${
-                      row.range === undefined ? '' : `  → { ${row.range.map((value) => JSON.stringify(value)).join(', ')} }`
-                    }`}
-                  </Text>
-                );
-              })}
+              {enrichment.map((row) => (
+                <EnrichmentRowLayerWidget key={`${row.line}:${row.symbol}`} row={row} hoveredLine={hoveredLine} />
+              ))}
             </Stack>
           )}
         </Tabs.Panel>
@@ -285,144 +261,16 @@ export const DetailPanelWidget = ({
                 </Text>
               ))}
 
-              {functions.map((fn) => {
-                // A module entry is reached by IMPORTING it, not calling it, so it shows a bare LABEL
-                // (its single exported binding, else the file basename) with no `()` — never the
-                // internal `*module*`. An ANONYMOUS entry carries its own label — the callsite that
-                // reaches it, signature included — because its `name` is a structural projection, a
-                // cache key no surface may print. A named function/method keeps `name(params)`.
-                const isModule = fn.entry.access.kind === 'module';
-                const entryLabel =
-                  isModule && relPath !== undefined && relPath !== null
-                    ? String(
-                        moduleEntryLabelTransformer({
-                          ...(fn.entry.exportName === undefined ? {} : { exportName: fn.entry.exportName }),
-                          relPath: String(relPath),
-                        }),
-                      )
-                    : String(fn.entry.label ?? fn.entry.exportName ?? fn.entry.name);
-                // Only a name needs its parameter list appended; a label already carries the whole
-                // signature, and a module takes no arguments at all.
-                const showsParams = !isModule && fn.entry.label === undefined;
-                // WHAT THE RUNNER CALLS, which is not always the entry. A through-caller entry — a
-                // private, or a callback its host maps — is never called directly: the runner calls the
-                // CALLER with the arrange and the probe observes this entry's exits. The arrange values
-                // are therefore the caller's arguments, so printing them beside this entry's name
-                // describes a call that never happens (`(n) => …([101])`, a one-param arrow taking an
-                // array). The exit line below already says which entry was reached.
-                const driver = fn.entry.access.kind === 'through-caller' ? String(fn.entry.access.callerName) : entryLabel;
-
-                return (
-                  <Box key={fn.entry.name} data-testid="TEST_ENTRY">
-                    <Text ff="monospace" fz="xs" fw={600} c="gray.1">
-                      {showsParams
-                        ? `${entryLabel}(${fn.entry.params
-                            .map((param) => param.name)
-                            .join(', ')}) · ${fn.cases.length} cases`
-                        : `${entryLabel} · ${fn.cases.length} cases`}
-                    </Text>
-                    <Stack gap={2} mt={4}>
-                    {fn.cases.map((testCase) => {
-                      const exit = fn.exits.find((candidate) => candidate.coverageId === testCase.reachesPath[0]);
-                      const touched = caseTouchedLinesTransformer({
-                        functionAnalysis: fn,
-                        reachesPath: testCase.reachesPath,
-                      });
-                      const isMatch = active && touched.some((line) => line === hoveredLine);
-                      const status = String(caseRunStatusTransformer({ run, testCase }));
-                      const result = caseRunResultTransformer({ run, testCase });
-                      // A case the run did not pass never reached the exit on this row, so the row says
-                      // `predicted` rather than `reaches`. Printing the derived exit as though the run
-                      // landed there is the panel asserting an outcome that did not happen — and it
-                      // makes a case that THREW read identically to one that merely came out elsewhere.
-                      const settled = result !== undefined && status !== 'passed';
-                      const reach = `${settled ? 'predicted' : 'reaches'} L${exit?.line ?? '?'}`;
-                      // Why it did not pass, in this panel's own L-number vocabulary. An errored case
-                      // carries the runner's message (it threw, was not callable, fired no exit probe);
-                      // a failed one has no message and is explained by where it DID come out.
-                      const observed = (result?.observedPath ?? [])
-                        .map((id) => `L${String(fn.exits.find((candidate) => candidate.coverageId === id)?.line ?? '?')}`)
-                        .join(' → ');
-                      const outcome =
-                        result?.message ?? (observed === '' ? 'reached no exit' : `reached ${observed}`);
-                      // Display-only: under 'intelligent' the non-salient breadth grays out; 'thorough'
-                      // (the default, and any runMode the panel is not told) leaves every row live. This
-                      // never changes what the run engine executes — only how a reviewer reads the set.
-                      const grayed = runMode === 'intelligent' && !testCase.salient;
-
-                      return (
-                        <Box
-                          key={`${testCase.reachesPath.join('>')}#${arrangeTextTransformer({ arrange: testCase.arrange })}`}
-                        >
-                        <Group gap={6} wrap="nowrap" align="baseline">
-                          <Text
-                            data-testid="TEST_CASE_ROW"
-                            data-match={isMatch ? 'true' : 'false'}
-                            data-status={status}
-                            data-running={grayed ? 'false' : 'true'}
-                            ff="monospace"
-                            fz="xs"
-                            c={grayed || (active && !isMatch) ? 'dark.3' : 'gray.4'}
-                            style={{
-                              backgroundColor: !grayed && isMatch ? 'var(--mantine-color-blue-9)' : undefined,
-                              borderRadius: 2,
-                              paddingInline: 4,
-                            }}
-                          >
-                            <Text
-                              span
-                              data-testid="CASE_STATUS"
-                              fz="xs"
-                              fw={600}
-                              c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
-                            >
-                              {`${runStatusStatics.marker[status as keyof typeof runStatusStatics.marker]} `}
-                            </Text>
-                            {isModule
-                              ? `${entryLabel} → ${reach}`
-                              : `${driver}(${arrangeTextTransformer({
-                                  arrange: testCase.arrange,
-                                })}) → ${reach}`}
-                          </Text>
-                          {/* The salient (must-run) marker — its own inline span like CASE_STATUS, but a
-                              SIBLING of the row so it never enters the row's asserted text. It rides every
-                              salient row regardless of runMode; a non-salient row shows none. */}
-                          {testCase.salient ? (
-                            <Text
-                              span
-                              data-testid="INTELLIGENT_BADGE"
-                              fz="xs"
-                              fw={600}
-                              c={runModeStatics.colour.intelligent}
-                            >
-                              {runModeStatics.marker.intelligent}
-                            </Text>
-                          ) : null}
-                        </Group>
-                        {/* WHY it did not pass, on the row itself. Without this the tab shows that a case
-                            failed and never what went wrong, so the reason lives only in the run console —
-                            a panel that opens on Run, can be dismissed, and is empty for a run someone did
-                            in a terminal. A case that threw is exactly the one a reader must not have to
-                            re-run to understand. */}
-                        {settled ? (
-                          <Text
-                            data-testid="CASE_OUTCOME"
-                            ff="monospace"
-                            fz="xs"
-                            c={runStatusStatics.colour[status as keyof typeof runStatusStatics.colour]}
-                            pl={30}
-                            style={{ whiteSpace: 'pre-wrap' }}
-                          >
-                            {outcome}
-                          </Text>
-                        ) : null}
-                        </Box>
-                      );
-                    })}
-                    </Stack>
-                  </Box>
-                );
-              })}
+              {functions.map((fn) => (
+                <TestEntryLayerWidget
+                  key={fn.entry.name}
+                  fn={fn}
+                  relPath={relPath}
+                  hoveredLine={hoveredLine}
+                  run={run}
+                  runMode={runMode}
+                />
+              ))}
             </Stack>
           )}
         </Tabs.Panel>
@@ -438,41 +286,9 @@ export const DetailPanelWidget = ({
                   source, then the structured INPUT contract (one `name: type` per param — the star,
                   `—` when there are none), then the OUTPUT/return (or a member `type`) line. Teal /
                   positive colour, distinct from the admissions on the Tests tab. */}
-              {edges.map((edge) => {
-                const view = resolvedEdgeContractTransformer({ edge });
-
-                return (
-                  <Box
-                    key={`${String(edge.line)}:${String(edge.column)}:${view.symbol}`}
-                    data-testid="CONTRACT_ENTRY"
-                  >
-                    <Text data-testid="CONTRACT_SYMBOL" ff="monospace" fz="xs" fw={600} c="teal.3">
-                      {view.symbol}
-                    </Text>
-                    <Text data-testid="CONTRACT_SOURCE" ff="monospace" fz="xs" c="teal.6">
-                      {view.source}
-                    </Text>
-                    <Stack gap={0} mt={2} pl="xs" style={{ borderLeft: '2px solid var(--mantine-color-teal-9)' }}>
-                      {view.inputs.length === 0 ? (
-                        <Text data-testid="CONTRACT_INPUT" ff="monospace" fz="xs" c="teal.4">
-                          —
-                        </Text>
-                      ) : (
-                        view.inputs.map((line) => (
-                          <Text key={line} data-testid="CONTRACT_INPUT" ff="monospace" fz="xs" c="teal.4">
-                            {line}
-                          </Text>
-                        ))
-                      )}
-                      {view.output === undefined ? null : (
-                        <Text data-testid="CONTRACT_OUTPUT" ff="monospace" fz="xs" c="teal.4">
-                          {view.output}
-                        </Text>
-                      )}
-                    </Stack>
-                  </Box>
-                );
-              })}
+              {edges.map((edge) => (
+                <ContractEntryLayerWidget key={`${String(edge.line)}:${String(edge.column)}`} edge={edge} />
+              ))}
             </Stack>
           )}
         </Tabs.Panel>

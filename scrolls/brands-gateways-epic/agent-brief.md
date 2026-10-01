@@ -21,9 +21,7 @@ checkout.
    shared. Never restore a file with `git show HEAD:<path> > <path>` either, because another agent's unsaved work may
    be in it.
 3. Never run a bare `npm run ward`. Scope it to your files: `npm run ward -- -- <paths>`.
-4. Never run a ward lint before the operator says EPIC item P0-2 is done. Ward's lint runs `--fix`, and three brand
-   rules would rewrite files outside your scope. A typecheck-only run is safe:
-   `npm run ward -- --only typecheck -- <paths>`.
+4. Ward's lint is safe to run on your own files: EPIC item P0-2 turned the three autofixing brand rules off.
 5. Never `npm install`, `npm ci`, `npm link` or `npm rebuild`. If a dependency is missing, report it.
 6. Never edit `.claude/settings.json`, `.mcp.json` or any `.env*` file.
 7. Never dispatch sub-agents or forks. A fork edits the same checkout beside you and redoes your task.
