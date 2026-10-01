@@ -504,7 +504,8 @@ item in its subject.
 | PE-7 | `tsconfig.base.json` states the `node16` settings every config already used | done | `6b78189` |
 | PE-8 | CommonJS runs skip the ESM flag; the compile and the hash load one ts-morph; core CLAUDE.md names each runtime file | done | `9283207` |
 | PE-9 | Each file is analysed with the options of the tsconfig that owns it, found through TypeScript's own parser; symbol names are deterministic; a separate `analysisHash` field; module resolution per importing file's owner; the catalogue passes absolute paths (concessions 15 and 23, `items/pe-9.md`) | done. Stopped once at the 60-minute limit and split into PE-9b and PE-9c. Every moved specimen hash is explained: only run ids moved, no `cases.json`. A type declared only in TypeScript's library files reads as opaque (`map-param`); PE-10 narrows that to types with callable members, so plain-data `Error` stays fillable. | the PE-9 commit |
-| PE-10 | A default-library type stays opaque only when it has a callable member, so plain-data `Error` stays fillable while `Map`, `Date` and `Promise` stay opaque | active, with an agent | |
+| PE-10 | A default-library type stays opaque only when it has a callable member, so plain-data `Error` stays fillable while `Map`, `Date` and `Promise` stay opaque | done. Specimen hashes byte-identical, `test:syntax` 117 of 117. | the PE-10 commit |
+| PE-10b | Rename `isDefaultLibraryTypeGuard`, which now answers false for `Error`, a default-library type, to a name that says what it answers; move the `Error`-parameter proof from `tmp/pe10/` into a real analyze-file test | planned | |
 | PE-11 | Fix the slow-test gate at its cause: core's first test in each file pays the TypeScript load and library parse, and nine to thirteen files tip over ward's 1-second limit under load. Measure on a quiet machine after PE-10, then fix the cause, never raise the limit. | planned | |
 | PE-12 | The run-unit integration test's first real run pays the CommonJS worker's cold start (15.7 s alone, near the 30 s timeout under load). Cut the cold start or give the file one warm-up at its cause. | planned | |
 | PE-13 | `packages/core/ts-resolver.js`, the nested Jest's resolver, still resolves with the nearest tsconfig, not the importing file's owner. Move it to the owner rule PE-9 built. | planned | |
@@ -515,6 +516,8 @@ item in its subject.
 | PE-18 | After the user merges dungeonmaster's TypeScript 6 upgrade (`DEF-271` step 1): run assayer's full ward and `test:syntax` on the new tooling, and fix anything it changes | planned, waits on the user | |
 | PE-19 | `DEF-271` step 2: assayer moves to ts-morph 28 (TypeScript 6), bumps ts-jest and widens the `typescript` peer to `>=4.3 <7`, gated on the specimen hash check | planned, after PE-18 | |
 | PE-20 | The walk reader reads a mapped type's property through its original declaration, so `Partial<{ mode: string }>` reads `mode` as `string` with no `\| undefined`. A partial property is optional, so the reader must include `undefined`. Found by PE-9b; it predates PE-9. | planned | |
+
+**Upstream finding:** dungeonmaster's published Jest global teardown fails a run when any other process, such as another Claude session, creates a folder under `~/.claude/projects` during it (seen in PE-10's run `1790897042784-6bda`). Concurrent sessions can fail each other's tests.
 
 **Waiting on the user, not scheduled:**
 
