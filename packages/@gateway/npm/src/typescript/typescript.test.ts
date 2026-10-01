@@ -11,6 +11,19 @@ describe('#gateway/npm/typescript', () => {
     expect(ourModule.SyntaxKind).toBe(pkgModule.SyntaxKind);
   });
 
+  it.each([
+    ['findConfigFile', ourModule.findConfigFile, pkgModule.findConfigFile],
+    ['isExpression', ourModule.isExpression, pkgModule.isExpression],
+    ['isStatement', ourModule.isStatement, pkgModule.isStatement],
+    ['parseJsonConfigFileContent', ourModule.parseJsonConfigFileContent, pkgModule.parseJsonConfigFileContent],
+    ['readConfigFile', ourModule.readConfigFile, pkgModule.readConfigFile],
+    ['transform', ourModule.transform, pkgModule.transform],
+    ['transpileModule', ourModule.transpileModule, pkgModule.transpileModule],
+    ['visitEachChild', ourModule.visitEachChild, pkgModule.visitEachChild],
+  ])('VALID: {module} => re-exports %s as the real typescript function', (_name, ours, real) => {
+    expect(ours).toBe(real);
+  });
+
   it("VALID: {module} => default export is typescript's own module value", () => {
     // A namespace import's declared TYPE never carries a synthetic `.default` (`ourModule.default`
     // does not typecheck even against `typescript` itself) even though esModuleInterop's runtime
