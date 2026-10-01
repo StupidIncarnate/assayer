@@ -87,7 +87,7 @@ export const stubContradictionsTransformer = ({
     const authoritative = valueDomainContract.parse({ members: correction.values });
     const { satisfying } = typeToRangeTransformer({
       type: guard.operandType,
-      predicateKind: String(guard.predicate.kind),
+      predicateKind: guard.predicate.kind,
       literal: guard.predicate.literal,
     });
 
@@ -95,7 +95,7 @@ export const stubContradictionsTransformer = ({
       return [];
     }
 
-    const operator = OPERATOR_BY_KIND.get(String(guard.predicate.kind)) ?? 'satisfying';
+    const operator = OPERATOR_BY_KIND.get(guard.predicate.kind) ?? 'satisfying';
     const literal = typeof guard.predicate.literal === 'string' ? `'${guard.predicate.literal}'` : String(guard.predicate.literal);
 
     return [

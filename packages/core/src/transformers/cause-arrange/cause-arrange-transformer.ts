@@ -81,7 +81,7 @@
  */
 import { causeArrangeContract } from '../../contracts/cause-arrange/cause-arrange-contract';
 import type { CauseArrange } from '../../contracts/cause-arrange/cause-arrange-contract';
-import { arrangeValueContract } from '@assayer/shared/contracts';
+import { arrangeBindingContract, arrangeValueContract } from '@assayer/shared/contracts';
 import type { ArrangeBinding, ArrangeValue, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
@@ -177,12 +177,12 @@ export const causeArrangeTransformer = ({
 
           return [
             String(param),
-            {
-              kind: 'harness' as const,
+            arrangeBindingContract.parse({
+              kind: 'harness',
               param,
               key: harnessKeyPathTransformer({ entry: harness.entry, param }),
               ...(isRest ? { rest: true } : {}),
-            },
+            }),
           ] as const;
         }),
   );
@@ -323,13 +323,20 @@ export const causeArrangeTransformer = ({
           // REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
           // positional slots instead of handing it over as one argument.
           if (arrayValue !== undefined) {
-            return [{ kind: 'array', param: param.name, value: arrayValue, ...(param.rest === true ? { rest: true } : {}) }];
+            return [
+              arrangeBindingContract.parse({
+                kind: 'array',
+                param: param.name,
+                value: arrayValue,
+                ...(param.rest === true ? { rest: true } : {}),
+              }),
+            ];
           }
 
           const existing = bound.get(param.name);
 
           if (existing !== undefined) {
-            return [{ kind: 'param', param: param.name, value: existing }];
+            return [arrangeBindingContract.parse({ kind: 'param', param: param.name, value: existing })];
           }
 
           // Unconstrained: the seam's fill, already proven present by the refusal check above.
@@ -345,7 +352,7 @@ export const causeArrangeTransformer = ({
 
           return value === undefined
             ? []
-            : [{ kind: 'env' as const, name: envVarName, value: String(value) }];
+            : [arrangeBindingContract.parse({ kind: 'env', name: envVarName, value: String(value) })];
         }),
       ];
 

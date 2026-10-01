@@ -40,7 +40,7 @@
  */
 import { funnelCasesContract } from '../../contracts/funnel-cases/funnel-cases-contract';
 import type { FunnelCases } from '../../contracts/funnel-cases/funnel-cases-contract';
-import { derivedTestCaseContract } from '@assayer/shared/contracts';
+import { arrangeBindingContract, derivedTestCaseContract } from '@assayer/shared/contracts';
 import type { ArrangeBinding, ArrangeValue, Coverage } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
@@ -140,7 +140,9 @@ export const funnelCasesTransformer = ({
       // A REST param's array carries `rest: true`, so the interpreter SPREADS it across the tail
       // positional slots the funnel steers instead of handing it over as one argument.
       if (value !== undefined) {
-        return [{ kind: 'array', param: param.name, value, ...(param.rest === true ? { rest: true } : {}) }];
+        return [
+          arrangeBindingContract.parse({ kind: 'array', param: param.name, value, ...(param.rest === true ? { rest: true } : {}) }),
+        ];
       }
 
       const fill = fillParamTransformer({ param });

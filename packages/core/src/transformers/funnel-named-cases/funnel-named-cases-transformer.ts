@@ -43,7 +43,7 @@
  * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }],
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
-import { derivedTestCaseContract } from '@assayer/shared/contracts';
+import { arrangeBindingContract, derivedTestCaseContract } from '@assayer/shared/contracts';
 import type { ArrangeBinding, DerivedTestCase, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
@@ -158,7 +158,7 @@ export const funnelNamedCasesTransformer = ({
             : subCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(calleeParam));
 
         if (binding !== undefined && binding.kind !== 'env') {
-          return [{ ...binding, param: param.name }];
+          return [arrangeBindingContract.parse({ ...binding, param: param.name })];
         }
 
         const own = baseCase.arrange.find((entry) => entry.kind !== 'env' && String(entry.param) === String(param.name));

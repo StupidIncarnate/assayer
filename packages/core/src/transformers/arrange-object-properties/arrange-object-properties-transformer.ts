@@ -95,7 +95,7 @@ export const arrangeObjectPropertiesTransformer = ({
         // recursion builds is ever falsy, so the two arms cannot both hold. A demanded TRUTHY arm needs
         // no extra check — any built object already satisfies it.
         const falsyContradiction = propertyRequirements.some((requirement) =>
-          isFalsyArmGuard({ predicateKind: String(requirement.leaf.predicate.kind), want: requirement.want }),
+          isFalsyArmGuard({ predicateKind: requirement.leaf.predicate.kind, want: requirement.want }),
         );
 
         return {
@@ -128,7 +128,7 @@ export const arrangeObjectPropertiesTransformer = ({
       const armDomains = propertyRequirements.map((requirement) => {
         const armValues = typeToRangeTransformer({
           type: property.type,
-          predicateKind: String(requirement.leaf.predicate.kind),
+          predicateKind: requirement.leaf.predicate.kind,
           ...(requirement.leaf.predicate.literal === undefined ? {} : { literal: requirement.leaf.predicate.literal }),
         });
         return requirement.want ? armValues.satisfying : armValues.violating;
@@ -149,7 +149,7 @@ export const arrangeObjectPropertiesTransformer = ({
         representativeValueTransformer({ type: property.type }) === undefined &&
         (armDomains.some((domain) => !isDomainUnconstrainedGuard({ domain })) ||
           propertyRequirements.some((requirement) =>
-            isFalsyArmGuard({ predicateKind: String(requirement.leaf.predicate.kind), want: requirement.want }),
+            isFalsyArmGuard({ predicateKind: requirement.leaf.predicate.kind, want: requirement.want }),
           ))
       ) {
         return { name: property.name, value: undefined, unreachable: false };
