@@ -26,11 +26,12 @@
  */
 import { z } from '#gateway/npm/zod';
 
+import { entrySignatureContract } from '../entry-signature/entry-signature-contract';
 import { paramDescriptorContract } from '../param-descriptor/param-descriptor-contract';
 
 export const declaringScopeContract = z.object({
   name: z.string().min(1).brand<'DeclaringScopeName'>(),
-  hostEntry: z.string().min(1).brand<'DeclaringScopeHostEntry'>(),
+  hostEntry: entrySignatureContract.shape.name,
   params: z.array(paramDescriptorContract),
 }).brand<'DeclaringScope'>();
 

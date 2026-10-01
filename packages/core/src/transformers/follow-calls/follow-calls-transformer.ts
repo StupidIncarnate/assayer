@@ -54,8 +54,8 @@
  * //   refusals: [{ entryName, param, type, owner? }] }
  */
 import { anonymousEntryLabelTransformer } from '@assayer/shared/transformers';
-import { lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
-import type { AnonymousReach, DerivedTestCase, EntryAccess, FunctionAnalysis, LintEntry, ParamDescriptor, RepresentativeValue, UndrivenEntry } from '@assayer/shared/contracts';
+import { anonymousReachContract, lintEntryContract, undrivenEntryContract } from '@assayer/shared/contracts';
+import type { DerivedTestCase, EntryAccess, FunctionAnalysis, LintEntry, ParamDescriptor, RepresentativeValue, UndrivenEntry } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
@@ -174,7 +174,7 @@ export const followCallsTransformer = ({
   // funnelled private is never ALSO reported as a through-caller entry, an undriven admission, or dead
   // surface. Keyed by name + start line, the same key the walk records a local callee by.
   const funnelledPrivateKeys = new Set(
-    namedFunnels.flatMap(({ funnel }) => funnel.consumed.map((entry) => `${String(entry.name)}@${String(entry.startLine)}`)),
+    namedFunnels.flatMap(({ funnel }) => funnel.consumed.map((entry) => `${entry.name}@${String(entry.startLine)}`)),
   );
 
   const results = scopes
@@ -223,14 +223,19 @@ export const followCallsTransformer = ({
       // passthrough of one of the caller's own parameters, or a literal the caller welds in. A mix is
       // allowed: a passthrough param steers a branch, a welded literal evaluates one. An argument that is
       // neither (an opaque expression) leaves the call unable to drive the callee, so it is not a driver.
+      // A local callee link names a scope record by its name and start line. The link's contract cannot
+      // reuse the scope record's fields, because the scope record contract already imports the call-site
+      // contract, so the two sides are compared as plain values.
+      const calleeName: string = callee.name;
+      const calleeStartLine: number = callee.startLine;
       const drives = reachable.flatMap((caller) => {
         const callerParams = new Set(caller.params.map((param) => param.name));
         return caller.calls
           .filter(
             (call) =>
               call.callee.target === 'local' &&
-              call.callee.name === callee.name &&
-              call.callee.startLine === callee.startLine &&
+              call.callee.name === calleeName &&
+              call.callee.startLine === calleeStartLine &&
               call.guardPath.length === 0 &&
               callee.params.every((_param, index) => {
                 const arg = call.args[index];
@@ -245,7 +250,7 @@ export const followCallsTransformer = ({
 
       const isCalled = scopes.some((scope) =>
         scope.calls.some(
-          (call) => call.callee.target === 'local' && call.callee.name === callee.name && call.callee.startLine === callee.startLine,
+          (call) => call.callee.target === 'local' && call.callee.name === calleeName && call.callee.startLine === calleeStartLine,
         ),
       );
 
@@ -275,7 +280,9 @@ export const followCallsTransformer = ({
               ...(callbackReach.call.method === undefined ? {} : { method: callbackReach.call.method }),
               ...(callbackReach.call.callee.target === 'local' ? { callee: callbackReach.call.callee.name } : {}),
             };
-      const reach: AnonymousReach = argumentReach ?? (invoked === undefined ? { kind: 'return' } : { kind: 'invocation' });
+      const reach = anonymousReachContract.parse(
+        argumentReach ?? (invoked === undefined ? { kind: 'return' } : { kind: 'invocation' }),
+      );
       // The scope path ends with the callee's OWN segment, so dropping it leaves the holder last. A scope
       // the module itself holds has none to show — the file is its holder, and every surface already
       // names the file above the entry.

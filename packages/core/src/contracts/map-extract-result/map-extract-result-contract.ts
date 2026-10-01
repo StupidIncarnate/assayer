@@ -11,13 +11,15 @@ import { z } from '#gateway/npm/zod';
 
 import { mapNodeContract } from '@assayer/shared/contracts';
 
+import { sourcePositionContract } from '../source-position/source-position-contract';
+
 export const mapExtractResultContract = z.discriminatedUnion('success', [
   z.object({ success: z.literal(true), nodes: z.array(mapNodeContract) }).brand<'MapExtractResult'>(),
   z.object({
     success: z.literal(false),
     error: z.object({
-      line: z.number().int().positive().brand<'MapExtractResultErrorLine'>(),
-      column: z.number().int().positive().brand<'MapExtractResultErrorColumn'>(),
+      line: sourcePositionContract.shape.line,
+      column: sourcePositionContract.shape.column,
       message: z.string().min(1).brand<'MapExtractResultErrorMessage'>(),
     }).brand<'MapExtractResultError'>(),
   }).brand<'MapExtractResult'>(),

@@ -23,7 +23,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { guardStepContract, representativeValueContract } from '@assayer/shared/contracts';
+import { conditionLeafContract, guardStepContract, paramDescriptorContract, representativeValueContract } from '@assayer/shared/contracts';
 
 const calleeLinkContract = z.discriminatedUnion('target', [
   z.object({ target: z.literal('local'), name: z.string().min(1).brand<'CalleeLinkName'>(), startLine: z.number().int().positive().brand<'CalleeLinkStartLine'>() }).brand<'CalleeLink'>(),
@@ -32,7 +32,7 @@ const calleeLinkContract = z.discriminatedUnion('target', [
 ]);
 
 const callArgContract = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('param-ref'), paramName: z.string().min(1).brand<'CallArgParamName'>() }).brand<'CallArg'>(),
+  z.object({ kind: z.literal('param-ref'), paramName: paramDescriptorContract.shape.name }).brand<'CallArg'>(),
   z.object({ kind: z.literal('literal'), value: representativeValueContract }).brand<'CallArg'>(),
   // An inline function-like argument (`items.map((n) => …)`, `apply(x, (n) => …)`). It is a scope of
   // its own the walk opens elsewhere; this records only the LINK — the callback scope's start line,
@@ -54,8 +54,10 @@ export const callSiteContract = z.object({
   args: z.array(callArgContract),
   guardPath: z.array(guardStepContract),
   // Where the call is written — the position that anchors an import-resolution build error at the
-  // call site (P1). Carried structurally from the parse; never re-derived downstream.
-  position: z.object({ line: z.number().int().positive().brand<'CallSitePositionLine'>(), column: z.number().int().positive().brand<'CallSitePositionColumn'>() }).brand<'CallSitePosition'>(),
+  // call site (P1). Carried structurally from the parse; never re-derived downstream. It reuses the
+  // condition leaf's `operandCallPosition` schema because a call operand's leaf joins back to its call
+  // site on this one coordinate; the leaf contract lives in shared, which cannot import core.
+  position: conditionLeafContract.shape.operandCallPosition.unwrap(),
   // A method call on an IDENTIFIER receiver (`items.map(...)`) records that receiver's name and the
   // method's name. Present only for a `receiver.method(...)` shape whose receiver is a plain
   // identifier; a bare call, a computed member, or a chained receiver leaves both unset. This is what
