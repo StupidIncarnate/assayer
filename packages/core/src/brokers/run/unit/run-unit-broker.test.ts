@@ -1,6 +1,6 @@
 import { RunResultStub } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { runUnitBroker } from './run-unit-broker';
 import { runUnitBrokerProxy } from './run-unit-broker.proxy';
 
@@ -94,7 +94,7 @@ describe('runUnitBroker', () => {
       }).toStrictEqual({
         paths: [
           '/cache/runs/r1/cases.json',
-          `/cache/probes/${String(cryptoSha256Adapter({ content: SOURCE }))}.json`,
+          `/cache/probes/${String(contentHashTransformer({ content: SOURCE }))}.json`,
           '/cache/runs/r1/assayer.test.js',
         ],
         content:

@@ -3,7 +3,7 @@ import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
 import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import type { FileCount } from '@assayer/shared/contracts';
 
@@ -23,7 +23,7 @@ export const compileProcessFileBrokerProxy = (): {
   const writeFileProxy = fsWriteFileAdapterProxy();
   const renameProxy = fsRenameAdapterProxy();
   walkFileTransformerProxy();
-  cryptoSha256AdapterProxy();
+  contentHashTransformerProxy();
   analyzeFileBrokerProxy();
 
   return {

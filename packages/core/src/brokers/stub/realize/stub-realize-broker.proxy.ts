@@ -1,6 +1,6 @@
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
-import { typescriptReadConfigAdapterProxy } from '../../../adapters/typescript/read-config/typescript-read-config-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
+import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/resolve-sibling-callee-broker.proxy';
 
 export const stubRealizeBrokerProxy = (): {
@@ -11,8 +11,8 @@ export const stubRealizeBrokerProxy = (): {
   // what a unit test cannot do; the caller says where a specifier lands and what the definition's
   // source is instead.
   analyzeFileBrokerProxy();
-  cryptoSha256AdapterProxy();
-  typescriptReadConfigAdapterProxy();
+  contentHashTransformerProxy();
+  tsconfigReadBrokerProxy();
   const sibling = resolveSiblingCalleeBrokerProxy();
 
   return {

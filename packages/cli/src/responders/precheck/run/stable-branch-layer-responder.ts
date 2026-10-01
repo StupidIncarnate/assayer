@@ -17,7 +17,7 @@ import { assayerConfigContract } from '@assayer/shared/contracts';
 import type { AssayerConfig } from '@assayer/shared/contracts';
 
 import { processStdoutIsTtyAdapter } from '../../../adapters/process-stdout/is-tty/process-stdout-is-tty-adapter';
-import { readlineStableBranchPickAdapter } from '../../../adapters/readline/stable-branch-pick/readline-stable-branch-pick-adapter';
+import { stableBranchPickBroker } from '../../../brokers/stable-branch/pick/stable-branch-pick-broker';
 
 export const StableBranchLayerResponder = async ({
   config,
@@ -49,7 +49,7 @@ export const StableBranchLayerResponder = async ({
   // picker text pollutes stdout ahead of the command's own output.
   const chosen =
     candidates.length > 1 && processStdoutIsTtyAdapter()
-      ? await readlineStableBranchPickAdapter({ candidates, preselected })
+      ? await stableBranchPickBroker({ candidates, preselected })
       : preselected;
 
   const nextConfig = assayerConfigContract.parse({ ...config, stableBranch: chosen });

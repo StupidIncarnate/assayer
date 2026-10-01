@@ -1,7 +1,7 @@
 import { fsExistsSyncAdapterProxy } from '../../../adapters/fs/exists-sync/fs-exists-sync-adapter.proxy';
 import { fsReadFileSyncAdapterProxy } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy';
-import { typescriptHarnessGateAdapterProxy } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter.proxy';
-import { typescriptLoadHarnessAdapterProxy } from '../../../adapters/typescript/load-harness/typescript-load-harness-adapter.proxy';
+import { isAssayerHarnessGuardProxy } from '../../../guards/is-assayer-harness/is-assayer-harness-guard.proxy';
+import { harnessLoadBrokerProxy } from '../load/harness-load-broker.proxy';
 
 export const harnessRealizeBrokerProxy = (): {
   setupHarness: ({ source }: { source: string }) => void;
@@ -10,8 +10,8 @@ export const harnessRealizeBrokerProxy = (): {
   // The gate and the load run REAL: parsing the declaration and evaluating it ARE what this overlay is,
   // and a stubbed one would prove a harness nobody wrote. Only the two disk reads are staged, because a
   // colocated file is exactly what a unit test has no filesystem for.
-  typescriptHarnessGateAdapterProxy();
-  typescriptLoadHarnessAdapterProxy();
+  isAssayerHarnessGuardProxy();
+  harnessLoadBrokerProxy();
   const exists = fsExistsSyncAdapterProxy();
   const read = fsReadFileSyncAdapterProxy();
 

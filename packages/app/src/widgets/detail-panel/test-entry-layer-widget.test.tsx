@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { TestEntryLayerWidget } from './test-entry-layer-widget';
 import { TestEntryLayerWidgetProxy } from './test-entry-layer-widget.proxy';
 import { EntrySignatureStub, FunctionAnalysisStub, RelPathStub } from '@assayer/shared/contracts';
@@ -51,7 +51,7 @@ describe('TestEntryLayerWidget', () => {
     it('VALID: {two params, two cases} => the title carries the param list and the full case count, one row per case', () => {
       TestEntryLayerWidgetProxy();
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
         ui: <TestEntryLayerWidget fn={NAMED_FUNCTION} />,
       });
 
@@ -67,7 +67,7 @@ describe('TestEntryLayerWidget', () => {
     it('VALID: {module entry with export message} => a bare label with no parens, and the row names the label', () => {
       TestEntryLayerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <TestEntryLayerWidget fn={MODULE_ENTRY} relPath={RelPathStub({ value: 'src/message.ts' })} />,
       });
 
@@ -80,7 +80,7 @@ describe('TestEntryLayerWidget', () => {
     it('VALID: {inner driven through outer} => the title is its own name, the row names the caller', () => {
       TestEntryLayerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <TestEntryLayerWidget fn={THROUGH_CALLER_ENTRY} />,
       });
 

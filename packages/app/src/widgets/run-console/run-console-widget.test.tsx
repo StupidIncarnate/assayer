@@ -1,6 +1,6 @@
 import { RunConsoleStub } from '@assayer/shared/contracts';
 
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { RunConsoleWidget } from './run-console-widget';
 import { RunConsoleWidgetProxy } from './run-console-widget.proxy';
 
@@ -11,7 +11,7 @@ describe('RunConsoleWidget', () => {
     it('VALID: {the CLI report} => the text is shown exactly as the CLI wrote it', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget
             output={RunConsoleStub({ value: 'Assayer is updating caches\na.ts  3/3 passed\n' })}
@@ -29,7 +29,7 @@ describe('RunConsoleWidget', () => {
     it('VALID: {a finished run} => the panel says so rather than leaving the reader to guess', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <RunConsoleWidget output={RunConsoleStub()} running={false} onHide={(): void => undefined} />,
       });
 
@@ -41,7 +41,7 @@ describe('RunConsoleWidget', () => {
     it('VALID: {a run in flight} => the panel states it is still running', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <RunConsoleWidget output={RunConsoleStub()} running onHide={(): void => undefined} />,
       });
 
@@ -53,7 +53,7 @@ describe('RunConsoleWidget', () => {
     it('EMPTY: {no output yet} => says it is waiting rather than rendering a blank panel', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <RunConsoleWidget output={RunConsoleStub({ value: '' })} running onHide={(): void => undefined} />,
       });
 
@@ -67,7 +67,7 @@ describe('RunConsoleWidget', () => {
     it('ERROR: {the run failed} => the status says Failed rather than Finished', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
         ),
@@ -81,7 +81,7 @@ describe('RunConsoleWidget', () => {
     it('ERROR: {the run failed before the CLI wrote} => says nothing was written and where the reason is', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget output={RunConsoleStub({ value: '' })} running={false} failed onHide={(): void => undefined} />
         ),
@@ -96,7 +96,7 @@ describe('RunConsoleWidget', () => {
     it('ERROR: {the run failed after the CLI wrote} => the output written so far is still shown', () => {
       RunConsoleWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget
             output={RunConsoleStub({ value: 'Assayer is updating caches\n' })}
@@ -116,7 +116,7 @@ describe('RunConsoleWidget', () => {
       RunConsoleWidgetProxy();
       const hidden: ReturnType<typeof RunConsoleStub>[] = [];
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <RunConsoleWidget
             output={RunConsoleStub()}

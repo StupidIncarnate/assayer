@@ -1,6 +1,6 @@
 import { MemoryRouter } from '#gateway/npm/react-router-dom';
 
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { AppShellWidget } from './app-shell-widget';
 import { AppShellWidgetProxy } from './app-shell-widget.proxy';
 
@@ -9,7 +9,7 @@ describe('AppShellWidget', () => {
     it('VALID: {rendered at /} => shows the Explorer and Stub Repository links targeting their routes', () => {
       AppShellWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <MemoryRouter initialEntries={['/']}>
             <AppShellWidget />
@@ -26,7 +26,7 @@ describe('AppShellWidget', () => {
     it('VALID: {rendered at /stubs} => still shows both links so a human can switch back to the explorer', () => {
       AppShellWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <MemoryRouter initialEntries={['/stubs']}>
             <AppShellWidget />

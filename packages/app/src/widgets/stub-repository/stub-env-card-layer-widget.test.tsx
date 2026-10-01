@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubEnvCardLayerWidget } from './stub-env-card-layer-widget';
 import { StubEnvCardLayerWidgetProxy } from './stub-env-card-layer-widget.proxy';
 import { EnvStubStub } from '@assayer/shared/contracts';
@@ -15,7 +15,7 @@ describe('StubEnvCardLayerWidget', () => {
         readers: ['src/reader.ts'],
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
         ui: <StubEnvCardLayerWidget stub={stub} />,
       });
 
@@ -32,7 +32,7 @@ describe('StubEnvCardLayerWidget', () => {
       StubEnvCardLayerWidgetProxy();
       const stub = EnvStubStub({ key: 'process.env#MODE', property: 'MODE', values: ['prod'], guessed: false, readers: [] });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({
         ui: <StubEnvCardLayerWidget stub={stub} />,
       });
 

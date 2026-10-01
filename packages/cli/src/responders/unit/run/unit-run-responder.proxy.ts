@@ -4,7 +4,7 @@ import { runConsoleSaveBrokerProxy, runPathsBrokerProxy } from '@assayer/core/te
 import { RunResultStub, RelPathStub, RunIdStub, RunConsoleStub } from '@assayer/shared/contracts';
 import type { RunResult, RelPath, RunId, RunConsole } from '@assayer/shared/contracts';
 
-import { analyzerRootsResolveAdapterProxy } from '../../../adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter.proxy';
+import { analyzerRootsResolveBrokerProxy } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker.proxy';
 import { utilParseArgsAdapterProxy } from '../../../adapters/util/parse-args/util-parse-args-adapter.proxy';
 
 export const UnitRunResponderProxy = (): {
@@ -18,7 +18,7 @@ export const UnitRunResponderProxy = (): {
   // walk with no I/O and is left to run for real.
   runPathsBrokerProxy();
   runConsoleSaveBrokerProxy();
-  analyzerRootsResolveAdapterProxy();
+  analyzerRootsResolveBrokerProxy();
   utilParseArgsAdapterProxy();
 
   const handle = registerMock({ fn: runPathsBroker });

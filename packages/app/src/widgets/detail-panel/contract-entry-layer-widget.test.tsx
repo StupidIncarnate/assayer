@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
 import { ContractEntryLayerWidgetProxy } from './contract-entry-layer-widget.proxy';
 import { ExternalSignatureStub, ResolvedEdgeStub } from '@assayer/shared/contracts';
@@ -17,7 +17,7 @@ describe('ContractEntryLayerWidget', () => {
         },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <ContractEntryLayerWidget edge={edge} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <ContractEntryLayerWidget edge={edge} /> });
 
       expect(getByTestId('CONTRACT_SYMBOL').textContent).toBe('greeting');
       expect(getByTestId('CONTRACT_SOURCE').textContent).toBe("import './greeting' → src/greeting.ts");
@@ -42,7 +42,7 @@ describe('ContractEntryLayerWidget', () => {
         },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <ContractEntryLayerWidget edge={edge} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <ContractEntryLayerWidget edge={edge} /> });
 
       expect(getByTestId('CONTRACT_SOURCE').textContent).toBe('pkg vendored-pkg');
       expect(getByTestId('CONTRACT_INPUT').textContent).toBe('name: string');
@@ -56,7 +56,7 @@ describe('ContractEntryLayerWidget', () => {
         target: { kind: 'package', packageName: 'vendored-pkg' },
       });
 
-      const { queryByTestId } = testingLibraryRenderAdapter({ ui: <ContractEntryLayerWidget edge={edge} /> });
+      const { queryByTestId } = themedRenderMiddleware({ ui: <ContractEntryLayerWidget edge={edge} /> });
 
       expect(queryByTestId('CONTRACT_OUTPUT')).toBe(null);
     });

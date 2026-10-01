@@ -15,12 +15,12 @@
 import type { ExternalSignature, ModuleSpecifier, SymbolName, TypeDescriptor } from '@assayer/shared/contracts';
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { tsMorphReadGlobalSignatureAdapter } from '../../../adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter';
+import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
 
 type GlobalReference =
   | { kind: 'global'; name: SymbolName; member?: SymbolName; called: boolean }
@@ -40,7 +40,7 @@ export const externalSignatureReadGlobalBroker = async ({
   reference: GlobalReference;
   cacheDir: string;
 }): Promise<GlobalSignatureResult> => {
-  const read = tsMorphReadGlobalSignatureAdapter({ tsConfigFilePath, reference });
+  const read = externalSignatureReadGlobalDeclarationBroker({ tsConfigFilePath, reference });
 
   if (!read.usable) {
     return { usable: false };
@@ -54,7 +54,7 @@ export const externalSignatureReadGlobalBroker = async ({
       ? `b:${String(reference.specifier)} ${String(reference.importedName)} ${String(reference.called)}`
       : `g:${String(reference.name)}.${reference.member === undefined ? '' : String(reference.member)}.${String(reference.called)}`;
 
-  const cacheKey = cryptoSha256Adapter({ content: `${referenceKey}\n${String(read.declText)}` });
+  const cacheKey = contentHashTransformer({ content: `${referenceKey}\n${String(read.declText)}` });
   const dir = `${cacheDir}/global-signatures`;
   const cachePath = `${dir}/${String(cacheKey)}.json`;
 

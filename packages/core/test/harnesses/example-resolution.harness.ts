@@ -20,7 +20,7 @@ import { resolve, join, dirname } from '#gateway/node/path';
 
 import { RelPathStub } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
@@ -87,7 +87,7 @@ export const exampleResolutionHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: RelPathStub({ value: relPath }), contentHash: cryptoSha256Adapter({ content }) };
+          return { relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content }) };
         }),
       );
 
@@ -109,7 +109,7 @@ export const exampleResolutionHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: RelPathStub({ value: relPath }), contentHash: cryptoSha256Adapter({ content }) };
+          return { relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content }) };
         }),
       );
 
@@ -129,7 +129,7 @@ export const exampleResolutionHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: relPath }), contentHash: cryptoSha256Adapter({ content: BROKEN_SRC }) }],
+        files: [{ relPath: RelPathStub({ value: relPath }), contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
       });
     },
   };

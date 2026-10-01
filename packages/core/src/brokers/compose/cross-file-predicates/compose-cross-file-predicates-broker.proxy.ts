@@ -1,4 +1,4 @@
-import { typescriptReadConfigAdapterProxy } from '../../../adapters/typescript/read-config/typescript-read-config-adapter.proxy';
+import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/resolve-sibling-callee-broker.proxy';
 
 export const composeCrossFilePredicatesBrokerProxy = (): {
@@ -10,7 +10,7 @@ export const composeCrossFilePredicatesBrokerProxy = (): {
   // The tsconfig read runs REAL; the sibling resolve is staged, since resolving a specifier against a
   // real filesystem is exactly what a unit test cannot do — the caller says where a specifier lands and
   // what its source is instead.
-  typescriptReadConfigAdapterProxy();
+  tsconfigReadBrokerProxy();
   const sibling = resolveSiblingCalleeBrokerProxy();
 
   return {

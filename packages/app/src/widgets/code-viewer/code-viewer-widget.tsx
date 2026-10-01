@@ -35,7 +35,7 @@ import type { ReactElement } from '#gateway/npm/react';
 import { Box, Center, Text } from '#gateway/npm/mantine__core';
 import type { CompiledFileView } from '@assayer/shared/contracts';
 
-import { codemirrorViewAdapter } from '../../adapters/codemirror/view/codemirror-view-adapter';
+import { SourceEditorLayerWidget } from './source-editor-layer-widget';
 import { caseGutterMarkersTransformer } from '../../transformers/case-gutter-markers/case-gutter-markers-transformer';
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
 import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
@@ -97,7 +97,7 @@ export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProp
 
   const editor = useMemo(
     () =>
-      codemirrorViewAdapter({
+      SourceEditorLayerWidget({
         value,
         height: '100%',
         markers,

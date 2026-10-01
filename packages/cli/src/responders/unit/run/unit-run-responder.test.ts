@@ -1,4 +1,4 @@
-import { jestInterpretCaseAdapter, jestProbeRuntimeAdapter } from '@assayer/core/adapters';
+import { caseInterpretBroker, probeRuntimeCreateBroker } from '@assayer/core/adapters';
 import { RunResultStub, CaseResultStub, DarkSpotStub, EntryGapStub, LintEntryStub, RelPathStub, DerivedTestCaseStub, CoverageIdStub } from '@assayer/shared/contracts';
 
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
@@ -186,7 +186,7 @@ describe('UnitRunResponder', () => {
   describe('fails loudly — the P4 soundness net', () => {
     it('ERROR: {a string arranged where the entry maps an array} => the real run FAILS with the throw, and assayer unit throws that exact report', async () => {
       const proxy = UnitRunResponderProxy();
-      const probe = jestProbeRuntimeAdapter();
+      const probe = probeRuntimeCreateBroker();
 
       const testCase = DerivedTestCaseStub({
         reachesPath: [MAP_EXIT],
@@ -195,7 +195,7 @@ describe('UnitRunResponder', () => {
       // Real instrumented code `(items) => items.map(...)`. Arranging a STRING makes `.map` throw
       // inside the instrumented call before any exit fires — the interpreter reports the throw and
       // could not report a pass if it wanted to.
-      const result = jestInterpretCaseAdapter({
+      const result = caseInterpretBroker({
         entry: (items: number[]) => probe.x(MAP_EXIT, items.map((n) => n + 1)),
         entryName: 'mapEach',
         exitIds: [MAP_EXIT],
@@ -236,7 +236,7 @@ describe('UnitRunResponder', () => {
 
     it('ERROR: {an arrange that reaches an exit the case did not predict} => the real run FAILS on the wrong path, and assayer unit throws that exact report', async () => {
       const proxy = UnitRunResponderProxy();
-      const probe = jestProbeRuntimeAdapter();
+      const probe = probeRuntimeCreateBroker();
 
       const testCase = DerivedTestCaseStub({
         reachesPath: [CLASSIFY_THEN],
@@ -244,7 +244,7 @@ describe('UnitRunResponder', () => {
       });
       // The arrange drives the flow to the ELSE exit, but the case PREDICTED the THEN exit — the
       // observed path's suffix does not equal the predicted path, so the interpreter fails it.
-      const result = jestInterpretCaseAdapter({
+      const result = caseInterpretBroker({
         entry: (score: number) => probe.x(CLASSIFY_ELSE, score),
         entryName: 'classify',
         exitIds: [CLASSIFY_THEN, CLASSIFY_ELSE],

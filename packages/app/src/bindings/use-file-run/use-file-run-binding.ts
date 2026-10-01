@@ -25,7 +25,7 @@
  */
 import { useCallback, useEffect, useState } from '#gateway/npm/react';
 
-import { assayerBridgeOnRunOutputAdapter } from '../../adapters/assayer-bridge/on-run-output/assayer-bridge-on-run-output-adapter';
+import { runSubscribeOutputBroker } from '../../brokers/run/subscribe-output/run-subscribe-output-broker';
 import { runExecuteBroker } from '../../brokers/run/execute/run-execute-broker';
 import { runFetchConsoleBroker } from '../../brokers/run/fetch-console/run-fetch-console-broker';
 import { runFetchSavedBroker } from '../../brokers/run/fetch-saved/run-fetch-saved-broker';
@@ -56,7 +56,7 @@ export const useFileRunBinding = ({
   // dropped by a listener that only existed between execute() and its resolution.
   useEffect(
     () =>
-      assayerBridgeOnRunOutputAdapter({
+      runSubscribeOutputBroker({
         onChunk: ({ chunk }: { chunk: string }): void => {
           setOutput((previous) => runConsoleContract.parse(`${String(previous)}${chunk}`));
         },

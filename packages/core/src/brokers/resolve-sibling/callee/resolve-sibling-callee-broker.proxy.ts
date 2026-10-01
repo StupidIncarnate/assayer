@@ -3,8 +3,8 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { fsReadFileSyncAdapterProxy } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter.proxy';
 import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
 import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
-import { typescriptResolveModuleAdapterProxy } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter.proxy';
+import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
+import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 
 export const resolveSiblingCalleeBrokerProxy = (): {
@@ -22,9 +22,9 @@ export const resolveSiblingCalleeBrokerProxy = (): {
   pathRelativeAdapterProxy();
   walkFileTransformerProxy();
   const reads = fsReadFileSyncAdapterProxy();
-  typescriptResolveModuleAdapterProxy();
+  importSpecifierResolveBrokerProxy();
 
-  const resolveHandle = registerMock({ fn: typescriptResolveModuleAdapter });
+  const resolveHandle = registerMock({ fn: importSpecifierResolveBroker });
   // Stays on the legacy per-adapter-routed fallback so the proxy constructor stays free of the
   // argument-matching side effects the setup methods below add per test.
   resolveHandle.calledWith([]).returns({ resolved: false });

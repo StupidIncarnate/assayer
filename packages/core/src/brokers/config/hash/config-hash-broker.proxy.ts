@@ -1,7 +1,7 @@
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 
 export const configHashBrokerProxy = (): Record<PropertyKey, never> => {
-  cryptoSha256AdapterProxy();
+  contentHashTransformerProxy();
 
   return {};
 };

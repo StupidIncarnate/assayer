@@ -10,7 +10,7 @@
  */
 import type { AssayerConfig, ContentHash } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 export const configHashBroker = ({ config }: { config: AssayerConfig }): ContentHash => {
   const canonical = JSON.stringify({
@@ -19,5 +19,5 @@ export const configHashBroker = ({ config }: { config: AssayerConfig }): Content
     exclude: [...config.exclude].sort(),
   });
 
-  return cryptoSha256Adapter({ content: canonical });
+  return contentHashTransformer({ content: canonical });
 };

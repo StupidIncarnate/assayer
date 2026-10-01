@@ -1,11 +1,11 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
-import { jestRunCliAdapterProxy } from '../../../adapters/jest/run-cli/jest-run-cli-adapter.proxy';
+import { runExecuteCasesBrokerProxy } from '../execute-cases/run-execute-cases-broker.proxy';
 import { walkFileTransformerProxy } from '../../../transformers/walk-file/walk-file-transformer.proxy';
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
 import { composeCrossFileMapBrokerProxy } from '../../compose/cross-file-map/compose-cross-file-map-broker.proxy';
@@ -39,7 +39,7 @@ export const runUnitBrokerProxy = (): {
   // than merely that the overlay was called.
   setupHarness: ({ source }: { source: string }) => void;
 } => {
-  cryptoSha256AdapterProxy();
+  contentHashTransformerProxy();
   fsMkdirAdapterProxy();
   walkFileTransformerProxy();
   analyzeFileBrokerProxy();
@@ -62,7 +62,7 @@ export const runUnitBrokerProxy = (): {
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
   overlayLoadHandle.calledWith([]).resolves([]);
 
-  const runner = jestRunCliAdapterProxy();
+  const runner = runExecuteCasesBrokerProxy();
   const exists = fsExistsAdapterProxy();
   const writes = fsWriteFileAdapterProxy();
   const reads = fsReadFileAdapterProxy();

@@ -21,9 +21,9 @@
  */
 import type { RelPath } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { crossFileMapReachesTransformer } from '../../../transformers/cross-file-map-reaches/cross-file-map-reaches-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
@@ -50,7 +50,7 @@ export const runCrossFileProbesBroker = async ({
     return [];
   }
 
-  const { options } = typescriptReadConfigAdapter({ searchPath: root });
+  const { options } = tsconfigReadBroker({ searchPath: root });
   const containingFile = `${root}/${relPath}`;
 
   // One plan per DISTINCT specifier — two maps of the same sibling share a plan (same bytes, same hash).
@@ -62,7 +62,7 @@ export const runCrossFileProbesBroker = async ({
       return [];
     }
 
-    const contentHash = cryptoSha256Adapter({ content: String(sibling.source) });
+    const contentHash = contentHashTransformer({ content: String(sibling.source) });
 
     return [
       {

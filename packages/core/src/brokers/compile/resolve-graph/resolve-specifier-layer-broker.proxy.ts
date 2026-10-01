@@ -1,7 +1,7 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
-import { typescriptResolveModuleAdapterProxy } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter.proxy';
+import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
+import { importSpecifierResolveBrokerProxy } from '../../import-specifier/resolve/import-specifier-resolve-broker.proxy';
 import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 
@@ -17,10 +17,10 @@ export const resolveSpecifierLayerBrokerProxy = (): {
   // pathRelativeAdapter runs REAL (deterministic path math). The module resolver is REPLACED wholesale
   // because resolution against a real filesystem is exactly what a unit test cannot stage — the caller
   // says where a specifier lands instead.
-  typescriptResolveModuleAdapterProxy();
+  importSpecifierResolveBrokerProxy();
   pathRelativeAdapterProxy();
 
-  const resolveHandle = registerMock({ fn: typescriptResolveModuleAdapter });
+  const resolveHandle = registerMock({ fn: importSpecifierResolveBroker });
   resolveHandle.calledWith([]).returns({ resolved: false });
 
   return {

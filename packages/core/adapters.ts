@@ -10,9 +10,9 @@
 
 // Subpath export entry for @assayer/core/adapters
 
-export * from './src/adapters/jest/probe-inject/jest-probe-inject-adapter';
-export * from './src/adapters/jest/probe-runtime/jest-probe-runtime-adapter';
-export * from './src/adapters/jest/interpret-case/jest-interpret-case-adapter';
-export * from './src/adapters/jest/resolve-entry/jest-resolve-entry-adapter';
+export * from './src/transformers/probe-inject/probe-inject-transformer';
+export * from './src/brokers/probe-runtime/create/probe-runtime-create-broker';
+export * from './src/brokers/case/interpret/case-interpret-broker';
+export * from './src/brokers/case/resolve-entry/case-resolve-entry-broker';
 
 export * from './src/transformers/walk-file/walk-file-transformer';

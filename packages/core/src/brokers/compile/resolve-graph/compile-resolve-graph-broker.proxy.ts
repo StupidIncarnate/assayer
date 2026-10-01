@@ -2,11 +2,11 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { contentHashContract } from '@assayer/shared/contracts';
 
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { nodeModuleBuiltinsAdapterProxy } from '../../../adapters/node-module/builtins/node-module-builtins-adapter.proxy';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
-import { typescriptReadConfigAdapterProxy } from '../../../adapters/typescript/read-config/typescript-read-config-adapter.proxy';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
+import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { externalSignatureReadBroker } from '../../external-signature/read/external-signature-read-broker';
 import { externalSignatureReadBrokerProxy } from '../../external-signature/read/external-signature-read-broker.proxy';
 import { externalSignatureReadGlobalBroker } from '../../external-signature/read-global/external-signature-read-global-broker';
@@ -37,12 +37,12 @@ export const compileResolveGraphBrokerProxy = (): {
   // queued blob is one file's on-disk record. Config reading is mocked to a fixed tsconfigHash; module
   // resolution is staged through the layer proxy; the builtins list and the sha256 hasher run REAL.
   const readFileProxy = fsReadFileAdapterProxy();
-  typescriptReadConfigAdapterProxy();
+  tsconfigReadBrokerProxy();
   nodeModuleBuiltinsAdapterProxy();
-  cryptoSha256AdapterProxy();
+  contentHashTransformerProxy();
   const layerProxy = resolveSpecifierLayerBrokerProxy();
 
-  const readConfigHandle = registerMock({ fn: typescriptReadConfigAdapter });
+  const readConfigHandle = registerMock({ fn: tsconfigReadBroker });
   readConfigHandle.calledWith([]).returns({ options: {}, tsconfigHash: contentHashContract.parse(EMPTY_HASH) });
 
   // External type reading is REPLACED wholesale (its own broker tests cover caching); this broker's

@@ -30,12 +30,12 @@
 import { relPathContract, runResultContract } from '@assayer/shared/contracts';
 import type { RunResult } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { jestRunCliAdapter } from '../../../adapters/jest/run-cli/jest-run-cli-adapter';
+import { runExecuteCasesBroker } from '../execute-cases/run-execute-cases-broker';
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { assembleShimTransformer } from '../../../transformers/assemble-shim/assemble-shim-transformer';
 import { coreRuntimeTransformer } from '../../../transformers/core-runtime/core-runtime-transformer';
@@ -115,7 +115,7 @@ export const runUnitBroker = async ({
   // it re-runs the same `follow-calls` classification the compile walk used, rather than leaving that
   // refusal open forever on this, the real run path.
   const analysis = harnessRealizeBroker({ analysis: mapped, root: repoRoot, relPath, walked });
-  const contentHash = cryptoSha256Adapter({ content: source });
+  const contentHash = contentHashTransformer({ content: source });
 
   const probeDir = `${cacheDir}/probes`;
   const runDir = `${cacheDir}/runs/${runId}`;
@@ -180,7 +180,7 @@ export const runUnitBroker = async ({
     }),
   });
 
-  await jestRunCliAdapter({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
+  await runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
 
   // A FAILING case still writes the artifact — the shim's afterAll sees to that — so a missing one
   // means the runner itself died and the run is over with nothing to report. Said plainly here rather

@@ -1,6 +1,6 @@
 import userEvent from '#gateway/npm/testing-library__user-event';
 
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { DetailPanelWidget } from './detail-panel-widget';
 import { DetailPanelWidgetProxy } from './detail-panel-widget.proxy';
 import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
@@ -154,7 +154,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} />,
       });
 
@@ -171,7 +171,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {no run} => every case reads not-run rather than blank', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
       });
 
@@ -185,7 +185,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a driven module entry with one export} => title and case read the export name, no ()', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/import-local/uses-greeting/uses-greeting.ts' })} />,
       });
 
@@ -198,7 +198,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a driven module entry with no export} => title and case read the file basename', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/node-global/uses-console/uses-console.ts' })} />,
       });
 
@@ -212,7 +212,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {an anonymous callback entry} => the title reads its callsite label, never the structural projection', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />,
       });
 
@@ -227,7 +227,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {an anonymous callback entry} => the case row names the caller and its argument', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />,
       });
 
@@ -239,7 +239,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a named private driven through its caller} => the title is its own name, the row is the caller', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={THROUGH_CALLER_ANALYSIS} />,
       });
 
@@ -254,7 +254,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {an enrichment row with no range} => renders the symbol and type with no range suffix', async () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L1  name: string');
@@ -265,7 +265,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'x', typeText: 'number', range: [0, 1] }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_ROW').textContent).toBe('L2  x: number  → { 0, 1 }');
@@ -274,7 +274,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {hoveredLine equal to the row line} => marks the row matched', async () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 1 })} />,
       });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
@@ -285,7 +285,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {hoveredLine not equal to the row line} => marks the row unmatched', async () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} hoveredLine={LineNumberStub({ value: 9 })} />,
       });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
@@ -297,7 +297,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ enrichment: [] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
       await userEvent.click(getByTestId('TAB_ENRICHMENT'));
 
       expect(getByTestId('ENRICHMENT_EMPTY').textContent).toBe('No enrichment for this file');
@@ -309,7 +309,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 3 })} />,
       });
 
@@ -320,7 +320,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 2 })} />,
       });
 
@@ -331,7 +331,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} hoveredLine={LineNumberStub({ value: 9 })} />,
       });
 
@@ -351,7 +351,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
       });
 
@@ -369,7 +369,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
       });
 
@@ -391,7 +391,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
       });
 
@@ -414,7 +414,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
       });
 
@@ -484,7 +484,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} run={run} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} run={run} /> });
 
       expect(getByTestId('CASE_OUTCOME').textContent).toBe('reached L6');
     });
@@ -504,7 +504,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
       });
 
@@ -524,7 +524,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { queryAllByTestId } = testingLibraryRenderAdapter({
+      const { queryAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
       });
 
@@ -537,7 +537,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} run={run} />,
       });
 
@@ -551,7 +551,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(getByTestId('RUN_GAP').textContent).toBe('GAP audit — the fill seam refuses `report`');
     });
@@ -568,7 +568,7 @@ describe('DetailPanelWidget', () => {
         ],
       });
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} run={run} />,
       });
 
@@ -586,7 +586,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ darkSpots: [LOOP_DARK_SPOT] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
     });
@@ -598,7 +598,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
       expect(getByTestId('TESTS_EMPTY').textContent).toBe('No entries in this file');
@@ -612,7 +612,7 @@ describe('DetailPanelWidget', () => {
       const analysis = FileAnalysisStub({ darkSpots: [LOOP_DARK_SPOT] });
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} run={run} />,
       });
 
@@ -626,7 +626,7 @@ describe('DetailPanelWidget', () => {
         darkSpots: [LOOP_DARK_SPOT, DarkSpotStub({ kind: 'TryStatement', scopePath: ['load'], startLine: 9, endLine: 12 })],
       });
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(getAllByTestId('DARK_SPOT').map((element) => element.textContent)).toStrictEqual([
         LOOP_DARK_SPOT_TEXT,
@@ -637,7 +637,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis with no dark spots} => no dark-spot row is rendered', () => {
       DetailPanelWidgetProxy();
 
-      const { queryAllByTestId } = testingLibraryRenderAdapter({
+      const { queryAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
       });
 
@@ -651,7 +651,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ undriven: [UndrivenEntryStub({ name: 'inner', reason: 'it is not exported' })] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(getByTestId('UNDRIVEN').textContent).toBe('UNDRIVEN inner — it is not exported');
     });
@@ -666,7 +666,7 @@ describe('DetailPanelWidget', () => {
         undriven: [UndrivenEntryStub({ name: '*module*', label: 'welded-const.ts' })],
       });
 
-      const { queryAllByTestId, getByTestId } = testingLibraryRenderAdapter({
+      const { queryAllByTestId, getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} />,
       });
 
@@ -685,7 +685,7 @@ describe('DetailPanelWidget', () => {
         undriven: [UndrivenEntryStub({ name: '*module*' })],
       });
 
-      const { queryAllByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { queryAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(queryAllByTestId('TESTS_EMPTY')).toStrictEqual([]);
     });
@@ -699,7 +699,7 @@ describe('DetailPanelWidget', () => {
         undriven: [UndrivenEntryStub({ name: '*module*' })],
       });
 
-      const { queryAllByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { queryAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(queryAllByTestId('RUN_BUTTON')).toStrictEqual([]);
       expect(queryAllByTestId('TESTS_HINT')).toStrictEqual([]);
@@ -711,7 +711,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ undriven: [UndrivenEntryStub({ name: 'inner', reason: 'it is not exported' })] });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} />,
       });
 
@@ -732,7 +732,7 @@ describe('DetailPanelWidget', () => {
       });
       const run = RunResultStub({ gaps: [{ name: 'find', reason: 'needs a harness' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={analysis} run={run} />,
       });
 
@@ -744,7 +744,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis with nothing undriven} => no undriven row is rendered', () => {
       DetailPanelWidgetProxy();
 
-      const { queryAllByTestId } = testingLibraryRenderAdapter({
+      const { queryAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
       });
 
@@ -759,7 +759,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ lints: [LintEntryStub({ name: 'unused', message: 'nothing calls it' })] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(getByTestId('LINT').textContent).toBe('LINT unused — nothing calls it');
     });
@@ -770,7 +770,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({ functions: [], lints: [LintEntryStub()] });
 
-      const { queryAllByTestId, getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={analysis} /> });
+      const { queryAllByTestId, getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={analysis} /> });
 
       expect(queryAllByTestId('TESTS_EMPTY')).toStrictEqual([]);
       expect(getByTestId('LINT').textContent).toBe('LINT decide — nothing in this file calls it, so it is dead surface');
@@ -779,7 +779,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis with no lints} => no lint row is rendered', () => {
       DetailPanelWidgetProxy();
 
-      const { queryAllByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
+      const { queryAllByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={FileAnalysisStub()} /> });
 
       expect(queryAllByTestId('LINT')).toStrictEqual([]);
     });
@@ -801,7 +801,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
       });
       await detail.openContractsTab();
@@ -829,7 +829,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
       });
       await detail.openContractsTab();
@@ -858,7 +858,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
       });
       await detail.openContractsTab();
@@ -879,7 +879,7 @@ describe('DetailPanelWidget', () => {
         target: { kind: 'global', name: 'process', member: 'env', type: { kind: 'unknown', text: 'ProcessEnv' } },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} resolvedEdges={[edge]} />,
       });
       await detail.openContractsTab();
@@ -903,7 +903,7 @@ describe('DetailPanelWidget', () => {
         },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub({ functions: [], enrichment: [] })} resolvedEdges={[edge]} />,
       });
 
@@ -917,7 +917,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {no resolvedEdges} => the Contracts tab reads its empty prompt', async () => {
       const detail = DetailPanelWidgetProxy();
 
-      const { getByTestId, queryAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} />,
       });
       await detail.openContractsTab();
@@ -932,7 +932,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       let ran = false;
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <DetailPanelWidget
             analysis={FileAnalysisStub()}
@@ -952,7 +952,7 @@ describe('DetailPanelWidget', () => {
     it('ERROR: {a run that could not happen} => the reason is shown', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={FileAnalysisStub()} runError={new Error('the CLI is not built')} />,
       });
 
@@ -964,7 +964,7 @@ describe('DetailPanelWidget', () => {
     it('ERROR: {a run that could not happen, no entries} => the reason is still shown', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={undefined} runError={new Error('the CLI is not built')} />,
       });
 
@@ -978,7 +978,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a salient case beside its grayed breadth twin} => only the salient row carries the INTELLIGENT badge', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />,
       });
 
@@ -992,7 +992,7 @@ describe('DetailPanelWidget', () => {
     it('VALID: {a salient case beside its breadth twin} => both rows render, badge never in the row text', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={RelPathStub({ value: 'src/happy-path/x/thing.ts' })} />,
       });
 
@@ -1007,7 +1007,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const {runMode} = StatusViewStub({ runMode: 'thorough' });
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />,
       });
 
@@ -1023,7 +1023,7 @@ describe('DetailPanelWidget', () => {
       DetailPanelWidgetProxy();
       const {runMode} = StatusViewStub({ runMode: 'intelligent' });
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />,
       });
 
@@ -1038,7 +1038,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {no runMode prop} => defaults to thorough, every row live', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId } = themedRenderMiddleware({
         ui: <DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />,
       });
 
@@ -1053,7 +1053,7 @@ describe('DetailPanelWidget', () => {
     it('EMPTY: {analysis: undefined} => renders the empty tests prompt', () => {
       DetailPanelWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <DetailPanelWidget analysis={undefined} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <DetailPanelWidget analysis={undefined} /> });
 
       expect(getByTestId('TESTS_EMPTY').textContent).toBe('No entries in this file');
     });

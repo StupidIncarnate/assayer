@@ -1,6 +1,6 @@
 import { runConsoleFindBrokerProxy, runFindBrokerProxy } from '@assayer/core/testing';
 
-import { electronDesktopBootAdapterProxy } from '../../../adapters/electron/desktop-boot/electron-desktop-boot-adapter.proxy';
+import { desktopBootBrokerProxy } from '../../../brokers/desktop/boot/desktop-boot-broker.proxy';
 import { statusResolveBrokerProxy } from '../../../brokers/status/resolve/status-resolve-broker.proxy';
 import { compiledTreeResolveBrokerProxy } from '../../../brokers/compiled-tree/resolve/compiled-tree-resolve-broker.proxy';
 import { compiledFileResolveBrokerProxy } from '../../../brokers/compiled-file/resolve/compiled-file-resolve-broker.proxy';
@@ -13,7 +13,7 @@ export const DesktopMainBootResponderProxy = (): {
   handledChannels: () => unknown[];
   invokeCompiledFileHandler: (params: { relPath?: unknown }) => Promise<unknown>;
 } => {
-  const bootProxy = electronDesktopBootAdapterProxy();
+  const bootProxy = desktopBootBrokerProxy();
   statusResolveBrokerProxy();
   // Bare-invoked (never wired for setup): our tests validate/reject relPath before the
   // compiled-tree/compiled-file/run brokers would ever run — see enforce-proxy-child-creation.

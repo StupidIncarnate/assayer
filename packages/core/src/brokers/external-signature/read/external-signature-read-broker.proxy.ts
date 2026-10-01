@@ -2,14 +2,14 @@ import { registerMock } from '@dungeonmaster/testing/register-mock';
 import { fileCountContract } from '@assayer/shared/contracts';
 import type { FileCount } from '@assayer/shared/contracts';
 
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
-import { tsMorphReadExternalSignatureAdapter } from '../../../adapters/ts-morph/read-external-signature/ts-morph-read-external-signature-adapter';
-import { tsMorphReadExternalSignatureAdapterProxy } from '../../../adapters/ts-morph/read-external-signature/ts-morph-read-external-signature-adapter.proxy';
+import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
+import { externalSignatureReadDeclarationBrokerProxy } from '../read-declaration/external-signature-read-declaration-broker.proxy';
 
 export const externalSignatureReadBrokerProxy = (): {
   cacheMiss: ({ dtsContent }: { dtsContent: string }) => void;
@@ -33,10 +33,10 @@ export const externalSignatureReadBrokerProxy = (): {
   const mkdirProxy = fsMkdirAdapterProxy();
   const writeFileProxy = fsWriteFileAdapterProxy();
   const renameProxy = fsRenameAdapterProxy();
-  cryptoSha256AdapterProxy();
-  tsMorphReadExternalSignatureAdapterProxy();
+  contentHashTransformerProxy();
+  externalSignatureReadDeclarationBrokerProxy();
 
-  const readHandle = registerMock({ fn: tsMorphReadExternalSignatureAdapter });
+  const readHandle = registerMock({ fn: externalSignatureReadDeclarationBroker });
   readHandle.calledWith([]).returns({ usable: false });
 
   return {

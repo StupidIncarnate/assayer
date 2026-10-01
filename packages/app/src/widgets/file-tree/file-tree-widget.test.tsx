@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { FileTreeWidget } from './file-tree-widget';
 import { FileTreeWidgetProxy } from './file-tree-widget.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts';
@@ -29,7 +29,7 @@ describe('FileTreeWidget', () => {
       const onFileClick = jest.fn();
       FileTreeWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
       });
 
@@ -62,7 +62,7 @@ describe('FileTreeWidget', () => {
       const onFileClick = jest.fn();
       FileTreeWidgetProxy();
 
-      const { getByText } = testingLibraryRenderAdapter({
+      const { getByText } = themedRenderMiddleware({
         ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
       });
 
@@ -94,7 +94,7 @@ describe('FileTreeWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeWidgetProxy();
-      testingLibraryRenderAdapter({
+      themedRenderMiddleware({
         ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
       });
 
@@ -126,7 +126,7 @@ describe('FileTreeWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeWidgetProxy();
-      testingLibraryRenderAdapter({
+      themedRenderMiddleware({
         ui: <FileTreeWidget tree={tree} onFileClick={onFileClick} />,
       });
 

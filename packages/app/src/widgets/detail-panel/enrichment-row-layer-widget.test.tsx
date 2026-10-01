@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
 import { EnrichmentRowLayerWidgetProxy } from './enrichment-row-layer-widget.proxy';
 import { FileAnalysisStub, LineNumberStub } from '@assayer/shared/contracts';
@@ -9,7 +9,7 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {enrichment.map((row) => (
@@ -26,7 +26,7 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'x', typeText: 'number', range: [0, 1] }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {enrichment.map((row) => (
@@ -45,7 +45,7 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {enrichment.map((row) => (
@@ -62,7 +62,7 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {enrichment.map((row) => (
@@ -79,7 +79,7 @@ describe('EnrichmentRowLayerWidget', () => {
       EnrichmentRowLayerWidgetProxy();
       const { enrichment } = FileAnalysisStub({ enrichment: [{ line: 2, symbol: 'name', typeText: 'string' }] });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {enrichment.map((row) => (

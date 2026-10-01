@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
 import { StubRepositoryWidget } from './stub-repository-widget';
 import { StubRepositoryWidgetProxy } from './stub-repository-widget.proxy';
@@ -32,7 +32,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -80,7 +80,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -105,7 +105,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -127,7 +127,7 @@ describe('StubRepositoryWidget', () => {
         }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -146,7 +146,7 @@ describe('StubRepositoryWidget', () => {
       const proxy = StubRepositoryWidgetProxy();
       proxy.setupView({ view: StubViewStub({ objectStubs: [], envStubs: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -163,7 +163,7 @@ describe('StubRepositoryWidget', () => {
       const proxy = StubRepositoryWidgetProxy();
       proxy.setupView({ view: StubViewStub({ objectStubs: [], envStubs: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
       expect(getByTestId('STUB_LOADING').textContent).toBe('Reading the stub repository…');
       expect(queryByTestId('STUB_EMPTY')).toBe(null);
@@ -178,7 +178,7 @@ describe('StubRepositoryWidget', () => {
         message: 'assayer: cannot read /repo/assayer.config.json. Run `assayer status` in that repo to generate one.',
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <StubRepositoryWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <StubRepositoryWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {

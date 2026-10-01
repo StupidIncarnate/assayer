@@ -9,7 +9,7 @@ import {
 import type { AssayerCacheManifestStub, CompileResultStub } from '@assayer/shared/contracts';
 import { contentHashContract, compileResultContract } from '@assayer/shared/contracts';
 
-import { processStdoutCompileProgressAdapterProxy } from '../../../adapters/process-stdout/compile-progress/process-stdout-compile-progress-adapter.proxy';
+import { compileProgressRenderBrokerProxy } from '../../../brokers/compile-progress/render/compile-progress-render-broker.proxy';
 
 type AssayerCacheManifest = ReturnType<typeof AssayerCacheManifestStub>;
 type CompileResultErrors = ReturnType<typeof CompileResultStub>['errors'];
@@ -38,7 +38,7 @@ export const CompileRunLayerResponderProxy = (): {
   manifestLoadBrokerProxy();
   manifestTrashBrokerProxy();
   compileRunBrokerProxy();
-  processStdoutCompileProgressAdapterProxy();
+  compileProgressRenderBrokerProxy();
 
   const configHashHandle = registerMock({ fn: configHashBroker });
   const manifestLoadHandle = registerMock({ fn: manifestLoadBroker });

@@ -6,7 +6,7 @@ import {
   RelPathStub,
 } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { compileResolveGraphBroker } from './compile-resolve-graph-broker';
 import { compileResolveGraphBrokerProxy } from './compile-resolve-graph-broker.proxy';
 
@@ -22,7 +22,7 @@ describe('compileResolveGraphBroker', () => {
 
       expect(result).toStrictEqual({
         index: {
-          layoutHash: cryptoSha256Adapter({ content: JSON.stringify([]) }),
+          layoutHash: contentHashTransformer({ content: JSON.stringify([]) }),
           tsconfigHash: EMPTY_HASH,
           edges: [],
         },
@@ -53,7 +53,7 @@ describe('compileResolveGraphBroker', () => {
 
       expect(result).toStrictEqual({
         index: {
-          layoutHash: cryptoSha256Adapter({
+          layoutHash: contentHashTransformer({
             content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: String(HASH) }]),
           }),
           tsconfigHash: EMPTY_HASH,
@@ -88,7 +88,7 @@ describe('compileResolveGraphBroker', () => {
 
       expect(result).toStrictEqual({
         index: {
-          layoutHash: cryptoSha256Adapter({
+          layoutHash: contentHashTransformer({
             content: JSON.stringify([{ relPath: 'src/a/caller.ts', contentHash: String(HASH) }]),
           }),
           tsconfigHash: EMPTY_HASH,
@@ -129,7 +129,7 @@ describe('compileResolveGraphBroker', () => {
 
       expect(result).toStrictEqual({
         index: {
-          layoutHash: cryptoSha256Adapter({
+          layoutHash: contentHashTransformer({
             content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: String(HASH) }]),
           }),
           tsconfigHash: EMPTY_HASH,

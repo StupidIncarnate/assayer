@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { ExplorerHeaderWidget } from './explorer-header-widget';
 import { ExplorerHeaderWidgetProxy } from './explorer-header-widget.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts';
@@ -17,7 +17,7 @@ describe('ExplorerHeaderWidget', () => {
         },
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <ExplorerHeaderWidget summary={summary} />,
       });
 

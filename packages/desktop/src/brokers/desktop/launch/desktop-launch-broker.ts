@@ -8,12 +8,12 @@
  * // Returns { success: true } after spawning the window
  */
 
-import { electronBinaryPathAdapter } from '../../../adapters/electron/binary-path/electron-binary-path-adapter';
+import { desktopResolveBinaryBroker } from '../resolve-binary/desktop-resolve-binary-broker';
 import { electronMainEntryPathAdapter } from '../../../adapters/electron/main-entry-path/electron-main-entry-path-adapter';
 import { nodeChildProcessSpawnAdapter } from '../../../adapters/node-child-process/spawn/node-child-process-spawn-adapter';
 
 export const desktopLaunchBroker = ({ repoPath }: { repoPath: string }): void => {
-  const electronBinary = electronBinaryPathAdapter();
+  const electronBinary = desktopResolveBinaryBroker();
   const mainEntry = electronMainEntryPathAdapter();
 
   return nodeChildProcessSpawnAdapter({

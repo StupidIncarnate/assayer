@@ -1,5 +1,5 @@
 import { AssayerConfigStub, AssayerCacheManifestStub } from '@assayer/shared/contracts';
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { compileRunBroker } from './compile-run-broker';
 import { compileRunBrokerProxy } from './compile-run-broker.proxy';
@@ -37,7 +37,7 @@ describe('compileRunBroker', () => {
       proxy.onCurrentBranch({ name: 'feature-x' });
       proxy.stableUnchanged({ sha: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0' });
       const currentContent = 'export const a = 1;\n';
-      const currentHash = cryptoSha256Adapter({ content: currentContent });
+      const currentHash = contentHashTransformer({ content: currentContent });
       proxy.queueCurrentFiles({ contents: [currentContent] });
       proxy.manifestWriteSucceeds();
       const previousManifest = AssayerCacheManifestStub();
@@ -262,14 +262,14 @@ describe('compileRunBroker', () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
       const stableContent = 'export const stable = 1;\n';
-      const stableHash = cryptoSha256Adapter({ content: stableContent });
+      const stableHash = contentHashTransformer({ content: stableContent });
       proxy.stableChanged({
         sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
         fileContents: [stableContent],
       });
       const currentContent = 'export const current = 1;\n';
-      const currentHash = cryptoSha256Adapter({ content: currentContent });
+      const currentHash = contentHashTransformer({ content: currentContent });
       proxy.queueCurrentFiles({ contents: [currentContent] });
       proxy.manifestWriteSucceeds();
       const config = AssayerConfigStub({ stableBranch: 'master' });
@@ -430,7 +430,7 @@ describe('compileRunBroker', () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
       const stableContent = 'export const stable = 1;\n';
-      const stableHash = cryptoSha256Adapter({ content: stableContent });
+      const stableHash = contentHashTransformer({ content: stableContent });
       proxy.stableChangedCommitUnresolvable({
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
         fileContents: [stableContent],
@@ -478,7 +478,7 @@ describe('compileRunBroker', () => {
         fileContents: [stableContent],
       });
       const currentContent = 'export const current = 1;\n';
-      const currentHash = cryptoSha256Adapter({ content: currentContent });
+      const currentHash = contentHashTransformer({ content: currentContent });
       proxy.queueCurrentFiles({ contents: [currentContent] });
       proxy.manifestWriteSucceeds();
       const config = AssayerConfigStub({ stableBranch: 'master' });

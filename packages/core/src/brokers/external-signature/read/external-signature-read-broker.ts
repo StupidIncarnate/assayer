@@ -15,13 +15,13 @@ import { externalSignatureContract } from '@assayer/shared/contracts';
 import type { ExternalSignature, SymbolName } from '@assayer/shared/contracts';
 
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { tsMorphReadExternalSignatureAdapter } from '../../../adapters/ts-morph/read-external-signature/ts-morph-read-external-signature-adapter';
+import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
 
 export const externalSignatureReadBroker = async ({
   tsConfigFilePath,
@@ -35,7 +35,7 @@ export const externalSignatureReadBroker = async ({
   cacheDir: string;
 }): Promise<{ usable: true; signature: ExternalSignature } | { usable: false }> => {
   const dtsContent = String(await fsReadFileAdapter({ path: String(dtsPath) }));
-  const declHash = cryptoSha256Adapter({ content: `${String(exportName)}\n${dtsContent}` });
+  const declHash = contentHashTransformer({ content: `${String(exportName)}\n${dtsContent}` });
   const dir = `${cacheDir}/external-signatures`;
   const cachePath = `${dir}/${String(declHash)}.json`;
 
@@ -45,7 +45,7 @@ export const externalSignatureReadBroker = async ({
     return { usable: true, signature: externalSignatureContract.parse(JSON.parse(cached) as unknown) };
   }
 
-  const read = tsMorphReadExternalSignatureAdapter({ tsConfigFilePath, dtsPath, exportName });
+  const read = externalSignatureReadDeclarationBroker({ tsConfigFilePath, dtsPath, exportName });
 
   if (!read.usable) {
     return { usable: false };

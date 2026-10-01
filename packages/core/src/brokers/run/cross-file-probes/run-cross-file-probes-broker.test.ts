@@ -1,4 +1,4 @@
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { runCrossFileProbesBroker } from './run-cross-file-probes-broker';
 import { runCrossFileProbesBrokerProxy } from './run-cross-file-probes-broker.proxy';
@@ -19,7 +19,7 @@ describe('runCrossFileProbesBroker', () => {
 
       const result = await runCrossFileProbesBroker({ walked, root: '/repo', relPath: 'src/cross-file-map.ts', probeDir: '/repo/.assayer/cache/probes' });
 
-      const hash = cryptoSha256Adapter({ content: CHILD_SOURCE });
+      const hash = contentHashTransformer({ content: CHILD_SOURCE });
 
       expect({
         instrumented: result.map((relPath) => String(relPath)),

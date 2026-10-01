@@ -1,5 +1,5 @@
 import { reactCreateElementAdapter } from '../../../adapters/react/create-element/react-create-element-adapter';
-import { testingLibraryRenderAdapter } from '../../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../../middleware/themed-render/themed-render-middleware';
 import { StubsPageResponder } from './stubs-page-responder';
 import { StubsPageResponderProxy } from './stubs-page-responder.proxy';
 import { StubViewStub } from '@assayer/shared/contracts';
@@ -10,7 +10,7 @@ describe('StubsPageResponder', () => {
       const proxy = StubsPageResponderProxy();
       proxy.setupView({ view: StubViewStub() });
 
-      const { findByTestId } = testingLibraryRenderAdapter({
+      const { findByTestId } = themedRenderMiddleware({
         ui: reactCreateElementAdapter({ component: StubsPageResponder }),
       });
       const panel = await findByTestId('STUB_REPOSITORY');

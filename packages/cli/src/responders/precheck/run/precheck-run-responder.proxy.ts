@@ -11,7 +11,7 @@ import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
 import { CompileRunLayerResponder } from './compile-run-layer-responder';
 import { CompileRunLayerResponderProxy } from './compile-run-layer-responder.proxy';
-import { analyzerRootsResolveAdapterProxy } from '../../../adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter.proxy';
+import { analyzerRootsResolveBrokerProxy } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker.proxy';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 
 type AssayerConfig = ReturnType<typeof AssayerConfigStub>;
@@ -34,7 +34,7 @@ export const PrecheckRunResponderProxy = (): {
   // it directly to give it a deterministic hash — the analyzerRootsResolveAdapter it consumes is a
   // pure __dirname path computation with no I/O, so it is left to run for real.
   analyzerHashBrokerProxy();
-  analyzerRootsResolveAdapterProxy();
+  analyzerRootsResolveBrokerProxy();
   // Left to run for real: resolving a repoRoot against its config dir is pure path arithmetic with
   // no I/O, and mocking it would hide the very configDir-vs-root distinction the tests assert.
   compileResolveRootBrokerProxy();

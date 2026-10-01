@@ -15,7 +15,7 @@
 import { relPathContract } from '@assayer/shared/contracts';
 import { runConsoleFindBroker, runFindBroker } from '@assayer/core/brokers';
 
-import { electronDesktopBootAdapter } from '../../../adapters/electron/desktop-boot/electron-desktop-boot-adapter';
+import { desktopBootBroker } from '../../../brokers/desktop/boot/desktop-boot-broker';
 import { statusResolveBroker } from '../../../brokers/status/resolve/status-resolve-broker';
 import { compiledTreeResolveBroker } from '../../../brokers/compiled-tree/resolve/compiled-tree-resolve-broker';
 import { compiledFileResolveBroker } from '../../../brokers/compiled-file/resolve/compiled-file-resolve-broker';
@@ -30,7 +30,7 @@ export const DesktopMainBootResponder = async ({
 }: {
   repoPath: RepoPath;
 }): Promise<void> =>
-  electronDesktopBootAdapter({
+  desktopBootBroker({
     statusChannel: desktopBridgeStatics.channels.status,
     compiledTreeChannel: desktopBridgeStatics.channels.compiledTree,
     compiledFileChannel: desktopBridgeStatics.channels.compiledFile,

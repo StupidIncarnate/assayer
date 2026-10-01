@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubReadersLayerWidget } from './stub-readers-layer-widget';
 import { StubReadersLayerWidgetProxy } from './stub-readers-layer-widget.proxy';
 import { ObjectStubStub } from '@assayer/shared/contracts';
@@ -9,7 +9,7 @@ describe('StubReadersLayerWidget', () => {
       StubReadersLayerWidgetProxy();
       const { readers } = ObjectStubStub({ readers: ['src/a.ts', 'src/b.ts'] });
 
-      const { getAllByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getAllByTestId, queryByTestId } = themedRenderMiddleware({
         ui: <StubReadersLayerWidget readers={readers} />,
       });
 
@@ -23,7 +23,7 @@ describe('StubReadersLayerWidget', () => {
       StubReadersLayerWidgetProxy();
       const { readers } = ObjectStubStub({ readers: [] });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({
         ui: <StubReadersLayerWidget readers={readers} />,
       });
 

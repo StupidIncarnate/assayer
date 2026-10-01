@@ -46,10 +46,10 @@ import type {
   ResolvedIndex,
 } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { tsMorphReadHarnessValueTypesAdapter } from '../../../adapters/ts-morph/read-harness-value-types/ts-morph-read-harness-value-types-adapter';
-import { typescriptLoadHarnessAdapter } from '../../../adapters/typescript/load-harness/typescript-load-harness-adapter';
+import { harnessValueTypesTransformer } from '../../../transformers/harness-value-types/harness-value-types-transformer';
+import { harnessLoadBroker } from '../../harness/load/harness-load-broker';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { harnessKeysTransformer } from '../../../transformers/harness-keys/harness-keys-transformer';
 import { harnessTargetTransformer } from '../../../transformers/harness-target/harness-target-transformer';
@@ -82,11 +82,11 @@ export const compileHarnessGraphBroker = async ({
 
   // The harness files' OWN identity, hashed over path + content in path order — the third key, and the
   // only one a harness-only edit moves.
-  const harnessHash = cryptoSha256Adapter({
+  const harnessHash = contentHashTransformer({
     content: ordered
       .map(
         (harness) =>
-          `${String(harness.relPath)}\n${String(cryptoSha256Adapter({ content: String(harness.content) }))}`,
+          `${String(harness.relPath)}\n${String(contentHashTransformer({ content: String(harness.content) }))}`,
       )
       .join('\n'),
   });
@@ -110,7 +110,7 @@ export const compileHarnessGraphBroker = async ({
       };
     }
 
-    const loaded = typescriptLoadHarnessAdapter({
+    const loaded = harnessLoadBroker({
       source: String(harness.content),
       fileName: String(harness.relPath),
     });
@@ -139,7 +139,7 @@ export const compileHarnessGraphBroker = async ({
           keys: harnessKeysTransformer({ declarations: loaded.declarations }),
           // The STATIC type of every supplied expression, read off the same source's AST — a SEPARATE,
           // narrower read from the eval-based load above, which only ever produces runtime VALUES.
-          suppliedTypes: tsMorphReadHarnessValueTypesAdapter({
+          suppliedTypes: harnessValueTypesTransformer({
             source: String(harness.content),
             fileName: String(harness.relPath),
           }),

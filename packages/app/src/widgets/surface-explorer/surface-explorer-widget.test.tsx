@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { testingLibraryWaitForAdapter } from '../../adapters/testing-library/wait-for/testing-library-wait-for-adapter';
 import { SurfaceExplorerWidget } from './surface-explorer-widget';
 import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
@@ -22,7 +22,7 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -44,7 +44,7 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -64,7 +64,7 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.setupTree({ tree: CompiledTreeStub({ nodes: [] }) });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       expect(getByTestId('SURFACE_LOADING').textContent).toBe('Reading the compiled surface…');
       expect(queryByTestId('SURFACE_EMPTY')).toBe(null);
@@ -81,7 +81,7 @@ describe('SurfaceExplorerWidget', () => {
           'Cannot resolve current namespace: expected exactly one working-tree entry without a commit among [branch-a, branch-b]',
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -102,7 +102,7 @@ describe('SurfaceExplorerWidget', () => {
       const proxy = SurfaceExplorerWidgetProxy();
       proxy.failTree({ message: 'Assayer preload bridge unavailable: window.assayerBridge was not exposed.' });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -155,7 +155,7 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId, getByRole } = testingLibraryRenderAdapter({
+      const { getByTestId, getByRole } = themedRenderMiddleware({
         ui: <SurfaceExplorerWidget />,
       });
 
@@ -185,7 +185,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failFile();
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -214,7 +214,7 @@ describe('SurfaceExplorerWidget', () => {
         tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -237,7 +237,7 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -266,7 +266,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'opening a file must never run it' });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -294,7 +294,7 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -330,7 +330,7 @@ describe('SurfaceExplorerWidget', () => {
         }),
       });
 
-      const { getByTestId, getByRole } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, getByRole } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -363,7 +363,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { getByTestId, queryAllByText } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryAllByText } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -400,7 +400,7 @@ describe('SurfaceExplorerWidget', () => {
       });
       proxy.failRun({ message: 'assayer: the CLI is not built, so nothing can be run.' });
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {
@@ -431,7 +431,7 @@ describe('SurfaceExplorerWidget', () => {
         fileView: CompiledFileViewStub({ relPath: 'packages/web/app.tsx', analysis: FileAnalysisStub() }),
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({ ui: <SurfaceExplorerWidget /> });
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({ ui: <SurfaceExplorerWidget /> });
 
       await testingLibraryWaitForAdapter({
         callback: () => {

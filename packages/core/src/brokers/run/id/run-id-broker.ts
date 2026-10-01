@@ -27,10 +27,10 @@
 import { relPathContract, runIdContract } from '@assayer/shared/contracts';
 import type { RunId } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
-import { typescriptHarnessGateAdapter } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 
 export const runIdBroker = async ({
@@ -47,13 +47,13 @@ export const runIdBroker = async ({
     ? String(await fsReadFileAdapter({ path: harnessPath }))
     : undefined;
   const harnessDigest =
-    harnessSource !== undefined && typescriptHarnessGateAdapter({ source: harnessSource })
-      ? String(cryptoSha256Adapter({ content: harnessSource }))
+    harnessSource !== undefined && isAssayerHarnessGuard({ source: harnessSource })
+      ? String(contentHashTransformer({ content: harnessSource }))
       : undefined;
 
   return runIdContract.parse(
     String(
-      cryptoSha256Adapter({
+      contentHashTransformer({
         content:
           harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
       }),

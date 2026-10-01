@@ -4,7 +4,7 @@ import { compileWalkWorkingTreeBrokerProxy } from '../../compile/walk-working-tr
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
 import { pathRelativeAdapterProxy } from '../../../adapters/path/relative/path-relative-adapter.proxy';
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { FilePathStub } from '../../../contracts/file-path/file-path.stub';
 
 export const analyzerHashBrokerProxy = (): {
@@ -17,7 +17,7 @@ export const analyzerHashBrokerProxy = (): {
   compileWalkWorkingTreeBrokerProxy();
   fsReadFileAdapterProxy();
   pathRelativeAdapterProxy();
-  cryptoSha256AdapterProxy();
+  contentHashTransformerProxy();
 
   const walkHandle = registerMock({ fn: compileWalkWorkingTreeBroker });
   const readHandle = registerMock({ fn: fsReadFileAdapter });

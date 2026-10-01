@@ -21,7 +21,7 @@
  */
 import type { RelPath } from '@assayer/shared/contracts';
 
-import { typescriptHarnessGateAdapter } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import type { FileContents } from '../../../contracts/file-contents/file-contents-contract';
 import { harnessModuleStatics } from '../../../statics/harness-module/harness-module-statics';
 
@@ -37,7 +37,7 @@ export const harnessClassifyBroker = ({
     file: { relPath: file.relPath, content: file.content },
     isHarness:
       String(file.relPath).endsWith(harnessModuleStatics.fileSuffix) &&
-      typescriptHarnessGateAdapter({ source: String(file.content) }),
+      isAssayerHarnessGuard({ source: String(file.content) }),
   }));
 
   return {

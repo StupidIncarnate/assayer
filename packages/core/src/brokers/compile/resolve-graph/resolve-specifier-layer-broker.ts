@@ -21,9 +21,9 @@ import type { CompiledFileBlob, PackageName, RelPath } from '@assayer/shared/con
 import { filePathContract } from '../../../contracts/file-path/file-path-contract';
 import type { FilePath } from '../../../contracts/file-path/file-path-contract';
 import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
+import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 
-type ResolveOptions = Parameters<typeof typescriptResolveModuleAdapter>[0]['options'];
+type ResolveOptions = Parameters<typeof importSpecifierResolveBroker>[0]['options'];
 
 export const resolveSpecifierLayerBroker = ({
   containingFile,
@@ -54,7 +54,7 @@ export const resolveSpecifierLayerBroker = ({
     return { kind: 'builtin', packageName: packageNameContract.parse(bareBuiltin) };
   }
 
-  const resolved = typescriptResolveModuleAdapter({ specifier, containingFile, options });
+  const resolved = importSpecifierResolveBroker({ specifier, containingFile, options });
 
   if (!resolved.resolved) {
     return { kind: 'unresolved' };

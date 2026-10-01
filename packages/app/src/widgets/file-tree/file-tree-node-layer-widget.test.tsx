@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { FileTreeNodeLayerWidget } from './file-tree-node-layer-widget';
 import { FileTreeNodeLayerWidgetProxy } from './file-tree-node-layer-widget.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts';
@@ -12,7 +12,7 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {nodes.map((node) => (
@@ -32,7 +32,7 @@ describe('FileTreeNodeLayerWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeNodeLayerWidgetProxy();
-      testingLibraryRenderAdapter({
+      themedRenderMiddleware({
         ui: (
           <>
             {nodes.map((node) => (
@@ -63,7 +63,7 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId, getByText } = testingLibraryRenderAdapter({
+      const { getByTestId, getByText } = themedRenderMiddleware({
         ui: (
           <>
             {nodes.map((node) => (
@@ -90,7 +90,7 @@ describe('FileTreeNodeLayerWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeNodeLayerWidgetProxy();
-      testingLibraryRenderAdapter({
+      themedRenderMiddleware({
         ui: (
           <>
             {nodes.map((node) => (
@@ -118,7 +118,7 @@ describe('FileTreeNodeLayerWidget', () => {
       });
       const onFileClick = jest.fn();
       const proxy = FileTreeNodeLayerWidgetProxy();
-      const { getByText, queryAllByTestId } = testingLibraryRenderAdapter({
+      const { getByText, queryAllByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {nodes.map((node) => (
@@ -148,7 +148,7 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId, queryAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryAllByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {nodes.map((node) => (
@@ -169,7 +169,7 @@ describe('FileTreeNodeLayerWidget', () => {
       const onFileClick = jest.fn();
       FileTreeNodeLayerWidgetProxy();
 
-      const { getByTestId, queryAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryAllByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {nodes.map((node) => (

@@ -1,11 +1,11 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { fsReadFileAdapterProxy } from '../../../adapters/fs/read-file/fs-read-file-adapter.proxy';
-import { typescriptHarnessGateAdapterProxy } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter.proxy';
+import { isAssayerHarnessGuardProxy } from '../../../guards/is-assayer-harness/is-assayer-harness-guard.proxy';
 
 // The broker looks for a colocated harness, so every scenario starts from "there is none" — the shape
 // of nearly every file, and the one whose id must not move. Registered from HERE rather than shared
@@ -16,10 +16,10 @@ export const runIdBrokerProxy = (): {
   harness: ({ source }: { source: string }) => void;
   readThrows: ({ error }: { error: Error }) => void;
 } => {
-  cryptoSha256AdapterProxy();
+  contentHashTransformerProxy();
   fsExistsAdapterProxy();
   fsReadFileAdapterProxy();
-  typescriptHarnessGateAdapterProxy();
+  isAssayerHarnessGuardProxy();
 
   const existsHandle = registerMock({ fn: fsExistsAdapter });
   const readHandle = registerMock({ fn: fsReadFileAdapter });

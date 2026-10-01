@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { CodeViewerWidget } from './code-viewer-widget';
 import { CodeViewerWidgetProxy } from './code-viewer-widget.proxy';
 import {
@@ -77,7 +77,7 @@ describe('CodeViewerWidget', () => {
         ],
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       const gutterElementTexts = Array.from(
         document.querySelectorAll('.cm-lineNumbers .cm-gutterElement'),
@@ -92,7 +92,7 @@ describe('CodeViewerWidget', () => {
         displayLines: [{ n: 1, text: 'export const foo = 1;', hash: STUB_HASH }],
       });
 
-      const { getByRole } = testingLibraryRenderAdapter({
+      const { getByRole } = themedRenderMiddleware({
         ui: <CodeViewerWidget fileView={fileView} />,
       });
 
@@ -108,7 +108,7 @@ describe('CodeViewerWidget', () => {
         displayLines: [{ n: 1, text: 'const cached = true;', hash: STUB_HASH }],
       });
 
-      const { getByRole } = testingLibraryRenderAdapter({
+      const { getByRole } = themedRenderMiddleware({
         ui: <CodeViewerWidget fileView={fileView} />,
       });
 
@@ -126,7 +126,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       const shaded = Array.from(document.querySelectorAll('.cm-dark-spot')).map((element) => element.textContent);
 
@@ -141,7 +141,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [LOOP_DARK_SPOT] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       const icons = Array.from(document.querySelectorAll('[data-testid="DARK_SPOT_ICON"]')).map((element) => ({
         text: element.textContent,
@@ -164,7 +164,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], enrichment: [], darkSpots: [] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       expect(Array.from(document.querySelectorAll('.cm-dark-spot'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="DARK_SPOT_ICON"]'))).toStrictEqual([]);
@@ -176,7 +176,7 @@ describe('CodeViewerWidget', () => {
       CodeViewerWidgetProxy();
       const fileView = CompiledFileViewStub({ displayLines: LOOP_DISPLAY_LINES });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       expect(Array.from(document.querySelectorAll('.cm-dark-spot'))).toStrictEqual([]);
     });
@@ -195,7 +195,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       const counts = Array.from(document.querySelectorAll('.cm-test-counts .cm-gutterElement')).map(
         (element) => element.textContent,
@@ -213,7 +213,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [NESTED_UNDRIVEN] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       const shaded = Array.from(document.querySelectorAll('.cm-undriven')).map((element) => element.textContent);
 
@@ -236,7 +236,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [NESTED_UNDRIVEN] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       const icons = Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]')).map((element) => ({
         text: element.textContent,
@@ -264,7 +264,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       expect({
         undrivenShaded: Array.from(document.querySelectorAll('.cm-undriven')).map((element) => element.textContent),
@@ -304,7 +304,7 @@ describe('CodeViewerWidget', () => {
         }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       expect(Array.from(document.querySelectorAll('.cm-undriven'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]'))).toStrictEqual([]);
@@ -317,7 +317,7 @@ describe('CodeViewerWidget', () => {
         analysis: FileAnalysisStub({ functions: [], darkSpots: [], undriven: [] }),
       });
 
-      testingLibraryRenderAdapter({ ui: <CodeViewerWidget fileView={fileView} /> });
+      themedRenderMiddleware({ ui: <CodeViewerWidget fileView={fileView} /> });
 
       expect(Array.from(document.querySelectorAll('.cm-undriven'))).toStrictEqual([]);
       expect(Array.from(document.querySelectorAll('[data-testid="UNDRIVEN_ICON"]'))).toStrictEqual([]);
@@ -328,7 +328,7 @@ describe('CodeViewerWidget', () => {
     it('EMPTY: {fileView: null} => renders the placeholder prompt in EXPLORER_CODE with no editor', () => {
       CodeViewerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <CodeViewerWidget fileView={null} />,
       });
 

@@ -1,6 +1,6 @@
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
-import { typescriptReadConfigAdapterProxy } from '../../../adapters/typescript/read-config/typescript-read-config-adapter.proxy';
+import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { resolveSiblingCalleeBrokerProxy } from '../../resolve-sibling/callee/resolve-sibling-callee-broker.proxy';
 
 export const runCrossFileProbesBrokerProxy = (): {
@@ -13,8 +13,8 @@ export const runCrossFileProbesBrokerProxy = (): {
 } => {
   // The hash and the tsconfig read run REAL (deterministic); the sibling resolve is staged and the file
   // write is captured rather than performed, so a unit test asserts the plan without touching disk.
-  cryptoSha256AdapterProxy();
-  typescriptReadConfigAdapterProxy();
+  contentHashTransformerProxy();
+  tsconfigReadBrokerProxy();
   const writes = fsWriteFileAdapterProxy();
   const sibling = resolveSiblingCalleeBrokerProxy();
 

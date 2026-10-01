@@ -30,7 +30,7 @@ import { Project, ts } from '#gateway/npm/ts-morph';
 import { relPathContract } from '@assayer/shared/contracts';
 import type { RelPath } from '@assayer/shared/contracts';
 
-import { typescriptHarnessGateAdapter } from '../../src/adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { isAssayerHarnessGuard } from '../../src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../src/statics/harness-module/harness-module-statics';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
@@ -41,7 +41,7 @@ const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 // applies, off the same bytes, so the catalogue and the compiled surface can never disagree.
 const isAnalysed = (entry: { name: string; parentPath: string }): boolean =>
   !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
-  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name)) });
+  !isAssayerHarnessGuard({ source: readFileSync(join(entry.parentPath, entry.name)) });
 
 // The combined `.ts`/`.tsx` inclusion rule the compiled surface applies — a harness is never `.tsx`
 // (CLAUDE.md: a colocated harness is always `.ts`, even beside a `.tsx` source), so the symbol gate

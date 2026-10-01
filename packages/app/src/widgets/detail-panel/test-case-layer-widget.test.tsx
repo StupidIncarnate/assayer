@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { TestCaseLayerWidget } from './test-case-layer-widget';
 import { TestCaseLayerWidgetProxy } from './test-case-layer-widget.proxy';
 import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
@@ -39,7 +39,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {salient case, no run} => the row reads not run, names the driver and the exit line, and carries the badge', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {DECIDE.cases.map((testCase) => (
@@ -65,7 +65,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {module entry} => the row names the entry label with no call parens', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {DECIDE.cases.map((testCase) => (
@@ -90,7 +90,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {hoveredLine 4, the exit line} => data-match is true', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {DECIDE.cases.map((testCase) => (
@@ -114,7 +114,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {hoveredLine 9, another line} => data-match is false', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {DECIDE.cases.map((testCase) => (
@@ -139,7 +139,7 @@ describe('TestCaseLayerWidget', () => {
       TestCaseLayerWidgetProxy();
       const { runMode } = StatusViewStub({ runMode: 'intelligent' });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {BREADTH.cases.map((testCase) => (
@@ -176,7 +176,7 @@ describe('TestCaseLayerWidget', () => {
         ],
       });
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {DECIDE.cases.map((testCase) => (
@@ -209,7 +209,7 @@ describe('TestCaseLayerWidget', () => {
         ],
       });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({
         ui: (
           <>
             {DECIDE.cases.map((testCase) => (

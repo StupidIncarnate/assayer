@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubPropertyRowLayerWidget } from './stub-property-row-layer-widget';
 import { StubPropertyRowLayerWidgetProxy } from './stub-property-row-layer-widget.proxy';
 import { FlatPropertyDemandStub } from '../../contracts/flat-property-demand/flat-property-demand.stub';
@@ -12,7 +12,7 @@ describe('StubPropertyRowLayerWidget', () => {
         demand: { kind: 'demanded', values: ['a', 'b'] },
       });
 
-      const { getByTestId, getAllByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, getAllByTestId, queryByTestId } = themedRenderMiddleware({
         ui: <StubPropertyRowLayerWidget property={property} />,
       });
 
@@ -27,7 +27,7 @@ describe('StubPropertyRowLayerWidget', () => {
       StubPropertyRowLayerWidgetProxy();
       const property = FlatPropertyDemandStub({ name: 'retries', demand: { kind: 'unknown' } });
 
-      const { getByTestId, queryByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, queryByTestId } = themedRenderMiddleware({
         ui: <StubPropertyRowLayerWidget property={property} />,
       });
 

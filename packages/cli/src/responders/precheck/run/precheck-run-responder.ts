@@ -25,7 +25,7 @@ import { analyzerHashBroker, compileResolveRootBroker } from '@assayer/core/brok
 import { ConfigResolveLayerResponder } from './config-resolve-layer-responder';
 import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { CompileRunLayerResponder } from './compile-run-layer-responder';
-import { analyzerRootsResolveAdapter } from '../../../adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter';
+import { analyzerRootsResolveBroker } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker';
 
 export const PrecheckRunResponder = async ({
   repoPath,
@@ -41,7 +41,7 @@ export const PrecheckRunResponder = async ({
   // Cache-invalidation identity = a content hash of Assayer's OWN analyzer source, not a version
   // string. When any analysis code changes this hash changes and the stale cache is rebuilt — no
   // manual bump. (Config changes fold in separately via configHash downstream.)
-  const assayerVersion = await analyzerHashBroker({ roots: analyzerRootsResolveAdapter() });
+  const assayerVersion = await analyzerHashBroker({ roots: analyzerRootsResolveBroker() });
 
   await CompileRunLayerResponder({ config, configDir: resolved.configDir, assayerVersion });
 

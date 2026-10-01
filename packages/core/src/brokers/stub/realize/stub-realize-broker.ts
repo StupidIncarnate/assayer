@@ -48,8 +48,8 @@ import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-fi
 import { caseSignatureContract } from '../../../contracts/case-signature/case-signature-contract';
 import type { CaseSignature } from '../../../contracts/case-signature/case-signature-contract';
 import type { PredictedOutput } from '../../../contracts/predicted-output/predicted-output-contract';
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { appliedParamsTransformer } from '../../../transformers/applied-params/applied-params-transformer';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
 import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
@@ -107,7 +107,7 @@ export const stubRealizeBroker = ({
   // The tsconfig is read ONCE, and only when a cross-file type has to be resolved — a same-file-only
   // entry (branch-local) never touches module resolution.
   const options = typeRefs.some((typeRef) => !sameFileTypes.has(typeRef))
-    ? typescriptReadConfigAdapter({ searchPath: root }).options
+    ? tsconfigReadBroker({ searchPath: root }).options
     : undefined;
 
   // Each type-reference resolved to its declared shape + repo-relative definition path: a same-file type
@@ -166,7 +166,7 @@ export const stubRealizeBroker = ({
 
   // The merged stub view: each resolved type's derived per-property demands combined with the committed
   // overlay (a correction REPLACES the demanded values it names). Built once here, never persisted.
-  const emptyHash = cryptoSha256Adapter({ content: '' });
+  const emptyHash = contentHashTransformer({ content: '' });
   const objectStubs = [...resolvedTypes.entries()]
     .map(([typeRef, resolved]) => ({
       key: `${resolved.definitionRelPath}#${typeRef}`,

@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { StubObjectCardLayerWidget } from './stub-object-card-layer-widget';
 import { StubObjectCardLayerWidgetProxy } from './stub-object-card-layer-widget.proxy';
 import { ObjectStubStub } from '@assayer/shared/contracts';
@@ -22,7 +22,7 @@ describe('StubObjectCardLayerWidget', () => {
         readers: ['src/reader.ts'],
       });
 
-      const { getByTestId, getAllByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId, getAllByTestId } = themedRenderMiddleware({
         ui: <StubObjectCardLayerWidget stub={stub} />,
       });
 

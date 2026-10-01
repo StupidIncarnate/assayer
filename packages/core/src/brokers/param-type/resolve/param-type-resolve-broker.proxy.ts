@@ -1,5 +1,5 @@
 import { analyzeFileBrokerProxy } from '../../analyze/file/analyze-file-broker.proxy';
-import { typescriptReadConfigAdapterProxy } from '../../../adapters/typescript/read-config/typescript-read-config-adapter.proxy';
+import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
 import { resolveTypeRefLayerBrokerProxy } from './resolve-type-ref-layer-broker.proxy';
 
 export const paramTypeResolveBrokerProxy = (): {
@@ -10,7 +10,7 @@ export const paramTypeResolveBrokerProxy = (): {
   // behaviour under test, not a dependency to stage. Only the sibling definition is staged, through the
   // layer broker's own proxy.
   analyzeFileBrokerProxy();
-  typescriptReadConfigAdapterProxy();
+  tsconfigReadBrokerProxy();
   const refs = resolveTypeRefLayerBrokerProxy();
 
   return {

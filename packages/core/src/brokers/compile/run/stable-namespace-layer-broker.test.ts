@@ -1,5 +1,5 @@
 import { AssayerCacheManifestStub } from '@assayer/shared/contracts';
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';
 import { stableNamespaceLayerBrokerProxy } from './stable-namespace-layer-broker.proxy';
@@ -44,7 +44,7 @@ describe('stableNamespaceLayerBroker', () => {
       const proxy = stableNamespaceLayerBrokerProxy();
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       const content = 'export const stable = 1;\n';
-      const hash = cryptoSha256Adapter({ content });
+      const hash = contentHashTransformer({ content });
       proxy.changed({
         sha,
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
@@ -76,7 +76,7 @@ describe('stableNamespaceLayerBroker', () => {
       const proxy = stableNamespaceLayerBrokerProxy();
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       const content = 'export const stable = 2;\n';
-      const hash = cryptoSha256Adapter({ content });
+      const hash = contentHashTransformer({ content });
       proxy.changed({
         sha,
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
@@ -109,7 +109,7 @@ describe('stableNamespaceLayerBroker', () => {
     it('EDGE: {ref cannot be resolved to a commit} => omits the commit field from the manifest namespace', async () => {
       const proxy = stableNamespaceLayerBrokerProxy();
       const content = 'export const stable = 1;\n';
-      const hash = cryptoSha256Adapter({ content });
+      const hash = contentHashTransformer({ content });
       proxy.changedCommitUnresolvable({
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
         fileContents: [content],
@@ -162,7 +162,7 @@ describe('stableNamespaceLayerBroker', () => {
       const proxy = stableNamespaceLayerBrokerProxy();
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       const keepContent = 'export const keep = 1;\n';
-      const keepHash = cryptoSha256Adapter({ content: keepContent });
+      const keepHash = contentHashTransformer({ content: keepContent });
       proxy.changed({
         sha,
         lsTreeStdout:

@@ -25,7 +25,7 @@ import type { FileAnalysis, SymbolName } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { crossFileMapReachesTransformer } from '../../../transformers/cross-file-map-reaches/cross-file-map-reaches-transformer';
 import { funnelCasesTransformer } from '../../../transformers/funnel-cases/funnel-cases-transformer';
 import { inputGapTransformer } from '../../../transformers/input-gap/input-gap-transformer';
@@ -52,7 +52,7 @@ export const composeCrossFileMapBroker = ({
     return analysis;
   }
 
-  const { options } = typescriptReadConfigAdapter({ searchPath: root });
+  const { options } = tsconfigReadBroker({ searchPath: root });
   const containingFile = `${root}/${relPath}`;
 
   // Each reach resolved to its sibling callee SCOPE — the exported function the specifier names. A

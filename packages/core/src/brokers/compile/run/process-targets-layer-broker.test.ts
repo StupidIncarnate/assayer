@@ -1,4 +1,4 @@
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
 import { processTargetsLayerBrokerProxy } from './process-targets-layer-broker.proxy';
@@ -33,8 +33,8 @@ describe('processTargetsLayerBroker', () => {
       proxy.queueCleanWrite();
       const contentA = 'export const a = 1;\n';
       const contentB = 'export const b = 2;\n';
-      const hashA = cryptoSha256Adapter({ content: contentA });
-      const hashB = cryptoSha256Adapter({ content: contentB });
+      const hashA = contentHashTransformer({ content: contentA });
+      const hashB = contentHashTransformer({ content: contentB });
 
       const result = await processTargetsLayerBroker({
         remaining: [
@@ -95,7 +95,7 @@ describe('processTargetsLayerBroker', () => {
       proxy.queueCleanWrite();
       proxy.queueCleanWrite();
       const cleanContent = 'export const ok = 1;\n';
-      const hash = cryptoSha256Adapter({ content: cleanContent });
+      const hash = contentHashTransformer({ content: cleanContent });
 
       const result = await processTargetsLayerBroker({
         remaining: [
@@ -125,7 +125,7 @@ describe('processTargetsLayerBroker', () => {
       const proxy = processTargetsLayerBrokerProxy();
       proxy.queueCleanWrite();
       const content = 'export const x = 1;\n';
-      const hash = cryptoSha256Adapter({ content });
+      const hash = contentHashTransformer({ content });
       const events: unknown[] = [];
 
       const result = await processTargetsLayerBroker({

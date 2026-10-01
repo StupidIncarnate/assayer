@@ -19,7 +19,7 @@ import { readFileSync, walkFilesSync } from '#gateway/node/fs';
 import { basename, dirname, join, relative, sep } from '#gateway/node/path';
 import { RelPathStub, FolderNameStub } from '@assayer/shared/contracts';
 
-import { typescriptHarnessGateAdapter } from '../../../core/src/adapters/typescript/harness-gate/typescript-harness-gate-adapter';
+import { isAssayerHarnessGuard } from '../../../core/src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../core/src/statics/harness-module/harness-module-statics';
 
 const SMOKE_REPO = join(__dirname, '..', '..', '..', '..', 'smoke-repo');
@@ -30,7 +30,7 @@ const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 // bytes. A `*.harness.ts` that never registers stays a specimen, exactly as it stays an analysed target.
 const isAnalysed = (entry: { name: string; parentPath: string }): boolean =>
   !entry.name.endsWith(harnessModuleStatics.fileSuffix) ||
-  !typescriptHarnessGateAdapter({ source: readFileSync(join(entry.parentPath, entry.name)) });
+  !isAssayerHarnessGuard({ source: readFileSync(join(entry.parentPath, entry.name)) });
 
 // Every `.ts` and `.tsx` file under the catalogue, as the name and parent folder the inclusion rules read.
 const catalogueFiles = (): { name: string; parentPath: string }[] =>

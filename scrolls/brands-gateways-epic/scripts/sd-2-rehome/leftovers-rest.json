@@ -1,0 +1,1669 @@
+{
+  "needles": [
+    "adapters/analyzer-roots/resolve/",
+    "adapters/assayer-bridge/on-run-output/",
+    "adapters/codemirror/view/",
+    "adapters/crypto/sha256/",
+    "adapters/electron/binary-path/",
+    "adapters/electron/desktop-boot/",
+    "adapters/electron/preload-bridge/",
+    "adapters/jest/interpret-case/",
+    "adapters/jest/probe-inject/",
+    "adapters/jest/probe-runtime/",
+    "adapters/jest/resolve-entry/",
+    "adapters/jest/run-cli/",
+    "adapters/package-json/read/",
+    "adapters/process-stdout/compile-progress/",
+    "adapters/readline/stable-branch-pick/",
+    "adapters/testing-library/render/",
+    "adapters/ts-morph/read-external-signature/",
+    "adapters/ts-morph/read-global-signature/",
+    "adapters/ts-morph/read-harness-value-types/",
+    "adapters/typescript/harness-gate/",
+    "adapters/typescript/load-harness/",
+    "adapters/typescript/read-config/",
+    "adapters/typescript/resolve-module/",
+    "analyzer-roots-resolve-adapter",
+    "analyzerRootsResolveAdapter",
+    "analyzerRootsResolveAdapterProxy",
+    "assayer-bridge-on-run-output-adapter",
+    "assayerBridgeOnRunOutputAdapter",
+    "assayerBridgeOnRunOutputAdapterProxy",
+    "codemirror-view-adapter",
+    "codemirrorViewAdapter",
+    "codemirrorViewAdapterProxy",
+    "crypto-sha256-adapter",
+    "cryptoSha256Adapter",
+    "cryptoSha256AdapterProxy",
+    "electron-binary-path-adapter",
+    "electron-desktop-boot-adapter",
+    "electron-preload-bridge-adapter",
+    "electronBinaryPathAdapter",
+    "electronBinaryPathAdapterProxy",
+    "electronDesktopBootAdapter",
+    "electronDesktopBootAdapterProxy",
+    "electronPreloadBridgeAdapter",
+    "electronPreloadBridgeAdapterProxy",
+    "jest-interpret-case-adapter",
+    "jest-probe-inject-adapter",
+    "jest-probe-runtime-adapter",
+    "jest-resolve-entry-adapter",
+    "jest-run-cli-adapter",
+    "jestInterpretCaseAdapter",
+    "jestInterpretCaseAdapterProxy",
+    "jestProbeInjectAdapter",
+    "jestProbeInjectAdapterProxy",
+    "jestProbeRuntimeAdapter",
+    "jestProbeRuntimeAdapterProxy",
+    "jestResolveEntryAdapter",
+    "jestResolveEntryAdapterProxy",
+    "jestRunCliAdapter",
+    "jestRunCliAdapterProxy",
+    "package-json-read-adapter",
+    "packageJsonReadAdapter",
+    "packageJsonReadAdapterProxy",
+    "probe-visit-node-layer-adapter",
+    "probeVisitNodeLayerAdapter",
+    "probeVisitNodeLayerAdapterProxy",
+    "process-stdout-compile-progress-adapter",
+    "processStdoutCompileProgressAdapter",
+    "processStdoutCompileProgressAdapterProxy",
+    "read-global-type-layer-adapter",
+    "read-harness-value-type-layer-adapter",
+    "read-signature-type-layer-adapter",
+    "readGlobalTypeLayerAdapter",
+    "readGlobalTypeLayerAdapterProxy",
+    "readHarnessValueTypeLayerAdapter",
+    "readHarnessValueTypeLayerAdapterProxy",
+    "readSignatureTypeLayerAdapter",
+    "readSignatureTypeLayerAdapterProxy",
+    "readline-stable-branch-pick-adapter",
+    "readlineStableBranchPickAdapter",
+    "readlineStableBranchPickAdapterProxy",
+    "reply-value-layer-adapter",
+    "replyValueLayerAdapter",
+    "replyValueLayerAdapterProxy",
+    "testing-library-render-adapter",
+    "testingLibraryRenderAdapter",
+    "testingLibraryRenderAdapterProxy",
+    "ts-morph-read-external-signature-adapter",
+    "ts-morph-read-global-signature-adapter",
+    "ts-morph-read-harness-value-types-adapter",
+    "tsMorphReadExternalSignatureAdapter",
+    "tsMorphReadExternalSignatureAdapterProxy",
+    "tsMorphReadGlobalSignatureAdapter",
+    "tsMorphReadGlobalSignatureAdapterProxy",
+    "tsMorphReadHarnessValueTypesAdapter",
+    "tsMorphReadHarnessValueTypesAdapterProxy",
+    "typescript-harness-gate-adapter",
+    "typescript-load-harness-adapter",
+    "typescript-read-config-adapter",
+    "typescript-resolve-module-adapter",
+    "typescriptHarnessGateAdapter",
+    "typescriptHarnessGateAdapterProxy",
+    "typescriptLoadHarnessAdapter",
+    "typescriptLoadHarnessAdapterProxy",
+    "typescriptReadConfigAdapter",
+    "typescriptReadConfigAdapterProxy",
+    "typescriptResolveModuleAdapter",
+    "typescriptResolveModuleAdapterProxy"
+  ],
+  "counts": {
+    "string": 95,
+    "comment": 49,
+    "doc-line": 15,
+    "identifier": 4,
+    "template": 2
+  },
+  "total": 165,
+  "leftovers": [
+    {
+      "file": "packages/app/src/brokers/run/subscribe-output/run-subscribe-output-broker.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "assayerBridgeOnRunOutputAdapter"
+      ],
+      "text": "describe('assayerBridgeOnRunOutputAdapter', () => {"
+    },
+    {
+      "file": "packages/app/src/brokers/run/subscribe-output/run-subscribe-output-broker.ts",
+      "line": 12,
+      "kind": "comment",
+      "needles": [
+        "assayerBridgeOnRunOutputAdapter"
+      ],
+      "text": "* const unsubscribe = assayerBridgeOnRunOutputAdapter({ onChunk: ({ chunk }) => append(chunk) });"
+    },
+    {
+      "file": "packages/app/src/middleware/themed-render/themed-render-middleware.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "testingLibraryRenderAdapter"
+      ],
+      "text": "describe('testingLibraryRenderAdapter', () => {"
+    },
+    {
+      "file": "packages/app/src/middleware/themed-render/themed-render-middleware.ts",
+      "line": 6,
+      "kind": "comment",
+      "needles": [
+        "testingLibraryRenderAdapter"
+      ],
+      "text": "* const { getByTestId } = testingLibraryRenderAdapter({ ui: someElement });"
+    },
+    {
+      "file": "packages/app/src/widgets/code-viewer/source-editor-layer-widget.test.ts",
+      "line": 7,
+      "kind": "string",
+      "needles": [
+        "codemirrorViewAdapter"
+      ],
+      "text": "describe('codemirrorViewAdapter', () => {"
+    },
+    {
+      "file": "packages/app/src/widgets/code-viewer/source-editor-layer-widget.tsx",
+      "line": 25,
+      "kind": "comment",
+      "needles": [
+        "codemirrorViewAdapter"
+      ],
+      "text": "* codemirrorViewAdapter({ value: 'const x = 1;', markers: [{ line: 1, count: 2 }] });"
+    },
+    {
+      "file": "packages/cli/src/brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "analyzerRootsResolveAdapter"
+      ],
+      "text": "describe('analyzerRootsResolveAdapter', () => {"
+    },
+    {
+      "file": "packages/cli/src/brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "analyzerRootsResolveAdapter"
+      ],
+      "text": "* analyzerRootsResolveAdapter();"
+    },
+    {
+      "file": "packages/cli/src/brokers/compile-progress/render/compile-progress-render-broker.test.ts",
+      "line": 6,
+      "kind": "string",
+      "needles": [
+        "processStdoutCompileProgressAdapter"
+      ],
+      "text": "describe('processStdoutCompileProgressAdapter', () => {"
+    },
+    {
+      "file": "packages/cli/src/brokers/compile-progress/render/compile-progress-render-broker.ts",
+      "line": 13,
+      "kind": "comment",
+      "needles": [
+        "processStdoutCompileProgressAdapter"
+      ],
+      "text": "* const controller = processStdoutCompileProgressAdapter();"
+    },
+    {
+      "file": "packages/cli/src/brokers/package-json/read/package-json-read-broker.test.ts",
+      "line": 4,
+      "kind": "string",
+      "needles": [
+        "packageJsonReadAdapter"
+      ],
+      "text": "describe('packageJsonReadAdapter', () => {"
+    },
+    {
+      "file": "packages/cli/src/brokers/package-json/read/package-json-read-broker.ts",
+      "line": 5,
+      "kind": "comment",
+      "needles": [
+        "packageJsonReadAdapter"
+      ],
+      "text": "* await packageJsonReadAdapter();"
+    },
+    {
+      "file": "packages/cli/src/brokers/stable-branch/pick/stable-branch-pick-broker.test.ts",
+      "line": 5,
+      "kind": "string",
+      "needles": [
+        "readlineStableBranchPickAdapter"
+      ],
+      "text": "describe('readlineStableBranchPickAdapter', () => {"
+    },
+    {
+      "file": "packages/cli/src/brokers/stable-branch/pick/stable-branch-pick-broker.ts",
+      "line": 9,
+      "kind": "comment",
+      "needles": [
+        "readlineStableBranchPickAdapter"
+      ],
+      "text": "* await readlineStableBranchPickAdapter({"
+    },
+    {
+      "file": "packages/cli/src/responders/precheck/run/precheck-run-responder.proxy.ts",
+      "line": 34,
+      "kind": "comment",
+      "needles": [
+        "analyzerRootsResolveAdapter"
+      ],
+      "text": "// it directly to give it a deterministic hash — the analyzerRootsResolveAdapter it consumes is a"
+    },
+    {
+      "file": "packages/cli/src/responders/unit/run/unit-run-responder.proxy.ts",
+      "line": 17,
+      "kind": "comment",
+      "needles": [
+        "analyzerRootsResolveAdapter"
+      ],
+      "text": "// registerMock below is what actually drives this. analyzerRootsResolveAdapter is a pure __dirname"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 450,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/typescript/read-config/"
+      ],
+      "text": "`brokers/compile/resolve-graph`, plus `adapters/typescript/read-config`"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 451,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/typescript/resolve-module/"
+      ],
+      "text": "and `adapters/typescript/resolve-module`."
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 463,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/ts-morph/read-external-signature/"
+      ],
+      "text": "`adapters/ts-morph/read-external-signature`, the second, `node_modules`-"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 469,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/ts-morph/read-global-signature/"
+      ],
+      "text": "`adapters/ts-morph/read-global-signature`, which probes that same second"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 474,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/typescript/harness-gate/"
+      ],
+      "text": "Touch `adapters/typescript/harness-gate`, the symbol gate that checks"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 496,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/typescript/load-harness/"
+      ],
+      "text": "**Change how a harness is read.** Touch `adapters/typescript/load-harness`."
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 559,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/jest/run-cli/"
+      ],
+      "text": "`harness-registrar.js` (`adapters/jest/run-cli`) so the harness's"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 565,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/jest/interpret-case/"
+      ],
+      "text": "collects. `adapters/jest/interpret-case` then walks the key path"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 767,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/ts-morph/read-external-signature/"
+      ],
+      "text": "`adapters/ts-morph/read-external-signature` opens its own `new Project`,"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1185,
+      "kind": "doc-line",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "The test `jest-run-cli-adapter.test.ts` checks this rule directly, with"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1241,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/typescript/resolve-module/"
+      ],
+      "text": "`ts.resolveModuleName` (`adapters/typescript/resolve-module`, configured"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1242,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/typescript/read-config/"
+      ],
+      "text": "by `adapters/typescript/read-config`). A re-export barrel file (a file"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1259,
+      "kind": "doc-line",
+      "needles": [
+        "adapters/ts-morph/read-external-signature/"
+      ],
+      "text": "through `adapters/ts-morph/read-external-signature` and fed through the"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1547,
+      "kind": "doc-line",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "`jest-run-cli-adapter` maps `@assayer/core` to the root"
+    },
+    {
+      "file": "packages/core/CLAUDE.md",
+      "line": 1554,
+      "kind": "doc-line",
+      "needles": [
+        "jest-interpret-case-adapter"
+      ],
+      "text": "missing even though it was supplied. `jest-interpret-case-adapter` then"
+    },
+    {
+      "file": "packages/core/adapters.ts",
+      "line": 8,
+      "kind": "comment",
+      "needles": [
+        "jestProbeInjectAdapter"
+      ],
+      "text": "* import { jestProbeInjectAdapter, tsMorphWalkFileAdapter } from '@assayer/core/adapters';"
+    },
+    {
+      "file": "packages/core/harness-registrar.js",
+      "line": 3,
+      "kind": "comment",
+      "needles": [
+        "typescript-load-harness-adapter"
+      ],
+      "text": "*   `typescript-load-harness-adapter` binds at compile time. Jest maps `@assayer/core` to this file for"
+    },
+    {
+      "file": "packages/core/harness-registrar.js",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "*   `__assayerCoreRuntime` Jest global, which `jest-run-cli-adapter` sets, and it points into the same"
+    },
+    {
+      "file": "packages/core/harness-registrar.js",
+      "line": 26,
+      "kind": "string",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "\"assayer: harness-registrar.js ran without the __assayerCoreRuntime Jest global. jest-run-cli-adapter sets it; this file is only loaded by Assayer's own runner.\","
+    },
+    {
+      "file": "packages/core/probe-runtime.js",
+      "line": 5,
+      "kind": "comment",
+      "needles": [
+        "jestProbeRuntimeAdapter"
+      ],
+      "text": "*   runs, so this cannot itself be TypeScript. All the behaviour lives in `jestProbeRuntimeAdapter`,"
+    },
+    {
+      "file": "packages/core/probe-runtime.js",
+      "line": 7,
+      "kind": "comment",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "*   `__assayerCoreRuntime` Jest global, which `jest-run-cli-adapter` sets. That path points into the"
+    },
+    {
+      "file": "packages/core/probe-runtime.js",
+      "line": 20,
+      "kind": "string",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "\"assayer: probe-runtime.js ran without the __assayerCoreRuntime Jest global. jest-run-cli-adapter sets it; this file is only loaded by Assayer's own runner.\","
+    },
+    {
+      "file": "packages/core/probe-runtime.js",
+      "line": 24,
+      "kind": "identifier",
+      "needles": [
+        "jestProbeRuntimeAdapter"
+      ],
+      "text": "const { jestProbeRuntimeAdapter } = require(runtime.probeRuntimeModule);"
+    },
+    {
+      "file": "packages/core/probe-runtime.js",
+      "line": 26,
+      "kind": "identifier",
+      "needles": [
+        "jestProbeRuntimeAdapter"
+      ],
+      "text": "globalThis.__P = jestProbeRuntimeAdapter();"
+    },
+    {
+      "file": "packages/core/probe-transformer.js",
+      "line": 10,
+      "kind": "comment",
+      "needles": [
+        "jestProbeInjectAdapter"
+      ],
+      "text": "*   `name`/`version`/`factory` off it. The injection itself lives in `jestProbeInjectAdapter`, which is"
+    },
+    {
+      "file": "packages/core/probe-transformer.js",
+      "line": 12,
+      "kind": "comment",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "*   arrives as the `probeInjectModule` option, which `jest-run-cli-adapter` sets. It points into the same"
+    },
+    {
+      "file": "packages/core/probe-transformer.js",
+      "line": 39,
+      "kind": "string",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "\"assayer: probe-transformer.js ran without its probeInjectModule option. jest-run-cli-adapter sets it; this file is only loaded by Assayer's own runner.\","
+    },
+    {
+      "file": "packages/core/probe-transformer.js",
+      "line": 43,
+      "kind": "identifier",
+      "needles": [
+        "jestProbeInjectAdapter"
+      ],
+      "text": "const { jestProbeInjectAdapter } = require(probeInjectModule);"
+    },
+    {
+      "file": "packages/core/probe-transformer.js",
+      "line": 59,
+      "kind": "identifier",
+      "needles": [
+        "jestProbeInjectAdapter"
+      ],
+      "text": "return jestProbeInjectAdapter({ ts, context, sourceFile, sites: plan.sites });"
+    },
+    {
+      "file": "packages/core/src/adapters/fs/find-up/fs-find-up-adapter.ts",
+      "line": 5,
+      "kind": "comment",
+      "needles": [
+        "analyzer-roots-resolve-adapter"
+      ],
+      "text": "*   trap `analyzer-roots-resolve-adapter` already documents."
+    },
+    {
+      "file": "packages/core/src/brokers/case/interpret/case-interpret-broker.test.ts",
+      "line": 23,
+      "kind": "string",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "describe('jestInterpretCaseAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/case/interpret/case-interpret-broker.ts",
+      "line": 58,
+      "kind": "comment",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "* jestInterpretCaseAdapter({ entry, entryName, exitIds, testCase, probe, harness });"
+    },
+    {
+      "file": "packages/core/src/brokers/case/resolve-entry/case-resolve-entry-broker.test.ts",
+      "line": 14,
+      "kind": "string",
+      "needles": [
+        "jestResolveEntryAdapter"
+      ],
+      "text": "describe('jestResolveEntryAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/case/resolve-entry/case-resolve-entry-broker.ts",
+      "line": 34,
+      "kind": "comment",
+      "needles": [
+        "jestResolveEntryAdapter"
+      ],
+      "text": "* jestResolveEntryAdapter({ subject, name: 'classify', access: { kind: 'method', className: 'Classifier', constructable: true }, requireFresh });"
+    },
+    {
+      "file": "packages/core/src/brokers/compile/harness-graph/compile-harness-graph-broker.ts",
+      "line": 22,
+      "kind": "comment",
+      "needles": [
+        "ts-morph-read-harness-value-types-adapter"
+      ],
+      "text": "*   `ts-morph-read-harness-value-types-adapter`, a second, narrower read of the SAME source"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-declaration/external-signature-read-declaration-broker.test.ts",
+      "line": 13,
+      "kind": "string",
+      "needles": [
+        "tsMorphReadExternalSignatureAdapter"
+      ],
+      "text": "describe('tsMorphReadExternalSignatureAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-declaration/external-signature-read-declaration-broker.ts",
+      "line": 16,
+      "kind": "comment",
+      "needles": [
+        "tsMorphReadExternalSignatureAdapter"
+      ],
+      "text": "* tsMorphReadExternalSignatureAdapter({ tsConfigFilePath, dtsPath, exportName });"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-declaration/read-signature-type-layer-broker.test.ts",
+      "line": 7,
+      "kind": "string",
+      "needles": [
+        "readSignatureTypeLayerAdapter"
+      ],
+      "text": "describe('readSignatureTypeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-declaration/read-signature-type-layer-broker.ts",
+      "line": 42,
+      "kind": "comment",
+      "needles": [
+        "readSignatureTypeLayerAdapter"
+      ],
+      "text": "* readSignatureTypeLayerAdapter({ type: signature.getReturnType() });"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global-declaration/external-signature-read-global-declaration-broker.test.ts",
+      "line": 17,
+      "kind": "string",
+      "needles": [
+        "tsMorphReadGlobalSignatureAdapter"
+      ],
+      "text": "describe('tsMorphReadGlobalSignatureAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global-declaration/external-signature-read-global-declaration-broker.ts",
+      "line": 22,
+      "kind": "comment",
+      "needles": [
+        "tsMorphReadGlobalSignatureAdapter"
+      ],
+      "text": "* tsMorphReadGlobalSignatureAdapter({ tsConfigFilePath, reference: { kind: 'global', name: 'console', member: 'log', called: true } });"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global-declaration/read-global-type-layer-broker.test.ts",
+      "line": 24,
+      "kind": "string",
+      "needles": [
+        "readGlobalTypeLayerAdapter"
+      ],
+      "text": "describe('readGlobalTypeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global-declaration/read-global-type-layer-broker.ts",
+      "line": 7,
+      "kind": "comment",
+      "needles": [
+        "read-signature-type-layer-adapter"
+      ],
+      "text": "*   `read-signature-type-layer-adapter` in the sibling external-signature action: adapters cannot import"
+    },
+    {
+      "file": "packages/core/src/brokers/external-signature/read-global-declaration/read-global-type-layer-broker.ts",
+      "line": 34,
+      "kind": "comment",
+      "needles": [
+        "readGlobalTypeLayerAdapter"
+      ],
+      "text": "* readGlobalTypeLayerAdapter({ type: propertyAccess.getType() });"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/load/harness-load-broker.test.ts",
+      "line": 55,
+      "kind": "string",
+      "needles": [
+        "typescriptLoadHarnessAdapter"
+      ],
+      "text": "describe('typescriptLoadHarnessAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/harness/load/harness-load-broker.ts",
+      "line": 21,
+      "kind": "comment",
+      "needles": [
+        "typescriptLoadHarnessAdapter"
+      ],
+      "text": "* typescriptLoadHarnessAdapter({ source, fileName: 'src/audit.harness.ts' });"
+    },
+    {
+      "file": "packages/core/src/brokers/import-specifier/resolve/import-specifier-resolve-broker.test.ts",
+      "line": 12,
+      "kind": "string",
+      "needles": [
+        "typescriptResolveModuleAdapter"
+      ],
+      "text": "describe('typescriptResolveModuleAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/import-specifier/resolve/import-specifier-resolve-broker.ts",
+      "line": 10,
+      "kind": "comment",
+      "needles": [
+        "typescriptResolveModuleAdapter"
+      ],
+      "text": "* typescriptResolveModuleAdapter({ specifier: '../b/foo', containingFile: '/repo/src/a/x.ts', options });"
+    },
+    {
+      "file": "packages/core/src/brokers/probe-runtime/create/probe-runtime-create-broker.test.ts",
+      "line": 11,
+      "kind": "string",
+      "needles": [
+        "jestProbeRuntimeAdapter"
+      ],
+      "text": "describe('jestProbeRuntimeAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/probe-runtime/create/probe-runtime-create-broker.ts",
+      "line": 16,
+      "kind": "comment",
+      "needles": [
+        "jestProbeRuntimeAdapter"
+      ],
+      "text": "* const probe = jestProbeRuntimeAdapter();"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 5,
+      "kind": "string",
+      "needles": [
+        "jestRunCliAdapter"
+      ],
+      "text": "describe('jestRunCliAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 67,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 68,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 69,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 70,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 101,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 124,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 125,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 126,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 127,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 144,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 145,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 146,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 147,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.test.ts",
+      "line": 167,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/brokers/run/execute-cases/run-execute-cases-broker.ts",
+      "line": 34,
+      "kind": "comment",
+      "needles": [
+        "jestRunCliAdapter"
+      ],
+      "text": "* jestRunCliAdapter({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.test.ts",
+      "line": 103,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter",
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "'const { jestInterpretCaseAdapter } = require(\"/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter\");\\n' +"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.test.ts",
+      "line": 104,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter",
+        "jestResolveEntryAdapter"
+      ],
+      "text": "'const { jestResolveEntryAdapter } = require(\"/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter\");\\n' +"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.test.ts",
+      "line": 118,
+      "kind": "string",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "'        const result = jestInterpretCaseAdapter({\\n' +"
+    },
+    {
+      "file": "packages/core/src/brokers/run/unit/run-unit-broker.test.ts",
+      "line": 119,
+      "kind": "string",
+      "needles": [
+        "jestResolveEntryAdapter"
+      ],
+      "text": "'          entry: jestResolveEntryAdapter({ subject, name: entry.name, access: entry.access, requireFresh }),\\n' +"
+    },
+    {
+      "file": "packages/core/src/brokers/tsconfig/read/tsconfig-read-broker.test.ts",
+      "line": 11,
+      "kind": "string",
+      "needles": [
+        "typescriptReadConfigAdapter"
+      ],
+      "text": "describe('typescriptReadConfigAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/brokers/tsconfig/read/tsconfig-read-broker.ts",
+      "line": 11,
+      "kind": "comment",
+      "needles": [
+        "typescriptReadConfigAdapter"
+      ],
+      "text": "* typescriptReadConfigAdapter({ searchPath: '/repo' });"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime-contract.test.ts",
+      "line": 14,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime-contract.test.ts",
+      "line": 15,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime-contract.test.ts",
+      "line": 16,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime-contract.test.ts",
+      "line": 17,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime-contract.ts",
+      "line": 7,
+      "kind": "comment",
+      "needles": [
+        "jestRunCliAdapter"
+      ],
+      "text": "*   `jestRunCliAdapter` builds the nested Jest config from this object, and the generated test file"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime.stub.ts",
+      "line": 12,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime.stub.ts",
+      "line": 13,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime.stub.ts",
+      "line": 14,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/core-runtime/core-runtime.stub.ts",
+      "line": 15,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/contracts/probe-runtime/probe-runtime-contract.ts",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "jestProbeRuntimeAdapter"
+      ],
+      "text": "* const probe: ProbeRuntime = jestProbeRuntimeAdapter();"
+    },
+    {
+      "file": "packages/core/src/guards/is-assayer-harness/is-assayer-harness-guard.test.ts",
+      "line": 57,
+      "kind": "string",
+      "needles": [
+        "typescriptHarnessGateAdapter"
+      ],
+      "text": "describe('typescriptHarnessGateAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/guards/is-assayer-harness/is-assayer-harness-guard.ts",
+      "line": 21,
+      "kind": "comment",
+      "needles": [
+        "typescriptHarnessGateAdapter"
+      ],
+      "text": "* typescriptHarnessGateAdapter({ source: \"import { assayerHarness } from '@assayer/core';\\nassayerHarness({ inputs: {} });\" });"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.test.ts",
+      "line": 20,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCase: 'src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.test.ts",
+      "line": 21,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntry: 'src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.test.ts",
+      "line": 22,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntime: 'src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.test.ts",
+      "line": 23,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInject: 'src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.ts",
+      "line": 14,
+      "kind": "comment",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "* // 'src/adapters/jest/interpret-case/jest-interpret-case-adapter'"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.ts",
+      "line": 30,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCase: 'src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.ts",
+      "line": 31,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntry: 'src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.ts",
+      "line": 32,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntime: 'src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/statics/core-runtime/core-runtime-statics.ts",
+      "line": 33,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInject: 'src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 10,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter",
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "'const { jestInterpretCaseAdapter } = require(\"/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter\");',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 11,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter",
+        "jestResolveEntryAdapter"
+      ],
+      "text": "'const { jestResolveEntryAdapter } = require(\"/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter\");',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 25,
+      "kind": "string",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "'        const result = jestInterpretCaseAdapter({',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 26,
+      "kind": "string",
+      "needles": [
+        "jestResolveEntryAdapter"
+      ],
+      "text": "'          entry: jestResolveEntryAdapter({ subject, name: entry.name, access: entry.access, requireFresh }),',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 62,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 63,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 76,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 77,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 94,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 95,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 112,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.test.ts",
+      "line": 113,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.ts",
+      "line": 52,
+      "kind": "template",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "`const { jestInterpretCaseAdapter } = require(${JSON.stringify(interpretCaseModule)});`,"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.ts",
+      "line": 53,
+      "kind": "template",
+      "needles": [
+        "jestResolveEntryAdapter"
+      ],
+      "text": "`const { jestResolveEntryAdapter } = require(${JSON.stringify(resolveEntryModule)});`,"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.ts",
+      "line": 75,
+      "kind": "string",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "'        const result = jestInterpretCaseAdapter({',"
+    },
+    {
+      "file": "packages/core/src/transformers/assemble-shim/assemble-shim-transformer.ts",
+      "line": 78,
+      "kind": "string",
+      "needles": [
+        "jestResolveEntryAdapter"
+      ],
+      "text": "'          entry: jestResolveEntryAdapter({ subject, name: entry.name, access: entry.access, requireFresh }),',"
+    },
+    {
+      "file": "packages/core/src/transformers/cause-arrange/cause-arrange-transformer.test.ts",
+      "line": 592,
+      "kind": "comment",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "// A5: `jestInterpretCaseAdapter` applies an `array` binding as ONE positional argument, which is"
+    },
+    {
+      "file": "packages/core/src/transformers/content-hash/content-hash-transformer.test.ts",
+      "line": 4,
+      "kind": "string",
+      "needles": [
+        "cryptoSha256Adapter"
+      ],
+      "text": "describe('cryptoSha256Adapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/content-hash/content-hash-transformer.ts",
+      "line": 6,
+      "kind": "comment",
+      "needles": [
+        "cryptoSha256Adapter"
+      ],
+      "text": "* cryptoSha256Adapter({ content: 'abc' });"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 11,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 12,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 13,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 14,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 25,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 26,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 27,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 28,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 43,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 44,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 45,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 46,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 57,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/interpret-case/",
+        "jest-interpret-case-adapter"
+      ],
+      "text": "interpretCaseModule: '/core/dist/src/adapters/jest/interpret-case/jest-interpret-case-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 58,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/resolve-entry/",
+        "jest-resolve-entry-adapter"
+      ],
+      "text": "resolveEntryModule: '/core/dist/src/adapters/jest/resolve-entry/jest-resolve-entry-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 59,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-runtime/",
+        "jest-probe-runtime-adapter"
+      ],
+      "text": "probeRuntimeModule: '/core/dist/src/adapters/jest/probe-runtime/jest-probe-runtime-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/core-runtime/core-runtime-transformer.test.ts",
+      "line": 60,
+      "kind": "string",
+      "needles": [
+        "adapters/jest/probe-inject/",
+        "jest-probe-inject-adapter"
+      ],
+      "text": "probeInjectModule: '/core/dist/src/adapters/jest/probe-inject/jest-probe-inject-adapter',"
+    },
+    {
+      "file": "packages/core/src/transformers/harness-validate/harness-validate-transformer.ts",
+      "line": 36,
+      "kind": "comment",
+      "needles": [
+        "ts-morph-read-harness-value-types-adapter"
+      ],
+      "text": "*   with `ts-morph-read-harness-value-types-adapter`, the same conjunction of file and key this"
+    },
+    {
+      "file": "packages/core/src/transformers/harness-value-types/harness-value-types-transformer.test.ts",
+      "line": 4,
+      "kind": "string",
+      "needles": [
+        "tsMorphReadHarnessValueTypesAdapter"
+      ],
+      "text": "describe('tsMorphReadHarnessValueTypesAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/harness-value-types/harness-value-types-transformer.ts",
+      "line": 26,
+      "kind": "comment",
+      "needles": [
+        "tsMorphReadHarnessValueTypesAdapter"
+      ],
+      "text": "* tsMorphReadHarnessValueTypesAdapter({ source, fileName: 'src/audit.harness.ts' });"
+    },
+    {
+      "file": "packages/core/src/transformers/harness-value-types/read-harness-value-type-layer-transformer.test.ts",
+      "line": 7,
+      "kind": "string",
+      "needles": [
+        "readHarnessValueTypeLayerAdapter"
+      ],
+      "text": "describe('readHarnessValueTypeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/harness-value-types/read-harness-value-type-layer-transformer.ts",
+      "line": 20,
+      "kind": "comment",
+      "needles": [
+        "readHarnessValueTypeLayerAdapter"
+      ],
+      "text": "* readHarnessValueTypeLayerAdapter({ type: expression.getType() });"
+    },
+    {
+      "file": "packages/core/src/transformers/probe-inject/probe-inject-transformer.test.ts",
+      "line": 16,
+      "kind": "string",
+      "needles": [
+        "jestProbeInjectAdapter"
+      ],
+      "text": "describe('jestProbeInjectAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/probe-inject/probe-inject-transformer.ts",
+      "line": 20,
+      "kind": "comment",
+      "needles": [
+        "jestProbeInjectAdapter"
+      ],
+      "text": "* jestProbeInjectAdapter({ ts, context, sourceFile, sites: plan.sites });"
+    },
+    {
+      "file": "packages/core/src/transformers/probe-inject/probe-visit-node-layer-transformer.test.ts",
+      "line": 13,
+      "kind": "string",
+      "needles": [
+        "probeVisitNodeLayerAdapter"
+      ],
+      "text": "describe('probeVisitNodeLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/core/src/transformers/probe-inject/probe-visit-node-layer-transformer.ts",
+      "line": 22,
+      "kind": "comment",
+      "needles": [
+        "probeVisitNodeLayerAdapter"
+      ],
+      "text": "* probeVisitNodeLayerAdapter({ ts, context, sourceFile, sites, node });"
+    },
+    {
+      "file": "packages/desktop/src/adapters/assayer-cli/entry-path/assayer-cli-entry-path-adapter.ts",
+      "line": 7,
+      "kind": "comment",
+      "needles": [
+        "analyzer-roots-resolve-adapter"
+      ],
+      "text": "*   `analyzer-roots-resolve-adapter` documents."
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop-bridge/expose/desktop-bridge-expose-broker.test.ts",
+      "line": 4,
+      "kind": "string",
+      "needles": [
+        "electronPreloadBridgeAdapter"
+      ],
+      "text": "describe('electronPreloadBridgeAdapter', () => {"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop-bridge/expose/desktop-bridge-expose-broker.ts",
+      "line": 15,
+      "kind": "comment",
+      "needles": [
+        "electronPreloadBridgeAdapter"
+      ],
+      "text": "* electronPreloadBridgeAdapter({"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop-bridge/expose/reply-value-layer-broker.test.ts",
+      "line": 4,
+      "kind": "string",
+      "needles": [
+        "replyValueLayerAdapter"
+      ],
+      "text": "describe('replyValueLayerAdapter', () => {"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop-bridge/expose/reply-value-layer-broker.ts",
+      "line": 11,
+      "kind": "comment",
+      "needles": [
+        "replyValueLayerAdapter"
+      ],
+      "text": "* replyValueLayerAdapter({ reply: { success: true, valueRaw: 3 } });"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/boot/desktop-boot-broker.test.ts",
+      "line": 7,
+      "kind": "string",
+      "needles": [
+        "electronDesktopBootAdapter"
+      ],
+      "text": "describe('electronDesktopBootAdapter', () => {"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/boot/desktop-boot-broker.ts",
+      "line": 8,
+      "kind": "comment",
+      "needles": [
+        "electronDesktopBootAdapter"
+      ],
+      "text": "* await electronDesktopBootAdapter({"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/resolve-binary/desktop-resolve-binary-broker.test.ts",
+      "line": 4,
+      "kind": "string",
+      "needles": [
+        "electronBinaryPathAdapter"
+      ],
+      "text": "describe('electronBinaryPathAdapter', () => {"
+    },
+    {
+      "file": "packages/desktop/src/brokers/desktop/resolve-binary/desktop-resolve-binary-broker.ts",
+      "line": 6,
+      "kind": "comment",
+      "needles": [
+        "electronBinaryPathAdapter"
+      ],
+      "text": "* electronBinaryPathAdapter();"
+    },
+    {
+      "file": "packages/shared/src/transformers/arrange-text/arrange-text-transformer.ts",
+      "line": 30,
+      "kind": "comment",
+      "needles": [
+        "jestInterpretCaseAdapter"
+      ],
+      "text": "*   (`jestInterpretCaseAdapter`), so `tally(11, ...[6,9])` is the call that happens and `tally(11, [6,9])`"
+    },
+    {
+      "file": "scripts/copy-dist-package-json.mjs",
+      "line": 2,
+      "kind": "comment",
+      "needles": [
+        "packageJsonReadAdapter"
+      ],
+      "text": "// runtime: packageJsonReadAdapter resolves `<pkg>/dist/package.json` (four levels up from the compiled"
+    },
+    {
+      "file": "smoke-repo/packages/syntax-repository/jest.config.js",
+      "line": 25,
+      "kind": "comment",
+      "needles": [
+        "jest-run-cli-adapter"
+      ],
+      "text": "// One entry covering both TypeScript extensions, the same widening `jest-run-cli-adapter` uses for"
+    }
+  ]
+}

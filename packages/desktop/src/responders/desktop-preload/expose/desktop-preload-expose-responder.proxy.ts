@@ -1,4 +1,4 @@
-import { electronPreloadBridgeAdapterProxy } from '../../../adapters/electron/preload-bridge/electron-preload-bridge-adapter.proxy';
+import { desktopBridgeExposeBrokerProxy } from '../../../brokers/desktop-bridge/expose/desktop-bridge-expose-broker.proxy';
 
 export const DesktopPreloadExposeResponderProxy = (): {
   exposedBridgeKeys: () => unknown[];
@@ -6,7 +6,7 @@ export const DesktopPreloadExposeResponderProxy = (): {
   triggerGetCompiledFile: (params: { relPath: string }) => Promise<void>;
   invokedArgs: () => unknown[][];
 } => {
-  const adapterProxy = electronPreloadBridgeAdapterProxy();
+  const adapterProxy = desktopBridgeExposeBrokerProxy();
 
   return {
     exposedBridgeKeys: (): unknown[] => adapterProxy.exposedBridgeKeys(),

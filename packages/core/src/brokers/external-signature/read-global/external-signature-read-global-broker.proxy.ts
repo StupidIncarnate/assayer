@@ -1,12 +1,12 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { cryptoSha256AdapterProxy } from '../../../adapters/crypto/sha256/crypto-sha256-adapter.proxy';
+import { contentHashTransformerProxy } from '../../../transformers/content-hash/content-hash-transformer.proxy';
 import { fsExistsAdapterProxy } from '../../../adapters/fs/exists/fs-exists-adapter.proxy';
 import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
 import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
 import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
-import { tsMorphReadGlobalSignatureAdapter } from '../../../adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter';
-import { tsMorphReadGlobalSignatureAdapterProxy } from '../../../adapters/ts-morph/read-global-signature/ts-morph-read-global-signature-adapter.proxy';
+import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';
+import { externalSignatureReadGlobalDeclarationBrokerProxy } from '../read-global-declaration/external-signature-read-global-declaration-broker.proxy';
 
 export const externalSignatureReadGlobalBrokerProxy = (): {
   cacheMiss: () => void;
@@ -28,10 +28,10 @@ export const externalSignatureReadGlobalBrokerProxy = (): {
   const mkdirProxy = fsMkdirAdapterProxy();
   const writeFileProxy = fsWriteFileAdapterProxy();
   const renameProxy = fsRenameAdapterProxy();
-  cryptoSha256AdapterProxy();
-  tsMorphReadGlobalSignatureAdapterProxy();
+  contentHashTransformerProxy();
+  externalSignatureReadGlobalDeclarationBrokerProxy();
 
-  const readHandle = registerMock({ fn: tsMorphReadGlobalSignatureAdapter });
+  const readHandle = registerMock({ fn: externalSignatureReadGlobalDeclarationBroker });
   readHandle.calledWith([]).returns({ usable: false });
 
   return {

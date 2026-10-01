@@ -44,7 +44,7 @@
  */
 import { runConsoleSaveBroker, runPathsBroker } from '@assayer/core/brokers';
 
-import { analyzerRootsResolveAdapter } from '../../../adapters/analyzer-roots/resolve/analyzer-roots-resolve-adapter';
+import { analyzerRootsResolveBroker } from '../../../brokers/analyzer-roots/resolve/analyzer-roots-resolve-broker';
 import { utilParseArgsAdapter } from '../../../adapters/util/parse-args/util-parse-args-adapter';
 import { cliUsageStatics } from '../../../statics/cli-usage/cli-usage-statics';
 import { unitReportFormatTransformer } from '../../../transformers/unit-report-format/unit-report-format-transformer';
@@ -78,7 +78,7 @@ export const UnitRunResponder = async ({
     configDir,
     root,
     relPaths: paths,
-    analyzerRoots: analyzerRootsResolveAdapter().map(String),
+    analyzerRoots: analyzerRootsResolveBroker().map(String),
   });
 
   // Each run's OWN slice of the report is saved beside its artifact, so the desktop can show what a

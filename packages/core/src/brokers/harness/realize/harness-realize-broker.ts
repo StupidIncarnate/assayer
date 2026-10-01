@@ -51,8 +51,8 @@ import type { EntryLabel, FileAnalysis, SymbolName, TypeText } from '@assayer/sh
 
 import { fsExistsSyncAdapter } from '../../../adapters/fs/exists-sync/fs-exists-sync-adapter';
 import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
-import { typescriptHarnessGateAdapter } from '../../../adapters/typescript/harness-gate/typescript-harness-gate-adapter';
-import { typescriptLoadHarnessAdapter } from '../../../adapters/typescript/load-harness/typescript-load-harness-adapter';
+import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
+import { harnessLoadBroker } from '../load/harness-load-broker';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { appliedParamsTransformer } from '../../../transformers/applied-params/applied-params-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
@@ -96,11 +96,11 @@ export const harnessRealizeBroker = ({
 
   const source = String(fsReadFileSyncAdapter({ path: harnessPath }));
 
-  if (!typescriptHarnessGateAdapter({ source })) {
+  if (!isAssayerHarnessGuard({ source })) {
     return analysis;
   }
 
-  const loaded = typescriptLoadHarnessAdapter({ source, fileName: harnessPath });
+  const loaded = harnessLoadBroker({ source, fileName: harnessPath });
 
   if (!loaded.ok) {
     return analysis;

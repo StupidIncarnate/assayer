@@ -1,4 +1,4 @@
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { compileProcessFileBroker } from './compile-process-file-broker';
 import { compileProcessFileBrokerProxy } from './compile-process-file-broker.proxy';
@@ -9,7 +9,7 @@ describe('compileProcessFileBroker', () => {
       const proxy = compileProcessFileBrokerProxy();
       proxy.blobExists();
       const content = 'export function foo() { return 1; }';
-      const contentHash = cryptoSha256Adapter({ content });
+      const contentHash = contentHashTransformer({ content });
 
       const result = await compileProcessFileBroker({
         relPath: 'src/foo.ts',
@@ -27,7 +27,7 @@ describe('compileProcessFileBroker', () => {
       const proxy = compileProcessFileBrokerProxy();
       proxy.blobMissing();
       const content = 'function foo() { return 1; }';
-      const contentHash = cryptoSha256Adapter({ content });
+      const contentHash = contentHashTransformer({ content });
 
       const result = await compileProcessFileBroker({
         relPath: 'src/foo.ts',
@@ -79,7 +79,7 @@ describe('compileProcessFileBroker', () => {
       const proxy = compileProcessFileBrokerProxy();
       proxy.blobMissing();
       const content = 'function App() {\n  return <div>hi</div>;\n}\n';
-      const contentHash = cryptoSha256Adapter({ content });
+      const contentHash = contentHashTransformer({ content });
 
       const result = await compileProcessFileBroker({
         relPath: 'src/app.tsx',
@@ -100,10 +100,10 @@ describe('compileProcessFileBroker', () => {
         contentHash,
         nodes: [{ kind: 'function', name: 'App', startLine: 1, endLine: 3 }],
         displayLines: [
-          { n: 1, text: 'function App() {', hash: cryptoSha256Adapter({ content: 'function App() {' }) },
-          { n: 2, text: '  return <div>hi</div>;', hash: cryptoSha256Adapter({ content: '  return <div>hi</div>;' }) },
-          { n: 3, text: '}', hash: cryptoSha256Adapter({ content: '}' }) },
-          { n: 4, text: '', hash: cryptoSha256Adapter({ content: '' }) },
+          { n: 1, text: 'function App() {', hash: contentHashTransformer({ content: 'function App() {' }) },
+          { n: 2, text: '  return <div>hi</div>;', hash: contentHashTransformer({ content: '  return <div>hi</div>;' }) },
+          { n: 3, text: '}', hash: contentHashTransformer({ content: '}' }) },
+          { n: 4, text: '', hash: contentHashTransformer({ content: '' }) },
         ],
         analysis: { functions: [], enrichment: [], gaps: [], darkSpots: [], undriven: [], lints: [], declaredTypes: [], declaringScopes: [] },
         moduleGraph: { edges: [], references: [], globalUses: [], envReads: [] },

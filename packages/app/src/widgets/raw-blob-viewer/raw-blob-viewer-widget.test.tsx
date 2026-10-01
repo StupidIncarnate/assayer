@@ -1,4 +1,4 @@
-import { testingLibraryRenderAdapter } from '../../adapters/testing-library/render/testing-library-render-adapter';
+import { themedRenderMiddleware } from '../../middleware/themed-render/themed-render-middleware';
 import { RawBlobViewerWidget } from './raw-blob-viewer-widget';
 import { RawBlobViewerWidgetProxy } from './raw-blob-viewer-widget.proxy';
 import { CompiledFileViewStub } from '@assayer/shared/contracts';
@@ -9,7 +9,7 @@ describe('RawBlobViewerWidget', () => {
       RawBlobViewerWidgetProxy();
       const fileView = CompiledFileViewStub();
 
-      const { getByTestId } = testingLibraryRenderAdapter({ ui: <RawBlobViewerWidget fileView={fileView} /> });
+      const { getByTestId } = themedRenderMiddleware({ ui: <RawBlobViewerWidget fileView={fileView} /> });
 
       expect(getByTestId('RAW_BLOB').textContent).toBe(JSON.stringify(fileView, null, '  '));
     });
@@ -19,7 +19,7 @@ describe('RawBlobViewerWidget', () => {
     it('EMPTY: {fileView: null} => renders the inspect prompt and no blob', () => {
       RawBlobViewerWidgetProxy();
 
-      const { getByTestId } = testingLibraryRenderAdapter({
+      const { getByTestId } = themedRenderMiddleware({
         ui: <RawBlobViewerWidget fileView={null} />,
       });
 

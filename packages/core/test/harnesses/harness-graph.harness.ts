@@ -30,7 +30,7 @@ import { join } from '#gateway/node/path';
 import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract, RelPathStub } from '@assayer/shared/contracts';
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
@@ -112,7 +112,7 @@ export const harnessGraphHarness = (): {
 
     const blobsDir = String(blobsDirOf({ dir: params.dir }));
     const processed = await compileProcessFileBroker({ relPath: SOURCE_REL, content: params.source, blobsDir });
-    const contentHash = cryptoSha256Adapter({ content: params.source });
+    const contentHash = contentHashTransformer({ content: params.source });
 
     const files = [{ relPath: RelPathStub({ value: SOURCE_REL }), contentHash }];
     const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });

@@ -38,10 +38,10 @@ import {
 } from '@assayer/shared/contracts';
 import type { ColumnNumber, ContentHash, LineNumber, RelPath, ResolvedIndex } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { nodeModuleBuiltinsAdapter } from '../../../adapters/node-module/builtins/node-module-builtins-adapter';
-import { typescriptReadConfigAdapter } from '../../../adapters/typescript/read-config/typescript-read-config-adapter';
+import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { externalSignatureReadBroker } from '../../external-signature/read/external-signature-read-broker';
 import { externalSignatureReadGlobalBroker } from '../../external-signature/read-global/external-signature-read-global-broker';
 import { resolveSpecifierLayerBroker } from './resolve-specifier-layer-broker';
@@ -60,7 +60,7 @@ export const compileResolveGraphBroker = async ({
   index: ResolvedIndex;
   errors: { relPath: RelPath; line: LineNumber; column: ColumnNumber; message: string }[];
 }> => {
-  const { options, tsconfigHash, configFilePath } = typescriptReadConfigAdapter({ searchPath: root });
+  const { options, tsconfigHash, configFilePath } = tsconfigReadBroker({ searchPath: root });
   const builtins = new Set(nodeModuleBuiltinsAdapter().map(String));
 
   const blobs = await Promise.all(
@@ -75,7 +75,7 @@ export const compileResolveGraphBroker = async ({
   const sortedFiles = [...files]
     .map((file) => ({ relPath: String(file.relPath), contentHash: String(file.contentHash) }))
     .sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
-  const layoutHash = cryptoSha256Adapter({ content: JSON.stringify(sortedFiles) });
+  const layoutHash = contentHashTransformer({ content: JSON.stringify(sortedFiles) });
 
   // One resolution unit per imported name: named/default bindings chase a specific export through
   // barrels; namespace/star/side-effect imports name no single export, so they carry no importedName.

@@ -18,7 +18,7 @@ import { join } from '#gateway/node/path';
 
 import { RelPathStub } from '@assayer/shared/contracts';
 
-import { cryptoSha256Adapter } from '../../src/adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { FilePathStub } from '../../src/contracts/file-path/file-path.stub';
@@ -79,8 +79,8 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: cryptoSha256Adapter({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: cryptoSha256Adapter({ content: CALLER_SRC }) },
+          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
@@ -105,8 +105,8 @@ export const resolveGraphHarness = (): {
         blobsDir,
         cacheDir: join(dir, '.assayer', 'cache'),
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: cryptoSha256Adapter({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: cryptoSha256Adapter({ content: CALLER_SRC }) },
+          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: RelPathStub({ value: 'src/a/caller.ts' }), contentHash: contentHashTransformer({ content: CALLER_SRC }) },
         ],
       });
     },
@@ -130,9 +130,9 @@ export const resolveGraphHarness = (): {
         root: dir,
         blobsDir,
         files: [
-          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: cryptoSha256Adapter({ content: FOO_SRC }) },
-          { relPath: RelPathStub({ value: 'src/barrel/index.ts' }), contentHash: cryptoSha256Adapter({ content: BARREL_SRC }) },
-          { relPath: RelPathStub({ value: 'src/c/user.ts' }), contentHash: cryptoSha256Adapter({ content: USER_SRC }) },
+          { relPath: RelPathStub({ value: 'src/b/foo.ts' }), contentHash: contentHashTransformer({ content: FOO_SRC }) },
+          { relPath: RelPathStub({ value: 'src/barrel/index.ts' }), contentHash: contentHashTransformer({ content: BARREL_SRC }) },
+          { relPath: RelPathStub({ value: 'src/c/user.ts' }), contentHash: contentHashTransformer({ content: USER_SRC }) },
         ],
       });
     },
@@ -149,7 +149,7 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/broken.ts' }), contentHash: cryptoSha256Adapter({ content: BROKEN_SRC }) }],
+        files: [{ relPath: RelPathStub({ value: 'src/broken.ts' }), contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
       });
     },
 
@@ -165,7 +165,7 @@ export const resolveGraphHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: RelPathStub({ value: 'src/dynamic.ts' }), contentHash: cryptoSha256Adapter({ content: DYNAMIC_SRC }) }],
+        files: [{ relPath: RelPathStub({ value: 'src/dynamic.ts' }), contentHash: contentHashTransformer({ content: DYNAMIC_SRC }) }],
       });
     },
   };

@@ -16,7 +16,7 @@
  * // { reused: false, contentHash } after writing a freshly compiled blob, or
  * // { reused: false, error: { line, column, message } } when the source fails to parse
  */
-import { cryptoSha256Adapter } from '../../../adapters/crypto/sha256/crypto-sha256-adapter';
+import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
 import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
 import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
@@ -43,7 +43,7 @@ export const compileProcessFileBroker = async ({
   | { reused: false; contentHash: ContentHash }
   | { reused: false; error: { message: string } & SourcePosition }
 > => {
-  const contentHash = cryptoSha256Adapter({ content });
+  const contentHash = contentHashTransformer({ content });
   const blobPath = `${blobsDir}/${contentHash}.json`;
 
   if (await fsExistsAdapter({ path: blobPath })) {
@@ -67,7 +67,7 @@ export const compileProcessFileBroker = async ({
   const displayLines = content.split('\n').map((text, index) => ({
     n: index + 1,
     text,
-    hash: cryptoSha256Adapter({ content: text }),
+    hash: contentHashTransformer({ content: text }),
   }));
 
   const analysis = analyzeFileBroker({ walked, relPath });

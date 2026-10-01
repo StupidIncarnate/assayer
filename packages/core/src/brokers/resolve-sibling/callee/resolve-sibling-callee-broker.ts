@@ -22,7 +22,7 @@ import type { FileContents } from '../../../contracts/file-contents/file-content
 import { fsReadFileSyncAdapter } from '../../../adapters/fs/read-file-sync/fs-read-file-sync-adapter';
 import { pathRelativeAdapter } from '../../../adapters/path/relative/path-relative-adapter';
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
-import { typescriptResolveModuleAdapter } from '../../../adapters/typescript/resolve-module/typescript-resolve-module-adapter';
+import { importSpecifierResolveBroker } from '../../import-specifier/resolve/import-specifier-resolve-broker';
 
 export const resolveSiblingCalleeBroker = ({
   specifier,
@@ -33,9 +33,9 @@ export const resolveSiblingCalleeBroker = ({
   specifier: string;
   containingFile: string;
   root: string;
-  options: Parameters<typeof typescriptResolveModuleAdapter>[0]['options'];
+  options: Parameters<typeof importSpecifierResolveBroker>[0]['options'];
 }): { walked: ReturnType<typeof walkFileTransformer>; relPath: RelPath; source: FileContents } | undefined => {
-  const resolved = typescriptResolveModuleAdapter({ specifier, containingFile, options });
+  const resolved = importSpecifierResolveBroker({ specifier, containingFile, options });
 
   if (!resolved.resolved) {
     return undefined;
