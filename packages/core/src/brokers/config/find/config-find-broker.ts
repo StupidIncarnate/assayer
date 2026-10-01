@@ -24,7 +24,7 @@ export const configFindBroker = async ({
     return {
       found: true,
       configDir: startDir,
-      configPath: configPath,
+      configPath,
     };
   }
 

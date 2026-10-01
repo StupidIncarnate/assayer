@@ -23,12 +23,12 @@ export const resolveSpecifierLayerBrokerProxy = (): {
     resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
       resolveHandle
         .calledWith([{ specifier }])
-        .returns({ resolved: true, fileName: fileName });
+        .returns({ resolved: true, fileName });
     },
     resolvesLocalOnce: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
       resolveHandle
         .onceFor([{ specifier }])
-        .returns({ resolved: true, fileName: fileName });
+        .returns({ resolved: true, fileName });
     },
     resolvesUnresolved: ({ specifier }: { specifier: string }): void => {
       resolveHandle.calledWith([{ specifier }]).returns({ resolved: false });

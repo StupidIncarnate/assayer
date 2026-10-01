@@ -10,7 +10,7 @@ import { docsGetBroker } from '@assayer/core/brokers';
 
 
 export const DocsShowResponder = ({ topic }: { topic: string }): string => {
-  const docs = docsGetBroker({ topic: topic });
+  const docs = docsGetBroker({ topic });
 
   return docs.body;
 };

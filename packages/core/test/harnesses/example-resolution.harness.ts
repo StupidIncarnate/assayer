@@ -85,7 +85,7 @@ export const exampleResolutionHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: relPath, contentHash: contentHashTransformer({ content }) };
+          return { relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 
@@ -107,7 +107,7 @@ export const exampleResolutionHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: relPath, contentHash: contentHashTransformer({ content }) };
+          return { relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 
@@ -127,7 +127,7 @@ export const exampleResolutionHarness = (): {
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath: relPath, contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
+        files: [{ relPath, contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
       });
     },
   };

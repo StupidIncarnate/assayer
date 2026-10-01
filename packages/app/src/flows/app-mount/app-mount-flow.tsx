@@ -9,4 +9,4 @@
 import { AppFlow } from '../app/app-flow';
 import { AppMountResponder } from '../../responders/app/mount/app-mount-responder';
 
-export const AppMountFlow = (): void => AppMountResponder({ content: <AppFlow /> });
+export const AppMountFlow = (): void => { AppMountResponder({ content: <AppFlow /> }); };

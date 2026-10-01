@@ -41,7 +41,7 @@ export const runIdBroker = async ({
   relPath: string;
   source: string;
 }): Promise<RunResult['runId']> => {
-  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPath }))}`;
+  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath }))}`;
   const harnessSource = (await pathExists(harnessPath))
     ? String((await readFile(harnessPath)))
     : undefined;

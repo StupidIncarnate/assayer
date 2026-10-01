@@ -65,6 +65,6 @@ export const gatherEnvReadsTransformer = ({
       .sort((a, b) => (a < b ? -1 : 1))
       .map((reader) => reader);
 
-    return { property: property, literals, readers };
+    return { property, literals, readers };
   }));
 };

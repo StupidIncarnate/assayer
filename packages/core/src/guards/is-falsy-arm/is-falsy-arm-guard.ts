@@ -1,4 +1,3 @@
-import type { Predicate } from '@assayer/shared/contracts';
 /**
  * PURPOSE: Answers whether ONE arm of a truthiness predicate demands a FALSY value of its operand —
  *   the else side of `if (x)`, the then side of a `falsy` read, and the fall-through side of `a ?? b`
@@ -23,6 +22,7 @@ import type { Predicate } from '@assayer/shared/contracts';
  * isFalsyArmGuard({ predicateKind: 'truthy', want: true });
  * // Returns false — the then arm, which any constructed object satisfies
  */
+import type { Predicate } from '@assayer/shared/contracts';
 export const isFalsyArmGuard = ({ predicateKind, want }: { predicateKind?: Predicate['kind']; want?: boolean }): boolean =>
   want === true
     ? predicateKind === 'falsy'

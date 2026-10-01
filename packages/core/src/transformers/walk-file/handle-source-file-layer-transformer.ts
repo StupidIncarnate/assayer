@@ -30,7 +30,7 @@ export const handleSourceFileLayerTransformer = ({
   node: SourceFile;
   context: WalkContext;
 }): ReturnType<typeof handlerResultLayerTransformer> => {
-  const name = moduleScopeStatics.name;
+  const {name} = moduleScopeStatics;
   const scoped = walkContextTransformer({ context, scopeSegment: name, params: [], exported: false });
   const statements = node.getStatements();
 

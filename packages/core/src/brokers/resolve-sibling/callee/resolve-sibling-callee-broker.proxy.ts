@@ -27,7 +27,7 @@ export const resolveSiblingCalleeBrokerProxy = (): {
     resolvesToSibling: ({ fileName, source, specifier }: { fileName: string; source: string; specifier: string }): void => {
       resolveHandle
         .onceFor([{ specifier }])
-        .returns({ resolved: true, fileName: fileName });
+        .returns({ resolved: true, fileName });
       reads.returns({ path: fileName, contents: source });
     },
     // Resolution lands somewhere but the file is a node_modules / outside-root file the broker skips as
@@ -35,7 +35,7 @@ export const resolveSiblingCalleeBrokerProxy = (): {
     resolvesToOutside: ({ fileName, specifier }: { fileName: string; specifier: string }): void => {
       resolveHandle
         .onceFor([{ specifier }])
-        .returns({ resolved: true, fileName: fileName });
+        .returns({ resolved: true, fileName });
     },
     // The specifier points at nothing: a broken import.
     resolvesToNothing: ({ specifier }: { specifier: string }): void => {

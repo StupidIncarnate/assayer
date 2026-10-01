@@ -118,7 +118,7 @@ export const readTypeFactLayerTransformer = ({
       // literal) — `getChildren()`'s array type just cannot say so. The opaque fallback below is
       // unreached in practice; it exists only so this stays total if that ever stopped holding.
       return {
-        text: text,
+        text,
         fact:
           substitutionNode === undefined
             ? { flavor: 'other', text: 'unknown' }

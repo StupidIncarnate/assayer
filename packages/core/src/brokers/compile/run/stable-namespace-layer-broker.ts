@@ -75,12 +75,12 @@ export const stableNamespaceLayerBroker = async ({
   return stableNamespaceLayerResultContract.parse({
     resultEntry: {
       namespace: branch,
-      branch: branch,
+      branch,
       mode: plan.mode,
       fileCount: max,
     },
     manifestNamespace: {
-      branch: branch,
+      branch,
       ...(commit === undefined ? {} : { commit }),
       files,
     },

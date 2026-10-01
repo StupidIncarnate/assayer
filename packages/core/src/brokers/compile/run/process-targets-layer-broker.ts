@@ -59,7 +59,7 @@ export const processTargetsLayerBroker = async ({
     blobsDir,
   });
   const nextCurrent = current + 1;
-  const relPath = target.relPath;
+  const {relPath} = target;
 
   // `reused` rides along because "advanced past a file" and "compiled a file" are different facts,
   // and only this broker still knows which one happened. A consumer told merely that the count moved

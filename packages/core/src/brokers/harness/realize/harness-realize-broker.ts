@@ -87,7 +87,7 @@ export const harnessRealizeBroker = ({
     return analysis;
   }
 
-  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath: relPath }))}`;
+  const harnessPath = `${root}/${String(harnessPathTransformer({ relPath }))}`;
 
   if (!existsSync(harnessPath)) {
     return analysis;

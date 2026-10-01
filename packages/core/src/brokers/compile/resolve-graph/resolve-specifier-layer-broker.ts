@@ -68,7 +68,7 @@ export const resolveSpecifierLayerBroker = ({
 
     // The resolved `.d.ts` path rides ALONG the classification so the stitch can read the declared
     // signature; it is absolute and machine-specific, so it never enters the persisted edge.
-    return { kind: 'package', packageName: packageName, dtsPath: fileName };
+    return { kind: 'package', packageName, dtsPath: fileName };
   }
 
   const relPath = rel;

@@ -110,7 +110,7 @@ export const stubGraphHarness = (): {
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath: relPath, contentHash: contentHashTransformer({ content }) };
+          return { relPath, contentHash: contentHashTransformer({ content }) };
         }),
       );
 
