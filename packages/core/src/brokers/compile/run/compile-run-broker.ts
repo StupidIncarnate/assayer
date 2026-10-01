@@ -19,7 +19,7 @@
  * // Returns { status: 'ok', results: [...], errors: [] } and writes the cache manifest, or
  * // { status: 'errors', results: [...], errors: [...] } and leaves the prior manifest untouched
  */
-import { compileResultContract, assayerCacheManifestContract, namespaceNameContract } from '@assayer/shared/contracts';
+import { compileResultContract, assayerCacheManifestContract } from '@assayer/shared/contracts';
 import type { CompileResult, AssayerCacheManifest, AssayerConfig } from '@assayer/shared/contracts';
 
 import { compileProgressEventContract } from '../../../contracts/compile-progress-event/compile-progress-event-contract';
@@ -155,12 +155,12 @@ export const compileRunBroker = async ({
   ];
 
   const currentErrors = currentProcessed.errors.map((error) => ({
-    namespace: namespaceNameContract.parse(String(currentBranch)),
+    namespace: String(currentBranch),
     ...error,
   }));
 
   const resolveErrors = resolved.errors.map((error) => ({
-    namespace: namespaceNameContract.parse(String(currentBranch)),
+    namespace: String(currentBranch),
     ...error,
   }));
 
@@ -271,7 +271,7 @@ export const compileRunBroker = async ({
     ...stubContradictionsTransformer({ guards: currentStub.guards, overlays: overlay }),
     ...currentHarness.errors,
   ].map((error) => ({
-    namespace: namespaceNameContract.parse(String(currentBranch)),
+    namespace: String(currentBranch),
     ...error,
   }));
 

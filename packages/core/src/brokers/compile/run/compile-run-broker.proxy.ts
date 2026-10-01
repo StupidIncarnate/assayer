@@ -1,10 +1,9 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
-import { namespaceNameContract } from '@assayer/shared/contracts';
 import { HarnessIndexStub } from '@assayer/shared/contracts/harness-index/harness-index.stub';
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
 import { StubOverlayStub } from '@assayer/shared/contracts/stub-overlay/stub-overlay.stub';
-import type { FileCount, NamespaceName } from '@assayer/shared/contracts';
+import type { FileCount } from '@assayer/shared/contracts';
 
 import { PropertyGuardStub } from '../../../contracts/property-guard/property-guard.stub';
 
@@ -56,9 +55,9 @@ export const compileRunBrokerProxy = (): {
   getWrittenManifest: ({ configDir }: { configDir: string }) => unknown;
   wasManifestWritten: (params: { configDir: string }) => boolean;
   getProcessedFileCount: () => FileCount;
-  getResolvedIndexWriteOrder: () => readonly NamespaceName[];
-  getPropertyIndexWriteOrder: () => readonly NamespaceName[];
-  getHarnessGraphWriteOrder: () => readonly NamespaceName[];
+  getResolvedIndexWriteOrder: () => readonly string[];
+  getPropertyIndexWriteOrder: () => readonly string[];
+  getHarnessGraphWriteOrder: () => readonly string[];
 } => {
   compileResolveRootBrokerProxy();
   const currentBranchProxy = gitCurrentBranchBrokerProxy();
@@ -93,11 +92,11 @@ export const compileRunBrokerProxy = (): {
   // before CURRENT" collision-handling invariant the broker's own comments claim, since these three
   // callees are replaced wholesale and their real implementations (covered by their own tests) never
   // run here to produce an observable side effect.
-  const resolvedIndexWriteOrder: NamespaceName[] = [];
+  const resolvedIndexWriteOrder: string[] = [];
   const stubGraphIndex = StubIndexStub();
-  const stubGraphWriteOrder: NamespaceName[] = [];
+  const stubGraphWriteOrder: string[] = [];
   const harnessGraphIndex = HarnessIndexStub({ harnesses: [] });
-  const harnessGraphWriteOrder: NamespaceName[] = [];
+  const harnessGraphWriteOrder: string[] = [];
 
   return {
     onCurrentBranch: ({ name }: { name: string }): void => {
@@ -165,15 +164,15 @@ export const compileRunBrokerProxy = (): {
       // Each write records the namespace it reached, in call order, so a test can read back the
       // "write STABLE before CURRENT" order the broker's own comments claim.
       resolvedWriteHandle.calledWith([{ configDir }]).implement(({ namespace }: { namespace: string }) => {
-        resolvedIndexWriteOrder.push(namespaceNameContract.parse(namespace));
+        resolvedIndexWriteOrder.push(namespace);
         return { success: true };
       });
       stubGraphHandle.calledWith([{ configDir }]).implement(({ namespace }: { namespace: string }) => {
-        stubGraphWriteOrder.push(namespaceNameContract.parse(namespace));
+        stubGraphWriteOrder.push(namespace);
         return { index: stubGraphIndex, guards: [] };
       });
       harnessGraphHandle.calledWith([{ configDir }]).implement(({ namespace }: { namespace: string }) => {
-        harnessGraphWriteOrder.push(namespaceNameContract.parse(namespace));
+        harnessGraphWriteOrder.push(namespace);
         return { index: harnessGraphIndex, errors: [] };
       });
     },
@@ -220,8 +219,8 @@ export const compileRunBrokerProxy = (): {
     wasManifestWritten: ({ configDir }: { configDir: string }): boolean =>
       manifestProxy.wasWritten({ configDir }),
     getProcessedFileCount: (): FileCount => processCurrentProxy.processedCount(),
-    getResolvedIndexWriteOrder: (): readonly NamespaceName[] => resolvedIndexWriteOrder,
-    getPropertyIndexWriteOrder: (): readonly NamespaceName[] => stubGraphWriteOrder,
-    getHarnessGraphWriteOrder: (): readonly NamespaceName[] => harnessGraphWriteOrder,
+    getResolvedIndexWriteOrder: (): readonly string[] => resolvedIndexWriteOrder,
+    getPropertyIndexWriteOrder: (): readonly string[] => stubGraphWriteOrder,
+    getHarnessGraphWriteOrder: (): readonly string[] => harnessGraphWriteOrder,
   };
 };

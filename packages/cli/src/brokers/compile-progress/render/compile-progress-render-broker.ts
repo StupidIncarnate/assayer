@@ -16,7 +16,7 @@
  * // progress-bar line per namespace, in first-seen order, on every subsequent event.
  */
 import type { CompileProgressEvent } from '@assayer/core/contracts';
-import type { NamespaceName, FileCount } from '@assayer/shared/contracts';
+import type { FileCount } from '@assayer/shared/contracts';
 
 import { progressBarLineFormatTransformer } from '../../../transformers/progress-bar-line-format/progress-bar-line-format-transformer';
 
@@ -26,8 +26,8 @@ export const compileProgressRenderBroker = (): {
   let headerWritten = false;
   let compiledAnything = false;
   let previousLineCount = 0;
-  const order: NamespaceName[] = [];
-  const bars = new Map<NamespaceName, { label: string; current: FileCount; max: FileCount }>();
+  const order: string[] = [];
+  const bars = new Map<string, { label: string; current: FileCount; max: FileCount }>();
 
   return {
     render: ({ event }: { event: CompileProgressEvent }): void => {

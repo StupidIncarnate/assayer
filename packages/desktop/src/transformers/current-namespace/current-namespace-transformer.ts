@@ -8,14 +8,13 @@
  * // Returns { namespaceName, files } for the one commitless namespace entry, or throws if
  * // zero or more than one entry lacks a commit
  */
-import { namespaceNameContract } from '@assayer/shared/contracts';
-import type { AssayerCacheManifest, NamespaceName, ContentHash } from '@assayer/shared/contracts';
+import type { AssayerCacheManifest, ContentHash } from '@assayer/shared/contracts';
 
 export const currentNamespaceTransformer = ({
   manifest,
 }: {
   manifest: AssayerCacheManifest;
-}): { namespaceName: NamespaceName; files: { relPath: string; contentHash: ContentHash }[] } => {
+}): { namespaceName: string; files: { relPath: string; contentHash: ContentHash }[] } => {
   const entries = Object.entries(manifest.namespaces);
   const commitless = entries.filter(([, entry]) => entry.commit === undefined);
   const [found] = commitless;
@@ -28,5 +27,5 @@ export const currentNamespaceTransformer = ({
 
   const [key, entry] = found;
 
-  return { namespaceName: namespaceNameContract.parse(key), files: entry.files };
+  return { namespaceName: key, files: entry.files };
 };

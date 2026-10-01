@@ -9,8 +9,8 @@
  * });
  * // Returns { resultEntry, manifestNamespace, errors } for the 'master' namespace
  */
-import { namespaceNameContract, fileCountContract } from '@assayer/shared/contracts';
-import type { AssayerCacheManifest, NamespaceName, CompileMode, FileCount, ContentHash } from '@assayer/shared/contracts';
+import { fileCountContract } from '@assayer/shared/contracts';
+import type { AssayerCacheManifest, CompileMode, FileCount, ContentHash } from '@assayer/shared/contracts';
 
 import { compilePlanStableBroker } from '../plan-stable/compile-plan-stable-broker';
 import { gitResolveCommitBroker } from '../../git/resolve-commit/git-resolve-commit-broker';
@@ -36,10 +36,10 @@ export const stableNamespaceLayerBroker = async ({
   blobsDir: string;
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<{
-  resultEntry: { namespace: NamespaceName; branch: string; mode: CompileMode; fileCount: FileCount };
+  resultEntry: { namespace: string; branch: string; mode: CompileMode; fileCount: FileCount };
   manifestNamespace: { branch: string; commit?: string; files: { relPath: string; contentHash: ContentHash }[] };
   harnesses: { relPath: string; content: string }[];
-  errors: { namespace: NamespaceName; relPath: string; line: number; column: SourcePosition['column']; message: string }[];
+  errors: { namespace: string; relPath: string; line: number; column: SourcePosition['column']; message: string }[];
 }> => {
   const previousStableCommit = previousManifest?.namespaces[branch]?.commit;
 
@@ -79,7 +79,7 @@ export const stableNamespaceLayerBroker = async ({
 
   return {
     resultEntry: {
-      namespace: namespaceNameContract.parse(branch),
+      namespace: branch,
       branch: branch,
       mode: plan.mode,
       fileCount: fileCountContract.parse(max),
@@ -92,6 +92,6 @@ export const stableNamespaceLayerBroker = async ({
     // A SKIPPED ref planned nothing, so it has no harness bytes to stitch; its harness index already
     // sits on disk from the compile that made it, exactly as its resolved and stub indexes do.
     harnesses: plan.harnesses,
-    errors: processed.errors.map((error) => ({ namespace: namespaceNameContract.parse(branch), ...error })),
+    errors: processed.errors.map((error) => ({ namespace: branch, ...error })),
   };
 };

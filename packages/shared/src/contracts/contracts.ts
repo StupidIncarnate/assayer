@@ -23,7 +23,6 @@ export * from './content-hash/content-hash-contract';
 export * from './column-number/column-number-contract';
 
 
-export * from './namespace-name/namespace-name-contract';
 
 export * from './file-count/file-count-contract';
 

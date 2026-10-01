@@ -23,7 +23,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { namespaceNameContract, fileCountContract } from '@assayer/shared/contracts';
+import { fileCountContract } from '@assayer/shared/contracts';
 
 // Supporting phase schema (kept local, non-exported const; export only the type)
 const compileProgressPhaseContract = z.enum(['planned', 'advanced', 'done']).brand<'CompileProgressPhase'>();
@@ -31,7 +31,7 @@ export type CompileProgressPhase = z.infer<typeof compileProgressPhaseContract>;
 
 export const compileProgressEventContract = z.object({
   // namespace: which branch-keyed manifest index this progress reports on
-  namespace: namespaceNameContract,
+  namespace: z.string().min(1).brand<'CompileProgressEventNamespace'>(),
   // branch: the git branch (or 'default'/'detached-<sha>')
   branch: z.string().min(1).brand<'CompileProgressEventBranch'>(),
   // phase: lifecycle stage of the compile — 'planned' | 'advanced' | 'done'

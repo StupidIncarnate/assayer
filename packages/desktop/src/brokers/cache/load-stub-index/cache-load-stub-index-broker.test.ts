@@ -1,4 +1,3 @@
-import { NamespaceNameStub } from '@assayer/shared/contracts/namespace-name/namespace-name.stub';
 import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';
 
 import { cacheLoadStubIndexBroker } from './cache-load-stub-index-broker';
@@ -13,7 +12,7 @@ describe('cacheLoadStubIndexBroker', () => {
 
       const result = await cacheLoadStubIndexBroker({
         repoPath: '/repo',
-        namespace: NamespaceNameStub({ value: 'main' }),
+        namespace: 'main',
       });
 
       expect(result).toStrictEqual(index);
@@ -27,7 +26,7 @@ describe('cacheLoadStubIndexBroker', () => {
 
       const result = await cacheLoadStubIndexBroker({
         repoPath: '/repo',
-        namespace: NamespaceNameStub({ value: 'main' }),
+        namespace: 'main',
       });
 
       expect(result).toBe(undefined);
