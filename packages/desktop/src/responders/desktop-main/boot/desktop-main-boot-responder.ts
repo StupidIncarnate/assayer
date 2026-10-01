@@ -13,6 +13,7 @@
  * // Opens the window and registers the status/tree/file/run/saved-run IPC; returns { success: true }
  */
 import { runConsoleFindBroker, runFindBroker } from '@assayer/core/brokers';
+import { compiledFileViewContract } from '@assayer/shared/contracts';
 
 import { desktopBootBroker } from '../../../brokers/desktop/boot/desktop-boot-broker';
 import { statusResolveBroker } from '../../../brokers/status/resolve/status-resolve-broker';
@@ -40,7 +41,10 @@ export const DesktopMainBootResponder = async ({
     resolveStatus: async () => statusResolveBroker({ repoPath }),
     resolveCompiledTree: async () => compiledTreeResolveBroker({ repoPath }),
     resolveCompiledFile: async ({ relPath }) =>
-      compiledFileResolveBroker({ repoPath, relPath: String(relPath) }),
+      compiledFileResolveBroker({
+        repoPath,
+        relPath: compiledFileViewContract.shape.relPath.parse(relPath),
+      }),
     resolveStubs: async () => stubIndexResolveBroker({ repoPath }),
     resolveRun: async ({ relPath, onOutput }) =>
       runExecuteBroker({

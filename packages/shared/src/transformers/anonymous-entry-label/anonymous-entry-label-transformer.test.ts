@@ -23,7 +23,7 @@ describe('anonymousEntryLabelTransformer', () => {
     it('VALID: {a bare callee} => the called name, since there is no receiver to show', () => {
       const result = anonymousEntryLabelTransformer({
         host: 'boot',
-        reach: AnonymousReachStub({ kind: 'argument', callee: 'register' }),
+        reach: anonymousReachContract.parse({ kind: 'argument', callee: 'register' }),
         params: [ELEMENT_PARAM],
         line: 4,
       });
