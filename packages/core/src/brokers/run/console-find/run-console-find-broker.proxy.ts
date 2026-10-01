@@ -1,65 +1,117 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-
-import { fsExistsAdapter } from '../../../adapters/fs/exists/fs-exists-adapter';
-import { fsReadFileAdapter } from '../../../adapters/fs/read-file/fs-read-file-adapter';
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
-// The broker reads TWO files through one pair of adapters — the source (to derive the content-keyed
-// run id) and then console.txt. The report path always CONTAINS `console.txt`; the source (and the
-// colocated-harness check inside runIdBroker) never does. Matching on that substring, rather than on
-// which read happens first, is what keeps a source-content stub from silently answering a report read
-// (or the reverse) if the broker's own read order ever changes. The adapters are mocked rather than
-// fs/promises underneath them because a second mock of `readFile` registered from here would answer
-// calls this broker's OWN direct mock of `fsReadFileAdapter` already claims.
-const isReportPath = (path: unknown): boolean => typeof path === 'string' && path.includes('console.txt');
-// runIdBroker checks for a colocated harness before this broker ever asks for the report. None of this
-// proxy's scenarios exercise a harness, so that check is answered false here — a real path, matched
-// explicitly, rather than a spurious third read riding the same blanket default the source and report
-// share.
-const isHarnessPath = (path: unknown): boolean => typeof path === 'string' && path.endsWith('.harness.ts');
-
+// The broker reads the source (to derive the content-keyed run id) and then console.txt. The colocated
+// harness check inside runIdBroker looks at `harnessPath` first, so every scenario stages it as absent.
+// Each scenario names the paths it answers, so a read of any other path throws.
 export const runConsoleFindBrokerProxy = (): {
-  savedConsole: ({ console }: { console: string }) => void;
-  neverRun: () => void;
-  fileMissing: () => void;
-  sourceReadThrows: ({ error }: { error: Error }) => void;
-  consoleReadThrows: ({ error }: { error: Error }) => void;
-  getReadArgs: () => readonly unknown[];
+  savedConsole: ({
+    sourcePath,
+    source,
+    harnessPath,
+    consolePath,
+    console,
+  }: {
+    sourcePath: string;
+    source: string;
+    harnessPath: string;
+    consolePath: string;
+    console: string;
+  }) => void;
+  neverRun: ({
+    sourcePath,
+    source,
+    harnessPath,
+    consolePath,
+  }: {
+    sourcePath: string;
+    source: string;
+    harnessPath: string;
+    consolePath: string;
+  }) => void;
+  fileMissing: ({ sourcePath }: { sourcePath: string }) => void;
+  sourceReadDenied: ({ sourcePath }: { sourcePath: string }) => void;
+  consoleReadDenied: ({
+    sourcePath,
+    source,
+    harnessPath,
+    consolePath,
+  }: {
+    sourcePath: string;
+    source: string;
+    harnessPath: string;
+    consolePath: string;
+  }) => void;
+  getReadCalls: ({ path }: { path: string }) => readonly unknown[][];
 } => {
-  pathExistsProxy();
-  readFileProxy();
+  const existsProxy = pathExistsProxy();
+  const fileProxy = readFileProxy();
   runIdBrokerProxy();
 
-  const existsHandle = registerMock({ fn: fsExistsAdapter });
-  const readHandle = registerMock({ fn: fsReadFileAdapter });
-
-  existsHandle.calledWith([]).resolves(true);
-  existsHandle.calledWith([{ path: isHarnessPath }]).resolves(false);
-  readHandle.calledWith([]).resolves('export const a = 1;\n');
-
   return {
-    savedConsole: ({ console: consoleText }: { console: string }): void => {
-      readHandle.calledWith([{ path: isReportPath }]).resolves(consoleText);
+    savedConsole: ({
+      sourcePath,
+      source,
+      harnessPath,
+      consolePath,
+      console: consoleText,
+    }: {
+      sourcePath: string;
+      source: string;
+      harnessPath: string;
+      consolePath: string;
+      console: string;
+    }): void => {
+      existsProxy.present({ path: sourcePath });
+      existsProxy.missing({ path: harnessPath });
+      existsProxy.present({ path: consolePath });
+      fileProxy.returns({ path: sourcePath, contents: source });
+      fileProxy.returns({ path: consolePath, contents: consoleText });
     },
-    neverRun: (): void => {
-      existsHandle.calledWith([{ path: isReportPath }]).resolves(false);
+    neverRun: ({
+      sourcePath,
+      source,
+      harnessPath,
+      consolePath,
+    }: {
+      sourcePath: string;
+      source: string;
+      harnessPath: string;
+      consolePath: string;
+    }): void => {
+      existsProxy.present({ path: sourcePath });
+      existsProxy.missing({ path: harnessPath });
+      existsProxy.missing({ path: consolePath });
+      fileProxy.returns({ path: sourcePath, contents: source });
     },
-    fileMissing: (): void => {
-      existsHandle.calledWith([]).resolves(false);
+    fileMissing: ({ sourcePath }: { sourcePath: string }): void => {
+      existsProxy.missing({ path: sourcePath });
     },
     // Both reads are deliberately unwrapped -- no try/catch -- so a filesystem rejection propagates to
-    // the caller unmodified. The source read is whichever read happens first; the report read is
-    // whichever read names the console.txt path, regardless of order.
-    sourceReadThrows: ({ error }: { error: Error }): void => {
-      readHandle.onceFor([]).rejects(error);
+    // the caller unmodified.
+    sourceReadDenied: ({ sourcePath }: { sourcePath: string }): void => {
+      existsProxy.present({ path: sourcePath });
+      fileProxy.denied({ path: sourcePath });
     },
-    consoleReadThrows: ({ error }: { error: Error }): void => {
-      readHandle.calledWith([{ path: isReportPath }]).rejects(error);
+    consoleReadDenied: ({
+      sourcePath,
+      source,
+      harnessPath,
+      consolePath,
+    }: {
+      sourcePath: string;
+      source: string;
+      harnessPath: string;
+      consolePath: string;
+    }): void => {
+      existsProxy.present({ path: sourcePath });
+      existsProxy.missing({ path: harnessPath });
+      existsProxy.present({ path: consolePath });
+      fileProxy.returns({ path: sourcePath, contents: source });
+      fileProxy.denied({ path: consolePath });
     },
-    // Serialized rather than destructured: reading `.path` off a mock argument needs an inline
-    // structural type, which brokers/ forbids. The JSON is exact and needs no assertion.
-    getReadArgs: (): readonly unknown[] => readHandle.callsMatching([]).map((call) => JSON.stringify(call[0])),
+    getReadCalls: ({ path }: { path: string }): readonly unknown[][] =>
+      fileProxy.getCallsFor({ path }),
   };
 };

@@ -9,41 +9,48 @@ describe('resolvedIndexWriteBroker', () => {
   describe('writing a resolved index for a namespace', () => {
     it('VALID: {configDir "/repo", namespace "feature-x", one-edge index} => writes the canonical index and returns success', async () => {
       const proxy = resolvedIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
-      const result = await resolvedIndexWriteBroker({
-        configDir: '/repo',
-        namespace: 'feature-x',
-        index: ResolvedIndexStub(),
-      });
-
-      expect(result).toBeUndefined();
+      await expect(
+        resolvedIndexWriteBroker({
+          configDir: '/repo',
+          namespace: 'feature-x',
+          index: ResolvedIndexStub(),
+        }),
+      ).resolves.toBe(undefined);
       expect(
-        proxy.getWrittenIndex({ path: '/repo/.assayer/cache/resolved/feature-x.json.tmp' }),
-      ).toStrictEqual({
-        layoutHash: EMPTY_HASH,
-        tsconfigHash: EMPTY_HASH,
-        edges: [
-          {
-            from: 'src/a/caller.ts',
-            specifier: '../b/foo',
-            importedName: 'foo',
-            line: 1,
-            column: 1,
-            target: { kind: 'local', relPath: 'src/b/foo.ts' },
-          },
-        ],
-      });
+        proxy
+          .getWrittenContentsFor({ path: '/repo/.assayer/cache/resolved/feature-x.json.tmp' })
+          .map((contents) => JSON.parse(String(contents))),
+      ).toStrictEqual([
+        {
+          layoutHash: EMPTY_HASH,
+          tsconfigHash: EMPTY_HASH,
+          edges: [
+            {
+              from: 'src/a/caller.ts',
+              specifier: '../b/foo',
+              importedName: 'foo',
+              line: 1,
+              column: 1,
+              target: { kind: 'local', relPath: 'src/b/foo.ts' },
+            },
+          ],
+        },
+      ]);
     });
 
     it('VALID: {namespace "feature-x"} => writes to the tmp path under .assayer/cache/resolved before renaming', async () => {
       const proxy = resolvedIndexWriteBrokerProxy();
-      proxy.succeeds();
+      proxy.succeeds({ configDir: '/repo', namespace: 'feature-x' });
 
       await resolvedIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: ResolvedIndexStub() });
 
-      expect(proxy.getWrittenPaths()).toStrictEqual([
-        '/repo/.assayer/cache/resolved/feature-x.json.tmp',
+      expect(proxy.getRenameArgs({ configDir: '/repo', namespace: 'feature-x' })).toStrictEqual([
+        [
+          '/repo/.assayer/cache/resolved/feature-x.json.tmp',
+          '/repo/.assayer/cache/resolved/feature-x.json',
+        ],
       ]);
     });
   });
@@ -51,29 +58,29 @@ describe('resolvedIndexWriteBroker', () => {
   describe('a failure along the mkdir -> write -> rename sequence', () => {
     it('ERROR: {resolved cache dir cannot be created} => propagates the mkdir rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = resolvedIndexWriteBrokerProxy();
-      proxy.mkdirThrows({ error: new Error('EACCES: permission denied') });
+      proxy.mkdirDenied({ configDir: '/repo' });
 
       await expect(
         resolvedIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: ResolvedIndexStub() }),
-      ).rejects.toThrow(/^EACCES: permission denied$/u);
+      ).rejects.toThrow(/^EACCES: mkdir '\/repo\/\.assayer\/cache\/resolved'$/u);
     });
 
     it('ERROR: {tmp resolved index cannot be written} => propagates the write rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = resolvedIndexWriteBrokerProxy();
-      proxy.writeThrows({ error: new Error('ENOSPC: no space left on device') });
+      proxy.writeDiskFull({ configDir: '/repo', namespace: 'feature-x' });
 
       await expect(
         resolvedIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: ResolvedIndexStub() }),
-      ).rejects.toThrow(/^ENOSPC: no space left on device$/u);
+      ).rejects.toThrow(/^ENOSPC: write '\/repo\/\.assayer\/cache\/resolved\/feature-x\.json\.tmp'$/u);
     });
 
     it('ERROR: {tmp resolved index cannot be renamed into place} => propagates the rename rejection unmodified, since it is never wrapped in try/catch', async () => {
       const proxy = resolvedIndexWriteBrokerProxy();
-      proxy.renameThrows({ error: new Error('ENOENT: no such file or directory') });
+      proxy.renameMissing({ configDir: '/repo', namespace: 'feature-x' });
 
       await expect(
         resolvedIndexWriteBroker({ configDir: '/repo', namespace: 'feature-x', index: ResolvedIndexStub() }),
-      ).rejects.toThrow(/^ENOENT: no such file or directory$/u);
+      ).rejects.toThrow(/^ENOENT: rename '\/repo\/\.assayer\/cache\/resolved\/feature-x\.json\.tmp'$/u);
     });
   });
 });

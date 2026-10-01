@@ -19,8 +19,7 @@
  * await runConsoleSaveBroker({ configDir: '/repo', runId: 'abc123', console: 'src/a.ts  1/1 passed\n' });
  * // Writes '/repo/.assayer/cache/runs/abc123/console.txt' and returns { success: true }
  */
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
+import { ensureDir, writeFile } from '#gateway/node/fs__promises';
 
 export const runConsoleSaveBroker = async ({
   configDir,
@@ -36,7 +35,7 @@ export const runConsoleSaveBroker = async ({
   // Created rather than assumed: a file whose cases were ALL admitted never reaches the runner, so its
   // run directory may not exist yet — and the report for that run is precisely the one that says why
   // nothing ran, which is the reader's whole answer for that file.
-  await fsMkdirAdapter({ path: runDir });
-  await fsWriteFileAdapter({ path: `${runDir}/console.txt`, content: consoleText });
+  await ensureDir(runDir);
+  await writeFile(`${runDir}/console.txt`, consoleText);
 
 };
