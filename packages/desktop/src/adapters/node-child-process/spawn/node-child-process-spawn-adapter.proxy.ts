@@ -4,30 +4,34 @@ import { stderr } from '#gateway/node/process';
 
 export const nodeChildProcessSpawnAdapterProxy = (): {
   getStderrWrites: () => unknown[];
-  failsToSpawn: ({ error }: { error: Error }) => void;
+  spawns: ({ command, args }: { command: string; args: readonly string[] }) => void;
+  failsToSpawn: ({ command, args, error }: { command: string; args: readonly string[]; error: Error }) => void;
 } => {
   const handle = registerMock({ fn: spawn });
   const stderrSpy = registerSpyOn({ object: stderr, method: 'write' });
   stderrSpy.calledWith([]).implement(() => true);
-  const state: { error: Error | undefined } = { error: undefined };
-
-  // Every spawn call gets the same fake ChildProcess back regardless of command/args, since the
-  // adapter is called once per launch with nothing this proxy needs to tell apart.
-  handle.calledWith([]).returns({
-    on: (event: string, listener: (error: Error) => void): void => {
-      if (event === 'error' && state.error !== undefined) {
-        listener(state.error);
-      }
-    },
-    unref: (): void => undefined,
-  } as ReturnType<typeof spawn>);
 
   return {
     // Every write regardless of what else write() was called with (encoding, callback) — a real
     // collector, not a narrowed one.
     getStderrWrites: (): unknown[] => stderrSpy.callsMatching([]).map((call) => String(call[0])),
-    failsToSpawn: ({ error }: { error: Error }): void => {
-      state.error = error;
+    // A launch the child accepts: it never emits `error`.
+    spawns: ({ command, args }): void => {
+      handle.calledWith([command, [...args]]).returns({
+        on: (_event: string, _listener: (error: Error) => void): void => undefined,
+        unref: (): void => undefined,
+      } as ReturnType<typeof spawn>);
+    },
+    // A launch the child rejects: it emits `error` as soon as a listener is attached.
+    failsToSpawn: ({ command, args, error }): void => {
+      handle.calledWith([command, [...args]]).returns({
+        on: (event: string, listener: (error: Error) => void): void => {
+          if (event === 'error') {
+            listener(error);
+          }
+        },
+        unref: (): void => undefined,
+      } as ReturnType<typeof spawn>);
     },
   };
 };

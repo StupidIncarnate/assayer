@@ -21,8 +21,8 @@ registerModuleMock({
 
 export const desktopBridgeExposeBrokerProxy = (): {
   exposedBridgeKeys: () => unknown[];
-  mainAnswers: ({ valueRaw }: { valueRaw: unknown }) => void;
-  mainFails: ({ message }: { message: string }) => void;
+  mainAnswers: ({ channel, valueRaw }: { channel: string; valueRaw: unknown }) => void;
+  mainFails: ({ channel, message }: { channel: string; message: string }) => void;
   triggerGetCompiledTree: () => Promise<void>;
   triggerGetCompiledFile: ({ relPath }: { relPath: string }) => Promise<void>;
   triggerGetMergedView: () => Promise<void>;
@@ -53,9 +53,15 @@ export const desktopBridgeExposeBrokerProxy = (): {
   const removeSpy = registerSpyOn({ object: ipcRenderer, method: 'removeAllListeners', passthrough: true });
   // Main answers with an IpcReply on every channel, never a bare payload, so the default has to be a
   // reply too — a bare `undefined` here would be a shape main cannot send, and every bridge method
-  // would reject on it. `calledWith([])` matches every channel, since this default deliberately
-  // answers the same generic reply regardless which of the six invoke channels called it.
-  invokeSpy.calledWith([]).resolves({ success: true, valueRaw: undefined });
+  // would reject on it. Each request channel gets the generic reply, addressed by its own name. The
+  // run-output channel is a push channel that is subscribed to, never invoked.
+  invokeSpy.calledWith([desktopBridgeStatics.channels.status]).resolves({ success: true, valueRaw: undefined });
+  invokeSpy.calledWith([desktopBridgeStatics.channels.compiledTree]).resolves({ success: true, valueRaw: undefined });
+  invokeSpy.calledWith([desktopBridgeStatics.channels.compiledFile]).resolves({ success: true, valueRaw: undefined });
+  invokeSpy.calledWith([desktopBridgeStatics.channels.stubs]).resolves({ success: true, valueRaw: undefined });
+  invokeSpy.calledWith([desktopBridgeStatics.channels.run]).resolves({ success: true, valueRaw: undefined });
+  invokeSpy.calledWith([desktopBridgeStatics.channels.savedRun]).resolves({ success: true, valueRaw: undefined });
+  invokeSpy.calledWith([desktopBridgeStatics.channels.savedConsole]).resolves({ success: true, valueRaw: undefined });
 
   // The proxy subscribes and records, so a test never needs its own collector to see what arrived.
   const state: { unsubscribe: (() => void) | undefined; chunks: unknown[] } = {
@@ -77,13 +83,13 @@ export const desktopBridgeExposeBrokerProxy = (): {
     // test expects would hide a wrong-key bug instead of surfacing it. The adapter exposes exactly
     // once, so a test asserts this whole list and sees a second, unwanted expose call too.
     exposedBridgeKeys: (): unknown[] => exposeSpy.callsMatching([]).map((call) => call[0]),
-    mainAnswers: ({ valueRaw }: { valueRaw: unknown }): void => {
-      invokeSpy.calledWith([]).resolves({ success: true, valueRaw });
+    mainAnswers: ({ channel, valueRaw }: { channel: string; valueRaw: unknown }): void => {
+      invokeSpy.calledWith([channel]).resolves({ success: true, valueRaw });
     },
     // Stands up a main process that FAILED. The message travels as data because that is what main
     // does — so a test asserting what the renderer sees is asserting the real wire shape.
-    mainFails: ({ message }: { message: string }): void => {
-      invokeSpy.calledWith([]).resolves({ success: false, message });
+    mainFails: ({ channel, message }: { channel: string; message: string }): void => {
+      invokeSpy.calledWith([channel]).resolves({ success: false, message });
     },
     triggerGetCompiledTree: async (): Promise<void> => {
       await getApi()?.getCompiledTree?.();

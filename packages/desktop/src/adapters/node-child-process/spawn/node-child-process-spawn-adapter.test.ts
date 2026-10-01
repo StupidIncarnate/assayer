@@ -4,7 +4,8 @@ import { nodeChildProcessSpawnAdapterProxy } from './node-child-process-spawn-ad
 describe('nodeChildProcessSpawnAdapter', () => {
   describe('spawning a process', () => {
     it('VALID: {command, args} => spawns and returns success', () => {
-      nodeChildProcessSpawnAdapterProxy();
+      const proxy = nodeChildProcessSpawnAdapterProxy();
+      proxy.spawns({ command: '/usr/bin/electron', args: ['main.js', '--repo', '/repo'] });
 
       const result = nodeChildProcessSpawnAdapter({
         command: '/usr/bin/electron',
@@ -16,6 +17,7 @@ describe('nodeChildProcessSpawnAdapter', () => {
 
     it('VALID: {command, args} => writes nothing to stderr when the spawn succeeds', () => {
       const proxy = nodeChildProcessSpawnAdapterProxy();
+      proxy.spawns({ command: '/usr/bin/electron', args: ['main.js', '--repo', '/repo'] });
 
       nodeChildProcessSpawnAdapter({
         command: '/usr/bin/electron',
@@ -29,7 +31,11 @@ describe('nodeChildProcessSpawnAdapter', () => {
   describe('a spawn that fails', () => {
     it('ERROR: {the child emits an ENOENT error} => still returns success, and writes an actionable message to stderr instead of crashing', () => {
       const proxy = nodeChildProcessSpawnAdapterProxy();
-      proxy.failsToSpawn({ error: new Error('spawn /usr/bin/electron ENOENT') });
+      proxy.failsToSpawn({
+        command: '/usr/bin/electron',
+        args: ['main.js', '--repo', '/repo'],
+        error: new Error('spawn /usr/bin/electron ENOENT'),
+      });
 
       const result = nodeChildProcessSpawnAdapter({
         command: '/usr/bin/electron',

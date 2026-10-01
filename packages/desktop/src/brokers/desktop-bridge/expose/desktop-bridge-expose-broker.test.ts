@@ -111,7 +111,7 @@ describe('desktopBridgeExposeBroker', () => {
 
     it('VALID: {main answers a run result} => resolves with the payload, unwrapped from the reply', async () => {
       const proxy = desktopBridgeExposeBrokerProxy();
-      proxy.mainAnswers({ valueRaw: { verdicts: [] } });
+      proxy.mainAnswers({ channel: 'assayer:run', valueRaw: { verdicts: [] } });
 
       desktopBridgeExposeBroker({
         bridgeKey: 'assayerBridge',
@@ -137,6 +137,7 @@ describe('desktopBridgeExposeBroker', () => {
     it('ERROR: {main failed} => rejects with the main-process message alone, with no Electron prefix', async () => {
       const proxy = desktopBridgeExposeBrokerProxy();
       proxy.mainFails({
+        channel: 'assayer:run',
         message: 'assayer: the run produced no result for src/happy-path/switch/pure-statement/pure-statement.ts.\n\nCannot find run.json',
       });
 

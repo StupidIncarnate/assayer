@@ -6,7 +6,7 @@ describe('nodeChildProcessExecAdapter', () => {
   describe('a command that succeeds', () => {
     it('VALID: {exit 0 with output} => the code and what it wrote', async () => {
       const proxy = nodeChildProcessExecAdapterProxy();
-      proxy.exitsWith({ exitCode: 0, stdout: 'src/a.ts  3/3 passed', stderr: '' });
+      proxy.exitsWith({ command: 'node', args: ['x.js'], exitCode: 0, stdout: 'src/a.ts  3/3 passed', stderr: '' });
 
       const result = await nodeChildProcessExecAdapter({ command: 'node', args: ['x.js'], cwd: '/repo' });
 
@@ -18,7 +18,7 @@ describe('nodeChildProcessExecAdapter', () => {
     // A failing run is a RESULT, not a throw: the report on stderr is what the UI renders.
     it('VALID: {exit 1 with a report on stderr} => captured rather than thrown', async () => {
       const proxy = nodeChildProcessExecAdapterProxy();
-      proxy.exitsWith({ exitCode: 1, stdout: '', stderr: 'src/a.ts  0/1 passed' });
+      proxy.exitsWith({ command: 'node', args: ['x.js'], exitCode: 1, stdout: '', stderr: 'src/a.ts  0/1 passed' });
 
       const result = await nodeChildProcessExecAdapter({ command: 'node', args: ['x.js'], cwd: '/repo' });
 
@@ -31,6 +31,7 @@ describe('nodeChildProcessExecAdapter', () => {
     // window.
     it('VALID: {a command} => spawned in the given cwd with piped output and the parent environment', async () => {
       const proxy = nodeChildProcessExecAdapterProxy();
+      proxy.exitsWith({ command: 'node', args: ['x.js', 'unit'], exitCode: 0, stdout: '', stderr: '' });
 
       await nodeChildProcessExecAdapter({ command: 'node', args: ['x.js', 'unit'], cwd: '/repo' });
 
@@ -43,6 +44,7 @@ describe('nodeChildProcessExecAdapter', () => {
     // onto the parent environment rather than becoming the whole of it.
     it('VALID: {an env override} => merged onto the parent environment rather than replacing it', async () => {
       const proxy = nodeChildProcessExecAdapterProxy();
+      proxy.exitsWith({ command: 'node', args: ['x.js'], exitCode: 0, stdout: '', stderr: '' });
 
       await nodeChildProcessExecAdapter({
         command: 'node',
