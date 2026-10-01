@@ -1,17 +1,17 @@
-import { fsRmAdapterProxy } from '../../../adapters/fs/rm/fs-rm-adapter.proxy';
+import { rmProxy } from '#gateway/node/fs__promises/rm/rm.proxy';
 
 export const manifestTrashBrokerProxy = (): {
-  succeeds: () => void;
-  // Addressed on the directory the broker removes. The options this answers with belong to that one
-  // removal, never to whichever rm happened to run last.
-  getRmArgs: ({ path }: { path: string }) => readonly unknown[];
+  succeeds: ({ path }: { path: string }) => void;
+  // Every rm call made on the path, as its full argument tuple, in call order.
+  getRmCalls: ({ path }: { path: string }) => readonly unknown[][];
 } => {
-  const rmProxy = fsRmAdapterProxy();
+  const removeProxy = rmProxy();
 
   return {
-    succeeds: (): void => {
-      rmProxy.succeeds();
+    succeeds: ({ path }: { path: string }): void => {
+      removeProxy.succeeds({ path });
     },
-    getRmArgs: ({ path }: { path: string }): readonly unknown[] => rmProxy.getRmArgs({ path }),
+    getRmCalls: ({ path }: { path: string }): readonly unknown[][] =>
+      removeProxy.getCallsFor({ path }),
   };
 };

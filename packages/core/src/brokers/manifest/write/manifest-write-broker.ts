@@ -1,17 +1,16 @@
 /**
- * PURPOSE: Writes the assayer cache manifest to disk atomically (tmp write + rename),
+ * PURPOSE: Writes the assayer cache manifest to disk atomically (a temp file, then a rename),
  *   canonicalizing namespace-key and file ordering first so the same manifest content always
  *   produces byte-identical JSON -- load-bearing for the content-hash cache's determinism
  *   guarantee across cold starts and CI runs.
  *
  * USAGE:
  * await manifestWriteBroker({ configDir: '/repo', manifest });
- * // Writes '/repo/.assayer/cache/manifest.json' atomically and returns { success: true }
+ * // Writes '/repo/.assayer/cache/manifest.json' atomically, creating the cache directory first
  */
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import type { AssayerCacheManifest } from '@assayer/shared/contracts';
+
+import { writeFileAtomic } from '#gateway/node/fs__promises';
 
 export const manifestWriteBroker = async ({
   configDir,
@@ -21,7 +20,6 @@ export const manifestWriteBroker = async ({
   manifest: AssayerCacheManifest;
 }): Promise<void> => {
   const cacheDir = `${configDir}/.assayer/cache`;
-  await fsMkdirAdapter({ path: cacheDir });
 
   // Namespace keys are unique by JS object construction, so a two-way comparator is sufficient
   // (no equal case can ever occur) -- keeps a would-be-dead tiebreak branch out of the code.
@@ -54,10 +52,5 @@ export const manifestWriteBroker = async ({
     rootFolderName: manifest.rootFolderName,
   };
 
-  const content = JSON.stringify(canonical);
-  const tmpPath = `${cacheDir}/manifest.json.tmp`;
-
-  await fsWriteFileAdapter({ path: tmpPath, content });
-  await fsRenameAdapter({ from: tmpPath, to: `${cacheDir}/manifest.json` });
-
+  await writeFileAtomic(`${cacheDir}/manifest.json`, JSON.stringify(canonical));
 };

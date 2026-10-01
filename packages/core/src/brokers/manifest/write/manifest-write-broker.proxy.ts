@@ -1,58 +1,61 @@
-import { fsMkdirAdapterProxy } from '../../../adapters/fs/mkdir/fs-mkdir-adapter.proxy';
-import { fsWriteFileAdapterProxy } from '../../../adapters/fs/write-file/fs-write-file-adapter.proxy';
-import { fsRenameAdapterProxy } from '../../../adapters/fs/rename/fs-rename-adapter.proxy';
+import type { FsError } from '#gateway/node/fs';
+import { writeFileAtomicProxy } from '#gateway/node/fs__promises/write-file-atomic/write-file-atomic.proxy';
 
+// Every method takes the config directory the broker was given. The manifest path is
+// `<configDir>/.assayer/cache/manifest.json`, the one the broker writes.
 export const manifestWriteBrokerProxy = (): {
-  succeeds: () => void;
-  // Each read below names the address it is asking about, so it answers for that one call rather
-  // than for whichever call happened to run last.
-  getMkdirArgs: ({ path }: { path: string }) => readonly unknown[];
-  // Every path written, in call order. Asking WHICH path the broker wrote to cannot be addressed by
-  // that path without assuming the answer, so a caller reads the whole list and asserts it complete.
-  getWrittenPaths: () => unknown[];
-  getWrittenContentFor: ({ path }: { path: string }) => unknown;
-  // Addressed on the SOURCE path, so the destination it answers with is a real assertion rather than
-  // an echo of what the caller asked for.
-  getRenameArgs: ({ from }: { from: string }) => readonly unknown[];
-  wasWritten: () => boolean;
-  getWrittenManifest: ({ path }: { path: string }) => unknown;
-  // None of the three writes below are wrapped in try/catch, so each stages a distinct rejection
-  // point along the mkdir -> write -> rename sequence.
-  mkdirThrows: ({ error }: { error: Error }) => void;
-  writeThrows: ({ error }: { error: Error }) => void;
-  renameThrows: ({ error }: { error: Error }) => void;
+  succeeds: ({ configDir }: { configDir: string }) => void;
+  getMkdirCalls: ({ configDir }: { configDir: string }) => readonly unknown[][];
+  // Every write of the manifest's temp file, in call order, as the full argument tuple.
+  getWriteCalls: ({ configDir }: { configDir: string }) => readonly unknown[][];
+  getRenameCalls: ({ configDir }: { configDir: string }) => readonly unknown[][];
+  wasWritten: ({ configDir }: { configDir: string }) => boolean;
+  getWrittenManifest: ({ configDir }: { configDir: string }) => unknown;
+  // The three steps are not wrapped in try/catch, so each stages a distinct rejection point along
+  // the mkdir -> write -> rename sequence.
+  mkdirThrows: ({ configDir, error }: { configDir: string; error: FsError }) => void;
+  writeThrows: ({ configDir, error }: { configDir: string; error: FsError }) => void;
+  renameThrows: ({ configDir, error }: { configDir: string; error: FsError }) => void;
 } => {
-  const mkdirProxy = fsMkdirAdapterProxy();
-  const writeFileProxy = fsWriteFileAdapterProxy();
-  const renameProxy = fsRenameAdapterProxy();
+  const atomicProxy = writeFileAtomicProxy();
 
   return {
-    succeeds: (): void => {
-      mkdirProxy.succeeds();
-      writeFileProxy.succeeds();
-      renameProxy.succeeds();
+    succeeds: ({ configDir }: { configDir: string }): void => {
+      atomicProxy.succeeds({ path: `${configDir}/.assayer/cache/manifest.json` });
     },
-    getMkdirArgs: ({ path }: { path: string }): readonly unknown[] =>
-      mkdirProxy.getMkdirArgs({ path }),
-    getWrittenPaths: (): unknown[] => writeFileProxy.getWrittenPaths(),
-    getWrittenContentFor: ({ path }: { path: string }): unknown =>
-      writeFileProxy.getWrittenContentFor({ path }),
-    getRenameArgs: ({ from }: { from: string }): readonly unknown[] =>
-      renameProxy.getRenameArgs({ from }),
-    wasWritten: (): boolean => writeFileProxy.wasCalled(),
-    getWrittenManifest: ({ path }: { path: string }): unknown =>
-      JSON.parse(String(writeFileProxy.getWrittenContentFor({ path }))),
-    mkdirThrows: ({ error }: { error: Error }): void => {
-      mkdirProxy.throws({ error });
+    getMkdirCalls: ({ configDir }: { configDir: string }): readonly unknown[][] =>
+      atomicProxy.getCallsFor({ seam: 'mkdir', path: `${configDir}/.assayer/cache/manifest.json` }),
+    getWriteCalls: ({ configDir }: { configDir: string }): readonly unknown[][] =>
+      atomicProxy.getCallsFor({
+        seam: 'writeFile',
+        path: `${configDir}/.assayer/cache/manifest.json`,
+      }),
+    getRenameCalls: ({ configDir }: { configDir: string }): readonly unknown[][] =>
+      atomicProxy.getCallsFor({
+        seam: 'rename',
+        path: `${configDir}/.assayer/cache/manifest.json`,
+      }),
+    wasWritten: ({ configDir }: { configDir: string }): boolean =>
+      atomicProxy.getCallsFor({
+        seam: 'writeFile',
+        path: `${configDir}/.assayer/cache/manifest.json`,
+      }).length > 0,
+    getWrittenManifest: ({ configDir }: { configDir: string }): unknown =>
+      JSON.parse(
+        String(
+          atomicProxy
+            .getCallsFor({ seam: 'writeFile', path: `${configDir}/.assayer/cache/manifest.json` })
+            .at(-1)?.[1],
+        ),
+      ),
+    mkdirThrows: ({ configDir, error }: { configDir: string; error: FsError }): void => {
+      atomicProxy.mkdirRejects({ path: `${configDir}/.assayer/cache/manifest.json`, error });
     },
-    writeThrows: ({ error }: { error: Error }): void => {
-      mkdirProxy.succeeds();
-      writeFileProxy.throws({ error });
+    writeThrows: ({ configDir, error }: { configDir: string; error: FsError }): void => {
+      atomicProxy.writeRejects({ path: `${configDir}/.assayer/cache/manifest.json`, error });
     },
-    renameThrows: ({ error }: { error: Error }): void => {
-      mkdirProxy.succeeds();
-      writeFileProxy.succeeds();
-      renameProxy.throws({ error });
+    renameThrows: ({ configDir, error }: { configDir: string; error: FsError }): void => {
+      atomicProxy.renameRejects({ path: `${configDir}/.assayer/cache/manifest.json`, error });
     },
   };
 };
