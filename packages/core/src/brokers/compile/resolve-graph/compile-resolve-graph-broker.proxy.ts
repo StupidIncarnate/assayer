@@ -15,7 +15,9 @@ import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.pr
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
 export const compileResolveGraphBrokerProxy = (): {
-  queueBlob: ({ blob }: { blob: unknown }) => void;
+  // `path` is the blob file the broker reads: `<blobsDir>/<contentHash>.json`. One-shot, so two blobs
+  // queued for the same path are read in the order queued.
+  queueBlob: ({ path, blob }: { path: string; blob: unknown }) => void;
   configHash: ({ tsconfigHash }: { tsconfigHash: string }) => void;
   // Sets the tsconfig's own config-file path, the second condition (alongside a supplied `cacheDir`)
   // that gates external/global signature reading on -- unset in every other test, so those reads stay
@@ -31,10 +33,9 @@ export const compileResolveGraphBrokerProxy = (): {
   getExternalSignatureReadCalls: () => readonly unknown[];
   getExternalSignatureReadGlobalCalls: () => readonly unknown[];
 } => {
-  // Blob loading runs through the REAL fsReadFileAdapter with only the underlying readFile mocked, so
-  // a composing broker's own source reads keep working (the adapter module is not auto-replaced). Each
-  // queued blob is one file's on-disk record. Config reading is mocked to a fixed tsconfigHash; module
-  // resolution is staged through the layer proxy; the builtins list and the sha256 hasher run REAL.
+  // Each queued blob is one file's on-disk record, answered to a read of its exact path. Config reading
+  // is mocked to a fixed tsconfigHash; module resolution is staged through the layer proxy; the builtins
+  // list and the sha256 hasher run REAL.
   const readFileGateway = readFileProxy();
   tsconfigReadBrokerProxy();
   contentHashTransformerProxy();
@@ -56,8 +57,8 @@ export const compileResolveGraphBrokerProxy = (): {
   externalGlobalHandle.calledWith([]).resolves({ usable: false });
 
   return {
-    queueBlob: ({ blob }: { blob: unknown }): void => {
-      readFileGateway.returns({ content: JSON.stringify(blob) });
+    queueBlob: ({ path, blob }: { path: string; blob: unknown }): void => {
+      readFileGateway.returnsOnce({ path, contents: JSON.stringify(blob) });
     },
     configHash: ({ tsconfigHash }: { tsconfigHash: string }): void => {
       readConfigHandle.calledWith([]).returns({ options: {}, tsconfigHash: contentHashContract.parse(tsconfigHash) });

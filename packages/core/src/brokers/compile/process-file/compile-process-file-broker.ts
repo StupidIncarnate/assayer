@@ -17,9 +17,6 @@
  * // { reused: false, error: { line, column, message } } when the source fails to parse
  */
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { fsMkdirAdapter } from '../../../adapters/fs/mkdir/fs-mkdir-adapter';
-import { fsWriteFileAdapter } from '../../../adapters/fs/write-file/fs-write-file-adapter';
-import { fsRenameAdapter } from '../../../adapters/fs/rename/fs-rename-adapter';
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { mapProjectionTransformer } from '../../../transformers/map-projection/map-projection-transformer';
 import { moduleGraphProjectionTransformer } from '../../../transformers/module-graph-projection/module-graph-projection-transformer';
@@ -28,7 +25,7 @@ import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
 import { compiledFileBlobContract, relPathContract } from '@assayer/shared/contracts';
 import type { ContentHash } from '@assayer/shared/contracts';
 import type { SourcePosition } from '../../../contracts/source-position/source-position-contract';
-import { pathExists } from '#gateway/node/fs__promises';
+import { ensureDir, pathExists, rename, writeFile } from '#gateway/node/fs__promises';
 
 export const compileProcessFileBroker = async ({
   relPath,
@@ -82,10 +79,10 @@ export const compileProcessFileBroker = async ({
     moduleGraph,
   });
 
-  await fsMkdirAdapter({ path: blobsDir });
+  await ensureDir(blobsDir);
   const tmpPath = `${blobPath}.tmp`;
-  await fsWriteFileAdapter({ path: tmpPath, content: JSON.stringify(blob) });
-  await fsRenameAdapter({ from: tmpPath, to: blobPath });
+  await writeFile(tmpPath, JSON.stringify(blob));
+  await rename(tmpPath, blobPath);
 
   return { reused: false, contentHash };
 };

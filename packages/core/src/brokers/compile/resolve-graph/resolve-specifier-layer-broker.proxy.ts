@@ -13,7 +13,7 @@ export const resolveSpecifierLayerBrokerProxy = (): {
   resolvesLocalOnce: ({ fileName, specifier }: { fileName: string; specifier?: string }) => void;
   resolvesUnresolved: () => void;
 } => {
-  // pathRelativeAdapter runs REAL (deterministic path math). The module resolver is REPLACED wholesale
+  // The path `relative` call runs REAL (deterministic path math). The module resolver is REPLACED wholesale
   // because resolution against a real filesystem is exactly what a unit test cannot stage — the caller
   // says where a specifier lands instead.
   importSpecifierResolveBrokerProxy();

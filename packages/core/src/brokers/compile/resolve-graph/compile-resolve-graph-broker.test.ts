@@ -12,6 +12,7 @@ import { compileResolveGraphBrokerProxy } from './compile-resolve-graph-broker.p
 
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 const HASH = ContentHashStub();
+const BLOB_PATH = `/blobs/${String(HASH)}.json`;
 
 describe('compileResolveGraphBroker', () => {
   describe('an empty file set', () => {
@@ -35,6 +36,7 @@ describe('compileResolveGraphBroker', () => {
     it("ERROR: {import { foo } from './missing' resolves to nothing} => a cannot-resolve error at the declaration, no edge", async () => {
       const proxy = compileResolveGraphBrokerProxy();
       proxy.queueBlob({
+        path: BLOB_PATH,
         blob: CompiledFileBlobStub({
           relPath: 'src/a.ts',
           moduleGraph: {
@@ -70,6 +72,7 @@ describe('compileResolveGraphBroker', () => {
     it("VALID: {import { foo } from '../b/foo' resolves in-repo} => one local edge keyed by the definition path", async () => {
       const proxy = compileResolveGraphBrokerProxy();
       proxy.queueBlob({
+        path: BLOB_PATH,
         blob: CompiledFileBlobStub({
           relPath: 'src/a/caller.ts',
           moduleGraph: {
@@ -112,6 +115,7 @@ describe('compileResolveGraphBroker', () => {
     it("VALID: {import { readFile } from 'node:fs'} => one builtin edge, never touching the resolver", async () => {
       const proxy = compileResolveGraphBrokerProxy();
       proxy.queueBlob({
+        path: BLOB_PATH,
         blob: CompiledFileBlobStub({
           relPath: 'src/a.ts',
           moduleGraph: {
@@ -154,6 +158,7 @@ describe('compileResolveGraphBroker', () => {
       const proxy = compileResolveGraphBrokerProxy();
       proxy.configFilePath({ path: '/repo/tsconfig.json' });
       proxy.queueBlob({
+        path: BLOB_PATH,
         blob: CompiledFileBlobStub({
           relPath: 'src/a.ts',
           moduleGraph: {
@@ -163,6 +168,7 @@ describe('compileResolveGraphBroker', () => {
         }),
       });
       proxy.queueBlob({
+        path: BLOB_PATH,
         blob: CompiledFileBlobStub({
           relPath: 'src/b.ts',
           moduleGraph: {
@@ -199,6 +205,7 @@ describe('compileResolveGraphBroker', () => {
       const proxy = compileResolveGraphBrokerProxy();
       proxy.configFilePath({ path: '/repo/tsconfig.json' });
       proxy.queueBlob({
+        path: BLOB_PATH,
         blob: CompiledFileBlobStub({
           relPath: 'src/a.ts',
           moduleGraph: {
@@ -209,6 +216,7 @@ describe('compileResolveGraphBroker', () => {
         }),
       });
       proxy.queueBlob({
+        path: BLOB_PATH,
         blob: CompiledFileBlobStub({
           relPath: 'src/b.ts',
           moduleGraph: {
