@@ -24,7 +24,6 @@
 import { z } from '#gateway/npm/zod';
 
 import { externalSignatureContract } from '../external-signature/external-signature-contract';
-import { packageNameContract } from '../package-name/package-name-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 
 // A local edge is keyed by its in-repo definition path; a package/builtin edge is keyed by package
@@ -42,13 +41,13 @@ const resolvedTargetContract = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('local'), relPath: z.string().min(1).brand<'ResolvedTargetRelPath'>(), signature: externalSignatureContract.optional() }),
   z.object({
     kind: z.literal('package'),
-    packageName: packageNameContract,
+    packageName: z.string().min(1).brand<'ResolvedTargetPackageName'>(),
     signature: externalSignatureContract.optional(),
     type: typeDescriptorContract.optional(),
   }),
   z.object({
     kind: z.literal('builtin'),
-    packageName: packageNameContract,
+    packageName: z.string().min(1).brand<'ResolvedTargetPackageName'>(),
     signature: externalSignatureContract.optional(),
     type: typeDescriptorContract.optional(),
   }),

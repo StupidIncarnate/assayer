@@ -26,7 +26,7 @@
  *   cacheDir: '/repo/.assayer/cache', files: [{ relPath: 'src/a.ts', contentHash }] });
  * // Returns { index: ResolvedIndex, errors: [{ relPath, line, column, message }] }
  */
-import { compiledFileBlobContract, resolvedEdgeContract, resolvedIndexContract, packageNameContract } from '@assayer/shared/contracts';
+import { compiledFileBlobContract, resolvedEdgeContract, resolvedIndexContract } from '@assayer/shared/contracts';
 import type { ContentHash, ResolvedIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
@@ -52,7 +52,7 @@ export const compileResolveGraphBroker = async ({
   errors: { relPath: string; line: number; column: number; message: string }[];
 }> => {
   const { options, tsconfigHash, configFilePath } = tsconfigReadBroker({ searchPath: root });
-  const builtins = new Set(builtinModules.map((name) => packageNameContract.parse(name)).map(String));
+  const builtins = new Set(builtinModules.map((name) => name).map(String));
 
   const blobs = await Promise.all(
     files.map(async (file) => {
