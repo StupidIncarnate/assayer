@@ -347,7 +347,7 @@ current branch, so run it on a branch carved for it.
 
 | ID | What | Who | How | Status |
 |---|---|---|---|---|
-| R-1 | `JSON.parse` straight into a contract parse, at 38 sites | Script | `$E/phase34-scripts/b17-json-parse/run.cjs $FLAGS apply`, then unit tests, because the rewrite adds a runtime check | todo |
+| R-1 | `JSON.parse` straight into a contract parse, at 38 sites | Script | `$E/phase34-scripts/b17-json-parse/run.cjs $FLAGS apply`, then unit tests, because the rewrite adds a runtime check | done. `b17-json-parse` rewrote the two sites still left, in `config-load-broker.ts` and `manifest-load-broker.ts`; ward PASS (`1790856137375-e132`). Its 3 leftovers: two are `z.json()` contract definitions it misreads as raw JSON reads, and one raw value handed to a function goes to R-2. |
 | R-2 | Scan every gateway, test and brand rule to 0. The rules are `raw-import-ban`, `platform-globals-ban`, `bin-program-spawn-ban`, `ban-proxy-empty-called-with`, `ban-invented-failures`, `ban-test-support-in-production`, `ban-workspace-export-mocks`, `enforce-project-structure` and the brand rules. | Script, then agents | `npm run ward -- scan @dungeonmaster/<rule>` per rule. Its JSON batches are the hand queue. Also find why ward's lint discovery skips `packages/app/test/e2e-global-build.ts`: ESLint does not ignore it and app's tsconfig includes it, but a ward lint run on it grades 0 files. Also app's widget and responder tests import `themedRenderMiddleware` (at least `explorer-page-responder.test.ts`, `stubs-page-responder.test.ts` and five `stub-repository` widget tests), which `enforce-import-dependencies` refuses for a responder or widget; give app's tests one render path the rule allows, the way dungeonmaster's web package renders. | todo Also a gateway gap: core's `importSpecifierResolveBroker` and `tsconfigReadBroker` run `ts.resolveModuleName` and `ts.readConfigFile` over `ts.sys`, which no gateway proxy can stage, so their callers keep a `registerMock` of each broker staged by real arguments. |
 
 ### Phase Z: docs and the finish
@@ -493,4 +493,5 @@ One row per script run that changed files. The operator fills it in as the work 
 | X-3 | `b03-strip-barrels/run.cjs <pkg> $FLAGS apply` for shared, core, desktop; `b03-stub-type-alias/run.cjs $FLAGS` | 6 | 0 | the X-3 commit |
 | C-2 | `b15-enum-brands-off/run.cjs $FLAGS apply`, then the three `b15-stub-unwrap` lines it printed | 19 | 18 inline enum brands | the C-2/C-3 commit |
 | C-3 | `b15-as-never/run.cjs <pkg> $FLAGS apply` for shared, core, desktop, app | 15 | 18 kept casts | the C-2/C-3 commit |
+| R-1 | `b17-json-parse/run.cjs $FLAGS apply` | 2 | 3 | the R-1 commit |
 | P0-3 | `python3 $H/scripts/p0-3/rename-scope.py`, then `apply`, then `npm install` | 11 `package.json` files and `package-lock.json` | 0 | the P0-3 commit |

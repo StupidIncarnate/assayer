@@ -24,9 +24,8 @@ export const configLoadBroker = async ({
   const text = (await readFile(configPath));
 
   try {
-    const parsed = JSON.parse(text) as unknown;
 
-    return { success: true, data: assayerConfigContract.parse(parsed) };
+    return { success: true, data: assayerConfigContract.parse(JSON.parse(text)) };
   } catch (error: unknown) {
     if (!(error instanceof SyntaxError)) {
       throw error;

@@ -36,8 +36,7 @@ export const manifestLoadBroker = async ({
   const text = (await readFile(manifestPath));
 
   try {
-    const json: unknown = JSON.parse(text);
-    const parsed = assayerCacheManifestContract.safeParse(json);
+    const parsed = assayerCacheManifestContract.safeParse(JSON.parse(text));
 
     if (!parsed.success) {
       return manifestLoadResultContract.parse({
