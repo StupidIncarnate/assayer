@@ -166,6 +166,22 @@ These rules come from the dungeonmaster epic. Its section "Lessons worth keeping
 18. **A dungeonmaster bug gets fixed in dungeonmaster, not worked around.** When a scaffold, rule or script is wrong,
     an agent fixes it in the dungeonmaster checkout, with a test, then builds and commits there (D11). The operator
     adds a line to "Upstream reports" naming the commit. A local workaround is a concession and needs a row.
+19. **Every dungeonmaster commit says why.** Its message states the problem the change fixes, not only what changed.
+    Before the operator reports an item done, `git -C ../codex-of-consentient-craft status --short` shows no change
+    from this epic left uncommitted.
+20. **The operator runs a watchdog for the whole epic.** At the start of each session it creates a recurring cron job
+    that fires every 30 minutes, at :13 and :43 past the hour. The job lives only in the session, so a new session
+    creates it again. The watchdog reads the ledger `tmp/operator/agents.json`, which holds one entry per agent or long
+    script: `id`, `kind` (`agent` or `script`), `item`, `started` (from `date -Iseconds`), `status`, and for a script
+    its output file and that file's size at the last check. The operator adds an entry the moment it dispatches an
+    agent or starts a long script, and marks it `done` when the result arrives. On each run the watchdog does this:
+    - An agent running more than 60 minutes is stopped. The operator keeps its sound partial work, splits the rest
+      into smaller batches, and dispatches fresh agents for them.
+    - A script is never stopped for running long. A script whose output file has not grown across two checks in a row
+      counts as stalled, and is stopped and resumed.
+    - When nothing is running and work remains, the watchdog picks up the next items from this file.
+    The watchdog exists because an agent can run past an hour, and because a script like `run-all.sh` can run for hours
+    with nothing else to wake the operator. Its regular runs also keep the session's cache warm through those waits.
 
 ## The order of work
 
