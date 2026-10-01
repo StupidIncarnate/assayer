@@ -514,13 +514,13 @@ item in its subject.
 | PE-17 | Clean build, full ward and `test:syntax` on `post-epic`, then merge into `master` | planned, after PE-10 to PE-15 | |
 | PE-18 | After the user merges dungeonmaster's TypeScript 6 upgrade (`DEF-271` step 1): run assayer's full ward and `test:syntax` on the new tooling, and fix anything it changes | planned, waits on the user | |
 | PE-19 | `DEF-271` step 2: assayer moves to ts-morph 28 (TypeScript 6), bumps ts-jest and widens the `typescript` peer to `>=4.3 <7`, gated on the specimen hash check | planned, after PE-18 | |
+| PE-20 | The walk reader reads a mapped type's property through its original declaration, so `Partial<{ mode: string }>` reads `mode` as `string` with no `\| undefined`. A partial property is optional, so the reader must include `undefined`. Found by PE-9b; it predates PE-9. | planned | |
 
 **Waiting on the user, not scheduled:**
 
 - What happens when git is not installed: today a silent fallback (concession 16); the operator recommends a clear build error.
 - When and which packages to publish (every package is private).
 - Which upstream reports in dungeonmaster to fix (the operator suggests 4, 11, 12 and 17), and confirming `DEF-234` by running it.
-- `Partial<{ mode: string }>` reads `mode` as `string` with no `| undefined`. This predates PE-9; PE-9b found it. Whether to fix it is open.
 
 ## Scripts used
 
