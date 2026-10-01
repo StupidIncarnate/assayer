@@ -24,8 +24,28 @@ export const runPathsBrokerProxy = (): {
   const hashHandle = registerMock({ fn: analyzerHashBroker });
   const runEachHandle = registerMock({ fn: runEachLayerBroker });
 
-  hashHandle.calledWith([]).resolves(ContentHashStub());
-  runEachHandle.calledWith([]).implement(async ({ remaining }: { remaining: readonly string[] }) =>
+  // The broker is handed the caller's analyzer roots and the run set, so each stage names the shape of
+  // the one argument the broker passes: a call with a missing key does not match and throws.
+  hashHandle
+    .calledWith([
+      (arg: unknown): boolean =>
+        typeof arg === 'object' && arg !== null && 'roots' in arg && Array.isArray(arg.roots),
+    ])
+    .resolves(ContentHashStub());
+  runEachHandle
+    .calledWith([
+      (arg: unknown): boolean =>
+        typeof arg === 'object' &&
+        arg !== null &&
+        'remaining' in arg &&
+        Array.isArray(arg.remaining) &&
+        'root' in arg &&
+        'cacheDir' in arg &&
+        'coreRoot' in arg &&
+        'analyzerContentHash' in arg &&
+        'results' in arg,
+    ])
+    .implement(async ({ remaining }: { remaining: readonly string[] }) =>
     Promise.resolve(remaining.map(() => RunResultStub())),
   );
 

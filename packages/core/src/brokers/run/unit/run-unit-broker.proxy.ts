@@ -20,15 +20,17 @@ import { writeFileProxy } from '#gateway/node/fs__promises/write-file/write-file
 export const runUnitBrokerProxy = (): {
   // The run directory, the case set, the target's probe plan, the shim and the run artifact a run may
   // write, each staged to succeed at its exact path. `contentHash` names the probe plan, which is keyed
-  // on the source's content hash.
+  // on the source's content hash. `repoRoot` is the root whose committed stub overlay loads empty.
   setupWrites: ({
     cacheDir,
     runId,
     contentHash,
+    repoRoot,
   }: {
     cacheDir: string;
     runId: string;
     contentHash: string;
+    repoRoot: string;
   }) => void;
   setupSavedRun: ({ cacheDir, runId, run }: { cacheDir: string; runId: string; run: unknown }) => void;
   runnerWroteNothing: ({ cacheDir, runId }: { cacheDir: string; runId: string }) => void;
@@ -65,12 +67,12 @@ export const runUnitBrokerProxy = (): {
   // that stages nothing reaches an unstaged read of the colocated file.
   const harness = harnessRealizeBrokerProxy();
   runCrossFileProbesBrokerProxy();
-  // The overlay load is mocked wholesale to an EMPTY overlay: reading committed corrections off disk is
-  // I/O a unit test does not stage, so stub-realize sees no correction and its object-arrange overlay is
-  // a same-reference no-op. The child proxy satisfies structure; the direct registerMock is the intercept.
+  // The overlay load is mocked wholesale: reading committed corrections off disk is I/O a unit test
+  // does not stage. `setupWrites` stages it per repo root to an EMPTY overlay, so stub-realize sees no
+  // correction and its object-arrange overlay is a same-reference no-op. The child proxy satisfies
+  // structure; the direct registerMock is the intercept.
   stubOverlayLoadBrokerProxy();
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
-  overlayLoadHandle.calledWith([]).resolves([]);
 
   const runner = runExecuteCasesBrokerProxy();
   const dirs = ensureDirProxy();
@@ -83,11 +85,14 @@ export const runUnitBrokerProxy = (): {
       cacheDir,
       runId,
       contentHash,
+      repoRoot,
     }: {
       cacheDir: string;
       runId: string;
       contentHash: string;
+      repoRoot: string;
     }): void => {
+      overlayLoadHandle.calledWith([{ repoRoot }]).resolves([]);
       const runDir = `${cacheDir}/runs/${runId}`;
       dirs.succeeds({ path: `${cacheDir}/probes` });
       dirs.succeeds({ path: runDir });

@@ -7,7 +7,8 @@ import { runUnitBroker } from '../unit/run-unit-broker';
 import { runUnitBrokerProxy } from '../unit/run-unit-broker.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
-// Each scenario names the source file it stages and its colocated harness path, because the run id
+// Each scenario names the source file it stages, the run it answers with, and its colocated harness
+// path, because the run id
 // looks for the harness after the file is read. A file no scenario staged reaches an unstaged call,
 // which throws.
 export const runEachLayerBrokerProxy = (): {
@@ -31,8 +32,6 @@ export const runEachLayerBrokerProxy = (): {
 
   const runHandle = registerMock({ fn: runUnitBroker });
 
-  runHandle.calledWith([]).resolves(RunResultStub());
-
   return {
     setupSource: ({
       sourcePath,
@@ -43,6 +42,7 @@ export const runEachLayerBrokerProxy = (): {
       harnessPath: string;
       source: string;
     }): void => {
+      runHandle.calledWith([{ absPath: sourcePath }]).resolves(RunResultStub());
       fileProxy.returns({ path: sourcePath, contents: source });
       idProxy.noHarness({ harnessPath });
     },
