@@ -9,7 +9,7 @@ describe('stableNamespaceLayerBroker', () => {
     it('VALID: {previousManifest with matching commit} => returns mode skipped, reuses the previous files, no errors', async () => {
       const proxy = stableNamespaceLayerBrokerProxy();
       const sha = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
-      proxy.unchanged({ sha });
+      proxy.unchanged({ ref: 'master', sha });
       const previousManifest = AssayerCacheManifestStub();
 
       const result = await stableNamespaceLayerBroker({
@@ -46,9 +46,11 @@ describe('stableNamespaceLayerBroker', () => {
       const content = 'export const stable = 1;\n';
       const hash = contentHashTransformer({ content });
       proxy.changed({
+        ref: 'master',
         sha,
+        blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [content],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],
       });
 
       const result = await stableNamespaceLayerBroker({
@@ -78,9 +80,11 @@ describe('stableNamespaceLayerBroker', () => {
       const content = 'export const stable = 2;\n';
       const hash = contentHashTransformer({ content });
       proxy.changed({
+        ref: 'master',
         sha,
+        blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [content],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],
       });
       const previousManifest = AssayerCacheManifestStub();
 
@@ -111,8 +115,10 @@ describe('stableNamespaceLayerBroker', () => {
       const content = 'export const stable = 1;\n';
       const hash = contentHashTransformer({ content });
       proxy.changedCommitUnresolvable({
+        ref: 'master',
+        blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [content],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],
       });
 
       const result = await stableNamespaceLayerBroker({
@@ -136,9 +142,11 @@ describe('stableNamespaceLayerBroker', () => {
       const proxy = stableNamespaceLayerBrokerProxy();
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       proxy.changed({
+        ref: 'master',
         sha,
+        blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/broken.ts\n`,
-        fileContents: ['const x = ;;;{{{'],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'const x = ;;;{{{' }],
       });
 
       const result = await stableNamespaceLayerBroker({
@@ -164,11 +172,13 @@ describe('stableNamespaceLayerBroker', () => {
       const keepContent = 'export const keep = 1;\n';
       const keepHash = contentHashTransformer({ content: keepContent });
       proxy.changed({
+        ref: 'master',
         sha,
+        blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout:
           '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/skip.ts\n' +
           '100644 blob a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\tsrc/keep.ts\n',
-        fileContents: [keepContent],
+        blobs: [{ blobSha: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2', content: keepContent }],
       });
 
       const result = await stableNamespaceLayerBroker({
@@ -198,9 +208,11 @@ describe('stableNamespaceLayerBroker', () => {
       const sha = '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b';
       const content = 'export const stable = 1;\n';
       proxy.changed({
+        ref: 'master',
         sha,
+        blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
-        fileContents: [content],
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],
       });
       const events: unknown[] = [];
 

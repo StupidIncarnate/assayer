@@ -30,20 +30,31 @@ import { resolvedIndexWriteBrokerProxy } from '../../resolved-index/write/resolv
 
 export const compileRunBrokerProxy = (): {
   onCurrentBranch: (params: { name: string }) => void;
-  queueCurrentFiles: (params: { contents: readonly string[] }) => void;
-  stableUnchanged: (params: { sha: string }) => void;
-  stableChanged: (params: { sha: string; lsTreeStdout: string; fileContents: readonly string[] }) => void;
-  stableChangedCommitUnresolvable: (params: { lsTreeStdout: string; fileContents: readonly string[] }) => void;
-  manifestWriteSucceeds: () => void;
+  // `configDir` is the directory the caller hands the broker. The stub config's repoRoot is '.', so the
+  // walk root is `configDir` too, and the blob store is `<configDir>/.assayer/cache/blobs`.
+  queueCurrentFiles: (params: { configDir: string; contents: readonly string[] }) => void;
+  stableUnchanged: (params: { ref: string; sha: string }) => void;
+  stableChanged: (params: {
+    configDir: string;
+    ref: string;
+    sha: string;
+    lsTreeStdout: string;
+    blobs: readonly { blobSha: string; content: string }[];
+  }) => void;
+  stableChangedCommitUnresolvable: (params: {
+    configDir: string;
+    ref: string;
+    lsTreeStdout: string;
+    blobs: readonly { blobSha: string; content: string }[];
+  }) => void;
+  manifestWriteSucceeds: (params: { configDir: string }) => void;
   resolvesWithError: (params: { relPath: string; line: number; column: number; message: string }) => void;
   overlayStale: () => void;
   overlayContradicts: () => void;
   harnessInvalid: (params: { relPath: string; message: string }) => void;
-  // Takes the same configDir the caller hands the broker, and addresses the read on the tmp manifest
-  // path the broker derives from it. Every write this compile makes shares one recording, so an
-  // unaddressed read would answer with whichever file happened to be written last.
+  // Takes the same configDir the caller hands the broker; the manifest path derives from it.
   getWrittenManifest: ({ configDir }: { configDir: string }) => unknown;
-  wasManifestWritten: () => boolean;
+  wasManifestWritten: (params: { configDir: string }) => boolean;
   getProcessedFileCount: () => FileCount;
   getResolvedIndexWriteOrder: () => readonly NamespaceName[];
   getPropertyIndexWriteOrder: () => readonly NamespaceName[];
@@ -105,40 +116,61 @@ export const compileRunBrokerProxy = (): {
     onCurrentBranch: ({ name }: { name: string }): void => {
       currentBranchProxy.onBranch({ name });
     },
-    queueCurrentFiles: ({ contents }: { contents: readonly string[] }): void => {
+    queueCurrentFiles: ({ configDir, contents }: { configDir: string; contents: readonly string[] }): void => {
+      const blobsDir = `${configDir}/.assayer/cache/blobs`;
       planCurrentProxy.queueDir({
-        entries: contents.map((_content, index) => ({ name: `current-${index}.ts`, isDirectory: false })),
+        path: configDir,
+        entries: contents.map((_content, index) => ({ name: `current-${index}.ts`, kind: 'file' as const })),
       });
-      contents.forEach((content) => {
-        planCurrentProxy.queueFileContent({ content });
-        processCurrentProxy.queueCleanWrite();
+      contents.forEach((content, index) => {
+        planCurrentProxy.queueFileContent({ path: `${configDir}/current-${index}.ts`, content });
+        processCurrentProxy.queueCleanWrite({ blobsDir, content });
       });
     },
-    stableUnchanged: ({ sha }: { sha: string }): void => {
-      stableProxy.unchanged({ sha });
+    stableUnchanged: ({ ref, sha }: { ref: string; sha: string }): void => {
+      stableProxy.unchanged({ ref, sha });
     },
     stableChanged: ({
+      configDir,
+      ref,
       sha,
       lsTreeStdout,
-      fileContents,
+      blobs,
     }: {
+      configDir: string;
+      ref: string;
       sha: string;
       lsTreeStdout: string;
-      fileContents: readonly string[];
+      blobs: readonly { blobSha: string; content: string }[];
     }): void => {
-      stableProxy.changed({ sha, lsTreeStdout, fileContents });
+      stableProxy.changed({
+        ref,
+        sha,
+        lsTreeStdout,
+        blobs,
+        blobsDir: `${configDir}/.assayer/cache/blobs`,
+      });
     },
     stableChangedCommitUnresolvable: ({
+      configDir,
+      ref,
       lsTreeStdout,
-      fileContents,
+      blobs,
     }: {
+      configDir: string;
+      ref: string;
       lsTreeStdout: string;
-      fileContents: readonly string[];
+      blobs: readonly { blobSha: string; content: string }[];
     }): void => {
-      stableProxy.changedCommitUnresolvable({ lsTreeStdout, fileContents });
+      stableProxy.changedCommitUnresolvable({
+        ref,
+        lsTreeStdout,
+        blobs,
+        blobsDir: `${configDir}/.assayer/cache/blobs`,
+      });
     },
-    manifestWriteSucceeds: (): void => {
-      manifestProxy.succeeds();
+    manifestWriteSucceeds: ({ configDir }: { configDir: string }): void => {
+      manifestProxy.succeeds({ configDir });
     },
     resolvesWithError: ({
       relPath,
@@ -174,8 +206,9 @@ export const compileRunBrokerProxy = (): {
       });
     },
     getWrittenManifest: ({ configDir }: { configDir: string }): unknown =>
-      manifestProxy.getWrittenManifest({ path: `${configDir}/.assayer/cache/manifest.json.tmp` }),
-    wasManifestWritten: (): boolean => manifestProxy.wasWritten(),
+      manifestProxy.getWrittenManifest({ configDir }),
+    wasManifestWritten: ({ configDir }: { configDir: string }): boolean =>
+      manifestProxy.wasWritten({ configDir }),
     getProcessedFileCount: (): FileCount => processCurrentProxy.processedCount(),
     getResolvedIndexWriteOrder: (): readonly NamespaceName[] => resolvedIndexWriteOrder,
     getPropertyIndexWriteOrder: (): readonly NamespaceName[] => stubGraphWriteOrder,
