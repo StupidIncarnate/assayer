@@ -9,8 +9,6 @@
  * // { hasGitRepo: true, candidates: [] } when neither main nor master exist, or
  * // { hasGitRepo: false } when repoRoot isn't a git working tree
  */
-import { branchNameContract } from '@assayer/shared/contracts';
-import type { BranchName } from '@assayer/shared/contracts';
 
 import { GitNotInstalledError, branchList, isInsideWorkTree } from '#gateway/bin/git';
 
@@ -19,7 +17,7 @@ export const gitDetectStableBranchBroker = async ({
 }: {
   repoRoot: string;
 }): Promise<
-  { hasGitRepo: false } | { hasGitRepo: true; candidates: BranchName[]; preselected?: BranchName }
+  { hasGitRepo: false } | { hasGitRepo: true; candidates: string[]; preselected?: string }
 > => {
   const inside = await isInsideWorkTree({ cwd: repoRoot }).catch((error: unknown) => {
     if (error instanceof GitNotInstalledError) {
@@ -37,7 +35,7 @@ export const gitDetectStableBranchBroker = async ({
   const present = new Set(branches ?? []);
   const candidates = (['main', 'master'] as const)
     .filter((branch) => present.has(branch))
-    .map((branch) => branchNameContract.parse(branch));
+    .map((branch) => branch);
 
   const [preselected] = candidates;
 

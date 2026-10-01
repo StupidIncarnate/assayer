@@ -22,7 +22,6 @@ export * from './content-hash/content-hash-contract';
 
 export * from './column-number/column-number-contract';
 
-export * from './branch-name/branch-name-contract';
 
 export * from './namespace-name/namespace-name-contract';
 

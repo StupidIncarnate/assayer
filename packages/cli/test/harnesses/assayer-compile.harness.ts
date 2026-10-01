@@ -34,9 +34,8 @@ import {
 
 import { CliRunResultStub } from '../../src/contracts/cli-run-result/cli-run-result.stub';
 import type { CliRunResult } from '../../src/contracts/cli-run-result/cli-run-result-contract';
-import { BranchNameStub } from '@assayer/shared/contracts/branch-name/branch-name.stub';
 import { ContentHashStub } from '@assayer/shared/contracts/content-hash/content-hash.stub';
-import type { BranchName, ContentHash } from '@assayer/shared/contracts';
+import type { ContentHash } from '@assayer/shared/contracts';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { execPath } from '#gateway/node/process';
@@ -67,7 +66,7 @@ export const assayerCompileHarness = (): {
   headBranch: () => Promise<string>;
   read: ({ relPath }: { relPath: string }) => string;
   exists: ({ relPath }: { relPath: string }) => boolean;
-  manifestNamespaceNames: () => readonly BranchName[];
+  manifestNamespaceNames: () => readonly string[];
   manifestRelPaths: ({ namespace }: { namespace: string }) => readonly string[];
   manifestContentHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
   manifestNamespaceHasCommit: ({ namespace }: { namespace: string }) => boolean;
@@ -171,13 +170,13 @@ export const assayerCompileHarness = (): {
     read: ({ relPath }: { relPath: string }): string =>
       readFileSync(join(dir, relPath)),
     exists: ({ relPath }: { relPath: string }): boolean => existsSync(join(dir, relPath)),
-    manifestNamespaceNames: (): readonly BranchName[] => {
+    manifestNamespaceNames: (): readonly string[] => {
       const manifest = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
       ) as Manifest;
       return Object.keys(manifest.namespaces)
         .sort((a, b) => (a < b ? -1 : 1))
-        .map((name) => BranchNameStub({ value: name }));
+        .map((name) => name);
     },
     manifestRelPaths: ({ namespace }: { namespace: string }): readonly string[] => {
       const manifest = JSON.parse(

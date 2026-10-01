@@ -14,16 +14,14 @@
  */
 import { question } from '#gateway/node/readline';
 import { getStdin, stdout } from '#gateway/node/process';
-import { branchNameContract } from '@assayer/shared/contracts';
-import type { BranchName } from '@assayer/shared/contracts';
 
 export const stableBranchPickBroker = async ({
   candidates,
   preselected,
 }: {
-  candidates: readonly BranchName[];
-  preselected: BranchName;
-}): Promise<BranchName> => {
+  candidates: readonly string[];
+  preselected: string;
+}): Promise<string> => {
   const candidateLines = candidates
     .map((candidate) => `  ${candidate}${candidate === preselected ? ' (default)' : ''}`)
     .join('\n');
@@ -39,5 +37,5 @@ export const stableBranchPickBroker = async ({
   });
   const match = candidates.find((candidate) => candidate === answer);
 
-  return branchNameContract.parse(match === undefined ? preselected : match);
+  return (match === undefined ? preselected : match);
 };

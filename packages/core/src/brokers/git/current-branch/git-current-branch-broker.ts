@@ -7,8 +7,6 @@
  * await gitCurrentBranchBroker({ repoRoot: '/repo' });
  * // Returns a validated BranchName, e.g. 'feature-x', 'detached-abc1234', or 'default'
  */
-import { branchNameContract } from '@assayer/shared/contracts';
-import type { BranchName } from '@assayer/shared/contracts';
 
 import { gitRun, GitNotInstalledError, resolveRef } from '#gateway/bin/git';
 
@@ -16,7 +14,7 @@ export const gitCurrentBranchBroker = async ({
   repoRoot,
 }: {
   repoRoot: string;
-}): Promise<BranchName> => {
+}): Promise<string> => {
   try {
     const { exitCode, stdout } = await gitRun({
       args: ['rev-parse', '--abbrev-ref', 'HEAD'],
@@ -24,7 +22,7 @@ export const gitCurrentBranchBroker = async ({
     });
 
     if (exitCode !== 0) {
-      return branchNameContract.parse('default');
+      return 'default';
     }
 
     const name = stdout.trim();
@@ -32,13 +30,13 @@ export const gitCurrentBranchBroker = async ({
     if (name === 'HEAD') {
       const short = await resolveRef({ cwd: repoRoot, ref: 'HEAD', short: true });
 
-      return branchNameContract.parse(`detached-${short ?? ''}`);
+      return `detached-${short ?? ''}`;
     }
 
-    return branchNameContract.parse(name);
+    return name;
   } catch (error: unknown) {
     if (error instanceof GitNotInstalledError) {
-      return branchNameContract.parse('default');
+      return 'default';
     }
 
     throw error;
