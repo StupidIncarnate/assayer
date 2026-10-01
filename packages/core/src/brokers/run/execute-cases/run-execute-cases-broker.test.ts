@@ -57,8 +57,35 @@ describe('runExecuteCasesBroker', () => {
 
   describe('the worker it runs in', () => {
     // Jest runs an ES module only through vm.SourceTextModule, which Node turns on only from the
-    // worker's own command line. CommonJS runs go through the same worker, so there is one path.
-    it('VALID: {a run} => forks the runner entry with the vm-modules flag and its warning silenced', async () => {
+    // worker's own command line.
+    it('VALID: {an ESM run} => forks the runner entry with the vm-modules flag and its warning silenced', async () => {
+      const proxy = runExecuteCasesBrokerProxy();
+      proxy.succeeds({ runDir: '/cache/runs/r1' });
+
+      await runExecuteCasesBroker({
+        runDir: '/cache/runs/r1',
+        repoRoot: '/repo',
+        probeDir: '/cache/probes',
+        runtime: CoreRuntimeStub(),
+        analyzerContentHash: 'abc123',
+        format: 'esm',
+      });
+
+      expect(proxy.getForkCalls({ runner: '/core/run-jest.js' })).toStrictEqual([
+        [
+          '/core/run-jest.js',
+          [],
+          {
+            execArgv: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+            stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+          },
+        ],
+      ]);
+    });
+
+    // The vm-modules flag costs about 100 ms on every run, CommonJS runs included, so a CommonJS run
+    // goes to a worker started without it. Same runner entry, same code path.
+    it('VALID: {a CommonJS run} => forks the same runner entry with no Node flags', async () => {
       const proxy = runExecuteCasesBrokerProxy();
       proxy.succeeds({ runDir: '/cache/runs/r1' });
 
@@ -76,7 +103,7 @@ describe('runExecuteCasesBroker', () => {
           '/core/run-jest.js',
           [],
           {
-            execArgv: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+            execArgv: [],
             stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
           },
         ],

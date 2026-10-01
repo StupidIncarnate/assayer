@@ -25,9 +25,11 @@
  *   `compiler`. `esModuleInterop` is on for ESM because ts-jest turns it on for an ESM compile anyway and
  *   warns on stderr when the tsconfig leaves it off.
  *
- *   `workerExecArgv` are the Node flags the worker process starts with. Jest runs an ES module only
- *   through `vm.SourceTextModule`, which Node puts behind `--experimental-vm-modules`. The warning Node
- *   prints for that flag is silenced, because runner output never reaches a human.
+ *   `workerExecArgv` are the Node flags the worker process starts with, per format. Jest runs an ES
+ *   module only through `vm.SourceTextModule`, which Node puts behind `--experimental-vm-modules`, so an
+ *   ESM worker starts with that flag. The warning Node prints for it is silenced, because runner output
+ *   never reaches a human. A CommonJS worker starts with no flag, because the flag costs about 100 ms on
+ *   every run, ESM or not (measured in PE-3).
  *
  * USAGE:
  * coreRuntimeStatics.modules.interpretCase;
@@ -72,5 +74,8 @@ export const coreRuntimeStatics = {
       esModuleInterop: true,
     },
   },
-  workerExecArgv: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+  workerExecArgv: {
+    commonjs: [],
+    esm: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+  },
 } as const;

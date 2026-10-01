@@ -1222,12 +1222,16 @@ compiles with the installed `typescript` package instead of ts-morph's copy.
 **The nested Jest runs in a worker process, never in the caller's own.**
 Jest runs an ES module only through `vm.SourceTextModule`, which Node puts
 behind `--experimental-vm-modules`, and only a process's own command line can
-turn that flag on. `runExecuteCasesBroker` sends every run, CommonJS and ESM,
-to one worker that the node gateway's `forkWorker` keeps alive for the life
-of the calling process, so Jest, ts-jest and each compiler start once per
-batch. The worker's entry is the root `run-jest.js`. It forks with
-`process.execPath`, so under Electron with `ELECTRON_RUN_AS_NODE` the worker
-is Electron's Node, and the flag works there too. The worker never keeps the
+turn that flag on. The flag also slows every run, CommonJS runs included, by
+about 100 ms (measured in PE-3 and PE-8). So `runExecuteCasesBroker` keeps one
+worker per module format: the ESM worker starts with the flag, and the
+CommonJS worker starts without it. The node gateway's `forkWorker` keeps each
+one alive for the life of the calling process, so Jest, ts-jest and each
+format's compiler start once per batch. Both workers run the root
+`run-jest.js` through the same code path; only their Node flags differ,
+from `coreRuntimeStatics.workerExecArgv`. A worker forks with
+`process.execPath`, so under Electron with `ELECTRON_RUN_AS_NODE` it is
+Electron's Node, and the flag works there too. A worker never keeps the
 caller alive while it is idle, and it exits when the caller's process ends.
 
 **An ESM run has no setup file.** A Jest setup file is CommonJS, and in an
@@ -1269,10 +1273,27 @@ source. The CLI integration tests are the exception: they spawn the built
 CLI binary, so they need a current build.
 
 The ceremony files are the plain-JS files at core's package root that Node
-or Jest loads by path: `probe-runtime.js`, `probe-transformer.js`,
-`harness-registrar.js`, `bundled-typescript.js`, `ts-resolver.js` and
-`run-jest.js`. The file paths of the run-time modules and the ceremony files
-live in `statics/core-runtime`. Moving a run-time module means editing that
+or Jest loads by path. They are plain JS because the nested Jest config is
+JSON, so it can only name a file, and Node or Jest loads that file before
+any TypeScript support exists. Each one has a single job:
+
+- `probe-runtime.js` is the CommonJS run's Jest setup file. It installs the
+  probe runtime that records which exit a case reached.
+- `probe-transformer.js` is ts-jest's AST transformer. It injects the
+  probes into the code under test as ts-jest compiles it.
+- `harness-registrar.js` is what `@assayer/core` maps to inside a run, so a
+  harness's registration lands where the generated test file reads it.
+- `bundled-typescript.js` is ts-jest's `compiler`: the TypeScript that
+  ts-morph bundles, loaded from the ts-morph install the npm gateway uses,
+  so it is the same object `#gateway/npm/typescript` exports. The analyzer
+  hash reads ts-morph's version from that same install.
+- `ts-resolver.js` is the nested Jest's resolver (see the entry above on
+  relative imports).
+- `run-jest.js` is the worker process's entry. It runs Jest for each
+  request the worker receives.
+
+The file names of the run-time modules and the ceremony files live in
+`statics/core-runtime`. Adding, moving or renaming one means editing that
 file.
 
 **Coverage IDs are cache-internal by design.** Changing how they are

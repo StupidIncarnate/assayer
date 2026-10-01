@@ -3,11 +3,12 @@
  *   actually invoked. Consumers never touch Jest; the runner is an implementation detail behind this
  *   boundary, which is what keeps it swappable.
  *
- *   Jest runs in a worker process, the one `forkWorker` keeps alive per batch, started with
- *   `coreRuntimeStatics.workerExecArgv`. The worker needs `--experimental-vm-modules` so an ESM consumer's
- *   code runs as ES modules, and only a process's own command line can turn that flag on. Every run, ESM
- *   and CommonJS alike, goes through the same worker, so there is one execution path. The worker's entry
- *   is the root `run-jest.js`, and it replies `{ passed }`, or `{ crashed }` when Jest itself throws.
+ *   Jest runs in a worker process, one per module format, each kept alive by `forkWorker` for the life
+ *   of the calling process. Both workers run the root `run-jest.js` through the same code path; only
+ *   their Node flags differ, from `coreRuntimeStatics.workerExecArgv[format]`. The ESM worker needs
+ *   `--experimental-vm-modules` so an ESM consumer's code runs as ES modules, and only a process's own
+ *   command line can turn that flag on. The CommonJS worker starts without it, because the flag costs
+ *   about 100 ms on every run. A worker replies `{ passed }`, or `{ crashed }` when Jest itself throws.
  *
  *   The config is INLINE JSON, which constrains the shape: Jest parses it as JSON, so the transformer,
  *   setup file, resolver, environment and compiler must be file PATHS, never live objects. The ceremony
@@ -42,7 +43,7 @@
  *   per distinct config and never releases it, so pointing `roots`/`testMatch` at each run's own
  *   directory made every file look like a new project and left a whole compiler behind — measured at
  *   ~370MB per file, which took `assayer unit` over 13 files to 3GB and would OOM a real repo. One
- *   config per format means at most two compilers in the worker, each reused.
+ *   config per format means one compiler in each format's worker, reused across its runs.
  *
  * USAGE:
  * runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash, format: 'esm' });
@@ -129,7 +130,7 @@ export const runExecuteCasesBroker = async ({
   };
 
   const reply = workerReplyContract.parse(
-    await forkWorker({ modulePath: runtime.runner, execArgv: [...coreRuntimeStatics.workerExecArgv] }).request({
+    await forkWorker({ modulePath: runtime.runner, execArgv: [...coreRuntimeStatics.workerExecArgv[format]] }).request({
       message: {
         config: JSON.stringify(config),
         // The one place THIS run is named, which is what lets the config above stay identical between runs.
