@@ -12,8 +12,8 @@ as an unhandled node and surfaces as a dark spot — honest, but zero cases. The
 reason the standard "add a handler" recipe does not close it splits cleanly:
 
 - **Exit position** (`return cond ? a : b`, `throw cond ? a : b`). The blocker is
-  EXIT OWNERSHIP. `handle-exit-layer-adapter.ts` emits one unguarded exit BEFORE
-  descending (`:41-58`), and exits merge upward (`walk-node-layer-adapter.ts:39`),
+  EXIT OWNERSHIP. `handle-exit-layer-transformer.ts` emits one unguarded exit BEFORE
+  descending, and exits merge upward (`walk-node-layer-transformer.ts`),
   so a branch inside the returned expression cannot make the `return` retract its
   own exit. The fix lives inside the exit handler: split its own exit per arm.
   Everything downstream — branch → `guardPath` → `derive-cases` — is reused
@@ -28,7 +28,7 @@ reason the standard "add a handler" recipe does not close it splits cleanly:
 
 The **assumed ternaries** are a third axis crossing both positions: `a && b`,
 `a || b`, `a ?? b`, `a?.b` are branch points with the same two-path shape, but
-`read-condition-tree-layer-adapter.ts` already reads `&&`/`||` as CONNECTIVES (one
+`read-condition-tree-layer-transformer.ts` already reads `&&`/`||` as CONNECTIVES (one
 boolean tree) when they sit inside an `if`. In VALUE position they are branches
 with different value-flow (`a ?? b` ≡ `a != null ? a : b`), and today the
 `BinaryExpression`/optional-chain forms are not even in
@@ -54,11 +54,11 @@ is silently dropped — a small soundness gap.
 
 ## What already exists (reuse, do not rebuild)
 
-- **Condition reading:** `read-condition-tree-layer-adapter.ts` takes the condition
+- **Condition reading:** `read-condition-tree-layer-transformer.ts` takes the condition
   EXPRESSION, not the `if` — its own doc says a ternary can reuse it unchanged. It
   emits the leaf tree + probe sites.
-- **Branch id + exit id:** `coverage-id-transformer.ts` + `project-node-layer-adapter.ts`
-  (structural projection of the condition). `derive-branch-id-layer-adapter.ts` is
+- **Branch id + exit id:** `coverage-id-transformer.ts` + `project-node-layer-transformer.ts`
+  (structural projection of the condition). `derive-branch-id-layer-transformer.ts` is
   `if`-typed (`.getExpression()`); a ternary derives the same id shape off its
   `.getCondition()`.
 - **Guard/exit/case machinery, all reusable unchanged:** `exit-coverage-id`,
@@ -79,7 +79,7 @@ The clean, fully-derivable piece. Specimen-first per core CLAUDE.md §6.
   block-bodied `return` sibling). Colocated `.test.ts` asserts the two branch-driven
   cases + the branch. Declared in `specimen-registry.ts` (`branch:ternary`,
   `access:named`) by READING the file.
-- **New layer adapter** `read-conditional-exit-layer-adapter.ts` (+ proxy + test):
+- **New layer file** `read-conditional-exit-layer-transformer.ts` (+ proxy + test):
   given `{ expression, kind, context }`, returns `{ branches, exits, probeSites,
   descents }`. Recursive: if `expression` is a `ConditionalExpression`, read its
   condition as a branch (id off `.getCondition()` via `project-node` +
@@ -90,12 +90,12 @@ The clean, fully-derivable piece. Specimen-first per core CLAUDE.md §6.
   cleared (routes calls sited in the condition to `handle-call`, mirroring
   `handle-if`). Nested ternaries in an arm are handled by the recursion, not a
   second dark spot.
-- **Wire `handle-exit-layer-adapter.ts`:** when the returned expression is
-  conditional, delegate to the new adapter instead of emitting one unguarded exit;
+- **Wire `handle-exit-layer-transformer.ts`:** when the returned expression is
+  conditional, delegate to the new layer file instead of emitting one unguarded exit;
   otherwise keep the current single-exit behaviour verbatim.
 - **Branch node kind** `'ternary'` (already in `map-node-kind-statics.ts` and the
   shared `map-node-kind-contract`); confirm `branch-node-contract` admits it.
-- **Flip the walk-adapter test** `ts-morph-walk-file-adapter.test.ts:438` — the
+- **Flip the walk-file test** `walk-file-transformer.test.ts` — the
   "ternary in a return is unhandled" case becomes two guarded exits + a handled
   `ConditionalExpression` node. Update core CLAUDE.md §8 to state that exit-position
   is handled and value-position remains the marked blind spot.
@@ -105,7 +105,7 @@ The clean, fully-derivable piece. Specimen-first per core CLAUDE.md §6.
 ### Rung B — exit-position assumed ternaries (`return a && b / a || b / a ?? b / a?.b`)
 
 Same exit-split mechanism, different desugaring, so it is a natural extension of the
-Rung-A adapter — but it touches the predicate vocabulary, so it is its own rung.
+Rung-A layer file — but it touches the predicate vocabulary, so it is its own rung.
 
 - The left operand becomes the condition LEAF, read as a truthy / non-nullish check
   — distinct from `read-condition-tree`'s connective reading. Desugaring:
@@ -149,7 +149,7 @@ to make a branch look covered.
 
 ## Open decisions to confirm
 
-1. **Rung A adapter as a dedicated layer file** vs. folding the recursion into
+1. **Rung A's reader as a dedicated layer file** vs. folding the recursion into
    `handle-exit`. Recommend the layer file — the recursion (nested ternaries) and the
    Rung-B extension both want their own unit tests, and `handle-exit` stays readable.
 2. **Rung B's nullish predicate** — new predicate kind + `type-to-range` domain, or

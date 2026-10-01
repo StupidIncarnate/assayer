@@ -133,7 +133,7 @@ second where the helper's whole body is a comparison like `n > 5`.
 that value to a function the module does not export, and it already drops unexported
 functions before that value could ever be attached to anything. So the value only exists
 briefly during parsing, and it is tested there, in
-`read-entry-access-layer-adapter.test.ts`. Changing that would mean changing what the field
+`read-entry-access-layer-transformer.test.ts`. Changing that would mean changing what the field
 is allowed to hold, not writing an example file.
 
 ---

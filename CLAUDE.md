@@ -206,19 +206,24 @@ details inside `dev:stop` matter and are not incidental:
 
 Fix both of these before publishing `@assayer/core`:
 
-- Running `npm pack` ships 359 files, and 0 of them are inside `dist/`.
-  `package.json`'s `exports` field points every export at a path under
-  `./dist/*.js`. `dist/` is gitignored, there is no `files` allowlist in
-  `package.json`, and there is no prepublish build step. A published core
-  package would resolve every export to a file that is not in the tarball.
-  The tarball also ships 127 `.test.ts` files a published package does not
-  need.
-- Core declares `typescript` and `ts-jest` as regular `dependencies`. A
-  package installed into an arbitrary consumer's TypeScript repo
-  conventionally declares `typescript` as a `peerDependency` instead.
-  Otherwise the consumer ends up with a second copy of TypeScript, and that
-  copy can disagree with the consumer's own `tsc`, and with Assayer's own
-  `ts-morph`, about what the code means. This one is still undecided.
+- Core's `package.json` marks the package `private`, so `npm publish`
+  refuses it. Removing that flag is not enough on its own. The `exports`
+  entries for `.`, `./brokers`, `./contracts`, and `./transformers` point
+  at files under `./dist/`. `dist/` is gitignored, `package.json` has no
+  `files` allowlist, and there is no prepublish build step. A tarball
+  packed from a fresh checkout therefore holds no `dist/`, and every one of
+  those exports resolves to a missing file. The tarball also ships every
+  `.test.ts`, `.proxy.ts`, and `.stub.ts` file. The `./*.proxy` and
+  `./*.stub` exports carry only the `source` condition, so a consumer that
+  does not set that condition cannot resolve them at all.
+- Core declares `typescript` and `ts-jest` as regular `dependencies`. So
+  does the npm gateway package `@assayer/npm`, which core depends on, and
+  the two must agree. A package installed into an arbitrary consumer's
+  TypeScript repo conventionally declares `typescript` as a
+  `peerDependency` instead. Otherwise the consumer ends up with a second
+  copy of TypeScript, and that copy can disagree with the consumer's own
+  `tsc`, and with Assayer's own `ts-morph`, about what the code means.
+  This one is still undecided.
 
 ## Constraints that shape every implementation decision
 
@@ -298,12 +303,14 @@ structural projection of that node instead: its node kind, its children,
 and its leaf values. Assayer's cache is a translated AST. Do not fall back
 to `getText()`. Pulling text into static analysis is a bug, full stop.
 
-For a concrete example, `ts-morph-extract-analysis-adapter.ts` keys a
-coverage ID on the identifier's resolved SYMBOL name when the operand is
-simple, and on the whole condition's structural projection otherwise. It
-reads a predicate's operator and literal from the node's kind and from
-`getLiteralValue()`. No path in that file calls `getText()` to produce an
-ID.
+For a concrete example, `project-node-layer-transformer.ts` builds the
+structural projection a branch's coverage ID keys on. It writes each node
+as its kind, each string or number literal as its value from
+`getLiteralValue()`, and each identifier as its name. It skips redundant
+parentheses. `read-condition-layer-transformer.ts` reads a predicate's
+operator from the operator token's kind, and its literal through
+`getLiteralValue()`. Neither file reads a condition's source text to
+produce an ID.
 
 ### Never derive an expected value from the code under test
 

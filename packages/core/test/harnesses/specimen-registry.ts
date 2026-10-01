@@ -716,7 +716,7 @@ export const specimenRegistry = new Map<string, readonly SyntaxTrait[]>(
 export const uncataloguedTraits = {
   'access:unreachable':
     'no ENTRY can EVER carry it, by construction — not a missing specimen but a value the pipeline ' +
-    'always resolves away before analysis is exposed. `readEntryAccessLayerAdapter` assigns `unreachable` ' +
+    'always resolves away before analysis is exposed. `readEntryAccessLayerTransformer` assigns `unreachable` ' +
     'only when the module export table has no entry for the scope, which is exactly the condition under ' +
     'which `analysisProjectionTransformer`\'s own entry filter (`scope.kind === \'function\' && ' +
     'scope.exported`) already excludes it from `FileAnalysis.functions`. The only route back in is ' +
@@ -724,5 +724,5 @@ export const uncataloguedTraits = {
     'own — `happy-path/function/nested`), promotes it to `access:through-caller` ' +
     '(`happy-path/composition/through-caller`), or leaves it UNDRIVEN (`sad-path/undriven/hof-callback`), ' +
     'which carries no access kind at all. So `unreachable` is real only inside the raw walk, one step ' +
-    'before `FileAnalysis` — pinned there, and only there, by `read-entry-access-layer-adapter.test.ts`.',
+    'before `FileAnalysis` — pinned there, and only there, by `read-entry-access-layer-transformer.test.ts`.',
 } as const;

@@ -39,7 +39,7 @@
  *   "RepresentativeValue"/"ArrangeValue" anywhere in it, and that version fired on nine sites across
  *   packages/core/src when run for real against this repo (`npm run ward -- --only lint`) — every one
  *   an array or a `Map#get()` result being defaulted to `[]`/a fallback array, never a scalar `null`
- *   being discarded. `handler-result-layer-adapter.ts` and `is-domain-empty/is-domain-empty-guard.ts`
+ *   being discarded. `handler-result-layer-transformer.ts` and `is-domain-empty/is-domain-empty-guard.ts`
  *   are two of those nine; the shapes below reconstruct them.
  */
 
@@ -87,8 +87,8 @@ const value = usableValues[0] === undefined ? fillValueTransformer() : usableVal
 `,
     },
     {
-      // REGRESSION LOCK. Reconstructs packages/core/src/adapters/ts-morph/walk-file/
-      // handler-result-layer-adapter.ts:113 — `calls ?? []`, where `calls`'s element type has an
+      // REGRESSION LOCK. Reconstructs packages/core/src/transformers/walk-file/
+      // handler-result-layer-transformer.ts:62 — `calls ?? []`, where `calls`'s element type has an
       // UNRELATED property typed `RepresentativeValue | null` three levels down. A text-substring
       // version of this rule fired here; the whole `??` operand is an ARRAY of rich objects, never a
       // RepresentativeValue itself, so nothing here is ever `null` — only ever absent (`undefined`).
