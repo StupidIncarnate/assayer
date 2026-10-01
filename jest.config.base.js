@@ -10,8 +10,6 @@ module.exports = {
   testMatch: ['**/src/**/*.test.ts', '**/src/**/*.test.tsx', '**/bin/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json'],
   moduleNameMapper: {
-    '^@assayer/core/testing$': '<rootDir>/../core/testing.ts',
-    '^@assayer/desktop/testing$': '<rootDir>/../desktop/testing.ts',
   },
   transform: {
     ...base.transform,

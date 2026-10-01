@@ -9,12 +9,6 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./testing": {
-      "source": "./testing.ts",
-      "import": "./dist/testing.js",
-      "require": "./dist/testing.js",
-      "types": "./dist/testing.d.ts"
-    },
     "./*.proxy": {
       "source": "./src/*.proxy.ts"
     },

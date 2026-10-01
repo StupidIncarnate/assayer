@@ -3,12 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./testing": {
-      "source": "./testing.ts",
-      "import": "./dist/testing.js",
-      "require": "./dist/testing.js",
-      "types": "./dist/testing.d.ts"
-    },
     "./*.proxy": {
       "source": "./src/*.proxy.ts"
     },
