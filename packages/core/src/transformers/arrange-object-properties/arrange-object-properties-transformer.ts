@@ -81,7 +81,7 @@ export const arrangeObjectPropertiesTransformer = ({
           want: requirement.want,
           leaf: { ...requirement.leaf, operandPropertyPath: (requirement.leaf.operandPropertyPath ?? []).slice(1) },
         }));
-        const nestedDemands = demand !== undefined && demand.kind === 'nested' ? demand.properties : [];
+        const nestedDemands = demand?.kind === 'nested' ? demand.properties : [];
         // A correction addresses the TOP-level properties of the type it was written against, never a
         // path this deep — a deeper level always recurses with no correction of its own.
         const sub = arrangeObjectPropertiesTransformer({
@@ -105,7 +105,7 @@ export const arrangeObjectPropertiesTransformer = ({
         };
       }
 
-      const demandedValues = demand !== undefined && demand.kind === 'demanded' ? demand.values : [];
+      const demandedValues = demand?.kind === 'demanded' ? demand.values : [];
       // Only the demands that ARE values of this property's declared type may be placed in it. The stub
       // unions every reader's demands onto one property, so `cfg.tags.length > 3` in one entry leaves a
       // string demand on a `string[]` that a second entry's arrangement would otherwise hand over — a

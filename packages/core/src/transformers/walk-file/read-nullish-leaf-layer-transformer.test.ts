@@ -54,7 +54,7 @@ describe('readNullishLeafLayerTransformer', () => {
   describe('a non-identifier operand', () => {
     it('VALID: {`foo()` from `foo() ?? b`} => a non-nullish leaf with no operand name, so it cannot be arranged', () => {
       readNullishLeafLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function foo(): string | null;\nfunction orElse(b: string) {\n  return foo() ?? b;\n}\n',

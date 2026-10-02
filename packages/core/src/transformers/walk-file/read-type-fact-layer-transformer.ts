@@ -214,6 +214,10 @@ export const readTypeFactLayerTransformer = ({
     const location = readType.getSymbol()?.getDeclarations()[0];
     const properties = readType
       .getProperties()
+      // A member keyed by a symbol (`[Symbol.iterator]` on a `Map`) has no data name a harness could
+      // set, and the checker names it `__@iterator@<id>` with an internal id that moves between
+      // TypeScript builds, so carrying it would change the analysis without the source changing.
+      .filter((symbol) => !symbol.getName().startsWith('__@'))
       .map((symbol): { name: string; fact: TypeFact } => {
         const declaration = symbol.getDeclarations()[0] ?? location;
         // A TUPLE's numeric-index properties (`0`, `1`, `length` on `readonly [string, number]`) carry

@@ -24,10 +24,11 @@ const GAP_REASON =
   'builds them from that declaration instead of refusing them; anything else still standing between ' +
   '`tally` and a case is reported on its own line.';
 
-describe('input-gap / map-param — a built-in generic is OPAQUE, so the entry derives no case', () => {
-  // The parameter the hermetic walk cannot enumerate: `Map` is declared by the standard library, not by
-  // this file, so the descriptor carries the reference and its arguments and nothing structural. The
-  // branch on `size` is steered normally — this is a refusal about ONE parameter, not about the file.
+describe('input-gap / map-param — a Map is methods over a size, so the entry derives no case', () => {
+  // The hermetic walk reads `Map` from the standard library, so the descriptor enumerates its members:
+  // every one but `size` is a method, and a method is the one thing no input can be built from. Its
+  // symbol-keyed members (`[Symbol.iterator]`) are not carried. The branch on `size` is steered
+  // normally — this is a refusal about ONE parameter, not about the file.
   it('VALID: {an unsteered Map param} => the entry derives no case at all', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
 
@@ -41,10 +42,20 @@ describe('input-gap / map-param — a built-in generic is OPAQUE, so the entry d
           {
             name: 'counts',
             type: {
-              kind: 'unknown',
-              text: 'Map<string, number>',
-              typeRef: 'Map',
-              typeArgs: [{ kind: 'string' }, { kind: 'number' }],
+              kind: 'object',
+              typeName: 'Map',
+              properties: [
+                { name: 'clear', type: { kind: 'callable', text: '() => void' } },
+                { name: 'delete', type: { kind: 'callable', text: '(key: string) => boolean' } },
+                { name: 'entries', type: { kind: 'callable', text: '() => MapIterator<[string, number]>' } },
+                { name: 'forEach', type: { kind: 'callable', text: '(callbackfn: (value: number, key: string, map: Map<string, number>) => void, thisArg?: any) => void' } },
+                { name: 'get', type: { kind: 'callable', text: '(key: string) => number | undefined' } },
+                { name: 'has', type: { kind: 'callable', text: '(key: string) => boolean' } },
+                { name: 'keys', type: { kind: 'callable', text: '() => MapIterator<string>' } },
+                { name: 'set', type: { kind: 'callable', text: '(key: string, value: number) => Map<string, number>' } },
+                { name: 'size', type: { kind: 'number' } },
+                { name: 'values', type: { kind: 'callable', text: '() => MapIterator<number>' } },
+              ],
             },
             declaredText: 'Map<string, number>',
           },

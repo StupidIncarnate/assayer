@@ -61,8 +61,7 @@ export const gatherPropertyGuardsTransformer = ({
           conditionLeavesTransformer({ condition: branch.condition }).flatMap((leaf) => {
             if (
               leaf.operandTypeRef === undefined ||
-              leaf.operandPropertyPath === undefined ||
-              leaf.operandPropertyPath.length !== 1
+              leaf.operandPropertyPath?.length !== 1
             ) {
               return [];
             }

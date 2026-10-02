@@ -61,8 +61,7 @@ export const handleMemberAccessLayerTransformer = ({
   // guessed value.
   const container = Node.isPropertyAccessExpression(root) ? root : undefined;
   const isEnvContainer =
-    container !== undefined &&
-    container.getName() === envSourceStatics.property &&
+    container?.getName() === envSourceStatics.property &&
     readAmbientRootLayerTransformer({ node: container.getExpression() });
 
   if (isEnvContainer) {

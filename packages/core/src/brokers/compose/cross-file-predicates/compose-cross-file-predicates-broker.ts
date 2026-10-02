@@ -80,7 +80,7 @@ export const composeCrossFilePredicatesBroker = ({
           (candidate) => candidate.position.line === position.line && candidate.position.column === position.column,
         );
 
-        return call !== undefined && call.callee.target === 'import' ? call : undefined;
+        return call?.callee.target === 'import' ? call : undefined;
       }),
     };
   });
@@ -98,7 +98,7 @@ export const composeCrossFilePredicatesBroker = ({
     const branches = fn.branches.map((branch, index) => {
       const candidate = candidates[index];
 
-      if (candidate === undefined || candidate.callee.target !== 'import') {
+      if (candidate?.callee.target !== 'import') {
         return branch;
       }
 

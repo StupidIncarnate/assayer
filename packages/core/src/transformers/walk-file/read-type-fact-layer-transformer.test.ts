@@ -418,7 +418,7 @@ describe('readTypeFactLayerTransformer', () => {
     // optionality is read off the parameter rather than its type.
     it('VALID: {interface with an optional property} => the property fact carries optional: true', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
       const sourceFile = project.createSourceFile('src/f.ts', 'interface Config { mode?: string }\nexport function f(cfg: Config): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('cfg').getType();
 

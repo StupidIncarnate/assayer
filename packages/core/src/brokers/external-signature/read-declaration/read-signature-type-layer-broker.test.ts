@@ -226,7 +226,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // otherwise-fillable object gets refused over a property nobody owes a value.
     it('VALID: {an optional property} => carries optional: true, a required sibling carries nothing', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Config { mode?: string; retries: number }\nexport declare function f(cfg: Config): void;\n',

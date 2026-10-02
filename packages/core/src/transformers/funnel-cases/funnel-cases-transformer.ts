@@ -88,7 +88,7 @@ export const funnelCasesTransformer = ({
       // The steered element list each per-element case laid into the array param — a one-element list.
       const steered = perElement.map((testCase): ArrangeValue[] => {
         const binding = testCase.arrange.find((entry) => entry.kind === 'array' && String(entry.param) === arrayParam);
-        return binding !== undefined && binding.kind === 'array' ? binding.value : [];
+        return binding?.kind === 'array' ? binding.value : [];
       });
 
       // The empty array shape for the array param. It holds no element, so no element type is read and
