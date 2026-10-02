@@ -1,4 +1,3 @@
-import { GitNotInstalledErrorProxy } from '#gateway/bin/git/git-run/git-not-installed.error.proxy';
 import { resolveRefProxy } from '#gateway/bin/git/resolve-ref/resolve-ref.proxy';
 
 export const gitResolveCommitBrokerProxy = (): {
@@ -6,7 +5,6 @@ export const gitResolveCommitBrokerProxy = (): {
   refMissing: (params: { ref: string }) => void;
   gitNotInstalled: (params: { ref: string }) => void;
 } => {
-  GitNotInstalledErrorProxy();
   const refProxy = resolveRefProxy();
 
   return {

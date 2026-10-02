@@ -1,5 +1,4 @@
 import { catFileBlobProxy } from '#gateway/bin/git/cat-file-blob/cat-file-blob.proxy';
-import { GitNotInstalledErrorProxy } from '#gateway/bin/git/git-run/git-not-installed.error.proxy';
 
 export const gitCatFileBrokerProxy = (): {
   hasBlob: (params: { blobSha: string; content: string }) => void;
@@ -7,7 +6,6 @@ export const gitCatFileBrokerProxy = (): {
   gitNotInstalled: (params: { blobSha: string }) => void;
 } => {
   const blobProxy = catFileBlobProxy();
-  GitNotInstalledErrorProxy();
 
   return {
     hasBlob: ({ blobSha, content }: { blobSha: string; content: string }): void => {

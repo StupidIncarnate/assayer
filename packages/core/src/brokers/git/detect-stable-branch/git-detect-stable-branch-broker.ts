@@ -7,12 +7,13 @@
  * await gitDetectStableBranchBroker({ repoRoot: '/repo' });
  * // Returns { hasGitRepo: true, candidates: ['main'], preselected: 'main' },
  * // { hasGitRepo: true, candidates: [] } when neither main nor master exist, or
- * // { hasGitRepo: false } when repoRoot isn't a git working tree
+ * // { hasGitRepo: false } when repoRoot isn't a git working tree.
+ * // Rejects with GitNotInstalledError when git itself cannot start.
  */
 
 import { gitDetectStableBranchResultContract } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
 import type { GitDetectStableBranchResult } from '../../../contracts/git-detect-stable-branch-result/git-detect-stable-branch-result-contract';
-import { GitNotInstalledError, branchList, isInsideWorkTree } from '#gateway/bin/git';
+import { branchList, isInsideWorkTree } from '#gateway/bin/git';
 
 export const gitDetectStableBranchBroker = async ({
   repoRoot,
@@ -21,12 +22,7 @@ export const gitDetectStableBranchBroker = async ({
 }): Promise<
   GitDetectStableBranchResult
 > => {
-  const inside = await isInsideWorkTree({ cwd: repoRoot }).catch((error: unknown) => {
-    if (error instanceof GitNotInstalledError) {
-      return false;
-    }
-    throw error;
-  });
+  const inside = await isInsideWorkTree({ cwd: repoRoot });
 
   if (!inside) {
     return gitDetectStableBranchResultContract.parse({ hasGitRepo: false });
