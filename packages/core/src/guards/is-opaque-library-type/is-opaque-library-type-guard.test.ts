@@ -1,7 +1,7 @@
 import { Project, ScriptTarget } from '#gateway/npm/ts-morph';
 import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
-import { isDefaultLibraryTypeGuard } from './is-default-library-type-guard';
+import { isOpaqueLibraryTypeGuard } from './is-opaque-library-type-guard';
 
 const SOURCE = [
   'interface Config { mode: string }',
@@ -17,7 +17,7 @@ const SOURCE = [
   '',
 ].join('\n');
 
-describe('isDefaultLibraryTypeGuard', () => {
+describe('isOpaqueLibraryTypeGuard', () => {
   it.each([
     ['counts', 'a library generic with methods, Map<string, number>', true],
     ['pattern', 'a library interface with methods, RegExp', true],
@@ -34,10 +34,10 @@ describe('isDefaultLibraryTypeGuard', () => {
     });
     const type = project.createSourceFile('src/f.ts', SOURCE).getVariableDeclarationOrThrow(name).getType();
 
-    expect(isDefaultLibraryTypeGuard({ type })).toBe(expected);
+    expect(isOpaqueLibraryTypeGuard({ type })).toBe(expected);
   });
 
   it('EMPTY: {type: undefined} => returns false', () => {
-    expect(isDefaultLibraryTypeGuard({})).toBe(false);
+    expect(isOpaqueLibraryTypeGuard({})).toBe(false);
   });
 });

@@ -25,7 +25,7 @@ import type { Type } from '#gateway/npm/ts-morph';
 import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
-import { isDefaultLibraryTypeGuard } from '../../guards/is-default-library-type/is-default-library-type-guard';
+import { isOpaqueLibraryTypeGuard } from '../../guards/is-opaque-library-type/is-opaque-library-type-guard';
 import { propertyNameTransformer } from '../property-name/property-name-transformer';
 
 export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Type; seen?: ReadonlySet<string> }): TypeFact => {
@@ -69,7 +69,7 @@ export const readHarnessValueTypeLayerTransformer = ({ type, seen }: { type: Typ
   }
   // A named type only the default library declares, with a callable member (`Map`, `Date`), stays opaque, as in
   // the walk reader. A library type made only of data (`Error`) expands here like any other object.
-  if (type.isObject() && !isDefaultLibraryTypeGuard({ type })) {
+  if (type.isObject() && !isOpaqueLibraryTypeGuard({ type })) {
     // `__type` is the anonymous symbol a `type X = { … }` alias produces; `__object` is its OBJECT
     // LITERAL EXPRESSION twin — the synthesized symbol the checker hands back for `{ host: 'x' }` read
     // as a whole, which every reader this one mirrors never encounters (they read PARAMETER/RETURN

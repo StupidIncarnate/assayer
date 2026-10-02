@@ -417,9 +417,8 @@ describe('readTypeFactLayerTransformer', () => {
       );
     });
 
-    // The checker WIDENS `mode?: string` to the same `string` a required property declares, so only the
-    // DECLARATION can answer whether the shape marks it optional — the same reason a parameter's own
-    // optionality is read off the parameter rather than its type.
+    // With `strictNullChecks` off, as here, the checker reads `mode?: string` as the same `string` a
+    // required property has, so only the property symbol's Optional flag says the shape marks it optional.
     it('VALID: {interface with an optional property} => the property fact carries optional: true', () => {
       readTypeFactLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
@@ -697,11 +696,13 @@ describe('readTypeFactLayerTransformer', () => {
       });
     });
 
-    it('VALID: {config: Partial<Config>, a library mapped type over a local interface} => enumerates the local properties', () => {
+    // The walk always sets `strictNullChecks`, so these tests set it too. Under it the checker gives each
+    // property of `Partial<Config>` the type `string | undefined` and marks it optional.
+    it('VALID: {config: Partial<Config>, a library mapped type over a local interface} => enumerates the local properties, each optional and including undefined', () => {
       readTypeFactLayerTransformerProxy();
       const project = new Project({
         useInMemoryFileSystem: true,
-        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
       });
       const param = project
         .createSourceFile('src/f.ts', 'interface Config { mode: string }\nexport function f(config: Partial<Config>) { return config; }\n')
@@ -712,7 +713,72 @@ describe('readTypeFactLayerTransformer', () => {
         TypeFactStub({
           flavor: 'object',
           typeName: 'Partial',
+          properties: [
+            {
+              name: 'mode',
+              fact: TypeFactStub({
+                flavor: 'union',
+                members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+                text: 'string | undefined',
+              }),
+              optional: true,
+            },
+          ],
+        }),
+      );
+    });
+
+    // `-?` removes the optional mark and the `undefined` it added, so `mode` reads as a required `string`
+    // although the interface declares it with a question mark.
+    it('VALID: {config: Required<Config>, over an interface with an optional property} => the property is required and plain string', () => {
+      readTypeFactLayerTransformerProxy();
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const param = project
+        .createSourceFile('src/f.ts', 'interface Config { mode?: string }\nexport function f(config: Required<Config>) { return config; }\n')
+        .getFunctionOrThrow('f')
+        .getParameterOrThrow('config');
+
+      expect(readTypeFactLayerTransformer({ type: param.getType() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Required',
           properties: [{ name: 'mode', fact: TypeFactStub({ flavor: 'string' }) }],
+        }),
+      );
+    });
+
+    it('VALID: {config: Loose<Config>, a mapped type the file writes with ?} => the property is optional and includes undefined', () => {
+      readTypeFactLayerTransformerProxy();
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true }),
+      });
+      const param = project
+        .createSourceFile(
+          'src/f.ts',
+          'interface Config { mode: string }\ntype Loose<T> = { [K in keyof T]?: T[K] };\nexport function f(config: Loose<Config>) { return config; }\n',
+        )
+        .getFunctionOrThrow('f')
+        .getParameterOrThrow('config');
+
+      expect(readTypeFactLayerTransformer({ type: param.getType() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Loose',
+          properties: [
+            {
+              name: 'mode',
+              fact: TypeFactStub({
+                flavor: 'union',
+                members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+                text: 'string | undefined',
+              }),
+              optional: true,
+            },
+          ],
         }),
       );
     });

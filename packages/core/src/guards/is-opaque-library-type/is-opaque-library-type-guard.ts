@@ -13,16 +13,16 @@
  *
  *   An anonymous type (`__type`, the symbol of a type literal or of a mapped type such as `Partial<Config>`) is
  *   never a library type here, even when the library declares the mapped type: its members come from the type
- *   it maps over, so a reader enumerates it as before. A type the file augments (`interface Date { x: 1 }` in the
+ *   it maps over, so a reader enumerates them. A type the file augments (`interface Date { x: 1 }` in the
  *   source) has a declaration outside the library, so it is not a library type either.
  *
  * USAGE:
- * isDefaultLibraryTypeGuard({ type: param.getType() });
+ * isOpaqueLibraryTypeGuard({ type: param.getType() });
  * // Returns true for `counts: Map<string, number>`, false for `failure: Error` and for a same-file `config: Config`
  */
 import type { Type } from '#gateway/npm/ts-morph';
 
-export const isDefaultLibraryTypeGuard = ({ type }: { type?: Type }): boolean => {
+export const isOpaqueLibraryTypeGuard = ({ type }: { type?: Type }): boolean => {
   const symbol = type?.getSymbol();
 
   if (type === undefined || symbol === undefined || symbol.getName() === '__type') {

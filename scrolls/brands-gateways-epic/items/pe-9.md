@@ -493,11 +493,11 @@ section says, and never something to fit to the analyzer's output.
 
 ## Default library types
 
-The run above was taken before `guards/is-default-library-type` existed. With the guard in place, `counts` reads as
+The run above was taken before `guards/is-opaque-library-type` existed. With the guard in place, `counts` reads as
 the opaque reference the specimen expects, and `map-param.test.ts` passes.
 
 Both type readers, `read-type-fact-layer-transformer.ts` (the walk) and `read-harness-value-type-layer-transformer.ts`
-(the harness reader), keep a type opaque when `isDefaultLibraryTypeGuard` says yes. Opaque means the reader records
+(the harness reader), keep a type opaque when `isOpaqueLibraryTypeGuard` says yes. Opaque means the reader records
 the reference and its type arguments, never the type's members. The guard says yes only when all three hold:
 
 1. The type has a named symbol. An anonymous type, such as the mapped type `Partial<Config>`, makes the guard answer
@@ -514,6 +514,6 @@ has only data properties (`name`, `message`, `stack?`, plus `cause?` under ES202
 other object, and an `Error` parameter derives its cases. The guard reads callability from the type graph, never from
 a type name.
 
-`tmp/pe10/error-param-cases.ts` checks this end to end, under the defaults (ES5 plus DOM) and under ES2022 with
-`strict`. A function taking `e: Error` and a `size` it branches on derives 2 cases, and the `Date`, `RegExp`,
-`Promise` and `Map` versions derive none and report an input gap.
+`analyze-file-broker.test.ts` checks this end to end, under the defaults (ES5 plus DOM) and under ES2022 with
+`strict`. A function taking `e: Error` and a `size` it branches on derives 2 cases and reports no gap, and the `Map`
+version derives none and reports an input gap.

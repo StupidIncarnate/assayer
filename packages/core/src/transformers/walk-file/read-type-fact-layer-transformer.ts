@@ -55,7 +55,7 @@ import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../contracts/type-fact/type-fact-contract';
-import { isDefaultLibraryTypeGuard } from '../../guards/is-default-library-type/is-default-library-type-guard';
+import { isOpaqueLibraryTypeGuard } from '../../guards/is-opaque-library-type/is-opaque-library-type-guard';
 import { readDeclaredTypeTextLayerTransformer } from './read-declared-type-text-layer-transformer';
 import { propertyNameTransformer } from '../property-name/property-name-transformer';
 
@@ -196,7 +196,7 @@ export const readTypeFactLayerTransformer = ({
   // A named type only the default library declares, with a callable member (`Map`, `Date`), falls through to the
   // opaque arm below, so its descriptor carries the reference and its arguments, whichever `lib` the owning
   // tsconfig loads. A library type made only of data (`Error`) expands here like any other object.
-  if ((readType.isObject() || readType.isIntersection()) && !isDefaultLibraryTypeGuard({ type: readType })) {
+  if ((readType.isObject() || readType.isIntersection()) && !isOpaqueLibraryTypeGuard({ type: readType })) {
     // Two ways a shape carries a name, and the checker answers them on different symbols. An
     // `interface Config` names its own symbol; a `type Config = { … }` names an ANONYMOUS object
     // symbol (`__type`) and hangs `Config` on the ALIAS symbol, so reading only the first spells every
@@ -231,14 +231,14 @@ export const readTypeFactLayerTransformer = ({
             ? declaration.getTypeNode()
             : undefined;
 
-        // Whether the shape DECLARES the property with a question mark. Read off the declaration
-        // because the checker widens `child?: TreeNode` to the same `TreeNode` a required property
-        // declares, so the type cannot answer it — the same reason a parameter's optionality is read
-        // off the parameter.
-        const optional =
-          declaration !== undefined &&
-          (Node.isPropertySignature(declaration) || Node.isPropertyDeclaration(declaration)) &&
-          declaration.hasQuestionToken();
+        // Whether the property is optional, read off the checker's Optional flag on the property's own
+        // symbol. The type cannot answer it: with `strictNullChecks` off the checker reads `child?: TreeNode`
+        // as the same `TreeNode` a required property has. The declaration cannot answer it either: a mapped
+        // type's property points back at the declaration it maps over, so `Partial<{ mode: string }>`
+        // would read `mode` as required and `Required<{ mode?: string }>` would read it as optional. The
+        // checker sets the flag for a `?` declaration and for each mapped property from the `?` or `-?`
+        // modifier.
+        const optional = symbol.isOptional();
 
         return {
           name: propertyNameTransformer({ symbol }),
