@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'const-alias.ts'), 'utf8');
 const relPath = 'src/happy-path/array/const-alias/const-alias.ts';
@@ -15,7 +15,7 @@ describe('array / const-alias — a branchless function aliasing its array param
   // single + two-element twins are grayed (`salient:false`). The values are INPUTS (P4); each case
   // asserts only that the flow REACHES the same single exit.
   it('VALID: {export function count(items: number[]): number { const doubled = items; return doubled.length }} => array-of-number param, one exit, three cardinality cases', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-alias.ts') }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -54,7 +54,7 @@ describe('array / const-alias — a branchless function aliasing its array param
   // of the resolver's reportable callees, so nothing is admitted: no declared types, no dark spot, no
   // undriven, no lint.
   it('VALID: {an array-typed param aliased through a const, a builtin `.length` read} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-alias.ts') }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

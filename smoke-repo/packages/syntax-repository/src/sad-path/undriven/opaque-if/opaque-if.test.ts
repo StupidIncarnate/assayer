@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'opaque-if.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/opaque-if/opaque-if.ts';
@@ -23,7 +23,7 @@ describe('undriven / opaque-if — an `if` whose deciding value is a same-file c
   // operand, so no case can arrange which arm `opaqueIf` takes. The branch is admitted undriven at its
   // own line — NOT the whole-file span a welded module scope gets, because the owner is a named entry.
   it('VALID: {an `if` over an opaque same-file call} => the branch admitted undriven, named at its line', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-if.ts') }), relPath });
 
     expect(analysis.undriven).toStrictEqual([
       { name: 'opaqueIf', reason: BRANCH_REASON, startLine: 6, endLine: 6 },
@@ -34,7 +34,7 @@ describe('undriven / opaque-if — an `if` whose deciding value is a same-file c
   // the derivation emits NO case rather than two that misclaim their exits. That is what "undriven"
   // means here, and why a run reports 0/0 rather than failing a case against correct code.
   it('VALID: {an un-steerable guard} => no case is derived, since nothing can choose an arm', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-if.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
   });
@@ -42,7 +42,7 @@ describe('undriven / opaque-if — an `if` whose deciding value is a same-file c
   // NOT a dark spot: the walk read this `if` and both arms perfectly. It is understood and simply
   // un-steerable — the two admissions are opposite claims and must never merge.
   it('VALID: {a fully-understood if} => admits nothing as a dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-if.ts') }) });
 
     expect(analysis.darkSpots).toStrictEqual([]);
   });

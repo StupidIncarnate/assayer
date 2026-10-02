@@ -1,3 +1,5 @@
+import { GitNotInstalledError } from '#gateway/bin/git';
+
 import { gitCatFileBroker } from './git-cat-file-broker';
 import { gitCatFileBrokerProxy } from './git-cat-file-broker.proxy';
 
@@ -32,14 +34,16 @@ describe('gitCatFileBroker', () => {
   });
 
   describe('git is not installed', () => {
-    it('EMPTY: {git never starts} => returns empty contents', async () => {
+    it('ERROR: {git never starts} => rejects with GitNotInstalledError naming the git call', async () => {
       const proxy = gitCatFileBrokerProxy();
 
       proxy.gitNotInstalled({ blobSha: BLOB_SHA });
 
-      const result = await gitCatFileBroker({ repoRoot: '/repo', blobSha: BLOB_SHA });
-
-      expect(result).toBe('');
+      await expect(gitCatFileBroker({ repoRoot: '/repo', blobSha: BLOB_SHA })).rejects.toStrictEqual(
+        new GitNotInstalledError(
+          `git cat-file blob ${BLOB_SHA} could not start in /repo: "git" never started: ENOENT: open 'git'`,
+        ),
+      );
     });
   });
 });

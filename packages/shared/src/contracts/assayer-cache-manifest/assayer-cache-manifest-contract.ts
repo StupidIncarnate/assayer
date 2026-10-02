@@ -5,6 +5,11 @@
  *   semver — it is a CONTENT HASH of the analyzer's own source (see analyzerHashBroker), so any
  *   change to the analysis code invalidates the whole cache with no manual version bump.
  *
+ *   Each file carries two hashes, because they answer two questions. `contentHash` is the hash of the
+ *   file's bytes alone: did the bytes change. `analysisHash` is the hash of the bytes plus the analysis
+ *   options of the tsconfig that owns the file: would the walk come out differently. It names the file's
+ *   compiled blob, so editing an owning tsconfig's `lib` or strict flags gives that file a new blob.
+ *
  * USAGE:
  * const manifest = assayerCacheManifestContract.parse({
  *   assayerVersion: '1.0.0',
@@ -31,7 +36,7 @@ export const assayerCacheManifestContract = z.object({
       z.object({
         branch: z.string().min(1).brand<'AssayerCacheManifestNamespacesBranch'>().optional(),
         commit: z.string().min(1).brand<'AssayerCacheManifestNamespacesCommit'>().optional(),
-        files: z.array(z.object({ relPath: z.string().min(1).brand<'AssayerCacheManifestNamespacesFilesRelPath'>(), contentHash: contentHashContract }).brand<'AssayerCacheManifestNamespacesFiles'>()),
+        files: z.array(z.object({ relPath: z.string().min(1).brand<'AssayerCacheManifestNamespacesFilesRelPath'>(), contentHash: contentHashContract, analysisHash: contentHashContract }).brand<'AssayerCacheManifestNamespacesFiles'>()),
       }).brand<'AssayerCacheManifestNamespaces'>(),
     )
     .brand<'AssayerCacheManifestNamespaces'>(),

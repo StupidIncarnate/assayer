@@ -13,7 +13,7 @@ const DEFAULT_EXIT = '*module*/pick/return@ternary:id:a#else/ternary:id:b#else';
 
 describe('short-circuit / or-chain — a `||` chain in a block return', () => {
   it('VALID: {block `return a || b || "default"`} => a ternary branch per controlling operand, one exit per path', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/short-circuit/or-chain/or-chain.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/short-circuit/or-chain/or-chain.ts', absPath: join(__dirname, 'or-chain.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

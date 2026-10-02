@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'through-caller.ts'), 'utf8');
 const relPath = 'src/happy-path/composition/through-caller/through-caller.ts';
@@ -14,7 +14,7 @@ describe('composition / through-caller — a private CALLED but not RETURNED, so
   // `through-caller`, driven with `report`'s own `n` threaded straight through — the only shape that
   // reaches `access:through-caller` on an entry at all.
   it('VALID: {report(n) { classify(n); } with classify branching on n} => two entries, classify access through-caller naming report', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'through-caller.ts') }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -91,7 +91,7 @@ describe('composition / through-caller — a private CALLED but not RETURNED, so
   });
 
   it('VALID: {a driven through-caller entry} => nothing admitted', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'through-caller.ts') }), relPath });
 
     expect({
       gaps: analysis.gaps,

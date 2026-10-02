@@ -1,11 +1,9 @@
-import { GitNotInstalledErrorProxy } from '#gateway/bin/git/git-run/git-not-installed.error.proxy';
 import { lsTreeProxy } from '#gateway/bin/git/ls-tree/ls-tree.proxy';
 
 export const gitLsTreeBrokerProxy = (): {
   returnsTree: (params: { ref: string; stdout: string }) => void;
   gitNotInstalled: (params: { ref: string }) => void;
 } => {
-  GitNotInstalledErrorProxy();
   const treeProxy = lsTreeProxy();
 
   return {

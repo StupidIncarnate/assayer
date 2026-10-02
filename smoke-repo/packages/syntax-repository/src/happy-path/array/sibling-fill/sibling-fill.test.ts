@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'sibling-fill.ts'), 'utf8');
 const relPath = 'src/happy-path/array/sibling-fill/sibling-fill.ts';
@@ -40,7 +40,7 @@ describe('array / sibling-fill — `scaleAndAppend` maps a branching callback ov
   // funnels through it; it is filled with the same real one-element array `[7]` in EVERY case. Each value
   // is an INPUT (P4); the case asserts only the reached PATH.
   it('VALID: {a map callback branching on n, plus a passive sibling `extra`} => FUNNELLED into scaleAndAppend, `values` driving each arm while `extra` is filled with a real array', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'sibling-fill.ts') }) });
 
     expect(
       analysis.functions.map((fn) => ({ name: fn.entry.name, label: fn.entry.label, access: fn.entry.access, cases: fn.cases })),
@@ -68,7 +68,7 @@ describe('array / sibling-fill — `scaleAndAppend` maps a branching callback ov
   // string, which `scaled.concat(extra)` would throw on. `arrange[1]` is `extra`'s binding (source-order
   // params: `values` then `extra`), so this reads exactly the fill under test across the four cases.
   it('VALID: {a passive sibling array param} => filled with a real array `[7]`, never a scalar string, in every funnel case', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'sibling-fill.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases.map((testCase) => testCase.arrange[1]))).toStrictEqual([
       EXTRA_FILL,
@@ -82,7 +82,7 @@ describe('array / sibling-fill — `scaleAndAppend` maps a branching callback ov
   // scaleAndAppend's funnel. Nothing is admitted — the walk read every arm, the funnel drives them, and
   // the passive sibling is filled rather than left un-steered.
   it('VALID: {a reached, funnelled callback with a filled sibling} => no dead-surface lint, nothing undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'sibling-fill.ts') }) });
 
     expect({
       lints: analysis.lints,

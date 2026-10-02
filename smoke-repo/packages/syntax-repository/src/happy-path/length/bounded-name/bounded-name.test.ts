@@ -2,11 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'bounded-name.ts'), 'utf8');
 const relPath = 'src/happy-path/length/bounded-name/bounded-name.ts';
-const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'bounded-name.ts') }) });
 const tier = analysis.functions[0];
 
 describe('length / bounded-name — two length comparisons on one operand, jointly satisfiable', () => {

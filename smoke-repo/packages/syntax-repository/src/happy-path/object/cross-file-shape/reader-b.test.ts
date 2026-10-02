@@ -3,7 +3,7 @@ import { join, resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { stubRealizeBroker } from '@assayer/core/stub-realize';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'reader-b.ts'), 'utf8');
 const relPath = 'src/happy-path/object/cross-file-shape/reader-b.ts';
@@ -14,7 +14,7 @@ describe('object / cross-file-shape — reader-b.ts, the SECOND reader of Config
   // never touches. Its leaf captures the `['region']` property path and the `Config` type-ref; the
   // per-file walk cannot type the imported param, so it derives no case there.
   it("VALID: {if (config.region === 'us') on imported Config} => region property captured, no per-file case, no local type", () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'reader-b.ts') }), relPath });
 
     expect({
       leaves: analysis.functions.flatMap((fn) => fn.branches.map((branch) => branch.condition)),
@@ -41,7 +41,7 @@ describe('object / cross-file-shape — reader-b.ts, the SECOND reader of Config
   // arranges `region` per arm — `region: 'us'` reaches the then exit, a demanded non-'us' value the else,
   // with the unread `mode`/`retries` filled from their types. Undriven cleared; runs clean (happy-path).
   it("VALID: {stub-realize resolves Config from ./types} => both arms driven on region, undriven cleared", () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'reader-b.ts') });
     const analysis = stubRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath, overlays: [] });
 
     expect({

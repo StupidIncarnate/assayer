@@ -7,10 +7,10 @@
  * USAGE:
  * await processTargetsLayerBroker({
  *   remaining: [{ relPath: 'src/foo.ts', content: 'export const x = 1;\n' }],
- *   namespace: 'master', branch: 'master', blobsDir: '/repo/.assayer/cache/blobs',
+ *   root: '/repo', namespace: 'master', branch: 'master', blobsDir: '/repo/.assayer/cache/blobs',
  *   max: 1, stableMax: 1, currentMax: 0, current: 0, index: [], errors: [],
  * });
- * // Returns { index: [{ relPath, contentHash }], errors: [] } after writing/reusing each blob
+ * // Returns { index: [{ relPath, contentHash, analysisHash }], errors: [] } after writing/reusing each blob
  */
 import type { ContentHash } from '@assayer/shared/contracts';
 
@@ -21,6 +21,7 @@ import type { SourcePosition } from '../../../contracts/source-position/source-p
 
 export const processTargetsLayerBroker = async ({
   remaining,
+  root,
   namespace,
   branch,
   blobsDir,
@@ -33,6 +34,7 @@ export const processTargetsLayerBroker = async ({
   onProgress,
 }: {
   remaining: { relPath: string; content: string }[];
+  root: string;
   namespace: string;
   branch: string;
   blobsDir: string;
@@ -40,11 +42,11 @@ export const processTargetsLayerBroker = async ({
   stableMax: number;
   currentMax: number;
   current: number;
-  index: { relPath: string; contentHash: ContentHash }[];
+  index: { relPath: string; contentHash: ContentHash; analysisHash: ContentHash }[];
   errors: { relPath: string; line: number; column: SourcePosition['column']; message: string }[];
   onProgress?: (event: CompileProgressEvent) => void;
 }): Promise<{
-  index: { relPath: string; contentHash: ContentHash }[];
+  index: { relPath: string; contentHash: ContentHash; analysisHash: ContentHash }[];
   errors: { relPath: string; line: number; column: SourcePosition['column']; message: string }[];
 }> => {
   const [target, ...rest] = remaining;
@@ -54,6 +56,7 @@ export const processTargetsLayerBroker = async ({
   }
 
   const result = await compileProcessFileBroker({
+    root,
     relPath: target.relPath,
     content: target.content,
     blobsDir,
@@ -80,6 +83,7 @@ export const processTargetsLayerBroker = async ({
   if ('error' in result) {
     return processTargetsLayerBroker({
       remaining: rest,
+      root,
       namespace,
       branch,
       blobsDir,
@@ -98,6 +102,7 @@ export const processTargetsLayerBroker = async ({
 
   return processTargetsLayerBroker({
     remaining: rest,
+    root,
     namespace,
     branch,
     blobsDir,
@@ -105,7 +110,7 @@ export const processTargetsLayerBroker = async ({
     stableMax,
     currentMax,
     current: nextCurrent,
-    index: [...index, { relPath, contentHash: result.contentHash }],
+    index: [...index, { relPath, contentHash: result.contentHash, analysisHash: result.analysisHash }],
     errors,
     ...(onProgress === undefined ? {} : { onProgress }),
   });

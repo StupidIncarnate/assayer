@@ -46,7 +46,6 @@ import type {
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { appliedParamsTransformer } from '../../../transformers/applied-params/applied-params-transformer';
 import { collectPropertyDemandsTransformer } from '../../../transformers/collect-property-demands/collect-property-demands-transformer';
 import { conditionLeavesTransformer } from '../../../transformers/condition-leaves/condition-leaves-transformer';
@@ -101,12 +100,6 @@ export const stubRealizeBroker = ({
   );
   const typeRefs = [...new Set(allLeaves.map((leaf) => String(leaf.operandTypeRef)))];
 
-  // The tsconfig is read ONCE, and only when a cross-file type has to be resolved — a same-file-only
-  // entry (branch-local) never touches module resolution.
-  const options = typeRefs.some((typeRef) => !sameFileTypes.has(typeRef))
-    ? tsconfigReadBroker({ searchPath: root }).options
-    : undefined;
-
   // Each type-reference resolved to its declared shape + repo-relative definition path: a same-file type
   // reads off `declaredTypes`, a cross-file one resolves the import the file declares and re-walks the
   // definition on disk. Built as entries so the Map infers rather than annotating a raw string key.
@@ -128,13 +121,13 @@ export const stubRealizeBroker = ({
           ),
       );
 
-      if (edge?.specifier === undefined || options === undefined) {
+      if (edge?.specifier === undefined) {
         return [];
       }
 
       // Resolve the type's declaring import to its sibling on disk — the same per-run sibling read as
       // compose. A specifier that does not land on an in-repo sibling resolves to `undefined`.
-      const sibling = resolveSiblingCalleeBroker({ specifier: String(edge.specifier), containingFile: `${root}/${relPath}`, root, options });
+      const sibling = resolveSiblingCalleeBroker({ specifier: String(edge.specifier), containingFile: `${root}/${relPath}`, root });
 
       if (sibling === undefined) {
         return [];

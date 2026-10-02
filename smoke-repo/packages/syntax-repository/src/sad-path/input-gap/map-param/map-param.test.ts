@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'map-param.ts'), 'utf8');
 const relPath = 'src/sad-path/input-gap/map-param/map-param.ts';
@@ -24,13 +24,12 @@ const GAP_REASON =
   'builds them from that declaration instead of refusing them; anything else still standing between ' +
   '`tally` and a case is reported on its own line.';
 
-describe('input-gap / map-param — a Map is methods over a size, so the entry derives no case', () => {
-  // The hermetic walk reads `Map` from the standard library, so the descriptor enumerates its members:
-  // every one but `size` is a method, and a method is the one thing no input can be built from. Its
-  // symbol-keyed members (`[Symbol.iterator]`) are not carried. The branch on `size` is steered
-  // normally — this is a refusal about ONE parameter, not about the file.
+describe('input-gap / map-param — a built-in generic is OPAQUE, so the entry derives no case', () => {
+  // The parameter the hermetic walk cannot enumerate: `Map` is declared by the standard library, not by
+  // this file, so the descriptor carries the reference and its arguments and nothing structural. The
+  // branch on `size` is steered normally — this is a refusal about ONE parameter, not about the file.
   it('VALID: {an unsteered Map param} => the entry derives no case at all', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'map-param.ts') }), relPath });
 
     expect(
       analysis.functions.map((fn) => ({ name: fn.entry.name, params: fn.entry.params, cases: fn.cases })),
@@ -42,20 +41,10 @@ describe('input-gap / map-param — a Map is methods over a size, so the entry d
           {
             name: 'counts',
             type: {
-              kind: 'object',
-              typeName: 'Map',
-              properties: [
-                { name: 'clear', type: { kind: 'callable', text: '() => void' } },
-                { name: 'delete', type: { kind: 'callable', text: '(key: string) => boolean' } },
-                { name: 'entries', type: { kind: 'callable', text: '() => MapIterator<[string, number]>' } },
-                { name: 'forEach', type: { kind: 'callable', text: '(callbackfn: (value: number, key: string, map: Map<string, number>) => void, thisArg?: any) => void' } },
-                { name: 'get', type: { kind: 'callable', text: '(key: string) => number | undefined' } },
-                { name: 'has', type: { kind: 'callable', text: '(key: string) => boolean' } },
-                { name: 'keys', type: { kind: 'callable', text: '() => MapIterator<string>' } },
-                { name: 'set', type: { kind: 'callable', text: '(key: string, value: number) => Map<string, number>' } },
-                { name: 'size', type: { kind: 'number' } },
-                { name: 'values', type: { kind: 'callable', text: '() => MapIterator<number>' } },
-              ],
+              kind: 'unknown',
+              text: 'Map<string, number>',
+              typeRef: 'Map',
+              typeArgs: [{ kind: 'string' }, { kind: 'number' }],
             },
             declaredText: 'Map<string, number>',
           },
@@ -69,7 +58,7 @@ describe('input-gap / map-param — a Map is methods over a size, so the entry d
   // snippet alike — not `Map`, and not the structural expansion of one, which would bury the one
   // actionable fact under every method the declaration carries.
   it('VALID: {a refused Map param} => the invoice names the type the source spells, arguments and all', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'map-param.ts') }), relPath });
 
     expect(analysis.gaps).toStrictEqual([{ name: 'tally', reason: GAP_REASON }]);
   });
@@ -77,7 +66,7 @@ describe('input-gap / map-param — a Map is methods over a size, so the entry d
   // A GAP and never one of the other three. Nothing here is dark (the syntax is ordinary), nothing is
   // undriven (`size` steers the branch perfectly), and nothing is dead. Only the value is missing.
   it("VALID: {a refused Map param} => the debt is the caller's alone, on no other channel", () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'map-param.ts') }), relPath });
 
     expect({
       undriven: analysis.undriven,

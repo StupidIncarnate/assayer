@@ -21,8 +21,7 @@
  */
 import { compiledFileViewContract } from '@assayer/shared/contracts';
 import type { CompiledFileView } from '@assayer/shared/contracts';
-import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, harnessRealizeBroker, paramTypeResolveBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
-import { walkFileTransformer } from '@assayer/core/transformers';
+import { composeCrossFilePredicatesBroker, composeCrossFileMapBroker, fileWalkBroker, harnessRealizeBroker, paramTypeResolveBroker, stubRealizeBroker, stubOverlayLoadBroker } from '@assayer/core/brokers';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
 import { cacheLoadBlobBroker } from '../../cache/load-blob/cache-load-blob-broker';
@@ -46,20 +45,21 @@ export const compiledFileResolveBroker = async ({
     throw new Error(`Compiled file not found in the current namespace: ${relPath}`);
   }
 
-  const blob = await cacheLoadBlobBroker({ repoPath, contentHash: entry.contentHash });
+  const blob = await cacheLoadBlobBroker({ repoPath, analysisHash: entry.analysisHash });
   const resolvedIndex = await cacheLoadResolvedIndexBroker({ repoPath, namespace: namespaceName });
   const resolvedEdges =
     resolvedIndex === undefined ? [] : resolvedIndex.edges.filter((edge) => edge.from === relPath);
 
   // Overlay the consume-time passes on the persisted (child-independent) analysis, at serve time,
-  // against the caller source on disk under the SOURCE root (not the config dir). A missing source, or a
+  // against the caller source on disk under the SOURCE root (not the config dir). The walk reads the file
+  // under the tsconfig that owns it, the same options the compile wrote the blob with. A missing source, or a
   // blob that carries no analysis, serves the opaque analysis untouched — both overlays are same-
   // reference no-ops for a file they do not touch.
   const root = blob.analysis === undefined ? undefined : await repoSourceRootBroker({ repoPath });
   const source =
     root === undefined ? null : await readFileIfExists(`${root}/${relPath}`);
   const walked =
-    source === null ? undefined : walkFileTransformer({ source, relPath });
+    source === null ? undefined : fileWalkBroker({ source, relPath, absPath: `${String(root)}/${relPath}` });
   // The types first: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // per-file blob refuses it and invoices an input Assayer can build. Resolving the declaration against
   // the sibling on disk is what lets every overlay below read real parameter types.

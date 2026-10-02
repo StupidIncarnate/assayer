@@ -1,3 +1,5 @@
+import { GitNotInstalledError } from '#gateway/bin/git';
+
 import { gitLsTreeBroker } from './git-ls-tree-broker';
 import { gitLsTreeBrokerProxy } from './git-ls-tree-broker.proxy';
 
@@ -41,14 +43,16 @@ describe('gitLsTreeBroker', () => {
   });
 
   describe('git is not installed', () => {
-    it('EMPTY: {repoRoot: "/repo", ref: "HEAD"} git binary missing => returns an empty array', async () => {
+    it('ERROR: {repoRoot: "/repo", ref: "HEAD"} git binary missing => rejects with GitNotInstalledError naming the git call', async () => {
       const proxy = gitLsTreeBrokerProxy();
 
       proxy.gitNotInstalled({ ref: 'HEAD' });
 
-      const result = await gitLsTreeBroker({ repoRoot: '/repo', ref: 'HEAD' });
-
-      expect(result).toStrictEqual([]);
+      await expect(gitLsTreeBroker({ repoRoot: '/repo', ref: 'HEAD' })).rejects.toStrictEqual(
+        new GitNotInstalledError(
+          'git ls-tree -r HEAD could not start in /repo: "git" never started: ENOENT: open \'git\'',
+        ),
+      );
     });
   });
 });

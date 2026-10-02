@@ -4,12 +4,13 @@
  *
  * USAGE:
  * await gitLsTreeBroker({ repoRoot: '/repo', ref: 'HEAD' });
- * // Returns [{ relPath, blobSha }, ...] for every file tracked at that ref
+ * // Returns [{ relPath, blobSha }, ...] for every file tracked at that ref.
+ * // Rejects with GitNotInstalledError when git itself cannot start.
  */
 
 import { gitLsTreeResultContract } from '../../../contracts/git-ls-tree-result/git-ls-tree-result-contract';
 import type { GitLsTreeResult } from '../../../contracts/git-ls-tree-result/git-ls-tree-result-contract';
-import { GitNotInstalledError, lsTree } from '#gateway/bin/git';
+import { lsTree } from '#gateway/bin/git';
 
 export const gitLsTreeBroker = async ({
   repoRoot,
@@ -18,12 +19,7 @@ export const gitLsTreeBroker = async ({
   repoRoot: string;
   ref: string;
 }): Promise<GitLsTreeResult> => {
-  const entries = await lsTree({ cwd: repoRoot, ref }).catch((error: unknown) => {
-    if (error instanceof GitNotInstalledError) {
-      return null;
-    }
-    throw error;
-  });
+  const entries = await lsTree({ cwd: repoRoot, ref });
 
   return gitLsTreeResultContract.parse((entries ?? []).map((entry) => ({
     relPath: entry.path,

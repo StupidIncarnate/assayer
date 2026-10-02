@@ -83,4 +83,24 @@ describe('PrecheckRunResponder', () => {
       expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(false);
     });
   });
+
+  describe('git is not installed', () => {
+    it('ERROR: {git never starts} => throws the exact git-missing message and writes no manifest', async () => {
+      const proxy = PrecheckRunResponderProxy();
+      const config = AssayerConfigStub();
+      proxy.configAt({ configDir: '/repo', content: JSON.stringify(config) });
+      proxy.gitNotInstalled();
+
+      await expect(PrecheckRunResponder({ repoPath: '/repo' })).rejects.toStrictEqual(
+        new CliExactOutputError({
+          message:
+            'assayer: git is not installed or not on PATH, so Assayer cannot read the repository at /repo.\n\n' +
+            'Assayer runs git to name the cache after the current branch and to read the stable branch for ref-to-ref diffs.\n' +
+            'Install git, check that `git --version` works in this shell, then run this command again.\n' +
+            'The git call that failed: git rev-parse --is-inside-work-tree could not start in /repo: "git" never started: ENOENT: open \'git\'',
+        }),
+      );
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(false);
+    });
+  });
 });

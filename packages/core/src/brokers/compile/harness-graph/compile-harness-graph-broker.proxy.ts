@@ -2,8 +2,13 @@ import { harnessLoadBrokerProxy } from '../../harness/load/harness-load-broker.p
 import { harnessIndexWriteBrokerProxy } from '../../harness-index/write/harness-index-write-broker.proxy';
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
+import { tsconfigOwnerBrokerProxy } from '../../tsconfig/owner/tsconfig-owner-broker.proxy';
+
 export const compileHarnessGraphBrokerProxy = (): {
   queueBlob: ({ path, blob }: { path: string; blob: unknown }) => void;
+  // No tsconfig owns these harness files under `root`, so their value types read under TypeScript's
+  // defaults and their analysis options add only the forced `strictNullChecks` to the harness hash.
+  harnessesWithoutOwner: ({ root, relPaths }: { root: string; relPaths: readonly string[] }) => void;
   // The index write is atomic: the bytes go to `<namespace>.json.tmp` first and a rename moves them
   // into place, so the address a caller asks with is that tmp path.
   getWrittenIndex: ({ path }: { path: string }) => unknown;
@@ -21,10 +26,14 @@ export const compileHarnessGraphBrokerProxy = (): {
   harnessLoadBrokerProxy();
   const readFileGateway = readFileProxy();
   const writeProxy = harnessIndexWriteBrokerProxy();
+  const ownerProxy = tsconfigOwnerBrokerProxy();
 
   return {
     queueBlob: ({ path, blob }: { path: string; blob: unknown }): void => {
       readFileGateway.returns({ path, contents: JSON.stringify(blob) });
+    },
+    harnessesWithoutOwner: ({ root, relPaths }: { root: string; relPaths: readonly string[] }): void => {
+      ownerProxy.filesWithoutOwner({ absPaths: relPaths.map((relPath) => `${root}/${relPath}`) });
     },
     getWrittenIndex: ({ path }: { path: string }): unknown => writeProxy.getWrittenIndex({ path }),
     indexWriteSucceeds: ({ configDir, namespace }: { configDir: string; namespace: string }): void => {

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'intersection.ts'), 'utf8');
 const relPath = 'src/happy-path/object/intersection/intersection.ts';
@@ -17,7 +17,7 @@ describe('object / intersection — a branchless function over an intersection o
   // The arrange is the payoff: `v` is an OBJECT binding carrying a value for both interfaces' properties
   // merged onto one shape, so `v.a` reads a string the case actually supplied.
   it('VALID: {export function combine(v: Ay & Bee) { return v.a }} => param typed as object merging both interfaces, one derived case', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'intersection.ts') }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -58,7 +58,7 @@ describe('object / intersection — a branchless function over an intersection o
   // full property lists — the merged, keyless intersection shape itself is not, because it has no name
   // to key a stub on. Nothing is admitted.
   it('VALID: {an intersection of two locally-declared interfaces} => declaredTypes carries both Ay and Bee, and nothing is admitted', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'intersection.ts') }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,

@@ -19,7 +19,7 @@ const POST = '*module*/routeLabel/switch:id:method,EqualsEqualsEqualsToken,str:p
 
 describe('switch / in-function — switch inside an exported function', () => {
   it('VALID: {switch over a 3-member union} => two eq-branches and case/case/default exits', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/switch/in-function/in-function.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/switch/in-function/in-function.ts', absPath: join(__dirname, 'in-function.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

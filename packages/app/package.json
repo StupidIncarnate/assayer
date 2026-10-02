@@ -2,7 +2,12 @@
   "name": "@assayer/app",
   "version": "1.0.0",
   "private": true,
+  "files": [
+    "dist",
+    "!dist/package.json"
+  ],
   "scripts": {
+    "prepack": "vite build",
     "dev": "vite",
     "build": "vite build",
     "build:clean": "rm -rf dist && npm run build",
@@ -40,6 +45,7 @@
     },
     "./*.stub": {
       "source": "./src/*.stub.ts"
-    }
+    },
+    "./page": "./dist/index.html"
   }
 }

@@ -30,7 +30,7 @@
       // Specimens that assert DARK SPOTS need the full file analysis, which is a projection of a
       // WALK rather than of source — so they need the walk adapter alongside the broker.
       "@assayer/core/walk-file": [
-        "../../../packages/core/src/transformers/walk-file/walk-file-transformer"
+        "../../../packages/core/src/brokers/file/walk/file-walk-broker"
       ],
       "@assayer/core/analyze-file": ["../../../packages/core/src/brokers/analyze/file/analyze-file-broker"],
       // The cross-file predicate compose is a CONSUME-TIME overlay applied on top of a file analysis,

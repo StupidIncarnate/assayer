@@ -1,3 +1,5 @@
+import { GitNotInstalledError } from '#gateway/bin/git';
+
 import { gitResolveCommitBroker } from './git-resolve-commit-broker';
 import { gitResolveCommitBrokerProxy } from './git-resolve-commit-broker.proxy';
 
@@ -28,15 +30,16 @@ describe('gitResolveCommitBroker', () => {
   });
 
   describe('git is not installed', () => {
-    it('EMPTY: {repoRoot: "/repo", ref: "master"} git binary missing => returns undefined', async () => {
+    it('ERROR: {repoRoot: "/repo", ref: "master"} git binary missing => rejects with GitNotInstalledError naming the git call', async () => {
       const proxy = gitResolveCommitBrokerProxy();
 
       proxy.gitNotInstalled({ ref: 'master' });
 
-      const result = await gitResolveCommitBroker({ repoRoot: '/repo', ref: 'master' });
-      const notResolved: typeof result = undefined;
-
-      expect(result).toBe(notResolved);
+      await expect(gitResolveCommitBroker({ repoRoot: '/repo', ref: 'master' })).rejects.toStrictEqual(
+        new GitNotInstalledError(
+          'git rev-parse master could not start in /repo: "git" never started: ENOENT: open \'git\'',
+        ),
+      );
     });
   });
 });

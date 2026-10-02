@@ -1,14 +1,18 @@
-import { Project } from '#gateway/npm/ts-morph';
+import { Project, ScriptTarget } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { TypeFactStub } from '../../contracts/type-fact/type-fact.stub';
 import { readTypeFactLayerTransformer } from './read-type-fact-layer-transformer';
 import { readTypeFactLayerTransformerProxy } from './read-type-fact-layer-transformer.proxy';
 
+const SYMBOL_KEYED_SOURCE =
+  'const k: unique symbol = Symbol();\nexport interface Keyed { [k]: number; plain: string }\nexport declare function f(): Keyed;\nexport function g(n: Keyed): void {}\nconst x: Keyed = { [k]: 1, plain: "a" };\n';
+
 describe('readTypeFactLayerTransformer', () => {
   describe('primitive types', () => {
     it('VALID: {string param} => string fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: string): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
 
@@ -17,7 +21,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {number param} => number fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: number): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
 
@@ -26,7 +30,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {boolean param} => boolean fact, never a true|false union', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: boolean): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
 
@@ -37,7 +41,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('boolean-literal types', () => {
     it('VALID: {true param} => literal fact carrying true', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: true): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
 
@@ -46,7 +50,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {false param} => literal fact carrying false', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: false): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
 
@@ -55,7 +59,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {string | boolean param} => union whose boolean halves are literal facts', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: string | boolean): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
 
@@ -72,7 +76,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('opaque types', () => {
     it('VALID: {void return} => other fact carrying the type text', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getReturnType();
 
@@ -84,7 +88,7 @@ describe('readTypeFactLayerTransformer', () => {
     // what a P1 invoice quotes back to the reader.
     it('VALID: {Db | string with the declaration, Db imported} => the declared text, not the collapsed any', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "import type { Db } from './db';\nexport function f(db: Db | string): void {}\n",
@@ -98,7 +102,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {Db | string with no declaration in hand} => the checker rendering, which is all there is', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "import type { Db } from './db';\nexport function f(db: Db | string): void {}\n",
@@ -112,7 +116,7 @@ describe('readTypeFactLayerTransformer', () => {
     // and an object PROPERTY both read their own type node.
     it('VALID: {(Db | string)[] with the declaration} => the element carries the declared text', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "import type { Db } from './db';\nexport function f(rows: (Db | string)[]): void {}\n",
@@ -129,7 +133,7 @@ describe('readTypeFactLayerTransformer', () => {
     // foreign key a consume-time overlay resolves against.
     it('VALID: {imported type declared as a plain reference} => the other fact carries typeRef, the reference NAME', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "import type { Db } from './db';\nexport function f(db: Db): void {}\n",
@@ -146,7 +150,7 @@ describe('readTypeFactLayerTransformer', () => {
     // declaration's type parameter stands for.
     it('VALID: {imported generic reference with a same-file type argument} => typeArgs carries the argument\'s own fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "import type { Box } from './box';\ninterface Config { mode: string }\nexport function f(b: Box<Config>): void {}\n",
@@ -165,7 +169,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {an object property declared Db | string} => the property carries the declared text', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "import type { Db } from './db';\ninterface Wire { store: Db | string }\nexport function f(wire: Wire): void {}\n",
@@ -185,7 +189,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('literal-union types', () => {
     it('VALID: {union param} => union fact whose members are literal facts', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "export function f(n: 'open' | 'closed'): void {}\n",
@@ -208,7 +212,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('enum-literal types', () => {
     it('VALID: {a single enum member as the declared type} => literal fact carrying its value', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "enum Mode { Fast = 'fast', Slow = 'slow' }\nexport function f(m: Mode.Fast): void {}\n",
@@ -220,7 +224,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {the whole enum as the declared type} => union whose members are each an enum-literal fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "enum Mode { Fast = 'fast', Slow = 'slow' }\nexport function f(m: Mode): void {}\n",
@@ -243,7 +247,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('array types', () => {
     it('VALID: {number[] param} => array fact whose element is a number fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(items: number[]): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('items').getType();
 
@@ -256,7 +260,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('callable types', () => {
     it('VALID: {function-typed param} => callable fact carrying the signature text, never a property-less object', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export function f(report: (message: string) => string): void {}\n',
@@ -270,7 +274,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {function-typed return} => callable fact carrying the signature text', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export function f(): (n: number) => string { return (n) => String(n); }\n',
@@ -284,7 +288,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {named interface carrying a call signature} => callable fact carrying the type NAME', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Hybrid { (n: number): string; tag: string }\nexport function f(h: Hybrid): void {}\n',
@@ -296,7 +300,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {class with a method} => the method reads as a callable, never an object named after it', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export class Runner { run(n: number): void {} }\n');
       const type = sourceFile.getClassOrThrow('Runner').getType();
 
@@ -313,7 +317,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('object types', () => {
     it('VALID: {locally-declared interface param} => object fact carrying the type name and sorted properties', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Config { mode: string; retries: number }\nexport function f(cfg: Config): void {}\n',
@@ -338,7 +342,7 @@ describe('readTypeFactLayerTransformer', () => {
     // `interface Config` for no reason a reader could see.
     it('VALID: {type-alias-to-object param} => the SAME named object fact the interface spelling gives', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'type Config = { mode: string; retries: number };\nexport function f(cfg: Config): void {}\n',
@@ -359,7 +363,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {interface with a function-typed member} => the member reads as a callable fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Sink { write: (line: string) => string }\nexport function f(sink: Sink): void {}\n',
@@ -377,7 +381,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {anonymous inline object param} => keyless object fact enumerating its properties', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(o: { a: string; b: number }): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('o').getType();
 
@@ -394,7 +398,7 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {self-referential interface param} => the recursive property truncates to a MARKED reference-only object', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Tree { value: number; next: Tree }\nexport function f(t: Tree): void {}\n',
@@ -413,12 +417,11 @@ describe('readTypeFactLayerTransformer', () => {
       );
     });
 
-    // The checker WIDENS `mode?: string` to the same `string` a required property declares, so only the
-    // DECLARATION can answer whether the shape marks it optional — the same reason a parameter's own
-    // optionality is read off the parameter rather than its type.
+    // With `strictNullChecks` off, as here, the checker reads `mode?: string` as the same `string` a
+    // required property has, so only the property symbol's Optional flag says the shape marks it optional.
     it('VALID: {interface with an optional property} => the property fact carries optional: true', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'interface Config { mode?: string }\nexport function f(cfg: Config): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('cfg').getType();
 
@@ -435,7 +438,7 @@ describe('readTypeFactLayerTransformer', () => {
     // properties and `{}` is a complete value of it, while the truncated `Tree` above declares two.
     it('EMPTY: {an empty interface param} => a property-less object fact carrying NO truncation mark', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'interface Empty {}\nexport function f(e: Empty): void {}\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('e').getType();
 
@@ -451,7 +454,7 @@ describe('readTypeFactLayerTransformer', () => {
     // inherited `ReadonlyArray` method, which is what the same param read as an object.
     it('VALID: {readonly [string, number] param} => a tuple fact with one element fact per position', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(pair: readonly [string, number]): void {}\n');
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair');
 
@@ -464,7 +467,7 @@ describe('readTypeFactLayerTransformer', () => {
     // node lookup has to unwrap only when the wrapper is actually there.
     it('VALID: {[string, number] param, no readonly} => the same tuple fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(pair: [string, number]): void {}\n');
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair');
 
@@ -480,7 +483,7 @@ describe('readTypeFactLayerTransformer', () => {
     // separate merge logic is needed. Keyless, because an inline `Ay & Bee` names no symbol of its own.
     it('VALID: {v: Ay & Bee, both same-file interfaces} => an object fact merging both shapes, no typeName', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export interface Ay { a: string }\nexport interface Bee { b: number }\nexport function f(v: Ay & Bee): void {}\n',
@@ -502,7 +505,7 @@ describe('readTypeFactLayerTransformer', () => {
     // `type Config = { … }` object alias does — the same split §3 documents for a plain object.
     it('VALID: {type AB = Ay & Bee, referenced by name} => an object fact carrying the alias as typeName', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export interface Ay { a: string }\nexport interface Bee { b: number }\nexport type AB = Ay & Bee;\nexport function f(v: AB): void {}\n',
@@ -527,7 +530,7 @@ describe('readTypeFactLayerTransformer', () => {
     // `template` flavor: the literal segments in source order, and one fact per substitution.
     it(`VALID: {t: \`id-\${string}\`} => a template fact with the literal segments and the string substitution`, () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `export function f(t: \`id-\${string}\`): void {}\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
 
@@ -540,7 +543,7 @@ describe('readTypeFactLayerTransformer', () => {
     // with the middle segment landing between them.
     it(`VALID: {t: \`\${string}-\${number}!\`} => texts and types both carry two entries in source order`, () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `export function f(t: \`\${string}-\${number}!\`): void {}\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
 
@@ -558,7 +561,7 @@ describe('readTypeFactLayerTransformer', () => {
     // first, exactly as the file's own PURPOSE doc says.
     it(`VALID: {t: \`\${'a'|'b'}-x\`} => a union fact of the two literal strings, never a template fact`, () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `export function f(t: \`\${'a'|'b'}-x\`): void {}\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
 
@@ -578,7 +581,7 @@ describe('readTypeFactLayerTransformer', () => {
   describe('widened literal bindings', () => {
     it('VALID: {const n = 7 with widen} => number fact rather than the literal', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const n = 7;\n');
       const type = sourceFile.getVariableDeclarationOrThrow('n').getType();
 
@@ -587,11 +590,197 @@ describe('readTypeFactLayerTransformer', () => {
 
     it('VALID: {const n = 7 without widen} => literal fact', () => {
       readTypeFactLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const n = 7;\n');
       const type = sourceFile.getVariableDeclarationOrThrow('n').getType();
 
       expect(readTypeFactLayerTransformer({ type })).toStrictEqual(TypeFactStub({ flavor: 'literal', value: 7 }));
+    });
+  });
+
+  describe('symbol-keyed properties', () => {
+    it('VALID: {the same source read in two projects in one process} => names a symbol key by its declaration, identically both times', () => {
+      readTypeFactLayerTransformerProxy();
+      const firstProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const secondProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const firstSource = firstProject.createSourceFile('src/f.ts', SYMBOL_KEYED_SOURCE);
+      const secondSource = secondProject.createSourceFile('src/f.ts', SYMBOL_KEYED_SOURCE);
+      const keyed = TypeFactStub({
+        flavor: 'object',
+        typeName: 'Keyed',
+        properties: [
+          { name: '[k]', fact: TypeFactStub({ flavor: 'number' }) },
+          { name: 'plain', fact: TypeFactStub({ flavor: 'string' }) },
+        ],
+      });
+
+      expect({
+        first: readTypeFactLayerTransformer({ type: firstSource.getFunctionOrThrow('g').getParameterOrThrow('n').getType() }),
+        second: readTypeFactLayerTransformer({ type: secondSource.getFunctionOrThrow('g').getParameterOrThrow('n').getType() }),
+      }).toStrictEqual({ first: keyed, second: keyed });
+    });
+  });
+
+  describe('default library types', () => {
+    it('VALID: {counts: Map<string, number>, read under ES2022 and under the defaults} => the same opaque reference both times, never its members', () => {
+      readTypeFactLayerTransformerProxy();
+      const es2022Project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const defaultProject = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const source = 'export function tally(counts: Map<string, number>) { return counts; }\n';
+      const es2022Param = es2022Project.createSourceFile('src/f.ts', source).getFunctionOrThrow('tally').getParameterOrThrow('counts');
+      const defaultParam = defaultProject.createSourceFile('src/f.ts', source).getFunctionOrThrow('tally').getParameterOrThrow('counts');
+      const opaque = TypeFactStub({
+        flavor: 'other',
+        text: 'Map<string, number>',
+        typeRef: 'Map',
+        typeArgs: [TypeFactStub({ flavor: 'string' }), TypeFactStub({ flavor: 'number' })],
+      });
+
+      expect({
+        es2022: readTypeFactLayerTransformer({ type: es2022Param.getType(), typeNode: es2022Param.getTypeNodeOrThrow() }),
+        defaults: readTypeFactLayerTransformer({ type: defaultParam.getType(), typeNode: defaultParam.getTypeNodeOrThrow() }),
+      }).toStrictEqual({ es2022: opaque, defaults: opaque });
+    });
+
+    it('VALID: {failure: Error, read under the defaults and under ES2022} => an object of its data properties, which ES2022 extends with cause', () => {
+      readTypeFactLayerTransformerProxy();
+      const defaultProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true }),
+      });
+      const es2022Project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const source = 'export function fail(failure: Error) { return failure; }\n';
+      const defaultParam = defaultProject.createSourceFile('src/f.ts', source).getFunctionOrThrow('fail').getParameterOrThrow('failure');
+      const es2022Param = es2022Project.createSourceFile('src/f.ts', source).getFunctionOrThrow('fail').getParameterOrThrow('failure');
+      const stack = TypeFactStub({
+        flavor: 'union',
+        members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+        text: 'string | undefined',
+      });
+
+      expect({
+        defaults: readTypeFactLayerTransformer({ type: defaultParam.getType(), typeNode: defaultParam.getTypeNodeOrThrow() }),
+        es2022: readTypeFactLayerTransformer({ type: es2022Param.getType(), typeNode: es2022Param.getTypeNodeOrThrow() }),
+      }).toStrictEqual({
+        defaults: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack, optional: true },
+          ],
+        }),
+        es2022: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'cause', fact: TypeFactStub({ flavor: 'other', text: 'unknown' }), optional: true },
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack, optional: true },
+          ],
+        }),
+      });
+    });
+
+    // The walk always sets `strictNullChecks`, so these tests set it too. Under it the checker gives each
+    // property of `Partial<Config>` the type `string | undefined` and marks it optional.
+    it('VALID: {config: Partial<Config>, a library mapped type over a local interface} => enumerates the local properties, each optional and including undefined', () => {
+      readTypeFactLayerTransformerProxy();
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const param = project
+        .createSourceFile('src/f.ts', 'interface Config { mode: string }\nexport function f(config: Partial<Config>) { return config; }\n')
+        .getFunctionOrThrow('f')
+        .getParameterOrThrow('config');
+
+      expect(readTypeFactLayerTransformer({ type: param.getType() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Partial',
+          properties: [
+            {
+              name: 'mode',
+              fact: TypeFactStub({
+                flavor: 'union',
+                members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+                text: 'string | undefined',
+              }),
+              optional: true,
+            },
+          ],
+        }),
+      );
+    });
+
+    // `-?` removes the optional mark and the `undefined` it added, so `mode` reads as a required `string`
+    // although the interface declares it with a question mark.
+    it('VALID: {config: Required<Config>, over an interface with an optional property} => the property is required and plain string', () => {
+      readTypeFactLayerTransformerProxy();
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const param = project
+        .createSourceFile('src/f.ts', 'interface Config { mode?: string }\nexport function f(config: Required<Config>) { return config; }\n')
+        .getFunctionOrThrow('f')
+        .getParameterOrThrow('config');
+
+      expect(readTypeFactLayerTransformer({ type: param.getType() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Required',
+          properties: [{ name: 'mode', fact: TypeFactStub({ flavor: 'string' }) }],
+        }),
+      );
+    });
+
+    it('VALID: {config: Loose<Config>, a mapped type the file writes with ?} => the property is optional and includes undefined', () => {
+      readTypeFactLayerTransformerProxy();
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true }),
+      });
+      const param = project
+        .createSourceFile(
+          'src/f.ts',
+          'interface Config { mode: string }\ntype Loose<T> = { [K in keyof T]?: T[K] };\nexport function f(config: Loose<Config>) { return config; }\n',
+        )
+        .getFunctionOrThrow('f')
+        .getParameterOrThrow('config');
+
+      expect(readTypeFactLayerTransformer({ type: param.getType() })).toStrictEqual(
+        TypeFactStub({
+          flavor: 'object',
+          typeName: 'Loose',
+          properties: [
+            {
+              name: 'mode',
+              fact: TypeFactStub({
+                flavor: 'union',
+                members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+                text: 'string | undefined',
+              }),
+              optional: true,
+            },
+          ],
+        }),
+      );
     });
   });
 });

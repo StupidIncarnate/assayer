@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'type-alias.ts'), 'utf8');
 const relPath = 'src/happy-path/object/type-alias/type-alias.ts';
@@ -14,7 +14,7 @@ describe('object / type-alias — a branchless function over a PLAIN (non-generi
   // the object symbol itself is anonymous). The interface and alias spellings of one shape are
   // indistinguishable downstream, which is what this pins.
   it('VALID: {export function pick(cfg: Config) { return cfg.mode }} => param typed as object Config with its properties, one derived case', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'type-alias.ts') }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -54,7 +54,7 @@ describe('object / type-alias — a branchless function over a PLAIN (non-generi
   // The plain alias projects into `declaredTypes` with its FULL property list, exactly as an interface
   // does — the source the stub stitch reads to key the cross-file stub. Nothing is admitted.
   it('VALID: {a locally-declared plain type-alias param} => declaredTypes carries Config, and nothing is admitted', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'type-alias.ts') }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,

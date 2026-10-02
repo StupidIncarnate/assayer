@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'opaque-module.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/opaque-module/opaque-module.ts';
@@ -26,7 +26,7 @@ describe('undriven / opaque-module — a module scope branching on an opaque, no
   // The module has no exported binding, so its label is the file basename — the reader never sees the
   // internal `*module*`, while `name` stays `*module*` to key the driven/undriven match.
   it('VALID: {a module scope branching on Math.random()} => admitted undriven, with the reason naming the opaque operand', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-module.ts') }), relPath });
 
     expect(analysis.undriven).toStrictEqual([
       { name: '*module*', label: 'opaque-module.ts', reason: MODULE_REASON, startLine: 1, endLine: 6 },
@@ -36,7 +36,7 @@ describe('undriven / opaque-module — a module scope branching on an opaque, no
   // The derivation emits NO case — nothing can steer or evaluate `Math.random()` — so a run reports
   // 0/0 rather than failing a spurious case against correct code.
   it('VALID: {an opaque module operand} => no case is derived, since nothing can choose an arm', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-module.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
   });
@@ -44,7 +44,7 @@ describe('undriven / opaque-module — a module scope branching on an opaque, no
   // NOT a dark spot and NOT a lint: the walk read this `if` and both arms perfectly, and neither arm is
   // dead — either could run. It is simply undrivable. The four admissions are distinct claims.
   it('VALID: {a fully-understood opaque branch} => admits nothing as a dark spot or a lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-module.ts') }) });
 
     expect({ darkSpots: analysis.darkSpots, lints: analysis.lints }).toStrictEqual({ darkSpots: [], lints: [] });
   });

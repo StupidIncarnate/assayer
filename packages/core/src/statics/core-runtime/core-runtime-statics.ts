@@ -19,15 +19,21 @@
  *   never reads it off a consumer's `package.json`. `esmExtensions` are the source extensions an ESM run
  *   loads as ES modules.
  *
- *   `tsJestCompilerOptions` overrides the consumer's tsconfig inside ts-jest, per format. Neither
- *   `module` is a node kind (`node16`, `node18`, `nodenext`). A node kind with `isolatedModules` sends
- *   ts-jest to its own transpile path, which compiles with the installed `typescript` package instead of
- *   `compiler`. `esModuleInterop` is on for ESM because ts-jest turns it on for an ESM compile anyway and
- *   warns on stderr when the tsconfig leaves it off.
+ *   `tsJestCompilerOptions` overrides the consumer's tsconfig inside ts-jest, per format.
+ *   `isolatedModules` makes ts-jest compile each file on its own, with `compiler`'s `transpileModule`.
+ *   Without it, ts-jest builds a type-checked program over every file the consumer's root tsconfig
+ *   includes before it compiles the first file, and builds a fresh type checker for each new file after
+ *   that. Nothing a run needs comes from types: diagnostics are off, and the probe transformer reads only
+ *   the syntax tree. Neither `module` is a node kind (`node16`, `node18`, `nodenext`). A node kind with
+ *   `isolatedModules` sends ts-jest to a second transpile path, which compiles with the installed
+ *   `typescript` package instead of `compiler`. `esModuleInterop` is on for ESM because ts-jest turns it
+ *   on for an ESM compile anyway and warns on stderr when the tsconfig leaves it off.
  *
- *   `workerExecArgv` are the Node flags the worker process starts with. Jest runs an ES module only
- *   through `vm.SourceTextModule`, which Node puts behind `--experimental-vm-modules`. The warning Node
- *   prints for that flag is silenced, because runner output never reaches a human.
+ *   `workerExecArgv` are the Node flags the worker process starts with, per format. Jest runs an ES
+ *   module only through `vm.SourceTextModule`, which Node puts behind `--experimental-vm-modules`, so an
+ *   ESM worker starts with that flag. The warning Node prints for it is silenced, because runner output
+ *   never reaches a human. A CommonJS worker starts with no flag, because the flag costs about 100 ms on
+ *   every run, ESM or not (measured in PE-3).
  *
  * USAGE:
  * coreRuntimeStatics.modules.interpretCase;
@@ -66,11 +72,16 @@ export const coreRuntimeStatics = {
   tsJestCompilerOptions: {
     commonjs: {
       module: 'commonjs',
+      isolatedModules: true,
     },
     esm: {
       module: 'esnext',
       esModuleInterop: true,
+      isolatedModules: true,
     },
   },
-  workerExecArgv: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+  workerExecArgv: {
+    commonjs: [],
+    esm: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+  },
 } as const;

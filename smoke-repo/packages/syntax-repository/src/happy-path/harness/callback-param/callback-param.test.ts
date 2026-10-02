@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { harnessRealizeBroker } from '@assayer/core/harness-realize';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'callback-param.ts'), 'utf8');
 const relPath = 'src/happy-path/harness/callback-param/callback-param.ts';
@@ -21,7 +21,7 @@ describe('harness / callback-param — a colocated harness PAYS the callback gap
   // between the two specimens, which is what makes the pair a controlled experiment rather than two
   // files that happen to disagree.
   it('VALID: {the per-file analysis alone} => the same refusal its unharnessed twin has', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'callback-param.ts') }), relPath });
 
     expect({
       cases: analysis.functions.flatMap((fn) => fn.cases),
@@ -34,7 +34,7 @@ describe('harness / callback-param — a colocated harness PAYS the callback gap
   // key path — so each case differs from an ordinary derived one in exactly that one binding. The VALUE
   // never rides in the case: `inputs.audit.report` is what the run resolves against the same file.
   it('VALID: {the colocated harness applied} => both arms derive, the callback bound to its key path', () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'callback-param.ts') });
     const analysis = harnessRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), root, relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
@@ -61,7 +61,7 @@ describe('harness / callback-param — a colocated harness PAYS the callback gap
   // that answers it would bill the reader for work they have already done, and an admission arriving on
   // another channel would do the same thing under a different name.
   it('VALID: {the colocated harness applied} => the gap comes off the channel and no other admission replaces it', () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'callback-param.ts') });
     const analysis = harnessRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), root, relPath });
 
     expect({

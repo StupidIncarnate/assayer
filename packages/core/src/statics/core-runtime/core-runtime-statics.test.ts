@@ -2,7 +2,7 @@ import { coreRuntimeStatics } from './core-runtime-statics';
 
 describe('coreRuntimeStatics', () => {
   describe('the file names of core\'s run-time modules', () => {
-    it('VALID: {the statics} => names the trees, the dist folder, the Jest global, the ceremony files, the modules, the source conditions, the module formats and the runner settings', () => {
+    it('VALID: {the statics} => names the trees, the dist folder, the Jest global, the ceremony files, the modules, the source conditions, the module formats and the worker flags per format', () => {
       expect(coreRuntimeStatics).toStrictEqual({
         trees: ['source', 'dist'],
         layout: {
@@ -36,13 +36,18 @@ describe('coreRuntimeStatics', () => {
         tsJestCompilerOptions: {
           commonjs: {
             module: 'commonjs',
+            isolatedModules: true,
           },
           esm: {
             module: 'esnext',
             esModuleInterop: true,
+            isolatedModules: true,
           },
         },
-        workerExecArgv: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+        workerExecArgv: {
+          commonjs: [],
+          esm: ['--experimental-vm-modules', '--no-warnings=ExperimentalWarning'],
+        },
       });
     });
   });

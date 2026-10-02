@@ -1,4 +1,5 @@
 import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
+import { GitNotInstalledError } from '#gateway/bin/git';
 
 import { StableBranchLayerResponder } from './stable-branch-layer-responder';
 import { StableBranchLayerResponderProxy } from './stable-branch-layer-responder.proxy';
@@ -22,6 +23,23 @@ describe('StableBranchLayerResponder', () => {
       });
 
       expect(result).toStrictEqual(config);
+      expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([]);
+    });
+  });
+
+  describe('git is not installed', () => {
+    it('ERROR: {git never starts} => rejects with GitNotInstalledError and saves nothing', async () => {
+      const proxy = StableBranchLayerResponderProxy();
+      proxy.gitNotInstalled();
+      const config = AssayerConfigStub();
+
+      await expect(
+        StableBranchLayerResponder({ config, configPath: '/repo/assayer.config.json', repoRoot: '/repo' }),
+      ).rejects.toStrictEqual(
+        new GitNotInstalledError(
+          'git rev-parse --is-inside-work-tree could not start in /repo: "git" never started: ENOENT: open \'git\'',
+        ),
+      );
       expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([]);
     });
   });

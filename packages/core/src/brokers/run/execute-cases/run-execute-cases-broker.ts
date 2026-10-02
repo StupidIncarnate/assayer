@@ -3,11 +3,12 @@
  *   actually invoked. Consumers never touch Jest; the runner is an implementation detail behind this
  *   boundary, which is what keeps it swappable.
  *
- *   Jest runs in a worker process, the one `forkWorker` keeps alive per batch, started with
- *   `coreRuntimeStatics.workerExecArgv`. The worker needs `--experimental-vm-modules` so an ESM consumer's
- *   code runs as ES modules, and only a process's own command line can turn that flag on. Every run, ESM
- *   and CommonJS alike, goes through the same worker, so there is one execution path. The worker's entry
- *   is the root `run-jest.js`, and it replies `{ passed }`, or `{ crashed }` when Jest itself throws.
+ *   Jest runs in a worker process, one per module format, each kept alive by `forkWorker` for the life
+ *   of the calling process. Both workers run the root `run-jest.js` through the same code path; only
+ *   their Node flags differ, from `coreRuntimeStatics.workerExecArgv[format]`. The ESM worker needs
+ *   `--experimental-vm-modules` so an ESM consumer's code runs as ES modules, and only a process's own
+ *   command line can turn that flag on. The CommonJS worker starts without it, because the flag costs
+ *   about 100 ms on every run. A worker replies `{ passed }`, or `{ crashed }` when Jest itself throws.
  *
  *   The config is INLINE JSON, which constrains the shape: Jest parses it as JSON, so the transformer,
  *   setup file, resolver, environment and compiler must be file PATHS, never live objects. The ceremony
@@ -17,8 +18,10 @@
  *
  *   `format` is the consumer file's module format, from `moduleFormatReadBroker`. It picks the generated
  *   test file's extension, the ts-jest `module` override, and for ESM, `useESM` with the extensions Jest
- *   loads as ES modules. Neither override is a node module kind, so ts-jest always compiles with
- *   `compiler`. A CommonJS run keeps `probe-runtime.js` as its setup file. An ESM run has none: a setup
+ *   loads as ES modules. Both overrides set `isolatedModules`, so ts-jest compiles each file on its own
+ *   and never builds a type-checked program: a run needs no type information, and that program is the
+ *   bulk of a worker's first run. Neither override is a node module kind, so ts-jest always compiles
+ *   with `compiler`. A CommonJS run keeps `probe-runtime.js` as its setup file. An ESM run has none: a setup
  *   file is CommonJS, and in an ESM run of core's source it cannot `require` core's TypeScript, so the ESM
  *   test file installs the probe runtime itself before it loads the subject.
  *
@@ -42,7 +45,7 @@
  *   per distinct config and never releases it, so pointing `roots`/`testMatch` at each run's own
  *   directory made every file look like a new project and left a whole compiler behind — measured at
  *   ~370MB per file, which took `assayer unit` over 13 files to 3GB and would OOM a real repo. One
- *   config per format means at most two compilers in the worker, each reused.
+ *   config per format means one compiler in each format's worker, reused across its runs.
  *
  * USAGE:
  * runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash, format: 'esm' });
@@ -110,8 +113,9 @@ export const runExecuteCasesBroker = async ({
           // The copy ts-morph bundles, so the compiler that places each probe parses with the same
           // TypeScript that recorded the probe offsets.
           compiler: runtime.compiler,
-          // Merged over the consumer's tsconfig. Never a node module kind, which with `isolatedModules`
-          // sends ts-jest to a transpile path that ignores `compiler`.
+          // Merged over the consumer's tsconfig. `isolatedModules` compiles each file on its own, so
+          // ts-jest never builds a type-checked program of the consumer's whole repo. Never a node module
+          // kind, which with `isolatedModules` sends ts-jest to a transpile path that ignores `compiler`.
           tsconfig: coreRuntimeStatics.tsJestCompilerOptions[format],
           ...(esm ? { useESM: true } : {}),
           diagnostics: false,
@@ -129,7 +133,7 @@ export const runExecuteCasesBroker = async ({
   };
 
   const reply = workerReplyContract.parse(
-    await forkWorker({ modulePath: runtime.runner, execArgv: [...coreRuntimeStatics.workerExecArgv] }).request({
+    await forkWorker({ modulePath: runtime.runner, execArgv: [...coreRuntimeStatics.workerExecArgv[format]] }).request({
       message: {
         config: JSON.stringify(config),
         // The one place THIS run is named, which is what lets the config above stay identical between runs.

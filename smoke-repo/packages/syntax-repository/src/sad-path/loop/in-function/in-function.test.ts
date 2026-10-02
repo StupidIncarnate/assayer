@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'in-function.ts'), 'utf8');
 
@@ -12,7 +12,7 @@ describe('loop / in-function — a for-of loop inside an exported function', () 
   // completeness — see the dark-spot assertion below, which is what stops the map from quietly
   // looking finished.
   it('EDGE: {for-of loop} => yields no branches (no loop handler exists yet)', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts', absPath: join(__dirname, 'in-function.ts') });
     const branches = result.success ? result.functions.flatMap((fn) => fn.branches) : [];
 
     expect(branches).toStrictEqual([]);
@@ -21,7 +21,7 @@ describe('loop / in-function — a for-of loop inside an exported function', () 
   // The whole point of the dark spot: unrecognized is not the same as invisible. The analyzer says
   // out loud that it did not follow this loop, rather than returning a map that looks complete.
   it('VALID: {for-of loop} => is reported as a DARK SPOT rather than silently dropped', () => {
-    const walked = walkFileTransformer({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts' });
+    const walked = walkFileTransformer({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts', absPath: join(__dirname, 'in-function.ts') });
     const analysis = analyzeFileBroker({ walked });
 
     expect(analysis.darkSpots).toStrictEqual([
@@ -37,7 +37,7 @@ describe('loop / in-function — a for-of loop inside an exported function', () 
 
   // Descending an unhandled node is what keeps its contents from vanishing with it.
   it('VALID: {for-of loop} => the return AFTER the loop is still found', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/sad-path/loop/in-function/in-function.ts', absPath: join(__dirname, 'in-function.ts') });
     const lines = result.success ? result.functions.flatMap((fn) => fn.exits).map((exit) => exit.line) : [];
 
     expect(lines).toStrictEqual([8]);

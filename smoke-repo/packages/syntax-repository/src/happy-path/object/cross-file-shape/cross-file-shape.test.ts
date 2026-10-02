@@ -4,7 +4,7 @@ import { join, resolve } from 'path';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { moduleGraphProjectionTransformer } from '@assayer/core/module-graph';
 import { stubRealizeBroker } from '@assayer/core/stub-realize';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'cross-file-shape.ts'), 'utf8');
 const relPath = 'src/happy-path/object/cross-file-shape/cross-file-shape.ts';
@@ -17,7 +17,7 @@ describe('object / cross-file-shape — decideA reads config.mode off an IMPORTE
   // as an opaque `unknown` here — yet the leaf STILL captures the operand:property fact (root `config`,
   // path `['mode']`, type-ref `Config`) the stub view keys on. The per-file blob derives no case for it.
   it("VALID: {if (config.mode === 'a') on imported Config} => the leaf records the property path and type-ref though the param is unknown", () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'cross-file-shape.ts') }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -75,7 +75,7 @@ describe('object / cross-file-shape — decideA reads config.mode off an IMPORTE
   // the per-file walk carried is dropped; the `./types` import edge is still recorded, and this file
   // declares no type of its own. So running it comes out clean (happy-path).
   it("VALID: {stub-realize resolves Config from ./types} => both arms driven cross-file, undriven cleared, import edge intact", () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'cross-file-shape.ts') });
     const analysis = stubRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath, overlays: [] });
 
     expect({

@@ -9,8 +9,8 @@ describe('compiledTreeResolveBroker', () => {
       namespaces: {
         main: {
           files: [
-            { relPath: 'a.ts', contentHash: 'a'.repeat(64) },
-            { relPath: 'b.tsx', contentHash: 'b'.repeat(64) },
+            { relPath: 'a.ts', contentHash: 'a'.repeat(64), analysisHash: 'a'.repeat(64) },
+            { relPath: 'b.tsx', contentHash: 'b'.repeat(64), analysisHash: 'b'.repeat(64) },
           ],
         },
       },

@@ -20,6 +20,7 @@ describe('#gateway/npm/typescript', () => {
     ['parseJsonConfigFileContent', ourModule.parseJsonConfigFileContent, tsMorph.ts.parseJsonConfigFileContent],
     ['readConfigFile', ourModule.readConfigFile, tsMorph.ts.readConfigFile],
     ['resolveModuleName', ourModule.resolveModuleName, tsMorph.ts.resolveModuleName],
+    ['resolveProjectReferencePath', ourModule.resolveProjectReferencePath, tsMorph.ts.resolveProjectReferencePath],
     ['transform', ourModule.transform, tsMorph.ts.transform],
     ['transpileModule', ourModule.transpileModule, tsMorph.ts.transpileModule],
     ['visitEachChild', ourModule.visitEachChild, tsMorph.ts.visitEachChild],

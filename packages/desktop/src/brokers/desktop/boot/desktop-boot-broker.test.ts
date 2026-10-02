@@ -1,3 +1,4 @@
+import { join } from '#gateway/node/path';
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
@@ -368,7 +369,7 @@ describe('desktopBootBroker', () => {
   });
 
   describe('the renderer window', () => {
-    it('VALID: {no ASSAYER_DEV} => loads the built renderer file', async () => {
+    it('VALID: {no ASSAYER_DEV} => loads the page @assayer/app exports, resolved from the broker file', async () => {
       const proxy = desktopBootBrokerProxy();
       proxy.setupBoot({ dev: false, headless: false });
 
@@ -390,10 +391,15 @@ describe('desktopBootBroker', () => {
         resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
       });
 
-      expect(proxy.loadedUrls({ url: proxy.packagedRendererUrl() })).toStrictEqual([[proxy.packagedRendererUrl()]]);
+      expect(proxy.pageResolutionsFromBroker()).toStrictEqual([
+        [{ specifier: '@assayer/app/page', fromPath: join(__dirname, 'desktop-boot-broker.ts') }],
+      ]);
+      expect(proxy.loadedUrls({ url: 'file:///consumer/node_modules/@assayer/app/dist/index.html' })).toStrictEqual([
+        ['file:///consumer/node_modules/@assayer/app/dist/index.html'],
+      ]);
     });
 
-    it('VALID: {ASSAYER_DEV is 1} => loads the dev server URL', async () => {
+    it('VALID: {ASSAYER_DEV is 1} => loads the dev server URL and resolves no built page', async () => {
       const proxy = desktopBootBrokerProxy();
       proxy.setupBoot({ dev: true, headless: false });
 
@@ -416,6 +422,7 @@ describe('desktopBootBroker', () => {
       });
 
       expect(proxy.loadedUrls({ url: 'http://localhost:6273' })).toStrictEqual([['http://localhost:6273']]);
+      expect(proxy.pageResolutionsFromBroker()).toStrictEqual([]);
     });
 
     it('VALID: {no ASSAYER_HEADLESS} => opens a visible window that renders onscreen', async () => {

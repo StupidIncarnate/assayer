@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'const-default.ts'), 'utf8');
 const relPath = 'src/happy-path/export-default/const-default/const-default.ts';
@@ -12,7 +12,7 @@ describe('export-default / const-default — a const arrow exported by a LATER `
   // Read off the keyword, this const is private, its entry vanishes, and the file's only surface is
   // reported as dead code the repo should delete — a build failing over ordinary correct code.
   it('VALID: {const decide; export default decide} => a DEFAULT-access entry, the same as `export default function`', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-default.ts') }), relPath });
 
     expect(analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access }))).toStrictEqual([
       { name: 'decide', access: { kind: 'default' } },
@@ -20,7 +20,7 @@ describe('export-default / const-default — a const arrow exported by a LATER `
   });
 
   it('VALID: {an exported const arrow} => nothing is admitted, and its `if` drives both arms', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-default.ts') }), relPath });
 
     expect({
       lints: analysis.lints,

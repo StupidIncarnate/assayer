@@ -109,7 +109,7 @@ export const compileRunBrokerProxy = (): {
       });
       contents.forEach((content, index) => {
         planCurrentProxy.queueFileContent({ path: `${configDir}/current-${index}.ts`, content });
-        processCurrentProxy.queueCleanWrite({ blobsDir, content });
+        processCurrentProxy.queueCleanWrite({ blobsDir, absPath: `${configDir}/current-${index}.ts`, content });
       });
       // The stitch resolves every import cleanly, and no stub overlay is committed under the root.
       walkRoots.push(configDir);
@@ -137,6 +137,7 @@ export const compileRunBrokerProxy = (): {
         sha,
         lsTreeStdout,
         blobs,
+        root: configDir,
         blobsDir: `${configDir}/.assayer/cache/blobs`,
       });
     },
@@ -155,6 +156,7 @@ export const compileRunBrokerProxy = (): {
         ref,
         lsTreeStdout,
         blobs,
+        root: configDir,
         blobsDir: `${configDir}/.assayer/cache/blobs`,
       });
     },

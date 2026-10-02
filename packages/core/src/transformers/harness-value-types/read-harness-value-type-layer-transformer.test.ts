@@ -1,14 +1,18 @@
-import { Project } from '#gateway/npm/ts-morph';
+import { Project, ScriptTarget } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { TypeFactStub } from '../../contracts/type-fact/type-fact.stub';
 import { readHarnessValueTypeLayerTransformer } from './read-harness-value-type-layer-transformer';
 import { readHarnessValueTypeLayerTransformerProxy } from './read-harness-value-type-layer-transformer.proxy';
 
+const SYMBOL_KEYED_SOURCE =
+  'const k: unique symbol = Symbol();\nexport interface Keyed { [k]: number; plain: string }\nexport declare function f(): Keyed;\nexport function g(n: Keyed): void {}\nconst x: Keyed = { [k]: 1, plain: "a" };\n';
+
 describe('readHarnessValueTypeLayerTransformer', () => {
   describe('primitive types', () => {
     it('VALID: {a string-typed expression} => string fact', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "const x: string = 'a';\n");
       const type = sourceFile.getVariableDeclarationOrThrow('x').getType();
 
@@ -17,7 +21,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
 
     it('VALID: {a number-typed expression} => number fact', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const x: number = 7;\n');
       const type = sourceFile.getVariableDeclarationOrThrow('x').getType();
 
@@ -26,7 +30,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
 
     it('VALID: {a boolean-typed expression} => boolean fact', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const x: boolean = true;\n');
       const type = sourceFile.getVariableDeclarationOrThrow('x').getType();
 
@@ -39,7 +43,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
   describe('undefined', () => {
     it('VALID: {an undefined expression} => other fact carrying the literal text "undefined"', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const x = undefined;\n');
       const type = sourceFile.getVariableDeclarationOrThrow('x').getInitializerOrThrow().getType();
 
@@ -53,7 +57,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
   describe('literal precision', () => {
     it('VALID: {a string literal expression} => literal fact, not widened to string', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "const x = 'a';\n");
       const type = sourceFile.getVariableDeclarationOrThrow('x').getInitializerOrThrow().getType();
 
@@ -64,7 +68,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
   describe('callable types', () => {
     it('VALID: {an arrow-function expression} => callable fact carrying the rendered signature', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const cb = (message: string): string => message;\n');
       const type = sourceFile.getVariableDeclarationOrThrow('cb').getInitializerOrThrow().getType();
 
@@ -77,7 +81,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
   describe('array types', () => {
     it('VALID: {an array of arrow functions} => array fact whose element is a callable fact', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const xs = [(message: string): void => {}];\n');
       const type = sourceFile.getVariableDeclarationOrThrow('xs').getInitializerOrThrow().getType();
 
@@ -94,7 +98,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
     // `__type` is: neither is a real declared name.
     it('VALID: {an object literal expression} => object fact enumerating its WIDENED properties, keyless', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "const cfg = { host: 'x', retries: 3 };\n");
       const type = sourceFile.getVariableDeclarationOrThrow('cfg').getInitializerOrThrow().getType();
 
@@ -113,7 +117,7 @@ describe('readHarnessValueTypeLayerTransformer', () => {
     // both mark it: without it a re-entered type is indistinguishable from one that declares nothing.
     it('VALID: {a self-referential-typed expression} => the recursive property truncates to a MARKED reference-only object', () => {
       readHarnessValueTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Tree { value: number; next: Tree }\ndeclare const t: Tree;\n',
@@ -130,6 +134,99 @@ describe('readHarnessValueTypeLayerTransformer', () => {
           ],
         }),
       );
+    });
+  });
+
+  describe('symbol-keyed properties', () => {
+    it('VALID: {the same source read in two projects in one process} => names a symbol key by its declaration, identically both times', () => {
+      readHarnessValueTypeLayerTransformerProxy();
+      const firstProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const secondProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const firstSource = firstProject.createSourceFile('src/f.ts', SYMBOL_KEYED_SOURCE);
+      const secondSource = secondProject.createSourceFile('src/f.ts', SYMBOL_KEYED_SOURCE);
+      const keyed = TypeFactStub({
+        flavor: 'object',
+        typeName: 'Keyed',
+        properties: [
+          { name: '[k]', fact: TypeFactStub({ flavor: 'number' }) },
+          { name: 'plain', fact: TypeFactStub({ flavor: 'string' }) },
+        ],
+      });
+
+      expect({
+        first: readHarnessValueTypeLayerTransformer({ type: firstSource.getVariableDeclarationOrThrow('x').getType() }),
+        second: readHarnessValueTypeLayerTransformer({ type: secondSource.getVariableDeclarationOrThrow('x').getType() }),
+      }).toStrictEqual({ first: keyed, second: keyed });
+    });
+  });
+
+  describe('default library types', () => {
+    it('VALID: {a new Map<string, number>() expression under ES2022} => opaque fact carrying the checker rendering, never its members', () => {
+      readHarnessValueTypeLayerTransformerProxy();
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const type = project
+        .createSourceFile('src/f.ts', 'const x = new Map<string, number>();\n')
+        .getVariableDeclarationOrThrow('x')
+        .getInitializerOrThrow()
+        .getType();
+
+      expect(readHarnessValueTypeLayerTransformer({ type })).toStrictEqual(
+        TypeFactStub({ flavor: 'other', text: 'Map<string, number>' }),
+      );
+    });
+
+    it('VALID: {a new Error() expression, read under the defaults and under ES2022} => an object of its data properties, which ES2022 extends with cause', () => {
+      readHarnessValueTypeLayerTransformerProxy();
+      const defaultProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true }),
+      });
+      const es2022Project = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ strictNullChecks: true, target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const source = "const e = new Error('x');\n";
+      const defaultType = defaultProject.createSourceFile('src/f.ts', source).getVariableDeclarationOrThrow('e').getInitializerOrThrow().getType();
+      const es2022Type = es2022Project.createSourceFile('src/f.ts', source).getVariableDeclarationOrThrow('e').getInitializerOrThrow().getType();
+      const stack = TypeFactStub({
+        flavor: 'union',
+        members: [TypeFactStub({ flavor: 'other', text: 'undefined' }), TypeFactStub({ flavor: 'string' })],
+        text: 'string | undefined',
+      });
+
+      expect({
+        defaults: readHarnessValueTypeLayerTransformer({ type: defaultType }),
+        es2022: readHarnessValueTypeLayerTransformer({ type: es2022Type }),
+      }).toStrictEqual({
+        defaults: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack },
+          ],
+        }),
+        es2022: TypeFactStub({
+          flavor: 'object',
+          typeName: 'Error',
+          properties: [
+            { name: 'cause', fact: TypeFactStub({ flavor: 'other', text: 'unknown' }) },
+            { name: 'message', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'name', fact: TypeFactStub({ flavor: 'string' }) },
+            { name: 'stack', fact: stack },
+          ],
+        }),
+      });
     });
   });
 });

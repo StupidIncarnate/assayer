@@ -15,7 +15,13 @@ describe('assayerCacheManifestContract', () => {
           master: {
             branch: 'master',
             commit: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0',
-            files: [{ relPath: 'packages/shared/src/index.ts', contentHash: HASH }],
+            files: [
+              {
+                relPath: 'packages/shared/src/index.ts',
+                contentHash: HASH,
+                analysisHash: '278cd2eb8a5ff504fe51a1eb6395e1924a27562a34e02778fda65c0645eea29e',
+              },
+            ],
           },
         },
         repoName: 'assayer',
@@ -28,7 +34,7 @@ describe('assayerCacheManifestContract', () => {
         assayerVersion: '1.0.0',
         configHash: HASH,
         namespaces: {
-          master: { branch: 'master', files: [{ relPath: 'a.ts', contentHash: HASH }] },
+          master: { branch: 'master', files: [{ relPath: 'a.ts', contentHash: HASH, analysisHash: HASH }] },
         },
         repoName: 'assayer',
         rootFolderName: 'smoke-repo',
@@ -36,7 +42,7 @@ describe('assayerCacheManifestContract', () => {
 
       expect(result.namespaces.master).toStrictEqual({
         branch: 'master',
-        files: [{ relPath: 'a.ts', contentHash: HASH }],
+        files: [{ relPath: 'a.ts', contentHash: HASH, analysisHash: HASH }],
       });
     });
   });

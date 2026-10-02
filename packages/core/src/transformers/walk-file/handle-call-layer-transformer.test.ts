@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 import type { CallExpression } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
@@ -28,7 +29,7 @@ const GUARDED_CONTEXT = WalkContextStub({
 });
 
 const callOf = ({ source }: { source: string }): CallExpression =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression);
 

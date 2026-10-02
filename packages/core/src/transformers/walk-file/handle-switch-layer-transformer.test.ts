@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';
@@ -31,7 +32,7 @@ describe('handleSwitchLayerTransformer', () => {
   describe('the eq-branches it emits', () => {
     it('VALID: {two literal cases plus a default} => one eq-branch per CASE, none for the default', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', ALL_RETURN_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -71,7 +72,7 @@ describe('handleSwitchLayerTransformer', () => {
     // switch on `Number(process.env.X)` is driven by setting X rather than admitted undriven.
     it('VALID: {a switch on Number(process.env.CODE)} => each leaf carries the discriminant`s env source', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'const code = Number(process.env.CODE);\nswitch (code) {\n  case 1:\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n',
@@ -103,7 +104,7 @@ describe('handleSwitchLayerTransformer', () => {
 
     it('EDGE: {enum-member cases only} => a branch carrying an unrecognized predicate, never a dropped clause', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'enum E { A, B }\nfunction f(e: E) {\n  switch (e) {\n    case E.A:\n      return 1;\n    default:\n      return 2;\n  }\n}\n',
@@ -142,7 +143,7 @@ describe('handleSwitchLayerTransformer', () => {
     // operand is — so the leaf carries the single value the analyzer already knows.
     it('VALID: {a switch on a same-file const} => the leaf carries the discriminant`s welded value', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'const level = 7;\nswitch (level) {\n  case 7:\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n',
@@ -176,7 +177,7 @@ describe('handleSwitchLayerTransformer', () => {
     // param — the leaf omits `operandParamName` entirely rather than guessing one.
     it('VALID: {a switch on a member-access discriminant} => the leaf carries no operandParamName', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "declare const obj: { method: string };\nswitch (obj.method) {\n  case 'get':\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n",
@@ -206,7 +207,7 @@ describe('handleSwitchLayerTransformer', () => {
 
     it('VALID: {switch} => records itself as a handled node under its scope', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', ALL_RETURN_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -221,7 +222,7 @@ describe('handleSwitchLayerTransformer', () => {
   describe('the guards it hands each clause', () => {
     it("VALID: {a literal case} => that case's THEN step", () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', ALL_RETURN_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -239,7 +240,7 @@ describe('handleSwitchLayerTransformer', () => {
 
     it('VALID: {switch reached through an enclosing guard} => clause guards are APPENDED to it, never replacing it', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', ALL_RETURN_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
       const enclosed = WalkContextStub({
@@ -271,7 +272,7 @@ describe('handleSwitchLayerTransformer', () => {
 
     it('VALID: {clauses} => one descent per clause statement, cases first then the default', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', ALL_RETURN_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -288,7 +289,7 @@ describe('handleSwitchLayerTransformer', () => {
   describe('completion exits in tail position', () => {
     it('VALID: {tail switch whose clauses fall out} => a guarded implicit exit per clause', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', FALLS_OUT_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -314,7 +315,7 @@ describe('handleSwitchLayerTransformer', () => {
     // driven: a probe after the `break` would be unreachable and never fire.
     it('VALID: {tail switch whose clauses fall out} => a completion probe on each clause`s last non-break statement', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'const code = Number(process.env.CODE);\nswitch (code) {\n  case 1:\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n',
@@ -334,7 +335,7 @@ describe('handleSwitchLayerTransformer', () => {
 
     it('VALID: {tail switch whose clauses all return} => no completion exits', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', ALL_RETURN_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -345,7 +346,7 @@ describe('handleSwitchLayerTransformer', () => {
 
     it('VALID: {switch NOT in tail position} => no completion exits, because code runs after it', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', FALLS_OUT_SOURCE);
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
 
@@ -363,7 +364,7 @@ describe('handleSwitchLayerTransformer', () => {
     // `SWITCH_NO_DEFAULT_SPECIMEN`.
     it('VALID: {a switch with NO default clause} => no completion exit at all', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "function routeLabel(method: string) {\n  switch (method) {\n    case 'get':\n      noop();\n  }\n}\ndeclare function noop(): void;\n",
@@ -379,7 +380,7 @@ describe('handleSwitchLayerTransformer', () => {
     // out, so its fall-out completion exit is still emitted but CANNOT be probed.
     it('VALID: {a clause with only a bare break} => the completion exit is emitted with NO probe site', () => {
       handleSwitchLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "function routeLabel(method: string) {\n  switch (method) {\n    case 'get':\n      break;\n    default:\n      noop();\n  }\n}\ndeclare function noop(): void;\n",

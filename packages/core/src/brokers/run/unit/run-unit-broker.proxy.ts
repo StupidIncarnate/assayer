@@ -12,6 +12,7 @@ import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load
 import { stubOverlayLoadBrokerProxy } from '../../stub-overlay/load/stub-overlay-load-broker.proxy';
 import { runCrossFileProbesBrokerProxy } from '../cross-file-probes/run-cross-file-probes-broker.proxy';
 import { moduleFormatReadBrokerProxy } from '../../module-format/read/module-format-read-broker.proxy';
+import { fileWalkBrokerProxy } from '../../file/walk/file-walk-broker.proxy';
 import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';
 import { ensureDirProxy } from '#gateway/node/fs__promises/ensure-dir/ensure-dir.proxy';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
@@ -25,7 +26,8 @@ export const runUnitBrokerProxy = (): {
   // write, each staged to succeed at its exact path. `contentHash` names the probe plan, which is keyed
   // on the source's content hash. `repoRoot` is the root whose committed stub overlay loads empty.
   // `absPath` is the target, whose module format TypeScript answers as `format` (CommonJS when omitted),
-  // with no tsconfig above it; the format picks the shim's file name.
+  // with no tsconfig owning it, so it walks under TypeScript's defaults; the format picks the shim's file
+  // name.
   setupWrites: ({
     cacheDir,
     runId,
@@ -87,6 +89,7 @@ export const runUnitBrokerProxy = (): {
 
   const runner = runExecuteCasesBrokerProxy();
   const moduleFormat = moduleFormatReadBrokerProxy();
+  const walk = fileWalkBrokerProxy();
   const dirs = ensureDirProxy();
   const exists = pathExistsProxy();
   const writes = writeFileProxy();
@@ -111,11 +114,8 @@ export const runUnitBrokerProxy = (): {
       overlayLoadHandle.calledWith([{ repoRoot }]).resolves([]);
       const runDir = `${cacheDir}/runs/${runId}`;
       const shimFile = format === 'esm' ? 'assayer.test.mjs' : 'assayer.test.cjs';
-      moduleFormat.fileWithoutTsconfigIs({
-        absPath,
-        directory: absPath.slice(0, absPath.lastIndexOf('/')),
-        format: format ?? 'commonjs',
-      });
+      walk.filesWithoutOwner({ absPaths: [absPath] });
+      moduleFormat.fileWithoutTsconfigIs({ absPath, format: format ?? 'commonjs' });
       dirs.succeeds({ path: `${cacheDir}/probes` });
       dirs.succeeds({ path: runDir });
       writes.succeeds({ path: `${runDir}/cases.json` });

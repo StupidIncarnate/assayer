@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
@@ -34,7 +35,7 @@ describe('readOperandTypeLayerTransformer', () => {
   describe('a param keeps its DECLARED descriptor', () => {
     it('VALID: {operand named after a param} => the declared descriptor, NOT the type graph readout', () => {
       readOperandTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const value: string;\nif (value === "x") {}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
 
@@ -49,7 +50,7 @@ describe('readOperandTypeLayerTransformer', () => {
 
     it('VALID: {union param} => the union survives, so the per-member fan-out is preserved', () => {
       readOperandTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "declare const method: 'get' | 'post';\nif (method === 'get') {}\n",
@@ -75,7 +76,7 @@ describe('readOperandTypeLayerTransformer', () => {
   describe('any other binding is read from the type graph and WIDENED', () => {
     it('VALID: {name matching no param} => the widened type-graph readout', () => {
       readOperandTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const value: string;\nif (value === "x") {}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
 
@@ -90,7 +91,7 @@ describe('readOperandTypeLayerTransformer', () => {
 
     it('VALID: {no name at all} => the widened type-graph readout', () => {
       readOperandTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const value: string;\nif (value === "x") {}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
 
@@ -101,7 +102,7 @@ describe('readOperandTypeLayerTransformer', () => {
 
     it('VALID: {const with a literal type, no param} => WIDENED, since a one-value domain yields no case', () => {
       readOperandTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const value = 7;\nif (value > 5) {}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
 
@@ -116,7 +117,7 @@ describe('readOperandTypeLayerTransformer', () => {
 
     it("VALID: {union-typed const, no param} => widened to string rather than kept as 'get' | 'post'", () => {
       readOperandTypeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "declare const method: 'get' | 'post';\nif (method === 'get') {}\n",

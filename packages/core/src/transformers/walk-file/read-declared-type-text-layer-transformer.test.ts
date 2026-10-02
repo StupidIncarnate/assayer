@@ -1,4 +1,5 @@
 import { Project } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readDeclaredTypeTextLayerTransformer } from './read-declared-type-text-layer-transformer';
 import { readDeclaredTypeTextLayerTransformerProxy } from './read-declared-type-text-layer-transformer.proxy';
@@ -12,7 +13,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
     // `any` names a type the reader cannot find anywhere in their own signature.
     it('VALID: {Db | string, Db imported} => the declared members, never the collapsed any', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `${IMPORT}export function f(db: Db | string): void {}\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
@@ -22,7 +23,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
 
     it('VALID: {Db & { a: number }, Db imported} => the declared intersection, joined with &', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(db: Db & { a: number }): void {}\n`,
@@ -36,7 +37,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
     // rendering come from the same authority rather than one being read off the source.
     it('VALID: {string | Db | number} => every member in declaration order', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(db: string | Db | number): void {}\n`,
@@ -50,7 +51,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
   describe('a declaration the checker renders itself', () => {
     it('VALID: {a bare imported reference} => the name the checker keeps for it', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `${IMPORT}export function f(db: Db): void {}\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('db');
 
@@ -59,7 +60,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
 
     it('VALID: {a primitive keyword} => the checker rendering, unchanged', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export function f(n: number): void {}\n');
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n');
 
@@ -68,7 +69,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
 
     it('VALID: {a resolvable literal union} => the checker rendering of each member', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "export function f(mode: 'a' | 'b'): void {}\n");
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('mode');
 
@@ -80,7 +81,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
     // `import("/abs/path/box").Box<number>`.
     it('VALID: {a generic type reference} => the name plus its arguments, recursed', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(box: Box<Db>): void {}\ninterface Box<T> { value: T }\n`,
@@ -96,7 +97,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
     // difference, which is the same rule that keeps a coverage ID still under reformatting (§5.1).
     it('VALID: {redundant parens around a member} => the same bytes as without them', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(a: (Db) | string, b: Db|string): void {}\n`,
@@ -112,7 +113,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
     // function RETURNING the union — a different type, stated to the reader as if it were theirs.
     it('VALID: {a function type in a union} => kept parenthesized', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(cb: ((n: number) => void) | Db): void {}\n`,
@@ -126,7 +127,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
 
     it('VALID: {a union inside an intersection} => kept parenthesized', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(db: (Db | string) & { a: number }): void {}\n`,
@@ -143,7 +144,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
     // grouping check — a case union-inside-intersection alone leaves entirely untested.
     it('VALID: {an intersection inside a union} => kept parenthesized', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(db: (Db & string) | number): void {}\n`,
@@ -157,7 +158,7 @@ describe('readDeclaredTypeTextLayerTransformer', () => {
 
     it('VALID: {a constructor type in a union} => kept parenthesized', () => {
       readDeclaredTypeTextLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         `${IMPORT}export function f(make: (new (n: number) => Db) | string): void {}\n`,

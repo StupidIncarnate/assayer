@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'band-reading.ts'), 'utf8');
 const relPath = 'src/happy-path/array/cross-file-map/band-reading.ts';
@@ -21,7 +21,7 @@ const MID_EXIT = `*module*/bandReading/return@${HIGH}#else/${LOW}#else`;
 
 describe('array / cross-file-map — band-reading, the imported callee driven as a plain 3-arm function', () => {
   it('VALID: {bandReading(n)} => three cases, one per band, each steered by an n its arm distinguishes', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'band-reading.ts') }) });
 
     expect(
       analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases })),
@@ -39,7 +39,7 @@ describe('array / cross-file-map — band-reading, the imported callee driven as
   });
 
   it('VALID: {a plain branching function} => nothing admitted, a clean happy-path run', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'band-reading.ts') }) });
 
     expect({
       lints: analysis.lints,

@@ -1,3 +1,4 @@
+import { analysisHashTransformer } from '../../../transformers/analysis-hash/analysis-hash-transformer';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { processTargetsLayerBroker } from './process-targets-layer-broker';
@@ -9,6 +10,7 @@ describe('processTargetsLayerBroker', () => {
       const proxy = processTargetsLayerBrokerProxy();
 
       const result = await processTargetsLayerBroker({
+        root: '/repo',
         remaining: [],
         namespace: 'master',
         branch: 'master',
@@ -31,12 +33,13 @@ describe('processTargetsLayerBroker', () => {
       const proxy = processTargetsLayerBrokerProxy();
       const contentA = 'export const a = 1;\n';
       const contentB = 'export const b = 2;\n';
-      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: contentA });
-      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: contentB });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', absPath: '/repo/src/a.ts', content: contentA });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', absPath: '/repo/src/b.ts', content: contentB });
       const hashA = contentHashTransformer({ content: contentA });
       const hashB = contentHashTransformer({ content: contentB });
 
       const result = await processTargetsLayerBroker({
+        root: '/repo',
         remaining: [
           { relPath: 'src/a.ts', content: contentA },
           { relPath: 'src/b.ts', content: contentB },
@@ -54,8 +57,8 @@ describe('processTargetsLayerBroker', () => {
 
       expect(result).toStrictEqual({
         index: [
-          { relPath: 'src/a.ts', contentHash: hashA },
-          { relPath: 'src/b.ts', contentHash: hashB },
+          { relPath: 'src/a.ts', contentHash: hashA, analysisHash: analysisHashTransformer({ content: contentA, options: {} }) },
+          { relPath: 'src/b.ts', contentHash: hashB, analysisHash: analysisHashTransformer({ content: contentB, options: {} }) },
         ],
         errors: [],
       });
@@ -66,9 +69,10 @@ describe('processTargetsLayerBroker', () => {
   describe('a target that fails to parse', () => {
     it('ERROR: {remaining: one file with invalid syntax} => returns an error with relPath/line/column/message, no index entries', async () => {
       const proxy = processTargetsLayerBrokerProxy();
-      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: 'const x = ;;;{{{' });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', absPath: '/repo/src/broken.ts', content: 'const x = ;;;{{{' });
 
       const result = await processTargetsLayerBroker({
+        root: '/repo',
         remaining: [{ relPath: 'src/broken.ts', content: 'const x = ;;;{{{' }],
         namespace: 'master',
         branch: 'master',
@@ -93,11 +97,12 @@ describe('processTargetsLayerBroker', () => {
     it('EDGE: {remaining: one clean file then one invalid file} => keeps the clean file in the index and the invalid file in errors', async () => {
       const proxy = processTargetsLayerBrokerProxy();
       const cleanContent = 'export const ok = 1;\n';
-      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: cleanContent });
-      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content: 'const x = ;;;{{{' });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', absPath: '/repo/src/ok.ts', content: cleanContent });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', absPath: '/repo/src/broken.ts', content: 'const x = ;;;{{{' });
       const hash = contentHashTransformer({ content: cleanContent });
 
       const result = await processTargetsLayerBroker({
+        root: '/repo',
         remaining: [
           { relPath: 'src/ok.ts', content: cleanContent },
           { relPath: 'src/broken.ts', content: 'const x = ;;;{{{' },
@@ -114,7 +119,7 @@ describe('processTargetsLayerBroker', () => {
       });
 
       expect(result).toStrictEqual({
-        index: [{ relPath: 'src/ok.ts', contentHash: hash }],
+        index: [{ relPath: 'src/ok.ts', contentHash: hash, analysisHash: analysisHashTransformer({ content: cleanContent, options: {} }) }],
         errors: [{ relPath: 'src/broken.ts', line: 1, column: 11, message: 'Expression expected.' }],
       });
     });
@@ -124,11 +129,12 @@ describe('processTargetsLayerBroker', () => {
     it('VALID: {onProgress set, one clean target} => emits one advanced event carrying the new current count', async () => {
       const proxy = processTargetsLayerBrokerProxy();
       const content = 'export const x = 1;\n';
-      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', content });
+      proxy.queueCleanWrite({ blobsDir: '/repo/.assayer/cache/blobs', absPath: '/repo/src/x.ts', content });
       const hash = contentHashTransformer({ content });
       const events: unknown[] = [];
 
       const result = await processTargetsLayerBroker({
+        root: '/repo',
         remaining: [{ relPath: 'src/x.ts', content }],
         namespace: 'master',
         branch: 'master',
@@ -144,7 +150,7 @@ describe('processTargetsLayerBroker', () => {
         },
       });
 
-      expect(result).toStrictEqual({ index: [{ relPath: 'src/x.ts', contentHash: hash }], errors: [] });
+      expect(result).toStrictEqual({ index: [{ relPath: 'src/x.ts', contentHash: hash, analysisHash: analysisHashTransformer({ content, options: {} }) }], errors: [] });
       expect(events).toStrictEqual([
         { namespace: 'master', branch: 'master', phase: 'advanced', current: 1, max: 1, stableMax: 0, currentMax: 1, reused: false },
       ]);

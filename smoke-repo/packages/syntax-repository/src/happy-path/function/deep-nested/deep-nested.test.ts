@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'deep-nested.ts'), 'utf8');
 const relPath = 'src/happy-path/function/deep-nested/deep-nested.ts';
@@ -23,7 +23,7 @@ describe('function / deep-nested — a private returning a private funnelled TRA
   // hop at once: > 10 reaches inner's then through middle's then; 5 < v <= 10 reaches inner's else the
   // same way; v <= 5 never reaches inner, taking middle's else fall-through.
   it('VALID: {outer returns middle returns inner} => outer is the sole entry funnelling both hops', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'deep-nested.ts') }) });
 
     expect(
       analysis.functions.map((fn) => ({ name: String(fn.entry.name), access: fn.entry.access, branches: fn.branches, cases: fn.cases })),
@@ -44,7 +44,7 @@ describe('function / deep-nested — a private returning a private funnelled TRA
   // Neither `middle` nor `inner` is a separate entry — both funnel into `outer`, and `outer` itself is
   // branchless. Nothing is admitted on any channel: the two hops are fully driven through the surface.
   it('VALID: {both funnelled privates} => outer is the only entry and nothing is admitted', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'deep-nested.ts') }), relPath });
 
     expect({
       names: analysis.functions.map((fn) => String(fn.entry.name)),

@@ -16,6 +16,7 @@ export const currentNamespaceContract = z
         .object({
           relPath: z.string().brand<"CurrentNamespaceFilesRelPath">(),
           contentHash: contentHashContract,
+          analysisHash: contentHashContract,
         })
         .brand<"CurrentNamespaceFiles">(),
     ),

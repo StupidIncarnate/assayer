@@ -19,10 +19,12 @@ describe('manifestWriteBroker', () => {
               {
                 relPath: 'src/z.ts',
                 contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
               {
                 relPath: 'src/a.ts',
                 contentHash: 'f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
             ],
           },
@@ -31,10 +33,12 @@ describe('manifestWriteBroker', () => {
               {
                 relPath: 'src/m.ts',
                 contentHash: 'a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
               {
                 relPath: 'src/b.ts',
                 contentHash: 'b3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
             ],
           },
@@ -49,7 +53,7 @@ describe('manifestWriteBroker', () => {
       expect(proxy.getWriteCalls({ configDir: '/repo' })).toStrictEqual([
         [
           '/repo/.assayer/cache/manifest.json.tmp',
-          '{"assayerVersion":"1.0.0","configHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","namespaces":{"apple":{"files":[{"relPath":"src/b.ts","contentHash":"b3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},{"relPath":"src/m.ts","contentHash":"a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}]},"zebra":{"branch":"zebra","commit":"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0","files":[{"relPath":"src/a.ts","contentHash":"f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},{"relPath":"src/z.ts","contentHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}]}},"repoName":"assayer","rootFolderName":"smoke-repo"}',
+          '{"assayerVersion":"1.0.0","configHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","namespaces":{"apple":{"files":[{"relPath":"src/b.ts","contentHash":"b3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"},{"relPath":"src/m.ts","contentHash":"a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"}]},"zebra":{"branch":"zebra","commit":"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0","files":[{"relPath":"src/a.ts","contentHash":"f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"},{"relPath":"src/z.ts","contentHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"}]}},"repoName":"assayer","rootFolderName":"smoke-repo"}',
           'utf8',
         ],
       ]);
@@ -68,10 +72,12 @@ describe('manifestWriteBroker', () => {
               {
                 relPath: 'src/dup.ts',
                 contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
               {
                 relPath: 'src/dup.ts',
                 contentHash: 'f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
             ],
           },
@@ -83,7 +89,7 @@ describe('manifestWriteBroker', () => {
       expect(proxy.getWriteCalls({ configDir: '/repo' })).toStrictEqual([
         [
           '/repo/.assayer/cache/manifest.json.tmp',
-          '{"assayerVersion":"1.0.0","configHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","namespaces":{"alpha":{"files":[{"relPath":"src/dup.ts","contentHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},{"relPath":"src/dup.ts","contentHash":"f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}]}},"repoName":"assayer","rootFolderName":"smoke-repo"}',
+          '{"assayerVersion":"1.0.0","configHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","namespaces":{"alpha":{"files":[{"relPath":"src/dup.ts","contentHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"},{"relPath":"src/dup.ts","contentHash":"f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"}]}},"repoName":"assayer","rootFolderName":"smoke-repo"}',
           'utf8',
         ],
       ]);
@@ -101,10 +107,12 @@ describe('manifestWriteBroker', () => {
               {
                 relPath: 'src/a.ts',
                 contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
               {
                 relPath: 'src/z.ts',
                 contentHash: 'f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
             ],
           },
@@ -113,6 +121,7 @@ describe('manifestWriteBroker', () => {
               {
                 relPath: 'src/only.ts',
                 contentHash: 'a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857',
               },
             ],
           },
@@ -127,7 +136,7 @@ describe('manifestWriteBroker', () => {
       await manifestWriteBroker({ configDir: '/repo', manifest });
       const expectedWrite = [
         '/repo/.assayer/cache/manifest.json.tmp',
-        '{"assayerVersion":"1.0.0","configHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","namespaces":{"alpha":{"branch":"alpha","commit":"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0","files":[{"relPath":"src/a.ts","contentHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},{"relPath":"src/z.ts","contentHash":"f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}]},"zebra":{"files":[{"relPath":"src/only.ts","contentHash":"a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}]}},"repoName":"assayer","rootFolderName":"smoke-repo"}',
+        '{"assayerVersion":"1.0.0","configHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","namespaces":{"alpha":{"branch":"alpha","commit":"a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0","files":[{"relPath":"src/a.ts","contentHash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"},{"relPath":"src/z.ts","contentHash":"f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"}]},"zebra":{"files":[{"relPath":"src/only.ts","contentHash":"a3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","analysisHash":"73b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b857"}]}},"repoName":"assayer","rootFolderName":"smoke-repo"}',
         'utf8',
       ];
 

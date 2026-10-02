@@ -9,8 +9,6 @@ import { compileResolveGraphBroker } from './compile-resolve-graph-broker';
 import { compileResolveGraphBrokerProxy } from './compile-resolve-graph-broker.proxy';
 
 // sha256 of the empty string, and of the tsconfig text '{}'.
-const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
-const EMPTY_OBJECT_TSCONFIG_HASH = '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a';
 const HASH = ContentHashStub();
 const BLOB_PATH = `/blobs/${HASH}.json`;
 
@@ -18,14 +16,14 @@ describe('compileResolveGraphBroker', () => {
   describe('an empty file set', () => {
     it('EMPTY: {no files} => an index with no edges and no errors', async () => {
       const proxy = compileResolveGraphBrokerProxy();
-      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.filesWithoutOwner({ root: '/repo', relPaths: [] });
 
       const result = await compileResolveGraphBroker({ root: '/repo', blobsDir: '/blobs', files: [] });
 
       expect(result).toStrictEqual({
         index: {
           layoutHash: contentHashTransformer({ content: JSON.stringify([]) }),
-          tsconfigHash: EMPTY_HASH,
+          tsconfigHash: contentHashTransformer({ content: JSON.stringify([]) }),
           edges: [],
         },
         errors: [],
@@ -46,21 +44,21 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
-      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.filesWithoutOwner({ root: '/repo', relPaths: ['src/a.ts'] });
       proxy.resolvesUnresolved({ specifier: './missing' });
 
       const result = await compileResolveGraphBroker({
         root: '/repo',
         blobsDir: '/blobs',
-        files: [{ relPath: 'src/a.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/a.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(result).toStrictEqual({
         index: {
           layoutHash: contentHashTransformer({
-            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: HASH }]),
+            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: HASH, analysisHash: HASH }]),
           }),
-          tsconfigHash: EMPTY_HASH,
+          tsconfigHash: contentHashTransformer({ content: JSON.stringify([['src/a.ts', null, '[]']]) }),
           edges: [],
         },
         errors: [
@@ -83,21 +81,21 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
-      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.filesWithoutOwner({ root: '/repo', relPaths: ['src/a/caller.ts'] });
       proxy.resolvesLocal({ specifier: '../b/foo', fileName: '/repo/src/b/foo.ts' });
 
       const result = await compileResolveGraphBroker({
         root: '/repo',
         blobsDir: '/blobs',
-        files: [{ relPath: 'src/a/caller.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/a/caller.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(result).toStrictEqual({
         index: {
           layoutHash: contentHashTransformer({
-            content: JSON.stringify([{ relPath: 'src/a/caller.ts', contentHash: HASH }]),
+            content: JSON.stringify([{ relPath: 'src/a/caller.ts', contentHash: HASH, analysisHash: HASH }]),
           }),
-          tsconfigHash: EMPTY_HASH,
+          tsconfigHash: contentHashTransformer({ content: JSON.stringify([['src/a/caller.ts', null, '[]']]) }),
           edges: [
             {
               from: 'src/a/caller.ts',
@@ -127,20 +125,20 @@ describe('compileResolveGraphBroker', () => {
           },
         }),
       });
-      proxy.noTsconfigAt({ root: '/repo' });
+      proxy.filesWithoutOwner({ root: '/repo', relPaths: ['src/a.ts'] });
 
       const result = await compileResolveGraphBroker({
         root: '/repo',
         blobsDir: '/blobs',
-        files: [{ relPath: 'src/a.ts', contentHash: HASH }],
+        files: [{ relPath: 'src/a.ts', contentHash: HASH, analysisHash: HASH }],
       });
 
       expect(result).toStrictEqual({
         index: {
           layoutHash: contentHashTransformer({
-            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: HASH }]),
+            content: JSON.stringify([{ relPath: 'src/a.ts', contentHash: HASH, analysisHash: HASH }]),
           }),
-          tsconfigHash: EMPTY_HASH,
+          tsconfigHash: contentHashTransformer({ content: JSON.stringify([['src/a.ts', null, '[]']]) }),
           edges: [
             {
               from: 'src/a.ts',
@@ -160,7 +158,7 @@ describe('compileResolveGraphBroker', () => {
   describe('two files importing the same package export', () => {
     it("VALID: {src/a.ts and src/b.ts both import { foo } from 'left-pad'} => reads the external signature exactly once, keyed by the shared dtsPath and export name", async () => {
       const proxy = compileResolveGraphBrokerProxy();
-      proxy.tsconfigAt({ root: '/repo', path: '/repo/tsconfig.json', text: '{}' });
+      proxy.filesOwnedBy({ root: '/repo', relPaths: ['src/a.ts', 'src/b.ts'], configFilePath: '/repo/tsconfig.json', options: {} });
       proxy.queueBlob({
         path: BLOB_PATH,
         blob: CompiledFileBlobStub({
@@ -196,8 +194,8 @@ describe('compileResolveGraphBroker', () => {
         blobsDir: '/blobs',
         cacheDir: '/repo/.assayer/cache',
         files: [
-          { relPath: 'src/a.ts', contentHash: HASH },
-          { relPath: 'src/b.ts', contentHash: HASH },
+          { relPath: 'src/a.ts', contentHash: HASH, analysisHash: HASH },
+          { relPath: 'src/b.ts', contentHash: HASH, analysisHash: HASH },
         ],
       });
 
@@ -205,11 +203,11 @@ describe('compileResolveGraphBroker', () => {
         index: {
           layoutHash: contentHashTransformer({
             content: JSON.stringify([
-              { relPath: 'src/a.ts', contentHash: HASH },
-              { relPath: 'src/b.ts', contentHash: HASH },
+              { relPath: 'src/a.ts', contentHash: HASH, analysisHash: HASH },
+              { relPath: 'src/b.ts', contentHash: HASH, analysisHash: HASH },
             ]),
           }),
-          tsconfigHash: EMPTY_OBJECT_TSCONFIG_HASH,
+          tsconfigHash: contentHashTransformer({ content: JSON.stringify([['src/a.ts', 'tsconfig.json', '[]'], ['src/b.ts', 'tsconfig.json', '[]']]) }),
           edges: [
             {
               from: 'src/a.ts',
@@ -238,7 +236,7 @@ describe('compileResolveGraphBroker', () => {
   describe('two files reading the same ambient global', () => {
     it("VALID: {src/a.ts and src/b.ts both read process.env, uncalled} => reads the global signature exactly once, keyed by the shared reference", async () => {
       const proxy = compileResolveGraphBrokerProxy();
-      proxy.tsconfigAt({ root: '/repo', path: '/repo/tsconfig.json', text: '{}' });
+      proxy.filesOwnedBy({ root: '/repo', relPaths: ['src/a.ts', 'src/b.ts'], configFilePath: '/repo/tsconfig.json', options: {} });
       proxy.queueBlob({
         path: BLOB_PATH,
         blob: CompiledFileBlobStub({
@@ -274,8 +272,8 @@ describe('compileResolveGraphBroker', () => {
         blobsDir: '/blobs',
         cacheDir: '/repo/.assayer/cache',
         files: [
-          { relPath: 'src/a.ts', contentHash: HASH },
-          { relPath: 'src/b.ts', contentHash: HASH },
+          { relPath: 'src/a.ts', contentHash: HASH, analysisHash: HASH },
+          { relPath: 'src/b.ts', contentHash: HASH, analysisHash: HASH },
         ],
       });
 

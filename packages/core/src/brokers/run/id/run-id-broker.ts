@@ -20,6 +20,10 @@
  *   the harness index for the same reason — neither the layout hash nor the tsconfig hash moves when a
  *   file classified OUT of the analysed surface is edited.
  *
+ *   And keyed on the analysis options of the tsconfig that owns the file, because they decide the types the
+ *   walk reads, and so the cases a run holds: an edit to that tsconfig's `lib` or strict flags changes what
+ *   the same bytes are tested for. A file no tsconfig owns adds nothing, under the same rule as the harness.
+ *
  * USAGE:
  * await runIdBroker({ root: '/repo', relPath: 'src/a.ts', source: 'export const a = 1;\n' });
  * // Returns a RunId — the same one, for the same bytes and the same harness, forever
@@ -30,6 +34,9 @@ import type { RunResult } from '@assayer/shared/contracts';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { isAssayerHarnessGuard } from '../../../guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
+import { analysisOptionsTransformer } from '../../../transformers/analysis-options/analysis-options-transformer';
+import { compilerOptionsKeyTransformer } from '../../../transformers/compiler-options-key/compiler-options-key-transformer';
+import { tsconfigOwnerBroker } from '../../tsconfig/owner/tsconfig-owner-broker';
 import { pathExists, readFile } from '#gateway/node/fs__promises';
 
 export const runIdBroker = async ({
@@ -49,11 +56,15 @@ export const runIdBroker = async ({
     harnessSource !== undefined && isAssayerHarnessGuard({ source: harnessSource })
       ? contentHashTransformer({ content: harnessSource })
       : undefined;
+  const owner = tsconfigOwnerBroker({ absPath: `${root}/${relPath}` });
+  const ingredients = [
+    ...(harnessDigest === undefined ? [] : [harnessDigest]),
+    ...(owner.configFilePath === undefined
+      ? []
+      : [`options:${compilerOptionsKeyTransformer({ options: analysisOptionsTransformer({ options: owner.options }) })}`]),
+  ];
 
   return runResultContract.shape.runId.parse(
-    contentHashTransformer({
-      content:
-        harnessDigest === undefined ? `${relPath}\n${source}` : `${relPath}\n${source}\n${harnessDigest}`,
-    }),
+    contentHashTransformer({ content: [relPath, source, ...ingredients].join('\n') }),
   );
 };

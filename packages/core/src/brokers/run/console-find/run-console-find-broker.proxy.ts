@@ -47,7 +47,7 @@ export const runConsoleFindBrokerProxy = (): {
 } => {
   const existsProxy = pathExistsProxy();
   const fileProxy = readFileProxy();
-  runIdBrokerProxy();
+  const idProxy = runIdBrokerProxy();
 
   return {
     savedConsole: ({
@@ -65,6 +65,7 @@ export const runConsoleFindBrokerProxy = (): {
     }): void => {
       existsProxy.present({ path: sourcePath });
       existsProxy.missing({ path: harnessPath });
+      idProxy.fileWithoutOwner({ absPath: sourcePath });
       existsProxy.present({ path: consolePath });
       fileProxy.returns({ path: sourcePath, contents: source });
       fileProxy.returns({ path: consolePath, contents: consoleText });
@@ -82,6 +83,7 @@ export const runConsoleFindBrokerProxy = (): {
     }): void => {
       existsProxy.present({ path: sourcePath });
       existsProxy.missing({ path: harnessPath });
+      idProxy.fileWithoutOwner({ absPath: sourcePath });
       existsProxy.missing({ path: consolePath });
       fileProxy.returns({ path: sourcePath, contents: source });
     },
@@ -107,6 +109,7 @@ export const runConsoleFindBrokerProxy = (): {
     }): void => {
       existsProxy.present({ path: sourcePath });
       existsProxy.missing({ path: harnessPath });
+      idProxy.fileWithoutOwner({ absPath: sourcePath });
       existsProxy.present({ path: consolePath });
       fileProxy.returns({ path: sourcePath, contents: source });
       fileProxy.denied({ path: consolePath });

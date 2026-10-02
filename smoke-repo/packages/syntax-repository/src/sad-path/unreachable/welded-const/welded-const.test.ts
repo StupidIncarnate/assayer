@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'welded-const.ts'), 'utf8');
 const relPath = 'src/sad-path/unreachable/welded-const/welded-const.ts';
@@ -26,7 +26,7 @@ describe('unreachable / welded-const — a module scope whose branch turns on a 
   // arm is dead code on the lint channel. It is NO LONGER admitted undriven: the analyzer knows
   // exactly which arm runs.
   it('VALID: {const level = 7; if (level > 5) {…} else {…}} => the live arm is a case, the dead arm an unreachable-exit lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'welded-const.ts') }), relPath });
 
     expect({
       functions: analysis.functions.map((fn) => ({ name: String(fn.entry.name), access: fn.entry.access, cases: fn.cases })),
@@ -41,7 +41,7 @@ describe('unreachable / welded-const — a module scope whose branch turns on a 
   // derivation reads as a single-value domain. Derived from the source LITERAL (P4-safe), never from
   // executing the code.
   it('VALID: {const level = 7} => the branch leaf carries the welded const value', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'welded-const.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.branches).map((branch) => branch.condition)).toStrictEqual([
       {
@@ -59,7 +59,7 @@ describe('unreachable / welded-const — a module scope whose branch turns on a 
   // resolved which arm is live. The dead arm rides the LINT channel — the repo's debt to fix — not any
   // of the "Assayer cannot drive this" admissions.
   it('VALID: {a welded const module} => nothing is admitted as undriven or a dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'welded-const.ts') }), relPath });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots }).toStrictEqual({ undriven: [], darkSpots: [] });
   });

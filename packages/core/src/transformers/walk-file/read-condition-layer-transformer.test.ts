@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readConditionLayerTransformer } from './read-condition-layer-transformer';
 import { readConditionLayerTransformerProxy } from './read-condition-layer-transformer.proxy';
@@ -7,7 +8,7 @@ describe('readConditionLayerTransformer', () => {
   describe('the operand it reads', () => {
     it('VALID: {name.length === 0} => the operand is name itself, not the .length access', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (name.length === 0) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -21,7 +22,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('VALID: {value > 5} => the left-hand identifier is the operand', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (value > 5) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -35,7 +36,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('EDGE: {a.b > c} => the operand is the property access and it contributes NO name', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (a.b > c) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -49,7 +50,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('EDGE: {bare identifier condition} => the whole expression is the operand', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (flag) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -65,7 +66,7 @@ describe('readConditionLayerTransformer', () => {
   describe('object-member operands', () => {
     it('VALID: {config.mode === "a"} => records the root param, property path, and root type-reference', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Config { mode: string }\nexport function decide(config: Config): string {\n  if (config.mode === "a") { return "x"; }\n  return "y";\n}\n',
@@ -89,7 +90,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('EDGE: {a.b > c on an undeclared root} => the property path is read but no type-reference resolves', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (a.b > c) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -110,7 +111,7 @@ describe('readConditionLayerTransformer', () => {
   describe('typeof operand', () => {
     it("VALID: {typeof target === 'string'} => the operand is target itself, past the typeof keyword, and it is marked operandIsTypeof", () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "if (typeof target === 'string') {}\n");
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -129,7 +130,7 @@ describe('readConditionLayerTransformer', () => {
 
     it("VALID: {typeof config.mode === 'string'} => typeof unwraps to the property access, which still decomposes into its root and path", () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "if (typeof config.mode === 'string') {}\n");
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -152,7 +153,7 @@ describe('readConditionLayerTransformer', () => {
   describe('the predicate it parses', () => {
     it('VALID: {name.length === 0} => a length-eq predicate carrying the threshold', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (name.length === 0) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -164,7 +165,7 @@ describe('readConditionLayerTransformer', () => {
     // came back `unrecognized` and constrained nothing.
     it('VALID: {name.length >= 2} => a length-gte predicate carrying the non-zero threshold', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (name.length >= 2) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -173,7 +174,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('VALID: {value > 5} => a gt predicate carrying the literal VALUE', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (value > 5) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -182,7 +183,7 @@ describe('readConditionLayerTransformer', () => {
 
     it("VALID: {method === 'get'} => an eq predicate carrying the unquoted string value", () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "if (method === 'get') {}\n");
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -191,7 +192,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('VALID: {n === 3} => an eq predicate carrying the numeric value', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (n === 3) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -200,7 +201,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('VALID: {flag === true} => an eq predicate on the boolean keyword', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (flag === true) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -209,7 +210,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('VALID: {flag === false} => an eq predicate on the boolean keyword', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (flag === false) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -221,7 +222,7 @@ describe('readConditionLayerTransformer', () => {
     // side stayed unread and the predicate came back `unrecognized` for every `=== null` comparison.
     it('VALID: {v === null} => an eq predicate carrying the literal null', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (v === null) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -230,7 +231,7 @@ describe('readConditionLayerTransformer', () => {
 
     it('VALID: {v !== null} => a neq predicate carrying the literal null', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (v !== null) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -242,7 +243,7 @@ describe('readConditionLayerTransformer', () => {
     // to carry even once the identifier is recognized as meaning "no value".
     it('VALID: {v === undefined} => an unrecognized predicate, since undefined is an Identifier, not a keyword', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (v === undefined) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -251,7 +252,7 @@ describe('readConditionLayerTransformer', () => {
 
     it("VALID: {typeof target === 'string'} => a typeof-eq predicate carrying the tag", () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "if (typeof target === 'string') {}\n");
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -260,7 +261,7 @@ describe('readConditionLayerTransformer', () => {
 
     it("VALID: {typeof target !== 'string'} => a typeof-neq predicate carrying the tag", () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', "if (typeof target !== 'string') {}\n");
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -271,7 +272,7 @@ describe('readConditionLayerTransformer', () => {
     // never read as though the number were a valid typeof result.
     it('EDGE: {typeof target === 3} => unrecognized, since a typeof tag must be a string', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (typeof target === 3) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -285,7 +286,7 @@ describe('readConditionLayerTransformer', () => {
     // `if (a || flag)` and `if (!ready)` produced no usable values.
     it('VALID: {bare identifier condition} => a truthy predicate on the operand itself', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (flag) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -296,7 +297,7 @@ describe('readConditionLayerTransformer', () => {
   describe('conditions it cannot classify', () => {
     it('EDGE: {a.b > c compared against a non-literal} => an unrecognized predicate', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (a.b > c) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -307,7 +308,7 @@ describe('readConditionLayerTransformer', () => {
   describe('formatting invariance', () => {
     it('VALID: {double-quoted vs single-quoted literal} => the same parsed literal VALUE', () => {
       readConditionLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const doubled = project.createSourceFile('src/a.ts', 'if (method === "get") {}\n');
       const singled = project.createSourceFile('src/b.ts', "if (method==='get') {}\n");
       const doubledCondition = doubled.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();

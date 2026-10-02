@@ -7,9 +7,10 @@ const EARLY_RETURN_SOURCE =
 describe('analyzeExtractBroker', () => {
   describe('the analysis model it extracts', () => {
     it('VALID: {exported function with an if} => its entry, its branch, and both guarded exits', () => {
-      analyzeExtractBrokerProxy();
+      const proxy = analyzeExtractBrokerProxy();
+      proxy.filesWithoutOwner({ absPaths: ['/repo/src/f.ts'] });
 
-      const result = analyzeExtractBroker({ source: EARLY_RETURN_SOURCE, relPath: 'src/classify.ts' });
+      const result = analyzeExtractBroker({ source: EARLY_RETURN_SOURCE, relPath: 'src/classify.ts', absPath: '/repo/src/classify.ts' });
 
       expect(result).toStrictEqual({
         success: true,
@@ -68,11 +69,12 @@ describe('analyzeExtractBroker', () => {
     });
 
     it('VALID: {exported function with no branches} => an entry with one unguarded exit', () => {
-      analyzeExtractBrokerProxy();
+      const proxy = analyzeExtractBrokerProxy();
+      proxy.filesWithoutOwner({ absPaths: ['/repo/src/f.ts'] });
 
       const result = analyzeExtractBroker({
         source: 'export function echo(n: string): string {\n  return n;\n}\n',
-        relPath: 'src/echo.ts',
+        relPath: 'src/echo.ts', absPath: '/repo/src/echo.ts',
       });
 
       expect(result).toStrictEqual({
@@ -95,20 +97,22 @@ describe('analyzeExtractBroker', () => {
     });
 
     it('VALID: {non-exported function} => no entries, since it owes no cases of its own', () => {
-      analyzeExtractBrokerProxy();
+      const proxy = analyzeExtractBrokerProxy();
+      proxy.filesWithoutOwner({ absPaths: ['/repo/src/f.ts'] });
 
       const result = analyzeExtractBroker({
         source: 'function helper(n: number): number {\n  return n;\n}\n',
-        relPath: 'src/helper.ts',
+        relPath: 'src/helper.ts', absPath: '/repo/src/helper.ts',
       });
 
       expect(result).toStrictEqual({ success: true, functions: [] });
     });
 
     it('EMPTY: {empty source} => no entries', () => {
-      analyzeExtractBrokerProxy();
+      const proxy = analyzeExtractBrokerProxy();
+      proxy.filesWithoutOwner({ absPaths: ['/repo/src/f.ts'] });
 
-      const result = analyzeExtractBroker({ source: '', relPath: 'src/empty.ts' });
+      const result = analyzeExtractBroker({ source: '', relPath: 'src/empty.ts', absPath: '/repo/src/empty.ts' });
 
       expect(result).toStrictEqual({ success: true, functions: [] });
     });
@@ -116,12 +120,13 @@ describe('analyzeExtractBroker', () => {
 
   describe('formatting invariance', () => {
     it('VALID: {the same logic reformatted} => byte-identical coverage ids, since spelling is not logic', () => {
-      analyzeExtractBrokerProxy();
+      const proxy = analyzeExtractBrokerProxy();
+      proxy.filesWithoutOwner({ absPaths: ['/repo/src/f.ts'] });
 
-      const spaced = analyzeExtractBroker({ source: EARLY_RETURN_SOURCE, relPath: 'src/classify.ts' });
+      const spaced = analyzeExtractBroker({ source: EARLY_RETURN_SOURCE, relPath: 'src/classify.ts', absPath: '/repo/src/classify.ts' });
       const tight = analyzeExtractBroker({
         source: "export function classify(value:number):string{\n  if(value>5){\n    return 'big';\n  }\n  return 'small';\n}\n",
-        relPath: 'src/classify.ts',
+        relPath: 'src/classify.ts', absPath: '/repo/src/classify.ts',
       });
 
       expect(spaced).toStrictEqual(tight);
@@ -130,9 +135,10 @@ describe('analyzeExtractBroker', () => {
 
   describe('source it cannot parse', () => {
     it('ERROR: {unclosed parameter list} => a positioned parse error rather than a guess', () => {
-      analyzeExtractBrokerProxy();
+      const proxy = analyzeExtractBrokerProxy();
+      proxy.filesWithoutOwner({ absPaths: ['/repo/src/f.ts'] });
 
-      const result = analyzeExtractBroker({ source: 'export function broken( {\n', relPath: 'src/broken.ts' });
+      const result = analyzeExtractBroker({ source: 'export function broken( {\n', relPath: 'src/broken.ts', absPath: '/repo/src/broken.ts' });
 
       expect(result).toStrictEqual({
         success: false,

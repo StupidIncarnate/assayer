@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 import type { ImportDeclaration } from '#gateway/npm/ts-morph';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
@@ -8,7 +9,7 @@ import { handleImportLayerTransformerProxy } from './handle-import-layer-transfo
 const MODULE_CONTEXT = WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false });
 
 const importOf = ({ source }: { source: string }): ImportDeclaration =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.ImportDeclaration);
 

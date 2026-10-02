@@ -1,6 +1,8 @@
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 
-import { tsconfigReadBrokerProxy } from '../../tsconfig/read/tsconfig-read-broker.proxy';
+import type { CompilerOptions } from '#gateway/npm/typescript';
+
+import { tsconfigOwnerBrokerProxy } from '../../tsconfig/owner/tsconfig-owner-broker.proxy';
 import { externalSignatureReadBrokerProxy } from '../../external-signature/read/external-signature-read-broker.proxy';
 import { externalSignatureReadGlobalBroker } from '../../external-signature/read-global/external-signature-read-global-broker';
 import { externalSignatureReadGlobalBrokerProxy } from '../../external-signature/read-global/external-signature-read-global-broker.proxy';
@@ -8,16 +10,25 @@ import { resolveSpecifierLayerBrokerProxy } from './resolve-specifier-layer-brok
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const compileResolveGraphBrokerProxy = (): {
-  // `path` is the blob file the broker reads: `<blobsDir>/<contentHash>.json`. One-shot, so two blobs
+  // `path` is the blob file the broker reads: `<blobsDir>/<analysisHash>.json`. One-shot, so two blobs
   // queued for the same path are read in the order queued.
   queueBlob: ({ path, blob }: { path: string; blob: unknown }) => void;
-  // The tsconfig search starts at `root`. No tsconfig is found there, so the options are empty and
-  // external type reading is skipped.
-  noTsconfigAt: ({ root }: { root: string }) => void;
-  // The search from `root` finds a tsconfig at `path` holding `text`. Its options are parsed REAL from
-  // the text, and the index's tsconfigHash is the real sha256 of it. A found tsconfig is the second
-  // condition, beside a supplied `cacheDir`, that turns on external and global signature reading.
-  tsconfigAt: ({ root, path, text }: { root: string; path: string; text: string }) => void;
+  // No tsconfig owns these files under `root`, so they resolve under TypeScript's defaults and external
+  // type reading is skipped for their imports.
+  filesWithoutOwner: ({ root, relPaths }: { root: string; relPaths: readonly string[] }) => void;
+  // One tsconfig at `configFilePath` owns these files, with `options`. An owner is the second condition,
+  // beside a supplied `cacheDir`, that turns on external and global signature reading for a file's imports.
+  filesOwnedBy: ({
+    root,
+    relPaths,
+    configFilePath,
+    options,
+  }: {
+    root: string;
+    relPaths: readonly string[];
+    configFilePath: string;
+    options: CompilerOptions;
+  }) => void;
   resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }) => void;
   resolvesUnresolved: ({ specifier }: { specifier: string }) => void;
   // A package export's signature is not cached yet. The broker reads the `.d.ts` bytes, reads the
@@ -47,7 +58,7 @@ export const compileResolveGraphBrokerProxy = (): {
   // Each queued blob is one file's on-disk record, answered to a read of its exact path. The builtins
   // list and the sha256 hasher run REAL. The package signature read runs REAL through its own proxy.
   const readFileGateway = readFileProxy();
-  const tsconfigProxy = tsconfigReadBrokerProxy();
+  const ownerProxy = tsconfigOwnerBrokerProxy();
   const layerProxy = resolveSpecifierLayerBrokerProxy();
   const packageSignatureProxy = externalSignatureReadBrokerProxy();
   externalSignatureReadGlobalBrokerProxy();
@@ -60,11 +71,21 @@ export const compileResolveGraphBrokerProxy = (): {
     queueBlob: ({ path, blob }: { path: string; blob: unknown }): void => {
       readFileGateway.returnsOnce({ path, contents: JSON.stringify(blob) });
     },
-    noTsconfigAt: ({ root }: { root: string }): void => {
-      tsconfigProxy.noTsconfigAt({ searchPath: root });
+    filesWithoutOwner: ({ root, relPaths }: { root: string; relPaths: readonly string[] }): void => {
+      ownerProxy.filesWithoutOwner({ absPaths: relPaths.map((relPath) => `${root}/${relPath}`) });
     },
-    tsconfigAt: ({ root, path, text }: { root: string; path: string; text: string }): void => {
-      tsconfigProxy.tsconfigAt({ searchPath: root, configFilePath: path, text });
+    filesOwnedBy: ({
+      root,
+      relPaths,
+      configFilePath,
+      options,
+    }: {
+      root: string;
+      relPaths: readonly string[];
+      configFilePath: string;
+      options: CompilerOptions;
+    }): void => {
+      ownerProxy.filesOwnedBy({ absPaths: relPaths.map((relPath) => `${root}/${relPath}`), configFilePath, options });
     },
     resolvesLocal: ({ specifier, fileName }: { specifier: string; fileName: string }): void => {
       layerProxy.resolvesLocal({ specifier, fileName });

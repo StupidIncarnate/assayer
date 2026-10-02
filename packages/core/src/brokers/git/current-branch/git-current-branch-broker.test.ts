@@ -1,3 +1,5 @@
+import { GitNotInstalledError } from '#gateway/bin/git';
+
 import { gitCurrentBranchBroker } from './git-current-branch-broker';
 import { gitCurrentBranchBrokerProxy } from './git-current-branch-broker.proxy';
 
@@ -36,13 +38,15 @@ describe('gitCurrentBranchBroker', () => {
   });
 
   describe('git is not installed', () => {
-    it('EMPTY: {repoRoot: "/repo"} git never starts => returns "default"', async () => {
+    it('ERROR: {repoRoot: "/repo"} git never starts => rejects with GitNotInstalledError naming the git call', async () => {
       const proxy = gitCurrentBranchBrokerProxy();
       proxy.gitNotInstalled();
 
-      const result = await gitCurrentBranchBroker({ repoRoot: '/repo' });
-
-      expect(result).toBe('default');
+      await expect(gitCurrentBranchBroker({ repoRoot: '/repo' })).rejects.toStrictEqual(
+        new GitNotInstalledError(
+          'git rev-parse --abbrev-ref HEAD could not start in /repo: "git" never started: ENOENT: open \'git\'',
+        ),
+      );
     });
   });
 });
