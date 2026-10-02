@@ -1,4 +1,5 @@
 import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readEnvOperandLayerTransformer } from './read-env-operand-layer-transformer';
 import { readEnvOperandLayerTransformerProxy } from './read-env-operand-layer-transformer.proxy';
@@ -7,7 +8,7 @@ import { readEnvOperandLayerTransformerProxy } from './read-env-operand-layer-tr
 // standard library and NOTHING else, which is why `process` resolves to nothing and `Number`
 // resolves to the lib.
 const operandOf = ({ source }: { source: string }): Node => {
-  const project = new Project({ useInMemoryFileSystem: true });
+  const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
   const sourceFile = project.createSourceFile('src/x.ts', source);
   const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 

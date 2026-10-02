@@ -35,6 +35,7 @@ export const {
   findConfigFile,
   flattenDiagnosticMessageText,
   forEachChild,
+  getImpliedNodeFormatForFile,
   getModifiers,
   getParsedCommandLineOfConfigFile,
   isArrayLiteralExpression,
@@ -104,6 +105,7 @@ export const {
   readConfigFile,
   readJsonConfigFile,
   resolveModuleName,
+  resolveProjectReferencePath,
   sys,
   transform,
   transpileModule,
@@ -124,6 +126,7 @@ export type Node = ts.Node;
 export type NodeFactory = ts.NodeFactory;
 export type ObjectLiteralElementLike = ts.ObjectLiteralElementLike;
 export type ParameterDeclaration = ts.ParameterDeclaration;
+export type ParsedCommandLine = ts.ParsedCommandLine;
 export type ParseConfigFileHost = ts.ParseConfigFileHost;
 export type Program = ts.Program;
 export type PropertyName = ts.PropertyName;

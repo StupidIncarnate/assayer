@@ -114,7 +114,7 @@ describe('hermeticSourceFileTransformer', () => {
   });
 
   describe('compiler options', () => {
-    it('VALID: {strictNullChecks on, then the same source with default options} => each option set reads with its own checker', () => {
+    it('VALID: {strictNullChecks on, then the same source with it off} => each option set reads with its own checker', () => {
       const source = 'export const maybe: string | undefined = undefined as string | undefined;\n';
 
       const strict = hermeticSourceFileTransformer({
@@ -124,7 +124,7 @@ describe('hermeticSourceFileTransformer', () => {
         read: ({ sourceFile }) => sourceFile.getVariableDeclarationOrThrow('maybe').getType().getText(),
       });
       const loose = hermeticSourceFileTransformer({
-        compilerOptions: {},
+        compilerOptions: { strictNullChecks: false },
         relPath: 'src/maybe.ts',
         source,
         read: ({ sourceFile }) => sourceFile.getVariableDeclarationOrThrow('maybe').getType().getText(),

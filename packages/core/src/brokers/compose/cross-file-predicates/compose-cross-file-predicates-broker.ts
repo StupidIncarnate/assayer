@@ -32,7 +32,6 @@ import { branchNodeContract, fileAnalysisContract } from '@assayer/shared/contra
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { callArgBindingsTransformer } from '../../../transformers/call-arg-bindings/call-arg-bindings-transformer';
 import { deriveCasesTransformer } from '../../../transformers/derive-cases/derive-cases-transformer';
 import { fileEnrichmentTransformer } from '../../../transformers/file-enrichment/file-enrichment-transformer';
@@ -80,7 +79,7 @@ export const composeCrossFilePredicatesBroker = ({
           (candidate) => candidate.position.line === position.line && candidate.position.column === position.column,
         );
 
-        return call !== undefined && call.callee.target === 'import' ? call : undefined;
+        return call?.callee.target === 'import' ? call : undefined;
       }),
     };
   });
@@ -91,21 +90,20 @@ export const composeCrossFilePredicatesBroker = ({
     return analysis;
   }
 
-  const { options } = tsconfigReadBroker({ searchPath: root });
   const containingFile = `${root}/${relPath}`;
 
   const composed = perFunction.map(({ fn, candidates }) => {
     const branches = fn.branches.map((branch, index) => {
       const candidate = candidates[index];
 
-      if (candidate === undefined || candidate.callee.target !== 'import') {
+      if (candidate?.callee.target !== 'import') {
         return branch;
       }
 
       // Resolve the imported callee to its sibling on disk the way `tsc` does. Only a sibling INSIDE
       // this repo (not under node_modules) can be walked for its predicate — a package/builtin/
       // unresolved callee resolves to `undefined` here, so the leaf stays opaque.
-      const sibling = resolveSiblingCalleeBroker({ specifier: String(candidate.callee.specifier), containingFile, root, options });
+      const sibling = resolveSiblingCalleeBroker({ specifier: String(candidate.callee.specifier), containingFile, root });
 
       if (!sibling?.walked.success) {
         return branch;

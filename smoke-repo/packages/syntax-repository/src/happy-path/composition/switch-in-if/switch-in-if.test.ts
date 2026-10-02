@@ -13,7 +13,7 @@ describe('composition / switch-in-if — a switch nested inside an if arm', () =
   // single-step guard, so the enclosing `if` was silently LOST and every case looked reachable
   // unconditionally. The walk carries the outer guard into the clause, so both steps are present.
   it('VALID: {switch inside an if} => every switch exit carries the enclosing if guard FIRST', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/composition/switch-in-if/switch-in-if.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/composition/switch-in-if/switch-in-if.ts', absPath: join(__dirname, 'switch-in-if.ts') });
     const guards = result.success
       ? result.functions.flatMap((fn) => fn.exits).map((exit) => exit.guardPath.map((step) => `${step.branchCoverageId}#${step.arm}`))
       : [];

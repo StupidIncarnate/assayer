@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'const-arrow-callee.ts'), 'utf8');
 const relPath = 'src/happy-path/composition/const-arrow-callee/const-arrow-callee.ts';
@@ -12,7 +12,7 @@ describe('composition / const-arrow-callee — a private declared as a CONST-BOU
   // exactly as a `function` declaration is. Read it as unresolvable and `classify` is reached by nothing:
   // a dead-surface LINT against a private the exported entry calls four lines below.
   it('VALID: {report calls classify} => the call resolves locally, so no dead-surface lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-arrow-callee.ts') }), relPath });
 
     expect({ lints: analysis.lints, undriven: analysis.undriven, darkSpots: analysis.darkSpots, gaps: analysis.gaps }).toStrictEqual({
       lints: [],
@@ -25,7 +25,7 @@ describe('composition / const-arrow-callee — a private declared as a CONST-BOU
   // With the link resolved, the driving route runs: `report` passes its own input straight through, so
   // `classify`'s two arms funnel into the surface's case set and the surface is the only entry.
   it("VALID: {return classify(n)} => the callee's arms funnel into the surface, one case each", () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-arrow-callee.ts') }), relPath });
 
     expect({
       entries: analysis.functions.map((fn) => String(fn.entry.name)),

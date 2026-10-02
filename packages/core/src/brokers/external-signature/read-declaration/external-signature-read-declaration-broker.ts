@@ -22,6 +22,7 @@ import { Node, Project } from '#gateway/npm/ts-morph';
 
 import { externalSignatureContract, paramDescriptorContract } from '@assayer/shared/contracts';
 
+import { consumerProjectStatics } from '../../../statics/consumer-project/consumer-project-statics';
 import { typeDescriptorTransformer } from '../../../transformers/type-descriptor/type-descriptor-transformer';
 import { readSignatureTypeLayerBroker } from './read-signature-type-layer-broker';
 
@@ -37,7 +38,13 @@ export const externalSignatureReadDeclarationBroker = ({
   exportName: string;
 }): ExternalSignatureReadDeclarationResult => {
   const existing = projectByConfig.get(tsConfigFilePath);
-  const project = existing ?? new Project({ tsConfigFilePath, skipAddingFilesFromTsConfig: true });
+  const project =
+    existing ??
+    new Project({
+      tsConfigFilePath,
+      skipAddingFilesFromTsConfig: true,
+      defaultCompilerOptions: { types: [...consumerProjectStatics.defaultCompilerOptions.types] },
+    });
   if (existing === undefined) {
     projectByConfig.set(tsConfigFilePath, project);
   }

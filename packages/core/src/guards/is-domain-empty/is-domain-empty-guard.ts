@@ -39,7 +39,7 @@ export const isDomainEmptyGuard = ({ domain }: { domain?: ValueDomain }): boolea
   // `undefined` is "nothing was said about length", which proves nothing. Only a stated axis that no
   // length survives is a proof.
   const lengths = lengthCandidatesTransformer({ domain });
-  const noLengthLeft = lengths !== undefined && lengths.length === 0;
+  const noLengthLeft = lengths?.length === 0;
 
   const survivors = (domain.members ?? []).filter(
     (member) =>

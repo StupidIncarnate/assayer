@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'element-length.ts'), 'utf8');
 const relPath = 'src/happy-path/array/element-length/element-length.ts';
@@ -16,7 +16,7 @@ describe('array / element-length — a branchless function over an array param',
   // not a scalar placeholder — so `items.length` runs on an actual array. The values are INPUTS (P4);
   // every case asserts only that the flow REACHES the exit.
   it('VALID: {export function count(items: number[]) { return items.length }} => param typed as array-of-number, three cardinality cases (empty/one/many)', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'element-length.ts') }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -53,7 +53,7 @@ describe('array / element-length — a branchless function over an array param',
 
   // An array param declares no OBJECT shape, so `declaredTypes` is empty; nothing is admitted.
   it('VALID: {an array-typed param} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'element-length.ts') }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

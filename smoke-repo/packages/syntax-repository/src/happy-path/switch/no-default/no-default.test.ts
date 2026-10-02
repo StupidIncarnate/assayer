@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'no-default.ts'), 'utf8');
 const relPath = 'src/happy-path/switch/no-default/no-default.ts';
@@ -19,7 +19,7 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
   // out unmatched both continue into the exact same code. `routeLabel` has exactly ONE exit: the
   // enclosing scope's own `exit@top`. No `#then`-guarded completion exists for either case.
   it('VALID: {tail switch with no default} => one entry, two case branches, exactly ONE exit', () => {
-    const result = analyzeExtractBroker({ source, relPath });
+    const result = analyzeExtractBroker({ source, relPath, absPath: join(__dirname, 'no-default.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [
@@ -95,7 +95,7 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
   // predict a different exit than the one actually observed and fail a real run — pinned end to end
   // by `run-unit-broker.integration.test.ts`'s `SWITCH_NO_DEFAULT_SPECIMEN`.
   it('VALID: {tail switch with no default} => both cases converge on the one exit, second grayed', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'no-default.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [TOP_EXIT], arrange: [{ kind: 'param', param: 'method', value: 'get' }], salient: true },
@@ -104,7 +104,7 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
   });
 
   it('VALID: {tail switch with no default} => nothing admitted as undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'no-default.ts') }) });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots }).toStrictEqual({ undriven: [], darkSpots: [] });
   });

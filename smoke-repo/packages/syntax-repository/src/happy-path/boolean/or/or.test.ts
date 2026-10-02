@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'or.ts'), 'utf8');
 const relPath = 'src/happy-path/boolean/or/or.ts';
@@ -17,7 +17,7 @@ describe('boolean / or — a disjunction inside an exported function', () => {
   // The bare `smoke` operand is a TRUTHINESS test, not an unclassifiable condition — which is what
   // gives it a derivable domain of true/false at all.
   it('VALID: {temp > 50 || smoke} => an or-tree whose bare right operand is a truthy leaf', () => {
-    const result = analyzeExtractBroker({ source, relPath });
+    const result = analyzeExtractBroker({ source, relPath, absPath: join(__dirname, 'or.ts') });
     const conditions = result.success ? result.functions.flatMap((fn) => fn.branches).map((b) => b.condition) : [];
 
     expect(conditions).toStrictEqual([
@@ -44,7 +44,7 @@ describe('boolean / or — a disjunction inside an exported function', () => {
   // A disjunction MIRRORS a conjunction: it holds two ways and fails one. So the fan-out lands on
   // `then` here, where `and` put it on `else`.
   it('VALID: {|| condition} => TWO cases for then (one per reason it holds), ONE for else', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'or.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       // 51 > 50 holds, so `smoke` NEVER EVALUATES and falls to fill.

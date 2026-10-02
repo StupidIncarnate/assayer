@@ -12,7 +12,7 @@ describe('stubIndexResolveBroker', () => {
     proxy.setup({
       repoPath: '/repo',
       namespace: 'main',
-      manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
+      manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64), analysisHash: 'a'.repeat(64) }] } } }),
       index,
     });
 
@@ -26,7 +26,7 @@ describe('stubIndexResolveBroker', () => {
     proxy.setup({
       repoPath: '/repo',
       namespace: 'main',
-      manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
+      manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64), analysisHash: 'a'.repeat(64) }] } } }),
       index: StubIndexStub(),
     });
     proxy.withObjectOverlay({
@@ -60,7 +60,7 @@ describe('stubIndexResolveBroker', () => {
     proxy.setupNoIndex({
       repoPath: '/repo',
       namespace: 'main',
-      manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }] } } }),
+      manifest: AssayerCacheManifestStub({ namespaces: { main: { files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64), analysisHash: 'a'.repeat(64) }] } } }),
     });
 
     const result = await stubIndexResolveBroker({ repoPath: '/repo' });

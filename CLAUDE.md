@@ -202,14 +202,6 @@ details inside `dev:stop` matter and are not incidental:
   Matching on the string `vite` instead would also kill an unrelated Vite
   server running for a different repo on the same machine.
 
-## Known defect: core is not ready to publish
-
-`@assayer/core` is marked `"private": true` on purpose, so `npm publish`
-refuses it. Nothing publishes it yet. Fix this problem before that flag
-comes off:
-
-- Core depends on `@assayer/shared`, which is also private.
-
 ## Constraints that shape every implementation decision
 
 ### Error text is a build error a human never has to translate
@@ -465,10 +457,12 @@ is rebuilt on demand, never hand-edited:
   every colocated `<basename>.harness.ts` file that registers with Assayer.
   It records the source file the harness applies to, and the sorted list of
   (entry, parameter) pairs it supplies values for. This index is keyed on
-  the repo layout, the tsconfig, and a third hash computed over the harness
-  files' own bytes. A harness file is classified out of the analyzed
-  surface, so neither of the other two hashes changes when someone edits a
-  harness. Only the KEYS are cached here. The values themselves are
+  three hashes. The first covers the repo layout and the second covers the
+  tsconfig files. The third covers every harness file's path and bytes, plus
+  the analysis options of the tsconfig that owns that harness, because
+  Assayer reads each supplied value's type under those options. A harness
+  file is classified out of the analyzed surface, so the first two hashes do
+  not change when someone edits a harness. The third one does. Only the KEYS are cached here. The values themselves are
   callbacks, and Assayer resolves them by loading the harness file again at
   run time.
 

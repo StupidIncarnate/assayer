@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'tuple-param.ts'), 'utf8');
 const relPath = 'src/happy-path/tuple/tuple-param/tuple-param.ts';
@@ -16,7 +16,7 @@ describe('tuple / tuple-param — a branchless function over a fixed-length, het
   // The arrange is the payoff: `pair` is an ARRAY binding carrying a real two-element array, a string at
   // position 0 and a number at position 1 — never one shared element type repeated.
   it('VALID: {export const readPair = (pair: readonly [string, number]) => …} => param typed as tuple with one descriptor per position, one derived case', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'tuple-param.ts') }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -49,7 +49,7 @@ describe('tuple / tuple-param — a branchless function over a fixed-length, het
 
   // A clean run: no declared shape to key a stub on (a tuple carries no typeName), and nothing admitted.
   it('VALID: {a tuple param} => no declaredTypes, and nothing is admitted', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'tuple-param.ts') }), relPath });
 
     expect({
       declaredTypes: analysis.declaredTypes,

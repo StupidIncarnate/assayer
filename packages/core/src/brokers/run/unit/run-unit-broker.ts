@@ -21,7 +21,8 @@
  *   so raw runner output never reaches a human.
  *
  *   The run loads core's run-time modules from the tree this broker was loaded from: TypeScript source
- *   when it runs from `src`, compiled output when it runs from `dist`.
+ *   when it runs from `src`, compiled output when it runs from `dist`. It runs the file in the module
+ *   format `moduleFormatReadBroker` reads off the consumer's own config, so an ESM file runs as ESM.
  *
  * USAGE:
  * await runUnitBroker({ cacheDir, coreRoot, repoRoot, relPath, absPath, source, runId, analyzerContentHash });
@@ -32,13 +33,13 @@ import type { RunResult } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { runExecuteCasesBroker } from '../execute-cases/run-execute-cases-broker';
-import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { assembleShimTransformer } from '../../../transformers/assemble-shim/assemble-shim-transformer';
 import { coreRuntimeTransformer } from '../../../transformers/core-runtime/core-runtime-transformer';
 import { caseSetProjectionTransformer } from '../../../transformers/case-set-projection/case-set-projection-transformer';
 import { harnessPathTransformer } from '../../../transformers/harness-path/harness-path-transformer';
 import { probePlanProjectionTransformer } from '../../../transformers/probe-plan-projection/probe-plan-projection-transformer';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
+import { fileWalkBroker } from '../../file/walk/file-walk-broker';
 import { composeCrossFileMapBroker } from '../../compose/cross-file-map/compose-cross-file-map-broker';
 import { composeCrossFilePredicatesBroker } from '../../compose/cross-file-predicates/compose-cross-file-predicates-broker';
 import { harnessRealizeBroker } from '../../harness/realize/harness-realize-broker';
@@ -46,6 +47,8 @@ import { paramTypeResolveBroker } from '../../param-type/resolve/param-type-reso
 import { stubRealizeBroker } from '../../stub/realize/stub-realize-broker';
 import { stubOverlayLoadBroker } from '../../stub-overlay/load/stub-overlay-load-broker';
 import { runCrossFileProbesBroker } from '../cross-file-probes/run-cross-file-probes-broker';
+import { moduleFormatReadBroker } from '../../module-format/read/module-format-read-broker';
+import { coreRuntimeStatics } from '../../../statics/core-runtime/core-runtime-statics';
 import { ensureDir, pathExists, readFile, writeFile } from '#gateway/node/fs__promises';
 
 export const runUnitBroker = async ({
@@ -68,7 +71,7 @@ export const runUnitBroker = async ({
   analyzerContentHash: string;
 }): Promise<RunResult> => {
   const runtime = coreRuntimeTransformer({ coreRoot, loadedFrom: __dirname });
-  const walked = walkFileTransformer({ source, relPath });
+  const walked = fileWalkBroker({ source, relPath, absPath });
   // First, the types: a parameter declared as an IMPORTED type is `any` in the hermetic walk, so the
   // fill seam refuses it and the entry is invoiced for an input Assayer can build perfectly well. This
   // resolves the declaration against the sibling on disk and re-projects the file from it, so every
@@ -165,19 +168,27 @@ export const runUnitBroker = async ({
   // no such reach.
   await runCrossFileProbesBroker({ walked, root: repoRoot, relPath, probeDir });
 
+  // The file runs in the module format the consumer's own config gives it, read through TypeScript with
+  // the owning tsconfig and the nearest package.json, so an ESM file runs as ESM and a CommonJS file as
+  // CommonJS.
+  const format = moduleFormatReadBroker({ absPath });
+
   await writeFile(
-    `${runDir}/assayer.test.js`,
+    `${runDir}/${coreRuntimeStatics.shimFile[format]}`,
     assembleShimTransformer({
+      format,
       caseSetPath,
       interpretCaseModule: runtime.interpretCaseModule,
       resolveEntryModule: runtime.resolveEntryModule,
+      probeRuntimeModule: runtime.probeRuntimeModule,
+      harnessModule: runtime.harnessModule,
       registrarPath: runtime.registrar,
       resultPath,
       runId,
     }),
   );
 
-  await runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash });
+  await runExecuteCasesBroker({ runDir, repoRoot, probeDir, runtime, analyzerContentHash, format });
 
   // A FAILING case still writes the artifact — the shim's afterAll sees to that — so a missing one
   // means the runner itself died and the run is over with nothing to report. Said plainly here rather

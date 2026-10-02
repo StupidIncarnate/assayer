@@ -13,6 +13,10 @@
     // resolve through `react`'s own — no other specimen touches JSX, so this is otherwise inert.
     "jsx": "react-jsx",
     "types": ["jest", "node"],
+    // `baseUrl` and `moduleResolution: "node"` are deprecated in TypeScript 6. This repo is the
+    // consumer the specimens are analysed as, so it keeps the settings that consumer has rather than
+    // moving on with the compiler.
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     // The specimens import the analyzer the way a consumer would, by package subpath. These paths
     // are the ONLY definition of where those subpaths resolve: jest.config.js derives its
@@ -26,7 +30,7 @@
       // Specimens that assert DARK SPOTS need the full file analysis, which is a projection of a
       // WALK rather than of source — so they need the walk adapter alongside the broker.
       "@assayer/core/walk-file": [
-        "../../../packages/core/src/transformers/walk-file/walk-file-transformer"
+        "../../../packages/core/src/brokers/file/walk/file-walk-broker"
       ],
       "@assayer/core/analyze-file": ["../../../packages/core/src/brokers/analyze/file/analyze-file-broker"],
       // The cross-file predicate compose is a CONSUME-TIME overlay applied on top of a file analysis,

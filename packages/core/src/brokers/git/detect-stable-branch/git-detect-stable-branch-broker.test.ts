@@ -1,3 +1,5 @@
+import { GitNotInstalledError } from '#gateway/bin/git';
+
 import { gitDetectStableBranchBroker } from './git-detect-stable-branch-broker';
 import { gitDetectStableBranchBrokerProxy } from './git-detect-stable-branch-broker.proxy';
 
@@ -14,13 +16,15 @@ describe('gitDetectStableBranchBroker', () => {
   });
 
   describe('git is not installed', () => {
-    it('EMPTY: {repoRoot: "/repo"} git binary missing => returns { hasGitRepo: false }', async () => {
+    it('ERROR: {repoRoot: "/repo"} git binary missing => rejects with GitNotInstalledError naming the git call', async () => {
       const proxy = gitDetectStableBranchBrokerProxy();
       proxy.gitNotInstalled();
 
-      const result = await gitDetectStableBranchBroker({ repoRoot: '/repo' });
-
-      expect(result).toStrictEqual({ hasGitRepo: false });
+      await expect(gitDetectStableBranchBroker({ repoRoot: '/repo' })).rejects.toStrictEqual(
+        new GitNotInstalledError(
+          'git rev-parse --is-inside-work-tree could not start in /repo: "git" never started: ENOENT: open \'git\'',
+        ),
+      );
     });
   });
 

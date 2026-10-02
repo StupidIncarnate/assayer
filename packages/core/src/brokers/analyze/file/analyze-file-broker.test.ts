@@ -1,3 +1,6 @@
+import { ScriptTarget } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
+
 import { walkFileTransformer } from '../../../transformers/walk-file/walk-file-transformer';
 import { analyzeFileBroker } from './analyze-file-broker';
 import { analyzeFileBrokerProxy } from './analyze-file-broker.proxy';
@@ -404,6 +407,107 @@ describe('analyzeFileBroker', () => {
             'on its own line.',
         ],
         caseCount: 1,
+      });
+    });
+  });
+
+  describe('a parameter whose type only the TypeScript default library declares', () => {
+    // `Error` declares only data properties: `message` and `name`, plus the optional `stack` (and the optional
+    // `cause` under ES2022). So the reader expands it like any local interface, and `e` is filled with its two
+    // required strings whichever library set the owning tsconfig loads. `size > 1` steers the branch.
+    const ERROR_SOURCE = 'export function k(e: Error, size: number) {\n  if (size > 1) {\n    return 1;\n  }\n\n  return e;\n}\n';
+    const ERROR_BRANCH = '*module*/k/return@if:BinaryExpression,id:size,GreaterThanToken,num:1';
+
+    it('VALID: {e: Error, under TypeScript defaults} => two cases that fill e, and no gap', () => {
+      analyzeFileBrokerProxy();
+      const walked = walkFileTransformer({ source: ERROR_SOURCE, relPath: 'src/k.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/k.ts' });
+
+      expect({ cases: result.functions.flatMap((fn) => fn.cases), gaps: result.gaps }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: [`${ERROR_BRANCH}#then`],
+            arrange: [
+              { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
+              { kind: 'param', param: 'size', value: 2 },
+            ],
+            salient: true,
+          },
+          {
+            reachesPath: [`${ERROR_BRANCH}#else`],
+            arrange: [
+              { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
+              { kind: 'param', param: 'size', value: 1 },
+            ],
+            salient: true,
+          },
+        ],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {e: Error, under ES2022 with strict} => the same two cases, and no gap', () => {
+      analyzeFileBrokerProxy();
+      const walked = walkFileTransformer({
+        source: ERROR_SOURCE,
+        relPath: 'src/k.ts',
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'], strict: true }),
+      });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/k.ts' });
+
+      expect({ cases: result.functions.flatMap((fn) => fn.cases), gaps: result.gaps }).toStrictEqual({
+        cases: [
+          {
+            reachesPath: [`${ERROR_BRANCH}#then`],
+            arrange: [
+              { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
+              { kind: 'param', param: 'size', value: 2 },
+            ],
+            salient: true,
+          },
+          {
+            reachesPath: [`${ERROR_BRANCH}#else`],
+            arrange: [
+              { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
+              { kind: 'param', param: 'size', value: 1 },
+            ],
+            salient: true,
+          },
+        ],
+        gaps: [],
+      });
+    });
+
+    // `Map` has callable members, so the reader keeps it an opaque reference and nothing can build `counts`.
+    it('VALID: {counts: Map<string, number>} => no case, and a gap naming counts', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        'export function n(counts: Map<string, number>, size: number) {\n  if (size > 1) {\n    return 1;\n  }\n\n  return counts;\n}\n';
+      const walked = walkFileTransformer({ source, relPath: 'src/n.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/n.ts' });
+
+      expect({ cases: result.functions.flatMap((fn) => fn.cases), gaps: result.gaps }).toStrictEqual({
+        cases: [],
+        gaps: [
+          {
+            name: 'n',
+            reason:
+              '`n` derives no case, because Assayer cannot construct an input it needs. It builds inputs ' +
+              'out of declared DATA — a scalar, a union, an array, or an object shape whose every property is ' +
+              'itself one — and refuses anything that bottoms out in a function or in a type carrying nothing but ' +
+              'its name: `counts: Map<string, number>`. Substituting a stand-in would be worse than ' +
+              'deriving nothing: code that CALLS the value throws on it, and code that merely measures it passes ' +
+              'on something nobody supplied. Assayer read the signature perfectly — this is not syntax it missed ' +
+              "— so the value is the caller's to supply. Colocate a harness with this file, the same basename " +
+              "with a `.harness.ts` extension, and declare the input: `import { assayerHarness } from '@assayer/core'; " +
+              'assayerHarness({ inputs: { n: { counts: <a Map<string, number>> } } });`. Assayer then ' +
+              'builds them from that declaration instead of refusing them; anything else still standing between ' +
+              '`n` and a case is reported on its own line.',
+          },
+        ],
       });
     });
   });

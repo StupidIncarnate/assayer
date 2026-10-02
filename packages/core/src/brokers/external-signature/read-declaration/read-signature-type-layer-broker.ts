@@ -48,6 +48,7 @@ import type { Type, TypeNode } from '#gateway/npm/ts-morph';
 import { representativeValueContract } from '@assayer/shared/contracts';
 
 import type { TypeFact } from '../../../contracts/type-fact/type-fact-contract';
+import { propertyNameTransformer } from '../../../transformers/property-name/property-name-transformer';
 
 export const readSignatureTypeLayerBroker = ({
   type,
@@ -215,7 +216,7 @@ export const readSignatureTypeLayerBroker = ({
         const propertyNode = propertyDeclaration?.getTypeNode();
 
         return {
-          name: symbol.getName(),
+          name: propertyNameTransformer({ symbol }),
           fact:
             declaration === undefined
               ? { flavor: 'other', text: 'unknown' }

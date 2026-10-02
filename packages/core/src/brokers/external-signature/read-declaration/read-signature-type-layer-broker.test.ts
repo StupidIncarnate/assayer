@@ -1,14 +1,18 @@
-import { Project } from '#gateway/npm/ts-morph';
+import { Project, ScriptTarget } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { TypeFactStub } from '../../../contracts/type-fact/type-fact.stub';
 import { readSignatureTypeLayerBroker } from './read-signature-type-layer-broker';
 import { readSignatureTypeLayerBrokerProxy } from './read-signature-type-layer-broker.proxy';
 
+const SYMBOL_KEYED_SOURCE =
+  'const k: unique symbol = Symbol();\nexport interface Keyed { [k]: number; plain: string }\nexport declare function f(): Keyed;\nexport function g(n: Keyed): void {}\nconst x: Keyed = { [k]: 1, plain: "a" };\n';
+
 describe('readSignatureTypeLayerBroker', () => {
   describe('primitive types', () => {
     it('VALID: {string return} => string fact', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(): string;\n');
       const type = sourceFile.getFunctionOrThrow('f').getReturnType();
 
@@ -17,7 +21,7 @@ describe('readSignatureTypeLayerBroker', () => {
 
     it('VALID: {number return} => number fact', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(): number;\n');
       const type = sourceFile.getFunctionOrThrow('f').getReturnType();
 
@@ -26,7 +30,7 @@ describe('readSignatureTypeLayerBroker', () => {
 
     it('VALID: {boolean return} => boolean fact', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(): boolean;\n');
       const type = sourceFile.getFunctionOrThrow('f').getReturnType();
 
@@ -37,7 +41,7 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('boolean-literal types', () => {
     it('VALID: {true param} => literal fact carrying true', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(flag: true): void;\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('flag').getType();
 
@@ -46,7 +50,7 @@ describe('readSignatureTypeLayerBroker', () => {
 
     it('VALID: {false param} => literal fact carrying false', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(flag: false): void;\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('flag').getType();
 
@@ -55,7 +59,7 @@ describe('readSignatureTypeLayerBroker', () => {
 
     it('VALID: {string | boolean param} => union whose boolean halves are literal facts', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(flag: string | boolean): void;\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('flag').getType();
 
@@ -72,7 +76,7 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('enum-literal types', () => {
     it('VALID: {an enum-member param} => literal fact carrying the member\'s underlying value', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "enum Mode { Fast = 'fast', Slow = 'slow' }\nexport declare function f(m: Mode.Fast): void;\n",
@@ -86,7 +90,7 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('callable types', () => {
     it('VALID: {function-typed param} => callable fact carrying the rendered signature, never a property-less object', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export declare function f(report: (message: string) => string): void;\n',
@@ -100,7 +104,7 @@ describe('readSignatureTypeLayerBroker', () => {
 
     it('VALID: {named interface carrying a call signature} => callable fact carrying the type NAME', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Hybrid { (n: number): string; tag: string }\nexport declare function f(h: Hybrid): void;\n',
@@ -112,7 +116,7 @@ describe('readSignatureTypeLayerBroker', () => {
 
     it('VALID: {class with a method} => the method reads as a callable, never an object named after it', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare class Runner { run(n: number): void }\nexport declare function f(r: Runner): void;\n',
@@ -132,7 +136,7 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('numeric-literal types', () => {
     it('VALID: {a numeric-literal param} => literal fact carrying the number', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(n: 7): void;\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('n').getType();
 
@@ -143,7 +147,7 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('literal-union types', () => {
     it('VALID: {"open" | "closed" return} => union fact whose members are literal facts', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(): "open" | "closed";\n');
       const type = sourceFile.getFunctionOrThrow('f').getReturnType();
 
@@ -163,7 +167,7 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('array types', () => {
     it('VALID: {string[] param} => array fact whose element is a string fact', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(items: string[]): void;\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('items').getType();
 
@@ -176,7 +180,7 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('object types', () => {
     it('VALID: {locally-declared interface param} => object fact carrying the type name and sorted properties', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Config { mode: string; retries: number }\nexport declare function f(cfg: Config): void;\n',
@@ -201,7 +205,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // out of the stub index, which keys on `typeName`.
     it('VALID: {a type-alias object param} => the ALIAS name, not the anonymous __type symbol', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'type Config = { mode: string; retries: number };\nexport declare function f(cfg: Config): void;\n',
@@ -226,7 +230,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // otherwise-fillable object gets refused over a property nobody owes a value.
     it('VALID: {an optional property} => carries optional: true, a required sibling carries nothing', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Config { mode?: string; retries: number }\nexport declare function f(cfg: Config): void;\n',
@@ -249,7 +253,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // anonymous shape and a named-but-empty interface stay distinguishable downstream.
     it('VALID: {inline anonymous-object param} => a keyless object fact enumerating its properties', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'export declare function f(o: { mode: string; retries: number }): void;\n',
@@ -271,7 +275,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // re-entered `Tree` is indistinguishable from an interface that really declares nothing.
     it('VALID: {self-referential interface param} => the recursive property truncates to a MARKED reference-only object', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Tree { value: number; next: Tree }\nexport declare function f(t: Tree): void;\n',
@@ -298,7 +302,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // character dump, both here and in the P1 message `input-gap` builds from this fact.
     it('VALID: {readonly [string, number] param} => a tuple fact with one element fact per position', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(pair: readonly [string, number]): void;\n');
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair');
 
@@ -311,7 +315,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // node lookup has to unwrap only when the wrapper is actually there.
     it('VALID: {[string, number] param, no readonly} => the same tuple fact', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(pair: [string, number]): void;\n');
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair');
 
@@ -325,7 +329,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // branch below which genuinely needs the node.
     it('VALID: {readonly [string, number] param, no typeNode threaded} => still a tuple fact', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(pair: readonly [string, number]): void;\n');
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('pair').getType();
 
@@ -341,7 +345,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // separate merge logic is needed. Keyless, because an inline `Ay & Bee` names no symbol of its own.
     it('VALID: {v: Ay & Bee, both same-file interfaces} => an object fact merging both shapes, no typeName', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Ay { a: string }\ninterface Bee { b: number }\nexport declare function f(v: Ay & Bee): void;\n',
@@ -363,7 +367,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // `type Config = { … }` object alias does.
     it('VALID: {type AB = Ay & Bee, referenced by name} => an object fact carrying the alias as typeName', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Ay { a: string }\ninterface Bee { b: number }\ntype AB = Ay & Bee;\nexport declare function f(v: AB): void;\n',
@@ -390,7 +394,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // literal type's segments on its own — see the file's own PURPOSE doc.
     it(`VALID: {t: \`id-\${string}\`} => a template fact with the literal segments and the string substitution`, () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `export declare function f(t: \`id-\${string}\`): void;\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
 
@@ -403,7 +407,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // with the middle segment landing between them.
     it(`VALID: {t: \`\${string}-\${number}!\`} => texts and types both carry two entries in source order`, () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `export declare function f(t: \`\${string}-\${number}!\`): void;\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
 
@@ -420,7 +424,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // this adapter ever sees a template literal type — proof the `isUnion()` check runs first.
     it(`VALID: {t: \`\${'a'|'b'}-x\`} => a union fact of the two literal strings, never a template fact`, () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `export declare function f(t: \`\${'a'|'b'}-x\`): void;\n`);
       const param = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t');
 
@@ -440,7 +444,7 @@ describe('readSignatureTypeLayerBroker', () => {
     // `Type` alone cannot decompose a template literal type, so it stays opaque rather than guessing.
     it(`VALID: {t: \`id-\${string}\`, no typeNode threaded} => an opaque other fact carrying the checker text`, () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', `export declare function f(t: \`id-\${string}\`): void;\n`);
       const type = sourceFile.getFunctionOrThrow('f').getParameterOrThrow('t').getType();
 
@@ -451,11 +455,40 @@ describe('readSignatureTypeLayerBroker', () => {
   describe('opaque types', () => {
     it('VALID: {void return} => other fact carrying the type text', () => {
       readSignatureTypeLayerBrokerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export declare function f(): void;\n');
       const type = sourceFile.getFunctionOrThrow('f').getReturnType();
 
       expect(readSignatureTypeLayerBroker({ type })).toStrictEqual(TypeFactStub({ flavor: 'other', text: 'void' }));
+    });
+  });
+
+  describe('symbol-keyed properties', () => {
+    it('VALID: {the same source read in two projects in one process} => names a symbol key by its declaration, identically both times', () => {
+      readSignatureTypeLayerBrokerProxy();
+      const firstProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const secondProject = new Project({
+        useInMemoryFileSystem: true,
+        compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+      });
+      const firstSource = firstProject.createSourceFile('src/f.ts', SYMBOL_KEYED_SOURCE);
+      const secondSource = secondProject.createSourceFile('src/f.ts', SYMBOL_KEYED_SOURCE);
+      const keyed = TypeFactStub({
+        flavor: 'object',
+        typeName: 'Keyed',
+        properties: [
+          { name: '[k]', fact: TypeFactStub({ flavor: 'number' }) },
+          { name: 'plain', fact: TypeFactStub({ flavor: 'string' }) },
+        ],
+      });
+
+      expect({
+        first: readSignatureTypeLayerBroker({ type: firstSource.getFunctionOrThrow('f').getReturnType() }),
+        second: readSignatureTypeLayerBroker({ type: secondSource.getFunctionOrThrow('f').getReturnType() }),
+      }).toStrictEqual({ first: keyed, second: keyed });
     });
   });
 });

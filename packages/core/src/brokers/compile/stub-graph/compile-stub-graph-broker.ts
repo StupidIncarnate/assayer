@@ -25,7 +25,7 @@
  *
  * USAGE:
  * await compileStubGraphBroker({ configDir: '/repo', namespace: 'feature-x',
- *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files: [{ relPath, contentHash }] });
+ *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files: [{ relPath, contentHash, analysisHash }] });
  * // Writes '/repo/.assayer/cache/stubs/feature-x.json' and returns { index: StubIndex, guards: PropertyGuard[] }
  */
 import { compileStubGraphResultContract } from '../../../contracts/compile-stub-graph-result/compile-stub-graph-result-contract';
@@ -52,11 +52,11 @@ export const compileStubGraphBroker = async ({
   namespace: string;
   blobsDir: string;
   resolvedIndex: ResolvedIndex;
-  files: readonly { relPath: string; contentHash: ContentHash }[];
+  files: readonly { relPath: string; contentHash: ContentHash; analysisHash: ContentHash }[];
 }): Promise<CompileStubGraphResult> => {
   const blobs = await Promise.all(
     files.map(async (file) => {
-      const raw = (await readFile(`${blobsDir}/${file.contentHash}.json`));
+      const raw = (await readFile(`${blobsDir}/${file.analysisHash}.json`));
       return compiledFileBlobContract.parse(JSON.parse(raw));
     }),
   );

@@ -1,5 +1,6 @@
 import { AssayerConfigStub } from '@assayer/shared/contracts/assayer-config/assayer-config.stub';
 import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { analysisHashTransformer } from '../../../transformers/analysis-hash/analysis-hash-transformer';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { compileRunBroker } from './compile-run-broker';
@@ -71,10 +72,11 @@ describe('compileRunBroker', () => {
               {
                 relPath: 'packages/shared/src/index.ts',
                 contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+                analysisHash: '278cd2eb8a5ff504fe51a1eb6395e1924a27562a34e02778fda65c0645eea29e',
               },
             ],
           },
-          'feature-x': { branch: 'feature-x', files: [{ relPath: 'current-0.ts', contentHash: currentHash }] },
+          'feature-x': { branch: 'feature-x', files: [{ relPath: 'current-0.ts', contentHash: currentHash, analysisHash: analysisHashTransformer({ content: currentContent, options: {} }) }] },
         },
         repoName: 'repo',
         rootFolderName: 'repo',
@@ -300,9 +302,9 @@ describe('compileRunBroker', () => {
           master: {
             branch: 'master',
             commit: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
-            files: [{ relPath: 'src/stable.ts', contentHash: stableHash }],
+            files: [{ relPath: 'src/stable.ts', contentHash: stableHash, analysisHash: analysisHashTransformer({ content: stableContent, options: {} }) }],
           },
-          'feature-x': { branch: 'feature-x', files: [{ relPath: 'current-0.ts', contentHash: currentHash }] },
+          'feature-x': { branch: 'feature-x', files: [{ relPath: 'current-0.ts', contentHash: currentHash, analysisHash: analysisHashTransformer({ content: currentContent, options: {} }) }] },
         },
         repoName: 'repo',
         rootFolderName: 'repo',
@@ -470,7 +472,7 @@ describe('compileRunBroker', () => {
         assayerVersion: '1.0.0',
         configHash: CONFIG_HASH,
         namespaces: {
-          master: { branch: 'master', files: [{ relPath: 'src/stable.ts', contentHash: stableHash }] },
+          master: { branch: 'master', files: [{ relPath: 'src/stable.ts', contentHash: stableHash, analysisHash: analysisHashTransformer({ content: stableContent, options: {} }) }] },
           'feature-x': { branch: 'feature-x', files: [] },
         },
         repoName: 'repo',
@@ -516,7 +518,7 @@ describe('compileRunBroker', () => {
         assayerVersion: '1.0.0',
         configHash: CONFIG_HASH,
         namespaces: {
-          master: { branch: 'master', files: [{ relPath: 'current-0.ts', contentHash: currentHash }] },
+          master: { branch: 'master', files: [{ relPath: 'current-0.ts', contentHash: currentHash, analysisHash: analysisHashTransformer({ content: currentContent, options: {} }) }] },
         },
         repoName: 'repo',
         rootFolderName: 'repo',

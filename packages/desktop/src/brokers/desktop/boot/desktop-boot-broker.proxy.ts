@@ -1,10 +1,14 @@
 import { electronProxy } from '#gateway/npm/electron/electron.proxy';
+import { resolveModulePathProxy } from '#gateway/node/module/resolve-module-path/resolve-module-path.proxy';
 import { join } from '#gateway/node/path';
 import { getEnvProxy } from '#gateway/node/process/get-env/get-env.proxy';
 import { getPlatformProxy } from '#gateway/node/process/get-platform/get-platform.proxy';
 import { pathToFileURL } from '#gateway/node/url';
 
 const DEV_RENDERER_URL = 'http://localhost:6273';
+const PAGE_SPECIFIER = '@assayer/app/page';
+// An installed layout, not this monorepo's, so the boot must load whatever path the resolution answers.
+const INSTALLED_PAGE_PATH = '/consumer/node_modules/@assayer/app/dist/index.html';
 
 export const desktopBootBrokerProxy = (): {
   handledChannels: () => readonly string[];
@@ -16,14 +20,13 @@ export const desktopBootBrokerProxy = (): {
   loadedUrls: (params: { url: string }) => unknown[][];
   emitAllWindowsClosed: () => void;
   quitCalls: () => unknown[][];
-  packagedRendererUrl: () => string;
+  pageResolutionsFromBroker: () => readonly unknown[][];
   preloadPath: () => string;
 } => {
-  // The renderer URL a packaged run loads; this file sits beside the broker, so the relative path is
-  // the same one the broker resolves.
-  const packagedRendererUrl = (): string =>
-    pathToFileURL(join(__dirname, '../../../../../../app/dist/index.html')).href;
+  // The broker resolves the page from its own file, which sits beside this one.
+  const brokerFilePath = join(__dirname, 'desktop-boot-broker.ts');
   const electronGateway = electronProxy();
+  const resolveGateway = resolveModulePathProxy();
   const envGateway = getEnvProxy();
   const platformGateway = getPlatformProxy();
 
@@ -41,12 +44,18 @@ export const desktopBootBrokerProxy = (): {
       electronGateway.invokeHandler({ channel, args: arg === undefined ? [] : [arg] }),
     sentToRendererOn: ({ channel }: { channel: string }): unknown[][] =>
       electronGateway.getSentToSenderFor({ channel }).map((call) => [...call]),
-    // Stages the two environment flags the boot reads, and the renderer URL it will then load. A boot
-    // that finds no staged URL fails, so every test that boots calls this first.
+    // Stages the two environment flags the boot reads, where `@assayer/app/page` resolves from the
+    // broker's own file, and the renderer URL the boot will then load. A boot that finds no staged URL
+    // fails, so every test that boots calls this first.
     setupBoot: ({ dev, headless }: { dev: boolean; headless: boolean }): void => {
       envGateway.setupEnv({ name: 'ASSAYER_DEV', value: dev ? '1' : undefined });
       envGateway.setupEnv({ name: 'ASSAYER_HEADLESS', value: headless ? '1' : undefined });
-      electronGateway.loadUrlResolves({ url: dev ? DEV_RENDERER_URL : packagedRendererUrl() });
+      resolveGateway.returns({
+        specifier: PAGE_SPECIFIER,
+        fromPath: brokerFilePath,
+        path: INSTALLED_PAGE_PATH,
+      });
+      electronGateway.loadUrlResolves({ url: dev ? DEV_RENDERER_URL : pathToFileURL(INSTALLED_PAGE_PATH).href });
     },
     setupPlatform: ({ value }: { value: NodeJS.Platform }): void => {
       platformGateway.setupPlatform({ value });
@@ -59,7 +68,8 @@ export const desktopBootBrokerProxy = (): {
       electronGateway.emitAppEvent({ event: 'window-all-closed', args: [] });
     },
     quitCalls: (): unknown[][] => electronGateway.getQuitCalls().map((call) => [...call]),
-    packagedRendererUrl,
+    pageResolutionsFromBroker: (): readonly unknown[][] =>
+      resolveGateway.getCallsFor({ specifier: PAGE_SPECIFIER, fromPath: brokerFilePath }),
     preloadPath: (): string => join(__dirname, '../../../../bin/desktop-preload.js'),
   };
 };

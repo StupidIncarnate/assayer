@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { composeCrossFileMapBroker } from '@assayer/core/compose-cross-file-map';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 // The cross-file-map fold is a CONSUME-TIME overlay: the per-file blob never reads another file, so the
 // imported callee `bandReading` is resolved to its sibling on disk here, exactly as a run does — root is
@@ -11,7 +11,7 @@ import { walkFileTransformer } from '@assayer/core/walk-file';
 const relPath = 'packages/syntax-repository/src/happy-path/array/cross-file-map/cross-file-map.ts';
 const root = resolve(__dirname, '../../../../../..');
 const source = readFileSync(resolve(root, relPath), 'utf8');
-const walked = walkFileTransformer({ source, relPath });
+const walked = walkFileTransformer({ source, relPath, absPath: resolve(root, relPath) });
 const analysis = composeCrossFileMapBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath });
 
 // The callee's three band exits live in the SIBLING's coverage space (rooted at the sibling module scope

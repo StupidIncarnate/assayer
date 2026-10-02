@@ -17,7 +17,7 @@ const NULLABLE_STRING = { kind: 'union', members: [{ kind: 'unknown', text: 'nul
 
 describe('short-circuit / nullish — a `??` in a block return', () => {
   it('VALID: {block `return a ?? b`} => a ternary branch on the operand\'s non-nullishness, one exit per path', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/short-circuit/nullish/nullish.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/short-circuit/nullish/nullish.ts', absPath: join(__dirname, 'nullish.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

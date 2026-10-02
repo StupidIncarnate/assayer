@@ -18,11 +18,12 @@
  *   The instance method is BOUND, because the interpreter applies it with no receiver; an unbound
  *   method loses `this` and throws on the first field it touches.
  *
- *   A `module` scope resolves to `requireFresh` — the thunk that re-imports the module under whatever
+ *   A `module` scope resolves to `requireFresh` — the thunk that loads the module again under whatever
  *   the case has arranged. There is nothing else it COULD be: a module scope's body runs exactly
  *   once per load, so the only way to run it again, with different inputs, is to load it again. That
- *   makes every access kind the same shape to the interpreter — something to apply — which is why it
- *   needs no idea that a module is special.
+ *   makes every access kind the same shape to the interpreter — something to apply. In a CommonJS run
+ *   the thunk returns the module; in an ESM run it returns the import's promise, which the interpreter
+ *   awaits for a module entry.
  *
  *   A `through-caller` entry is a private driven through the reachable caller that reaches it, so it
  *   resolves to that CALLER — a named module property. The interpreter then applies it with the

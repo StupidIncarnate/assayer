@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'const-comparand.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/const-comparand/const-comparand.ts';
@@ -23,7 +23,7 @@ describe('undriven / const-comparand — `mode === TARGET`, an operand a case CA
   // side. Steerability asks both questions, so the branch is admitted at its own line rather than
   // deriving two cases that arrange the same `mode` and disagree about which arm it reaches.
   it('VALID: {a param compared against a same-file const} => the branch admitted undriven, naming the comparison', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-comparand.ts') }), relPath });
 
     expect(analysis.undriven).toStrictEqual([{ name: 'pick', reason: BRANCH_REASON, startLine: 4, endLine: 4 }]);
   });
@@ -31,7 +31,7 @@ describe('undriven / const-comparand — `mode === TARGET`, an operand a case CA
   // The defect this pins is a FALSE RED: with the predicate constraining neither arm, both cases were
   // arranged `pick('abc123')` and whichever one predicted `#then` failed against correct code.
   it('VALID: {an unreadable comparison} => no case is derived, so nothing fails against correct code', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-comparand.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
   });
@@ -39,7 +39,7 @@ describe('undriven / const-comparand — `mode === TARGET`, an operand a case CA
   // NOT a dark spot: the walk read the `if`, both arms, and the operand. Only the comparand is beyond
   // it, and the two admissions are opposite claims that must never merge.
   it('VALID: {a fully-read if} => admits nothing as a dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-comparand.ts') }) });
 
     expect(analysis.darkSpots).toStrictEqual([]);
   });

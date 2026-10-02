@@ -1,7 +1,46 @@
+import { ScriptTarget } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
+
 import { harnessValueTypesTransformer } from './harness-value-types-transformer';
 import { harnessValueTypesTransformerProxy } from './harness-value-types-transformer.proxy';
 
 describe('harnessValueTypesTransformer', () => {
+  // The harness is read under the analysis options of the tsconfig that owns it, so a value whose type
+  // depends on the library set reads the way the harness's own compile reads it.
+  describe('the owning tsconfig compiler options', () => {
+    const source = [
+      "import { assayerHarness } from '@assayer/core';",
+      '',
+      'assayerHarness({ inputs: { tally: { last: [1, 2].at(-1) } } });',
+    ].join('\n');
+
+    it('VALID: {last: [1, 2].at(-1), no compiler options} => the default library declares `at`, so the type is number | undefined', () => {
+      harnessValueTypesTransformerProxy();
+
+      expect(harnessValueTypesTransformer({ source, fileName: 'src/tally.harness.ts' })).toStrictEqual([
+        { entry: 'tally', param: 'last', type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] } },
+      ]);
+    });
+
+    it('VALID: {last: [1, 2].at(-1), target ES2022} => number or undefined, with strictNullChecks forced on', () => {
+      harnessValueTypesTransformerProxy();
+
+      expect(
+        harnessValueTypesTransformer({
+          source,
+          fileName: 'src/tally.harness.ts',
+          compilerOptions: CompilerOptionsStub({ target: ScriptTarget.ES2022, lib: ['lib.es2022.d.ts'] }),
+        }),
+      ).toStrictEqual([
+        {
+          entry: 'tally',
+          param: 'last',
+          type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+        },
+      ]);
+    });
+  });
+
   describe('a plain property value', () => {
     it('VALID: {report: undefined} => one entry naming its opaque "undefined" type', () => {
       harnessValueTypesTransformerProxy();

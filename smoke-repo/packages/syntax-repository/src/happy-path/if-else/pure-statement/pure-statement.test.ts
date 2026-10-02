@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { analyzeExtractBroker } from '@assayer/core/extract-analysis';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'pure-statement.ts'), 'utf8');
 const relPath = 'src/happy-path/if-else/pure-statement/pure-statement.ts';
@@ -17,7 +17,7 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
   // module, and each completion is its own exit worth a case. That single rule is why bare
   // top-level code needs no rung-specific derivation of its own.
   it('VALID: {bare top-level if/else} => a *module* void entry, one if branch, per-arm implicit exits', () => {
-    const result = analyzeExtractBroker({ source, relPath });
+    const result = analyzeExtractBroker({ source, relPath, absPath: join(__dirname, 'pure-statement.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [
@@ -72,7 +72,7 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
   // where that fact lands. The operand's TYPE is read exactly as any other binding's is (widened,
   // off the type graph); naming the variable it was read from is what makes the arms reachable.
   it('VALID: {const value = Number(process.env.VALUE)} => the leaf names the env var it reads', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'pure-statement.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.branches).map((branch) => branch.condition)).toStrictEqual([
       {
@@ -91,7 +91,7 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
   // the else. The values are the inverse of the source's own coercion, never a recording of what
   // running it produced (P4).
   it('VALID: {env-read operand} => one case per arm, each SETTING the variable that chooses it', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'pure-statement.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [THEN], arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], salient: true },
@@ -103,7 +103,7 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
   // and admits it cannot. `happy-path/switch/pure-statement/pure-statement.ts` is the rung that holds the other side: its
   // operand is welded to a literal, and it is admitted rather than driven.
   it('VALID: {a module scope Assayer drives} => nothing is admitted as undriven', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'pure-statement.ts') }) });
 
     expect(analysis.undriven).toStrictEqual([]);
   });

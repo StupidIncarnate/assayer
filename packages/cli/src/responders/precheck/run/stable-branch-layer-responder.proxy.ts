@@ -6,6 +6,7 @@ import { stdoutProxy } from '#gateway/node/process/stdout/stdout.proxy';
 
 export const StableBranchLayerResponderProxy = (): {
   notGitRepo: () => void;
+  gitNotInstalled: () => void;
   insideWith: (params: { branchListStdout: string }) => void;
   insideNoMainMaster: () => void;
   answersPicker: (params: { prompt: string; input: string }) => void;
@@ -25,6 +26,9 @@ export const StableBranchLayerResponderProxy = (): {
   return {
     notGitRepo: (): void => {
       detectProxy.notGitRepo();
+    },
+    gitNotInstalled: (): void => {
+      detectProxy.gitNotInstalled();
     },
     insideWith: ({ branchListStdout }: { branchListStdout: string }): void => {
       detectProxy.insideWith({ branchListStdout });

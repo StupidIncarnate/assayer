@@ -11,7 +11,7 @@ const ELSE_EXIT = '*module*/classify/return@ternary:BinaryExpression,id:n,Greate
 
 describe('ternary / return-basic — a ternary in a block return', () => {
   it('VALID: {block `return n > 5 ? a : b`} => one ternary branch, then/else return exits', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/return-basic/return-basic.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/ternary/return-basic/return-basic.ts', absPath: join(__dirname, 'return-basic.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

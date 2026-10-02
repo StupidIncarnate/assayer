@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'typeof-narrow-opaque.ts'), 'utf8');
 const relPath = 'src/sad-path/undriven/typeof-narrow-opaque/typeof-narrow-opaque.ts';
@@ -26,13 +26,13 @@ describe(
     // `typeof` reads is what has no input, not that `typeof` is unreadable. `checkKind` takes no
     // parameters at all, so there is nothing this comparison could ever narrow by.
     it('VALID: {typeof of a call result} => the branch admitted undriven, naming the opaque-operand limit', () => {
-      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-opaque.ts') }), relPath });
 
       expect(analysis.undriven).toStrictEqual([{ name: 'checkKind', reason: BRANCH_REASON, startLine: 6, endLine: 6 }]);
     });
 
     it('VALID: {a typeof read of an opaque call} => no case is derived, so nothing fails against correct code', () => {
-      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-opaque.ts') }), relPath });
 
       expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
     });
@@ -41,7 +41,7 @@ describe(
     // decomposition into a per-arm value is beyond it, and here there is no parameter to decompose it
     // onto in the first place.
     it('VALID: {a fully-read if} => admits nothing as a dark spot', () => {
-      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-opaque.ts') }), relPath });
 
       expect(analysis.darkSpots).toStrictEqual([]);
     });
@@ -50,7 +50,7 @@ describe(
     // `checkKind`'s guard is what carries the branch — so it projects no entry of its own and is not
     // dead surface either: `checkKind` reaches it.
     it('VALID: {readValue, a branchless private} => the file has exactly one entry', () => {
-      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-opaque.ts') }), relPath });
 
       expect(analysis.functions.map((fn) => fn.entry.name)).toStrictEqual(['checkKind']);
       expect(analysis.lints).toStrictEqual([]);

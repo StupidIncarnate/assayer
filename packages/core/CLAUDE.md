@@ -447,8 +447,9 @@ it as `envReads`, and the stub stitch (section 9) aggregates these into
 per-property environment stubs.
 
 **Change import resolution (the stitch).** Touch
-`brokers/compile/resolve-graph`, plus `brokers/tsconfig/read`
-and `brokers/import-specifier/resolve`.
+`brokers/compile/resolve-graph`, plus `brokers/tsconfig/owner`
+(finds the tsconfig that owns a file, the way tsserver does, and returns its
+compiler options) and `brokers/import-specifier/resolve`.
 
 **Change the stub index** (the per-property value demands computed over
 declared types). Touch `brokers/compile/stub-graph`, the twin stitch pass
@@ -554,7 +555,7 @@ never a second derivation path: a supplied entry's cases differ from a
 derived entry's cases in exactly the one binding a harness supplied.
 
 **Resolve a harness-supplied value at run time.** Touch the generated test
-file (`transformers/assemble-shim`), which requires the harness file
+file (`transformers/assemble-shim`), which loads the harness file
 through ts-jest, and note that Jest maps `@assayer/core` to the root
 `harness-registrar.js` (`brokers/run/execute-cases`) so the harness's
 registration lands where the generated test file can read it. This
@@ -747,6 +748,68 @@ visible to it. The lib files are parsed once per process and reused by
 every walk. The checker is new for every walk. A walk must copy out
 everything it needs as plain data before it returns, because its file's
 nodes and types stop being valid once the file is removed.
+
+**Each file is walked under the compiler options of the tsconfig that owns
+it.** `brokers/tsconfig/owner` finds that tsconfig the way tsserver does,
+and TypeScript's own parser answers every question in the search:
+
+- It starts at the nearest `tsconfig.json` at or above the file's folder.
+- That config owns the file when its parsed `fileNames` hold the file's
+  absolute path. TypeScript has already applied `include`, `files`,
+  `exclude` and the whole `extends` chain to that list. So Assayer's only
+  test is an equality check on TypeScript's list. It adds no glob and no
+  path rule of its own.
+- When that config does not own the file, Assayer asks each of its
+  project references in turn. A solution config (`files: []` plus
+  `references`) owns nothing itself, so it hands the question to its
+  projects. A reference may name a folder or a file such as
+  `tsconfig.scripts.json`.
+- When nothing there owns the file, the search starts again from the
+  folder above that config. A file that no config owns gets TypeScript's
+  defaults.
+
+A config that sits above a file does not always own it. A test file that
+its package config excludes is the common case. Reading the nearest
+config's options for that file would be the wrong answer, so every
+per-file question asks for the owner instead.
+
+`transformers/analysis-options` cuts the owner's options down to the
+`analysis` list in `statics/analysis-options`: the options that change a
+type the checker reports for one file read on its own, such as `target`,
+`lib` and the strict flags. Path options (`outDir`, `paths`, `types`,
+`typeRoots`) never reach the walk. In memory they resolve nothing, and an
+absolute path inside a cache key would make the key differ from one
+machine to the next. Each distinct option set gets its own in-memory
+project, so a repo whose packages differ in `lib` or a strict flag parses
+each library set once per process.
+
+`strictNullChecks` is always on, set on top of the owner's options. With
+it off, the checker drops `undefined` and `null` from every type the walk
+reads. The code still receives those values at run time, so the cases
+that cover them would vanish from the analysis.
+
+`walkFileTransformer` never reads the disk. It takes the options as a
+parameter, and with none it uses TypeScript's defaults. A caller that has
+the file on disk walks through `brokers/file/walk`, which looks the owner
+up first. The specimen catalogue passes each specimen's absolute path, so
+a specimen is walked under the same options the compile and the run use.
+The stable namespace, which analyses a git ref, reads the working tree's
+tsconfigs, because TypeScript exposes no public way to apply `include` and
+`exclude` to files read out of git. A file that exists at the ref but not
+in the working tree is in no config's `fileNames`, so it gets TypeScript's
+defaults.
+
+The options key is part of every key that depends on the analysis. A
+file's blob is stored under `analysisHash`, a hash over the options key
+and the file's bytes. `contentHash` stays the hash of the bytes alone. The
+run id and the harness index's `harnessHash` both include the options key.
+So a tsconfig edit that changes how a file is analysed gives that file a
+new blob and a new run id, and leaves every other file's blob alone.
+
+A symbol-keyed member, such as `Map`'s iterator, is named with the
+checker's own rendering, `[Symbol.iterator]`. TypeScript's internal name
+for that member ends in a symbol id from a counter the whole process
+shares, so it would differ depending on what the process walked first.
 
 Two consequences of the hermetic walk follow, and both are load-bearing:
 
@@ -1180,16 +1243,19 @@ A move that changes a specimen's VERDICT (for example, a construct
 flipping from an admission to a fully driven case) also moves its bucket,
 and that is exactly what those other files assert on.
 
-**The runner's Jest config must be IDENTICAL for every file it runs.**
-ts-jest keeps one TypeScript compiler alive per distinct config, and never
-releases it. Anything that varies the config per file strands a whole
-extra compiler in memory, roughly 370MB each, which shows up as `assayer
-unit` running out of memory partway through a real repo, not merely
-running slowly. Which run to execute travels through the test-path
-pattern instead, never through `roots` or `testMatch`. The
-`__assayerCoreRuntime` global and the source-tree export condition are
-fixed for the life of one process, so they keep the config identical. There are two ways
-to break this rule, and the second looks harmless:
+**The runner's Jest config must be IDENTICAL for every file of one module
+format.** ts-jest keeps one TypeScript compiler alive per distinct config,
+and never releases it. Anything that varies the config per file strands a
+whole extra compiler in memory, roughly 370MB each, which shows up as
+`assayer unit` running out of memory partway through a real repo, not merely
+running slowly. Which run to execute travels through the test-path pattern
+instead, never through `roots` or `testMatch`. The `__assayerCoreRuntime`
+global and the source-tree export condition are fixed for the life of one
+process, so they keep the config identical. There are two configs, one per
+module format (CommonJS and ESM), because Jest's `extensionsToTreatAsEsm` is
+one list per config: a config loads every `.ts` file as ESM or none of them.
+So a batch costs at most two compilers. There are two ways to break this
+rule, and the second looks harmless:
 
 - naming the run's own directory directly inside the config, and
 - minting a fresh temporary directory per test run. A new path is a new
@@ -1198,14 +1264,84 @@ to break this rule, and the second looks harmless:
   generating a new one per run.
 
 The test `run-execute-cases-broker.test.ts` checks this rule directly, with
-the assertion "{two different runs} => the config is IDENTICAL, so ts-jest
-reuses one compiler." If you are
-about to make the config depend on which file is running, that test is
-exactly why not to.
+the assertion "{two different %s runs} => the config is IDENTICAL, so
+ts-jest reuses one compiler", once per format. If you are about to make the
+config depend on which file is running, that test is exactly why not to.
+
+**A run executes in the module format the consumer's own code runs in.**
+`moduleFormatReadBroker` decides it per target file. It asks TypeScript's
+`getImpliedNodeFormatForFile`, through the typescript gateway, with the
+options of the tsconfig that owns the file (section 5.10), never the
+nearest tsconfig's. The two differ for a file its package config excludes,
+such as a test file. When no tsconfig owns that file, TypeScript makes no
+claim for it, and Node's rule decides, which is how Node itself runs it.
+TypeScript answers only for a node module kind (`node16`, `node18`,
+`nodenext`). For any other module kind it makes no claim, and the broker
+applies Node's own rule instead: the file extension, else the nearest
+`package.json` `type`. The format picks the generated test
+file's extension (`assayer.test.cjs` or `assayer.test.mjs`, so Jest never
+reads the format off a consumer's `package.json`), the ts-jest `module`
+override (`commonjs` or `esnext`), and for ESM, `useESM` plus
+`extensionsToTreatAsEsm`. Neither override is a node module kind, because a
+node kind with `isolatedModules` sends ts-jest to a transpile path that
+compiles with the installed `typescript` package instead of ts-morph's copy.
+
+**ts-jest compiles each file of a run on its own, never through a
+type-checked program.** Both overrides in
+`coreRuntimeStatics.tsJestCompilerOptions` set `isolatedModules`, so ts-jest
+calls `transpileModule` on ts-morph's TypeScript for one file at a time.
+Without it, ts-jest builds a language-service program over every file the
+consumer's root tsconfig includes before it compiles the first file, and
+builds a fresh type checker for each file that program has not seen. In
+PE-12 that program took 14 to 21 s of a worker's first run, and about 1 s of
+every later run. A real consumer pays it in proportion to the size of their
+repo. A run needs nothing from types: `diagnostics` is off, and the probe
+transformer reads only the syntax tree. The specimen run artifacts are byte
+for byte the same either way. The price is code that compiles correctly only
+as a whole program. Two cases fail at run time: an ES module that re-exports
+a type without the `type` keyword (`export { Shape } from './shape'`), which
+Node rejects when it links the module, and a `const enum` declared only in a
+`.d.ts` file, which has no value at run time. TypeScript's own
+`isolatedModules` check reports both in the consumer's code.
+
+**The nested Jest runs in a worker process, never in the caller's own.**
+Jest runs an ES module only through `vm.SourceTextModule`, which Node puts
+behind `--experimental-vm-modules`, and only a process's own command line can
+turn that flag on. The flag also slows every run, CommonJS runs included, by
+about 100 ms (measured in PE-3 and PE-8). So `runExecuteCasesBroker` keeps one
+worker per module format: the ESM worker starts with the flag, and the
+CommonJS worker starts without it. The node gateway's `forkWorker` keeps each
+one alive for the life of the calling process, so Jest, ts-jest and each
+format's compiler start once per batch. Both workers run the root
+`run-jest.js` through the same code path; only their Node flags differ,
+from `coreRuntimeStatics.workerExecArgv`. A worker forks with
+`process.execPath`, so under Electron with `ELECTRON_RUN_AS_NODE` it is
+Electron's Node, and the flag works there too. A worker never keeps the
+caller alive while it is idle, and it exits when the caller's process ends.
+
+**An ESM run has no setup file.** A Jest setup file is CommonJS, and in an
+ESM run of core's TypeScript source, core's `.ts` modules load as ES modules,
+which a `require` cannot load. So the ESM test file installs `__P` itself
+before it imports the subject. A CommonJS run keeps `probe-runtime.js` as its
+setup file. The same reason makes `harness-registrar.js` load nothing on its
+own: the generated test file hands it core's main module, through
+`bindValidator`, before it loads a harness.
+
+**A relative import resolves the way TypeScript resolves it.** The root
+`ts-resolver.js` is the nested Jest's `resolver`. It asks ts-morph's
+`resolveModuleName`, with the options of the tsconfig that owns the importing
+file (section 5.10), and takes the answer when it is TypeScript source outside
+`node_modules`. That is what lets `import { band } from './band.js'` find
+`band.ts` on `node16` and `nodenext`, and what lets a `paths` alias resolve,
+in both formats. Anything else resolves through Jest's own resolver. The
+resolver is plain JS in a Jest worker, so it cannot call `brokers/tsconfig/owner`.
+It repeats that search over the same TypeScript calls. Jest gives a resolver
+only the importing file's folder, so it asks whether a config's parsed file
+list holds a file in that folder, where the broker asks about the file itself.
+A folder no config owns gets TypeScript's defaults.
 
 **One nested Jest run proves nothing about fifteen at once.**
-`run-unit-broker` calls `runCLI` in-process, so this integration runs Jest
-inside Jest. That stays fine, and stays flat in memory, only while the
+The worker runs every file of a batch, so memory stays flat only while the
 rule above holds. The memory cost is per CONFIG, not per run, and it does
 not show up until something drives the whole specimen catalogue through
 this path at once.
@@ -1218,19 +1354,38 @@ runtime, the probe injector, and `assayerHarness`.
 When the broker runs from `src`, under ts-jest or `tsx`, the nested
 ts-jest compiles core's TypeScript source. That run also sets the `source`
 export condition, so a workspace package core imports resolves to its
-source too. When the broker runs from `dist`, as in the built CLI or a
-published install, the nested Jest loads `dist`. One run therefore reads
-one tree, so `src` and `dist` cannot disagree inside it.
+source too, and the worker registers tsx, because ts-jest loads the probe
+injector with Node's own `require`. When the broker runs from `dist`, as in
+the built CLI or a published install, the nested Jest loads `dist`. One run
+therefore reads one tree, so `src` and `dist` cannot disagree inside it.
 
 No Jest run builds anything. Core's unit and integration tests read
 source. The CLI integration tests are the exception: they spawn the built
 CLI binary, so they need a current build.
 
-The ceremony files are the three plain-JS files at core's package root
-that Jest loads by path: `probe-runtime.js`, `probe-transformer.js` and
-`harness-registrar.js`. Each one reads its module path from the runner's
-config and loads it. The file paths of the run-time modules and the
-ceremony files live in `statics/core-runtime`. Moving a run-time module means editing that file.
+The ceremony files are the plain-JS files at core's package root that Node
+or Jest loads by path. They are plain JS because the nested Jest config is
+JSON, so it can only name a file, and Node or Jest loads that file before
+any TypeScript support exists. Each one has a single job:
+
+- `probe-runtime.js` is the CommonJS run's Jest setup file. It installs the
+  probe runtime that records which exit a case reached.
+- `probe-transformer.js` is ts-jest's AST transformer. It injects the
+  probes into the code under test as ts-jest compiles it.
+- `harness-registrar.js` is what `@assayer/core` maps to inside a run, so a
+  harness's registration lands where the generated test file reads it.
+- `bundled-typescript.js` is ts-jest's `compiler`: the TypeScript that
+  ts-morph bundles, loaded from the ts-morph install the npm gateway uses,
+  so it is the same object `#gateway/npm/typescript` exports. The analyzer
+  hash reads ts-morph's version from that same install.
+- `ts-resolver.js` is the nested Jest's resolver (see the entry above on
+  relative imports).
+- `run-jest.js` is the worker process's entry. It runs Jest for each
+  request the worker receives.
+
+The file names of the run-time modules and the ceremony files live in
+`statics/core-runtime`. Adding, moving or renaming one means editing that
+file.
 
 **Coverage IDs are cache-internal by design.** Changing how they are
 computed only costs a fixture rewrite, never a migration for anyone
@@ -1254,8 +1409,17 @@ back, not re-walked), and it reconciles references purely by lookup.
 Different ways of spelling the same import (`../b/foo` vs `../../b/foo`),
 and aliased paths (`@app/foo`), all resolve to one canonical
 repo-relative `(file, symbol)` pair, through TypeScript's own
-`ts.resolveModuleName` (`brokers/import-specifier/resolve`, configured
-by `brokers/tsconfig/read`). A re-export barrel file (a file
+`ts.resolveModuleName` (`brokers/import-specifier/resolve`).
+
+**Resolve each import under the options of the importing file's owner.**
+Each file can belong to a different tsconfig, with its own `paths`,
+`baseUrl` or `moduleResolution`. So the stitch looks up the tsconfig that
+owns each file (section 5.10) and resolves that file's imports under that
+owner's options. A hop through a barrel file uses the barrel's own owner.
+The other brokers that resolve a specifier follow the same rule:
+`compose` (cross-file map and predicates), `param-type-resolve`,
+`run-cross-file-probes` and `stub-realize` each resolve under the owner of
+the file whose import they follow. A re-export barrel file (a file
 whose whole job is re-exporting things from elsewhere) is followed through
 to the real definition, using a seen-set (a record of files already
 visited) to stop if it cycles, implemented as recursion rather than a
@@ -1277,8 +1441,12 @@ SAME `read-type-fact` to `type-descriptor` pipeline every other type goes
 through, so this introduces no new type language. The result is cached by
 the `.d.ts` file's own byte hash, at
 `.assayer/cache/external-signatures/<declHash>.json`, and reused by every
-file that imports it. A dependency shipping no usable type information
-raises `no-usable-types`.
+file that imports it. The second project is rooted at the importing
+file's owner config, so that owner's `types` and `typeRoots` apply. One
+external callable is read once, under the owner of its first importer in
+path order, so the read never depends on which import finished first. An
+importing file that no tsconfig owns gets no external read. A dependency
+shipping no usable type information raises `no-usable-types`.
 
 **Read ambient globals and typed built-ins through the second project's
 GLOBAL scope.** A free identifier the hermetic walk cannot type
@@ -1301,16 +1469,22 @@ entry. The hermetic walk itself stays typeless (section 5.10 is untouched
 by any of this), and `read-env-operand` still proves `process.env`
 entirely on its own, without help from this second project.
 
-**The cache split keeps this honest.** Per-file blobs stay content-keyed
-and pure: raw references and module edges only, nothing resolved. The
-resolved index is a DERIVED artifact, keyed on the repo's layout plus a
-tsconfig hash, and it is rebuilt whenever the file set or the tsconfig
-changes. It is written to `.assayer/cache/resolved/<namespace>.json`.
-Moving a file with no other edit re-parses nothing (blobs are addressed by
-content, and this file's content did not change), and simply re-resolves
-edges against the new layout, so an import nobody updated after the move
-surfaces honestly as a broken link, never as a stale pointer nobody
-notices.
+**The cache split keeps this honest.** Per-file blobs stay pure: raw
+references and module edges only, nothing resolved. Each blob is stored
+under its `analysisHash`, the hash of the file's analysis options key plus
+its bytes (section 5.10). The resolved index is a DERIVED artifact, keyed
+on `layoutHash` plus `tsconfigHash`. `tsconfigHash` covers, for each
+analysed file, its owner config's path relative to the root and the owner
+options that decide where an import lands (the `resolution` list in
+`statics/analysis-options`). Paths are written relative to the root, so
+the key is the same on every machine. The index is rebuilt whenever the
+file set changes, or any owner's resolution options change. It is written
+to `.assayer/cache/resolved/<namespace>.json`. Moving a file with no other
+edit, under the same owner options, re-parses nothing (the blob key holds
+only the options and the bytes, and neither changed), and simply
+re-resolves edges against the new layout, so an import nobody updated
+after the move surfaces honestly as a broken link, never as a stale
+pointer nobody notices.
 
 **The stub index is a second, twin stitch, over the same blobs.**
 `compile-stub-graph-broker` reads the already-finished blobs back by
@@ -1490,7 +1664,9 @@ indexes do not need: `layoutHash` and `tsconfigHash` both come from the
 resolved index, but a harness is classified out of the analyzed surface
 entirely, so neither of those two hashes changes when a harness file is
 edited. `harnessHash`, computed over the harness files' own paths and
-bytes, is what makes editing only a harness rebuild this index. A harness
+bytes, is what makes editing only a harness rebuild this index. It also
+covers the analysis options of each harness's own owner, because the
+harness value types are read under those options. A harness
 whose target is not part of the analyzed surface, or whose module body
 throws when loaded, is a P1 error and is left OUT of the index entirely. A
 harness that loaded successfully is recorded even when its keys turn out
@@ -1558,7 +1734,7 @@ does supply it; `syntax-traits` is the one that does.
 registrar.** Because only KEYS are cached, the generated test file loads
 the harness file itself: `case-set-projection` carries `harnessPath` (an
 absolute path, exactly like `modulePath`) whenever some case names a
-harness binding. The generated file REQUIRES that path through the same
+harness binding. The generated file LOADS that path through the same
 ts-jest transform the subject under test goes through, and
 `run-execute-cases-broker` maps `@assayer/core` to the root
 `harness-registrar.js`, so the harness's registration lands where the

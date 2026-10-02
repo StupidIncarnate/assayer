@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'slice.ts'), 'utf8');
 const relPath = 'src/happy-path/array/slice/slice.ts';
@@ -18,7 +18,7 @@ describe('array / slice — a branchless function returning `items.slice(1)`', (
   // `items.slice(1)` runs on an actual array — a scalar placeholder would throw. The values are INPUTS
   // (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function tail(items: number[]): number[] { return items.slice(1) }} => array-of-number param and return, three cardinality cases', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'slice.ts') }) });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -56,7 +56,7 @@ describe('array / slice — a branchless function returning `items.slice(1)`', (
   // An array param declares no OBJECT shape, and a builtin array method call is not one of the resolver's
   // reportable callees, so nothing is admitted: no declared types, no dark spot, no undriven, no lint.
   it('VALID: {an array-typed param, a builtin array-returning method call} => no declared object types, no dark spots, no undriven, no lints', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'slice.ts') }) });
 
     expect({
       declaredTypes: analysis.declaredTypes,

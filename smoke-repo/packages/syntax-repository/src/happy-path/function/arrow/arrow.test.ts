@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'arrow.ts'), 'utf8');
 const relPath = 'src/happy-path/function/arrow/arrow.ts';
@@ -12,7 +12,7 @@ describe('function / arrow — a block-bodied arrow function bound to an exporte
   // declaration: exporting the const makes it `access:named`, and its `if` derives the sound pair. The
   // arrow syntax changes nothing — the const binding supplies the entry name and the branch drives.
   it('VALID: {export const grade = (n) => { if (n > 5) … }} => a named, driven entry with both arms', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'arrow.ts') }) });
 
     expect(analysis.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases }))).toStrictEqual([
       {
@@ -35,7 +35,7 @@ describe('function / arrow — a block-bodied arrow function bound to an exporte
   });
 
   it('VALID: {a driven arrow function} => admits nothing', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'arrow.ts') }) });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots, lints: analysis.lints }).toStrictEqual({
       undriven: [],

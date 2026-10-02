@@ -50,12 +50,14 @@ export const runFindBrokerProxy = (): {
       existsProxy.present({ path: sourcePath });
       fileProxy.returns({ path: sourcePath, contents: source });
       idProxy.noHarness({ harnessPath });
+      idProxy.fileWithoutOwner({ absPath: sourcePath });
       loadProxy.savedRun({ configDir, runId, run });
     },
     neverRun: ({ sourcePath, harnessPath, source, configDir, runId }): void => {
       existsProxy.present({ path: sourcePath });
       fileProxy.returns({ path: sourcePath, contents: source });
       idProxy.noHarness({ harnessPath });
+      idProxy.fileWithoutOwner({ absPath: sourcePath });
       loadProxy.noSuchRun({ configDir, runId });
     },
     fileMissing: ({ sourcePath }: { sourcePath: string }): void => {

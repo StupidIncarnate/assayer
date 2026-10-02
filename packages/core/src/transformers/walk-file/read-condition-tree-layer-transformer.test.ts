@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
@@ -43,7 +44,7 @@ describe('readConditionTreeLayerTransformer', () => {
   describe('a single comparison is a one-leaf tree', () => {
     it('VALID: {score > 5} => one leaf at the root, carrying its operand, type and predicate', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const score: number;\nif (score > 5) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -65,7 +66,7 @@ describe('readConditionTreeLayerTransformer', () => {
 
     it('VALID: {bare boolean param} => a truthy leaf, so a bare operand yields a derivable domain', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const smoke: boolean;\nif (smoke) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -89,7 +90,7 @@ describe('readConditionTreeLayerTransformer', () => {
   describe('object-member operand', () => {
     it('VALID: {config.mode === "a"} => a leaf naming the root param, its property path, and root type-ref', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'interface Config { mode: string }\nexport function decide(config: Config): string {\n  if (config.mode === "a") { return "x"; }\n  return "y";\n}\n',
@@ -125,7 +126,7 @@ describe('readConditionTreeLayerTransformer', () => {
   describe('typeof operand', () => {
     it("VALID: {typeof target === 'string'} => a leaf naming target itself, carrying operandIsTypeof and the typeof-eq predicate", () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         "declare const target: string | number;\nif (typeof target === 'string') {}\n",
@@ -161,7 +162,7 @@ describe('readConditionTreeLayerTransformer', () => {
   describe('connectives', () => {
     it('VALID: {score > 5 && bonus > 1} => an and over two independently typed leaves', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const score: number;\ndeclare const bonus: number;\nif (score > 5 && bonus > 1) {}\n',
@@ -196,7 +197,7 @@ describe('readConditionTreeLayerTransformer', () => {
 
     it('VALID: {temp > 50 || smoke} => an or whose bare right operand is a truthy leaf', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const temp: number;\ndeclare const smoke: boolean;\nif (temp > 50 || smoke) {}\n',
@@ -231,7 +232,7 @@ describe('readConditionTreeLayerTransformer', () => {
 
     it('VALID: {!ready} => a not wrapping the leaf, so negation is structure rather than a predicate', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const ready: boolean;\nif (!ready) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
@@ -261,7 +262,7 @@ describe('readConditionTreeLayerTransformer', () => {
 
     it('VALID: {admin && (level > 3 || owner)} => nested connectives, each leaf addressed by its path', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const admin: boolean;\ndeclare const level: number;\ndeclare const owner: boolean;\nif (admin && (level > 3 || owner)) {}\n',
@@ -308,7 +309,7 @@ describe('readConditionTreeLayerTransformer', () => {
   describe('formatting invariance', () => {
     it('VALID: {redundant parens around an operand} => byte-identical leaf IDs, since parens are formatting', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const bare = project.createSourceFile(
         'src/a.ts',
         'declare const score: number;\ndeclare const bonus: number;\nif (score > 5 && bonus > 1) {}\n',
@@ -345,7 +346,7 @@ describe('readConditionTreeLayerTransformer', () => {
     // is the dark spot, not the operand — an unrecognized leaf is recorded, never silently trusted.
     it('EDGE: {an operator that is not a connective or comparison} => one unrecognized leaf, not a guess', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare const a: number;\ndeclare const b: number;\nif (a + b) {}\n',
@@ -376,7 +377,7 @@ describe('readConditionTreeLayerTransformer', () => {
     // the callee's own predicate.
     it('VALID: {if (exceedsLimit(size))} => a truthy leaf carrying the call’s getStart coordinate', () => {
       readConditionTreeLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'declare function exceedsLimit(n: number): boolean;\nif (exceedsLimit(size)) {}\n',

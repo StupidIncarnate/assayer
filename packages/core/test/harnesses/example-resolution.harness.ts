@@ -19,6 +19,7 @@ import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
 
+import { analysisHashTransformer } from '../../src/transformers/analysis-hash/analysis-hash-transformer';
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
@@ -84,8 +85,8 @@ export const exampleResolutionHarness = (): {
           const content = readFileSync(join(SMOKE_REPO, relPath));
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
-          await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath, contentHash: contentHashTransformer({ content }) };
+          await compileProcessFileBroker({ root: dir, relPath, content, blobsDir });
+          return { relPath, contentHash: contentHashTransformer({ content }), analysisHash: analysisHashTransformer({ content, options: {} }) };
         }),
       );
 
@@ -106,8 +107,8 @@ export const exampleResolutionHarness = (): {
           const content = readFileSync(join(SMOKE_REPO, relPath));
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
-          await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath, contentHash: contentHashTransformer({ content }) };
+          await compileProcessFileBroker({ root: dir, relPath, content, blobsDir });
+          return { relPath, contentHash: contentHashTransformer({ content }), analysisHash: analysisHashTransformer({ content, options: {} }) };
         }),
       );
 
@@ -122,12 +123,12 @@ export const exampleResolutionHarness = (): {
       ensureDirSync(join(dir, dirname(relPath)));
       writeFileSync(join(dir, relPath), BROKEN_SRC);
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath, content: BROKEN_SRC, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath, content: BROKEN_SRC, blobsDir });
 
       return compileResolveGraphBroker({
         root: dir,
         blobsDir,
-        files: [{ relPath, contentHash: contentHashTransformer({ content: BROKEN_SRC }) }],
+        files: [{ relPath, contentHash: contentHashTransformer({ content: BROKEN_SRC }), analysisHash: analysisHashTransformer({ content: BROKEN_SRC, options: {} }) }],
       });
     },
   };

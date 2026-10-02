@@ -99,6 +99,7 @@ export const compileRunBroker = async ({
 
   const currentProcessed = await processTargetsLayerBroker({
     remaining: currentPlan.targets,
+    root,
     namespace: currentBranch,
     branch: currentBranch,
     blobsDir,
@@ -247,6 +248,7 @@ export const compileRunBroker = async ({
   // validation failures are P1s of the same class as a broken import.
   if (stable !== undefined && resolvedStable !== undefined) {
     await compileHarnessGraphBroker({
+      root,
       configDir,
       namespace: String(stable.resultEntry.namespace),
       blobsDir,
@@ -257,6 +259,7 @@ export const compileRunBroker = async ({
   }
 
   const currentHarness = await compileHarnessGraphBroker({
+    root,
     configDir,
     namespace: currentBranch,
     blobsDir,

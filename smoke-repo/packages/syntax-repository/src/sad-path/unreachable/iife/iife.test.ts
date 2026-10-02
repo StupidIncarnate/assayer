@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'iife.ts'), 'utf8');
 const relPath = 'src/sad-path/unreachable/iife/iife.ts';
@@ -30,7 +30,7 @@ describe('unreachable / iife — an immediately-invoked function expression appl
   // surface renders it by the file's label); it is NO LONGER admitted undriven — the module-load twin of
   // welded-arg's flip.
   it('VALID: {((n) => { if (n > 5) … })(7)} => the live arm is a module-driven case, the dead arm an unreachable-exit lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'iife.ts') }), relPath });
 
     expect({
       functions: analysis.functions.map((fn) => ({ access: fn.entry.access, cases: fn.cases })),
@@ -45,7 +45,7 @@ describe('unreachable / iife — an immediately-invoked function expression appl
   // resolved which arm the welded argument runs. The dead arm rides the LINT channel — the repo's debt —
   // not any of the "Assayer cannot drive this" admissions.
   it('VALID: {a welded-argument IIFE} => nothing is admitted as undriven or a dark spot', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'iife.ts') }), relPath });
 
     expect({ undriven: analysis.undriven, darkSpots: analysis.darkSpots }).toStrictEqual({ undriven: [], darkSpots: [] });
   });

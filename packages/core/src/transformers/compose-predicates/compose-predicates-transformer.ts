@@ -65,7 +65,7 @@ export const composePredicatesTransformer = ({
             Number(candidate.position.column) === Number(position.column),
         );
 
-        if (call === undefined || call.callee.target !== 'local') {
+        if (call?.callee.target !== 'local') {
           return branch;
         }
 

@@ -17,6 +17,7 @@ export const AssayerCacheManifestStub = ({
           {
             relPath: 'packages/shared/src/index.ts',
             contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            analysisHash: '278cd2eb8a5ff504fe51a1eb6395e1924a27562a34e02778fda65c0645eea29e',
           },
         ],
       },

@@ -1,8 +1,8 @@
 /**
  * PURPOSE: The stitch — turns finished per-file records into resolved cross-file edges without
- *   re-parsing. It loads every already-compiled blob back from the content-keyed blob store, reads the
- *   repo's tsconfig once, and resolves each import's specifier against the importing file's absolute
- *   path exactly once, canonicalizing to a repo-relative definition key BEFORE storing (spelling and
+ *   re-parsing. It loads every already-compiled blob back from the analysis-keyed blob store, finds the
+ *   tsconfig that owns each file, and resolves each import's specifier against the importing file's
+ *   absolute path, under that file's own options (each barrel hop under the barrel's own), exactly once, canonicalizing to a repo-relative definition key BEFORE storing (spelling and
  *   alias variants collapse to one key). Re-export barrels are followed to the definition site.
  *
  *   A `local` edge additionally carries the TARGET file's exported entry signature (its declared
@@ -17,13 +17,16 @@
  *   A
  *   package/builtin import's declared signature is pulled from its `.d.ts` (cached hash-checked) and
  *   attached to the edge — the typed black box — while a CALLED import that ships no usable types is a
- *   hard error of its own (`no usable types for '<name>'`). External type reading only runs when a
- *   `cacheDir` and a tsconfig are supplied; otherwise resolution classifies without pulling types. The
- *   returned index is keyed on `layoutHash` + `tsconfigHash`, so it rebuilds when either changes.
+ *   hard error of its own (`no usable types for '<name>'`). External type reading only runs with a
+ *   `cacheDir`, and only for an import whose file a tsconfig owns; the node_modules-aware project is rooted
+ *   at that owner. One external callable is read once, rooted at the owner of the first importer in path
+ *   order, so the read never depends on which import happened to finish first. The returned index is keyed on
+ *   `layoutHash` + `tsconfigHash`: the second covers each file's owner and the options that decide where its
+ *   imports land, so it rebuilds when the file set or any owning tsconfig's resolution changes.
  *
  * USAGE:
  * await compileResolveGraphBroker({ root: '/repo', blobsDir: '/repo/.assayer/cache/blobs',
- *   cacheDir: '/repo/.assayer/cache', files: [{ relPath: 'src/a.ts', contentHash }] });
+ *   cacheDir: '/repo/.assayer/cache', files: [{ relPath: 'src/a.ts', contentHash, analysisHash }] });
  * // Returns { index: ResolvedIndex, errors: [{ relPath, line, column, message }] }
  */
 import { compileResolveGraphResultContract } from '../../../contracts/compile-resolve-graph-result/compile-resolve-graph-result-contract';
@@ -32,12 +35,14 @@ import { compiledFileBlobContract, resolvedEdgeContract, resolvedIndexContract }
 import type { ContentHash } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
-import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
+import { resolutionOptionsKeyTransformer } from '../../../transformers/resolution-options-key/resolution-options-key-transformer';
+import { tsconfigOwnerBroker } from '../../tsconfig/owner/tsconfig-owner-broker';
 import { externalSignatureReadBroker } from '../../external-signature/read/external-signature-read-broker';
 import { externalSignatureReadGlobalBroker } from '../../external-signature/read-global/external-signature-read-global-broker';
 import { resolveSpecifierLayerBroker } from './resolve-specifier-layer-broker';
 import { readFile } from '#gateway/node/fs__promises';
 import { builtinModules } from '#gateway/node/module';
+import { relative } from '#gateway/node/path';
 
 export const compileResolveGraphBroker = async ({
   root,
@@ -48,24 +53,38 @@ export const compileResolveGraphBroker = async ({
   root: string;
   blobsDir: string;
   cacheDir?: string;
-  files: readonly { relPath: string; contentHash: ContentHash }[];
+  files: readonly { relPath: string; contentHash: ContentHash; analysisHash: ContentHash }[];
 }): Promise<CompileResolveGraphResult> => {
-  const { options, tsconfigHash, configFilePath } = tsconfigReadBroker({ searchPath: root });
   const builtins = new Set(builtinModules.map((name) => name).map(String));
+  const sortedFiles = [...files]
+    .map((file) => ({ relPath: file.relPath, contentHash: file.contentHash, analysisHash: file.analysisHash }))
+    .sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
 
+  // In path order, so "the first importer" below names one file on every run.
   const blobs = await Promise.all(
-    files.map(async (file) => {
-      const raw = (await readFile(`${blobsDir}/${file.contentHash}.json`));
+    sortedFiles.map(async (file) => {
+      const raw = (await readFile(`${blobsDir}/${file.analysisHash}.json`));
       return compiledFileBlobContract.parse(JSON.parse(raw));
     }),
   );
 
   const blobsByRelPath = new Map(blobs.map((blob) => [String(blob.relPath), blob]));
+  const ownerByRelPath = new Map(
+    sortedFiles.map((file) => [file.relPath, tsconfigOwnerBroker({ absPath: `${root}/${file.relPath}` })]),
+  );
+  const optionsByRelPath = new Map([...ownerByRelPath].map(([relPath, owner]) => [relPath, owner.options]));
 
-  const sortedFiles = [...files]
-    .map((file) => ({ relPath: file.relPath, contentHash: file.contentHash }))
-    .sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
   const layoutHash = contentHashTransformer({ content: JSON.stringify(sortedFiles) });
+  // Each file's owner, written relative to the root, and the options that decide where its imports land.
+  const tsconfigHash = contentHashTransformer({
+    content: JSON.stringify(
+      [...ownerByRelPath].map(([relPath, owner]) => [
+        relPath,
+        owner.configFilePath === undefined ? null : relative(root, owner.configFilePath),
+        resolutionOptionsKeyTransformer({ options: owner.options, root }),
+      ]),
+    ),
+  });
 
   // One resolution unit per imported name: named/default bindings chase a specific export through
   // barrels; namespace/star/side-effect imports name no single export, so they carry no importedName.
@@ -98,23 +117,26 @@ export const compileResolveGraphBroker = async ({
       specifier: String(unit.edge.specifier),
       ...(unit.importedName === undefined ? {} : { importedName: unit.importedName }),
       root,
-      options,
+      optionsByRelPath,
       blobsByRelPath,
       builtins,
       seen: new Set(),
     }),
+    configFilePath: ownerByRelPath.get(String(unit.blob.relPath))?.configFilePath,
   }));
 
   // Pull each external callable's declared signature (typed black box), cached by `.d.ts` content
-  // hash. Only runs with a cache dir and a tsconfig to root the node_modules-aware project at. The
+  // hash. Only runs with a cache dir, for an importer a tsconfig owns: that owner roots the
+  // node_modules-aware project, and the first such importer in path order roots a shared read. The
   // SAME export imported by several files names one cache entry, so the reads are deduped by cache
   // identity and each distinct callable is read exactly once — never once per importer. Reading
   // duplicates concurrently would re-derive the identical payload AND race on that entry's shared
   // atomic-write tmp path (one writer renames it away before the other's rename, an ENOENT crash).
   const packageTargets = classified.flatMap((item) =>
-    cacheDir !== undefined && configFilePath !== undefined && item.classification.kind === 'package' && item.importedName !== undefined
+    cacheDir !== undefined && item.configFilePath !== undefined && item.classification.kind === 'package' && item.importedName !== undefined
       ? [
           {
+            configFilePath: item.configFilePath,
             key: `${item.classification.dtsPath} ${item.importedName}`,
             dtsPath: item.classification.dtsPath,
             exportName: item.importedName,
@@ -125,12 +147,13 @@ export const compileResolveGraphBroker = async ({
 
   const builtinTargets = classified.flatMap((item) =>
     cacheDir !== undefined &&
-    configFilePath !== undefined &&
+    item.configFilePath !== undefined &&
     item.classification.kind === 'builtin' &&
     item.importedName !== undefined &&
     item.edge.specifier !== undefined
       ? [
           {
+            configFilePath: item.configFilePath,
             // A builtin binding is CALLED when a reference records the call; otherwise it is bound as a
             // VALUE. The read differs (a signature vs a member type), so `called` keys the read too.
             called: item.blob.moduleGraph.references.some(
@@ -153,12 +176,12 @@ export const compileResolveGraphBroker = async ({
   // One read PROMISE per distinct callable — the broker (and its atomic write) is kicked off exactly
   // once per key, so every importer awaits the same in-flight read rather than starting its own.
   const packageReadByKey = new Map(
-    [...new Map(packageTargets.map((target) => [target.key, target] as const)).values()].map((target) => {
+    [...new Map([...packageTargets].reverse().map((target) => [target.key, target] as const)).values()].map((target) => {
       const pending =
-        cacheDir === undefined || configFilePath === undefined
+        cacheDir === undefined
           ? Promise.resolve({ usable: false as const })
           : externalSignatureReadBroker({
-              tsConfigFilePath: configFilePath,
+              tsConfigFilePath: target.configFilePath,
               dtsPath: target.dtsPath,
               exportName: target.exportName,
               cacheDir,
@@ -169,16 +192,16 @@ export const compileResolveGraphBroker = async ({
   );
 
   const builtinReadByKey = new Map(
-    [...new Map(builtinTargets.map((target) => [target.key, target] as const)).values()].map((target) => {
+    [...new Map([...builtinTargets].reverse().map((target) => [target.key, target] as const)).values()].map((target) => {
       // A CALLED node builtin now pulls its declared signature from `@types/node` through the second
       // project — read as an ambient module import (`node:path`), since a builtin resolves only in the
       // checker, never via a `.d.ts` path. Without `@types/node` it ships no usable types (a call is a
       // build error below), exactly as a package with no `.d.ts` does.
       const pending =
-        cacheDir === undefined || configFilePath === undefined
+        cacheDir === undefined
           ? Promise.resolve({ usable: false as const })
           : externalSignatureReadGlobalBroker({
-              tsConfigFilePath: configFilePath,
+              tsConfigFilePath: target.configFilePath,
               reference: { kind: 'builtin', specifier: target.specifier, importedName: target.importedName, called: target.called },
               cacheDir,
             });
@@ -189,7 +212,7 @@ export const compileResolveGraphBroker = async ({
 
   const typed = await Promise.all(
     classified.map(async (item) => {
-      if (cacheDir !== undefined && configFilePath !== undefined && item.classification.kind === 'package' && item.importedName !== undefined) {
+      if (cacheDir !== undefined && item.configFilePath !== undefined && item.classification.kind === 'package' && item.importedName !== undefined) {
         const read = await packageReadByKey.get(`${item.classification.dtsPath} ${item.importedName}`);
 
         return { ...item, signature: read?.usable ? read.signature : undefined, typeDescriptor: undefined, usableExternal: read?.usable ?? false };
@@ -197,7 +220,7 @@ export const compileResolveGraphBroker = async ({
 
       if (
         cacheDir !== undefined &&
-        configFilePath !== undefined &&
+        item.configFilePath !== undefined &&
         item.classification.kind === 'builtin' &&
         item.importedName !== undefined &&
         item.edge.specifier !== undefined
@@ -286,10 +309,10 @@ export const compileResolveGraphBroker = async ({
   );
 
   const noTypeErrors =
-    cacheDir === undefined || configFilePath === undefined
+    cacheDir === undefined
       ? []
       : blobs.flatMap((blob) =>
-          blob.moduleGraph.references.flatMap((reference) => {
+          ownerByRelPath.get(String(blob.relPath))?.configFilePath === undefined ? [] : blob.moduleGraph.references.flatMap((reference) => {
             const key = `${String(blob.relPath)} ${String(reference.specifier)} ${String(reference.importedName)}`;
             const usable = externalKind.get(key);
 
@@ -328,22 +351,32 @@ export const compileResolveGraphBroker = async ({
   // its member type. A resolved edge is emitted for every use so a candidate is never invisible; a
   // CALLED use `@types/node` cannot type is additionally a no-usable-types build error at the call site
   // (honesty: the reader installs the types), while an untyped member access is merely recorded.
-  const globalUnits = blobs.flatMap((blob) => blob.moduleGraph.globalUses.map((use) => ({ blob, use })));
+  const globalUnits = blobs.flatMap((blob) =>
+    blob.moduleGraph.globalUses.map((use) => ({
+      blob,
+      use,
+      configFilePath: ownerByRelPath.get(String(blob.relPath))?.configFilePath,
+    })),
+  );
 
   // Resolve each DISTINCT ambient reference exactly once. Duplicates across files (`process.env` used
   // in many files, `console.log` in several) name the SAME global-signature cache entry; reading them
   // concurrently would both re-derive the identical payload AND race on that entry's shared
   // atomic-write tmp path (one writer renames it away before the other's rename, an ENOENT crash).
-  const globalUseByKey = new Map(
-    globalUnits.map(({ use }) => [
-      `${String(use.name)} ${use.member === undefined ? '' : String(use.member)} ${String(use.called)}`,
-      use,
-    ]),
+  const globalUseByKey = new Map<string, (typeof globalUnits)[number]>(
+    [...globalUnits]
+      .reverse()
+      .filter((unit) => unit.configFilePath !== undefined)
+      .map((unit) => {
+        const { use } = unit;
+
+        return [`${String(use.name)} ${use.member === undefined ? '' : String(use.member)} ${String(use.called)}`, unit];
+      }),
   );
 
   const globalReadByKey = new Map(
     await Promise.all(
-      [...globalUseByKey].map(async ([key, use]) => {
+      [...globalUseByKey].map(async ([key, { use, configFilePath }]) => {
         const member = use.member === undefined ? {} : { member: use.member };
         const read =
           cacheDir !== undefined && configFilePath !== undefined

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'string-element.ts'), 'utf8');
 const relPath = 'src/happy-path/array/string-element/string-element.ts';
@@ -43,7 +43,7 @@ describe('array / string-element — `tags.map((tag) => …)` whose callback BRA
   // in one array, firing the callback once per element. Each value is an INPUT (P4); the case asserts only
   // the reached PATH.
   it('VALID: {a map callback branching on STRING operands} => FUNNELLED into labelTags, array shapes of strings driving each arm', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'string-element.ts') }) });
 
     expect(
       analysis.functions.map((fn) => ({ name: fn.entry.name, label: fn.entry.label, access: fn.entry.access, cases: fn.cases })),
@@ -74,7 +74,7 @@ describe('array / string-element — `tags.map((tag) => …)` whose callback BRA
   // The callback is reached, so it is not dead code, and every arm drives through labelTags's funnel.
   // Nothing is admitted — the walk read each string arm and each is a driven case.
   it('VALID: {a reached, funnelled string callback} => no dead-surface lint, nothing undriven or dark', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'string-element.ts') }) });
 
     expect({
       lints: analysis.lints,

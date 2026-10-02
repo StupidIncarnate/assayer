@@ -1,4 +1,5 @@
 import { Project } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
@@ -25,7 +26,7 @@ describe('handleSourceFileLayerTransformer', () => {
   describe('the module scope it opens', () => {
     it('EMPTY: {empty file} => opens a parameterless void module scope spanning line 1', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', '');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });
@@ -35,7 +36,7 @@ describe('handleSourceFileLayerTransformer', () => {
 
     it('VALID: {four-line file} => the module scope it opens spans the whole file', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', 'const a = 1;\n\nif (a > 0) {\n}\n');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });
@@ -48,7 +49,7 @@ describe('handleSourceFileLayerTransformer', () => {
 
     it('EMPTY: {empty file} => its only exit is the file simply ending', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', '');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });
@@ -65,7 +66,7 @@ describe('handleSourceFileLayerTransformer', () => {
     // — the module finishing has no expression to wrap.
     it('EMPTY: {empty file} => the file-end exit carries a completion probe site keyed to its own id', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', '');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });
@@ -75,7 +76,7 @@ describe('handleSourceFileLayerTransformer', () => {
 
     it('VALID: {file ending in a return-covered if/else} => no completion exit of its own', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', 'declare const a: number;\nif (a > 1) {\n} else {\n}\n');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });
@@ -86,7 +87,7 @@ describe('handleSourceFileLayerTransformer', () => {
     // No exit means no probe: an unowed observation would fire under an id nothing predicted.
     it('VALID: {file ending in a return-covered if/else} => no completion probe site either', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', 'declare const a: number;\nif (a > 1) {\n} else {\n}\n');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });
@@ -98,7 +99,7 @@ describe('handleSourceFileLayerTransformer', () => {
   describe('the descents it asks for', () => {
     it('VALID: {two top-level statements} => one descent each, in source order', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', 'const a = 1;\nif (a > 0) {}\n');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });
@@ -111,7 +112,7 @@ describe('handleSourceFileLayerTransformer', () => {
 
     it('VALID: {top-level statement} => is handed the module scope path with an empty guard path', () => {
       handleSourceFileLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const node = project.createSourceFile('src/f.ts', 'const a = 1;\n');
 
       const result = handleSourceFileLayerTransformer({ node, context: SEED });

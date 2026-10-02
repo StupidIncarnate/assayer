@@ -6,7 +6,8 @@
  *   `string[]` and a `number[]` alike, so only the declaration's checker-inferred type says what a
  *   supplied expression actually IS.
  *
- *   Parses through `hermetic-source-file` (in memory, default compiler options, no `node_modules`) —
+ *   Parses through `hermetic-source-file` (in memory, no `node_modules`), under the analysis options of the
+ *   tsconfig that owns the harness (`compilerOptions`, projected the way the walk projects them) —
  *   the harness's own boundary read, kept separate from the target file's walk and from the eval-based
  *   `typescript/load-harness` adapter, which answers a different question (what did the sandbox collect)
  *   with a different tool (the plain `typescript` compiler, transpile-only, no checker). Reading types
@@ -30,6 +31,9 @@ import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import type { TypeDescriptor } from '@assayer/shared/contracts';
 
+import type { CompilerOptions } from '#gateway/npm/typescript';
+
+import { analysisOptionsTransformer } from '../analysis-options/analysis-options-transformer';
 import { hermeticSourceFileTransformer } from '../hermetic-source-file/hermetic-source-file-transformer';
 import { typeDescriptorTransformer } from '../type-descriptor/type-descriptor-transformer';
 import { harnessModuleStatics } from '../../statics/harness-module/harness-module-statics';
@@ -38,12 +42,14 @@ import { readHarnessValueTypeLayerTransformer } from './read-harness-value-type-
 export const harnessValueTypesTransformer = ({
   source,
   fileName,
+  compilerOptions = {},
 }: {
   source: string;
   fileName: string;
+  compilerOptions?: CompilerOptions;
 }): { entry: string; param: string; type: TypeDescriptor }[] =>
   hermeticSourceFileTransformer({
-    compilerOptions: {},
+    compilerOptions: analysisOptionsTransformer({ options: compilerOptions }),
     relPath: fileName,
     source,
     read: ({ sourceFile }) => {

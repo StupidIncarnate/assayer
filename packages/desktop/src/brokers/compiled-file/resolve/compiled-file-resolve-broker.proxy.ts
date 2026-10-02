@@ -1,5 +1,6 @@
 import { composeCrossFilePredicatesBrokerProxy } from '@assayer/core/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker.proxy';
 import { composeCrossFileMapBrokerProxy } from '@assayer/core/brokers/compose/cross-file-map/compose-cross-file-map-broker.proxy';
+import { fileWalkBrokerProxy } from '@assayer/core/brokers/file/walk/file-walk-broker.proxy';
 import { harnessRealizeBrokerProxy } from '@assayer/core/brokers/harness/realize/harness-realize-broker.proxy';
 import { paramTypeResolveBrokerProxy } from '@assayer/core/brokers/param-type/resolve/param-type-resolve-broker.proxy';
 import { stubRealizeBrokerProxy } from '@assayer/core/brokers/stub/realize/stub-realize-broker.proxy';
@@ -21,7 +22,7 @@ export const compiledFileResolveBrokerProxy = (): {
   }) => void;
   setupBlob: (params: {
     repoPath: string;
-    contentHash: string;
+    analysisHash: string;
     blob: ReturnType<typeof CompiledFileBlobStub>;
   }) => void;
   setupResolvedIndex: (params: {
@@ -35,7 +36,6 @@ export const compiledFileResolveBrokerProxy = (): {
   sourceMissing: (params: { root: string; relPath: string }) => void;
   siblingResolvesTo: (params: { fileName: string; source: string; specifier: string }) => void;
   harnessReads: (params: { path: string; source: string }) => void;
-  noTsconfigAt: (params: { root: string }) => void;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
   const blobProxy = cacheLoadBlobBrokerProxy();
@@ -46,9 +46,10 @@ export const compiledFileResolveBrokerProxy = (): {
   // The overlays run for real. Each sibling file an overlay resolves and reads is staged through the
   // compose proxy, since every overlay resolves a sibling through the same seam. The stub overlay proxy
   // stages the committed-corrections folder and the harness proxy stages the colocated harness file.
-  const paramTypeProxy = paramTypeResolveBrokerProxy();
-  const stubRealizeProxy = stubRealizeBrokerProxy();
-  const crossFileMapProxy = composeCrossFileMapBrokerProxy();
+  paramTypeResolveBrokerProxy();
+  stubRealizeBrokerProxy();
+  composeCrossFileMapBrokerProxy();
+  const walkProxy = fileWalkBrokerProxy();
   const composeProxy = composeCrossFilePredicatesBrokerProxy();
   const overlayProxy = stubOverlayLoadBrokerProxy();
   const harnessProxy = harnessRealizeBrokerProxy();
@@ -57,8 +58,8 @@ export const compiledFileResolveBrokerProxy = (): {
     setupManifest: ({ repoPath, manifest }): void => {
       manifestProxy.resolves({ repoPath, manifest });
     },
-    setupBlob: ({ repoPath, contentHash, blob }): void => {
-      blobProxy.resolves({ repoPath, contentHash, blob });
+    setupBlob: ({ repoPath, analysisHash, blob }): void => {
+      blobProxy.resolves({ repoPath, analysisHash, blob });
     },
     setupResolvedIndex: ({ repoPath, namespace, index }): void => {
       resolvedIndexProxy.resolves({ repoPath, namespace, index });
@@ -69,9 +70,11 @@ export const compiledFileResolveBrokerProxy = (): {
     sourceRootRepoRoot: ({ repoPath, repoRoot }): void => {
       sourceRootProxy.configHasRepoRoot({ repoPath, repoRoot });
     },
-    // The source file exists, and no committed stub corrections sit under its root.
+    // The source file exists, no tsconfig owns it (so it walks, and its imports resolve, under
+    // TypeScript's defaults), and no committed stub corrections sit under its root.
     sourceReads: ({ root, relPath, content }): void => {
       sourceReadProxy.returns({ path: `${root}/${relPath}`, contents: content });
+      walkProxy.filesWithoutOwner({ absPaths: [`${root}/${relPath}`] });
       overlayProxy.dirMissing({ path: `${root}/assayer/stubs/objects` });
       overlayProxy.dirMissing({ path: `${root}/assayer/stubs/env` });
     },
@@ -86,14 +89,6 @@ export const compiledFileResolveBrokerProxy = (): {
     // The colocated harness file at `path` exists and holds `source`.
     harnessReads: ({ path, source }): void => {
       harnessProxy.setupHarness({ path, source });
-    },
-    // The tsconfig search every overlay runs from the source root `root` finds nothing, so the
-    // compiler options are empty.
-    noTsconfigAt: ({ root }): void => {
-      paramTypeProxy.noTsconfigAt({ root });
-      stubRealizeProxy.noTsconfigAt({ root });
-      crossFileMapProxy.noTsconfigAt({ root });
-      composeProxy.noTsconfigAt({ root });
     },
   };
 };

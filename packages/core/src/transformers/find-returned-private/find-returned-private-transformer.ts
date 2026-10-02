@@ -50,7 +50,7 @@ export const findReturnedPrivateTransformer = ({
       }),
   );
 
-  if (call === undefined || call.callee.target !== 'local') {
+  if (call?.callee.target !== 'local') {
     return undefined;
   }
 

@@ -26,6 +26,7 @@ import { tmpdir } from '#gateway/node/os';
 import { resolve, join, dirname } from '#gateway/node/path';
 
 
+import { analysisHashTransformer } from '../../src/transformers/analysis-hash/analysis-hash-transformer';
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
@@ -72,9 +73,9 @@ export const stubGraphHarness = (): {
       writeFileSync(join(dir, BRANCH_LOCAL_REL), content);
 
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath: BRANCH_LOCAL_REL, content, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: BRANCH_LOCAL_REL, content, blobsDir });
 
-      const files = [{ relPath: BRANCH_LOCAL_REL, contentHash: contentHashTransformer({ content }) }];
+      const files = [{ relPath: BRANCH_LOCAL_REL, contentHash: contentHashTransformer({ content }), analysisHash: analysisHashTransformer({ content, options: {} }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -90,9 +91,9 @@ export const stubGraphHarness = (): {
       writeFileSync(join(dir, MULTI_READ_REL), content);
 
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
-      await compileProcessFileBroker({ relPath: MULTI_READ_REL, content, blobsDir });
+      await compileProcessFileBroker({ root: dir, relPath: MULTI_READ_REL, content, blobsDir });
 
-      const files = [{ relPath: MULTI_READ_REL, contentHash: contentHashTransformer({ content }) }];
+      const files = [{ relPath: MULTI_READ_REL, contentHash: contentHashTransformer({ content }), analysisHash: analysisHashTransformer({ content, options: {} }) }];
       const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
       return compileStubGraphBroker({ configDir: dir, namespace: 'main', blobsDir, resolvedIndex: resolved.index, files });
@@ -109,8 +110,8 @@ export const stubGraphHarness = (): {
           const content = readFileSync(join(SMOKE_REPO, relPath));
           ensureDirSync(join(dir, dirname(relPath)));
           writeFileSync(join(dir, relPath), content);
-          await compileProcessFileBroker({ relPath, content, blobsDir });
-          return { relPath, contentHash: contentHashTransformer({ content }) };
+          await compileProcessFileBroker({ root: dir, relPath, content, blobsDir });
+          return { relPath, contentHash: contentHashTransformer({ content }), analysisHash: analysisHashTransformer({ content, options: {} }) };
         }),
       );
 

@@ -5,6 +5,7 @@ import pkgModule = require('child_process');
 
 const OUR_WRAPPERS = [
   'RunNotFoundError',
+  'forkWorker',
   'run',
   'runFireAndForget',
   'runSync',

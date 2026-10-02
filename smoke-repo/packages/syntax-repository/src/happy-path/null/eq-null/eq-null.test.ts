@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'eq-null.ts'), 'utf8');
 const relPath = 'src/happy-path/null/eq-null/eq-null.ts';
@@ -22,7 +22,7 @@ describe('null / eq-null — an explicit equality against the literal null', () 
   // `null`, never an `unrecognized` predicate. `operandType` carries the full nullable union, and
   // `declaredText` shows the source's own spelling of the same union.
   it('VALID: {v === null} => an eq leaf carrying the literal null, not an unrecognized comparison', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'eq-null.ts') }), relPath });
 
     expect(analysis.functions[0]?.entry.params).toStrictEqual([
       { name: 'v', type: NULLABLE_STRING, declaredText: 'string | null' },
@@ -41,7 +41,7 @@ describe('null / eq-null — an explicit equality against the literal null', () 
   // UNDRIVEN — 0 cases, reading as clean success on a check that never ran. Each arm now arranges the
   // value that actually reaches it, `null` included.
   it('VALID: {v === null} => then arranges v=null and else arranges a non-null string', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'eq-null.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'v', value: null }], salient: true },
@@ -50,7 +50,7 @@ describe('null / eq-null — an explicit equality against the literal null', () 
   });
 
   it('VALID: {a null-equality guard} => nothing admitted: no dark spot, no gap, no undriven, no lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'eq-null.ts') }), relPath });
 
     expect({
       darkSpots: analysis.darkSpots,

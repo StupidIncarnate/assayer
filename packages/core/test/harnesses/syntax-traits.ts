@@ -25,7 +25,7 @@ import { resolve, join } from '#gateway/node/path';
 import { entryAccessContract, branchNodeContract } from '@assayer/shared/contracts';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
-import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
+import { fileWalkBroker } from '../../src/brokers/file/walk/file-walk-broker';
 import { analyzeFileBroker } from '../../src/brokers/analyze/file/analyze-file-broker';
 import { composeCrossFileMapBroker } from '../../src/brokers/compose/cross-file-map/compose-cross-file-map-broker';
 import { composeCrossFilePredicatesBroker } from '../../src/brokers/compose/cross-file-predicates/compose-cross-file-predicates-broker';
@@ -143,7 +143,7 @@ export const syntaxTraits = (): {
   // run. The harness overlay is not stubbed at all: a specimen's harness is a committed file beside it, so
   // it is read off disk exactly as a run reads it.
   const analyze = ({ relPath }: { relPath: string }): FileAnalysis => {
-    const walked = walkFileTransformer({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath });
+    const walked = fileWalkBroker({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath, absPath: join(SMOKE_REPO, relPath) });
 
     const typed = paramTypeResolveBroker({
       analysis: analyzeFileBroker({ walked, relPath }),
@@ -280,7 +280,7 @@ export const syntaxTraits = (): {
       // ambient types are absent must not be CALLED in the compiled surface, so its specimen imports a
       // value, and the trait still has to name it.
       const graph = moduleGraphProjectionTransformer({
-        walked: walkFileTransformer({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath }),
+        walked: fileWalkBroker({ source: readFileSync(join(SMOKE_REPO, relPath)), relPath, absPath: join(SMOKE_REPO, relPath) }),
       });
       const callees = graph.edges.flatMap((edge): SyntaxTrait[] => {
         const specifier = edge.specifier === undefined ? undefined : String(edge.specifier);

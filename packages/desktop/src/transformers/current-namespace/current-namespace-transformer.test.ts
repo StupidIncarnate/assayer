@@ -9,10 +9,10 @@ describe('currentNamespaceTransformer', () => {
         namespaces: {
           main: {
             commit: 'a'.repeat(40),
-            files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64) }],
+            files: [{ relPath: 'a.ts', contentHash: 'a'.repeat(64), analysisHash: 'a'.repeat(64) }],
           },
           master: {
-            files: [{ relPath: 'm.ts', contentHash: 'b'.repeat(64) }],
+            files: [{ relPath: 'm.ts', contentHash: 'b'.repeat(64), analysisHash: 'b'.repeat(64) }],
           },
         },
       });
@@ -21,7 +21,7 @@ describe('currentNamespaceTransformer', () => {
 
       expect(result).toStrictEqual({
         namespaceName: 'master',
-        files: [{ relPath: 'm.ts', contentHash: 'b'.repeat(64) }],
+        files: [{ relPath: 'm.ts', contentHash: 'b'.repeat(64), analysisHash: 'b'.repeat(64) }],
       });
     });
 
@@ -29,7 +29,7 @@ describe('currentNamespaceTransformer', () => {
       const manifest = AssayerCacheManifestStub({
         namespaces: {
           default: {
-            files: [{ relPath: 'x.ts', contentHash: 'c'.repeat(64) }],
+            files: [{ relPath: 'x.ts', contentHash: 'c'.repeat(64), analysisHash: 'c'.repeat(64) }],
           },
         },
       });
@@ -38,7 +38,7 @@ describe('currentNamespaceTransformer', () => {
 
       expect(result).toStrictEqual({
         namespaceName: 'default',
-        files: [{ relPath: 'x.ts', contentHash: 'c'.repeat(64) }],
+        files: [{ relPath: 'x.ts', contentHash: 'c'.repeat(64), analysisHash: 'c'.repeat(64) }],
       });
     });
 

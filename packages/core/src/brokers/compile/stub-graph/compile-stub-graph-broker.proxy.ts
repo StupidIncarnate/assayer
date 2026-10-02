@@ -2,7 +2,7 @@ import { stubIndexWriteBrokerProxy } from '../../stub-index/write/stub-index-wri
 import { readFileProxy } from '#gateway/node/fs__promises/read-file/read-file.proxy';
 
 export const compileStubGraphBrokerProxy = (): {
-  // `path` is the blob file the broker reads: `<blobsDir>/<contentHash>.json`. One-shot, so two blobs
+  // `path` is the blob file the broker reads: `<blobsDir>/<analysisHash>.json`. One-shot, so two blobs
   // queued for the same path are read in the order queued.
   queueBlob: ({ path, blob }: { path: string; blob: unknown }) => void;
   // The index write is atomic: the bytes go to `<namespace>.json.tmp` first and a rename moves them

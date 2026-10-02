@@ -25,7 +25,6 @@ import type { FileAnalysis } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../../contracts/scope-record/scope-record-contract';
 import type { WalkFileResult } from '../../../contracts/walk-file-result/walk-file-result-contract';
-import { tsconfigReadBroker } from '../../tsconfig/read/tsconfig-read-broker';
 import { crossFileMapReachesTransformer } from '../../../transformers/cross-file-map-reaches/cross-file-map-reaches-transformer';
 import { funnelCasesTransformer } from '../../../transformers/funnel-cases/funnel-cases-transformer';
 import { inputGapTransformer } from '../../../transformers/input-gap/input-gap-transformer';
@@ -52,14 +51,13 @@ export const composeCrossFileMapBroker = ({
     return analysis;
   }
 
-  const { options } = tsconfigReadBroker({ searchPath: root });
   const containingFile = `${root}/${relPath}`;
 
   // Each reach resolved to its sibling callee SCOPE — the exported function the specifier names. A
   // specifier that does not resolve to an in-repo sibling, or a sibling that exports no such function,
   // drops out here and folds nothing.
   const resolved = reaches.flatMap((reach) => {
-    const sibling = resolveSiblingCalleeBroker({ specifier: String(reach.specifier), containingFile, root, options });
+    const sibling = resolveSiblingCalleeBroker({ specifier: String(reach.specifier), containingFile, root });
 
     if (!sibling?.walked.success) {
       return [];

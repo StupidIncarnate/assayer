@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readFunctionNameLayerTransformer } from './read-function-name-layer-transformer';
 import { readFunctionNameLayerTransformerProxy } from './read-function-name-layer-transformer.proxy';
@@ -7,7 +8,7 @@ describe('readFunctionNameLayerTransformer', () => {
   describe('names carried by the declaration', () => {
     it('VALID: {function declaration} => its own name', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(): void {}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
 
@@ -16,7 +17,7 @@ describe('readFunctionNameLayerTransformer', () => {
 
     it('VALID: {class method} => its own name', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  classify(): void {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
 
@@ -25,7 +26,7 @@ describe('readFunctionNameLayerTransformer', () => {
 
     it('VALID: {constructor} => `constructor`', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  constructor() {}\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.Constructor);
 
@@ -36,7 +37,7 @@ describe('readFunctionNameLayerTransformer', () => {
   describe('names borrowed from the binding', () => {
     it('VALID: {arrow assigned to a const} => the const name', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const classify = (): void => {};\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
 
@@ -45,7 +46,7 @@ describe('readFunctionNameLayerTransformer', () => {
 
     it('VALID: {arrow assigned to a class property} => the property name', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'class C {\n  handleClick = (): void => {};\n}\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
 
@@ -54,7 +55,7 @@ describe('readFunctionNameLayerTransformer', () => {
 
     it('VALID: {default-exported arrow} => `default`', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export default (): void => {};\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
 
@@ -67,7 +68,7 @@ describe('readFunctionNameLayerTransformer', () => {
     // so a surface owes this scope a label built some other way.
     it('VALID: {bare callback} => its STRUCTURAL projection, flagged anonymous', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const xs: number[];\nxs.map((n) => n);\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
 
@@ -79,7 +80,7 @@ describe('readFunctionNameLayerTransformer', () => {
 
     it('VALID: {callback moved to another line} => keeps the SAME name, because position is not identity', () => {
       readFunctionNameLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const first = project.createSourceFile('src/a.ts', 'declare const xs: number[];\nxs.map((n) => n);\n');
       const moved = project.createSourceFile('src/b.ts', 'declare const xs: number[];\n\n\n\nxs.map((n) => n);\n');
       const firstNode = first.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);

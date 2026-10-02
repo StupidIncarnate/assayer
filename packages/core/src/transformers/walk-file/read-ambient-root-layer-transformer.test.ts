@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 import type { Node } from '#gateway/npm/ts-morph';
 
 import { readAmbientRootLayerTransformer } from './read-ambient-root-layer-transformer';
@@ -6,12 +7,12 @@ import { readAmbientRootLayerTransformerProxy } from './read-ambient-root-layer-
 
 // The first Identifier in the source — crafted so it is the root of the access under test.
 const firstIdentifier = ({ source }: { source: string }): Node =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.Identifier);
 
 const firstNumericLiteral = ({ source }: { source: string }): Node =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.NumericLiteral);
 

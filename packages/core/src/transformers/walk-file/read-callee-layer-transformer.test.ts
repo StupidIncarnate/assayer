@@ -1,5 +1,6 @@
 import type { Node} from '#gateway/npm/ts-morph';
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { readCalleeLayerTransformer } from './read-callee-layer-transformer';
 import { readCalleeLayerTransformerProxy } from './read-callee-layer-transformer.proxy';
@@ -8,7 +9,7 @@ import { readCalleeLayerTransformerProxy } from './read-callee-layer-transformer
 // with the standard library and NOTHING else, which is why imports resolve only to their in-file
 // specifier and never to another file.
 const calleeOf = ({ source }: { source: string }): Node =>
-  new Project({ useInMemoryFileSystem: true })
+  new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() })
     .createSourceFile('src/x.ts', source)
     .getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression)
     .getExpression();

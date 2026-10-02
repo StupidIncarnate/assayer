@@ -7,7 +7,8 @@
  *   It carries a hash the other two indexes cannot. `layoutHash` and `tsconfigHash` come from the
  *   resolved index it is handed, and a harness is in NEITHER — it is classified out of the analysed
  *   surface, so a harness-only edit leaves both unmoved. `harnessHash` digests the harness files' own
- *   paths and content, which is precisely what makes editing one rebuild this index.
+ *   paths and content, plus the analysis options of the tsconfig that owns each harness (its value types
+ *   are read under them), which is precisely what makes editing one rebuild this index.
  *
  *   Only KEYS are recorded. What a harness declares is a callback or an instance, which does not
  *   serialize and whose absence is what keeps this index deterministic; the run resolves the values by
@@ -27,7 +28,7 @@
  *   bytes anyway.
  *
  * USAGE:
- * await compileHarnessGraphBroker({ configDir: '/repo', namespace: 'feature-x',
+ * await compileHarnessGraphBroker({ root: '/repo', configDir: '/repo', namespace: 'feature-x',
  *   blobsDir: '/repo/.assayer/cache/blobs', resolvedIndex, files, harnesses });
  * // Writes '/repo/.assayer/cache/harness/feature-x.json' and returns { index, errors }
  */
@@ -36,6 +37,8 @@ import type { CompileHarnessGraphResult } from '../../../contracts/compile-harne
 import { compiledFileBlobContract, harnessIndexContract } from '@assayer/shared/contracts';
 import type { ContentHash, ResolvedIndex } from '@assayer/shared/contracts';
 
+import { analysisOptionsTransformer } from '../../../transformers/analysis-options/analysis-options-transformer';
+import { compilerOptionsKeyTransformer } from '../../../transformers/compiler-options-key/compiler-options-key-transformer';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { harnessValueTypesTransformer } from '../../../transformers/harness-value-types/harness-value-types-transformer';
 import { harnessLoadBroker } from '../../harness/load/harness-load-broker';
@@ -43,12 +46,14 @@ import { harnessKeysTransformer } from '../../../transformers/harness-keys/harne
 import { harnessTargetTransformer } from '../../../transformers/harness-target/harness-target-transformer';
 import { harnessValidateTransformer } from '../../../transformers/harness-validate/harness-validate-transformer';
 import { harnessIndexWriteBroker } from '../../harness-index/write/harness-index-write-broker';
+import { tsconfigOwnerBroker } from '../../tsconfig/owner/tsconfig-owner-broker';
 import { readFile } from '#gateway/node/fs__promises';
 
 const HARNESS_LINE = 1;
 const HARNESS_COLUMN = 1;
 
 export const compileHarnessGraphBroker = async ({
+  root,
   configDir,
   namespace,
   blobsDir,
@@ -56,23 +61,28 @@ export const compileHarnessGraphBroker = async ({
   files,
   harnesses,
 }: {
+  root: string;
   configDir: string;
   namespace: string;
   blobsDir: string;
   resolvedIndex: ResolvedIndex;
-  files: readonly { relPath: string; contentHash: ContentHash }[];
+  files: readonly { relPath: string; contentHash: ContentHash; analysisHash: ContentHash }[];
   harnesses: readonly { relPath: string; content: string }[];
 }): Promise<CompileHarnessGraphResult> => {
-  const ordered = [...harnesses].sort((a, b) => (a.relPath < b.relPath ? -1 : 1));
+  const ordered = [...harnesses]
+    .sort((a, b) => (a.relPath < b.relPath ? -1 : 1))
+    .map((harness) => ({ ...harness, options: tsconfigOwnerBroker({ absPath: `${root}/${harness.relPath}` }).options }));
   const sources = files.map((file) => file.relPath);
 
-  // The harness files' OWN identity, hashed over path + content in path order — the third key, and the
-  // only one a harness-only edit moves.
+  // The harness files' OWN identity, hashed over path + content + owner analysis options in path order — the
+  // third key, and the only one a harness-only edit moves.
   const harnessHash = contentHashTransformer({
     content: ordered
       .map(
         (harness) =>
-          `${harness.relPath}\n${contentHashTransformer({ content: harness.content })}`,
+          `${harness.relPath}\n${contentHashTransformer({ content: harness.content })}\n${compilerOptionsKeyTransformer({
+            options: analysisOptionsTransformer({ options: harness.options }),
+          })}`,
       )
       .join('\n'),
   });
@@ -128,6 +138,7 @@ export const compileHarnessGraphBroker = async ({
           suppliedTypes: harnessValueTypesTransformer({
             source: harness.content,
             fileName: harness.relPath,
+            compilerOptions: harness.options,
           }),
         },
       ],
@@ -139,7 +150,7 @@ export const compileHarnessGraphBroker = async ({
 
   // Only the blobs a harness actually addresses are read back — the validation asks one question of one
   // file, so there is no reason to load the namespace.
-  const hashByRelPath = new Map(files.map((file) => [file.relPath, file.contentHash]));
+  const hashByRelPath = new Map(files.map((file) => [file.relPath, file.analysisHash]));
   const targets = [...new Set(recorded.map((harness) => harness.targetRelPath))];
   const analysed = await Promise.all(
     targets.map(async (target) => {

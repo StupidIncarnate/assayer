@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { moduleGraphProjectionTransformer } from '@assayer/core/module-graph';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'calls-join.ts'), 'utf8');
 const relPath = 'src/happy-path/node-builtin/calls-join/calls-join.ts';
@@ -14,7 +14,7 @@ describe('node-builtin / calls-join — a CALLED value imported from a node buil
   // `@types/node` in the second project — pulls `join`'s `{params,returnType}` signature rather than
   // raising no-usable-types.
   it('VALID: {import { join } from "node:path"; join(a, b)} => one builtin import edge and one reference', () => {
-    const graph = moduleGraphProjectionTransformer({ walked: walkFileTransformer({ source, relPath }) });
+    const graph = moduleGraphProjectionTransformer({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'calls-join.ts') }) });
 
     expect(graph).toStrictEqual({
       edges: [{ kind: 'import', specifier: 'node:path', bindings: [{ kind: 'named', name: 'join' }], line: 1, column: 1 }],
@@ -27,7 +27,7 @@ describe('node-builtin / calls-join — a CALLED value imported from a node buil
   // Calling a builtin import is a CONSUMPTION site, so the module scope is a DRIVEN entry with one
   // branchless happy-path case that arranges nothing (P4).
   it('VALID: {export const full = join(\'a\', \'b\')} => one module entry with one structural happy-path case', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }) });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'calls-join.ts') }) });
 
     expect(analysis.functions).toStrictEqual([
       {

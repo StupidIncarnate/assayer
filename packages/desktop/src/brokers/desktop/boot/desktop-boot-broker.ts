@@ -25,6 +25,7 @@
  */
 import { app, BrowserWindow, Menu, ipcMain } from '#gateway/npm/electron';
 import type { IpcMainInvokeEvent } from '#gateway/npm/electron';
+import { resolveModulePath } from '#gateway/node/module';
 import { join } from '#gateway/node/path';
 import { getEnv, getPlatform } from '#gateway/node/process';
 import { pathToFileURL } from '#gateway/node/url';
@@ -70,10 +71,12 @@ export const desktopBootBroker = async ({
   resolveSavedConsole: (params: { relPath: unknown }) => Promise<string | undefined>;
 }): Promise<void> => {
   const preloadPath = join(__dirname, '../../../../bin/desktop-preload.js');
+  // The built page belongs to `@assayer/app`, a declared dependency, and is found through its
+  // `./page` export from this file. That resolves in this monorepo and in any installed layout alike.
   const rendererUrl =
     getEnv('ASSAYER_DEV') === '1'
       ? 'http://localhost:6273'
-      : pathToFileURL(join(__dirname, '../../../../../../app/dist/index.html')).href;
+      : pathToFileURL(resolveModulePath({ specifier: '@assayer/app/page', fromPath: __filename })).href;
 
   // Every handler ANSWERS with an IpcReply and none of them throws. Electron builds
   // `Error invoking remote method '<channel>': <error>` in the renderer out of a flag it sets only

@@ -4,14 +4,14 @@ import { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-bl
 
 describe('cacheLoadBlobBroker', () => {
   describe('successful load', () => {
-    it('VALID: {repoPath, contentHash} => returns the validated blob', async () => {
+    it('VALID: {repoPath, analysisHash} => returns the validated blob', async () => {
       const proxy = cacheLoadBlobBrokerProxy();
       const blob = CompiledFileBlobStub();
-      proxy.resolves({ repoPath: '/repo', contentHash: 'abc123', blob });
+      proxy.resolves({ repoPath: '/repo', analysisHash: 'abc123', blob });
 
       const result = await cacheLoadBlobBroker({
         repoPath: '/repo',
-        contentHash: 'abc123',
+        analysisHash: 'abc123',
       });
 
       expect(result).toStrictEqual(blob);
@@ -21,12 +21,12 @@ describe('cacheLoadBlobBroker', () => {
   describe('read failure', () => {
     it('ERROR: {blob file missing} => rejects with the underlying error', async () => {
       const proxy = cacheLoadBlobBrokerProxy();
-      proxy.missing({ repoPath: '/repo', contentHash: 'abc123' });
+      proxy.missing({ repoPath: '/repo', analysisHash: 'abc123' });
 
       await expect(
         cacheLoadBlobBroker({
           repoPath: '/repo',
-          contentHash: 'abc123',
+          analysisHash: 'abc123',
         }),
       ).rejects.toThrow(/ENOENT/u);
     });

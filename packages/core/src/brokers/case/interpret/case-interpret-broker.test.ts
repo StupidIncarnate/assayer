@@ -6,6 +6,7 @@ import { caseInterpretBroker } from './case-interpret-broker';
 import { caseInterpretBrokerProxy } from './case-interpret-broker.proxy';
 import { deleteEnv, getEnv, setEnv } from '#gateway/node/process';
 import { HarnessDeclarationStub } from '../../../contracts/harness-declaration/harness-declaration.stub';
+import { EntryAccessStub } from '@assayer/shared/contracts/entry-access/entry-access.stub';
 
 const THEN = CoverageIdStub({ value: 'grade/return@then' });
 const ELSE = CoverageIdStub({ value: 'grade/return@else' });
@@ -24,12 +25,12 @@ const OTHER = CoverageIdStub({ value: 'funnel/other@else' });
 
 describe('caseInterpretBroker', () => {
   describe('judging against the PREDICTED exit', () => {
-    it('VALID: {the entry reaches the predicted exit} => passes, recording the observed exit', () => {
+    it('VALID: {the entry reaches the predicted exit} => passes, recording the observed exit', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'param', param: 'score', value: 6 }] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (score: number) => probe.x(THEN, score),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -48,12 +49,12 @@ describe('caseInterpretBroker', () => {
 
     // The failure the runner exists to catch: the values derivation picked drive the flow somewhere
     // it did not predict. That is a soundness report on the ANALYZER, not a verdict on the code.
-    it('VALID: {the entry reaches a DIFFERENT exit} => fails, recording both exits', () => {
+    it('VALID: {the entry reaches a DIFFERENT exit} => fails, recording both exits', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'param', param: 'score', value: 0 }] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (score: number) => probe.x(ELSE, score),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -74,7 +75,7 @@ describe('caseInterpretBroker', () => {
   describe('composite bindings become one argument each', () => {
     // A nested object arrives whole, exactly as a nested array does — the binding's value IS the
     // structure the entry receives, so the entry can read straight through `config.db.host`.
-    it('VALID: {a nested object binding} => passed positionally with its nesting intact', () => {
+    it('VALID: {a nested object binding} => passed positionally with its nesting intact', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -82,7 +83,7 @@ describe('caseInterpretBroker', () => {
         arrange: [{ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } }],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (config: unknown) => probe.x(THEN, JSON.stringify(config)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -99,7 +100,7 @@ describe('caseInterpretBroker', () => {
       });
     });
 
-    it('VALID: {an object binding beside a scalar} => both arguments in arrange order', () => {
+    it('VALID: {an object binding beside a scalar} => both arguments in arrange order', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -110,7 +111,7 @@ describe('caseInterpretBroker', () => {
         ],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (config: unknown, retries: unknown) => probe.x(THEN, JSON.stringify([config, retries])),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -129,7 +130,7 @@ describe('caseInterpretBroker', () => {
   });
 
   describe('an array binding is one argument, UNLESS it realizes a rest parameter', () => {
-    it('VALID: {an ordinary array param} => the whole array arrives as ONE argument', () => {
+    it('VALID: {an ordinary array param} => the whole array arrives as ONE argument', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -137,7 +138,7 @@ describe('caseInterpretBroker', () => {
         arrange: [{ kind: 'array', param: 'items', value: [6, 9] }],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (items: unknown) => probe.x(THEN, JSON.stringify(items)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -157,7 +158,7 @@ describe('caseInterpretBroker', () => {
     // The case that would have caught A5: reading an ELEMENT of the rest array, not merely its
     // `.length`. Applied as one argument, `ns` would bind to `[[6, 9]]` and `ns[0]` would read an
     // array instead of `6`, so this fails against the bug and passes against the fix.
-    it('VALID: {a rest param, two elements} => the elements SPREAD across the tail positional slots', () => {
+    it('VALID: {a rest param, two elements} => the elements SPREAD across the tail positional slots', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -168,7 +169,7 @@ describe('caseInterpretBroker', () => {
         ],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (size: unknown, ...ns: unknown[]) => probe.x(THEN, `${String(size)}:${String(ns[0])}:${String(ns[1])}`),
         entryName: 'tally',
         exitIds: [THEN, ELSE],
@@ -185,7 +186,7 @@ describe('caseInterpretBroker', () => {
       });
     });
 
-    it('VALID: {a rest param, no elements} => contributes no argument, so the rest binds empty', () => {
+    it('VALID: {a rest param, no elements} => contributes no argument, so the rest binds empty', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -196,7 +197,7 @@ describe('caseInterpretBroker', () => {
         ],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (size: unknown, ...ns: unknown[]) => probe.x(THEN, `${String(size)}:${ns.length}`),
         entryName: 'tally',
         exitIds: [THEN, ELSE],
@@ -215,7 +216,7 @@ describe('caseInterpretBroker', () => {
   });
 
   describe('a harness binding resolves against the loaded declaration', () => {
-    it('VALID: {inputs.grade.report declared} => the registered callback is applied positionally', () => {
+    it('VALID: {inputs.grade.report declared} => the registered callback is applied positionally', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -226,7 +227,7 @@ describe('caseInterpretBroker', () => {
         ],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (score: unknown, report: unknown) => probe.x(THEN, `${String(score)}:${String(report)}`),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -248,7 +249,7 @@ describe('caseInterpretBroker', () => {
     // parameter resolves to an array, and applied as ONE argument it would bind `sinks` to `[[cb]]`
     // instead of `[cb]` — `sinks[0]` would then read an array, not the callback. Fails against the bug,
     // passes against the fix.
-    it('VALID: {inputs.collect.sinks declared, rest: true} => the resolved array SPREADS across the tail slots', () => {
+    it('VALID: {inputs.collect.sinks declared, rest: true} => the resolved array SPREADS across the tail slots', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -259,7 +260,7 @@ describe('caseInterpretBroker', () => {
         ],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (size: unknown, ...sinks: unknown[]) => probe.x(THEN, `${String(size)}:${sinks.length}`),
         entryName: 'collect',
         exitIds: [THEN, ELSE],
@@ -279,7 +280,7 @@ describe('caseInterpretBroker', () => {
 
     // The one outcome that must never be silent. A hole in the argument list would let the entry run on
     // a value nobody supplied, and whatever it then did would be reported as a verdict about the code.
-    it('ERROR: {the key is not declared} => errored, NAMING the key, without calling the entry', () => {
+    it('ERROR: {the key is not declared} => errored, NAMING the key, without calling the entry', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -287,7 +288,7 @@ describe('caseInterpretBroker', () => {
         arrange: [{ kind: 'harness', param: 'report', key: 'inputs.grade.report' }],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (report: unknown) => probe.x(THEN, String(report)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -310,7 +311,7 @@ describe('caseInterpretBroker', () => {
       });
     });
 
-    it('EMPTY: {no harness loaded at all} => errored, naming the key rather than passing undefined', () => {
+    it('EMPTY: {no harness loaded at all} => errored, naming the key rather than passing undefined', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -318,7 +319,7 @@ describe('caseInterpretBroker', () => {
         arrange: [{ kind: 'harness', param: 'report', key: 'inputs.grade.report' }],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (report: unknown) => probe.x(THEN, String(report)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -340,7 +341,7 @@ describe('caseInterpretBroker', () => {
       });
     });
 
-    it('ERROR: {two keys missing} => errored, naming BOTH, so one recompile closes them together', () => {
+    it('ERROR: {two keys missing} => errored, naming BOTH, so one recompile closes them together', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({
@@ -351,7 +352,7 @@ describe('caseInterpretBroker', () => {
         ],
       });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (report: unknown) => probe.x(THEN, String(report)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -377,14 +378,14 @@ describe('caseInterpretBroker', () => {
 
   describe('an env binding is written before the call and restored after', () => {
     // Snapshotted BEFORE the first write, so an absent variable comes back absent rather than ''.
-    it('VALID: {an env binding, no prior value} => visible to the entry, then restored to absent', () => {
+    it('VALID: {an env binding, no prior value} => visible to the entry, then restored to absent', async () => {
       caseInterpretBrokerProxy();
       const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_ABSENT';
       deleteEnv(NAME);
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => probe.x(THEN, getEnv(NAME)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -402,14 +403,14 @@ describe('caseInterpretBroker', () => {
       expect(getEnv(NAME)).toBe(undefined);
     });
 
-    it('VALID: {an env binding, a prior value} => visible to the entry, then restored to the prior value', () => {
+    it('VALID: {an env binding, a prior value} => visible to the entry, then restored to the prior value', async () => {
       caseInterpretBrokerProxy();
       const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_PRIOR';
       setEnv(NAME, 'prior-value');
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => probe.x(THEN, getEnv(NAME)),
         entryName: 'grade',
         exitIds: [THEN, ELSE],
@@ -431,14 +432,14 @@ describe('caseInterpretBroker', () => {
 
     // The case the PURPOSE doc calls out by name: an unrestored variable would poison every case that
     // runs after this one, and a throw must not skip the restore in `finally`.
-    it('ERROR: {the entry throws with an env binding set} => still restored to the prior value', () => {
+    it('ERROR: {the entry throws with an env binding set} => still restored to the prior value', async () => {
       caseInterpretBrokerProxy();
       const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_THROW';
       setEnv(NAME, 'prior-value');
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME, value: '6' }] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => {
           throw new Error('boom');
         },
@@ -465,12 +466,12 @@ describe('caseInterpretBroker', () => {
   describe("exits that are not the entry's own", () => {
     // The bug this guards: a callback the entry invoked fires its own exit probe AFTER the entry's,
     // so "the last exit event" would judge the entry by code it merely scheduled.
-    it("EDGE: {a callback exits after the entry} => judged on the ENTRY's exit, not the last one", () => {
+    it("EDGE: {a callback exits after the entry} => judged on the ENTRY's exit, not the last one", async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => {
           probe.x(THEN, 'entry');
           probe.x(CALLBACK_EXIT, 'callback');
@@ -498,12 +499,12 @@ describe('caseInterpretBroker', () => {
     // `return a && b && c` on (true, true, false) fires an exit probe per operand, so the observed trace
     // is three events and the analyzer predicts only the last. Exact equality would fail 3-vs-1; the
     // contiguous suffix passes because the predicted id is the last observed one.
-    it('VALID: {a short-circuit chain fires an exit per operand} => passes on the predicted suffix', () => {
+    it('VALID: {a short-circuit chain fires an exit per operand} => passes on the predicted suffix', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [AND_ALL_THEN], arrange: [] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => {
           probe.x(AND_A_ELSE, false);
           probe.x(AND_B_ELSE, false);
@@ -530,12 +531,12 @@ describe('caseInterpretBroker', () => {
 
     // A funnel case predicts a two-event path; here it is the WHOLE observed trace, so the suffix is the
     // whole path and it matches cleanly.
-    it('VALID: {a funnel case predicts [inner, surface]} => passes on the whole observed path', () => {
+    it('VALID: {a funnel case predicts [inner, surface]} => passes on the whole observed path', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [INNER, SURFACE], arrange: [] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => {
           probe.x(INNER, 'inner');
           probe.x(SURFACE, 'surface');
@@ -560,12 +561,12 @@ describe('caseInterpretBroker', () => {
 
     // The suffix is anchored end-to-front: the last observed id lines up but the second-to-last predicted
     // id does not, so the case still fails. A wrong funnel prediction is not rescued by a matching final id.
-    it('VALID: {a funnel prediction whose non-final id is wrong} => fails, the suffix not lining up', () => {
+    it('VALID: {a funnel prediction whose non-final id is wrong} => fails, the suffix not lining up', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [OTHER, SURFACE], arrange: [] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => {
           probe.x(INNER, 'inner');
           probe.x(SURFACE, 'surface');
@@ -595,12 +596,12 @@ describe('caseInterpretBroker', () => {
   // value the code cannot use reads exactly like a mispredicted arm, and the reader is sent to the
   // analyzer instead of to the arrange.
   describe('flows that never reach an exit', () => {
-    it('ERROR: {the entry throws} => errored with the message and the trace it got to', () => {
+    it('ERROR: {the entry throws} => errored with the message and the trace it got to', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => {
           throw new Error('boom');
         },
@@ -620,12 +621,12 @@ describe('caseInterpretBroker', () => {
       });
     });
 
-    it('EDGE: {the entry exits nowhere} => errored naming the entry rather than silently passing', () => {
+    it('EDGE: {the entry exits nowhere} => errored naming the entry rather than silently passing', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: () => undefined,
         entryName: 'grade',
         exitIds: [THEN],
@@ -643,12 +644,12 @@ describe('caseInterpretBroker', () => {
       });
     });
 
-    it('EDGE: {the export is missing} => errored naming it, rather than crashing the whole file', () => {
+    it('EDGE: {the export is missing} => errored naming it, rather than crashing the whole file', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
 
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: undefined,
         entryName: 'grade',
         exitIds: [THEN],
@@ -663,6 +664,65 @@ describe('caseInterpretBroker', () => {
         observedPath: [],
         trace: [],
         message: "entry 'grade' is not an exported function — nothing to drive",
+      });
+    });
+  });
+
+  // In an ESM run, loading a module again is an import promise, and the module body runs only once it
+  // settles. A module entry's load is awaited inside the arranged environment; any other entry's result
+  // is not awaited.
+  describe('an entry whose load settles later', () => {
+    it('VALID: {access module} => awaits the load, so the body reads the arranged environment and its exit is observed', async () => {
+      caseInterpretBrokerProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: 'PE3_LEVEL', value: '7' }] });
+
+      const result = await caseInterpretBroker({
+        entry: async () => {
+          await Promise.resolve();
+          return probe.x(THEN, Number(getEnv('PE3_LEVEL')));
+        },
+        entryName: '*module*',
+        access: EntryAccessStub({ kind: 'module' }),
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: '*module*',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '7' }],
+      });
+      expect(getEnv('PE3_LEVEL')).toBe(undefined);
+    });
+
+    it('VALID: {access named, the entry is async} => does not await it, so an exit after an await is not observed', async () => {
+      caseInterpretBrokerProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
+
+      const result = await caseInterpretBroker({
+        entry: async () => {
+          await Promise.resolve();
+          return probe.x(THEN, 1);
+        },
+        entryName: 'grade',
+        access: EntryAccessStub({ kind: 'named' }),
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'errored',
+        observedPath: [],
+        trace: [],
+        message: "reached no exit in 'grade'",
       });
     });
   });

@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { readConditionalExitLayerTransformer } from './read-conditional-exit-layer-transformer';
@@ -26,7 +27,7 @@ describe('readConditionalExitLayerTransformer', () => {
   describe('the sentinel for a non-ternary', () => {
     it('VALID: {a plain string return} => not conditional, so the caller keeps its single exit', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  return "small";\n}\n');
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -46,7 +47,7 @@ describe('readConditionalExitLayerTransformer', () => {
   describe('the split it emits for a basic ternary', () => {
     it('VALID: {`return value > 5 ? a : b`} => one ternary branch keyed on the condition projection', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', BASIC_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -71,7 +72,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return value > 5 ? a : b`} => one return exit per arm, guarded then/else', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', BASIC_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -95,7 +96,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return value > 5 ? a : b`} => a cond probe on the condition and an exit probe on each arm', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', BASIC_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -110,7 +111,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return value > 5 ? a : b`} => the ConditionalExpression walk node is marked handled', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', BASIC_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -123,7 +124,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return value > 5 ? a : b`} => descends the condition unguarded and each arm under its own step', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', BASIC_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -146,7 +147,7 @@ describe('readConditionalExitLayerTransformer', () => {
   describe('the recursion for a nested ternary in the else arm', () => {
     it('VALID: {`value >= 90 ? a : value >= 80 ? b : c`} => two branches, one per condition', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', NESTED_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -157,7 +158,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`value >= 90 ? a : value >= 80 ? b : c`} => three exits, one per leaf arm, guards accumulating', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', NESTED_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -174,7 +175,7 @@ describe('readConditionalExitLayerTransformer', () => {
   describe('seeing through parentheses', () => {
     it('VALID: {`return (value > 5 ? a : b)`} => keys identically to the unparenthesized form', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function classify(value: number) {\n  return (value > 5 ? "big" : "small");\n}\n',
@@ -190,7 +191,7 @@ describe('readConditionalExitLayerTransformer', () => {
   describe('the exit kind follows the caller', () => {
     it('VALID: {`throw value > 5 ? a : b`} => both arm exits are throws, not returns', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function classify(value: number) {\n  throw value > 5 ? new Error("a") : new Error("b");\n}\n',
@@ -219,7 +220,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a || b || "d"`} => one ternary branch per controlling operand', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OR_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -233,7 +234,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a || b || "d"`} => three exits, then-arm short-circuits, else continues', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OR_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -260,7 +261,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a || b || "d"`} => an exit probe per operand and no cond probe', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OR_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -271,7 +272,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a || b || "d"`} => no walk node for the `||` node, operands descend', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OR_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -301,7 +302,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a && b && c`} => three exits, else-arm short-circuits, then continues', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', AND_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -342,7 +343,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a ?? b`} => the controlling operand is a `non-nullish` leaf, not truthy', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', NULLISH_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -367,7 +368,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a ?? b`} => two exits, then-arm short-circuits to `a`, else falls through to `b`', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', NULLISH_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -381,7 +382,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return a ?? b ?? c`} => the left-associative spine flattens to three exits', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function pick3(a: string | null, b: string | null, c: string) {\n  return a ?? b ?? c;\n}\n',
@@ -423,7 +424,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it("VALID: {`return s?.length`} => a ternary branch on the receiver's non-nullishness", () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OPT_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -448,7 +449,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return s?.length`} => two exits, then for the member access, else for the nullish short-circuit', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OPT_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -462,7 +463,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return s?.length`} => ONE optional probe site carrying both exit ids over the whole access', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OPT_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -481,7 +482,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return s?.length`} => no walk node, only the receiver descends', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', OPT_SOURCE);
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -495,7 +496,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return obj.field?.length`} => a computed receiver is NOT split, the single-exit sentinel stands', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function len(obj: { field: string | null }) {\n  return obj.field?.length;\n}\n',
@@ -509,7 +510,7 @@ describe('readConditionalExitLayerTransformer', () => {
 
     it('VALID: {`return s.length`} => a plain (non-optional) property access is never split', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function len(s: string) {\n  return s.length;\n}\n');
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -522,7 +523,7 @@ describe('readConditionalExitLayerTransformer', () => {
   describe('the sentinel for a non-short-circuit binary', () => {
     it('VALID: {`return a + b`} => not conditional, so an arithmetic binary is never split', () => {
       readConditionalExitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
         'function add(a: number, b: number) {\n  return a + b;\n}\n',

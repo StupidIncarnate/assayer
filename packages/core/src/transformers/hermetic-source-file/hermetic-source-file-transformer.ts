@@ -29,6 +29,8 @@
 import { Project } from '#gateway/npm/ts-morph';
 import type { CompilerOptions, SourceFile } from '#gateway/npm/ts-morph';
 
+import { compilerOptionsKeyTransformer } from '../compiler-options-key/compiler-options-key-transformer';
+
 const projectByOptions = new Map<string, Project>();
 
 export const hermeticSourceFileTransformer = <T>({
@@ -42,12 +44,8 @@ export const hermeticSourceFileTransformer = <T>({
   source: string;
   read: (params: { sourceFile: SourceFile }) => T;
 }): T => {
-  // Sorted, so two spellings of one option set share one project and two different sets never do.
-  const key = JSON.stringify(
-    Object.keys(compilerOptions)
-      .sort()
-      .map((name) => [name, compilerOptions[name]]),
-  );
+  // Two spellings of one option set share one project, and two different sets never do.
+  const key = compilerOptionsKeyTransformer({ options: compilerOptions });
   const cached = projectByOptions.get(key);
   const shared = cached ?? new Project({ useInMemoryFileSystem: true, compilerOptions });
 

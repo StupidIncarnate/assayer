@@ -54,22 +54,27 @@
  *   reader who sees `errored` looks at the arrange that was handed in. Reporting a thrown case as
  *   `failed` sends them to the wrong one.
  *
+ *   `access` is the entry's access. For a `module` entry the interpreter awaits what the entry returns,
+ *   because in an ESM run re-loading a module is asynchronous, and the environment must stay arranged
+ *   until the module body has run.
+ *
  * USAGE:
- * caseInterpretBroker({ entry, entryName, exitIds, testCase, probe, harness });
+ * await caseInterpretBroker({ entry, entryName, access, exitIds, testCase, probe, harness });
  * // Returns { entryName, testCase, status: 'passed', observedPath, trace }
  */
 import { deleteEnv, getEnv, setEnv } from '#gateway/node/process';
 
 import { caseResultContract } from '@assayer/shared/contracts';
-import type { CaseResult, DerivedTestCase, Coverage } from '@assayer/shared/contracts';
+import type { CaseResult, DerivedTestCase, Coverage, EntryAccess } from '@assayer/shared/contracts';
 
 import type { HarnessDeclaration } from '../../../contracts/harness-declaration/harness-declaration-contract';
 import type { ProbeRuntime } from '../../../contracts/probe-runtime/probe-runtime-contract';
 import { harnessValueTransformer } from '../../../transformers/harness-value/harness-value-transformer';
 
-export const caseInterpretBroker = ({
+export const caseInterpretBroker = async ({
   entry,
   entryName,
+  access,
   exitIds,
   testCase,
   probe,
@@ -77,11 +82,12 @@ export const caseInterpretBroker = ({
 }: {
   entry: unknown;
   entryName: string;
+  access?: EntryAccess;
   exitIds: Coverage['id'][];
   testCase: DerivedTestCase;
   probe: ProbeRuntime;
   harness?: readonly HarnessDeclaration[] | undefined;
-}): CaseResult => {
+}): Promise<CaseResult> => {
   probe.reset();
 
   if (typeof entry !== 'function') {
@@ -163,7 +169,15 @@ export const caseInterpretBroker = ({
       setEnv(binding.name, binding.value);
     }
 
-    Reflect.apply(entry, undefined, args);
+    const applied: unknown = Reflect.apply(entry, undefined, args);
+
+    // A module entry is the thunk that loads the module again. In an ESM run that load is an import
+    // promise, and the module body runs only once it settles, so it is awaited here, inside the
+    // environment the case arranged. Any other entry's result is never awaited: an async function's
+    // later work is not part of the exit the case predicts.
+    if (access?.kind === 'module') {
+      await applied;
+    }
   } catch (error) {
     return caseResultContract.parse({
       entryName,

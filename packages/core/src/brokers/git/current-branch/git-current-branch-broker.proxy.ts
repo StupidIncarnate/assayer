@@ -1,5 +1,4 @@
 import { gitRunProxy } from '#gateway/bin/git/git-run/git-run.proxy';
-import { GitNotInstalledErrorProxy } from '#gateway/bin/git/git-run/git-not-installed.error.proxy';
 import { resolveRefProxy } from '#gateway/bin/git/resolve-ref/resolve-ref.proxy';
 
 const BRANCH_ARGS = ['rev-parse', '--abbrev-ref', 'HEAD'];
@@ -12,7 +11,6 @@ export const gitCurrentBranchBrokerProxy = (): {
 } => {
   const gitProxy = gitRunProxy();
   const shortShaProxy = resolveRefProxy();
-  GitNotInstalledErrorProxy();
 
   return {
     onBranch: ({ name }: { name: string }): void => {

@@ -3,7 +3,7 @@ import { join, resolve } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
 import { stubRealizeBroker } from '@assayer/core/stub-realize';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'property-depth.ts'), 'utf8');
 const relPath = 'src/happy-path/object/property-depth/property-depth.ts';
@@ -17,7 +17,7 @@ describe('object / property-depth — `config.db.retry`, a property path more th
   // carries, just longer. Arranging an object param's property, at any depth, is a consume-time step, so
   // the per-file blob still derives no case and the branch is still admitted undriven here.
   it('VALID: {if (config.db.retry === 3)} => the leaf records the full two-segment path and the root type-ref', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'property-depth.ts') }), relPath });
 
     expect(analysis.functions).toStrictEqual([
       {
@@ -100,7 +100,7 @@ describe('object / property-depth — `config.db.retry`, a property path more th
   // per-file walk carried is dropped, and no dark spot or lint is owed, so running this file comes out
   // clean (happy-path). Values are INPUTS (derived demands), not outputs.
   it('VALID: {stub-realize over the object param} => both arms driven, db built as a real nested object, undriven cleared', () => {
-    const walked = walkFileTransformer({ source, relPath });
+    const walked = walkFileTransformer({ source, relPath, absPath: join(__dirname, 'property-depth.ts') });
     const analysis = stubRealizeBroker({ analysis: analyzeFileBroker({ walked, relPath }), walked, root, relPath, overlays: [] });
 
     expect({

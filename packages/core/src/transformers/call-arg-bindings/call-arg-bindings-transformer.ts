@@ -31,13 +31,13 @@ export const callArgBindingsTransformer = ({
   toCallerParam: new Map(
     calleeParams.flatMap((param, index) => {
       const arg = args[index];
-      return arg !== undefined && arg.kind === 'param-ref' ? [[param.name, arg.paramName] as const] : [];
+      return arg?.kind === 'param-ref' ? [[param.name, arg.paramName] as const] : [];
     }),
   ),
   weldByParam: new Map(
     calleeParams.flatMap((param, index) => {
       const arg = args[index];
-      return arg !== undefined && arg.kind === 'literal' ? [[param.name, arg.value] as const] : [];
+      return arg?.kind === 'literal' ? [[param.name, arg.value] as const] : [];
     }),
   ),
 });

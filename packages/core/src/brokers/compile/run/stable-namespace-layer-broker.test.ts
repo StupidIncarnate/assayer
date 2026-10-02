@@ -1,4 +1,5 @@
 import { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
+import { analysisHashTransformer } from '../../../transformers/analysis-hash/analysis-hash-transformer';
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 
 import { stableNamespaceLayerBroker } from './stable-namespace-layer-broker';
@@ -29,6 +30,7 @@ describe('stableNamespaceLayerBroker', () => {
             {
               relPath: 'packages/shared/src/index.ts',
               contentHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+              analysisHash: '278cd2eb8a5ff504fe51a1eb6395e1924a27562a34e02778fda65c0645eea29e',
             },
           ],
         },
@@ -48,6 +50,7 @@ describe('stableNamespaceLayerBroker', () => {
       proxy.changed({
         ref: 'master',
         sha,
+        root: '/repo',
         blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
         blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],
@@ -65,7 +68,7 @@ describe('stableNamespaceLayerBroker', () => {
         manifestNamespace: {
           branch: 'master',
           commit: sha,
-          files: [{ relPath: 'src/stable.ts', contentHash: hash }],
+          files: [{ relPath: 'src/stable.ts', contentHash: hash, analysisHash: analysisHashTransformer({ content, options: {} }) }],
         },
         harnesses: [],
         errors: [],
@@ -82,6 +85,7 @@ describe('stableNamespaceLayerBroker', () => {
       proxy.changed({
         ref: 'master',
         sha,
+        root: '/repo',
         blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
         blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],
@@ -101,7 +105,7 @@ describe('stableNamespaceLayerBroker', () => {
         manifestNamespace: {
           branch: 'master',
           commit: sha,
-          files: [{ relPath: 'src/stable.ts', contentHash: hash }],
+          files: [{ relPath: 'src/stable.ts', contentHash: hash, analysisHash: analysisHashTransformer({ content, options: {} }) }],
         },
         harnesses: [],
         errors: [],
@@ -116,6 +120,7 @@ describe('stableNamespaceLayerBroker', () => {
       const hash = contentHashTransformer({ content });
       proxy.changedCommitUnresolvable({
         ref: 'master',
+        root: '/repo',
         blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
         blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],
@@ -130,7 +135,7 @@ describe('stableNamespaceLayerBroker', () => {
 
       expect(result).toStrictEqual({
         resultEntry: { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
-        manifestNamespace: { branch: 'master', files: [{ relPath: 'src/stable.ts', contentHash: hash }] },
+        manifestNamespace: { branch: 'master', files: [{ relPath: 'src/stable.ts', contentHash: hash, analysisHash: analysisHashTransformer({ content, options: {} }) }] },
         harnesses: [],
         errors: [],
       });
@@ -144,6 +149,7 @@ describe('stableNamespaceLayerBroker', () => {
       proxy.changed({
         ref: 'master',
         sha,
+        root: '/repo',
         blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/broken.ts\n`,
         blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'const x = ;;;{{{' }],
@@ -174,6 +180,7 @@ describe('stableNamespaceLayerBroker', () => {
       proxy.changed({
         ref: 'master',
         sha,
+        root: '/repo',
         blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout:
           '100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/skip.ts\n' +
@@ -194,7 +201,7 @@ describe('stableNamespaceLayerBroker', () => {
         manifestNamespace: {
           branch: 'master',
           commit: sha,
-          files: [{ relPath: 'src/keep.ts', contentHash: keepHash }],
+          files: [{ relPath: 'src/keep.ts', contentHash: keepHash, analysisHash: analysisHashTransformer({ content: keepContent, options: {} }) }],
         },
         harnesses: [],
         errors: [],
@@ -210,6 +217,7 @@ describe('stableNamespaceLayerBroker', () => {
       proxy.changed({
         ref: 'master',
         sha,
+        root: '/repo',
         blobsDir: '/repo/.assayer/cache/blobs',
         lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/stable.ts\n`,
         blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content }],

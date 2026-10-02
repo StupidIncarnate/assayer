@@ -166,7 +166,7 @@ describe('RunReportLayerResponder', () => {
       // Real instrumented code `(items) => items.map(...)`. Arranging a STRING makes `.map` throw
       // inside the instrumented call before any exit fires: the interpreter reports the throw and
       // could not report a pass if it wanted to.
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (items: number[]) => probe.x(MAP_EXIT, items.map((n) => n + 1)),
         entryName: 'mapEach',
         exitIds: [MAP_EXIT],
@@ -213,7 +213,7 @@ describe('RunReportLayerResponder', () => {
       });
       // The arrange drives the flow to the ELSE exit, but the case PREDICTED the THEN exit: the
       // observed path's suffix does not equal the predicted path, so the interpreter fails it.
-      const result = caseInterpretBroker({
+      const result = await caseInterpretBroker({
         entry: (score: number) => probe.x(CLASSIFY_ELSE, score),
         entryName: 'classify',
         exitIds: [CLASSIFY_THEN, CLASSIFY_ELSE],

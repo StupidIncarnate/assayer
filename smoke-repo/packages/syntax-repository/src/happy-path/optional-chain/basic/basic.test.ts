@@ -19,7 +19,7 @@ const OPTIONAL_NUMBER = { kind: 'union', members: [{ kind: 'unknown', text: 'und
 
 describe('optional-chain / basic — a single-level `a?.b` in a block return', () => {
   it("VALID: {block `return s?.length`} => a ternary branch on the receiver's non-nullishness, one exit per path", () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/optional-chain/basic/basic.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/optional-chain/basic/basic.ts', absPath: join(__dirname, 'basic.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

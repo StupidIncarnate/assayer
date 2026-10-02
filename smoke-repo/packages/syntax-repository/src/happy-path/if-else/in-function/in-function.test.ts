@@ -9,7 +9,7 @@ const BRANCH = '*module*/classify/if:BinaryExpression,id:value,GreaterThanToken,
 
 describe('if-else / in-function — if/else inside an exported function', () => {
   it('VALID: {exported function with if/else} => one entry, one gt branch, then/else exits', () => {
-    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/if-else/in-function/in-function.ts' });
+    const result = analyzeExtractBroker({ source, relPath: 'src/happy-path/if-else/in-function/in-function.ts', absPath: join(__dirname, 'in-function.ts') });
     expect(result).toStrictEqual({
       success: true,
       functions: [

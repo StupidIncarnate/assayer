@@ -16,7 +16,12 @@
       "require": "./dist/src/brokers/brokers.js"
     }
   },
+  "files": [
+    "dist",
+    "!dist/package.json"
+  ],
   "scripts": {
+    "prepack": "node ../../scripts/build-workspaces.mjs --tsc-only",
     "build": "tsc -p tsconfig.build.json",
     "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
     "start": "electron dist/bin/desktop-main.js",
@@ -27,6 +32,7 @@
     "ward": "dungeonmaster-ward"
   },
   "dependencies": {
+    "@assayer/app": "*",
     "@assayer/core": "*",
     "@assayer/node": "*",
     "@assayer/npm": "*",

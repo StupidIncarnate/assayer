@@ -27,7 +27,7 @@
  *   specifier, or a cycle. The caller leaves the reference exactly as the walk read it.
  *
  * USAGE:
- * resolveTypeRefLayerBroker({ reference, walked, relPath: 'src/reader.ts', root: '/repo', options, seen: new Set() });
+ * resolveTypeRefLayerBroker({ reference, walked, relPath: 'src/reader.ts', root: '/repo', seen: new Set() });
  * // Returns { kind: 'object', typeName: 'Config', properties: [...] } or undefined
  */
 import { typeDescriptorContract } from '@assayer/shared/contracts';
@@ -44,14 +44,12 @@ export const resolveTypeRefLayerBroker = ({
   walked,
   relPath,
   root,
-  options,
   seen,
 }: {
   reference: TypeDescriptor;
   walked: WalkFileResult;
   relPath: string;
   root: string;
-  options: Parameters<typeof resolveSiblingCalleeBroker>[0]['options'];
   seen: ReadonlySet<string>;
 }): TypeDescriptor | undefined => {
   // Only an OPAQUE descriptor carries a reference; anything already enumerated needs no resolving.
@@ -75,7 +73,7 @@ export const resolveTypeRefLayerBroker = ({
   // definer never saw. An argument nothing resolves stays exactly as read, and is refused honestly.
   const resolvedArgs = (typeArgs ?? []).map(
     (argument) =>
-      resolveTypeRefLayerBroker({ reference: argument, walked, relPath, root, options, seen: visited }) ?? argument,
+      resolveTypeRefLayerBroker({ reference: argument, walked, relPath, root, seen: visited }) ?? argument,
   );
   // A NAMESPACE-qualified reference (`T.Leaf`) names a module, not a local declaration. Its root is the
   // local binding an `import * as T` made, and only the member after it is the type to ask for.
@@ -90,7 +88,7 @@ export const resolveTypeRefLayerBroker = ({
     // REQUIRED property is still refused rather than silently completed.
     const nested = new Map(
       collectTypeRefsTransformer({ type: declared.type }).flatMap((inner) => {
-        const resolved = resolveTypeRefLayerBroker({ reference: inner, walked, relPath, root, options, seen: visited });
+        const resolved = resolveTypeRefLayerBroker({ reference: inner, walked, relPath, root, seen: visited });
 
         return resolved === undefined ? [] : [[String(typeRefKeyTransformer({ type: inner })), resolved] as const];
       }),
@@ -143,7 +141,6 @@ export const resolveTypeRefLayerBroker = ({
       specifier: forward.specifier,
       containingFile: `${root}/${relPath}`,
       root,
-      options,
     });
 
     if (sibling === undefined) {
@@ -165,7 +162,6 @@ export const resolveTypeRefLayerBroker = ({
       walked: sibling.walked,
       relPath: sibling.relPath,
       root,
-      options,
       seen: visited,
     });
 

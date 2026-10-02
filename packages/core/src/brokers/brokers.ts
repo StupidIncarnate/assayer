@@ -38,6 +38,8 @@ export * from './run/find/run-find-broker';
 export * from './run/console-save/run-console-save-broker';
 export * from './run/console-find/run-console-find-broker';
 
+export * from './file/walk/file-walk-broker';
+
 export * from './param-type/resolve/param-type-resolve-broker';
 
 export * from './compose/cross-file-predicates/compose-cross-file-predicates-broker';

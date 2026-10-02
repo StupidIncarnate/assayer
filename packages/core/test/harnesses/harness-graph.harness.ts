@@ -31,7 +31,7 @@ import { compiledFileBlobContract, fileAnalysisContract, harnessIndexContract } 
 import type { ContentHash, FileAnalysis, HarnessIndex } from '@assayer/shared/contracts';
 
 import { contentHashTransformer } from '../../src/transformers/content-hash/content-hash-transformer';
-import { walkFileTransformer } from '../../src/transformers/walk-file/walk-file-transformer';
+import { fileWalkBroker } from '../../src/brokers/file/walk/file-walk-broker';
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileHarnessGraphBroker } from '../../src/brokers/compile/harness-graph/compile-harness-graph-broker';
@@ -104,18 +104,22 @@ export const harnessGraphHarness = (): {
     errorMessages: string[];
     blob: 'compiled' | 'reused';
     contentHash: ContentHash;
+    analysisHash: ContentHash;
   }> => {
     const {dir} = params;
     writeFileSync(join(dir, HARNESS_REL), params.harness);
 
     const blobsDir = blobsDirOf({ dir: params.dir });
-    const processed = await compileProcessFileBroker({ relPath: SOURCE_REL, content: params.source, blobsDir });
+    const processed = await compileProcessFileBroker({ root: dir, relPath: SOURCE_REL, content: params.source, blobsDir });
     const contentHash = contentHashTransformer({ content: params.source });
+    // A source that fails to parse names no blob; the stitch below then reads none.
+    const analysisHash = 'analysisHash' in processed ? processed.analysisHash : contentHash;
 
-    const files = [{ relPath: SOURCE_REL, contentHash }];
+    const files = [{ relPath: SOURCE_REL, contentHash, analysisHash }];
     const resolved = await compileResolveGraphBroker({ root: dir, blobsDir, files });
 
     const result = await compileHarnessGraphBroker({
+      root: dir,
       configDir: dir,
       namespace: NAMESPACE,
       blobsDir,
@@ -133,6 +137,7 @@ export const harnessGraphHarness = (): {
       errorMessages: result.errors.map((error) => error.message),
       blob: processed.reused ? 'reused' : 'compiled',
       contentHash,
+      analysisHash,
     };
   };
 
@@ -143,17 +148,18 @@ export const harnessGraphHarness = (): {
   // axis the overlay needs is available without deriving a competing analysis to read from.
   const consume = ({
     dir,
-    contentHash,
+    analysisHash,
   }: {
     dir: string;
-    contentHash: ContentHash;
+    analysisHash: ContentHash;
   }): FileAnalysis => {
     const blob = compiledFileBlobContract.parse(
-      JSON.parse(readFileSync(join(blobsDirOf({ dir }), `${contentHash}.json`))),
+      JSON.parse(readFileSync(join(blobsDirOf({ dir }), `${analysisHash}.json`))),
     );
-    const walked = walkFileTransformer({
+    const walked = fileWalkBroker({
       source: readFileSync(join(dir, SOURCE_REL)),
       relPath: SOURCE_REL,
+      absPath: join(dir, SOURCE_REL),
     });
 
     return harnessRealizeBroker({
@@ -210,9 +216,9 @@ export const harnessGraphHarness = (): {
     }> => {
       const dir = seed({ source });
       const firstPass = await stitch({ dir, source, harness: first });
-      const firstAnalysis = consume({ dir, contentHash: firstPass.contentHash });
+      const firstAnalysis = consume({ dir, analysisHash: firstPass.analysisHash });
       const secondPass = await stitch({ dir, source, harness: second });
-      const secondAnalysis = consume({ dir, contentHash: secondPass.contentHash });
+      const secondAnalysis = consume({ dir, analysisHash: secondPass.analysisHash });
 
       return {
         first: {

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { analyzeFileBroker } from '@assayer/core/analyze-file';
-import { walkFileTransformer } from '@assayer/core/walk-file';
+import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 
 const source = readFileSync(join(__dirname, 'truthy-object-param.ts'), 'utf8');
 const relPath = 'src/sad-path/input-gap/truthy-object-param/truthy-object-param.ts';
@@ -30,7 +30,7 @@ describe('input-gap / truthy-object-param — a bare truthy read of an OBJECT pa
   // and the falsy arm — no constructed object is ever falsy — is a nameable refusal, `is-falsy-arm`'s
   // param-level call site. Only the falsy arm's bucket is refused; the truthy arm still derives.
   it('VALID: {if (settings)} => the truthy arm derives a real case, arranging the built object', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'truthy-object-param.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [THEN], arrange: [{ kind: 'object', param: 'settings', value: { mode: 'abc123' } }], salient: true },
@@ -41,13 +41,13 @@ describe('input-gap / truthy-object-param — a bare truthy read of an OBJECT pa
   // the truthy arm gets — the exact collision that would otherwise make the else case predict an exit
   // it cannot reach. The refusal is invoiced as a GAP, naming `settings: Settings`.
   it('VALID: {if (settings)} => the falsy arm is refused and invoiced as a GAP naming `settings`', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'truthy-object-param.ts') }), relPath });
 
     expect(analysis.gaps).toStrictEqual([{ name: 'readSettings', reason: GAP_REASON }]);
   });
 
   it('VALID: {a truthy object param} => the gap rides no other channel: no dark spot, no undriven, no lint', () => {
-    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath }), relPath });
+    const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'truthy-object-param.ts') }), relPath });
 
     expect({ darkSpots: analysis.darkSpots, undriven: analysis.undriven, lints: analysis.lints }).toStrictEqual({
       darkSpots: [],

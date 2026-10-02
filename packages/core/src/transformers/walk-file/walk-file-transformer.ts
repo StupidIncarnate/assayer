@@ -12,25 +12,36 @@
  *   for every walk in the process. The walk's program still holds only this file plus lib, and the
  *   result is fully built as plain data before that call removes the file again.
  *
+ *   `compilerOptions` are the options of the tsconfig that owns the file (`tsconfigOwnerBroker`). The walk
+ *   keeps only the options that change a type it reads, through `analysisOptionsTransformer`, so the file
+ *   is analysed against its own `lib`, `target` and strict flags. Without them it reads TypeScript's
+ *   defaults, which is what a file no tsconfig owns gets. A caller with the file on disk walks through
+ *   `fileWalkBroker`, which looks the owner up.
+ *
  * USAGE:
- * walkFileTransformer({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts' });
+ * walkFileTransformer({ source: 'export function f(n: string) { return n; }', relPath: 'src/f.ts', compilerOptions: { target: 9 } });
  * // Returns a validated WalkFileResult: { success: true, scopes: [...], nodes: [...] }
  */
 import { walkContextContract } from '../../contracts/walk-context/walk-context-contract';
 import { walkFileResultContract } from '../../contracts/walk-file-result/walk-file-result-contract';
 import type { WalkFileResult } from '../../contracts/walk-file-result/walk-file-result-contract';
+import type { CompilerOptions } from '#gateway/npm/typescript';
+
+import { analysisOptionsTransformer } from '../analysis-options/analysis-options-transformer';
 import { hermeticSourceFileTransformer } from '../hermetic-source-file/hermetic-source-file-transformer';
 import { walkNodeLayerTransformer } from './walk-node-layer-transformer';
 
 export const walkFileTransformer = ({
   source,
   relPath,
+  compilerOptions = {},
 }: {
   source: string;
   relPath: string;
+  compilerOptions?: CompilerOptions;
 }): WalkFileResult =>
   hermeticSourceFileTransformer({
-    compilerOptions: { strictNullChecks: true },
+    compilerOptions: analysisOptionsTransformer({ options: compilerOptions }),
     relPath,
     source,
     read: ({ sourceFile }) => {

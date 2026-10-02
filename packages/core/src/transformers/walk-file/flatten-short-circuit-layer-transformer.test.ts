@@ -1,4 +1,5 @@
 import { Project, SyntaxKind } from '#gateway/npm/ts-morph';
+import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
 import { flattenShortCircuitLayerTransformer } from './flatten-short-circuit-layer-transformer';
 import { flattenShortCircuitLayerTransformerProxy } from './flatten-short-circuit-layer-transformer.proxy';
@@ -7,7 +8,7 @@ describe('flattenShortCircuitLayerTransformer', () => {
   describe('a same-operator spine', () => {
     it('VALID: {`a || b || c`} => three operands in source order', () => {
       flattenShortCircuitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function f() {\n  return a || b || c;\n}\n');
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -18,7 +19,7 @@ describe('flattenShortCircuitLayerTransformer', () => {
 
     it('VALID: {`a && b && c && d`} => four operands in source order', () => {
       flattenShortCircuitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function f() {\n  return a && b && c && d;\n}\n');
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -31,7 +32,7 @@ describe('flattenShortCircuitLayerTransformer', () => {
   describe('parentheses on the spine are formatting', () => {
     it('VALID: {`(a || b) || c`} => flattens identically to `a || b || c`', () => {
       flattenShortCircuitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function f() {\n  return (a || b) || c;\n}\n');
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 
@@ -44,7 +45,7 @@ describe('flattenShortCircuitLayerTransformer', () => {
   describe('a different operator ends the spine', () => {
     it('VALID: {`a || b && c`} => the tighter `&&` stays one operand', () => {
       flattenShortCircuitLayerTransformerProxy();
-      const project = new Project({ useInMemoryFileSystem: true });
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'function f() {\n  return a || b && c;\n}\n');
       const expression = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ReturnStatement).getExpressionOrThrow();
 

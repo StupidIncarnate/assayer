@@ -1,13 +1,14 @@
 /**
- * PURPOSE: Drives the compile pipeline end-to-end through the REAL built assayer CLI
- *   (packages/cli/dist/bin/assayer.js) against a fresh, hermetic temp working directory OUTSIDE
- *   the repo per test (created in beforeEach, removed in afterEach) so config-lookup walks up to
- *   nothing. Beyond spawning the CLI, it can turn the temp dir into a real (hermetic) git repo —
+ * PURPOSE: Drives the compile pipeline end-to-end through the REAL assayer CLI entry, run from
+ *   source (packages/cli/bin/assayer.ts through tsx, with every workspace package resolved to its
+ *   TypeScript source through the `source` export condition), so no build is needed first. It runs
+ *   against a fresh, hermetic temp working directory OUTSIDE the repo per test (created in
+ *   beforeEach, removed in afterEach) so config-lookup walks up to nothing. Beyond spawning the CLI, it can turn the temp dir into a real (hermetic) git repo —
  *   committing a baseline on a work branch and creating a `master` branch pointer WITHOUT ever
  *   checking out — so the stable-namespace (git blobs) and current-namespace (working tree) caches
  *   are both exercised. It reads back the written .assayer/cache manifest + content-addressed blobs
  *   so a colocated .integration.test.ts asserts on the compiled surface (namespaces, per-file
- *   content hashes, reconstructed source, blob reuse) without touching node builtins itself. Owns
+ *   content and analysis hashes, reconstructed source, blob reuse) without touching node builtins itself. Owns
  *   all node:fs / node:child_process access.
  *
  * USAGE:
@@ -39,8 +40,17 @@ import type { ContentHash } from '@assayer/shared/contracts';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import type { CompiledFileBlobStub } from '@assayer/shared/contracts/compiled-file-blob/compiled-file-blob.stub';
 import { execPath } from '#gateway/node/process';
+import { tsxLoaderUrl } from '#gateway/npm/tsx';
 
-const cliEntry = join(__dirname, '..', '..', 'dist', 'bin', 'assayer.js');
+// `--conditions=source` resolves every workspace package to its TypeScript source, the way ward's own
+// checks do. It goes on node itself, beside `--import`, because tsx's CLI would start a second
+// process that does not inherit it.
+const cliArgs = [
+  '--conditions=source',
+  '--import',
+  tsxLoaderUrl(),
+  join(__dirname, '..', '..', 'bin', 'assayer.ts'),
+];
 
 type Manifest = ReturnType<typeof AssayerCacheManifestStub>;
 type Blob = ReturnType<typeof CompiledFileBlobStub>;
@@ -69,6 +79,7 @@ export const assayerCompileHarness = (): {
   manifestNamespaceNames: () => readonly string[];
   manifestRelPaths: ({ namespace }: { namespace: string }) => readonly string[];
   manifestContentHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
+  manifestAnalysisHash: ({ namespace, relPath }: { namespace: string; relPath: string }) => ContentHash;
   manifestNamespaceHasCommit: ({ namespace }: { namespace: string }) => boolean;
   blobHashes: () => readonly ContentHash[];
   readBlobText: ({ hash }: { hash: string }) => string;
@@ -97,7 +108,7 @@ export const assayerCompileHarness = (): {
     },
     run: async ({ argv }: { argv: readonly string[] }): Promise<CliRunResult> =>
       new Promise((resolve: (result: CliRunResult) => void, reject: (error: Error) => void) => {
-        const child = spawn(execPath, [cliEntry, ...argv], {
+        const child = spawn(execPath, [...cliArgs, ...argv], {
           cwd: dir,
           stdio: ['ignore', 'pipe', 'pipe'],
         });
@@ -205,6 +216,25 @@ export const assayerCompileHarness = (): {
       }
       return entry.contentHash;
     },
+    // The hash that names the file's blob: its bytes plus the analysis options of the tsconfig that owns it.
+    manifestAnalysisHash: ({
+      namespace,
+      relPath,
+    }: {
+      namespace: string;
+      relPath: string;
+    }): ContentHash => {
+      const manifest = JSON.parse(
+        readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
+      ) as Manifest;
+      const entry = (manifest.namespaces[namespace]?.files ?? []).find(
+        (file) => String(file.relPath) === relPath,
+      );
+      if (entry === undefined) {
+        throw new Error(`no manifest entry for ${relPath} in namespace ${namespace}`);
+      }
+      return entry.analysisHash;
+    },
     manifestNamespaceHasCommit: ({ namespace }: { namespace: string }): boolean => {
       const manifest = JSON.parse(
         readFileSync(join(dir, '.assayer', 'cache', 'manifest.json')),
@@ -235,7 +265,7 @@ export const assayerCompileHarness = (): {
         throw new Error(`no manifest entry for ${relPath} in namespace ${namespace}`);
       }
       const blob = JSON.parse(
-        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${entry.contentHash}.json`)),
+        readFileSync(join(dir, '.assayer', 'cache', 'blobs', `${entry.analysisHash}.json`)),
       ) as Blob;
       return blob.displayLines.map((line) => String(line.text)).join('\n');
     },

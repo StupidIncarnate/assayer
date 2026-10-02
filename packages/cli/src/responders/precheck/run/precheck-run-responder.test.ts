@@ -4,9 +4,12 @@ import { PrecheckRunResponder } from './precheck-run-responder';
 import { PrecheckRunResponderProxy } from './precheck-run-responder.proxy';
 import { CliExactOutputError } from '../../../errors/cli-exact-output/cli-exact-output-error';
 
-// The hash of ts-morph 26.0.0 and three analyzer source roots that each hold no files: sha256 of the
-// line `ts-morph@26.0.0` and three empty-input hashes, joined by newlines.
-const ANALYZER_HASH = 'df851e1a631747e30517db62a2c4812ba64f71e4ddd08374957f64b5139e08fe';
+// The hash of ts-morph 26.0.0, the files the wrapped runner loads by path, and three analyzer source
+// roots that each hold no files: sha256 of the line `ts-morph@26.0.0`, the run-time files digest
+// (sha256 of the sorted `<path from core's root>:<sha256 of 'runtime'>` lines, one per file in
+// coreRuntimeStatics' `ceremony` and `modules`, each module as `.ts`), and three empty-input hashes,
+// joined by newlines.
+const ANALYZER_HASH = '88f37765e29c098a84df3446dcdfd78f8fe15ab3d18899677c20396829366c93';
 // The hash of AssayerConfigStub's version, repoRoot and sorted exclude list.
 const CONFIG_HASH = 'd8e6b6f238b6443622268e3a540f0aaeb5fa5432b0a14345182c7724ad901ac2';
 
@@ -75,6 +78,26 @@ describe('PrecheckRunResponder', () => {
       await expect(PrecheckRunResponder({ repoPath: '/repo' })).rejects.toThrow(
         new CliExactOutputError({
           message: 'assayer.config.json: invalid JSON at line 3 column 12: Expected double-quoted property name',
+        }),
+      );
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(false);
+    });
+  });
+
+  describe('git is not installed', () => {
+    it('ERROR: {git never starts} => throws the exact git-missing message and writes no manifest', async () => {
+      const proxy = PrecheckRunResponderProxy();
+      const config = AssayerConfigStub();
+      proxy.configAt({ configDir: '/repo', content: JSON.stringify(config) });
+      proxy.gitNotInstalled();
+
+      await expect(PrecheckRunResponder({ repoPath: '/repo' })).rejects.toStrictEqual(
+        new CliExactOutputError({
+          message:
+            'assayer: git is not installed or not on PATH, so Assayer cannot read the repository at /repo.\n\n' +
+            'Assayer runs git to name the cache after the current branch and to read the stable branch for ref-to-ref diffs.\n' +
+            'Install git, check that `git --version` works in this shell, then run this command again.\n' +
+            'The git call that failed: git rev-parse --is-inside-work-tree could not start in /repo: "git" never started: ENOENT: open \'git\'',
         }),
       );
       expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(false);
