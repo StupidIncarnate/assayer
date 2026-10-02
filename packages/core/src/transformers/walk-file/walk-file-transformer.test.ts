@@ -929,7 +929,7 @@ describe('walkFileTransformer', () => {
   });
 
   describe('compiler options', () => {
-    it('VALID: {no options, so TypeScript defaults: ES5 has no Array.prototype.at} => the return reads as any', () => {
+    it('VALID: {no options, so TypeScript defaults, whose library declares Array.prototype.at} => the return reads as number | undefined', () => {
       walkFileTransformerProxy();
 
       const result = walkFileTransformer({ source: LAST_ELEMENT, relPath: 'src/last.ts' });
@@ -962,7 +962,7 @@ describe('walkFileTransformer', () => {
             exported: true,
             access: { kind: 'named' },
             params: [{ name: 'xs', type: { kind: 'array', element: { kind: 'number' } } }],
-            returnType: { kind: 'unknown', text: 'any' },
+            returnType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
             startLine: 1,
             endLine: 1,
             branches: [],

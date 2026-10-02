@@ -14,11 +14,11 @@ describe('harnessValueTypesTransformer', () => {
       'assayerHarness({ inputs: { tally: { last: [1, 2].at(-1) } } });',
     ].join('\n');
 
-    it('VALID: {last: [1, 2].at(-1), no compiler options} => the default library has no `at`, so the type is any', () => {
+    it('VALID: {last: [1, 2].at(-1), no compiler options} => the default library declares `at`, so the type is number | undefined', () => {
       harnessValueTypesTransformerProxy();
 
       expect(harnessValueTypesTransformer({ source, fileName: 'src/tally.harness.ts' })).toStrictEqual([
-        { entry: 'tally', param: 'last', type: { kind: 'unknown', text: 'any' } },
+        { entry: 'tally', param: 'last', type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] } },
       ]);
     });
 

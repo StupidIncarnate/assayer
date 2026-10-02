@@ -36,7 +36,7 @@ describe('fileWalkBroker', () => {
     });
   });
 
-  it('EMPTY: {a file no tsconfig owns} => reads TypeScript defaults, where ES5 has no Array.prototype.at', () => {
+  it('EMPTY: {a file no tsconfig owns} => reads the TypeScript defaults, whose library declares Array.prototype.at', () => {
     const proxy = fileWalkBrokerProxy();
     proxy.filesWithoutOwner({ absPaths: ['/loose/last.ts'] });
 
@@ -50,7 +50,7 @@ describe('fileWalkBroker', () => {
             name: 'last',
             scopePath: ['*module*', 'last'],
             params: [{ name: 'xs', type: { kind: 'array', element: { kind: 'number' } } }],
-            returnType: { kind: 'unknown', text: 'any' },
+            returnType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
             line: 1,
             access: { kind: 'named' },
           },
