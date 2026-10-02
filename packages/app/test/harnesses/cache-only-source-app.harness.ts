@@ -31,6 +31,10 @@ const desktopMainEntry = join(__dirname, '..', '..', '..', 'desktop', 'dist', 'b
 
 const greetingHash = '1111111111111111111111111111111111111111111111111111111111111111';
 const ghostHash = '2222222222222222222222222222222222222222222222222222222222222222';
+// A blob is named by its file's analysisHash (the bytes plus the analysis options), not its contentHash.
+// Each differs from its contentHash, so a desktop that loaded blobs by contentHash would find nothing.
+const greetingAnalysisHash = '3333333333333333333333333333333333333333333333333333333333333333';
+const ghostAnalysisHash = '4444444444444444444444444444444444444444444444444444444444444444';
 const lineHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
 export const cacheOnlySourceAppHarness = (): {
@@ -66,8 +70,8 @@ export const cacheOnlySourceAppHarness = (): {
         namespaces: {
           master: {
             files: [
-              { relPath: 'src/format-greeting.ts', contentHash: greetingHash },
-              { relPath: 'src/ghost.ts', contentHash: ghostHash },
+              { relPath: 'src/format-greeting.ts', contentHash: greetingHash, analysisHash: greetingAnalysisHash },
+              { relPath: 'src/ghost.ts', contentHash: ghostHash, analysisHash: ghostAnalysisHash },
             ],
           },
         },
@@ -85,7 +89,7 @@ export const cacheOnlySourceAppHarness = (): {
         ],
       });
       writeFileSync(
-        join(configDir, '.assayer', 'cache', 'blobs', `${greetingHash}.json`),
+        join(configDir, '.assayer', 'cache', 'blobs', `${greetingAnalysisHash}.json`),
         JSON.stringify(greetingBlob),
       );
 
@@ -96,7 +100,7 @@ export const cacheOnlySourceAppHarness = (): {
         displayLines: [{ n: 1, text: "export const ghost = 'no on-disk source exists';", hash: lineHash }],
       });
       writeFileSync(
-        join(configDir, '.assayer', 'cache', 'blobs', `${ghostHash}.json`),
+        join(configDir, '.assayer', 'cache', 'blobs', `${ghostAnalysisHash}.json`),
         JSON.stringify(ghostBlob),
       );
 
