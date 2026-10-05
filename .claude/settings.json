@@ -18,7 +18,7 @@
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Read",
         "hooks": [
           {
             "type": "command",
@@ -195,6 +195,14 @@
             "command": "dungeonmaster-session-snippet consumerGatewayWrapper"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dungeonmaster-session-snippet decisionMaking"
+          }
+        ]
       }
     ],
     "SubagentStart": [
@@ -317,18 +325,17 @@
             "command": "dungeonmaster-session-snippet consumerGatewayWrapper"
           }
         ]
-      }
-    ],
-    "SubagentStop": [
+      },
       {
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-subagent-stop"
+            "command": "dungeonmaster-session-snippet decisionMaking"
           }
         ]
       }
     ],
+    "SubagentStop": [],
     "WorktreeCreate": [
       {
         "hooks": [
@@ -384,7 +391,8 @@
       "Bash(kill:*)",
       "Bash(lsof:*)",
       "Bash(ps:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "mcp__dungeonmaster__get-quest-health"
     ]
   }
 }

@@ -19,7 +19,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-const harnessInputValueContract = z.custom<unknown>();
+const harnessInputValueContract = z.custom<unknown>(() => true);
 
 // Two open shapes rather than `z.record`: a record keyed by a BRANDED name infers
 // `Record<SymbolName, …>`, and an author's `{ audit: { report } }` literal cannot satisfy it, because the

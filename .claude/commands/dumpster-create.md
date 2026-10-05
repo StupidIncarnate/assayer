@@ -434,7 +434,7 @@ A DECLARED STYLE VALUE is the same shape — the source sets it, so the source i
 A flow whose observables are almost all `ui-state`/`api-call` gets walked in a browser — by Flowrider's Playwright suite, and again by Siegemaster's hands. A flow whose observables are almost all `file-exists`/`process-state`/`custom` gets Ward + grep + adversarial checks instead, and no browser at all. Picking the right tag is not a cosmetic choice — it decides how the flow gets verified.
 
 - `ui-state` — Visual/DOM changes (→ widgets, → Flowrider Playwright, → Siegemaster's hand-walk)
-- `api-call` — HTTP requests/responses (→ responders, adapters, → Flowrider's integration harness, or its Playwright suite when the call is observed through the browser)
+- `api-call` — HTTP requests/responses (→ responders, brokers, → Flowrider's integration harness, or its Playwright suite when the call is observed through the browser)
 - `file-exists` — File system changes (→ brokers, → Siegemaster file-system check)
 - `process-state` — Running process state changes (→ Siegemaster process exit/output check)
 - `log-output` — Console/log output verification (→ Siegemaster log tail)
@@ -444,23 +444,23 @@ A flow whose observables are almost all `ui-state`/`api-call` gets walked in a b
 - `db-query` — Database state assertions (→ Siegemaster integration harness)
 - `queue-message` — Message queue verification (→ Siegemaster integration harness)
 - `external-api` — Third-party API interactions (→ Siegemaster integration harness or contract test)
-- `custom` — Anything else (e.g. grep predicates for operational flows — write the predicate concretely in the description)
+- `custom` — Anything else (e.g. `discover` search predicates for operational flows — write the predicate concretely in the description)
 
 **Type guidance per flow type:**
 - `runtime` flows typically have observables dominated by `ui-state`, `api-call`, `log-output`, `db-query`, `queue-message`, `cache-state`, `external-api`. These describe behavior Siegemaster can walk or assert at runtime.
-- `operational` flows typically have observables dominated by `file-exists`, `process-state`, `environment`, `custom`. These describe post-execution state Siegemaster verifies via Ward + grep + manual checks.
+- `operational` flows typically have observables dominated by `file-exists`, `process-state`, `environment`, `custom`. These describe post-execution state Siegemaster verifies via Ward, `discover` searches and manual checks.
 - Mixed is fine. A single `runtime` flow can have a `file-exists` observable for a file it creates. A single `operational` flow can have an `api-call` observable for a post-deployment health check. Pick the type that most accurately describes what the outcome is, not what the flow type is.
 
 **Perspective matches flow type:**
 - `runtime` flows: write from the user's or caller's perspective — what a human, an HTTP client, or a message producer observes
-- `operational` flows: write from the verifier's perspective — what a grep or a file-system check would confirm after the task sequence completes (NOT "ward passes" — ward is automatic; see "Ward is automatic" below)
+- `operational` flows: write from the verifier's perspective — what a `discover` search or a file-system check would confirm after the task sequence completes (NOT "ward passes" — ward is automatic; see "Ward is automatic" below)
 
 **Operational observable conventions (examples to mirror):**
-- Grep predicate: `{ type: "custom", description: "grep -r ': void' packages/*/src/adapters/**/*.ts returns zero matches on exported function signatures" }`
+- Search predicate: `{ type: "custom", description: "discover({ glob: 'packages/*/src/brokers/**/*.ts', grep: ': void' }) returns zero matches on exported function signatures" }`
 - Infrastructure health: `{ type: "api-call", description: "curl http://localhost:4700/health returns 200 after deployment completes" }`
 - Code invariant: `{ type: "custom", description: "every file under <ui-package>/src/brokers/quest/**/*.ts that imports from @dungeonmaster/shared does NOT import QuestId" }`
 
-**Ward is automatic — do NOT author a "ward passes" observable.** Every quest's implementation workflow runs ward twice on its own: a `changed`-scope ward after the code is written and a `full` monorepo ward at the very end (failures auto-route to fixer agents that repair and re-run). An observable like `{ type: "process-state", description: "npm run ward … exits 0 with zero failures across lint, typecheck, unit" }` — or any "lint + typecheck + tests all pass" outcome — is therefore ALWAYS redundant: it adds nothing the baked-in ward floors don't already enforce, and it makes a downstream agent burn a whole build floor re-running ward. Operational acceptance is the concrete end-state predicate (a grep returns zero, a directory is gone, a symbol is absent), never "the quality gate passes". Same for a standalone "npm run build exits 0" observable — building is part of the ward floors.
+**Ward is automatic — do NOT author a "ward passes" observable.** Every quest's implementation workflow runs ward twice on its own: a `changed`-scope ward after the code is written and a `full` monorepo ward at the very end (failures auto-route to fixer agents that repair and re-run). An observable like `{ type: "process-state", description: "npm run ward … exits 0 with zero failures across lint, typecheck, unit" }` — or any "lint + typecheck + tests all pass" outcome — is therefore ALWAYS redundant: it adds nothing the baked-in ward floors don't already enforce, and it makes a downstream agent burn a whole build floor re-running ward. Operational acceptance is the concrete end-state predicate (a `discover` search returns zero, a directory is gone, a symbol is absent), never "the quality gate passes". Same for a standalone "npm run build exits 0" observable — building is part of the ward floors.
 
 **Each observable must be independently verifiable.** If an outcome has two parts, split them into separate observables.
 

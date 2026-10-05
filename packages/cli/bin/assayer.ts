@@ -12,7 +12,7 @@
  * assayer                 # (no command) opens the desktop app scoped to the current repo
  */
 
-import { argv, cwd, exit, stderr, stdout } from '#gateway/node/process';
+import { argv, exit, stderr, stdout } from '#gateway/node/process';
 
 import { StartAssayer } from '../src/startup/start-assayer';
 
@@ -27,7 +27,6 @@ if (require.main === module) {
     const output = await Promise.resolve(
       StartAssayer({
         argv: argv.slice(COMMAND_ARG_START_INDEX),
-        repoPath: cwd(),
       }),
     );
     stdout.write(`${output}\n`);

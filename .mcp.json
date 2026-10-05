@@ -4,7 +4,8 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "node_modules/@dungeonmaster/mcp/dist/src/index.js"
+        "-e",
+        "try { require('@dungeonmaster/mcp'); } catch (e) { try { const g = require('child_process').execSync('npm root -g', { encoding: 'utf8' }).trim(); const p = require('path'); try { require(p.join(g, '@dungeonmaster/mcp')); } catch { require(p.join(g, 'dungeonmaster', 'node_modules', '@dungeonmaster/mcp')); } } catch { throw e; } }"
       ]
     }
   }

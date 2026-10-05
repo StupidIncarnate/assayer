@@ -7,12 +7,13 @@
  * await StartAssayer({ argv: ['status'], repoPath: process.cwd() });
  * // Returns the routed CliOutput (after the flow's precheck, when applicable)
  */
+import { cwd } from '#gateway/node/process';
 import { AssayerFlow } from '../flows/assayer/assayer-flow';
 
 export const StartAssayer = async ({
   argv,
-  repoPath,
+  repoPath = cwd(),
 }: {
   argv: readonly string[];
-  repoPath: string;
+  repoPath?: string;
 }): Promise<string> => AssayerFlow({ argv, repoPath });
