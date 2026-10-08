@@ -49,7 +49,7 @@ describe('array / nested — a branchless function returning `matrix.length` ove
           },
           {
             reachesPath: ['*module*/rows/return@top'],
-            arrange: [{ kind: 'array', param: 'matrix', value: [[7], [7]] }],
+            arrange: [{ kind: 'array', param: 'matrix', value: [[7], [8]] }],
             salient: false,
           },
         ],

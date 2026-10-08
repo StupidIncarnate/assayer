@@ -29,6 +29,7 @@ import { handlerResultLayerTransformer } from './handler-result-layer-transforme
 import { readAmbientRootLayerTransformer } from './read-ambient-root-layer-transformer';
 import { readCallArgsLayerTransformer } from './read-call-args-layer-transformer';
 import { readCalleeLayerTransformer } from './read-callee-layer-transformer';
+import { readIndexDemandLayerTransformer } from './read-index-demand-layer-transformer';
 
 export const handleCallLayerTransformer = ({
   node,
@@ -85,6 +86,9 @@ export const handleCallLayerTransformer = ({
         ]
       : [];
 
+  const indexDemand = readIndexDemandLayerTransformer({ node });
+  const indexDemands = indexDemand === undefined ? [] : [indexDemand];
+
   return handlerResultLayerTransformer({
     calls: [
       callSiteContract.parse({
@@ -95,6 +99,7 @@ export const handleCallLayerTransformer = ({
         ...memberInfo,
       }),
     ],
+    indexDemands,
     globalUses,
     reachedFns,
     invokedFns,

@@ -37,7 +37,7 @@ describe('length / array-guard — a `.length` comparison on an ARRAY param, the
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       {
         reachesPath: [THEN],
-        arrange: [{ kind: 'array', param: 'xs', value: ['abc123', 'abc123', 'abc123', 'abc123'] }],
+        arrange: [{ kind: 'array', param: 'xs', value: ['abc123', 'abc123_1', 'abc123_2', 'abc123_3'] }],
         salient: true,
       },
       { reachesPath: [ELSE], arrange: [{ kind: 'array', param: 'xs', value: [] }], salient: true },

@@ -6,6 +6,7 @@ import { ModuleEdgeStub } from '@assayer/shared/contracts/module-edge/module-edg
 
 import { CallSiteStub } from '../../contracts/call-site/call-site.stub';
 import { DeclaredShapeStub } from '../../contracts/declared-shape/declared-shape.stub';
+import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 import { InvokedFnStub } from '../../contracts/invoked-fn/invoked-fn.stub';
 import { ProbeSiteStub } from '../../contracts/probe-site/probe-site.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
@@ -67,6 +68,7 @@ describe('walkFactsLayerTransformer', () => {
         looseCalls: [CallSiteStub({ position: { line: 1, column: 1 } })],
         looseValueUses: [ValueUseStub({ target: 'import', specifier: 'node:path', importedName: 'sep' })],
         looseExportedBindings: ['first'],
+        looseIndexDemands: [IndexDemandStub({ kind: 'param-index', param: 'first' })],
         nodes: [WalkNodeStub({ startLine: 1, endLine: 2 })],
         probeSites: [ProbeSiteStub({ id: 'a/leaf' })],
         moduleEdges: [ModuleEdgeStub({ specifier: './a' })],
@@ -83,6 +85,7 @@ describe('walkFactsLayerTransformer', () => {
         looseCalls: [CallSiteStub({ position: { line: 2, column: 1 } })],
         looseValueUses: [ValueUseStub({ target: 'global', name: 'process' })],
         looseExportedBindings: ['second'],
+        looseIndexDemands: [IndexDemandStub({ kind: 'param-index', param: 'second' })],
         nodes: [WalkNodeStub({ startLine: 3, endLine: 4 })],
         probeSites: [ProbeSiteStub({ id: 'b/leaf' })],
         moduleEdges: [ModuleEdgeStub({ specifier: './b' })],
@@ -103,6 +106,10 @@ describe('walkFactsLayerTransformer', () => {
           ValueUseStub({ target: 'global', name: 'process' }),
         ],
         looseExportedBindings: ['first', 'second'],
+        looseIndexDemands: [
+          IndexDemandStub({ kind: 'param-index', param: 'first' }),
+          IndexDemandStub({ kind: 'param-index', param: 'second' }),
+        ],
         nodes: [WalkNodeStub({ startLine: 1, endLine: 2 }), WalkNodeStub({ startLine: 3, endLine: 4 })],
         probeSites: [ProbeSiteStub({ id: 'a/leaf' }), ProbeSiteStub({ id: 'b/leaf' })],
         moduleEdges: [ModuleEdgeStub({ specifier: './a' }), ModuleEdgeStub({ specifier: './b' })],

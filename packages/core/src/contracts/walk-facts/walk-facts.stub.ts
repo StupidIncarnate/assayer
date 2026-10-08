@@ -11,6 +11,7 @@ export const WalkFactsStub = ({ ...props }: StubArgument<WalkFacts> = {}): WalkF
     looseCalls: [],
     looseValueUses: [],
     looseExportedBindings: [],
+    looseIndexDemands: [],
     nodes: [],
     probeSites: [],
     moduleEdges: [],

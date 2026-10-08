@@ -45,7 +45,7 @@ describe('array / slice — a branchless function returning `items.slice(1)`', (
           },
           {
             reachesPath: ['*module*/tail/return@top'],
-            arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
+            arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
             salient: false,
           },
         ],

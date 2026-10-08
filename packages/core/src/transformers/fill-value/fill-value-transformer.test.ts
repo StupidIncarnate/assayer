@@ -225,4 +225,20 @@ describe('fillValueTransformer', () => {
       expect(fillValueTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Map<string, number>' }) })).toBe(undefined);
     });
   });
+
+  describe('offset for distinct values', () => {
+    it('VALID: {number with offset 1} => returns 8', () => {
+      expect(fillValueTransformer({ type: { kind: 'number' }, offset: 1 })).toBe(8);
+    });
+
+    it('VALID: {string with offset 1} => returns "abc123_1"', () => {
+      expect(fillValueTransformer({ type: { kind: 'string' }, offset: 1 })).toBe('abc123_1');
+    });
+
+    it('VALID: {number[] with offset 1} => returns [8]', () => {
+      expect(
+        fillValueTransformer({ type: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }), offset: 1 }),
+      ).toStrictEqual([8]);
+    });
+  });
 });

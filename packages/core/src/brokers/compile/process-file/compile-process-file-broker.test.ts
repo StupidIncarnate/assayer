@@ -180,7 +180,7 @@ describe('compileProcessFileBroker', () => {
                 cases: [
                   { arrange: [{ kind: 'array', param: 'xs', value: [] }], reachesPath: ['*module*/last/return@top'], salient: true },
                   { arrange: [{ kind: 'array', param: 'xs', value: [7] }], reachesPath: ['*module*/last/return@top'], salient: false },
-                  { arrange: [{ kind: 'array', param: 'xs', value: [7, 7] }], reachesPath: ['*module*/last/return@top'], salient: false },
+                  { arrange: [{ kind: 'array', param: 'xs', value: [7, 8] }], reachesPath: ['*module*/last/return@top'], salient: false },
                 ],
               },
             ],

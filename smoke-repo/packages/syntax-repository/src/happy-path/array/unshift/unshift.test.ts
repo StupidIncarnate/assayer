@@ -52,7 +52,7 @@ describe('array / unshift — a branchless function returning `items.unshift(val
           {
             reachesPath: ['*module*/prepend/return@top'],
             arrange: [
-              { kind: 'array', param: 'items', value: [7, 7] },
+              { kind: 'array', param: 'items', value: [7, 8] },
               { kind: 'param', param: 'value', value: 7 },
             ],
             salient: false,

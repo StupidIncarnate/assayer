@@ -25,6 +25,7 @@ import { z } from '#gateway/npm/zod';
 import { branchNodeContract, conditionNodeContract, entryAccessContract, exitNodeContract, paramDescriptorContract, typeDescriptorContract } from '@assayer/shared/contracts';
 
 import { callSiteContract } from '../call-site/call-site-contract';
+import { indexDemandContract } from '../index-demand/index-demand-contract';
 import { valueUseContract } from '../value-use/value-use-contract';
 
 export const scopeRecordContract = z.object({
@@ -58,6 +59,9 @@ export const scopeRecordContract = z.object({
   // `calls`; only a module scope ever collects any, since exports are top-level. A projection reads
   // these to LABEL a module entry by its single exported binding — DISPLAY only, never identity.
   exportedBindings: z.array(z.string().min(1).brand<'ScopeRecordExportedBindings'>()).default([]),
+  // The array indexing operations this scope performs — `.at()` and `[]` index reads on input
+  // parameters or array lengths. LOOSE and claimed on its own channel like `calls`. Defaults to empty.
+  indexDemands: z.array(indexDemandContract).default([]),
   // The decomposed condition this scope's body RETURNS, present only when the scope is a boolean
   // predicate whose whole body is `return <comparison>` (`function tooBig(n){ return n > 50 }`). It is
   // what a caller's opaque `if (tooBig(x))` leaf composes against: the callee's comparison, rebased

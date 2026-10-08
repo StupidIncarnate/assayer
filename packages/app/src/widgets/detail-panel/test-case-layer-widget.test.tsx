@@ -184,7 +184,40 @@ describe('TestCaseLayerWidget', () => {
       expect(getByTestId('CASE_OUTCOME').textContent).toBe('threw before reaching an exit: items.map is not a function');
     });
 
-    it('VALID: {passed result} => the row reads reaches and shows no outcome line', () => {
+    it('VALID: {passed result with exit trace} => the row shows the exit value with the exit line in parentheses', () => {
+      TestCaseLayerWidgetProxy();
+      const run = RunResultStub({
+        cases: [
+          CaseResultStub({
+            status: 'passed',
+            testCase: { reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 1 }] },
+            trace: [{ id: 'decide/return@top', kind: 'exit', valueText: '10' }],
+          }),
+        ],
+      });
+
+      const { getByTestId, queryByTestId } = render((
+          <>
+            {DECIDE.cases.map((testCase) => (
+              <TestCaseLayerWidget
+                key={testCase.reachesPath.join('>')}
+                fn={DECIDE}
+                testCase={testCase}
+                driver="decide"
+                entryLabel="decide"
+                isModule={false}
+                run={run}
+              />
+            ))}
+          </>
+        ), { wrapper: MantineProvider });
+
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('PASS decide(1) → 10 (reaches L4)');
+      expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('passed');
+      expect(queryByTestId('CASE_OUTCOME')).toBe(null);
+    });
+
+    it('VALID: {passed result without exit trace} => falls back to reaches L<line>', () => {
       TestCaseLayerWidgetProxy();
       const run = RunResultStub({
         cases: [
@@ -211,6 +244,7 @@ describe('TestCaseLayerWidget', () => {
           </>
         ), { wrapper: MantineProvider });
 
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('PASS decide(1) → reaches L4');
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('passed');
       expect(queryByTestId('CASE_OUTCOME')).toBe(null);
     });

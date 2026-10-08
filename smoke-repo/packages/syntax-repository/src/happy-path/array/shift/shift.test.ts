@@ -49,7 +49,7 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
           },
           {
             reachesPath: ['*module*/takeFirst/return@top'],
-            arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
+            arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
             salient: false,
           },
         ],

@@ -11,13 +11,20 @@ describe('arrayArrangeTransformer', () => {
     expect(arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'number' }), count: 1 })).toStrictEqual([7]);
   });
 
-  it('VALID: {element: number, count: 2} => a two-element array, the many class', () => {
-    expect(arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'number' }), count: 2 })).toStrictEqual([7, 7]);
+  it('VALID: {element: number, count: 2} => a two-element array with distinct elements', () => {
+    expect(arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'number' }), count: 2 })).toStrictEqual([7, 8]);
   });
 
   it('VALID: {element: string, count: 1} => the string representative per element', () => {
     expect(arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'string' }), count: 1 })).toStrictEqual([
       'abc123',
+    ]);
+  });
+
+  it('VALID: {element: string, count: 2} => distinct string values per position', () => {
+    expect(arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'string' }), count: 2 })).toStrictEqual([
+      'abc123',
+      'abc123_1',
     ]);
   });
 
@@ -29,10 +36,10 @@ describe('arrayArrangeTransformer', () => {
     ).toStrictEqual([[7]]);
   });
 
-  it('VALID: {element: array, count: 2} => two nested arrays [[7], [7]]', () => {
+  it('VALID: {element: array, count: 2} => two nested arrays [[7], [8]]', () => {
     expect(
       arrayArrangeTransformer({ element: TypeDescriptorStub({ kind: 'array', element: { kind: 'number' } }), count: 2 }),
-    ).toStrictEqual([[7], [7]]);
+    ).toStrictEqual([[7], [8]]);
   });
 
   // An OBJECT element is built out too, so `Config[]` is a real array of real objects rather than an

@@ -3,6 +3,7 @@ import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
 import { ConditionCauseStub } from '../../contracts/condition-cause/condition-cause.stub';
+import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 
 import { causeArrangeTransformer } from './cause-arrange-transformer';
 
@@ -555,7 +556,7 @@ describe('causeArrangeTransformer', () => {
         arrangements: [
           [{ kind: 'array', param: 'items', value: [] }],
           [{ kind: 'array', param: 'items', value: [7] }],
-          [{ kind: 'array', param: 'items', value: [7, 7] }],
+          [{ kind: 'array', param: 'items', value: [7, 8] }],
         ],
       });
     });
@@ -587,7 +588,7 @@ describe('causeArrangeTransformer', () => {
           ],
           [
             { kind: 'param', param: 'score', value: 6 },
-            { kind: 'array', param: 'items', value: [7, 7] },
+            { kind: 'array', param: 'items', value: [7, 8] },
           ],
         ],
       });
@@ -610,7 +611,7 @@ describe('causeArrangeTransformer', () => {
         arrangements: [
           [{ kind: 'array', param: 'ns', value: [], rest: true }],
           [{ kind: 'array', param: 'ns', value: [7], rest: true }],
-          [{ kind: 'array', param: 'ns', value: [7, 7], rest: true }],
+          [{ kind: 'array', param: 'ns', value: [7, 8], rest: true }],
         ],
       });
     });
@@ -700,6 +701,62 @@ describe('causeArrangeTransformer', () => {
         unreachable: false,
         unfillable: [],
         arrangements: [[{ kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true }]],
+      });
+    });
+  });
+
+  describe('index demands generate in-bounds and out-of-bounds cases', () => {
+    it('VALID: {at method index demand} => generates 0, -1, 7 for index across empty, single, and multiple array cardinalities', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [
+          ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }),
+          ParamDescriptorStub({ name: 'index', type: { kind: 'number' } }),
+        ],
+        envDrivable: false,
+        indexDemands: [
+          IndexDemandStub({ kind: 'param-index', param: 'index', operation: 'at' }),
+        ],
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [
+          [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 0 }],
+          [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 0 }],
+          [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 0 }],
+          [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: -1 }],
+          [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: -1 }],
+          [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: -1 }],
+          [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 7 }],
+          [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 7 }],
+          [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 7 }],
+        ],
+      });
+    });
+
+    it('VALID: {array-length-index demand} => extends array cardinalities with extra length for out-of-bounds testing', () => {
+      const result = causeArrangeTransformer({
+        requirements: [],
+        params: [
+          ParamDescriptorStub({ name: 'arr', type: { kind: 'array', element: { kind: 'number' } } }),
+        ],
+        envDrivable: false,
+        indexDemands: [
+          IndexDemandStub({ kind: 'array-length-index', arrayParam: 'arr', targetLength: 3, operation: 'at' }),
+        ],
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [
+          [{ kind: 'array', param: 'arr', value: [] }],
+          [{ kind: 'array', param: 'arr', value: [7] }],
+          [{ kind: 'array', param: 'arr', value: [7, 8] }],
+          [{ kind: 'array', param: 'arr', value: [7, 8, 9] }],
+        ],
       });
     });
   });

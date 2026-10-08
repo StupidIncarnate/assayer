@@ -51,7 +51,7 @@ describe('array / pop — a branchless function returning `items.pop()`', () => 
           },
           {
             reachesPath: ['*module*/popLast/return@top'],
-            arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
+            arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
             salient: false,
           },
         ],

@@ -27,7 +27,13 @@ import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-filla
 import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
 import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
 
-export const fillValueTransformer = ({ type }: { type: TypeDescriptor }): ArrangeValue | undefined => {
+export const fillValueTransformer = ({
+  type,
+  offset = 0,
+}: {
+  type: TypeDescriptor;
+  offset?: number;
+}): ArrangeValue | undefined => {
   // An array VALUE is the `one` cardinality — the ordinary non-empty array. The empty/one/many fan-out
   // is an input-BREADTH axis a case set spans (`array-arrange` + `cause-arrange`), not what one value is.
   if (type.kind === 'array') {
@@ -40,7 +46,7 @@ export const fillValueTransformer = ({ type }: { type: TypeDescriptor }): Arrang
       return [];
     }
 
-    const element = fillValueTransformer({ type: type.element });
+    const element = fillValueTransformer({ type: type.element, offset });
 
     return element === undefined
       ? undefined
@@ -53,7 +59,7 @@ export const fillValueTransformer = ({ type }: { type: TypeDescriptor }): Arrang
   // caught by the length check against the declared position count.
   if (type.kind === 'tuple') {
     const elements = type.elements.flatMap((element) => {
-      const value = fillValueTransformer({ type: element });
+      const value = fillValueTransformer({ type: element, offset });
 
       return value === undefined ? [] : [value];
     });
@@ -73,7 +79,7 @@ export const fillValueTransformer = ({ type }: { type: TypeDescriptor }): Arrang
     // and the object twin of an optional parameter nobody has to pass.
     const owed = type.properties.filter((property) => property.optional !== true);
     const entries = owed.flatMap((property) => {
-      const value = fillValueTransformer({ type: property.type });
+      const value = fillValueTransformer({ type: property.type, offset });
 
       return value === undefined ? [] : [[property.name, value] as const];
     });
@@ -89,8 +95,8 @@ export const fillValueTransformer = ({ type }: { type: TypeDescriptor }): Arrang
   if (type.kind === 'union') {
     const member = type.members.find((candidate) => isTypeFillableGuard({ type: candidate }));
 
-    return member === undefined ? undefined : fillValueTransformer({ type: member });
+    return member === undefined ? undefined : fillValueTransformer({ type: member, offset });
   }
 
-  return representativeValueTransformer({ type });
+  return representativeValueTransformer({ type, offset });
 };

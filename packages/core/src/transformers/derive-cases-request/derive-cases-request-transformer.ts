@@ -66,4 +66,5 @@ export const deriveCasesRequestTransformer = ({
   envDrivable,
   ...(scope.predicateSignature === undefined ? {} : { returnPredicate: scope.predicateSignature }),
   ...(harness === undefined ? {} : { harness }),
+  ...(scope.indexDemands.length === 0 ? {} : { indexDemands: scope.indexDemands }),
 });

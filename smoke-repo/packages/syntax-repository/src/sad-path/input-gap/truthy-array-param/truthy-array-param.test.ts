@@ -35,7 +35,7 @@ describe('input-gap / truthy-array-param — a bare truthy read of an ARRAY para
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [THEN], arrange: [{ kind: 'array', param: 'tags', value: [] }], salient: true },
       { reachesPath: [THEN], arrange: [{ kind: 'array', param: 'tags', value: ['abc123'] }], salient: false },
-      { reachesPath: [THEN], arrange: [{ kind: 'array', param: 'tags', value: ['abc123', 'abc123'] }], salient: false },
+      { reachesPath: [THEN], arrange: [{ kind: 'array', param: 'tags', value: ['abc123', 'abc123_1'] }], salient: false },
     ]);
   });
 

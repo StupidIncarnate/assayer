@@ -43,7 +43,7 @@ describe('array / spread — a branchless function returning `[...items]`', () =
           },
           {
             reachesPath: ['*module*/copy/return@top'],
-            arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
+            arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
             salient: false,
           },
         ],

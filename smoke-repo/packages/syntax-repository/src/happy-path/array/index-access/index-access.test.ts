@@ -42,7 +42,7 @@ describe('array / index-access — a branchless function returning `items[0]`', 
           },
           {
             reachesPath: ['*module*/first/return@top'],
-            arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
+            arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
             salient: false,
           },
         ],

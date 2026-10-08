@@ -33,23 +33,31 @@ import { representativeValueStatics } from '../../statics/representative-value/r
 
 export const representativeValueTransformer = ({
   type,
+  offset = 0,
 }: {
   type: TypeDescriptor;
+  offset?: number;
 }): RepresentativeValue | undefined => {
   switch (type.kind) {
     case 'string':
-      return representativeValueContract.parse(representativeValueStatics.string);
+      return representativeValueContract.parse(
+        offset === 0
+          ? representativeValueStatics.string
+          : `${representativeValueStatics.string}_${String(offset)}`,
+      );
     case 'number':
-      return representativeValueContract.parse(representativeValueStatics.number);
+      return representativeValueContract.parse(representativeValueStatics.number + offset);
     case 'boolean':
-      return representativeValueContract.parse(representativeValueStatics.boolean);
+      return representativeValueContract.parse(
+        offset === 0 ? representativeValueStatics.boolean : !representativeValueStatics.boolean,
+      );
     case 'literal':
       return representativeValueContract.parse(type.value);
     // The first member that HAS a scalar point, so `Config | string` samples the string rather than
     // refusing on the object it met first. A union of composites has none and refuses.
     case 'union': {
       const [first] = type.members.flatMap((member) => {
-        const value = representativeValueTransformer({ type: member });
+        const value = representativeValueTransformer({ type: member, offset });
 
         return value === undefined ? [] : [value];
       });

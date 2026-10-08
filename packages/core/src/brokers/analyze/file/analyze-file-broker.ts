@@ -49,6 +49,19 @@ import { undrivenProjectionTransformer } from '../../../transformers/undriven-pr
 import { unreachableLintTransformer } from '../../../transformers/unreachable-lint/unreachable-lint-transformer';
 
 export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult; relPath?: string }): FileAnalysis => {
+  if (!walked.success) {
+    return fileAnalysisContract.parse({
+      functions: [],
+      enrichment: [],
+      gaps: [],
+      darkSpots: [],
+      undriven: [],
+      lints: [],
+      declaredTypes: [],
+      declaringScopes: [],
+    });
+  }
+
   const extracted = analysisProjectionTransformer({ walked });
 
   if (!extracted.success) {
@@ -74,20 +87,29 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // ones no caller can steer stay honestly undriven.
   const followed = followCallsTransformer({ walked });
 
-  const derived = composed.map((fn) => ({
-    fn,
-    result: deriveCasesTransformer({
-      params: fn.entry.params,
-      branches: fn.branches,
-      exits: fn.exits,
-      // Only a module scope is driven BY importing it, which is when its top-level bindings read the
-      // environment. A function is driven by calling it, long after its module ran and froze them.
-      envDrivable: fn.entry.access.kind === 'module',
-      // A branchless boolean predicate (`function tooBig(n){ return n > 50 }`) carries its return
-      // comparison here so derive-cases splits its true/false return into two salient cases.
-      ...(fn.predicateSignature === undefined ? {} : { returnPredicate: fn.predicateSignature }),
-    }),
-  }));
+  const scopeByEntry = new Map(
+    walked.scopes.map((scope) => [`${String(scope.name)}@${String(scope.startLine)}`, scope] as const),
+  );
+
+  const derived = composed.map((fn) => {
+    const scope = scopeByEntry.get(`${String(fn.entry.name)}@${String(fn.entry.line)}`);
+
+    return {
+      fn,
+      result: deriveCasesTransformer({
+        params: fn.entry.params,
+        branches: fn.branches,
+        exits: fn.exits,
+        // Only a module scope is driven BY importing it, which is when its top-level bindings read the
+        // environment. A function is driven by calling it, long after its module ran and froze them.
+        envDrivable: fn.entry.access.kind === 'module',
+        // A branchless boolean predicate (`function tooBig(n){ return n > 50 }`) carries its return
+        // comparison here so derive-cases splits its true/false return into two salient cases.
+        ...(fn.predicateSignature === undefined ? {} : { returnPredicate: fn.predicateSignature }),
+        ...(scope === undefined || scope.indexDemands.length === 0 ? {} : { indexDemands: scope.indexDemands }),
+      }),
+    };
+  });
 
   // A branching callback driven through a branchless host surface (`items.map((n) => …)`) is NOT its
   // own entry: it cannot be reached without calling the host, so its steering values FUNNEL into the
@@ -115,7 +137,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // itself. Straight off the walk's scope records, so each is a real ExitNode (coverageId + line +
   // guards), never a re-derived line.
   const exitByCoverageId = new Map(
-    (walked.success ? walked.scopes : []).flatMap((scope) => scope.exits.map((exit) => [String(exit.coverageId), exit] as const)),
+    walked.scopes.flatMap((scope) => scope.exits.map((exit) => [String(exit.coverageId), exit] as const)),
   );
 
   const functions = [

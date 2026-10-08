@@ -4,6 +4,7 @@ import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/cond
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
+import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 import { deriveCasesTransformer } from './derive-cases-transformer';
 
 const NUMBER_PARAMS = [
@@ -1279,6 +1280,64 @@ describe('deriveCasesTransformer', () => {
 
       expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
         cases: [{ reachesPath: ['collect/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        unfillable: [],
+      });
+    });
+  });
+
+  describe('index demands forward to cause-arrange to generate boundary cases', () => {
+    it('VALID: {param-index demand} => forwards to cause-arrange and derives in-bounds and out-of-bounds cases', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'items', type: { kind: 'array', element: { kind: 'number' } } }),
+          ParamDescriptorStub({ name: 'index', type: { kind: 'number' } }),
+        ],
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'elementAt/return@top', guardPath: [], line: 2 })],
+        envDrivable: false,
+        indexDemands: [IndexDemandStub({ kind: 'param-index', param: 'index', operation: 'at' })],
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 0 }], salient: true },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 0 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 0 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: -1 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: -1 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: -1 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 7 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 7 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 7 }], salient: false },
+        ],
+        unreachableExits: [],
+        undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+
+    it('VALID: {array-length-index demand} => forwards to cause-arrange and extends array cardinalities for out-of-bounds', () => {
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({ name: 'arr', type: { kind: 'array', element: { kind: 'number' } } }),
+        ],
+        branches: [],
+        exits: [ExitNodeStub({ coverageId: 'lengthAt/return@top', guardPath: [], line: 2 })],
+        envDrivable: false,
+        indexDemands: [
+          IndexDemandStub({ kind: 'array-length-index', arrayParam: 'arr', targetLength: 3, operation: 'at' }),
+        ],
+      });
+
+      expect(result).toStrictEqual({
+        cases: [
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [] }], salient: true },
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7] }], salient: false },
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7, 8] }], salient: false },
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7, 8, 9] }], salient: false },
+        ],
+        unreachableExits: [],
+        undrivenBranches: [],
         unfillable: [],
       });
     });

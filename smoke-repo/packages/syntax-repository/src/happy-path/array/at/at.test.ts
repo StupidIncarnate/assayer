@@ -43,9 +43,57 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
             reachesPath: ['*module*/elementAt/return@top'],
             arrange: [
               { kind: 'array', param: 'items', value: [] },
-              { kind: 'param', param: 'index', value: 7 },
+              { kind: 'param', param: 'index', value: 0 },
             ],
             salient: true,
+          },
+          {
+            reachesPath: ['*module*/elementAt/return@top'],
+            arrange: [
+              { kind: 'array', param: 'items', value: [7] },
+              { kind: 'param', param: 'index', value: 0 },
+            ],
+            salient: false,
+          },
+          {
+            reachesPath: ['*module*/elementAt/return@top'],
+            arrange: [
+              { kind: 'array', param: 'items', value: [7, 8] },
+              { kind: 'param', param: 'index', value: 0 },
+            ],
+            salient: false,
+          },
+          {
+            reachesPath: ['*module*/elementAt/return@top'],
+            arrange: [
+              { kind: 'array', param: 'items', value: [] },
+              { kind: 'param', param: 'index', value: -1 },
+            ],
+            salient: false,
+          },
+          {
+            reachesPath: ['*module*/elementAt/return@top'],
+            arrange: [
+              { kind: 'array', param: 'items', value: [7] },
+              { kind: 'param', param: 'index', value: -1 },
+            ],
+            salient: false,
+          },
+          {
+            reachesPath: ['*module*/elementAt/return@top'],
+            arrange: [
+              { kind: 'array', param: 'items', value: [7, 8] },
+              { kind: 'param', param: 'index', value: -1 },
+            ],
+            salient: false,
+          },
+          {
+            reachesPath: ['*module*/elementAt/return@top'],
+            arrange: [
+              { kind: 'array', param: 'items', value: [] },
+              { kind: 'param', param: 'index', value: 7 },
+            ],
+            salient: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -58,7 +106,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
           {
             reachesPath: ['*module*/elementAt/return@top'],
             arrange: [
-              { kind: 'array', param: 'items', value: [7, 7] },
+              { kind: 'array', param: 'items', value: [7, 8] },
               { kind: 'param', param: 'index', value: 7 },
             ],
             salient: false,

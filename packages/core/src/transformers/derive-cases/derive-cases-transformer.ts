@@ -61,6 +61,7 @@ import type { BranchNode, ConditionNode, DerivedTestCase, ExitNode, ParamDescrip
 
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
+import type { IndexDemand } from '../../contracts/index-demand/index-demand-contract';
 import { isPredicateConstrainingGuard } from '../../guards/is-predicate-constraining/is-predicate-constraining-guard';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { causeArrangeTransformer } from '../cause-arrange/cause-arrange-transformer';
@@ -77,6 +78,7 @@ export const deriveCasesTransformer = ({
   envDrivable,
   returnPredicate,
   harness,
+  indexDemands,
 }: {
   params: ParamDescriptor[];
   branches: BranchNode[];
@@ -84,6 +86,7 @@ export const deriveCasesTransformer = ({
   envDrivable: boolean;
   returnPredicate?: ConditionNode;
   harness?: { entry: string; params: readonly string[] } | undefined;
+  indexDemands?: IndexDemand[];
 }): {
   cases: DerivedTestCase[];
   unreachableExits: {
@@ -271,6 +274,7 @@ export const deriveCasesTransformer = ({
         params: applied,
         envDrivable,
         ...(harness === undefined ? {} : { harness }),
+        ...(indexDemands === undefined ? {} : { indexDemands }),
       }),
       exit: maximal.length === 1 ? maximal[0] : undefined,
     };

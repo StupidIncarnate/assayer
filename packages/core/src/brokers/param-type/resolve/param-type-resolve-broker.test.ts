@@ -127,7 +127,7 @@ describe('paramTypeResolveBroker', () => {
                 param: 'configs',
                 value: [
                   { mode: 'abc123', region: 'abc123' },
-                  { mode: 'abc123', region: 'abc123' },
+                  { mode: 'abc123_1', region: 'abc123_1' },
                 ],
               },
             ],

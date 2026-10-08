@@ -33,6 +33,7 @@ import { handleSwitchLayerTransformer } from './handle-switch-layer-transformer'
 import { handleTypeDeclarationLayerTransformer } from './handle-type-declaration-layer-transformer';
 import { handleVariableLayerTransformer } from './handle-variable-layer-transformer';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
+import { readIndexDemandLayerTransformer } from './read-index-demand-layer-transformer';
 
 export const dispatchNodeLayerTransformer = ({
   node,
@@ -89,6 +90,17 @@ export const dispatchNodeLayerTransformer = ({
   // nothing inside the callee expression or arguments is dropped.
   if (Node.isCallExpression(node)) {
     return handleCallLayerTransformer({ node, context });
+  }
+
+  // An element access `target[index]` records an index demand when an input parameter or array length
+  // is used as the index, and descends its children so nested expressions are not dropped.
+  if (Node.isElementAccessExpression(node)) {
+    const indexDemand = readIndexDemandLayerTransformer({ node });
+
+    return handlerResultLayerTransformer({
+      indexDemands: indexDemand === undefined ? [] : [indexDemand],
+      descents: node.forEachChildAsArray().map((child) => ({ node: child, context })),
+    });
   }
 
   // An import/re-export is a MODULE edge: it records the specifier and bindings as a flat file-level

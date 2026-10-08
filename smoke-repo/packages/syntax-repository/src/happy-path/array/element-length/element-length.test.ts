@@ -43,7 +43,7 @@ describe('array / element-length — a branchless function over an array param',
           },
           {
             reachesPath: ['*module*/count/return@top'],
-            arrange: [{ kind: 'array', param: 'items', value: [7, 7] }],
+            arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
             salient: false,
           },
         ],

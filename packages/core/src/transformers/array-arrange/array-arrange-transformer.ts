@@ -38,7 +38,7 @@ export const arrayArrangeTransformer = ({
   element.kind === 'object' && element.truncated === true
     ? []
     : isTypeFillableGuard({ type: element })
-      ? Array.from({ length: count }, () => fillValueTransformer({ type: element })).flatMap((value) =>
-          value === undefined ? [] : [value],
+      ? Array.from({ length: count }, (_, index) => fillValueTransformer({ type: element, offset: index })).flatMap(
+          (value) => (value === undefined ? [] : [value]),
         )
       : undefined;

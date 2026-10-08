@@ -1,3 +1,4 @@
+import { IndexDemandStub } from '../index-demand/index-demand.stub';
 import { ScopeRecordStub } from '../scope-record/scope-record.stub';
 import { WalkNodeStub } from '../walk-node/walk-node.stub';
 import { walkFactsContract } from './walk-facts-contract';
@@ -15,6 +16,14 @@ describe('walkFactsContract', () => {
 
     it('VALID: {scopes and nodes} => parses a populated fact set', () => {
       const facts = WalkFactsStub({ scopes: [ScopeRecordStub()], nodes: [WalkNodeStub()] });
+
+      const result = walkFactsContract.parse(facts);
+
+      expect(result).toStrictEqual(facts);
+    });
+
+    it('VALID: {looseIndexDemands} => parses walk facts with index demands', () => {
+      const facts = WalkFactsStub({ looseIndexDemands: [IndexDemandStub()] });
 
       const result = walkFactsContract.parse(facts);
 

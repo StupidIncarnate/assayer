@@ -290,10 +290,10 @@ describe('throughCallbackCasesTransformer', () => {
       expect(result.analysis.cases).toStrictEqual([
         { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[]] }], salient: true },
         { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[7]] }], salient: false },
-        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[7, 7]] }], salient: false },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[7, 8]] }], salient: false },
         { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[]] }], salient: true },
         { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[7]] }], salient: false },
-        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[7, 7]] }], salient: false },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[7, 8]] }], salient: false },
       ]);
     });
   });

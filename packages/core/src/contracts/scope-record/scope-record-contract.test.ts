@@ -1,5 +1,6 @@
 import { scopeRecordContract } from './scope-record-contract';
 import { ScopeRecordStub } from './scope-record.stub';
+import { IndexDemandStub } from '../index-demand/index-demand.stub';
 
 describe('scopeRecordContract', () => {
   describe('valid scope records', () => {
@@ -46,6 +47,16 @@ describe('scopeRecordContract', () => {
           operandType: { kind: 'number' },
           predicate: { kind: 'gt', literal: 50 },
         },
+      });
+
+      const result = scopeRecordContract.parse(record);
+
+      expect(result).toStrictEqual(record);
+    });
+
+    it('VALID: {indexDemands} => carries indexDemands array', () => {
+      const record = ScopeRecordStub({
+        indexDemands: [IndexDemandStub()],
       });
 
       const result = scopeRecordContract.parse(record);

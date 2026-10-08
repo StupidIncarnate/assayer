@@ -71,9 +71,9 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     // The verdict reaches the row it belongs to — not-run must not survive anywhere on the panel.
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'PASS grade(5, 7) → reaches L6',
-      'PASS grade(6, 1) → reaches L6',
-      'PASS grade(6, 2) → reaches L3',
+      "PASS grade(5, 7) → 'fail' (reaches L6)",
+      "PASS grade(6, 1) → 'fail' (reaches L6)",
+      "PASS grade(6, 2) → 'pass' (reaches L3)",
     ]);
 
     // A finished run must SAY it finished: the button leaves its loading state rather than spinning on.
@@ -135,7 +135,7 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     // wrote an artifact whose GAPS travel to the panel, naming the constructor and `find` the caller must
     // write a harness for, worded exactly as `assayer unit` prints them, in the case set's own order.
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveText(
-      'PASS tally(7) → reaches L2',
+      'PASS tally(7) → 8 (reaches L2)',
     );
     await expect(window.getByTestId('RUN_GAP')).toHaveText([RUN_GAP_CONSTRUCTOR_LINE, RUN_GAP_METHOD_LINE]);
     await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
@@ -195,8 +195,8 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
 
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'PASS audit(10, <harness inputs.audit.report>) → reaches L6',
-      'PASS audit(11, <harness inputs.audit.report>) → reaches L3',
+      "PASS audit(10, <harness inputs.audit.report>) → 'audited:under' (reaches L6)",
+      "PASS audit(11, <harness inputs.audit.report>) → 'audited:over' (reaches L3)",
     ]);
 
     // The CLI report agrees, and still invoices nothing: a paid gap must not be reprinted beside the

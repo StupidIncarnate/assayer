@@ -17,6 +17,7 @@ import { callSiteContract } from '../call-site/call-site-contract';
 import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
 import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
 import { probeSiteContract } from '../probe-site/probe-site-contract';
+import { indexDemandContract } from '../index-demand/index-demand-contract';
 import { scopeRecordContract } from '../scope-record/scope-record-contract';
 import { valueUseContract } from '../value-use/value-use-contract';
 import { walkNodeContract } from '../walk-node/walk-node-contract';
@@ -34,6 +35,8 @@ export const walkFactsContract = z.object({
   // Loose on its own channel: an exported top-level binding name belongs to the nearest enclosing scope
   // (the module, since exports are top-level) and is claimed on the way back up.
   looseExportedBindings: z.array(z.string().min(1).brand<'WalkFactsLooseExportedBindings'>()),
+  // Loose on its own channel: index demands belong to the nearest enclosing scope and are claimed on the way back up.
+  looseIndexDemands: z.array(indexDemandContract),
   nodes: z.array(walkNodeContract),
   // Flat like `nodes`, not loose like branches/exits: a probe site is a position in the FILE, so no
   // scope ever claims it.

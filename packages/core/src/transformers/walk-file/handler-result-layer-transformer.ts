@@ -18,6 +18,7 @@ import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { DeclaredShape } from '../../contracts/declared-shape/declared-shape-contract';
 import type { Descent } from '../../contracts/descent/descent-contract';
 import type { HandlerResult } from '../../contracts/handler-result/handler-result-contract';
+import type { IndexDemand } from '../../contracts/index-demand/index-demand-contract';
 import type { InvokedFn } from '../../contracts/invoked-fn/invoked-fn-contract';
 import type { ProbeSite } from '../../contracts/probe-site/probe-site-contract';
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
@@ -30,6 +31,7 @@ export const handlerResultLayerTransformer = ({
   calls,
   valueUses,
   exportedBindings,
+  indexDemands,
   nodes,
   probeSites,
   moduleEdges,
@@ -46,6 +48,7 @@ export const handlerResultLayerTransformer = ({
   calls?: CallSite[];
   valueUses?: ValueUse[];
   exportedBindings?: string[];
+  indexDemands?: IndexDemand[];
   nodes?: WalkNode[];
   probeSites?: ProbeSite[];
   moduleEdges?: ModuleEdge[];
@@ -62,6 +65,7 @@ export const handlerResultLayerTransformer = ({
   calls: calls ?? [],
   valueUses: valueUses ?? [],
   exportedBindings: exportedBindings ?? [],
+  indexDemands: indexDemands ?? [],
   nodes: nodes ?? [],
   probeSites: probeSites ?? [],
   moduleEdges: moduleEdges ?? [],

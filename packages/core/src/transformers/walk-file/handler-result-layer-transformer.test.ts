@@ -1,3 +1,4 @@
+import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
@@ -14,6 +15,7 @@ describe('handlerResultLayerTransformer', () => {
         calls: [],
         valueUses: [],
         exportedBindings: [],
+        indexDemands: [],
         nodes: [],
         probeSites: [],
         moduleEdges: [],
@@ -35,7 +37,31 @@ describe('handlerResultLayerTransformer', () => {
         calls: [],
         valueUses: [],
         exportedBindings: [],
+        indexDemands: [],
         nodes: [WalkNodeStub()],
+        probeSites: [],
+        moduleEdges: [],
+        declaredShapes: [],
+        globalUses: [],
+        envReads: [],
+        reachedFns: [],
+        invokedFns: [],
+        descents: [],
+      });
+    });
+
+    it('VALID: {indexDemands given} => carried through', () => {
+      handlerResultLayerTransformerProxy();
+      const demand = IndexDemandStub();
+
+      expect(handlerResultLayerTransformer({ indexDemands: [demand] })).toStrictEqual({
+        branches: [],
+        exits: [],
+        calls: [],
+        valueUses: [],
+        exportedBindings: [],
+        indexDemands: [demand],
+        nodes: [],
         probeSites: [],
         moduleEdges: [],
         declaredShapes: [],
@@ -58,6 +84,7 @@ describe('handlerResultLayerTransformer', () => {
         calls: [],
         valueUses: [],
         exportedBindings: [],
+        indexDemands: [],
         nodes: [],
         probeSites: [],
         moduleEdges: [],

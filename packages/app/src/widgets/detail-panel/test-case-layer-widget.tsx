@@ -6,7 +6,7 @@
  *
  * USAGE:
  * <TestCaseLayerWidget fn={fn} testCase={testCase} driver={driver} entryLabel={entryLabel} isModule={false} />
- * // Renders `<marker> <driver>(<arrange>) → reaches L<line>` and, for a settled case, its outcome line
+ * // Renders `<marker> <driver>(<arrange>) → <output> (reaches L<line>)` and, for a settled case, its outcome line
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Group, Text } from '#gateway/npm/mantine__core';
@@ -56,6 +56,11 @@ export const TestCaseLayerWidget = ({
   // makes a case that THREW read identically to one that merely came out elsewhere.
   const settled = result !== undefined && status !== 'passed';
   const reach = `${settled ? 'predicted' : 'reaches'} L${exit?.line ?? '?'}`;
+  const exitEvent =
+    status === 'passed' && result !== undefined
+      ? [...result.trace].reverse().find((event) => event.kind === 'exit' && event.id === testCase.reachesPath[0])
+      : undefined;
+  const reachText = exitEvent === undefined ? reach : `${exitEvent.valueText} (${reach})`;
   // Why it did not pass, in this panel's own L-number vocabulary. An errored case
   // carries the runner's message (it threw, was not callable, fired no exit probe);
   // a failed one has no message and is explained by where it DID come out.
@@ -95,10 +100,10 @@ export const TestCaseLayerWidget = ({
             {`${runStatusStatics.marker[status]} `}
           </Text>
           {isModule
-            ? `${entryLabel} → ${reach}`
+            ? `${entryLabel} → ${reachText}`
             : `${driver}(${arrangeTextTransformer({
                 arrange: testCase.arrange,
-              })}) → ${reach}`}
+              })}) → ${reachText}`}
         </Text>
         {/* The salient (must-run) marker — its own inline span like CASE_STATUS, but a
             SIBLING of the row so it never enters the row's asserted text. It rides every

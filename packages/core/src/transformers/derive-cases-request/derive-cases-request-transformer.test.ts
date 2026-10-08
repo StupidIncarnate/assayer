@@ -4,6 +4,7 @@ import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/cond
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
+import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 import { deriveCasesRequestTransformer } from './derive-cases-request-transformer';
 
 const VALUE = 'value';
@@ -122,6 +123,34 @@ describe('deriveCasesRequestTransformer', () => {
       const result = deriveCasesRequestTransformer({ scope: SCOPE, params: SCOPE.params, welds: undefined, envDrivable: false, harness: undefined });
 
       expect('harness' in result).toBe(false);
+    });
+  });
+
+  describe('indexDemands', () => {
+    it('VALID: {scope has indexDemands} => the request carries them', () => {
+      const demand = IndexDemandStub();
+      const scopeWithDemands = ScopeRecordStub({ ...SCOPE, indexDemands: [demand] });
+      const result = deriveCasesRequestTransformer({
+        scope: scopeWithDemands,
+        params: scopeWithDemands.params,
+        welds: undefined,
+        envDrivable: false,
+        harness: undefined,
+      });
+
+      expect(result.indexDemands).toStrictEqual([demand]);
+    });
+
+    it('EMPTY: {scope has no indexDemands} => the request carries no indexDemands key at all', () => {
+      const result = deriveCasesRequestTransformer({
+        scope: SCOPE,
+        params: SCOPE.params,
+        welds: undefined,
+        envDrivable: false,
+        harness: undefined,
+      });
+
+      expect('indexDemands' in result).toBe(false);
     });
   });
 });

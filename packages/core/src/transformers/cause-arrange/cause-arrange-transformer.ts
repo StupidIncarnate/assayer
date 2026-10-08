@@ -85,6 +85,7 @@ import { arrangeBindingContract, arrangeValueContract } from '@assayer/shared/co
 import type { ArrangeBinding, ArrangeValue, ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
 import type { ConditionCause } from '../../contracts/condition-cause/condition-cause-contract';
+import type { IndexDemand } from '../../contracts/index-demand/index-demand-contract';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 import { isDomainEmptyGuard } from '../../guards/is-domain-empty/is-domain-empty-guard';
@@ -92,6 +93,7 @@ import { isFalsyArmGuard } from '../../guards/is-falsy-arm/is-falsy-arm-guard';
 import { isTypeFillableGuard } from '../../guards/is-type-fillable/is-type-fillable-guard';
 import { isValueBindingGuard } from '../../guards/is-value-binding/is-value-binding-guard';
 import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-cardinality-statics';
+import { representativeValueStatics } from '../../statics/representative-value/representative-value-statics';
 import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transformer';
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
@@ -102,16 +104,22 @@ import { representativeValueTransformer } from '../representative-value/represen
 import { typeTextTransformer } from '../type-text/type-text-transformer';
 import { typeToRangeTransformer } from '../type-to-range/type-to-range-transformer';
 
+const AT_INDEX_MEMBERS = [0, -1, representativeValueStatics.number];
+const BRACKET_INDEX_MEMBERS = [0, representativeValueStatics.number];
+const MIN_OUT_OF_BOUNDS_TARGET_LENGTH = 3;
+
 export const causeArrangeTransformer = ({
   requirements,
   params,
   envDrivable,
   harness,
+  indexDemands,
 }: {
   requirements: ConditionCause['requirements'];
   params: ParamDescriptor[];
   envDrivable: boolean;
   harness?: { entry: string; params: readonly string[] } | undefined;
+  indexDemands?: IndexDemand[];
 }): CauseArrange => {
   // A WELDED operand is a single-value domain to start from — `{members:[7]}` for a scalar const,
   // `{lengthMin:3, lengthMax:3}` for an array const's length. The guard arm values below intersect onto
@@ -155,9 +163,29 @@ export const causeArrangeTransformer = ({
     return acc.set(operand, existing === undefined ? domain : intersectDomainsTransformer({ left: existing, right: domain }));
   }, constSeed);
 
+  const domainWithIndexDemands =
+    indexDemands === undefined
+      ? domainByOperand
+      : indexDemands.reduce((acc, demand) => {
+          if (demand.kind === 'param-index' && !acc.has(demand.param)) {
+            const paramDesc = params.find((candidate) => String(candidate.name) === String(demand.param));
+
+            if (paramDesc?.type.kind === 'number') {
+              return acc.set(
+                demand.param,
+                valueDomainContract.parse({
+                  members: demand.operation === 'at' ? AT_INDEX_MEMBERS : BRACKET_INDEX_MEMBERS,
+                }),
+              );
+            }
+          }
+
+          return acc;
+        }, domainByOperand);
+
   // One operand nothing can satisfy is enough: the cause as a whole cannot happen, so there is no
   // arrangement to return and the exit behind it is unreachable through this cause.
-  const unreachable = [...domainByOperand.values()].some((domain) => isDomainEmptyGuard({ domain }));
+  const unreachable = [...domainWithIndexDemands.values()].some((domain) => isDomainEmptyGuard({ domain }));
 
   if (unreachable) {
     return causeArrangeContract.parse({ unreachable: true, arrangements: [], unfillable: [] });
@@ -241,7 +269,7 @@ export const causeArrangeTransformer = ({
       }, new Map<string, string>())
     : new Map<string, string>();
 
-  const operandChoices = [...domainByOperand.entries()].flatMap(([operand, domain]) => {
+  const operandChoices = [...domainWithIndexDemands.entries()].flatMap(([operand, domain]) => {
     const values = domainValuesTransformer({ domain });
 
     return values.length === 0 ? [] : [{ operand, values }];
@@ -268,7 +296,7 @@ export const causeArrangeTransformer = ({
       return [];
     }
 
-    const lengths = lengthCandidatesTransformer({ domain: domainByOperand.get(param.name) ?? valueDomainContract.parse({}) });
+    const lengths = lengthCandidatesTransformer({ domain: domainWithIndexDemands.get(param.name) ?? valueDomainContract.parse({}) });
 
     if (lengths !== undefined) {
       const [length] = lengths;
@@ -277,13 +305,32 @@ export const causeArrangeTransformer = ({
       return value === undefined ? [] : [{ param: param.name, values: [value] }];
     }
 
+    const extraLengths =
+      indexDemands === undefined
+        ? []
+        : indexDemands
+            .filter(
+              (demand): demand is Extract<IndexDemand, { kind: 'array-length-index' }> =>
+                demand.kind === 'array-length-index' &&
+                String(demand.arrayParam) === String(param.name) &&
+                demand.targetLength >= MIN_OUT_OF_BOUNDS_TARGET_LENGTH,
+            )
+            .map((demand) => demand.targetLength);
+
+    const counts = [
+      ...new Set([
+        ...arrayCardinalityStatics.order.map((cardinality) => arrayCardinalityStatics.counts[cardinality]),
+        ...extraLengths,
+      ]),
+    ];
+
     return [
       {
         param: param.name,
-        values: arrayCardinalityStatics.order.flatMap((cardinality) => {
+        values: counts.flatMap((count) => {
           const arranged = arrayArrangeTransformer({
             element: type.element,
-            count: arrayCardinalityStatics.counts[cardinality],
+            count,
           });
 
           return arranged === undefined ? [] : [arranged];

@@ -7,4 +7,12 @@
  * import { someExport } from '#gateway/npm/react-dom__client';
  */
 
-export * from 'react-dom/client';
+export type {
+  Container,
+  HydrationOptions,
+  RootOptions,
+  ErrorInfo,
+  Root,
+} from 'react-dom/client';
+
+export { createRoot, hydrateRoot } from 'react-dom/client';

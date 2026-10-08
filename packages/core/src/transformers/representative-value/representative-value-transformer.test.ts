@@ -127,4 +127,22 @@ describe('representativeValueTransformer', () => {
       expect(representativeValueTransformer({ type: TypeDescriptorStub({ kind: 'unknown', text: 'Date' }) })).toBe(undefined);
     });
   });
+
+  describe('offset for distinct values', () => {
+    it('VALID: {number with offset 1} => returns 8 (7 + 1)', () => {
+      expect(representativeValueTransformer({ type: { kind: 'number' }, offset: 1 })).toBe(8);
+    });
+
+    it('VALID: {number with offset 2} => returns 9 (7 + 2)', () => {
+      expect(representativeValueTransformer({ type: { kind: 'number' }, offset: 2 })).toBe(9);
+    });
+
+    it('VALID: {string with offset 1} => returns "abc123_1"', () => {
+      expect(representativeValueTransformer({ type: { kind: 'string' }, offset: 1 })).toBe('abc123_1');
+    });
+
+    it('VALID: {boolean with offset 1} => returns true', () => {
+      expect(representativeValueTransformer({ type: { kind: 'boolean' }, offset: 1 })).toBe(true);
+    });
+  });
 });
