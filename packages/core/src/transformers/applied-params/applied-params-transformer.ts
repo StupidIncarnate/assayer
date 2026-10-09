@@ -10,6 +10,10 @@
  *   TypeScript already forbids a required parameter after an optional one and puts the rest parameter
  *   last, so the truncated tail is only ever other omissible parameters.
  *
+ *   A parameter whose DEFAULT value holds a branch (`label = cond ? 'a' : 'b'`, `branchingDefault`) is
+ *   not supplied either, even when the seam could fill it: that branch runs only when the caller leaves
+ *   the argument out, and supplying a value would skip it in every case.
+ *
  *   A REQUIRED parameter the seam refuses is left in place: it is a real debt, the entry cannot be
  *   called without it, and `fill-param` reports the refusal that `input-gap` invoices.
  *
@@ -41,11 +45,13 @@ export const appliedParamsTransformer = ({
   harness?: readonly string[] | undefined;
 }): ParamDescriptor[] => {
   const harnessNames = new Set((harness ?? []).map((name) => name));
+  // A parameter whose default value BRANCHES is left out too, fillable or not: its default runs only
+  // when the caller omits it, and that default is logic of this function a case has to reach.
   const unowed = params.findIndex(
     (param) =>
       (param.optional === true || param.rest === true) &&
       !harnessNames.has(String(param.name)) &&
-      fillParamTransformer({ param }).kind === 'unfillable',
+      (param.branchingDefault === true || fillParamTransformer({ param }).kind === 'unfillable'),
   );
 
   return unowed === -1 ? params : params.slice(0, unowed);

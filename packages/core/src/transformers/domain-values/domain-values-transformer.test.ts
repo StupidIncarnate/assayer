@@ -1,3 +1,5 @@
+import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
+
 import { ValueDomainStub } from '../../contracts/value-domain/value-domain.stub';
 import { domainValuesTransformer } from './domain-values-transformer';
 
@@ -129,6 +131,32 @@ describe('domainValuesTransformer', () => {
 
     it('EMPTY: {an exclusion with no bounds} => no values, since nothing states a point to pick', () => {
       const result = domainValuesTransformer({ domain: ValueDomainStub({ excluded: [0] }) });
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it('EMPTY: {excluded: [0], type: number} => no values, since the representative 7 is not excluded and the fill stands', () => {
+      const result = domainValuesTransformer({
+        domain: ValueDomainStub({ excluded: [0] }),
+        type: TypeDescriptorStub({ kind: 'number' }),
+      });
+
+      expect(result).toStrictEqual([]);
+    });
+  });
+
+  describe('an open domain that excludes the representative', () => {
+    it('VALID: {excluded: [7], type: number} => [8], so the arm does not receive the value it excludes', () => {
+      const result = domainValuesTransformer({
+        domain: ValueDomainStub({ excluded: [7] }),
+        type: TypeDescriptorStub({ kind: 'number' }),
+      });
+
+      expect(result).toStrictEqual([8]);
+    });
+
+    it('EMPTY: {excluded: [7], no type} => no values, since nothing names the representative to step past', () => {
+      const result = domainValuesTransformer({ domain: ValueDomainStub({ excluded: [7] }) });
 
       expect(result).toStrictEqual([]);
     });

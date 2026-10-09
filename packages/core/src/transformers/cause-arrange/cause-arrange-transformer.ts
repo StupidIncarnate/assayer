@@ -269,8 +269,20 @@ export const causeArrangeTransformer = ({
       }, new Map<string, string>())
     : new Map<string, string>();
 
+  // Each operand's own type, read off the leaf that names it, so a domain that excludes the type's
+  // representative realizes the next one rather than leaving the fill to land on the excluded point.
+  // `is-predicate-constraining` realizes with the same type, so the two cannot disagree.
+  const typeByOperand = new Map(
+    requirements.flatMap((requirement) =>
+      requirement.leaf.operandParamName === undefined
+        ? []
+        : [[String(requirement.leaf.operandParamName), requirement.leaf.operandType] as const],
+    ),
+  );
+
   const operandChoices = [...domainWithIndexDemands.entries()].flatMap(([operand, domain]) => {
-    const values = domainValuesTransformer({ domain });
+    const type = typeByOperand.get(operand);
+    const values = domainValuesTransformer({ domain, ...(type === undefined ? {} : { type }) });
 
     return values.length === 0 ? [] : [{ operand, values }];
   });

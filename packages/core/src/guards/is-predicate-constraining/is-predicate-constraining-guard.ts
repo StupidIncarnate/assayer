@@ -29,7 +29,10 @@
  *   domain's own value where it names one (`domain-values`, UNFILTERED — `null` is a value the
  *   `non-nullish` violating arm names on purpose, per `representative-value-contract`, even though no
  *   `string`-typed candidate normally is one), falling back to the type's context-free representative
- *   only when the domain names NOTHING — exactly what an unconstrained operand receives downstream.
+ *   only when the domain names NOTHING — exactly what an unconstrained operand receives downstream. The
+ *   domain is realized with the operand's type, so an open domain that excludes the representative
+ *   (`value === 7` on a number, whose violating arm excludes 7) realizes the next representative, 8,
+ *   exactly as `cause-arrange` realizes it.
  *   Both arms must resolve to a value, and the two must DIFFER: a value on only one arm, or the same
  *   fallback landing on both (an unrecognized predicate, or a representative that happens to equal the
  *   excluded literal — `false` is BOTH the boolean representative and what `b === false` excludes on
@@ -87,7 +90,7 @@ export const isPredicateConstrainingGuard = ({ leaf }: { leaf?: ConditionLeaf })
   }
 
   const [satisfying, violating] = [armValues.satisfying, armValues.violating].map((domain) => {
-    const [value] = domainValuesTransformer({ domain });
+    const [value] = domainValuesTransformer({ domain, type: leaf.operandType });
 
     return value === undefined ? representativeValueTransformer({ type: leaf.operandType }) : value;
   });

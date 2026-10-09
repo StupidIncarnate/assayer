@@ -9,6 +9,9 @@
  *   plain required parameter serializes exactly as it always did and the content-keyed cache is
  *   unmoved.
  *
+ *   `branchingDefault` is a fact about the parameter's DEFAULT value: it holds a branch the walk reads
+ *   as part of the function. Carried only when true, like the two flags above.
+ *
  *   `declaredText` is the SOURCE's own name for the type — the checker's canonical rendering of the
  *   declaration, carried only where the descriptor's own rendering would not reproduce it. It exists
  *   for the P1 invoice, which must name a type the reader can find in their own file: a
@@ -35,6 +38,9 @@ export const paramDescriptorContract = z.object({
   // The same debt, spelled the other way: `collect(11)` is a legal call of `collect(size: number,
   // ...sinks: ((m: string) => void)[])`, which binds `sinks` to the empty array.
   rest: z.boolean().optional(),
+  // The parameter's DEFAULT value holds a branch (`label = cond ? 'a' : 'b'`). That branch runs only
+  // when the caller leaves the argument out, so a derived case leaves it out (`applied-params`).
+  branchingDefault: z.boolean().optional(),
   // What the SIGNATURE spelled, for the invoice — present only where the descriptor cannot say it.
   declaredText: z.string().min(1).brand<'ParamDescriptorDeclaredText'>().optional(),
 }).brand<'ParamDescriptor'>();

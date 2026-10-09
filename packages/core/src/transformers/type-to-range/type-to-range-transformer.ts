@@ -93,6 +93,24 @@ export const typeToRangeTransformer = ({
   // Every arm that would be realized from the operand's OWN representative, for a type that has none.
   // Constraining nothing is the same safety property the unrecognized predicate relies on.
   const unrealizable = armValuesContract.parse({ satisfying: {}, violating: {} });
+  // The falsy value each scalar member of a union can take: `0`, `''`, `false`, or a falsy literal
+  // member itself. Read in member order, so the list is deterministic.
+  const falsyPoints: RepresentativeValue[] =
+    type.kind === 'union'
+      ? type.members
+          .flatMap((member): RepresentativeValue[] =>
+            member.kind === 'number'
+              ? [representativeValueContract.parse(0)]
+              : member.kind === 'string'
+                ? [representativeValueContract.parse('')]
+                : member.kind === 'boolean'
+                  ? [representativeValueContract.parse(false)]
+                  : member.kind === 'literal' && !member.value
+                    ? [member.value]
+                    : [],
+          )
+          .filter((point, index, all) => all.indexOf(point) === index)
+      : [];
 
   switch (predicateKind) {
     // The length axis, mirroring the value axis one line for one line. A length comparison becomes a
@@ -153,24 +171,35 @@ export const typeToRangeTransformer = ({
         satisfying: { max: num },
         violating: { min: num, minExclusive: true },
       });
+    // A UNION with a falsy point among its members (`number | undefined` has 0, `boolean | undefined`
+    // has `false`) is truthy everywhere but those points, and falsy exactly at them, so it reads the way
+    // a lone `number` does: an exclusion on one side, the points on the other. Sampling the truthy side
+    // instead would make a welded constant intersect it to nothing and report a live arm dead. A union
+    // with no such point keeps the representative reading below.
     case 'truthy':
       return type.kind === 'number'
         ? armValuesContract.parse({ satisfying: { excluded: [0] }, violating: { members: [0] } })
         : type.kind === 'boolean'
           ? armValuesContract.parse({ satisfying: { members: [true] }, violating: { members: [false] } })
-          : rep === undefined
-            ? unrealizable
-            : armValuesContract.parse({ satisfying: { members: [rep] }, violating: { members: [''] } });
+          : falsyPoints.length > 0
+            ? armValuesContract.parse({ satisfying: { excluded: falsyPoints }, violating: { members: falsyPoints } })
+            : rep === undefined
+              ? unrealizable
+              : armValuesContract.parse({ satisfying: { members: [rep] }, violating: { members: [''] } });
     case 'falsy':
       return type.kind === 'number'
         ? armValuesContract.parse({ satisfying: { members: [0] }, violating: { excluded: [0] } })
         : type.kind === 'boolean'
           ? armValuesContract.parse({ satisfying: { members: [false] }, violating: { members: [true] } })
-          : rep === undefined
-            ? unrealizable
-            : armValuesContract.parse({ satisfying: { members: [''] }, violating: { members: [rep] } });
-    // The `??` operand: satisfying is a NON-null value drawn from the type (`rep`, which the
-    // representative transformer never returns null for), violating is `null` — ALWAYS, regardless of
+          : falsyPoints.length > 0
+            ? armValuesContract.parse({ satisfying: { members: falsyPoints }, violating: { excluded: falsyPoints } })
+            : rep === undefined
+              ? unrealizable
+              : armValuesContract.parse({ satisfying: { members: [''] }, violating: { members: [rep] } });
+    // The `??` operand: satisfying is every value but `null` — an exclusion, not a sample, because a
+    // condition `a ?? b` intersects it with a truthiness read of the same `a` (`a` falsy but not
+    // nullish), and a sampled representative would intersect `{0}` to nothing. Realized, it is the
+    // type's representative, which is never null. Violating is `null` — ALWAYS, regardless of
     // whether the type has a scalar point. `null` is nullish independent of what the operand's non-null
     // half is, so an object/array/callable/unknown operand (`rep === undefined`) still violates on
     // exactly `null`: only the SATISFYING side has nothing to name (the fill seam builds the real
@@ -179,7 +208,7 @@ export const typeToRangeTransformer = ({
     // `plan/open-defects.md` names, just moved from a scalar operand to a composite one.
     case 'non-nullish':
       return armValuesContract.parse({
-        satisfying: rep === undefined ? {} : { members: [rep] },
+        satisfying: rep === undefined ? {} : { excluded: [null] },
         violating: { members: [null] },
       });
     // The runtime-tag axis: `literal` here is always the STRING tag `typeof` compared against

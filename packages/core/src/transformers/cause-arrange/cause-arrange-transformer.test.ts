@@ -37,6 +37,79 @@ const NUMBER_PARAMS = [
 
 describe('causeArrangeTransformer', () => {
   describe('binding requirements to values', () => {
+    // 7 is the number representative. The violating arm of `=== 7` excludes it and names no other
+    // value, so the arm realizes the next representative rather than the 7 it excludes.
+    it('VALID: {score === 7, want false} => 8, never the excluded 7', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({
+          requirements: [
+            {
+              leaf: ConditionLeafStub({
+                id: 'x#leaf',
+                operandParamName: 'score',
+                operandType: { kind: 'number' },
+                predicate: { kind: 'eq', literal: 7 },
+              }),
+              want: false,
+            },
+          ],
+        }),
+        params: [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'param', param: 'score', value: 8 }]],
+      });
+    });
+
+    it('VALID: {value truthy on boolean | undefined} => true, the member the falsy exclusion leaves', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({
+          requirements: [
+            {
+              leaf: ConditionLeafStub({
+                id: 'x#leaf',
+                operandParamName: 'value',
+                operandType: {
+                  kind: 'union',
+                  members: [
+                    { kind: 'unknown', text: 'undefined' },
+                    { kind: 'literal', value: false },
+                    { kind: 'literal', value: true },
+                  ],
+                },
+                predicate: { kind: 'truthy' },
+              }),
+              want: true,
+            },
+          ],
+        }),
+        params: [
+          ParamDescriptorStub({
+            name: 'value',
+            type: {
+              kind: 'union',
+              members: [
+                { kind: 'unknown', text: 'undefined' },
+                { kind: 'literal', value: false },
+                { kind: 'literal', value: true },
+              ],
+            },
+          }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'param', param: 'value', value: true }]],
+      });
+    });
+
     it('VALID: {two operands, both wanted} => one arrangement satisfying both', () => {
       const result = causeArrangeTransformer({
         ...ConditionCauseStub({ requirements: [

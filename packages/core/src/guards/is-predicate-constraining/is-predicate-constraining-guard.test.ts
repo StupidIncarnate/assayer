@@ -24,6 +24,28 @@ describe('isPredicateConstrainingGuard', () => {
       expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
     });
 
+    // 7 is also the number representative. The violating arm excludes it and names nothing else, so it
+    // realizes the next representative, 8, instead of landing on the 7 it excludes.
+    it('VALID: {value === 7 on a number, the literal equal to the representative} => true', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'value',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'eq', literal: 7 },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+    });
+
+    it("VALID: {name !== 'abc123' on a string, the literal equal to the representative} => true", () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'name',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'neq', literal: 'abc123' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+    });
+
     it('VALID: {s.length === 0 on a string} => true', () => {
       const leaf = ConditionLeafStub({
         operandParamName: 's',
@@ -41,6 +63,33 @@ describe('isPredicateConstrainingGuard', () => {
         operandParamName: 'flag',
         operandType: { kind: 'boolean' },
         predicate: { kind: 'truthy' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+    });
+
+    it('VALID: {value on boolean | undefined} => true, the truthy arm realizes true and the falsy arm false', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'value',
+        operandType: {
+          kind: 'union',
+          members: [
+            { kind: 'unknown', text: 'undefined' },
+            { kind: 'literal', value: false },
+            { kind: 'literal', value: true },
+          ],
+        },
+        predicate: { kind: 'truthy' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+    });
+
+    it('VALID: {xs.length !== 0 on an array} => true, each arm names a length', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'xs',
+        operandType: { kind: 'array', element: { kind: 'number' } },
+        predicate: { kind: 'length-neq', literal: 0 },
       });
 
       expect(isPredicateConstrainingGuard({ leaf })).toBe(true);

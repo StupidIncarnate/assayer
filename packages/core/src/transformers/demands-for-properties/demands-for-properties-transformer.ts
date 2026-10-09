@@ -82,7 +82,7 @@ export const demandsForPropertiesTransformer = ({
         });
 
         return [armValues.satisfying, armValues.violating].flatMap((domain) => {
-          const realized = domainValuesTransformer({ domain });
+          const realized = domainValuesTransformer({ domain, type: property.type });
 
           if (realized.length > 0) {
             return realized;

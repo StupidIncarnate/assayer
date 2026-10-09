@@ -30,6 +30,14 @@ describe('paramDescriptorContract', () => {
       expect(result).toStrictEqual({ name: 'name', type: { kind: 'string' }, rest: true });
     });
 
+    it('VALID: {branchingDefault: true} => carries the flag for a default value that holds a branch', () => {
+      const param = ParamDescriptorStub({ optional: true, branchingDefault: true });
+
+      const result = paramDescriptorContract.parse(param);
+
+      expect(result).toStrictEqual({ name: 'name', type: { kind: 'string' }, optional: true, branchingDefault: true });
+    });
+
     it('VALID: {declaredText} => carries the source-spelled type text for the P1 invoice', () => {
       const param = ParamDescriptorStub({
         type: { kind: 'object', properties: [] },

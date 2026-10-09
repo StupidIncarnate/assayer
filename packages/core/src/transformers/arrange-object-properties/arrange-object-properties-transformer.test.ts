@@ -36,6 +36,30 @@ describe('arrangeObjectPropertiesTransformer', () => {
     });
   });
 
+  describe('a requirement whose violating arm excludes the representative', () => {
+    // No demand names a value here, so the property is realized from its domain alone: `=== 7` excludes
+    // 7 on its violating arm, and 7 is the number representative, so the arm realizes 8.
+    it('VALID: {retries === 7, want false, no demand} => retries built as 8', () => {
+      const result = arrangeObjectPropertiesTransformer({
+        properties: [{ name: 'retries', type: { kind: 'number' } }],
+        demands: [],
+        requirements: [
+          {
+            leaf: ConditionLeafStub({
+              operandPropertyPath: ['retries'],
+              operandType: { kind: 'number' },
+              predicate: { kind: 'eq', literal: 7 },
+            }),
+            want: false,
+          },
+        ],
+        corrected: new Set(),
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: false, properties: [{ name: 'retries', value: 8 }] });
+    });
+  });
+
   describe('a requirement two levels deep, onto a NAMED nested object property', () => {
     it('VALID: {db: {retry: number}, db.retry === 3, want true} => db built as { retry: 3 }', () => {
       const result = arrangeObjectPropertiesTransformer({

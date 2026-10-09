@@ -5,7 +5,8 @@
  *   carrying that literal; the SAME six operators over a `.length` access become the `length-*` family,
  *   which constrains the operand's length instead of its value; the SAME `===`/`!==` pair over a
  *   `typeof` read becomes the `typeof-*` family, which constrains the operand's RUNTIME TAG instead of
- *   its value; a condition with NO comparison operator is a truthiness test on the operand itself;
+ *   its value; a condition with NO comparison operator is a truthiness test on the operand itself, and
+ *   a bare `.length` with no operator is the length-axis truthiness test, `length-neq` carrying 0;
  *   everything else is `unrecognized`.
  *
  *   One operator table serves all three axes, and zero is not a special case on any of them.
@@ -40,8 +41,12 @@ export const predicateTransformer = ({
   // invert and the only one a bare boolean operand ever has, so `if (a || flag)` and `if (!ready)`
   // derived no values at all. `truthy`/`falsy` already exist in the contract and are already handled
   // by the type→range engine; nothing produced them until now.
+  //
+  // A bare `.length` (`if (xs.length)`) is the same truthiness test one axis over: a length is a count,
+  // and a count is falsy exactly at zero, so it reads as `length-neq` carrying 0. Read as `truthy` on
+  // the value axis instead, it would ask for a truthy ARRAY, which every array already is.
   if (opKind === '') {
-    return predicateContract.parse({ kind: 'truthy' });
+    return predicateContract.parse(isLengthAccess ? { kind: 'length-neq', literal: 0 } : { kind: 'truthy' });
   }
 
   const comparison =

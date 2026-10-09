@@ -143,6 +143,28 @@ describe('predicateTransformer', () => {
     });
   });
 
+  describe('no comparison operator', () => {
+    it('VALID: {flag, no operator} => truthy', () => {
+      expect(
+        predicateTransformer({
+          opKind: '',
+          isLengthAccess: false,
+          isTypeofAccess: false,
+        }),
+      ).toStrictEqual(PredicateStub({ kind: 'truthy' }));
+    });
+
+    it('VALID: {xs.length, no operator} => length-neq carrying 0, since a count is falsy only at zero', () => {
+      expect(
+        predicateTransformer({
+          opKind: '',
+          isLengthAccess: true,
+          isTypeofAccess: false,
+        }),
+      ).toStrictEqual(PredicateStub({ kind: 'length-neq', literal: 0 }));
+    });
+  });
+
   describe('typeof comparisons', () => {
     it("VALID: {typeof x === 'string'} => typeof-eq carrying the tag", () => {
       expect(

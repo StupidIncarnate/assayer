@@ -19,6 +19,23 @@ describe('demandsForPropertiesTransformer', () => {
       expect(result).toStrictEqual([{ name: 'mode', demand: { kind: 'demanded', values: ['a', 'abc123'] } }]);
     });
 
+    // 7 is the number representative, so the violating arm of `=== 7` realizes the next one, 8, rather
+    // than collapsing onto the 7 it excludes and demanding a single value.
+    it('VALID: {retries: number, config.retries === 7} => retries demanded [7, 8]', () => {
+      const result = demandsForPropertiesTransformer({
+        properties: [{ name: 'retries', type: { kind: 'number' } }],
+        leaves: [
+          ConditionLeafStub({
+            operandPropertyPath: ['retries'],
+            operandType: { kind: 'number' },
+            predicate: { kind: 'eq', literal: 7 },
+          }),
+        ],
+      });
+
+      expect(result).toStrictEqual([{ name: 'retries', demand: { kind: 'demanded', values: [7, 8] } }]);
+    });
+
     it('EMPTY: {a property no leaf reaches} => unknown', () => {
       const result = demandsForPropertiesTransformer({
         properties: [{ name: 'mode', type: { kind: 'string' } }],

@@ -10,6 +10,11 @@
  *   comparison states a THRESHOLD, and dropping it left every length check but the two against zero
  *   with nothing to classify.
  *
+ *   A bare `.length` used as the whole condition (`if (xs.length)`) is read past the access too, with
+ *   no operator: `xs` is the operand, and `predicateTransformer` reads a length with no comparison as
+ *   a test that the length is not zero. Reading it as a member of `xs` instead would make it an
+ *   object-member read, which no case can steer.
+ *
  *   `null` is a KEYWORD node (`NullKeyword`) and reads as the literal value `null`, which is a
  *   first-class `RepresentativeValue` (`representative-value-contract`) — so `v === null` reads
  *   exactly as `v === 'a'` does. `undefined` is not a keyword but an IDENTIFIER, and stays unread:
@@ -40,11 +45,10 @@
  */
 import { Node } from '#gateway/npm/ts-morph';
 
-import { representativeValueContract } from '@assayer/shared/contracts';
-
 import type { ConditionReadout } from '../../contracts/condition-readout/condition-readout-contract';
 
 import { predicateTransformer } from '../predicate/predicate-transformer';
+import { readLiteralValueLayerTransformer } from './read-literal-value-layer-transformer';
 import { readPropertyPathLayerTransformer } from './read-property-path-layer-transformer';
 
 export const readConditionLayerTransformer = ({ condition }: { condition: Node }): ConditionReadout => {
@@ -52,33 +56,28 @@ export const readConditionLayerTransformer = ({ condition }: { condition: Node }
   const left = binary?.getLeft();
   const right = binary?.getRight();
   const opKind = binary === undefined ? '' : binary.getOperatorToken().getKindName();
-  const isLengthAccess = left !== undefined && Node.isPropertyAccessExpression(left) && left.getName() === 'length';
+  // The `.length` access is the comparison's left side, or the WHOLE condition when nothing compares it
+  // (`if (xs.length)`). Both read the operand past the access; `predicateTransformer` decides what a
+  // bare length means.
+  const lengthSubject = binary === undefined ? condition : left;
+  const lengthAccess =
+    lengthSubject !== undefined && Node.isPropertyAccessExpression(lengthSubject) && lengthSubject.getName() === 'length'
+      ? lengthSubject
+      : undefined;
+  const isLengthAccess = lengthAccess !== undefined;
   // A `typeof` operand is unwrapped the SAME way a `.length` access is: `operandIsTypeof` is read off
   // the LEFT node before the unwrap, so it survives even though `operandNode` becomes what `typeof`
   // applies to, not the `typeof` expression itself.
   const typeOfExpr = left !== undefined && Node.isTypeOfExpression(left) ? left : undefined;
   const operandNode: Node =
-    left === undefined
-      ? condition
-      : typeOfExpr === undefined
-        ? isLengthAccess && Node.isPropertyAccessExpression(left)
-          ? left.getExpression()
-          : left
-        : typeOfExpr.getExpression();
-  const rightLiteral =
-    right === undefined
-      ? undefined
-      : Node.isStringLiteral(right)
-        ? representativeValueContract.parse(right.getLiteralValue())
-        : Node.isNumericLiteral(right)
-          ? representativeValueContract.parse(right.getLiteralValue())
-          : right.getKindName() === 'TrueKeyword'
-            ? representativeValueContract.parse(true)
-            : right.getKindName() === 'FalseKeyword'
-              ? representativeValueContract.parse(false)
-              : Node.isNullLiteral(right)
-                ? representativeValueContract.parse(null)
-                : undefined;
+    lengthAccess === undefined
+      ? left === undefined
+        ? condition
+        : typeOfExpr === undefined
+          ? left
+          : typeOfExpr.getExpression()
+      : lengthAccess.getExpression();
+  const rightLiteral = right === undefined ? undefined : readLiteralValueLayerTransformer({ node: right });
   const operandName = Node.isIdentifier(operandNode) ? operandNode.getText() : undefined;
   const operandIsTypeof = typeOfExpr === undefined ? undefined : true;
 

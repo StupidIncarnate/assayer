@@ -389,4 +389,123 @@ describe('handleFunctionLayerTransformer', () => {
       }).toStrictEqual({ branchKinds: ['ternary'], exitKinds: ['return', 'return'] });
     });
   });
+
+  describe('the predicate signature', () => {
+    it('VALID: {return n > 50, a boolean return} => publishes the comparison as a predicate signature', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export function big(n: number): boolean {\n  return n > 50;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toStrictEqual({
+        kind: 'leaf',
+        id: '*module*/big/predicate#leaf',
+        operandParamName: 'n',
+        operandType: { kind: 'number' },
+        predicate: { kind: 'gt', literal: 50 },
+      });
+    });
+
+    it('EMPTY: {return items.length, a number return} => no predicate signature, since the count is returned, not compared', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export function count(items: number[]): number {\n  return items.length;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.predicateSignature).toBe(undefined);
+    });
+  });
+
+  describe('a parameter default value', () => {
+    it('VALID: {text = value === 7 ? "then" : "else"} => a ternary branch of this function, keyed under its scope', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "export function label(value: number, text: string = value === 7 ? 'then' : 'else'): string {\n  return text;\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect({
+        branches: result.branches.map((branch) => ({ coverageId: branch.coverageId, kind: branch.kind })),
+        fallthroughArms: result.fallthroughArms.map((fallthroughArm) => fallthroughArm.guardPath),
+      }).toStrictEqual({
+        branches: [
+          {
+            coverageId: '*module*/label/ternary:BinaryExpression,id:value,EqualsEqualsEqualsToken,num:7',
+            kind: 'ternary',
+          },
+        ],
+        fallthroughArms: [
+          [{ branchCoverageId: '*module*/label/ternary:BinaryExpression,id:value,EqualsEqualsEqualsToken,num:7', arm: 'then' }],
+          [{ branchCoverageId: '*module*/label/ternary:BinaryExpression,id:value,EqualsEqualsEqualsToken,num:7', arm: 'else' }],
+        ],
+      });
+    });
+
+    it('VALID: {text = value === 7 ? "then" : "else"} => the parameter is marked branchingDefault, so a case leaves it out', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "export function label(value: number, text: string = value === 7 ? 'then' : 'else'): string {\n  return text;\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.params).toStrictEqual([
+        { name: 'value', type: { kind: 'number' } },
+        { name: 'text', type: { kind: 'string' }, optional: true, branchingDefault: true },
+      ]);
+    });
+
+    it('VALID: {text = "x"} => no branch, the parameter is only optional, and the default is descended', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "export function label(value: number, text: string = 'x'): string {\n  return text;\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect({
+        branches: result.branches,
+        params: result.opensScope?.params,
+        descents: result.descents.map((descent) => descent.node.getKindName()),
+      }).toStrictEqual({
+        branches: [],
+        params: [
+          { name: 'value', type: { kind: 'number' } },
+          { name: 'text', type: { kind: 'string' }, optional: true },
+        ],
+        descents: ['StringLiteral', 'ReturnStatement'],
+      });
+    });
+
+    it('VALID: {make = () => 1} => the default arrow function is descended, so its scope is found', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export function run(make: () => number = () => 1): number {\n  return make();\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['ArrowFunction', 'ReturnStatement']);
+    });
+  });
 });

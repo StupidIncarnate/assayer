@@ -24,18 +24,27 @@
  *   the caller must ask it first, because the two demand opposite responses: fill a value, or report
  *   an exit that cannot be reached.
  *
+ *   An open domain that only EXCLUDES points (`value !== 7`) names no value of its own, so that fill
+ *   would land on the representative even when the domain excludes it, and both arms of `value === 7`
+ *   would then arrange 7. A caller that passes the operand's `type` gets the first representative the
+ *   domain does not exclude instead (`stepped-representative`). Without `type`, or when the
+ *   representative is not excluded, the list stays empty and the fill stands.
+ *
  * USAGE:
  * domainValuesTransformer({ domain: { min: 10, minExclusive: true, max: 100, maxExclusive: false, excluded: [] } });
  * // Returns [100] — one point satisfying both bounds
+ * domainValuesTransformer({ domain: { excluded: [7] }, type: { kind: 'number' } });
+ * // Returns [8] — the representative 7 is excluded, so the next one
  */
 import { representativeValueContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue } from '@assayer/shared/contracts';
+import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
 
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 import { isLengthInDomainGuard } from '../../guards/is-length-in-domain/is-length-in-domain-guard';
 import { isWithinDomainBoundsGuard } from '../../guards/is-within-domain-bounds/is-within-domain-bounds-guard';
 import { representativeValueStatics } from '../../statics/representative-value/representative-value-statics';
 import { lengthCandidatesTransformer } from '../length-candidates/length-candidates-transformer';
+import { steppedRepresentativeLayerTransformer } from './stepped-representative-layer-transformer';
 
 // A length-bounded string is built by slicing this pattern to the required length. The guards bounded
 // a LENGTH and said nothing about content, so any deterministic filler satisfies them; a
@@ -43,7 +52,13 @@ import { lengthCandidatesTransformer } from '../length-candidates/length-candida
 // one letter.
 const PATTERN = representativeValueStatics.string;
 
-export const domainValuesTransformer = ({ domain }: { domain: ValueDomain }): RepresentativeValue[] => {
+export const domainValuesTransformer = ({
+  domain,
+  type,
+}: {
+  domain: ValueDomain;
+  type?: TypeDescriptor;
+}): RepresentativeValue[] => {
   if (domain.members !== undefined) {
     return domain.members.filter(
       (member) =>
@@ -73,7 +88,7 @@ export const domainValuesTransformer = ({ domain }: { domain: ValueDomain }): Re
       : { from: domain.max, step: domain.maxExclusive ? -1 : 0, next: -1 };
 
   if (edge === undefined) {
-    return [];
+    return type === undefined ? [] : steppedRepresentativeLayerTransformer({ type, excluded: domain.excluded });
   }
 
   const preferred = edge.from + edge.step;

@@ -40,6 +40,16 @@ const ROUTE_CONTEXT = WalkContextStub({
   exported: true,
 });
 
+const NULLISH_CONTEXT = WalkContextStub({
+  scopePath: ['pick'],
+  guardPath: [],
+  params: [
+    { name: 'value', type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] } },
+    { name: 'other', type: { kind: 'number' } },
+  ],
+  exported: true,
+});
+
 describe('readConditionTreeLayerTransformer', () => {
   describe('a single comparison is a one-leaf tree', () => {
     it('VALID: {score > 5} => one leaf at the root, carrying its operand, type and predicate', () => {
@@ -402,6 +412,194 @@ describe('readConditionTreeLayerTransformer', () => {
         operandCallPosition: { line: 2, column: 5 },
         operandType: { kind: 'boolean' },
         predicate: { kind: 'truthy' },
+      });
+    });
+  });
+
+  describe('a `??` read as a condition', () => {
+    it('VALID: {value ?? 0, a falsy literal fallback} => the truthiness of value alone, its probe on value', () => {
+      readConditionTreeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'declare const value: number | undefined;\nif (value ?? 0) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const left = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = readConditionTreeLayerTransformer({ condition, context: NULLISH_CONTEXT, branchCoverageId: BRANCH, path: [] });
+
+      expect(result).toStrictEqual({
+        condition: {
+          kind: 'leaf',
+          id: 'B#leaf.0',
+          operandParamName: 'value',
+          operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+          predicate: { kind: 'truthy' },
+        },
+        sites: [{ id: 'B#leaf.0', kind: 'cond', start: left.getStart(), end: left.getEnd() }],
+      });
+    });
+
+    it('VALID: {value ?? 5, a truthy literal fallback} => value truthy, or value nullish', () => {
+      readConditionTreeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'declare const value: number | undefined;\nif (value ?? 5) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const left = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = readConditionTreeLayerTransformer({ condition, context: NULLISH_CONTEXT, branchCoverageId: BRANCH, path: [] });
+
+      expect(result).toStrictEqual({
+        condition: {
+          kind: 'or',
+          left: {
+            kind: 'leaf',
+            id: 'B#leaf.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+            predicate: { kind: 'truthy' },
+          },
+          right: {
+            kind: 'not',
+            operand: {
+              kind: 'leaf',
+              id: 'B#leaf.1.0',
+              operandParamName: 'value',
+              operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+              predicate: { kind: 'non-nullish' },
+            },
+          },
+        },
+        sites: [{ id: 'B#leaf.0', kind: 'cond', start: left.getStart(), end: left.getEnd() }],
+      });
+    });
+
+    it('VALID: {value ?? other > 3} => value truthy, or value nullish and the fallback comparison true', () => {
+      readConditionTreeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare const value: number | undefined;\ndeclare const other: number;\nif (value ?? other > 3) {}\n',
+      );
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const nullish = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression);
+      const left = nullish.getLeft();
+      const right = nullish.getRight();
+
+      const result = readConditionTreeLayerTransformer({ condition, context: NULLISH_CONTEXT, branchCoverageId: BRANCH, path: [] });
+
+      expect(result).toStrictEqual({
+        condition: {
+          kind: 'or',
+          left: {
+            kind: 'leaf',
+            id: 'B#leaf.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+            predicate: { kind: 'truthy' },
+          },
+          right: {
+            kind: 'and',
+            left: {
+              kind: 'not',
+              operand: {
+                kind: 'leaf',
+                id: 'B#leaf.1.0',
+                operandParamName: 'value',
+                operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+                predicate: { kind: 'non-nullish' },
+              },
+            },
+            right: {
+              kind: 'leaf',
+              id: 'B#leaf.1.1',
+              operandParamName: 'other',
+              operandType: { kind: 'number' },
+              predicate: { kind: 'gt', literal: 3 },
+            },
+          },
+        },
+        sites: [
+          { id: 'B#leaf.0', kind: 'cond', start: left.getStart(), end: left.getEnd() },
+          { id: 'B#leaf.1.1', kind: 'cond', start: right.getStart(), end: right.getEnd() },
+        ],
+      });
+    });
+
+    it('VALID: {(value) ?? 5 against value ?? 5} => redundant parentheses leave the condition unchanged', () => {
+      readConditionTreeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const bare = project.createSourceFile('src/a.ts', 'declare const value: number | undefined;\nif (value ?? 5) {}\n');
+      const wrapped = project.createSourceFile('src/b.ts', 'declare const value: number | undefined;\nif ((value)??(5)) {}\n');
+
+      const bareResult = readConditionTreeLayerTransformer({
+        condition: bare.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression(),
+        context: NULLISH_CONTEXT,
+        branchCoverageId: BRANCH,
+        path: [],
+      });
+      const wrappedResult = readConditionTreeLayerTransformer({
+        condition: wrapped.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression(),
+        context: NULLISH_CONTEXT,
+        branchCoverageId: BRANCH,
+        path: [],
+      });
+
+      expect(wrappedResult.condition).toStrictEqual(bareResult.condition);
+    });
+
+    // The operand's type is the checker's read of `welded` where the condition uses it, and the
+    // checker narrows a `const` initialized to 3 to `number` there.
+    it('VALID: {const welded ?? 0} => the truthiness leaf carries the welded value', () => {
+      readConditionTreeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const welded: number | undefined = 3;\nif (welded ?? 0) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionTreeLayerTransformer({
+        condition,
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        branchCoverageId: BRANCH,
+        path: [],
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf.0',
+        operandParamName: 'welded',
+        operandConstValue: 3,
+        operandType: { kind: 'number' },
+        predicate: { kind: 'truthy' },
+      });
+    });
+  });
+
+  describe('a bare .length read as a condition', () => {
+    it('VALID: {xs.length} => a length-neq 0 leaf on xs, its probe on the whole access', () => {
+      readConditionTreeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'declare const xs: readonly number[];\nif (xs.length) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionTreeLayerTransformer({
+        condition,
+        context: WalkContextStub({
+          scopePath: ['count'],
+          guardPath: [],
+          params: [{ name: 'xs', type: { kind: 'array', element: { kind: 'number' } } }],
+          exported: true,
+        }),
+        branchCoverageId: BRANCH,
+        path: [],
+      });
+
+      expect(result).toStrictEqual({
+        condition: {
+          kind: 'leaf',
+          id: 'B#leaf',
+          operandParamName: 'xs',
+          operandType: { kind: 'array', element: { kind: 'number' } },
+          predicate: { kind: 'length-neq', literal: 0 },
+        },
+        sites: [{ id: 'B#leaf', kind: 'cond', start: condition.getStart(), end: condition.getEnd() }],
       });
     });
   });

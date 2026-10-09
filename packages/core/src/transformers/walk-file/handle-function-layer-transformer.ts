@@ -10,6 +10,9 @@
  *   own near-copy of the derivation. This file owns the FunctionLikeNode family; widening the
  *   analyzer to a new callable shape means adding it here and routing it in `dispatch-node`.
  *
+ *   A parameter's default value runs inside this scope too, so it is walked here, under the same
+ *   context as the body, and a ternary in it is a branch of this function.
+ *
  * USAGE:
  * handleFunctionLayerTransformer({ node: functionDeclaration, context });
  * // Returns a HandlerResult opening the function's scope and descending its body
@@ -41,6 +44,7 @@ import { walkContextTransformer } from '../walk-context/walk-context-transformer
 import { handleBlockLayerTransformer } from './handle-block-layer-transformer';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
 import { readAccountedLayerTransformer } from './read-accounted-layer-transformer';
+import { readBoundTernaryLayerTransformer } from './read-bound-ternary-layer-transformer';
 import { readConditionalExitLayerTransformer } from './read-conditional-exit-layer-transformer';
 import { readConditionTreeLayerTransformer } from './read-condition-tree-layer-transformer';
 import { readEntryAccessLayerTransformer } from './read-entry-access-layer-transformer';
@@ -99,7 +103,7 @@ export const handleFunctionLayerTransformer = ({
   // The parameter's own type NODE travels with its type, because the checker alone cannot render a
   // declaration `any` absorbed (`db: Db | string`, §5.10) — and a gap invoicing a type the signature
   // does not declare is text nobody can act on.
-  const params = node.getParameters().map((param) => {
+  const declaredParams = node.getParameters().map((param) => {
     const typeNode = param.getTypeNode();
     const type = typeDescriptorTransformer({
       fact: readTypeFactLayerTransformer({
@@ -136,7 +140,25 @@ export const handleFunctionLayerTransformer = ({
     }),
   });
 
-  const scoped = walkContextTransformer({ context, scopeSegment: name, params, exported });
+  const scoped = walkContextTransformer({ context, scopeSegment: name, params: declaredParams, exported });
+
+  // A parameter's DEFAULT value is code of this function: it runs inside the function's scope, before
+  // the body, each time a caller leaves that argument out. So it is read under the function's own
+  // context, and a ternary there is a branch of this function (`read-bound-ternary`). Any other default
+  // is descended whole, so a call or an arrow function in it is still walked.
+  const defaults = node.getParameters().map((param) => {
+    const initializer = param.getInitializer();
+
+    return initializer === undefined
+      ? undefined
+      : readBoundTernaryLayerTransformer({ expression: initializer, context: walkContextTransformer({ context: scoped, tail: false }) });
+  });
+  const defaultResults = defaults.flatMap((result) => (result === undefined ? [] : [result]));
+  // A default that branches marks its parameter, so a derived case leaves that argument out and the
+  // branch runs (`applied-params`).
+  const params = declaredParams.map((param, index) =>
+    (defaults[index]?.branches.length ?? 0) > 0 ? paramDescriptorContract.parse({ ...param, branchingDefault: true }) : param,
+  );
   const body = node.getBody();
 
   const block = body !== undefined && Node.isBlock(body) ? body : undefined;
@@ -166,7 +188,9 @@ export const handleFunctionLayerTransformer = ({
   // `if (pred(x))` leaf composes against this — the callee's comparison rebased onto the argument the
   // caller passed — turning two identical derived cases into the sound pair. Gated to a SINGLE
   // comparison return: any leaf that is not a real comparison carries no constraint, so no signature is
-  // published and the caller's leaf stays opaque.
+  // published and the caller's leaf stays opaque. The function must also return a BOOLEAN: the
+  // condition reader reads a bare `xs.length` as the test `xs.length !== 0`, which is right where the
+  // length decides a branch, but `return xs.length` returns the count itself, not a comparison.
   const onlyStatement = statements.length === 1 ? statements[0] : undefined;
   const returnStatement =
     onlyStatement !== undefined && Node.isReturnStatement(onlyStatement) ? onlyStatement : undefined;
@@ -183,6 +207,7 @@ export const handleFunctionLayerTransformer = ({
         });
   const predicateSignature =
     predicateReadout !== undefined &&
+    returnType.kind === 'boolean' &&
     conditionLeavesTransformer({ condition: predicateReadout.condition }).every((leaf) =>
       COMPARISON_PREDICATE_KINDS.has(leaf.predicate.kind),
     )
@@ -257,9 +282,13 @@ export const handleFunctionLayerTransformer = ({
       : conciseTernary.probeSites;
 
   return handlerResultLayerTransformer({
-    branches: conciseTernary === undefined ? (blockResult?.branches ?? []) : conciseTernary.branches,
+    branches: [
+      ...defaultResults.flatMap((result) => result.branches),
+      ...(conciseTernary === undefined ? (blockResult?.branches ?? []) : conciseTernary.branches),
+    ],
     exits,
-    probeSites,
+    probeSites: [...defaultResults.flatMap((result) => result.probeSites), ...probeSites],
+    fallthroughArms: defaultResults.flatMap((result) => result.fallthroughArms),
     nodes: [
       walkNodeContract.parse({
         kind: node.getKindName(),
@@ -269,6 +298,7 @@ export const handleFunctionLayerTransformer = ({
         endLine: node.getEndLineNumber(),
         handled: true,
       }),
+      ...defaultResults.flatMap((result) => result.nodes),
       ...(conciseTernary === undefined ? (blockResult?.nodes ?? []) : conciseTernary.nodes),
     ],
     opensScope: scopeRecordContract.parse({
@@ -286,13 +316,15 @@ export const handleFunctionLayerTransformer = ({
       exits: [],
       ...(predicateSignature === undefined ? {} : { predicateSignature }),
     }),
-    descents:
-      conciseTernary === undefined
+    descents: [
+      ...defaultResults.flatMap((result) => result.descents),
+      ...(conciseTernary === undefined
         ? block === undefined
           ? body === undefined
             ? []
             : [{ node: body, context: scoped }]
           : (blockResult?.descents ?? [])
-        : conciseTernary.descents,
+        : conciseTernary.descents),
+    ],
   });
 };

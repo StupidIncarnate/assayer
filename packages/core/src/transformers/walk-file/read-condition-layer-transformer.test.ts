@@ -292,6 +292,55 @@ describe('readConditionLayerTransformer', () => {
 
       expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'truthy' });
     });
+
+    it('VALID: {bare xs.length condition} => xs is the operand, past the .length access, with no property path', () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (xs.length) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionLayerTransformer({ condition });
+
+      expect({
+        kind: result.operandNode.getKindName(),
+        name: result.operandName,
+        operandPropertyPath: result.operandPropertyPath,
+      }).toStrictEqual({
+        kind: 'Identifier',
+        name: 'xs',
+        operandPropertyPath: undefined,
+      });
+    });
+
+    it('VALID: {bare xs.length condition} => a length-neq predicate carrying 0', () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (xs.length) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'length-neq', literal: 0 });
+    });
+
+    it('VALID: {bare config.items.length condition} => the operand is config.items, an object-member read', () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (config.items.length) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionLayerTransformer({ condition });
+
+      expect({
+        kind: result.operandNode.getKindName(),
+        operandRootName: result.operandRootName,
+        operandPropertyPath: result.operandPropertyPath,
+        predicate: result.predicate,
+      }).toStrictEqual({
+        kind: 'PropertyAccessExpression',
+        operandRootName: 'config',
+        operandPropertyPath: ['items'],
+        predicate: { kind: 'length-neq', literal: 0 },
+      });
+    });
   });
 
   describe('conditions it cannot classify', () => {
@@ -322,6 +371,15 @@ describe('readConditionLayerTransformer', () => {
         kind: 'eq',
         literal: 'get',
       });
+    });
+
+    it('VALID: {n === (3)} => redundant parentheses around the literal are invisible, so the predicate is eq 3', () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (n === (3)) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'eq', literal: 3 });
     });
   });
 });

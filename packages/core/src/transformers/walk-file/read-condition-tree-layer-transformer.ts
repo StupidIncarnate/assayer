@@ -10,6 +10,11 @@
  *   and `predicate` (the classification). All this adds is the SHAPE — which is why a new comparison
  *   still lands in `transformers/predicate` and never here.
  *
+ *   `a ?? b` is a connective too, because its truthiness is a shape over other tests: `a` truthy, or
+ *   `a` nullish and `b` truthy. It is spelled with `or`, `and` and `not` over a `non-nullish` leaf on
+ *   `a`, so nothing downstream needs a new connective. A literal `b` is evaluated rather than read,
+ *   because a literal is no input a case can set.
+ *
  *   A leaf's id is the branch's coverage ID plus its positional PATH (`#leaf`, `#leaf.0`, `#leaf.1.0`),
  *   so each leaf is individually addressable for coverage. Parentheses do NOT consume a path segment:
  *   they are formatting, and `project-node` collapses them for exactly the same reason — an ID must
@@ -25,17 +30,16 @@
  */
 import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { conditionNodeContract, coverageContract } from '@assayer/shared/contracts';
+import { conditionNodeContract, coverageContract, predicateContract } from '@assayer/shared/contracts';
 import type { Coverage } from '@assayer/shared/contracts';
 
 import { conditionTreeReadoutContract } from '../../contracts/condition-tree-readout/condition-tree-readout-contract';
 import type { ConditionTreeReadout } from '../../contracts/condition-tree-readout/condition-tree-readout-contract';
-import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
+import { buildConditionLeafLayerTransformer } from './build-condition-leaf-layer-transformer';
 import { readConditionLayerTransformer } from './read-condition-layer-transformer';
-import { readConstOperandLayerTransformer } from './read-const-operand-layer-transformer';
-import { readEnvOperandLayerTransformer } from './read-env-operand-layer-transformer';
-import { readOperandTypeLayerTransformer } from './read-operand-type-layer-transformer';
+import { readLiteralValueLayerTransformer } from './read-literal-value-layer-transformer';
+import { unwrapParenthesesLayerTransformer } from './unwrap-parentheses-layer-transformer';
 
 export const readConditionTreeLayerTransformer = ({
   condition,
@@ -100,57 +104,65 @@ export const readConditionTreeLayerTransformer = ({
         sites: [...left.sites, ...right.sites],
       });
     }
+
+    // `a ?? b` used as a condition is truthy exactly when `a` is truthy, or when `a` is nullish and `b`
+    // is truthy: `a` truthy is never nullish, and `a` falsy but not nullish is what `??` returns. So it
+    // reads as `a || (a is nullish && b)`, over the connectives above. The truthiness of `a` keeps its
+    // probe on `a`'s span. The nullish test on `a` has no span left to wrap, so its leaf carries no
+    // probe.
+    //
+    // A LITERAL `b` is evaluated by its value, not read as a leaf, because no case can set a literal: a
+    // falsy one (`a ?? 0`) leaves just `a`, and a truthy one (`a ?? 5`) leaves `a || a is nullish`.
+    if (operator === SyntaxKind.QuestionQuestionToken) {
+      const truthyLeft = readConditionTreeLayerTransformer({
+        condition: condition.getLeft(),
+        context,
+        branchCoverageId,
+        path: [...path, 0],
+      });
+      const fallback = readLiteralValueLayerTransformer({ node: condition.getRight() });
+
+      if (fallback !== undefined && !fallback) {
+        return truthyLeft;
+      }
+
+      const nullishOperand = unwrapParenthesesLayerTransformer({ node: condition.getLeft() });
+      const nullishLeaf = buildConditionLeafLayerTransformer({
+        readout: {
+          operandNode: nullishOperand,
+          ...(Node.isIdentifier(nullishOperand) ? { operandName: nullishOperand.getText() } : {}),
+          predicate: predicateContract.parse({ kind: 'non-nullish' }),
+        },
+        context,
+        id: coverageContract.shape.id.parse(`${branchCoverageId}#leaf${[...path, 1, 0].map((index) => `.${index}`).join('')}`),
+      });
+      const isNullish = conditionNodeContract.parse({ kind: 'not', operand: nullishLeaf.condition });
+      const truthyRight =
+        fallback === undefined
+          ? readConditionTreeLayerTransformer({
+              condition: condition.getRight(),
+              context,
+              branchCoverageId,
+              path: [...path, 1, 1],
+            })
+          : undefined;
+
+      return conditionTreeReadoutContract.parse({
+        condition: conditionNodeContract.parse({
+          kind: 'or',
+          left: truthyLeft.condition,
+          right:
+            truthyRight === undefined
+              ? isNullish
+              : conditionNodeContract.parse({ kind: 'and', left: isNullish, right: truthyRight.condition }),
+        }),
+        sites: [...truthyLeft.sites, ...(truthyRight === undefined ? [] : truthyRight.sites)],
+      });
+    }
   }
 
   const readout = readConditionLayerTransformer({ condition });
   const id = coverageContract.shape.id.parse(`${branchCoverageId}#leaf${path.map((index) => `.${index}`).join('')}`);
-  // WHERE the operand's value came from — a different question from what its type is, asked of a
-  // different reader. Recorded wherever it is true; whether an entry can be driven through it is
-  // policy, and policy lives in the projections.
-  const envVarName = readEnvOperandLayerTransformer({ node: readout.operandNode });
 
-  // Whether the operand is WELDED to a same-file constant — a value the analyzer EVALUATES rather than
-  // an input a case sets. A scalar `const` welds a value, an array `const` welds its length. Recorded
-  // wherever true; the derivation reads it as a single-value domain and drives the live arm.
-  const constOperand = readConstOperandLayerTransformer({ node: readout.operandNode });
-
-  // A CALL operand reads as opaque `truthy` here, because a single-file parse cannot type the callee.
-  // Anchoring the call's position — the SAME coordinate its call site records — is the foreign key a
-  // later compose pass joins on to swap this leaf for the callee's own predicate.
-  const callPosition = Node.isCallExpression(readout.operandNode)
-    ? readout.operandNode.getSourceFile().getLineAndColumnAtPos(readout.operandNode.getStart())
-    : undefined;
-
-  // A plain identifier is its own param; an object-member read (`config.mode`) names its ROOT param
-  // instead, alongside the property path and type-ref the stub stitch joins on. The operand's TYPE is
-  // still read off the operand node itself (the property's type), never off the root param — passing
-  // the root as `name` would return the whole object descriptor instead of `string`.
-  const operandParamName = readout.operandName ?? readout.operandRootName;
-
-  return conditionTreeReadoutContract.parse({
-    condition: conditionNodeContract.parse({
-      kind: 'leaf',
-      id,
-      ...(operandParamName === undefined ? {} : { operandParamName }),
-      ...(readout.operandPropertyPath === undefined ? {} : { operandPropertyPath: readout.operandPropertyPath }),
-      ...(readout.operandTypeRef === undefined ? {} : { operandTypeRef: readout.operandTypeRef }),
-      ...(readout.operandIsTypeof === undefined ? {} : { operandIsTypeof: readout.operandIsTypeof }),
-      ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
-      ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
-      ...(constOperand?.length === undefined ? {} : { operandConstLength: constOperand.length }),
-      ...(callPosition === undefined ? {} : { operandCallPosition: { line: callPosition.line, column: callPosition.column } }),
-      operandType: readOperandTypeLayerTransformer({
-        node: readout.operandNode,
-        context,
-        ...(readout.operandName === undefined ? {} : { name: readout.operandName }),
-      }),
-      predicate: readout.predicate,
-    }),
-    // The site wraps the LEAF EXPRESSION as written — `condition`, not the operand `read-condition`
-    // picked out. Wrapping in place is what preserves short-circuit: an unevaluated leaf never calls
-    // its probe, so absent stays distinguishable from false.
-    sites: [
-      probeSiteContract.parse({ id, kind: 'cond', start: condition.getStart(), end: condition.getEnd() }),
-    ],
-  });
+  return buildConditionLeafLayerTransformer({ readout, context, id, site: condition });
 };

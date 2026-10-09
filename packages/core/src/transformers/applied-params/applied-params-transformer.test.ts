@@ -49,6 +49,27 @@ describe('appliedParamsTransformer', () => {
         { name: 'retries', type: { kind: 'number' }, optional: true },
       ]);
     });
+
+    it('VALID: {a fillable param whose default value branches} => dropped, so the default and its branch run', () => {
+      const params = [
+        SIZE,
+        ParamDescriptorStub({ name: 'label', type: { kind: 'string' }, optional: true, branchingDefault: true }),
+      ];
+
+      expect(appliedParamsTransformer({ params })).toStrictEqual([{ name: 'size', type: { kind: 'number' } }]);
+    });
+
+    it('VALID: {a branching default a harness answers} => kept, because the harness already supplied it', () => {
+      const params = [
+        SIZE,
+        ParamDescriptorStub({ name: 'label', type: { kind: 'string' }, optional: true, branchingDefault: true }),
+      ];
+
+      expect(appliedParamsTransformer({ params, harness: ['label'] })).toStrictEqual([
+        { name: 'size', type: { kind: 'number' } },
+        { name: 'label', type: { kind: 'string' }, optional: true, branchingDefault: true },
+      ]);
+    });
   });
 
   // The interpreter applies an arrange POSITIONALLY, so a dropped parameter cannot be a hole: keeping the

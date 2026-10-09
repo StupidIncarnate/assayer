@@ -178,17 +178,81 @@ describe('typeToRangeTransformer', () => {
         violating: ValueDomainStub({ members: ['abc123'] }),
       });
     });
+
+    // A union with a falsy point reads like a lone number: an exclusion on the truthy side, the points
+    // on the falsy side. A sampled truthy side would intersect a welded constant to nothing.
+    it('VALID: {undefined | number, truthy} => everything but 0 satisfies, 0 violates', () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({ kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] }),
+        predicateKind: 'truthy',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ excluded: [0] }),
+        violating: ValueDomainStub({ members: [0] }),
+      });
+    });
+
+    it('VALID: {undefined | false | true, truthy} => everything but false satisfies, false violates', () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({
+          kind: 'union',
+          members: [
+            { kind: 'unknown', text: 'undefined' },
+            { kind: 'literal', value: false },
+            { kind: 'literal', value: true },
+          ],
+        }),
+        predicateKind: 'truthy',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ excluded: [false] }),
+        violating: ValueDomainStub({ members: [false] }),
+      });
+    });
+
+    it("VALID: {string | number, falsy} => '' and 0 satisfy, everything else violates", () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({ kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }),
+        predicateKind: 'falsy',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['', 0] }),
+        violating: ValueDomainStub({ excluded: ['', 0] }),
+      });
+    });
+
+    it("VALID: {'a' | 'b', truthy} => a union with no falsy point keeps the representative reading", () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({
+          kind: 'union',
+          members: [
+            { kind: 'literal', value: 'a' },
+            { kind: 'literal', value: 'b' },
+          ],
+        }),
+        predicateKind: 'truthy',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['a'] }),
+        violating: ValueDomainStub({ members: [''] }),
+      });
+    });
   });
 
   describe('non-nullish predicate', () => {
-    // The `??` operand: satisfying is a non-null value drawn from the type, violating is null. Null is
-    // the value the fall-through arm needs, and it is drawn from the declared type, never from running
-    // the code.
-    it('VALID: {string, non-nullish} => the representative value satisfies, null violates', () => {
+    // The `??` operand: satisfying is every value but null, violating is null. Null is the value the
+    // fall-through arm needs, and it is drawn from the declared type, never from running the code. The
+    // satisfying side is an exclusion rather than a sample, so a truthiness read of the same operand
+    // (`a ?? b` used as a condition) can still intersect it with `{0}`.
+    it('VALID: {string, non-nullish} => everything but null satisfies, null violates', () => {
       const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'non-nullish' });
 
       expect(result).toStrictEqual({
-        satisfying: ValueDomainStub({ members: ['abc123'] }),
+        satisfying: ValueDomainStub({ excluded: [null] }),
         violating: ValueDomainStub({ members: [null] }),
       });
     });

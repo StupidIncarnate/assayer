@@ -194,7 +194,24 @@ member of a union IS a valid value of the whole union, which is the rule
 **Handle a new kind of comparison.** Touch `transformers/predicate`.
 `read-condition` only extracts the readout (what the comparison checks,
 and against what) from a condition; it does not decide what counts as a
-valid comparison.
+valid comparison. A bare `xs.length` used as a condition is read past the
+access, and `predicate` classifies a length with no operator as
+`length-neq` carrying 0.
+
+**Read a new connective in a condition.** Touch `read-condition-tree`.
+It spells every connective with `and`, `or` and `not` over leaves. `a ?? b`
+used as a condition is `a` truthy, or `a` nullish and `b` truthy, with a
+`non-nullish` leaf on `a` that carries no probe, because `a`'s span
+already carries its truthiness probe. A literal `b` is evaluated by its
+value instead of read as a leaf, because no case can set a literal.
+
+**Read a parameter's default value.** Touch `handle-function`, which
+walks each default under the function's own context, plus
+`read-bound-ternary`. A ternary there is a branch of the function. It
+has no exit, because its value flows into the parameter, so each arm is
+recorded as a fall-through arm. The parameter is marked
+`branchingDefault`, and `applied-params` leaves it out of every case, so
+the default runs.
 
 **Change how coverage IDs are computed.** Touch `transformers/coverage-id`
 and `transformers/exit-coverage-id`.

@@ -190,7 +190,7 @@ export const arrangeObjectPropertiesTransformer = ({
       // exactly `{ members: [null] }` (`type-to-range`'s `non-nullish` arm), and `??` would discard that
       // legitimate `null` for a freshly-built non-null fill.
       const preferred = domain === undefined ? undefined : usableValues.find((value) => isValueInDomainGuard({ value, domain }));
-      const realized = domain === undefined ? [] : domainValuesTransformer({ domain });
+      const realized = domain === undefined ? [] : domainValuesTransformer({ domain, type: property.type });
       const value =
         preferred === undefined
           ? realized[0] === undefined
