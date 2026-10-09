@@ -11,7 +11,8 @@
  *   analyzer to a new callable shape means adding it here and routing it in `dispatch-node`.
  *
  *   A parameter's default value runs inside this scope too, so it is walked here, under the same
- *   context as the body, and a ternary in it is a branch of this function. A written constructor
+ *   context as the body, and a ternary in it is a branch of this function. That includes the default of
+ *   an element a destructured parameter unpacks (`{ a = 1 }`). A written constructor
  *   walks its class's instance field initializers the same way, because construction runs them.
  *
  * USAGE:
@@ -51,6 +52,7 @@ import { readEntryAccessLayerTransformer } from './read-entry-access-layer-trans
 import { readExportFlagLayerTransformer } from './read-export-flag-layer-transformer';
 import { readFunctionNameLayerTransformer } from './read-function-name-layer-transformer';
 import { readInstanceInitializersLayerTransformer } from './read-instance-initializers-layer-transformer';
+import { readParameterDefaultsLayerTransformer } from './read-parameter-defaults-layer-transformer';
 import { readDeclaredTypeTextLayerTransformer } from './read-declared-type-text-layer-transformer';
 import { readTypeFactLayerTransformer } from './read-type-fact-layer-transformer';
 import { unwrapParenthesesLayerTransformer } from './unwrap-parentheses-layer-transformer';
@@ -150,9 +152,10 @@ export const handleFunctionLayerTransformer = ({
   // function in any other default is walked the same way.
   const paramInitializers = node.getParameters().map((param) => param.getInitializer());
   const preludeContext = walkContextTransformer({ context: scoped, tail: false });
-  const defaults = paramInitializers.flatMap((initializer) =>
-    initializer === undefined ? [] : [{ node: initializer, context: preludeContext }],
-  );
+  const defaults = node
+    .getParameters()
+    .flatMap((param) => readParameterDefaultsLayerTransformer({ node: param }))
+    .map((initializer) => ({ node: initializer, context: preludeContext }));
   // A written constructor runs its class's instance field initializers too, after the defaults and
   // before its own body, every time the class is constructed. So they descend under this scope's
   // context, and the class walks none of them itself (`read-instance-initializers`). An overload

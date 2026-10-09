@@ -524,6 +524,58 @@ describe('handleFunctionLayerTransformer', () => {
 
       expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['ArrowFunction', 'ReturnStatement']);
     });
+
+    it('VALID: {{ a = value > 5 ? 1 : 2 }: { a?: number }} => the default inside the object pattern descends under this function\'s own scope', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export function pick({ a = value > 5 ? 1 : 2 }: { a?: number }, value: number): number {\n  return a;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(
+        result.descents.map((descent) => ({
+          kind: descent.node.getKindName(),
+          scopePath: descent.context.scopePath,
+          guardPath: descent.context.guardPath,
+          tail: descent.context.tail,
+        })),
+      ).toStrictEqual([
+        { kind: 'ConditionalExpression', scopePath: ['*module*', 'pick'], guardPath: [], tail: false },
+        { kind: 'ReturnStatement', scopePath: ['*module*', 'pick'], guardPath: [], tail: true },
+      ]);
+    });
+
+    it('VALID: {[a = value > 5 ? 1 : 2]: number[]} => the default inside the array pattern descends too', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export function pick([a = value > 5 ? 1 : 2]: number[], value: number): number {\n  return a;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['ConditionalExpression', 'ReturnStatement']);
+    });
+
+    it('VALID: {a default inside a destructured parameter} => the parameter itself is not marked branchingDefault, since it has no default of its own', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'export function pick({ a = value > 5 ? 1 : 2 }: { a?: number }, value: number): number {\n  return a;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.params.map((param) => param.branchingDefault)).toStrictEqual([undefined, undefined]);
+    });
   });
 
   describe('a written constructor', () => {

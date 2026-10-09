@@ -15,6 +15,10 @@
  *   with required arguments makes `constructable` false, so the case set builds each instance with
  *   arguments filled from the constructor's declared types instead of guessing at them.
  *
+ *   A decorator on the class, on a member or on a member's parameter runs when the class is defined, so
+ *   the class walks each one under its own context, and a ternary in its arguments is a branch of the
+ *   scope the class sits in.
+ *
  *   A class DECLARES a shape too — its instance type — recorded on the same flat channel an
  *   `interface`/`type` declaration uses and read through the same type reader, because a sibling that
  *   takes a `Point` needs the same answer whether `Point` is an interface or a class. Without it the
@@ -35,6 +39,7 @@ import { typeDescriptorTransformer } from '../type-descriptor/type-descriptor-tr
 import { walkContextTransformer } from '../walk-context/walk-context-transformer';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
 import { implicitConstructorLayerTransformer } from './implicit-constructor-layer-transformer';
+import { readDecoratorsLayerTransformer } from './read-decorators-layer-transformer';
 import { readInstanceInitializersLayerTransformer } from './read-instance-initializers-layer-transformer';
 import { readTypeFactLayerTransformer } from './read-type-fact-layer-transformer';
 
@@ -85,17 +90,20 @@ export const handleClassLayerTransformer = ({
   // supplies, so this handler opens that constructor as an implicit scope and walks them there.
   const initializers = readInstanceInitializersLayerTransformer({ node });
   const ownedByConstructor = new Set<Node>(initializers);
-  // The rest of such a field (a computed name, a decorator) still descends here, so nothing is dropped.
+  // The rest of such a field (a computed name, a type) still descends here, so nothing is dropped.
+  // A decorator never descends with its member: a decorator runs when the class is defined, so the
+  // class walks every one of them below, under the scope the class sits in.
+  const decorators = readDecoratorsLayerTransformer({ node });
+  const ownedByClass = new Set<Node>(decorators);
   const descents = node.getMembers().flatMap((member) => {
-    const initializer = Node.isPropertyDeclaration(member) ? member.getInitializer() : undefined;
+    const children = member.forEachChildAsArray();
+    const kept = children.filter((child) => !ownedByConstructor.has(child) && !ownedByClass.has(child));
 
-    return initializer !== undefined && ownedByConstructor.has(initializer)
-      ? member
-          .forEachChildAsArray()
-          .filter((child) => child !== initializer)
-          .map((child) => ({ node: child, context: scoped }))
+    return Node.isPropertyDeclaration(member) && kept.length !== children.length
+      ? kept.map((child) => ({ node: child, context: scoped }))
       : [{ node: member, context: scoped }];
   });
+  const decoratorDescents = decorators.map((decorator) => ({ node: decorator, context: scoped }));
   const lastInitializer = initializers.at(-1);
   const implicitConstructor =
     node.getConstructors().length > 0 || lastInitializer === undefined
@@ -120,7 +128,7 @@ export const handleClassLayerTransformer = ({
         handled: true,
       }),
     ],
-    descents,
+    descents: [...decoratorDescents, ...descents],
     ...(implicitConstructor === undefined ? {} : { implicitScopes: [implicitConstructor] }),
   });
 };

@@ -290,6 +290,78 @@ describe('handleClassLayerTransformer', () => {
     });
   });
 
+  describe('decorators', () => {
+    it('VALID: {a decorated class} => the decorator descends first, under the scope the class sits in', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function d(n: number): any;\n@d(1)\nexport class X {\n  m(): void {}\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(
+        result.descents.map((descent) => ({
+          kind: descent.node.getKindName(),
+          scopePath: descent.context.scopePath,
+          guardPath: descent.context.guardPath,
+        })),
+      ).toStrictEqual([
+        { kind: 'Decorator', scopePath: ['*module*', 'X'], guardPath: [] },
+        { kind: 'MethodDeclaration', scopePath: ['*module*', 'X'], guardPath: [] },
+      ]);
+    });
+
+    it('VALID: {a decorated method} => the decorator descends from the class, so the method scope never walks it', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function d(n: number): any;\nexport class X {\n  @d(1)\n  m(): void {}\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['Decorator', 'MethodDeclaration']);
+    });
+
+    it('VALID: {a decorated instance field} => the decorator descends once, with the class, and the field descends without it', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function d(n: number): any;\nexport class X {\n  @d(1)\n  label = 2;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['Decorator', 'Identifier']);
+    });
+
+    it('VALID: {a decorated static field} => the decorator descends once, and the field descends without it', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function d(n: number): any;\nexport class X {\n  @d(1)\n  static label = 2;\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual([
+        'Decorator',
+        'StaticKeyword',
+        'Identifier',
+        'NumericLiteral',
+      ]);
+    });
+  });
+
   describe('instance field initializers', () => {
     it('VALID: {an instance field with an initializer, no constructor} => opens the implicit constructor over the initializer', () => {
       handleClassLayerTransformerProxy();

@@ -859,4 +859,149 @@ describe('analyzeFileBroker', () => {
       });
     });
   });
+
+  describe('a ternary in a default inside a destructured parameter', () => {
+    // The default of `label` runs inside `pick` when the object leaves `label` out, so the ternary is a
+    // branch of `pick`. The object case omits `label`, and `value` picks each arm.
+    it('VALID: {an object pattern default `label = value > 5 ? a : b`} => one case per arm, each leaving label out', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "export function pick({ label = value > 5 ? 'then' : 'else' }: { label?: string }, value: number): string {\n  return label;\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/pick.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/pick.ts' });
+
+      const [pick] = result.functions;
+
+      expect({
+        branches: pick?.branches.map((branch) => branch.kind),
+        cases: pick?.cases.map((entry) => entry.arrange),
+        darkSpots: result.darkSpots,
+        undriven: result.undriven,
+      }).toStrictEqual({
+        branches: ['ternary'],
+        cases: [
+          [
+            { kind: 'object', param: "{ label = value > 5 ? 'then' : 'else' }", value: {} },
+            { kind: 'param', param: 'value', value: 6 },
+          ],
+          [
+            { kind: 'object', param: "{ label = value > 5 ? 'then' : 'else' }", value: {} },
+            { kind: 'param', param: 'value', value: 5 },
+          ],
+        ],
+        darkSpots: [],
+        undriven: [],
+      });
+    });
+
+    it('VALID: {an array pattern default `label = value > 5 ? a : b`} => the ternary is a branch of the function, driven by value', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "export function pick([label = value > 5 ? 'then' : 'else']: string[], value: number): string {\n  return label;\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/pick.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/pick.ts' });
+
+      const [pick] = result.functions;
+
+      expect({
+        branches: pick?.branches.map((branch) => branch.kind),
+        cases: pick?.cases.map((entry) => entry.arrange),
+        darkSpots: result.darkSpots,
+        undriven: result.undriven,
+      }).toStrictEqual({
+        branches: ['ternary'],
+        cases: [
+          [
+            { kind: 'array', param: "[label = value > 5 ? 'then' : 'else']", value: [] },
+            { kind: 'param', param: 'value', value: 6 },
+          ],
+          [
+            { kind: 'array', param: "[label = value > 5 ? 'then' : 'else']", value: ['abc123'] },
+            { kind: 'param', param: 'value', value: 6 },
+          ],
+          [
+            { kind: 'array', param: "[label = value > 5 ? 'then' : 'else']", value: ['abc123', 'abc123_1'] },
+            { kind: 'param', param: 'value', value: 6 },
+          ],
+          [
+            { kind: 'array', param: "[label = value > 5 ? 'then' : 'else']", value: [] },
+            { kind: 'param', param: 'value', value: 5 },
+          ],
+          [
+            { kind: 'array', param: "[label = value > 5 ? 'then' : 'else']", value: ['abc123'] },
+            { kind: 'param', param: 'value', value: 5 },
+          ],
+          [
+            { kind: 'array', param: "[label = value > 5 ? 'then' : 'else']", value: ['abc123', 'abc123_1'] },
+            { kind: 'param', param: 'value', value: 5 },
+          ],
+        ],
+        darkSpots: [],
+        undriven: [],
+      });
+    });
+  });
+
+  describe('a ternary in a decorator argument', () => {
+    // A decorator runs when the class is defined, which is module load. So its ternary is a branch of
+    // the module scope, and the welded `value` makes the `then` arm dead.
+    it('VALID: {@tag(value > 5 ? a : b) on a class, value welded to 3} => the module scope owns the branch, and the dead arm is linted', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "declare function tag(text: string): any;\nconst value = 3;\n\n@tag(value > 5 ? 'then' : 'else')\nexport class Labeller {}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/cls.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/cls.ts' });
+
+      const [moduleEntry] = result.functions;
+
+      expect({
+        entries: result.functions.map((fn) => fn.entry.name),
+        moduleBranches: moduleEntry?.branches.map((branch) => branch.kind),
+        darkSpots: result.darkSpots,
+        lints: result.lints,
+      }).toStrictEqual({
+        entries: ['*module*'],
+        moduleBranches: ['ternary'],
+        darkSpots: [],
+        lints: [
+          {
+            rule: 'unreachable-exit',
+            name: '*module*',
+            message:
+              '`cls.ts` can never run the arm on line 4: `value` is welded to `3`, so the branch on line 4 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+            startLine: 4,
+            endLine: 4,
+          },
+        ],
+      });
+    });
+
+    it('VALID: {@tag(value > 5 ? a : b) on a method, value welded to 3} => the module scope owns the branch, never the method', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "declare function tag(text: string): any;\nconst value = 3;\n\nexport class Labeller {\n  @tag(value > 5 ? 'then' : 'else')\n  read(): void {}\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/meth.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/meth.ts' });
+
+      const [moduleEntry, readEntry] = result.functions;
+
+      expect({
+        entries: result.functions.map((fn) => fn.entry.name),
+        moduleBranches: moduleEntry?.branches.map((branch) => branch.kind),
+        readBranches: readEntry?.branches.map((branch) => branch.kind),
+        darkSpots: result.darkSpots,
+        lints: result.lints.map((lint) => ({ rule: lint.rule, name: lint.name, startLine: lint.startLine })),
+      }).toStrictEqual({
+        entries: ['*module*', 'read'],
+        moduleBranches: ['ternary'],
+        readBranches: [],
+        darkSpots: [],
+        lints: [{ rule: 'unreachable-exit', name: '*module*', startLine: 5 }],
+      });
+    });
+  });
 });
