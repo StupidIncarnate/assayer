@@ -1,8 +1,8 @@
 /**
- * PURPOSE: Playwright e2e for the STUB REPOSITORY view. Compiles the smoke-repo syntax-repository into
+ * PURPOSE: Playwright e2e for the STUB REPOSITORY view. Compiles the manual-smoke-repo syntax-repository into
  *   a PER-TEST temp cache via the built CLI precheck, launches the REAL built Electron desktop app,
  *   switches from the explorer to `/stubs` through the nav, and asserts the merged stub view renders
- *   real smoke-repo stubs: an OBJECT card (the cross-file-shape Config with its two readers, its
+ *   real manual-smoke-repo stubs: an OBJECT card (the cross-file-shape Config with its two readers, its
  *   per-property values, and its `unknown` retries), the committed OVERLAY merged in (branch-local
  *   Config's mode shows the corrected `staging`, which exists only in `assayer/stubs/`), and an ENV
  *   card (`process.env#CODE` with its guessed values). Also asserts the nav switches both ways.

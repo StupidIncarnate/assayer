@@ -53,7 +53,7 @@ Files: `packages/shared/src/contracts/arrange-value/arrange-value-contract.ts`,
 
 ## Missing test fixtures
 
-`smoke-repo/` holds small example files. Each one is a fixture that proves a piece of
+`manual-smoke-repo/` holds small example files. Each one is a fixture that proves a piece of
 behaviour still works. If a behaviour has no example there, it can break without any test
 failing. These are the behaviours with no example.
 
@@ -100,7 +100,7 @@ and one where it is false. That behaviour is only covered by unit tests right no
 
 To close it, add `happy-path/array/<name>/<name>.ts` containing something like
 `items.filter(n => n > 5)`, plus its line in `specimen-registry.ts`. Follow the recipe in
-section 6 of `packages/core/CLAUDE.md`. Coordinate with anyone else editing `smoke-repo/` at
+section 6 of `packages/core/CLAUDE.md`. Coordinate with anyone else editing `manual-smoke-repo/` at
 the time, since the directory and the registry are shared.
 
 ### No example pairs a folded-in helper with a harness, or with a bare comparison
@@ -148,7 +148,7 @@ A scratch directory created *inside this repo* works fine, because the walk up r
 monorepo root.
 
 So a one-off end-to-end check is easy. Just put the directory in the right place. Permanent
-test coverage should still go against `smoke-repo/`, which is a real npm workspace and does
+test coverage should still go against `manual-smoke-repo/`, which is a real npm workspace and does
 not need cleaning up. See `run-console.e2e.ts` and `run-unit-broker.integration.test.ts`.
 
 Separately: the catch-all error handler in `packages/cli/bin/assayer.ts` has no test. It

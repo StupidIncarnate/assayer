@@ -33,12 +33,14 @@ module.exports = [
             '**/*.d.ts',
             '**/@types/**',
             '**/__mocks__/**',
-            // smoke-repo is fixture INPUT for Assayer's own compiler (a plain TS repo
+            // manual-smoke-repo is fixture INPUT for Assayer's own compiler (a plain TS repo
             // it analyzes), NOT dungeonmaster-standards code — exclude it from lint.
+            'manual-smoke-repo/**',
+            // smoke-repo/ holds generated specimens, consumer code Assayer analyzes, for the same reason.
             'smoke-repo/**',
             // eslint-rules/ holds Assayer's own local ESLint plugin. A lint rule fits none
             // of the dungeonmaster folder types, so it lives outside packages/*/src and is
-            // excluded here for the same reason smoke-repo is: linting it under the
+            // excluded here for the same reason manual-smoke-repo is: linting it under the
             // dungeonmaster ruleset would fail enforce-project-structure.
             'eslint-rules/**',
         ],

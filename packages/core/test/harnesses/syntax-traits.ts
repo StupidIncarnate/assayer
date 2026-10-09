@@ -37,7 +37,7 @@ import { moduleGraphProjectionTransformer } from '../../src/transformers/module-
 import { builtinModules } from '#gateway/node/module';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
-const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
+const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'manual-smoke-repo');
 
 // The authoritative node-builtin name set, so a specifier like `path` (no `node:` prefix) still
 // classifies as a builtin exactly as the resolver's own builtin check does — never as a package.

@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Drives the REAL execution engine — analyze, assemble, wrapped Jest, saved artifact —
- *   against a REAL specimen in smoke-repo, from a fresh temp cache dir per test. Owns all node:fs /
+ *   against a REAL specimen in manual-smoke-repo, from a fresh temp cache dir per test. Owns all node:fs /
  *   node:os / node:path access so a colocated .integration.test.ts asserts on what actually ran and
  *   what actually landed on disk without touching builtins itself.
  *
@@ -32,7 +32,7 @@ import { runUnitBroker } from '../../src/brokers/run/unit/run-unit-broker';
 import { pid } from '#gateway/node/process';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
-const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
+const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'manual-smoke-repo');
 // Stable for the whole worker, unique across parallel ones — see the note above on why the path must
 // not change between tests.
 const CACHE_DIR = join(tmpdir(), `assayer-engine-${String(pid)}`);

@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer RAW JSON tab — the full cache blob shown
- *   as pretty-printed JSON. Compiles the smoke-repo syntax-repository into a PER-TEST temp cache,
+ *   as pretty-printed JSON. Compiles the manual-smoke-repo syntax-repository into a PER-TEST temp cache,
  *   launches the REAL built Electron app, selects a file, switches to the Raw JSON tab, and asserts
  *   the blob carries the file's relPath, its content-hash key, and a DERIVED coverage ID — while the
  *   code pane and right detail panel unmount (keepMounted=false).

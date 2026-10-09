@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer detail panel's TESTS tab — the derived
- *   case set. Reads the smoke-repo syntax-repository cache that globalSetup compiles once, through the
+ *   case set. Reads the manual-smoke-repo syntax-repository cache that globalSetup compiles once, through the
  *   REAL built Electron app the e2e fixture keeps warm, selects a single file by its exact
  *   data-relpath, and asserts the entry title, the per-exit derived case rows, and the hover coupling that highlights the case a code line runs
  *   through. Covers the if-else / switch / boolean rungs and the nested-function funnel proof (the
@@ -187,13 +187,13 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // `count(items: number[])` is branchless, but the array param FANS OUT over cardinality: three cases
-    // reach the one exit (L2), each arranging a REAL array — the salient `[]` plus the grayed `[7]`/`[7,7]`
+    // reach the one exit (L2), each arranging a REAL array — the salient `[]` plus the grayed `[7]`/`[7,8]`
     // breadth. The arrange renders as the array literal a reader would pass, positionally.
     const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
     await expect(entryTitle).toHaveText('count(items) · 3 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'not run count([7,7]) → reaches L2',
+      'not run count([7,8]) → reaches L2',
       'not run count([7]) → reaches L2',
       'not run count([]) → reaches L2',
     ]);

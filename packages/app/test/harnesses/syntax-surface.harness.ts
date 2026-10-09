@@ -1,7 +1,7 @@
 /**
  * PURPOSE: Derives the compiled-surface expectations for the syntax-repository catalogue by WALKING it
  *   off disk, the SAME way the analyzer's specimen-catalogue and the compiler's inclusion rule do —
- *   every `.ts` under smoke-repo/packages/syntax-repository/src that is not a `.test.ts`. The surface
+ *   every `.ts` under manual-smoke-repo/packages/syntax-repository/src that is not a `.test.ts`. The surface
  *   e2e asserts UI faithfulness (the header's file counts, the FILE_TREE_FILE leaves, the FILE_TREE_DIR
  *   nodes) against these derived values instead of a hand-listed snapshot, so a new specimen never
  *   forces an edit here: the walk answers "every specimen" the moment the file lands on disk.
@@ -21,7 +21,7 @@ import { basename, dirname, join, relative, sep } from '#gateway/node/path';
 import { isAssayerHarnessGuard } from '../../../core/src/guards/is-assayer-harness/is-assayer-harness-guard';
 import { harnessModuleStatics } from '../../../core/src/statics/harness-module/harness-module-statics';
 
-const SMOKE_REPO = join(__dirname, '..', '..', '..', '..', 'smoke-repo');
+const SMOKE_REPO = join(__dirname, '..', '..', '..', '..', 'manual-smoke-repo');
 const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 
 // The compiled surface is what a compile ANALYSED, and a colocated Assayer harness is classified out of
@@ -62,7 +62,7 @@ export const syntaxSurfaceHarness = (): {
     const tsxCount = entries.filter(
       (entry) => entry.name.endsWith('.tsx') && !entry.name.endsWith('.test.tsx'),
     ).length;
-    return new RegExp(`^Assayer \\| smoke-repo assayer/\\S+ \\| ts ${tsCount} tsx ${tsxCount}$`, 'u');
+    return new RegExp(`^Assayer \\| manual-smoke-repo assayer/\\S+ \\| ts ${tsCount} tsx ${tsxCount}$`, 'u');
   },
 
   // The FILE_TREE_FILE leaves are the specimen basenames — duplicates included (in-function.ts ×3,
@@ -76,7 +76,7 @@ export const syntaxSurfaceHarness = (): {
       .map((value) => value),
 
   // The FILE_TREE_DIR nodes are the directory nodes the tree renders — one per DISTINCT directory PATH on
-  // the way to a specimen. Deduping the full smoke-repo-relative paths collapses a shared prefix
+  // the way to a specimen. Deduping the full manual-smoke-repo-relative paths collapses a shared prefix
   // (`packages`, `syntax-repository`, `src`, the happy-path/sad-path buckets) to one node, while sibling
   // paths that share a basename stay distinct — in-function ×3, in-class/length/pure-statement/unreachable
   // ×2 — each rendered showing that basename, exactly as the tree does. Projected to the basename and

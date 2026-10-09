@@ -24,7 +24,7 @@ import { contentHashTransformer } from '../../src/transformers/content-hash/cont
 import { compileProcessFileBroker } from '../../src/brokers/compile/process-file/compile-process-file-broker';
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 
-const SMOKE_REPO = resolve(__dirname, '..', '..', '..', '..', 'smoke-repo');
+const SMOKE_REPO = resolve(__dirname, '..', '..', '..', '..', 'manual-smoke-repo');
 const CATALOGUE = 'packages/syntax-repository/src';
 
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';

@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer detail panel's ADMISSION rows — the
- *   UNDRIVEN and LINT lines that keep a file from reading as "nothing to test". Compiles the smoke-repo
+ *   UNDRIVEN and LINT lines that keep a file from reading as "nothing to test". Compiles the manual-smoke-repo
  *   syntax-repository into a PER-TEST temp cache, launches the REAL built Electron app, selects a
  *   sad-path specimen, and asserts the admission sentence VERBATIM (core-authored P1 text that must
  *   cross core -> cache -> IPC intact). Covers the opaque-module UNDRIVEN, the dead-surface LINT, the

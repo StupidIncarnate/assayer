@@ -719,7 +719,7 @@ completion exit), but the `if` does NOT always exit, because code
 following it still runs on both arms. Treating these as one question is a
 real soundness bug: it would guard a trailing `return` by an arm it does
 not actually depend on, and key that `return` under the wrong ID. The test
-`smoke-repo/.../happy-path/composition/fallthrough-in-if` checks this
+`manual-smoke-repo/.../happy-path/composition/fallthrough-in-if` checks this
 distinction holds. If you are tempted to merge these two functions, that
 test is what would catch the mistake.
 
@@ -1009,7 +1009,7 @@ what the code currently does, instead of what it should do.
 ### Step 1: add a specimen first
 
 Add a new example file at
-`smoke-repo/packages/syntax-repository/src/<bucket>/<category>/<rung>/<rung>.ts`
+`manual-smoke-repo/packages/syntax-repository/src/<bucket>/<category>/<rung>/<rung>.ts`
 (or `.tsx`; the walker treats the two extensions the same way), plus a
 colocated `<rung>.test.ts` (or `.test.tsx`, matching the root file's own
 extension) that asserts only what is BESPOKE to that one file: its exact

@@ -54,7 +54,7 @@ to this repo, on disk.
 
 Verify a change with both `npm run ward` and `npm run test:syntax`. Run
 both commands. The specimen catalogue (the example files under
-`smoke-repo/packages/syntax-repository` that exercise Assayer's supported
+`manual-smoke-repo/packages/syntax-repository` that exercise Assayer's supported
 syntax) is not part of `ward`'s test graph, so `ward` alone will not catch a
 regression there.
 
@@ -128,9 +128,9 @@ screenshot, click an element by its test ID, or call the bridge directly.
 `window.assayerBridge.getCompiledTree()` answers with real data over real
 IPC.
 
-### Point `--repo` at the smoke-repo, never a random repo
+### Point `--repo` at the manual-smoke-repo, never a random repo
 
-`smoke-repo/packages/syntax-repository` is the canonical example repo, the
+`manual-smoke-repo/packages/syntax-repository` is the canonical example repo, the
 same catalogue of example files the e2e suite drives. Point `--repo` at a
 cache compiled from it.
 
@@ -139,7 +139,7 @@ these steps is `compileSmokeCache` in
 `packages/app/test/harnesses/smoke-cache.harness.ts`:
 
 1. Write an `assayer.config.json` whose `repoRoot` is the ABSOLUTE path to
-   the smoke-repo.
+   the manual-smoke-repo.
 2. Run `node packages/cli/dist/bin/assayer.js status`, with the working
    directory set to the folder holding that config file. This precheck
    compiles the surface and writes the result into that folder's
@@ -574,7 +574,7 @@ requirement is R16 in `plan/requirements.md`.
 
 ### Every specimen owes every feature that applies to it
 
-The example files under `smoke-repo/packages/syntax-repository` are called
+The example files under `manual-smoke-repo/packages/syntax-repository` are called
 specimens. Each one is a small example file that demonstrates one syntax
 pattern. Assayer's test suite walks that catalogue directly off disk. The
 list of specimens is never hand-maintained anywhere else, so a new example

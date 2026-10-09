@@ -168,6 +168,9 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/array/shift/shift.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/unshift/unshift.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/at/at.ts`]: ['access:named', 'param:array'],
+  // `length-at` reads the array param's `.length` and uses it as the index into a literal array,
+  // `[10, 20, 30].at(some)`. Branchless, so the same two traits as `at`.
+  [`${CATALOGUE}/happy-path/array/length-at/length-at.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/index-access/index-access.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/element-assign/element-assign.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/spread/spread.ts`]: ['access:named', 'param:array'],

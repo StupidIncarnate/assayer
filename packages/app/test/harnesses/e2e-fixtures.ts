@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Playwright e2e entrypoint for the Assayer desktop app. Re-exports test/expect so specs never
- *   import @playwright/test directly, and owns the shared smoke-repo lifecycle so specs never manage it:
+ *   import @playwright/test directly, and owns the shared manual-smoke-repo lifecycle so specs never manage it:
  *
  *   - a WORKER-scoped `smokeApp` fixture launches ONE Electron process against the single shared compiled
  *     cache (built once in globalSetup) and warms it — the first paint pays Chromium's one-time

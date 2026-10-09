@@ -1,7 +1,7 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer detail panel's ENRICHMENT tab — the
  *   per-line data facts (a param's symbol + type, a branch operand's representative value range).
- *   Compiles the smoke-repo syntax-repository into a PER-TEST temp cache, launches the REAL built
+ *   Compiles the manual-smoke-repo syntax-repository into a PER-TEST temp cache, launches the REAL built
  *   Electron app, selects a single file by its exact data-relpath, opens the Enrichment tab, and
  *   asserts its rows. Covers the single-operand if-else rung and the compound boolean rung whose two
  *   operands both get a range.

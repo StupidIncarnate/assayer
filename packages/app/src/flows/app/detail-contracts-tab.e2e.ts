@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer detail panel's CONTRACTS tab — the
- *   resolved external import rendered as a typed input/output contract. Reads the smoke-repo
+ *   resolved external import rendered as a typed input/output contract. Reads the manual-smoke-repo
  *   syntax-repository cache that globalSetup compiles once, through the REAL built Electron app the
  *   e2e fixture keeps warm, selects
  *   happy-path/npm-package/uses-package/uses-package.ts, opens the Contracts tab, and asserts the symbol, its `pkg <name>`

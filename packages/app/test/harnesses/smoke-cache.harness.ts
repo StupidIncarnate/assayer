@@ -1,6 +1,6 @@
 /**
- * PURPOSE: Compiles the smoke-repo syntax-repository into ONE shared, stable cache dir that every
- *   smoke-repo e2e reuses, plus the per-test reset of that cache's mutable state. The compile is
+ * PURPOSE: Compiles the manual-smoke-repo syntax-repository into ONE shared, stable cache dir that every
+ *   manual-smoke-repo e2e reuses, plus the per-test reset of that cache's mutable state. The compile is
  *   deterministic — the same source yields byte-identical `.assayer` output — so a single compile
  *   serves the whole suite: the e2e fixture launches ONE Electron process against this dir and reloads
  *   the renderer per test instead of paying a fresh ~10s CLI compile and ~8s cold launch each time.
@@ -30,7 +30,7 @@ import { spawn } from '#gateway/node/child_process';
 import { execPath } from '#gateway/node/process';
 
 const cliEntry = join(__dirname, '..', '..', '..', 'cli', 'dist', 'bin', 'assayer.js');
-const smokeRepoPath = join(__dirname, '..', '..', '..', '..', 'smoke-repo');
+const smokeRepoPath = join(__dirname, '..', '..', '..', '..', 'manual-smoke-repo');
 
 // The absolute path to the BUILT Electron main entry — the same binary a production launch runs.
 export const desktopMainEntry = join(__dirname, '..', '..', '..', 'desktop', 'dist', 'bin', 'desktop-main.js');
@@ -71,7 +71,7 @@ export const compileSmokeCache = async (): Promise<void> => {
       if (code === null) {
         reject(
           new Error(
-            `assayer: the smoke-repo compile was killed by ${String(signal)} before writing a cache manifest, so the e2e suite has no compiled surface to read. Re-run it; if the kill repeats, run \`node ${cliEntry} status\` in a temp config dir pointed at ${smokeRepoPath}.`,
+            `assayer: the manual-smoke-repo compile was killed by ${String(signal)} before writing a cache manifest, so the e2e suite has no compiled surface to read. Re-run it; if the kill repeats, run \`node ${cliEntry} status\` in a temp config dir pointed at ${smokeRepoPath}.`,
           ),
         );
         return;
@@ -79,7 +79,7 @@ export const compileSmokeCache = async (): Promise<void> => {
       if (code !== 0) {
         reject(
           new Error(
-            `assayer: the smoke-repo precheck exited ${code}, so the e2e suite has no compiled surface. Run \`node ${cliEntry} status\` in a temp config dir pointed at ${smokeRepoPath} to see why.`,
+            `assayer: the manual-smoke-repo precheck exited ${code}, so the e2e suite has no compiled surface. Run \`node ${cliEntry} status\` in a temp config dir pointed at ${smokeRepoPath} to see why.`,
           ),
         );
         return;

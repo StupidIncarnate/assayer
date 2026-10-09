@@ -66,7 +66,7 @@ describe('analyzeFileBroker (integration)', () => {
   });
 
   describe('the catalogue covers what the contracts model', () => {
-    // "The smoke-repo represents every syntax we handle" is otherwise a claim with nothing behind it.
+    // "The manual-smoke-repo represents every syntax we handle" is otherwise a claim with nothing behind it.
     // The expected side is the WRITTEN-DOWN gap list, so a construct falling out of coverage — or a
     // contract gaining a member nobody catalogued — fails here rather than going unnoticed. Closing a
     // gap means deleting its line, which is the ratchet.

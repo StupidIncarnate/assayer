@@ -1,5 +1,5 @@
 /**
- * PURPOSE: Playwright e2e for the Compiled Surface Explorer SHELL + FILE TREE. Compiles the smoke-repo
+ * PURPOSE: Playwright e2e for the Compiled Surface Explorer SHELL + FILE TREE. Compiles the manual-smoke-repo
  *   syntax-repository into a PER-TEST temp cache via the built CLI precheck, launches the REAL built
  *   Electron desktop app at the '/' hash route, and asserts the shell handshake: the status header, the
  *   file tree rebuilt purely from the cache manifest relPaths, and that clicking a file renders its

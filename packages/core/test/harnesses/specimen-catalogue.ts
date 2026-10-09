@@ -21,7 +21,7 @@
  *
  * USAGE:
  * specimenCatalogue().relPaths();
- * // ['packages/syntax-repository/src/happy-path/boolean/and/and.ts', ...] — sorted, smoke-repo-relative
+ * // ['packages/syntax-repository/src/happy-path/boolean/and/and.ts', ...] — sorted, manual-smoke-repo-relative
  */
 import { existsSync, readFileSync, walkFilesSync } from '#gateway/node/fs';
 import { resolve, join, relative, sep, basename, dirname, extname } from '#gateway/node/path';
@@ -32,7 +32,7 @@ import { isAssayerHarnessGuard } from '../../src/guards/is-assayer-harness/is-as
 import { harnessModuleStatics } from '../../src/statics/harness-module/harness-module-statics';
 
 const CORE_ROOT = resolve(__dirname, '..', '..');
-const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'smoke-repo');
+const SMOKE_REPO = resolve(CORE_ROOT, '..', '..', 'manual-smoke-repo');
 const CATALOGUE_DIR = join(SMOKE_REPO, 'packages', 'syntax-repository', 'src');
 
 // A `.harness.ts` that never registers is ordinary source, not a harness — the same gate the compiler

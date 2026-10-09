@@ -17,8 +17,8 @@
     "lint": "dungeonmaster-ward --only lint",
     "typecheck": "dungeonmaster-ward --only typecheck",
     "test": "dungeonmaster-ward --only test",
-    "test:syntax": "jest --config smoke-repo/packages/syntax-repository/jest.config.js",
-    "typecheck:syntax": "npm run typecheck --prefix smoke-repo",
+    "test:syntax": "jest --config manual-smoke-repo/packages/syntax-repository/jest.config.js",
+    "typecheck:syntax": "npm run typecheck --prefix manual-smoke-repo",
     "test:eslint-rules": "jest --config eslint-rules/jest.config.js",
     "postinstall": "if command -v dungeonmaster >/dev/null 2>&1; then dungeonmaster gateway-sync; fi"
   },

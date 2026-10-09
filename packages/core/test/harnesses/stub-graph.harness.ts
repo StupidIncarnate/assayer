@@ -32,7 +32,7 @@ import { compileProcessFileBroker } from '../../src/brokers/compile/process-file
 import { compileResolveGraphBroker } from '../../src/brokers/compile/resolve-graph/compile-resolve-graph-broker';
 import { compileStubGraphBroker } from '../../src/brokers/compile/stub-graph/compile-stub-graph-broker';
 
-const SMOKE_REPO = resolve(__dirname, '..', '..', '..', '..', 'smoke-repo');
+const SMOKE_REPO = resolve(__dirname, '..', '..', '..', '..', 'manual-smoke-repo');
 const CATALOGUE = 'packages/syntax-repository/src';
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 

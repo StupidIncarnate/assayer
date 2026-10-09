@@ -25,7 +25,7 @@ const SWITCH_ENV_SPECIMEN = 'packages/syntax-repository/src/happy-path/switch/pu
 // exits they predict while the dead middle exit rides the artifact as an unreachable-exit lint.
 const CROSS_FILE_GUARDS_SPECIMEN = 'packages/syntax-repository/src/sad-path/unreachable/cross-file-guards/cross-file-guards.ts';
 // An object-member branch driven by stub-realize, carrying a COMMITTED `mode` correction under
-// `smoke-repo/assayer/stubs/`. Only a real run proves the overlay reaches the merged stub view and a
+// `manual-smoke-repo/assayer/stubs/`. Only a real run proves the overlay reaches the merged stub view and a
 // human-supplied value becomes an arrange a case actually executes.
 const BRANCH_LOCAL_SPECIMEN = 'packages/syntax-repository/src/happy-path/object/branch-local/branch-local.ts';
 // The harness PAIR — byte for byte the same source, one with a committed `<basename>.harness.ts` beside

@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Playwright e2e for the Compiled Surface Explorer CODE VIEW — the read-only CodeMirror 6
- *   render of a cached blob and the per-line test-count gutter. Compiles the smoke-repo
+ *   render of a cached blob and the per-line test-count gutter. Compiles the manual-smoke-repo
  *   syntax-repository into a PER-TEST temp cache, launches the REAL built Electron app, selects a
  *   single file by its exact data-relpath, and asserts the editor surface (line-number gutter, syntax
  *   highlighting, the exact cached bytes) and the `.cm-test-counts` gutter counts derived per line.

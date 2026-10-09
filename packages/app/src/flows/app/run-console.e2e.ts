@@ -1,5 +1,5 @@
 /**
- * PURPOSE: Playwright e2e for the Compiled Surface Explorer RUN flow + console. Compiles the smoke-repo
+ * PURPOSE: Playwright e2e for the Compiled Surface Explorer RUN flow + console. Compiles the manual-smoke-repo
  *   syntax-repository into a PER-TEST temp cache, launches the REAL built Electron app, selects
  *   happy-path/boolean/and/and.ts, and drives the Run action — the ONE assertion that proves the desktop's spawn of
  *   the same binary a human types actually terminates and streams the real CLI report. Also covers the
