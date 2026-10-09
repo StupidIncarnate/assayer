@@ -1,0 +1,8 @@
+{
+  "name": "@generated-smoke-repo/syntax-repository",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
