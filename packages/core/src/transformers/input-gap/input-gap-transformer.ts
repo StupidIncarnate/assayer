@@ -22,10 +22,10 @@
  *   parameter its signature does not have, which is a reader hunting for a `cb` that is not there.
  *
  *   The closing sentence promises only what supplying the value actually does. It does NOT promise cases:
- *   an entry can be blocked twice over — a method whose class also needs constructor arguments lands in
- *   the ACCESS gap the moment its inputs are buildable, and a branch on an opaque value is admitted
- *   UNDRIVEN once this gap stops suppressing it. Each of those states itself on its own line, so the
- *   promise is that the refusal ends, not that a test appears.
+ *   an entry can be blocked twice over — a method whose class's constructor takes an argument Assayer
+ *   cannot build is admitted UNDRIVEN whatever a harness supplies for the method's own inputs, and a
+ *   branch on an opaque value is admitted UNDRIVEN once this gap stops suppressing it. Each of those
+ *   states itself on its own line, so the promise is that the refusal ends, not that a test appears.
  *
  *   `hasCases` says whether the SAME entry also derived at least one real case despite the refusal — a
  *   truthy arm an object's own shape builds fine while its falsy arm needs a value nothing can build, or

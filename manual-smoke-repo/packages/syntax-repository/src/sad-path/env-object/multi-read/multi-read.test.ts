@@ -34,7 +34,8 @@ describe('env-object / multi-read — two env reads, one DRIVEN and one UNDRIVEN
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [CASE_1_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
       { reachesPath: [CASE_2_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '2' }], salient: true },
-      { reachesPath: [DEFAULT_EXIT], arrange: [], salient: true },
+      // Neither 1 nor 2 names no value of its own, so the default case writes the number representative.
+      { reachesPath: [DEFAULT_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '7' }], salient: true },
     ]);
   });
 

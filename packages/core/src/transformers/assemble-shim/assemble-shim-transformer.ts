@@ -111,8 +111,9 @@ export const assembleShimTransformer = ({
     "      it(entry.name + ' case ' + index, async () => {",
     '        const result = await caseInterpretBroker({',
     // Resolved per ACCESS and per case: a method needs a fresh instance, reading
-    // subject[entry.name] would find nothing for one, and a module scope is no property at all.
-    '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh }),',
+    // subject[entry.name] would find nothing for one, and a module scope is no property at all. A method
+    // of a class whose constructor needs arguments is built with `entry.construct`.
+    '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh, construct: entry.construct }),',
     '          entryName: entry.name,',
     '          exitIds: entry.exitIds,',
     '          testCase,',

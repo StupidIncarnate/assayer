@@ -128,7 +128,7 @@ describe('runUnitBroker', () => {
           '    for (const [index, testCase] of entry.cases.entries()) {\n' +
           "      it(entry.name + ' case ' + index, async () => {\n" +
           '        const result = await caseInterpretBroker({\n' +
-          '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh }),\n' +
+          '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh, construct: entry.construct }),\n' +
           '          entryName: entry.name,\n' +
           '          exitIds: entry.exitIds,\n' +
           '          testCase,\n' +

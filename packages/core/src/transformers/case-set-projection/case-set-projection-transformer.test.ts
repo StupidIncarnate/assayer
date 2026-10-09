@@ -3,6 +3,17 @@ import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysi
 
 import { caseSetProjectionTransformer } from './case-set-projection-transformer';
 
+const FIND = FunctionAnalysisStub({
+  entry: {
+    name: 'find',
+    scopePath: ['Repo', 'find'],
+    params: [{ name: 'id', type: { kind: 'string' } }],
+    returnType: { kind: 'string' },
+    line: 4,
+    access: { kind: 'method', className: 'Repo', constructable: false },
+  },
+});
+
 describe('caseSetProjectionTransformer', () => {
   describe('entries something can call', () => {
     it('VALID: {an exported function with cases} => one runnable entry carrying its own exit ids', () => {
@@ -193,22 +204,23 @@ describe('caseSetProjectionTransformer', () => {
     });
   });
 
-  describe('entries it cannot construct', () => {
-    // Named, not dropped and not driven: something real is untested, and only a human can say how to
-    // build the class. Driving it anyway would fail a case against correct code.
-    it('VALID: {a method whose class needs ctor args} => a NAMED gap rather than a runnable entry', () => {
+  describe('instance methods of a class whose constructor needs arguments', () => {
+    // The instance is built from the constructor's declared parameter types, filled by the same seam
+    // that fills any parameter, so the method is driven and nothing is admitted.
+    it('VALID: {a method whose class needs a buildable ctor arg} => runnable, carrying the arguments its instance is built with', () => {
       const analysis = FileAnalysisStub({
         functions: [
           FunctionAnalysisStub({
             entry: {
-              name: 'find',
-              scopePath: ['Repo', 'find'],
-              params: [{ name: 'id', type: { kind: 'string' } }],
-              returnType: { kind: 'string' },
-              line: 4,
-              access: { kind: 'method', className: 'Repo', constructable: false },
+              name: 'constructor',
+              scopePath: ['Repo', 'constructor'],
+              params: [{ name: 'url', type: { kind: 'string' } }],
+              returnType: { kind: 'unknown', text: 'void' },
+              line: 2,
+              access: { kind: 'constructor', className: 'Repo' },
             },
           }),
+          FIND,
         ],
       });
 
@@ -218,15 +230,135 @@ describe('caseSetProjectionTransformer', () => {
         modulePath: '/abs/src/repo.ts',
       });
 
-      expect({ entries: result.entries, gaps: result.gaps }).toStrictEqual({
+      expect({ entries: result.entries.map((entry) => ({ name: entry.name, construct: entry.construct })), gaps: result.gaps, undriven: result.undriven }).toStrictEqual({
+        entries: [
+          { name: 'constructor', construct: undefined },
+          { name: 'find', construct: [{ kind: 'param', param: 'url', value: 'abc123' }] },
+        ],
+        gaps: [],
+        undriven: [],
+      });
+    });
+
+    // A trailing optional argument the seam cannot build is not owed, so the instance is built without
+    // it — the same truncation a call site gets.
+    it('EDGE: {the only ctor arg is optional and unbuildable} => runnable, built with no arguments', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: {
+              name: 'constructor',
+              scopePath: ['Repo', 'constructor'],
+              params: [{ name: 'log', type: { kind: 'callable', text: '(m: string) => void' }, optional: true }],
+              returnType: { kind: 'unknown', text: 'void' },
+              line: 2,
+              access: { kind: 'constructor', className: 'Repo' },
+            },
+            cases: [],
+          }),
+          FIND,
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/repo.ts',
+        modulePath: '/abs/src/repo.ts',
+      });
+
+      expect({ entries: result.entries.map((entry) => ({ name: entry.name, construct: entry.construct })), undriven: result.undriven }).toStrictEqual({
+        entries: [{ name: 'find', construct: [] }],
+        undriven: [],
+      });
+    });
+
+    // Named, not dropped and not driven: no instance can be built, and no harness key reaches the
+    // constructor argument of an instance method, so this is Assayer's debt and rides `undriven`.
+    it('VALID: {a method whose class needs a ctor arg no value can be built for} => undriven, naming the argument, and not a gap', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: {
+              name: 'constructor',
+              scopePath: ['Repo', 'constructor'],
+              params: [{ name: 'report', type: { kind: 'callable', text: '(m: string) => void' }, declaredText: '(m: string) => void' }],
+              returnType: { kind: 'unknown', text: 'void' },
+              line: 2,
+              access: { kind: 'constructor', className: 'Repo' },
+            },
+            cases: [],
+          }),
+          FIND,
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/repo.ts',
+        modulePath: '/abs/src/repo.ts',
+      });
+
+      expect({ entries: result.entries, gaps: result.gaps, undriven: result.undriven }).toStrictEqual({
         entries: [],
-        gaps: [
+        gaps: [],
+        undriven: [
           {
             name: 'find',
-            reason: 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
+            reason:
+              '`find` is not driven: its class `Repo` needs a constructor argument Assayer cannot build, ' +
+              '`report: (m: string) => void`, so there is no instance to call `find` on. Assayer builds each constructor ' +
+              "argument from its declared type, the way it builds a function's inputs: a scalar, a union, an array, or an " +
+              'object shape whose every property is one of those. A harness cannot supply it yet. A harness key under ' +
+              "`constructor` gives the constructor's own test its inputs, and Assayer does not use those to build the " +
+              'instance `find` runs on. To test `find` now, declare that parameter with a type Assayer can build, or make ' +
+              '`find` a static method, or a plain function that takes what it needs as parameters, since neither needs an instance.',
+            startLine: 4,
+            endLine: 4,
           },
         ],
       });
+    });
+
+    it('EMPTY: {a method whose class has no analysed constructor} => undriven, saying the constructor is unknown', () => {
+      const analysis = FileAnalysisStub({ functions: [FIND] });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/repo.ts',
+        modulePath: '/abs/src/repo.ts',
+      });
+
+      expect({ entries: result.entries, gaps: result.gaps, undriven: result.undriven }).toStrictEqual({
+        entries: [],
+        gaps: [],
+        undriven: [
+          {
+            name: 'find',
+            reason:
+              "`find` is not driven: its class `Repo` needs constructor arguments, and Assayer has no analysis of that constructor's " +
+              'parameters, so it cannot build an instance to call `find` on. To test `find` now, make `find` a static method, or a ' +
+              'plain function that takes what it needs as parameters, since neither needs an instance.',
+            startLine: 4,
+            endLine: 4,
+          },
+        ],
+      });
+    });
+
+    // The analysis's own undriven entries are carried first, and the instance method is added beside them.
+    it('VALID: {an analysis undriven entry and a stuck method} => both ride the undriven channel, the analysis entry first', () => {
+      const analysis = FileAnalysisStub({
+        functions: [FIND],
+        undriven: [{ name: '*module*', reason: 'it runs at import time, so no case drove its branches', startLine: 1, endLine: 8 }],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/repo.ts',
+        modulePath: '/abs/src/repo.ts',
+      });
+
+      expect(result.undriven.map((entry) => entry.name)).toStrictEqual(['*module*', 'find']);
     });
   });
 
@@ -340,43 +472,10 @@ describe('caseSetProjectionTransformer', () => {
     });
   });
 
-  describe('the two producers of the one gap channel', () => {
+  describe('the gap channel', () => {
     // The analysis already invoiced the entry whose declared INPUT cannot be built. Recomputing it here
-    // would be a second answer to one question, so it is carried — and the access-shaped gap is ADDED
-    // beside it, never merged into it and never replacing it.
-    it('VALID: {an analysis gap and an access gap} => both ride the one channel, analysis first', () => {
-      const analysis = FileAnalysisStub({
-        functions: [
-          FunctionAnalysisStub({
-            entry: {
-              name: 'find',
-              scopePath: ['Repo', 'find'],
-              params: [{ name: 'id', type: { kind: 'string' } }],
-              returnType: { kind: 'string' },
-              line: 4,
-              access: { kind: 'method', className: 'Repo', constructable: false },
-            },
-          }),
-        ],
-        gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }],
-      });
-
-      const result = caseSetProjectionTransformer({
-        analysis,
-        relPath: 'src/repo.ts',
-        modulePath: '/abs/src/repo.ts',
-      });
-
-      expect(result.gaps).toStrictEqual([
-        { name: 'audit', reason: 'the fill seam refuses `report`' },
-        {
-          name: 'find',
-          reason: 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
-        },
-      ]);
-    });
-
-    it('VALID: {an analysis gap and nothing blocked} => the run still carries what the file admitted', () => {
+    // would be a second answer to one question, so it is carried as it is.
+    it('VALID: {an analysis gap} => the run still carries what the file admitted', () => {
       const analysis = FileAnalysisStub({ gaps: [{ name: 'audit', reason: 'the fill seam refuses `report`' }] });
 
       const result = caseSetProjectionTransformer({

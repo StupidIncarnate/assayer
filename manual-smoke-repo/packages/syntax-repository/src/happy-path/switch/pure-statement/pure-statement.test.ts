@@ -23,9 +23,10 @@ describe('switch / pure-statement — a bare top-level switch DRIVEN by the envi
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
       { reachesPath: [CASE_1_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
       { reachesPath: [CASE_2_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '2' }], salient: true },
-      // The default is reached when CODE is neither 1 nor 2 — including unset, which is `Number(undefined)`
-      // = NaN, matching no case. So it needs no binding of its own.
-      { reachesPath: [DEFAULT_EXIT], arrange: [], salient: true },
+      // The default is reached when CODE is neither 1 nor 2. That names no value of its own, so the case
+      // writes the number representative 7, the same value a number parameter's fill would get. The
+      // case then reaches the default whatever the test process's own environment holds.
+      { reachesPath: [DEFAULT_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '7' }], salient: true },
     ]);
   });
 

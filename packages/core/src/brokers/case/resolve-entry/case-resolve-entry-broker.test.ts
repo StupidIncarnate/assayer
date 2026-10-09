@@ -1,3 +1,4 @@
+import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case/derived-test-case.stub';
 import { EntryAccessStub } from '@assayer/shared/contracts/entry-access/entry-access.stub';
 
 import { caseResolveEntryBroker } from './case-resolve-entry-broker';
@@ -9,6 +10,14 @@ class Classifier {
   public readonly floor = 5;
 
   public level = 0;
+
+  public readonly url: string;
+
+  private calls = 0;
+
+  public constructor(url = '') {
+    this.url = url;
+  }
 
   public static get top(): number {
     return this.ceiling;
@@ -32,6 +41,16 @@ class Classifier {
 
   public classify(value: number): boolean {
     return value > this.floor;
+  }
+
+  public where(suffix: string): string {
+    return this.url + suffix;
+  }
+
+  public bump(): number {
+    this.calls += 1;
+
+    return this.calls;
   }
 }
 
@@ -127,6 +146,34 @@ describe('caseResolveEntryBroker', () => {
       });
 
       expect((result as (value: number) => boolean)(6)).toBe(true);
+    });
+
+    // The instance is built with the arguments the case set carries, so a constructor that needs one
+    // gets it, and the method reads the state that argument set.
+    it('VALID: {a method of a class needing a ctor arg, with construct bindings} => bound to an instance built with them', () => {
+      caseResolveEntryBrokerProxy();
+      const { arrange } = DerivedTestCaseStub({ arrange: [{ kind: 'param', param: 'url', value: 'abc123' }] });
+
+      const result = caseResolveEntryBroker({
+        subject: { Classifier },
+        name: 'where',
+        access: EntryAccessStub({ kind: 'method', className: 'Classifier', constructable: false }),
+        construct: arrange,
+      });
+
+      expect((result as (suffix: string) => string)('/x')).toBe('abc123/x');
+    });
+
+    // Each resolution builds its own instance: a case never sees what an earlier one left behind.
+    it('VALID: {two resolutions of the same method} => two separate instances', () => {
+      caseResolveEntryBrokerProxy();
+      const { arrange } = DerivedTestCaseStub({ arrange: [{ kind: 'param', param: 'url', value: 'abc123' }] });
+      const access = EntryAccessStub({ kind: 'method', className: 'Classifier', constructable: false });
+
+      const first = caseResolveEntryBroker({ subject: { Classifier }, name: 'bump', access, construct: arrange });
+      const second = caseResolveEntryBroker({ subject: { Classifier }, name: 'bump', access, construct: arrange });
+
+      expect([(first as () => number)(), (first as () => number)(), (second as () => number)()]).toStrictEqual([1, 2, 1]);
     });
 
     // Unbound, `this.floor` would throw rather than compare.

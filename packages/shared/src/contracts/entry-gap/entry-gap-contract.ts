@@ -8,18 +8,17 @@
  *   the reader, not three admissions. Two encodings of one concept is how a surface comes to describe
  *   an artifact differently from the artifact.
  *
- *   Two producers fill the channel and neither is privileged: an INPUT no value of the declared type
- *   can be built for, and an ACCESS the runner cannot reach through (a constructor, a method whose
- *   class needs constructor arguments). Both are closed by the caller supplying what Assayer cannot
- *   derive, which is why they share a channel where a dark spot, an undriven entry and a lint never
- *   could — those name Assayer's debt, Assayer's reach, and the repo's debt respectively.
+ *   The channel holds an INPUT no value of the declared type can be built for. A harness closes it by
+ *   supplying what Assayer cannot derive, which is why a gap shares no channel with a dark spot, an
+ *   undriven entry or a lint — those name Assayer's debt, Assayer's reach, and the repo's debt
+ *   respectively.
  *
  *   `name` keys the gap to its entry, so a surface can pair it with the entry it is about. `reason` is
  *   product surface (P1): it names what is missing, where, and the concrete thing that satisfies the
  *   check, written for an LLM to act on with no human in the loop.
  *
  * USAGE:
- * entryGapContract.parse({ name: 'find', reason: 'its class needs constructor arguments…' });
+ * entryGapContract.parse({ name: 'audit', reason: '`audit` derives no case, because Assayer cannot construct an input it needs…' });
  * // Returns a validated EntryGap (branded fields)
  */
 import { z } from '#gateway/npm/zod';

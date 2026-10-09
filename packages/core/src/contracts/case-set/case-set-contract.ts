@@ -13,6 +13,10 @@
  *   Each entry carries its `access`, because a case is not addressable without it: the runner has to
  *   know whether to read a module property, reach for `default`, or build an instance first.
  *
+ *   An entry carries `construct` when it is an instance method of a class whose constructor needs
+ *   arguments: the bindings the projection filled for those arguments, which the runner builds a fresh
+ *   instance from for every case.
+ *
  *   `harnessPath` is present exactly when some case names a HARNESS binding, and it is absolute for the
  *   same reason `modulePath` is: the shim requires it, and a shim resolves nothing relative to a cache
  *   directory nobody chose. Its presence is the run's instruction to load that file — the values a
@@ -23,9 +27,8 @@
  *   `darkSpots` is: a case set that can omit what it could not drive reads as complete coverage of
  *   the file, which is worse than admitting the hole. An entry nothing can construct belongs here —
  *   named, with a reason — never dropped silently and never driven anyway and reported as a failure
- *   of the analyzer. Two producers fill it and both are the caller's debt: the ANALYSIS already
- *   carried the entries whose declared inputs cannot be built, and the projection adds the ones whose
- *   ACCESS the runner cannot reach through. One channel, one shape, two sources.
+ *   of the analyzer. The ANALYSIS carries the entries whose declared inputs cannot be built, and a
+ *   harness supplies them.
  *
  *   `darkSpots` and `undriven` are carried rather than recomputed: the shim writes the run artifact,
  *   and the analysis is not in scope by then. All three are DIFFERENT admissions and never merge — a
@@ -44,7 +47,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { darkSpotContract, derivedTestCaseContract, entryAccessContract, entryGapContract, lintEntryContract, undrivenEntryContract, coverageContract } from '@assayer/shared/contracts';
+import { arrangeBindingContract, darkSpotContract, derivedTestCaseContract, entryAccessContract, entryGapContract, lintEntryContract, undrivenEntryContract, coverageContract } from '@assayer/shared/contracts';
 
 export const caseSetContract = z.object({
   relPath: z.string().min(1).brand<'CaseSetRelPath'>(),
@@ -56,6 +59,9 @@ export const caseSetContract = z.object({
       access: entryAccessContract,
       exitIds: z.array(coverageContract.shape.id),
       cases: z.array(derivedTestCaseContract),
+      // Present only on an instance method whose class needs constructor arguments: the arguments the
+      // runner builds each instance with.
+      construct: z.array(arrangeBindingContract).optional(),
     }).brand<'CaseSetEntries'>(),
   ),
   gaps: z.array(entryGapContract),

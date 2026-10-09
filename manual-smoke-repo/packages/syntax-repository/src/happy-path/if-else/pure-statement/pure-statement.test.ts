@@ -42,6 +42,7 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
                 id: `${BRANCH}#leaf`,
                 operandParamName: 'value',
                 operandEnvVarName: 'VALUE',
+                operandEnvSteps: [{ kind: 'number' }],
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
@@ -69,9 +70,9 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
   });
 
   // Where the operand COMES FROM is the whole difference between drivable and not, and the leaf is
-  // where that fact lands. The operand's TYPE is read exactly as any other binding's is (widened,
-  // off the type graph); naming the variable it was read from is what makes the arms reachable.
-  it('VALID: {const value = Number(process.env.VALUE)} => the leaf names the env var it reads', () => {
+  // where that fact lands: the variable it reads, and the one `Number` step between that variable and
+  // `value`. A case runs that step backwards (`String`) to write the variable.
+  it('VALID: {const value = Number(process.env.VALUE)} => the leaf names the env var it reads and its Number step', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'pure-statement.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.branches).map((branch) => branch.condition)).toStrictEqual([
@@ -80,6 +81,7 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
         id: `${BRANCH}#leaf`,
         operandParamName: 'value',
         operandEnvVarName: 'VALUE',
+        operandEnvSteps: [{ kind: 'number' }],
         operandType: { kind: 'number' },
         predicate: { kind: 'gt', literal: 5 },
       },

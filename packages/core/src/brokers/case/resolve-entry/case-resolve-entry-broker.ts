@@ -12,9 +12,10 @@
  *   name (`export { runIt as go }`), for the same reason: `runIt` is not on the module.
  *
  *   A method is constructed PER CASE, not once: a case must not observe state a previous case left
- *   behind. Construction only happens for a class the projection already judged constructable, so
- *   the zero-argument call is a checked assumption rather than a hope. A `static` method lives on the
- *   class itself, so it is read off the class and no instance is built.
+ *   behind. The instance is built with the entry's `construct` arguments, which the case-set projection
+ *   filled from the constructor's declared parameter types, so a class whose constructor needs
+ *   arguments is built with them, and a class that needs none is built with none. A `static` method
+ *   lives on the class itself, so it is read off the class and no instance is built.
  *
  *   A method is BOUND to the instance, or to the class for a static one, because the interpreter
  *   applies it with no receiver; an unbound method loses `this` and throws on the first field it
@@ -49,20 +50,23 @@
  * caseResolveEntryBroker({ subject, name: 'classify', access: { kind: 'method', className: 'Classifier', constructable: true }, requireFresh });
  * // Returns the bound method, or undefined when the module does not carry it
  */
-import type { EntryAccess } from '@assayer/shared/contracts';
+import type { ArrangeBinding, EntryAccess } from '@assayer/shared/contracts';
 
 import type { DrivableEntry } from '../../../contracts/drivable-entry/drivable-entry-contract';
+import { constructArgsTransformer } from '../../../transformers/construct-args/construct-args-transformer';
 
 export const caseResolveEntryBroker = ({
   subject,
   name,
   access,
   requireFresh,
+  construct,
 }: {
   subject: Record<PropertyKey, unknown>;
   name: string;
   access: EntryAccess;
   requireFresh?: () => unknown;
+  construct?: readonly ArrangeBinding[] | undefined;
 }): DrivableEntry | undefined => {
   // The module PROPERTY, which is the exported name when a rename put it under a different one. A
   // property that is not a function is no entry, so it resolves to undefined like a missing one.
@@ -94,7 +98,7 @@ export const caseResolveEntryBroker = ({
     const target =
       access.static === true
         ? (subject[access.className] as Record<PropertyKey, unknown>)
-        : (Reflect.construct(owner, []) as Record<PropertyKey, unknown>);
+        : (Reflect.construct(owner, constructArgsTransformer({ construct })) as Record<PropertyKey, unknown>);
 
     if (!(name in target)) {
       return undefined;

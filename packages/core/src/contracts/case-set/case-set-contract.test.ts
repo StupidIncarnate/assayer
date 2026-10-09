@@ -100,6 +100,54 @@ describe('caseSetContract', () => {
     });
   });
 
+  describe('an instance method of a class that needs constructor arguments', () => {
+    it('VALID: {an entry with construct bindings} => parses, carrying the bindings the instance is built from', () => {
+      const set = CaseSetStub({
+        entries: [
+          {
+            name: 'find',
+            access: { kind: 'method', className: 'Repo', constructable: false },
+            exitIds: ['find/return@if-then'],
+            cases: [{ reachesPath: ['find/return@if-then'], arrange: [{ kind: 'param', param: 'id', value: 1 }], salient: true }],
+            construct: [{ kind: 'param', param: 'url', value: 'abc123' }],
+          },
+        ],
+      });
+
+      expect(caseSetContract.parse(set).entries).toStrictEqual([
+        {
+          name: 'find',
+          access: { kind: 'method', className: 'Repo', constructable: false },
+          exitIds: ['find/return@if-then'],
+          cases: [{ reachesPath: ['find/return@if-then'], arrange: [{ kind: 'param', param: 'id', value: 1 }], salient: true }],
+          construct: [{ kind: 'param', param: 'url', value: 'abc123' }],
+        },
+      ]);
+    });
+
+    it('INVALID: {a construct binding of an unknown kind} => throws', () => {
+      expect(() => {
+        return caseSetContract.parse({
+          relPath: 'src/f.ts',
+          modulePath: '/abs/f.ts',
+          entries: [
+            {
+              name: 'find',
+              access: { kind: 'method', className: 'Repo', constructable: false },
+              exitIds: [],
+              cases: [],
+              construct: [{ kind: 'nope' }],
+            },
+          ],
+          gaps: [],
+          darkSpots: [],
+          undriven: [],
+          lints: [],
+        });
+      }).toThrow(/Invalid discriminator value/u);
+    });
+  });
+
   describe('invalid case sets', () => {
     it('INVALID: {no modulePath} => throws, since an entry that cannot be required cannot be driven', () => {
       expect(() => {

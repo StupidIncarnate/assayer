@@ -12,7 +12,7 @@ const BODY = [
   '    for (const [index, testCase] of entry.cases.entries()) {',
   "      it(entry.name + ' case ' + index, async () => {",
   '        const result = await caseInterpretBroker({',
-  '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh }),',
+  '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh, construct: entry.construct }),',
   '          entryName: entry.name,',
   '          exitIds: entry.exitIds,',
   '          testCase,',

@@ -15,23 +15,25 @@
  *     so importing it runs the call and its one happy-path case reaches the module's single exit). A
  *     module whose branch turns on an OPAQUE operand earns no case at all, so it is admitted in
  *     `undriven` instead of dropped silently;
- *   - an instance `method` whose class needs constructor arguments IS a gap: something real is untested
- *     and needs a harness, so it is named rather than dropped. A `static` method needs no instance, so
- *     it is drivable whatever its class's constructor takes;
+ *   - an instance `method` whose class needs constructor arguments is driven on an instance built from
+ *     those arguments, which the entry carries as `construct`. They are filled from the constructor's declared
+ *     parameter types by the same seam that fills any parameter. When one is refused, or the class's
+ *     constructor was never analysed, the method is admitted in `undriven` and named, never dropped
+ *     and never driven on a guess. It is not a gap, because no harness key reaches a constructor
+ *     argument of an instance method today. A `static` method needs no instance, so it is drivable
+ *     whatever its class's constructor takes;
  *   - everything else is drivable, and the runner resolves it through its access. A `constructor` is
  *     drivable too: the runner constructs the class with the case's arguments. A constructor whose
  *     argument no value can be built for derives no case, so the analysis already reports it as an
  *     input gap.
  *
- *   Reporting the gap rather than driving it is the whole point. Handing an unconstructable entry to
- *   the runner produces a FAILING case against correct code, which reads as the analyzer being
- *   wrong; a named gap reads as the truth — nobody has said how to build this yet.
+ *   Naming an instance method nothing can build, rather than driving it, is the whole point. Handing
+ *   it to the runner produces a FAILING case against correct code, which reads as the analyzer being
+ *   wrong; a named admission reads as the truth.
  *
- *   The ACCESS gaps computed here are only half the channel. The analysis carries the other half — an
- *   entry whose declared INPUT no value can be built for — and the two CONCATENATE: one channel, two
- *   producers, one shape, because the reader owes the same act for both. Recomputing the input half
- *   here would ask this transformer to re-run the fill seam, and a run whose gaps disagreed with the
- *   file's own analysis would be two answers to one question.
+ *   `gaps` is the analysis's own channel — an entry whose declared INPUT no value can be built for —
+ *   carried as it is. Recomputing it here would ask this transformer to re-run the fill seam, and a run
+ *   whose gaps disagreed with the file's own analysis would be two answers to one question.
  *
  *   `harnessPath` is named only when some case actually carries a HARNESS binding. The caller offers the
  *   path a colocated harness WOULD have — it is a pure function of the source path — and this decides
@@ -44,6 +46,7 @@
  *   (understood, not constructable — write a harness), a dark spot is ASSAYER's (syntax it never
  *   understood, which no harness can fix), and an undriven entry is understood perfectly but beyond
  *   the runner's reach (which no harness can fix either, and which the analyzer was never blind to).
+ *   The undriven channel also gains the instance methods named above, beside the analysis's own.
  *   Dropping any of them is how a run over an unfollowed loop comes to print a clean pass.
  *
  * USAGE:
@@ -53,6 +56,10 @@
 import { caseSetContract } from '../../contracts/case-set/case-set-contract';
 import type { CaseSet } from '../../contracts/case-set/case-set-contract';
 import type { FileAnalysis } from '@assayer/shared/contracts';
+
+import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
+import { fillParamTransformer } from '../fill-param/fill-param-transformer';
+import { undrivenInstanceLayerTransformer } from './undriven-instance-layer-transformer';
 
 export const caseSetProjectionTransformer = ({
   analysis,
@@ -72,8 +79,32 @@ export const caseSetProjectionTransformer = ({
   // CONSUMPTION site whose single import/global call reaches its one exit. A module whose branch turns
   // on an opaque operand earns no case at all and is admitted in `undriven` instead.
   const owed = analysis.functions.filter((fn) => fn.entry.access.kind !== 'unreachable' && fn.cases.length > 0);
-  const blocked = owed.filter(
-    (fn) => fn.entry.access.kind === 'method' && !fn.entry.access.constructable && fn.entry.access.static !== true,
+
+  // An instance method of a class whose constructor needs arguments runs on an instance built from
+  // those arguments, filled by the same seam that fills any parameter. It is driven when every argument
+  // fills, and admitted as undriven when one is refused or the constructor was never analysed.
+  const instanceMethods = owed.flatMap((fn) => {
+    const { access } = fn.entry;
+
+    if (access.kind !== 'method' || access.constructable || access.static === true) {
+      return [];
+    }
+
+    const ctorEntry = analysis.functions.find(
+      (candidate) => candidate.entry.access.kind === 'constructor' && candidate.entry.access.className === access.className,
+    );
+    const filled =
+      ctorEntry === undefined
+        ? undefined
+        : appliedParamsTransformer({ params: ctorEntry.entry.params }).map((param) => fillParamTransformer({ param }));
+
+    return [{ fn, className: String(access.className), filled }];
+  });
+  const stuck = instanceMethods.filter(({ filled }) => filled === undefined || filled.some((result) => result.kind === 'unfillable'));
+  const constructFor = new Map(
+    instanceMethods
+      .filter((method) => !stuck.includes(method))
+      .map(({ fn, filled }) => [fn, (filled ?? []).flatMap((result) => (result.kind === 'filled' ? [result.binding] : []))] as const),
   );
 
   // The run loads a harness only when a case actually reaches for one — a supplied input is the only
@@ -87,7 +118,7 @@ export const caseSetProjectionTransformer = ({
     modulePath,
     ...(harnessPath === undefined || !suppliesInputs ? {} : { harnessPath }),
     entries: owed
-      .filter((fn) => !blocked.includes(fn))
+      .filter((fn) => !stuck.some((method) => method.fn === fn))
       .map((fn) => ({
         name: fn.entry.name,
         access: fn.entry.access,
@@ -99,21 +130,27 @@ export const caseSetProjectionTransformer = ({
         // (not funnelled, so in no case's path) is still excluded, which is the filter's whole point.
         exitIds: [...new Set([...fn.exits.map((exit) => exit.coverageId), ...fn.cases.flatMap((testCase) => testCase.reachesPath)])],
         cases: fn.cases,
+        ...(constructFor.has(fn) ? { construct: constructFor.get(fn) } : {}),
       })),
-    // ONE channel, TWO producers. The analysis already invoiced every entry whose declared INPUT no
-    // value can be built for — a fact about the file, true before anything ran — and this adds the ones
-    // whose ACCESS the runner cannot reach through. Both are the caller's debt, closed by the same act,
-    // so they concatenate rather than living in two lists a reader would have to merge. The analysis
-    // gaps come first because they were true first.
-    gaps: [
-      ...analysis.gaps,
-      ...blocked.map((fn) => ({
-        name: fn.entry.name,
-        reason: 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
-      })),
-    ],
+    // The analysis already invoiced every entry whose declared INPUT no value can be built for — a
+    // fact about the file, true before anything ran. A harness closes each of those.
+    gaps: analysis.gaps,
     darkSpots: analysis.darkSpots,
-    undriven: analysis.undriven,
+    // The analysis's own undriven entries, then the instance methods whose constructor arguments could
+    // not be built. Those are Assayer's debt, not a gap: no harness key reaches a constructor argument
+    // of an instance method yet.
+    undriven: [
+      ...analysis.undriven,
+      ...stuck.map(({ fn, className, filled }) =>
+        undrivenInstanceLayerTransformer({
+          fn,
+          className,
+          refused: (filled ?? []).flatMap((result) =>
+            result.kind === 'unfillable' ? [{ param: String(result.param), type: String(result.type) }] : [],
+          ),
+        }),
+      ),
+    ],
     lints: analysis.lints,
   });
 };

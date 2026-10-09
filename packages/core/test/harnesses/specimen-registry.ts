@@ -401,6 +401,10 @@ const DECLARATIONS = {
   // per-arm split an exit ternary gets, so it reads as a plain `branch:ternary` DRIVEN by `n` — no dark
   // spot, one case per arm.
   [`${CATALOGUE}/happy-path/ternary/value-basic/value-basic.ts`]: ['access:named', 'branch:ternary'],
+  // VALUE position, driven: a ternary in a CALL ARGUMENT (`return label(n > 5 ? 'big' : 'small')`). Its
+  // value flows into the call, so it is a branch of `pick` whose arms meet again at the one `return`.
+  // `label` is a branchless private consumed by `pick`, so the file's one entry is `pick`.
+  [`${CATALOGUE}/happy-path/ternary/arg-position/arg-position.ts`]: ['access:named', 'branch:ternary'],
 
   // ASSUMED ternaries in EXIT position — a short-circuit `&&`/`||` chain, split per operand. Each
   // controlling operand becomes a `ternary` branch on its truthiness and each operand a guarded exit,
@@ -487,20 +491,25 @@ const DECLARATIONS = {
   // not it can follow the loop that consumes it.
   [`${CATALOGUE}/sad-path/loop/in-function/in-function.ts`]: ['access:named', 'param:array', 'darkspot:ForOfStatement'],
 
-  // A ternary in ARGUMENT position (`return label(n > 5 ? 'big' : 'small')`). v1 value-flow reaches only
-  // the adjacent `const`+`return` tail, so a ternary consumed by a call arg has no exit to split and
-  // stays an admitted `darkspot:ConditionalExpression`. The BOUNDARY ratchet: the day the reverse-map
-  // rung lands it moves sad-path → happy-path. `label` is a branchless private consumed by `pick`, so it
-  // projects as no entry of its own; the file's one entry is `pick` (access:named).
-  [`${CATALOGUE}/sad-path/ternary/arg-position/arg-position.ts`]: ['access:named', 'darkspot:ConditionalExpression'],
+  // A class whose constructor needs a buildable argument (`url: string`). The case-set projection fills
+  // it like any parameter and the run builds each instance of the class with it, so the instance method
+  // is driven and nothing is admitted. The constructor is driven too: the runner constructs the class with
+  // the `url` its case arranges. `tally` is a plain driven `access:named` beside them; `find`'s own
+  // `branch:if` rides its (non-constructable) method entry. This is the specimen exercising a driven
+  // `access:constructor`, which is why it drops off the uncatalogued list below.
+  [`${CATALOGUE}/happy-path/class/needs-ctor-arg/needs-ctor-arg.ts`]: ['access:constructor', 'access:method', 'access:named', 'branch:if'],
 
-  // A run GAP. A class whose constructor needs arguments has no zero-argument instance, so its instance
-  // method is a named GAP by case-set-projection — understood perfectly, but the CALLER owes a harness.
-  // The constructor is driven: the runner constructs the class with the `url` its case arranges. `tally`
-  // is a plain driven `access:named` beside them; `find`'s own `branch:if` rides its (non-constructable)
-  // method entry. This is the ONLY specimen exercising `access:constructor`, which is why it drops off
-  // the uncatalogued list below.
-  [`${CATALOGUE}/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts`]: ['access:constructor', 'access:method', 'access:named', 'branch:if'],
+  // A class whose constructor argument no value can be built for (`report` is a callback). The
+  // constructor derives no case and carries the input gap, which a harness key under `constructor` pays.
+  // `find` has no instance to run on, so the run admits it as undriven. That admission is the run's, so
+  // it is not a trait here: the analysis lists `find` as an ordinary entry with cases.
+  [`${CATALOGUE}/sad-path/instance-method/unbuildable-ctor-arg/unbuildable-ctor-arg.ts`]: [
+    'access:constructor',
+    'access:method',
+    'branch:if',
+    'gap:input',
+    'param:callable',
+  ],
 
   // The REPO's debt: a private with real branching that nothing in the file calls, so nothing ever
   // will (an unexported symbol is reachable only from its own file). Rides the LINT channel — "change

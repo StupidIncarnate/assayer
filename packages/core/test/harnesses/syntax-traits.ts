@@ -107,9 +107,7 @@ export type SyntaxTrait =
   // The CALLER's debt, and the only admission a harness can pay: a parameter the fill seam refused, so
   // the entry derives no case and is invoiced. It earns a trait for the same reason `undriven` does —
   // an entry whose refusal quietly became fillable keeps every other trait it declares, so without this
-  // the matrix could not see a gap appear or vanish. Read off `FileAnalysis.gaps`, which carries the
-  // INPUT-shaped gaps alone; the access-shaped ones (a class no instance can be built for) are the run
-  // artifact's own producer and never reach the analysis.
+  // the matrix could not see a gap appear or vanish. Read off `FileAnalysis.gaps`.
   | 'gap:input'
   // The other side of the same channel: a case whose parameter is bound to a harness key path rather
   // than a derived value. Observed off the ARRANGE bindings, so a specimen that quietly lost its
@@ -122,11 +120,7 @@ export type SyntaxTrait =
   // branch quietly became reachable would keep every other trait it declares, and the catalogue would
   // lose the feature's coverage without a single test turning red.
   | 'lint:unreachable-exit'
-  | 'darkspot:ForOfStatement'
-  // A ternary the walk understands but cannot yet split into cases where it sits — v1 value-flow reaches
-  // only the adjacent `const x = cond ? y : z; return x` tail, so a ternary in ARGUMENT position stays an
-  // admitted dark spot. A ratchet: the day the reverse-map rung lands, its specimen moves sad-path → happy.
-  | 'darkspot:ConditionalExpression';
+  | 'darkspot:ForOfStatement';
 
 export const syntaxTraits = (): {
   analyze: (params: { relPath: string }) => FileAnalysis;

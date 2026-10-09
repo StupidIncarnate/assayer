@@ -12,10 +12,10 @@
  *   runner reads `runIt` off the module, finds nothing, and reports an entry that is there perfectly
  *   as uncallable. It is absent whenever the two agree, which is nearly always.
  *
- *   `constructable` is the escalation point: a class whose constructor needs arguments cannot be
- *   driven without them, so its instance methods become a NAMED gap ("needs a harness") rather than a
- *   silent skip or a false failure. A `static` method is exempt, because it lives on the class itself
- *   and needs no instance. `static` is absent on an instance method.
+ *   `constructable` is false for a class whose constructor needs arguments. The case set then builds
+ *   each instance of that class from arguments it fills from the constructor's declared types, and
+ *   admits the method as undriven when it cannot fill one. A `static` method is exempt, because it
+ *   lives on the class itself and needs no instance. `static` is absent on an instance method.
  *
  *   `accessor` marks a getter or a setter. Reading the property runs a getter, and assigning it runs a
  *   setter, so the runner reads or writes the property when the case runs instead of calling a

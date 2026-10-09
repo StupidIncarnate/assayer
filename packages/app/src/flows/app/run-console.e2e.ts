@@ -17,20 +17,12 @@
 import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
-const RUN_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts';
+const CTOR_ARG_SPECIMEN = 'packages/syntax-repository/src/happy-path/class/needs-ctor-arg/needs-ctor-arg.ts';
 const INPUT_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/input-gap/callback-param/callback-param.ts';
 // Its PAID twin — byte for byte the same source, with a committed `callback-param.harness.ts` beside
 // it. The harness is the only difference between the two files, so the pair is what proves the invoice
 // above is closable rather than merely printable.
 const HARNESS_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/callback-param/callback-param.ts';
-
-// The ACCESS-shaped GAP line a RUN surfaces for sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts —
-// `GAP <name> — <reason>`, authored in core's case-set-projection. `Repo`'s constructor needs a `url`,
-// so the runner builds no zero-argument instance, and the instance method `find` is
-// understood-but-unconstructable, the caller's debt to close with a harness. The constructor itself is
-// driven: the runner constructs `Repo` with the `url` the case arranges. Both ride beside `tally`.
-const RUN_GAP_METHOD_LINE =
-  'GAP find — its class needs constructor arguments, so no instance can be built to drive it — needs a harness';
 
 // The INPUT-shaped gap, and the other producer of the same channel: `audit` takes a callback, no value
 // in the arrange vocabulary is a function, so the fill seam refuses it and the file derives nothing. This
@@ -112,39 +104,33 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(3);
   });
 
-  test('VALID: {sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives `tally` and the constructor and surfaces the GAP row for the unconstructable method', async ({ smokeWindow: window }) => {
+  test('VALID: {happy-path/class/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives `tally`, the constructor and the method on an instance built with its argument, and admits nothing', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${RUN_GAP_SPECIMEN}"]`).click();
+    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${CTOR_ARG_SPECIMEN}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
-    // This file's debt is ACCESS-shaped, and only the case-set projection knows it: every declared
-    // parameter here — `value`, `url`, `id` — is a scalar the fill seam constructs happily, so the
-    // file's own analysis invoices nothing and no gap shows yet. The panel IS populated — all four
-    // derived cases across `tally`, the constructor and `find` are on screen, none run — so the absent
-    // gap row is the finding rather than a panel that failed to render. The run below is what turns
-    // the unconstructable method into a gap.
+    // `Repo`'s constructor needs a `url`, a string Assayer builds from its declared type, so every
+    // derived case is on screen and none has run: `tally`, the constructor and the two arms of `find`.
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(4);
-    await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
 
     await window.getByTestId('RUN_BUTTON').click();
 
-    // run-done: the case set drives `tally`, and the constructor through `new Repo(url)` with the
-    // representative string the fill seam builds for `url`. Its body ends on line 6 with no value, so
-    // its exit carries `undefined`. `find` needs an instance no zero-argument call can build, so it is a
-    // gap, not an entry. The exit code is NOT the verdict — the run wrote an artifact whose GAP travels
-    // to the panel, worded exactly as `assayer unit` prints it.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveText([
-      'PASS tally(7) → 8 (reaches L2)',
-      'PASS constructor("abc123") → undefined (reaches L6)',
-    ]);
-    await expect(window.getByTestId('RUN_GAP')).toHaveText([RUN_GAP_METHOD_LINE]);
+    // run-done: the constructor runs through `new Repo(url)` with the representative string the fill
+    // seam builds for `url`, and its body ends on line 6 with no value, so its exit carries `undefined`.
+    // `find` runs on an instance built with that same `url`, one case per arm of `id > 0`: `id` is 0 for
+    // the arm that returns on line 13 and 1 for the arm that returns on line 10. The rows are sorted so
+    // the check does not depend on the order the cases run in.
     await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveCount(4);
+    expect([...(await window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]').allTextContents())].sort()).toStrictEqual([
+      'PASS constructor("abc123") → undefined (reaches L6)',
+      "PASS find(0) → 'miss' (reaches L13)",
+      "PASS find(1) → 'hit' (reaches L10)",
+      'PASS tally(7) → 8 (reaches L2)',
+    ]);
 
-    // The claim the panel's own header makes — every admission worded exactly as `assayer unit` prints
-    // it — asserted as BYTES rather than left as prose. The console carries the real CLI report, so the
-    // same row appears there, indented and otherwise identical. This is the only check that reads both
-    // surfaces at once, and a wording change on either side that the other does not follow fails here.
-    await expect(window.getByTestId('RUN_CONSOLE_OUTPUT')).toContainText(`  ${RUN_GAP_METHOD_LINE}`);
+    // Nothing is admitted: the method has an instance to run on, so no gap and no undriven row appears.
+    await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
   });
 
   test('VALID: {sad-path/input-gap/callback-param/callback-param.ts open, Run never clicked} => the input-gap invoice is already on the panel', async ({ smokeWindow: window }) => {
