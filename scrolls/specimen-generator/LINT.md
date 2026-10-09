@@ -117,6 +117,11 @@ as easily as from a parameter list.
 
 ## Decisions the format needs before the real generator is built
 
+`IMPLEMENTATION.md` settles all four, on 2026-10-08. The generator is a workspace package. Containers,
+syntax and shims sit in its `declarations/` folder, which lint skips and the generator typechecks itself.
+Markers keep the prototype's positional form, because the rule that needs one object does not reach an
+unlinted folder. Single-use type parameters stay, for the same reason.
+
 1. Where containers live. A folder under `smoke-repo/` that Assayer does not analyze removes every
    container conflict.
 2. How a type parameter that appears once is declared.

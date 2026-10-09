@@ -15,6 +15,7 @@ Read them in this order:
 | File | What it holds |
 |---|---|
 | `PLAN.md` | This file: the direction, the decisions, the open questions, the next steps |
+| `IMPLEMENTATION.md` | The build plan for the first slice: every file in order, and the rules every implementing agent follows |
 | `PROTOTYPE-2.md` | The config files as the prototype writes them, the specimens they produce, how to run it, and the review page |
 | `CONTAINERS.md` | Containers as templates with typed slots, and what each kind of slot accepts |
 | `SHIMS.md` | Shims: plain TypeScript stand-ins for builtins. Their rules, ranges, pinning, and the builtin inventory |
@@ -34,7 +35,8 @@ Read them in this order:
 - **A review page shows each config file beside every specimen it produced.** It is private to the user:
   https://claude.ai/code/artifact/3b754ead-3ae1-4907-9455-0dd94477d4c0. `PROTOTYPE-2.md` says how to
   rebuild it.
-- **The real generator is not built.** It will live outside `packages/`, with its own tests.
+- **The real generator is not built.** `IMPLEMENTATION.md` plans its first slice, agreed with the user on
+  2026-10-08. It will be a private workspace package, `packages/specimen-generator`.
 - **One catalogue failure exists on master.** `happy-path/array/length-at` has no line in
   `packages/core/test/harnesses/specimen-registry.ts`, which fails the catalogue check. That line has to be
   written by reading the specimen.
@@ -127,7 +129,10 @@ flowchart TD
 
 | Topic | Decision |
 |---|---|
-| Home | The generator and its config files live outside `packages/`. They still get tests |
+| Home | Before 2026-10-08: outside `packages/`. After: a private workspace package, `packages/specimen-generator`. A probe showed ward checks nothing outside a workspace package, so only a package gets the standards enforced. Declaration files sit in its `declarations/` folder, which lint skips and the generator typechecks itself |
+| What a generated test asserts | Structure, plus a passing run. Each `if` and ternary driven both ways, one way or never; failed cases; lints by rule and line; undriven, dark spots and gaps. Never Assayer's input values. `IMPLEMENTATION.md` defines the shape |
+| Smoke repos | The hand-written catalogue moves to `manual-smoke-repo/`. `smoke-repo/` holds only generated files |
+| First committed matrix | `if` and `ternary`, every container, depth 1, type argument `number`, no `random` provenance, no `.at` or `.includes` fills |
 | Declaration files | Containers, syntax and shims, each one file exporting one named const. No default exports |
 | How code is built | The generator parses each declaration's code with the TypeScript compiler and swaps syntax-tree nodes. It never edits text |
 | Types | Read from the code by the type checker, never declared twice |
@@ -147,10 +152,6 @@ flowchart TD
 
 | Decision | Why it comes first | Doc |
 |---|---|---|
-| **What a generated test asserts.** One option is the exact cases, with every arranged input value, as the first prototype did. Another is the arms and exits each specimen reaches, plus its lints and admissions, without the input values | Exact values encode Assayer's own choice of test values, such as which number it tries beside a `> 5` check. The generator would have to declare those choices, which is what the first prototype's hand-written "demands" did | `PROTOTYPE-2.md`, "What is not built yet" |
-| Which folder outside `packages/` the generator lives in, how its tests run, and the config format that meets the repo's rules | Ward runs lint, typecheck and tests over the packages, so a folder outside them needs its checks wired in. Containers break the rules by design. Single-use type parameters and the marker call shape need a decision | `LINT.md` |
-| Which matrix runs by default, and which generated files get committed | The full run is 3,311 files. Depth 2 and every type argument multiply that | below |
-| Output layout | Earlier plans put specimens under `src/syntax/<group>/<name>/`. The prototype writes `src/<focus>/<container>/<specimen>/` | `PROTOTYPE-2.md` |
 | How two settable values feed one check, as in `a > b`, and whether two leaves may vary at once | Anchored holes never vary today. So `value > limit` with two parameters, and a shim locked by two known inputs, are never generated | `CALLABLES.md` |
 | Union type arguments, such as `number \| undefined` | Needed for `if (maybeCount)`, likely the most common `if` in real code | `BACKLOG.md` |
 | Pinning: always on, or behind a global config toggle | A toggle would give both the driven and the undriven outcome from one specimen | `SHIMS.md` |
@@ -185,16 +186,12 @@ The hand-written originals are deleted only after every one has a destination, a
 
 ## Next steps for the next session
 
-1. **Decide what a generated test asserts.** Then design the generated test file. The rest of the plan
-   depends on it.
-2. **Decide which folder outside `packages/` the generator lives in, how its tests run, and its config
-   format,** using `LINT.md`.
-3. **Plan the build** as a sequence of pieces of work, each verified before the next:
-   1. the real generator for layers 1 and 2, written to the repo's standards
-   2. test generation, and a first run of a small subset against Assayer
-   3. the shim inventory as a generated doc, and a shim check against the real engine for every shim
-   4. the call layer
-   5. the stub dimension
-   6. the carry-over table, and retiring the hand-written specimens
-4. **Plan the Assayer fixes** already decided as Assayer's: causes A, B, C and E in `ASSAYER-FINDINGS.md`.
+1. **Build the first slice** in `IMPLEMENTATION.md`: the rename to `manual-smoke-repo/`, the generator
+   package for layers 1 and 2, test generation, and a first run against Assayer with triage.
+2. **Then, each verified before the next:**
+   1. the shim inventory as a generated doc, and a shim check against the real engine for every shim
+   2. the call layer, with exit lines added to the observation
+   3. the stub dimension
+   4. the carry-over table, and retiring the hand-written specimens
+3. **Plan the Assayer fixes** already decided as Assayer's: causes A, B, C and E in `ASSAYER-FINDINGS.md`.
    Each generated specimen that catches one stays failing until Assayer is fixed.
