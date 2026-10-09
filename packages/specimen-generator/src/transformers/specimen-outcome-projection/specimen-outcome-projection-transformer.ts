@@ -3,14 +3,18 @@
  * same SpecimenOutcome shape the generator predicts. Reach for this to read Assayer's side of the
  * comparison. The prediction side never reads Assayer, so it uses specimenPredictTransformer.
  *
+ * Branches come from two lists that are merged by coverage id: the branches of the analysis's
+ * functions, and `scopeBranches`, the branches of every scope the walk found. A scope that is not an
+ * entry, such as an inline function that nothing can steer, has its branches only in the second list.
+ *
  * A trace event is tied to a branch only by exact equality between the event's id and a condition
  * leaf id from the analysis. An id's text is never parsed or prefix-matched.
  *
  * USAGE:
- * specimenOutcomeProjectionTransformer({ analysis, run });
+ * specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches });
  * // Returns a SpecimenOutcome: branches, caseFailures, lints, undriven, darkSpots and gaps, each sorted
  */
-import type { FileAnalysis, RunResult } from '@assayer/shared/contracts';
+import type { BranchNode, FileAnalysis, RunResult } from '@assayer/shared/contracts';
 
 import { specimenOutcomeContract } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-outcome-contract';
@@ -18,9 +22,11 @@ import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-
 export const specimenOutcomeProjectionTransformer = ({
   analysis,
   run,
+  scopeBranches,
 }: {
   analysis: FileAnalysis;
   run: RunResult;
+  scopeBranches: readonly BranchNode[];
 }): SpecimenOutcome => {
   const outcomesByLeafId = new Map<string, Set<boolean>>();
   for (const runCase of run.cases) {
@@ -36,12 +42,10 @@ export const specimenOutcomeProjectionTransformer = ({
     }
   }
 
-  const branchesByCoverageId = new Map<string, FileAnalysis['functions'][number]['branches'][number]>();
-  for (const fn of analysis.functions) {
-    for (const branch of fn.branches) {
-      if (!branchesByCoverageId.has(branch.coverageId)) {
-        branchesByCoverageId.set(branch.coverageId, branch);
-      }
+  const branchesByCoverageId = new Map<string, BranchNode>();
+  for (const branch of [...analysis.functions.flatMap((fn) => fn.branches), ...scopeBranches]) {
+    if (!branchesByCoverageId.has(branch.coverageId)) {
+      branchesByCoverageId.set(branch.coverageId, branch);
     }
   }
 

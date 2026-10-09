@@ -12,5 +12,8 @@ export const observeStatics = {
     dirPrefix: 'assayer-specimen-observe-',
     analyzerContentHash: 'specimen-generator-pinned-hash',
   },
+  runId: {
+    hashLength: 16,
+  },
   corePathSegments: ['..', '..', '..', '..', '..', 'core'],
 } as const;

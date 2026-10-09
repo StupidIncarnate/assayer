@@ -155,7 +155,7 @@ describe('specimenPredictTransformer', () => {
   });
 
   describe('an undriven if', () => {
-    it('VALID: {leaf from process.argv, in a function} => the if never runs, the function is undriven', () => {
+    it('VALID: {leaf from process.argv, in a function} => the if never runs, and the admission is on the if line', () => {
       const source = [
         '',
         'export function classify(): string {',
@@ -178,13 +178,13 @@ describe('specimenPredictTransformer', () => {
         branches: [{ kind: 'if', line: 3, driven: 'never' }],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 2 }],
+        undriven: [{ startLine: 3 }],
         darkSpots: [],
         gaps: [],
       });
     });
 
-    it('VALID: {leaf from process.argv, in a class method} => the method is the undriven scope', () => {
+    it('VALID: {leaf from process.argv, in a class method} => the admission is on the if line, not the method line', () => {
       const source = [
         'export class Classify {',
         '    public run(): string {',
@@ -208,13 +208,13 @@ describe('specimenPredictTransformer', () => {
         branches: [{ kind: 'if', line: 3, driven: 'never' }],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 2 }],
+        undriven: [{ startLine: 3 }],
         darkSpots: [],
         gaps: [],
       });
     });
 
-    it('VALID: {leaf from process.argv, at module level} => the module, line 1, is undriven', () => {
+    it('VALID: {leaf from process.argv, at module level} => the module is admitted on line 1, and loading it runs the if once', () => {
       const source = [
         'if (Number(process.argv[2]) > 5) {',
         '    console.log("then");',
@@ -232,10 +232,97 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 1, driven: 'never' }],
+        branches: [{ kind: 'if', line: 1, driven: 'one-way' }],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 1 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {leaf from process.argv, in an arrow called where it is written, arms log} => the arrow is admitted on its own first line and its if runs once', () => {
+      const source = [
+        '(() => {',
+        '    if (Number(process.argv[2]) > 5) {',
+        '        console.log("then");',
+        '    }',
+        '    console.log("else");',
+        '})();',
+        'export {};',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'statement',
+        arms: ['then', 'else'],
+        slotArm: 'log',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'if', line: 2, driven: 'one-way' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 1 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {leaf from process.argv, in an arrow called where it is written, arms return} => the arms reach different exits, so the if never runs', () => {
+      const source = [
+        'export const result = (() => {',
+        '    if (Number(process.argv[2]) > 5) {',
+        '        return "then";',
+        '    }',
+        '    return "else";',
+        '})();',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'statement',
+        arms: ['then', 'else'],
+        slotArm: 'return',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'if', line: 2, driven: 'never' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 1 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {leaf from process.argv, in a method whose arms log} => a named entry is not run by loading the module, so the if never runs', () => {
+      const source = [
+        'export class Classify {',
+        '    public run(): void {',
+        '        if (Number(process.argv[2]) > 5) {',
+        '            console.log("then");',
+        '        }',
+        '        console.log("else");',
+        '    }',
+        '}',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'statement',
+        arms: ['then', 'else'],
+        slotArm: 'log',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'if', line: 3, driven: 'never' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 3 }],
         darkSpots: [],
         gaps: [],
       });
@@ -355,13 +442,13 @@ describe('specimenPredictTransformer', () => {
         ],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 1 }],
+        undriven: [{ startLine: 2 }],
         darkSpots: [],
         gaps: [],
       });
     });
 
-    it('VALID: {env ternary in a scope undriven by an argv leaf} => the env ternary never runs either', () => {
+    it('VALID: {env ternary in a scope undriven by an argv leaf} => loading the module runs the env ternary once too', () => {
       const source = [
         'const limit = process.env.LIMIT === undefined ? undefined : Number(process.env.LIMIT);',
         '',
@@ -382,8 +469,8 @@ describe('specimenPredictTransformer', () => {
 
       expect(result).toStrictEqual({
         branches: [
-          { kind: 'ternary', line: 1, driven: 'never' },
-          { kind: 'if', line: 3, driven: 'never' },
+          { kind: 'ternary', line: 1, driven: 'one-way' },
+          { kind: 'if', line: 3, driven: 'one-way' },
         ],
         caseFailures: [],
         lints: [],

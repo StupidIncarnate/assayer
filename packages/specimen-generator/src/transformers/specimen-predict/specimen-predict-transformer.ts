@@ -11,12 +11,21 @@
  * - Locked, when every leaf is known: the focus branch goes one way, and every arm the known values
  *   never reach gets an `unreachable-exit` lint on its first line. The last arm of a statement whose
  *   arms do not return is just the code after the branch, so it is never dead.
- * - Undriven, when a leaf comes from outside the program: no case evaluates the focus, and the scope
- *   holding it is admitted as undriven.
+ * - Undriven, when a leaf comes from outside the program: no test can set the leaf, so the focus is
+ *   admitted as undriven. Where the admission sits depends on the scope holding the focus. A named
+ *   entry (a function, a method, an arrow in a variable or object) gets one admission on the focus's
+ *   own line, because Assayer names the branch a case cannot steer. The module scope is admitted as a
+ *   whole, on line 1. An inline function that is called where it is written, such as an
+ *   immediately-invoked arrow, is admitted as a whole on its own first line.
+ * - Undriven, and the scope runs when the module loads (the module itself, or an inline function
+ *   called where it is written): loading the module evaluates the focus once. When both arms of a
+ *   statement fall through to the same exit, one case reaches that exit, so the focus goes one way.
+ *   In every other undriven scope no case evaluates the focus, and it never goes either way.
  *
  * A leaf that reads a `T | undefined` value from `process.env` or `process.argv` is written as a
  * ternary of its own. That ternary is a branch too: an environment read goes both ways unless its
- * scope is undriven, and an argument read never runs.
+ * scope is undriven, and an argument read never goes both ways. In an undriven scope the leaf ternary
+ * gets the same answer as the focus.
  *
  * USAGE:
  * specimenPredictTransformer({ source, focusKind: 'statement', arms: ['then', 'else'], slotArm: 'return', provenances: ['param'] });
@@ -24,6 +33,7 @@
  */
 import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
+import { isCalledInPlaceGuard } from '../../guards/is-called-in-place/is-called-in-place-guard';
 import type { Provenance } from '../../contracts/provenance/provenance-contract';
 import { specimenOutcomeContract } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-outcome-contract';
@@ -77,7 +87,17 @@ export const specimenPredictTransformer = ({
     );
   }
 
-  const focusDriven = { driven: 'both-ways', locked: 'one-way', undriven: 'never' } as const;
+  // The nearest function around the focus. The module has none. An inline function is one that is
+  // called where it is written: its parent, past any parentheses, is a call that names it as the callee.
+  const scope = focus.getFirstAncestor((ancestor) => Node.isFunctionLikeDeclaration(ancestor));
+  const isInlineCalled =
+    scope !== undefined &&
+    (Node.isArrowFunction(scope) || Node.isFunctionExpression(scope)) &&
+    isCalledInPlaceGuard({ node: scope });
+  const runsAtModuleLoad = scope === undefined || isInlineCalled;
+  const fallsThrough = focusKind === 'statement' && slotArm !== 'return';
+  const undrivenDriven = runsAtModuleLoad && fallsThrough ? ('one-way' as const) : ('never' as const);
+  const focusDriven = { driven: 'both-ways', locked: 'one-way', undriven: undrivenDriven } as const;
 
   const leafBranches = branchNodes
     .filter((node) => node !== focus)
@@ -89,10 +109,10 @@ export const specimenPredictTransformer = ({
         .map((read) => read.getName());
 
       if (reads.includes('env')) {
-        return { kind: 'ternary' as const, line: node.getStartLineNumber(), driven: verdict === 'undriven' ? 'never' : 'both-ways' };
+        return { kind: 'ternary' as const, line: node.getStartLineNumber(), driven: verdict === 'undriven' ? undrivenDriven : 'both-ways' };
       }
       if (reads.includes('argv')) {
-        return { kind: 'ternary' as const, line: node.getStartLineNumber(), driven: 'never' };
+        return { kind: 'ternary' as const, line: node.getStartLineNumber(), driven: undrivenDriven };
       }
 
       throw new Error(
@@ -111,7 +131,6 @@ export const specimenPredictTransformer = ({
     );
   }
 
-  const fallsThrough = focusKind === 'statement' && slotArm !== 'return';
   const lastArm = arms.at(-1);
   const deadArms =
     verdict === 'locked' ? arms.filter((arm) => arm !== liveArm && !(fallsThrough && arm === lastArm)) : [];
@@ -128,10 +147,8 @@ export const specimenPredictTransformer = ({
     })
     .sort((left, right) => left.startLine - right.startLine);
 
-  // The undriven admission names the scope that holds the focus: its nearest function, or the module,
-  // which starts on line 1.
-  const scope = focus.getFirstAncestor((ancestor) => Node.isFunctionLikeDeclaration(ancestor));
-  const undriven = verdict === 'undriven' ? [{ startLine: scope === undefined ? 1 : scope.getStartLineNumber() }] : [];
+  const admittedLine = scope === undefined ? 1 : isInlineCalled ? scope.getStartLineNumber() : focus.getStartLineNumber();
+  const undriven = verdict === 'undriven' ? [{ startLine: admittedLine }] : [];
 
   return specimenOutcomeContract.parse({
     branches,

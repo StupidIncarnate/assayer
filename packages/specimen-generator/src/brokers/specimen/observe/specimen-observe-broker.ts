@@ -7,7 +7,11 @@
  * The cache folder is the same path for every call in one process. The nested Jest run keeps one
  * TypeScript compiler for each distinct config path, so a fresh folder per call kept a new compiler
  * alive each time and ran the process out of memory. The folder is emptied before each call
- * instead. The run id comes from the file's own path, so one file always gets the same run id.
+ * instead. The run id is a short hash of the file's own path, so one file always gets the same run id
+ * and a long specimen name never makes a run folder name too long for the file system.
+ *
+ * The branch list comes from every scope the walk found, so a branch inside an inline function that
+ * nothing can steer still appears in the outcome.
  *
  * USAGE:
  * await specimenObserveBroker({ repoRoot: '/repo/smoke-repo', relPath: 'packages/syntax-repository/src/if/a/a.ts' });
@@ -15,6 +19,7 @@
  */
 import { analyzeFileBroker, fileWalkBroker, runUnitBroker } from '@assayer/core/brokers';
 
+import { createHash } from '#gateway/node/crypto';
 import { ensureDirSync, readFileSync, rmSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join, resolve } from '#gateway/node/path';
@@ -36,6 +41,7 @@ export const specimenObserveBroker = async ({
 
   const walked = fileWalkBroker({ source, relPath, absPath });
   const analysis = analyzeFileBroker({ walked, relPath });
+  const scopeBranches = walked.success ? walked.scopes.flatMap((scope) => scope.branches) : [];
 
   const cacheDir = join(tmpdir(), `${observeStatics.cache.dirPrefix}${String(pid)}`);
   rmSync(cacheDir, { recursive: true, force: true });
@@ -48,9 +54,9 @@ export const specimenObserveBroker = async ({
     relPath,
     absPath,
     source,
-    runId: relPath.replaceAll('/', '__'),
+    runId: createHash('sha256').update(relPath, 'utf8').digest('hex').slice(0, observeStatics.runId.hashLength),
     analyzerContentHash: observeStatics.cache.analyzerContentHash,
   });
 
-  return specimenOutcomeProjectionTransformer({ analysis, run });
+  return specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches });
 };

@@ -3,7 +3,7 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('ternary-boolean-object-literal-method-cond-not-number-value-external', () => {
-    it('VALID: {value: external} => ternary on line 3 never run, undriven from line 2, every case passes', async () => {
+    it('VALID: {value: external} => ternary on line 3 never run, undriven from line 3, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/ternary/object-literal/ternary-boolean-object-literal-method-cond-not-number-value-external/ternary-boolean-object-literal-method-cond-not-number-value-external.ts'
@@ -12,7 +12,7 @@ describe('ternary-boolean-object-literal-method-cond-not-number-value-external',
             branches: [{ kind: 'ternary', line: 3, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 2 }],
+            undriven: [{ startLine: 3 }],
             darkSpots: [],
             gaps: []
         });

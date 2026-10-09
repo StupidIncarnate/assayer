@@ -3,7 +3,7 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('if-boolean-class-constructor-body-cond-eq-boolean-value-external', () => {
-    it('VALID: {value: external} => if on line 3 never run, undriven from line 2, every case passes', async () => {
+    it('VALID: {value: external} => if on line 3 never run, undriven from line 3, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/if/class/if-boolean-class-constructor-body-cond-eq-boolean-value-external/if-boolean-class-constructor-body-cond-eq-boolean-value-external.ts'
@@ -12,7 +12,7 @@ describe('if-boolean-class-constructor-body-cond-eq-boolean-value-external', () 
             branches: [{ kind: 'if', line: 3, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 2 }],
+            undriven: [{ startLine: 3 }],
             darkSpots: [],
             gaps: []
         });

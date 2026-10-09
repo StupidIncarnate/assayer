@@ -3,7 +3,7 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('ternary-number-default-export-cond-external', () => {
-    it('VALID: {cond: external} => ternary on line 2 never run, undriven from line 1, every case passes', async () => {
+    it('VALID: {cond: external} => ternary on line 2 never run, undriven from line 2, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/ternary/default-export/ternary-number-default-export-cond-external/ternary-number-default-export-cond-external.ts'
@@ -12,7 +12,7 @@ describe('ternary-number-default-export-cond-external', () => {
             branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 1 }],
+            undriven: [{ startLine: 2 }],
             darkSpots: [],
             gaps: []
         });

@@ -38,7 +38,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         ],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'both-ways' }] }),
@@ -68,7 +68,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         ],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({ branches: [{ kind: 'ternary', line: 5, driven: 'one-way' }] }),
@@ -95,7 +95,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/if:a#leaf', kind: 'cond', outcome: false })] })],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'one-way' }] }));
     });
@@ -104,7 +104,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
       const analysis = FileAnalysisStub();
       const run = RunResultStub({ cases: [] });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
     });
@@ -137,7 +137,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         ],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
@@ -174,7 +174,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         ],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
     });
@@ -210,7 +210,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         ],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 3, driven: 'both-ways' }] }));
     });
@@ -242,7 +242,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/if:nor#leaf.1', kind: 'cond', outcome: true })] })],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 3, driven: 'one-way' }] }));
     });
@@ -274,7 +274,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/if:late#leaf', kind: 'cond', outcome: true })] })],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
@@ -311,7 +311,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
       });
       const run = RunResultStub({ cases: [] });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
@@ -338,7 +338,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/if:a#leaf', kind: 'cond', outcome: true })] })],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'one-way' }] }));
     });
@@ -347,9 +347,63 @@ describe('specimenOutcomeProjectionTransformer', () => {
       const analysis = FileAnalysisStub({ functions: [FunctionAnalysisStub({ branches: [] })] });
       const run = RunResultStub({ cases: [] });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [] }));
+    });
+
+    it('VALID: {a branch only in a scope, no function holds it} => one row driven never', () => {
+      const analysis = FileAnalysisStub({ functions: [] });
+      const run = RunResultStub({ cases: [] });
+      const scopeBranches = [
+        BranchNodeStub({
+          coverageId: 'iife/if:a',
+          kind: 'if',
+          startLine: 2,
+          endLine: 4,
+          condition: ConditionLeafStub({ id: 'iife/if:a#leaf' }),
+        }),
+      ];
+
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches });
+
+      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
+    });
+
+    it('VALID: {a scope branch whose leaf a passed case saw true} => the row reads one-way through the leaf id', () => {
+      const analysis = FileAnalysisStub({ functions: [] });
+      const run = RunResultStub({
+        cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'iife/if:a#leaf', kind: 'cond', outcome: true })] })],
+      });
+      const scopeBranches = [
+        BranchNodeStub({
+          coverageId: 'iife/if:a',
+          kind: 'if',
+          startLine: 2,
+          endLine: 4,
+          condition: ConditionLeafStub({ id: 'iife/if:a#leaf' }),
+        }),
+      ];
+
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches });
+
+      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'one-way' }] }));
+    });
+
+    it('VALID: {the same coverageId in a function and in a scope} => one row', () => {
+      const branch = BranchNodeStub({
+        coverageId: 'f/if:a',
+        kind: 'if',
+        startLine: 2,
+        endLine: 4,
+        condition: ConditionLeafStub({ id: 'f/if:a#leaf' }),
+      });
+      const analysis = FileAnalysisStub({ functions: [FunctionAnalysisStub({ branches: [branch] })] });
+      const run = RunResultStub({ cases: [] });
+
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [branch] });
+
+      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
     });
   });
 
@@ -364,7 +418,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         ],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
@@ -390,7 +444,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         ],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
@@ -411,7 +465,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         undriven: [UndrivenEntryStub({ startLine: 6 }), UndrivenEntryStub({ startLine: 1 })],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [], undriven: [{ startLine: 1 }, { startLine: 6 }] }));
     });
@@ -423,7 +477,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         darkSpots: [DarkSpotStub({ startLine: 7 }), DarkSpotStub({ startLine: 3 })],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [], darkSpots: [{ startLine: 3 }, { startLine: 7 }] }));
     });
@@ -435,7 +489,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
         gaps: [EntryGapStub({ name: 'zeta' }), EntryGapStub({ name: 'alpha' })],
       });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [], gaps: [{ name: 'alpha' }, { name: 'zeta' }] }));
     });
@@ -446,7 +500,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
       const analysis = FileAnalysisStub({ functions: [] });
       const run = RunResultStub({ cases: [] });
 
-      const result = specimenOutcomeProjectionTransformer({ analysis, run });
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
