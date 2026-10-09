@@ -61,4 +61,11 @@ export interface HandlerResult {
    * A handler cannot know its own branches: they are only discovered by descending.
    */
   opensScope?: ScopeRecord;
+  /**
+   * Scopes that run code but have no node of their own: a class with no constructor still runs its
+   * instance field initializers in the constructor the language supplies. Each is a full answer of
+   * its own, with `opensScope` set and the descents whose code runs in it, and the walk settles it
+   * exactly as it settles a node whose handler opened a scope. Absent when the node opens none.
+   */
+  implicitScopes?: HandlerResult[];
 }

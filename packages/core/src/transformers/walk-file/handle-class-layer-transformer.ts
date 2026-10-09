@@ -1,14 +1,19 @@
 /**
- * PURPOSE: Handles a class — a NAMING scope, not an executable one. A class owns no control flow of
- *   its own, so it opens no scope record; it contributes a path segment (`['Classifier', 'classify']`)
+ * PURPOSE: Handles a class — a NAMING scope, not an executable one. A class opens no scope record of
+ *   its own; it contributes a path segment (`['Classifier', 'classify']`)
  *   and passes its export reach down to its members, which is what makes a method of an exported
  *   class an analysable entry while a bare nested function is not. Members are then just
  *   function-likes: the class rung costs this file and nothing else.
  *
+ *   The one control flow a class body holds is construction: every instance field initializer runs
+ *   each time the class is constructed. So those initializers belong to the constructor's scope, never
+ *   to the scope the class sits in. A written constructor walks them itself. A class with none gets the
+ *   constructor the language supplies, opened here as an implicit scope over them.
+ *
  *   It also hands DOWN its identity and constructability, because a method is only addressable
  *   through an instance and the class is the only node that knows how to make one. A constructor
- *   with required arguments makes its methods a named gap rather than something the runner may
- *   guess at.
+ *   with required arguments makes `constructable` false, so the case set builds each instance with
+ *   arguments filled from the constructor's declared types instead of guessing at them.
  *
  *   A class DECLARES a shape too — its instance type — recorded on the same flat channel an
  *   `interface`/`type` declaration uses and read through the same type reader, because a sibling that
@@ -29,6 +34,8 @@ import { walkNodeContract } from '../../contracts/walk-node/walk-node-contract';
 import { typeDescriptorTransformer } from '../type-descriptor/type-descriptor-transformer';
 import { walkContextTransformer } from '../walk-context/walk-context-transformer';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
+import { implicitConstructorLayerTransformer } from './implicit-constructor-layer-transformer';
+import { readInstanceInitializersLayerTransformer } from './read-instance-initializers-layer-transformer';
 import { readTypeFactLayerTransformer } from './read-type-fact-layer-transformer';
 
 export const handleClassLayerTransformer = ({
@@ -72,6 +79,35 @@ export const handleClassLayerTransformer = ({
         ]
       : [];
 
+  // An instance field's initializer runs inside the constructor, every time the class is constructed,
+  // so the class walks none of them itself. A written constructor walks them before its own body
+  // (`handle-function`). A class without one still runs them, in the constructor the language
+  // supplies, so this handler opens that constructor as an implicit scope and walks them there.
+  const initializers = readInstanceInitializersLayerTransformer({ node });
+  const ownedByConstructor = new Set<Node>(initializers);
+  // The rest of such a field (a computed name, a decorator) still descends here, so nothing is dropped.
+  const descents = node.getMembers().flatMap((member) => {
+    const initializer = Node.isPropertyDeclaration(member) ? member.getInitializer() : undefined;
+
+    return initializer !== undefined && ownedByConstructor.has(initializer)
+      ? member
+          .forEachChildAsArray()
+          .filter((child) => child !== initializer)
+          .map((child) => ({ node: child, context: scoped }))
+      : [{ node: member, context: scoped }];
+  });
+  const lastInitializer = initializers.at(-1);
+  const implicitConstructor =
+    node.getConstructors().length > 0 || lastInitializer === undefined
+      ? undefined
+      : implicitConstructorLayerTransformer({
+          classNode: node,
+          className: name,
+          context: scoped,
+          initializers,
+          lastInitializer,
+        });
+
   return handlerResultLayerTransformer({
     declaredShapes,
     nodes: [
@@ -84,6 +120,7 @@ export const handleClassLayerTransformer = ({
         handled: true,
       }),
     ],
-    descents: node.getMembers().map((member) => ({ node: member, context: scoped })),
+    descents,
+    ...(implicitConstructor === undefined ? {} : { implicitScopes: [implicitConstructor] }),
   });
 };

@@ -95,7 +95,9 @@ The walk runs through four layers, in order:
    (the library that parses TypeScript into an AST), and it parses the
    file exactly once.
 2. `walk-node-layer-transformer` is the recursion. It calls itself once per
-   descent a handler asks for.
+   descent a handler asks for, through `settle-handler-layer-transformer`,
+   which turns one handler's answer into walk facts and completes the scope
+   the handler opened.
 3. `dispatch-node-layer-transformer` is the only place that decides which
    handler owns a given node kind.
 4. A `handle-<x>-layer-transformer` file is one handler. It returns
@@ -115,6 +117,13 @@ encloses them most closely, and the node that opened that scope is the one
 that claims them, once the recursion returns to it. Every scope claims
 exactly its own facts this way, so no node ever has to ask "which function
 am I in?"
+
+A scope can run code without having a node of its own. A class with no
+written constructor still runs its instance field initializers in the
+constructor the language supplies. `handle-class` hands that constructor
+back as an IMPLICIT scope: a full handler answer of its own, with the
+initializers as its descents. `settle-handler` completes it exactly as it
+completes a scope a node opened, so it claims its own facts the same way.
 
 A handler only describes what to descend into. The core (the shared walk
 machinery: `walk-node-layer-transformer` and `dispatch-node-layer-transformer`) is
@@ -205,13 +214,30 @@ used as a condition is `a` truthy, or `a` nullish and `b` truthy, with a
 already carries its truthiness probe. A literal `b` is evaluated by its
 value instead of read as a leaf, because no case can set a literal.
 
+**Read a ternary in a value position.** Touch `handle-ternary`, which
+`dispatch-node` routes every ternary the walk reaches to. A ternary in a
+call argument, a field or variable initializer, an object property, a
+`yield`, a parameter default or a condition is a branch of the scope it
+runs in. It has no exit, because its value flows on into the expression
+around it, so each arm is recorded as a fall-through arm and both arms
+meet again at the enclosing statement. A ternary that IS an exit never
+reaches it: `read-conditional-exit` consumes that one first (section 8).
+
+**Run a class's instance field initializers.** Touch
+`read-instance-initializers`, the one list of initializers construction
+runs, plus `handle-class` and `handle-function`, its two readers. A
+written constructor walks them before its own body. A class with no
+constructor gets an implicit one from `implicit-constructor`, a scope named
+`constructor`, reached through `new` on the class, taking no parameters.
+Its exit's probe wraps the last initializer, because initializers run in
+source order. A static field's initializer runs when the class is defined,
+so the class walks it under the scope the class sits in.
+
 **Read a parameter's default value.** Touch `handle-function`, which
-walks each default under the function's own context, plus
-`read-bound-ternary`. A ternary there is a branch of the function. It
-has no exit, because its value flows into the parameter, so each arm is
-recorded as a fall-through arm. The parameter is marked
-`branchingDefault`, and `applied-params` leaves it out of every case, so
-the default runs.
+descends each default under the function's own context, so a ternary
+there reaches `handle-ternary` as a branch of the function. A parameter
+whose default is a ternary is marked `branchingDefault`, and
+`applied-params` leaves it out of every case, so the default runs.
 
 **Change how coverage IDs are computed.** Touch `transformers/coverage-id`
 and `transformers/exit-coverage-id`.
@@ -469,6 +495,24 @@ projects the result as `globalUses`.
 directly compared against. `transformers/module-graph-projection` projects
 it as `envReads`, and the stub stitch (section 9) aggregates these into
 per-property environment stubs.
+
+**Drive a branch whose operand is read from the environment.** Touch
+`read-env-operand` and `read-env-chain`. They follow a branch operand's
+identifier through same-file `const` bindings down to one
+`process.env.<X>` read, and record each step on the way that Assayer can
+run backwards, in the order the code applies it: a `?? '<literal>'`
+fallback, `Number(x)`, a comparison with a literal, `x.split('<literal>')`,
+and `xs.map(f)`. The leaf carries the variable as `operandEnvVarName` and
+the steps as `operandEnvSteps` (`env-step-contract`). The steps also give
+the operand its type (`env-steps-type`), because the checker types every
+step built on `process.env` as `any` (section 5.10). `cause-arrange` starts
+the operand's domain from what the steps can produce at all
+(`env-steps-domain`: a split list is never empty), and writes the variable
+with `env-encode`, which runs the steps backwards from the operand's
+narrowed domain. A step with no inverse, such as `parseInt(x, 10)` or a
+template string, ends the chain, and the branch stays undriven. A
+condition that reads `process.env.X` in place, with no binding in between,
+is not followed either, so it stays undriven too.
 
 **Change import resolution (the stitch).** Touch
 `brokers/compile/resolve-graph`, plus `brokers/tsconfig/owner`
@@ -837,7 +881,7 @@ shares, so it would differ depending on what the process walked first.
 
 Two consequences of the hermetic walk follow, and both are load-bearing:
 
-- This is what lets `read-env-operand` prove that an access is really
+- This is what lets `read-env-access` prove that an access is really
   `process.env`, rather than merely pattern-matching the text
   `process.env`. An identifier the file itself declares is NOT the global,
   and the checker answers that correctly: a file with its own `const
@@ -847,18 +891,22 @@ Two consequences of the hermetic walk follow, and both are load-bearing:
   symbol at all," because `Number` resolves to the standard library while
   `process` resolves to nothing in the hermetic walk, and only the
   file-scoped version of the question gets both of those right.
-- This caps the environment-variable feature at one hop through `Number`:
-  `const x = Number(process.env.X)` is supported, because `String` is
-  `Number`'s exact inverse, so a representative value can be converted
-  back into the string form `process.env` actually holds. A bare `const
-  mode = process.env.MODE` types as `any` in this hermetic walk (there is
-  no `@types/node` loaded), so it has no domain of values to pick from,
-  and stays honestly undriven. This means the very common pattern
-  `process.env.NODE_ENV === 'production'` is NOT driven. Loading
-  `@types/node` into this project would widen it, and doing that is a real
-  decision with real costs (parse cost on every file, a core dependency on
-  types meant for consumers, and a changed analysis for every specimen in
-  the catalogue), not a small tweak.
+- The checker types `process.env.X`, and every step built on it, as
+  `any`, because no `@types/node` is loaded. So an environment operand's
+  TYPE comes from its recorded steps instead (`env-steps-type`): the raw
+  read is a `string`, `Number(x)` a `number`, a comparison a `boolean`,
+  and a `split` an array. That is the type Node itself declares, minus
+  `undefined`, which no case can write. Driving reaches exactly the steps
+  `env-encode` can run backwards (section 4 lists them), so a case can put
+  the operand where a predicate wants it: `String` inverts `Number`, the
+  literal itself makes `=== '<literal>'` true, and n items joined by the
+  separator give a `split` list of length n. Any other step ends the
+  chain and the branch stays honestly undriven, because guessing an
+  inverse would put a failing case against correct code. Loading
+  `@types/node` into this project would type more of the chain, and doing
+  that is a real decision with real costs (parse cost on every file, a
+  core dependency on types meant for consumers, and a changed analysis for
+  every specimen in the catalogue), not a small tweak.
 
 Reading an external type does not weaken any of this. When a resolved
 import needs its declared input or output types, a SEPARATE,
@@ -898,19 +946,26 @@ The same syntax form is read the same way no matter what encloses it.
 Where that form sits in the code may pick which LENS reads it, but it must
 never create a second variant of how one lens reads it.
 
-There are two lenses. The value-and-exit lens has a single reader,
+There are three lenses. The exit lens has a single reader,
 `read-conditional-exit`, used for a conditional expression (a ternary, a
-`&&`/`||`/`??` chain, or a `?.` access) in EVERY value position alike: a
-`return`, a `throw`, a concise-arrow function body, and a value assigned
-to a `const` that then flows straight into a `return`. Every one of those
-is split into per-arm exits by exactly the same code. The other lens reads
-an expression used AS a condition: `if`, a ternary's own condition, or a
-`??`/`?.` non-nullishness check. `read-condition`, `read-condition-tree`,
-and `read-nullish-leaf` read this lens. `a && b` is genuinely one
-predicate when it appears as `if (a && b)`, and genuinely two separate
-value paths when it appears as `return a && b`. Those are two different
-lenses looking at the same operators, not two different readers for the
-same lens.
+`&&`/`||`/`??` chain, or a `?.` access) that IS an exit, in every exit
+position alike: a `return`, a `throw`, a concise-arrow function body, and
+a value assigned to a `const` that then flows straight into a `return`.
+Every one of those is split into per-arm exits by exactly the same code.
+The value lens has a single reader too, `handle-ternary`, used for a
+ternary in every other value position alike: a call argument, a field or
+variable initializer, an object property, a `yield`, a parameter default,
+an operand inside a condition. Its value flows on, so it is a branch whose
+arms fall through to the enclosing statement, never an exit. The third
+lens reads an expression used AS a condition: `if`, a ternary's own
+condition, or a `??`/`?.` non-nullishness check. `read-condition`,
+`read-condition-tree`, and `read-nullish-leaf` read this lens. `a && b`
+is genuinely one predicate when it appears as `if (a && b)`, and genuinely
+two separate value paths when it appears as `return a && b`. Those are
+different lenses looking at the same operators, not two different readers
+for the same lens. Both ternary lenses read the ternary's own condition
+through the condition lens and key the branch the same way, so a ternary
+keeps its ID whichever lens reads it.
 
 Whether a branch can be steered is likewise decided in exactly ONE place:
 the steerability gate inside `derive-cases`, used identically for `if`,
@@ -1218,13 +1273,15 @@ directly; `handle-function` then MERGES that block's branches, exits,
 probe sites, and nodes (not merely its descents), and the function's own
 scope claims them through `opensScope`.
 
-What remains a dark spot, marked as a plain `ConditionalExpression`, is
-exactly what this tight equivalence structurally cannot reach: a
-non-adjacent or transformed use (`return x + 1`, `f(x)`), a `let` binding
-that gets reassigned, or a ternary sitting in argument position or inside
-JSX. Reaching those needs a later, definition-site-derived reverse-map
-feature, not this one. A non-drivable CONDITION is different from a dark
-spot: the branch is still emitted, and the steerability gate in
+Every other ternary reaches the walk as a node, and `dispatch-node` routes
+it to `handle-ternary`: a non-adjacent or transformed use (`return x + 1`,
+`f(x)`), a `let` binding that gets reassigned, a ternary in argument
+position or inside JSX. Its value flows on into the expression around it,
+so it is a `ternary` branch with no exit of its own. Each arm is a
+fall-through arm, and both meet again at the enclosing statement, the
+same way two `if` arms meet again at the statement after the `if`. So a
+ternary is never a dark spot. A non-drivable CONDITION is a different
+thing again: the branch is still emitted, and the steerability gate in
 `derive-cases` (section 5.12) admits it as undriven, never as a spurious
 test case.
 
@@ -1490,7 +1547,7 @@ cannot type is additionally a `no-usable-types` build error at the call
 site; a member access that cannot be typed is merely recorded, with no
 error. This is the sanctioned way anything Node-related earns a cache
 entry. The hermetic walk itself stays typeless (section 5.10 is untouched
-by any of this), and `read-env-operand` still proves `process.env`
+by any of this), and `read-env-access` still proves `process.env`
 entirely on its own, without help from this second project.
 
 **The cache split keeps this honest.** Per-file blobs stay pure: raw
@@ -1549,16 +1606,20 @@ type, since `process.env` has no declared shape inside the hermetic
 walk). Two facts already on the blob feed this: the module graph's
 `envReads` (bare `process.env.<X>` reads the walk captured, each carrying
 its property name and any literal it was directly compared against), and
-the Number-coerced branch leaves (`operandEnvVarName` names the property,
-and the predicate's literal is the switch or if-comparison value). The
+the env-read branch leaves (`operandEnvVarName` names the property). A
+leaf whose steps keep the variable's value, up to `Number`, contributes
+its predicate's literal, the switch or if-comparison value. A leaf whose
+steps compare the variable (`process.env.FLAG === 'on'`) contributes that
+comparison's literal instead, and a length predicate contributes none,
+because a boolean or a length is not a value of the variable. The
 resulting `values` are every distinct branch literal GUESSED, plus one
 representative value for anything else, marked `guessed: true` (meaning
 this is a best-effort guess a human can later correct, never treated as
 authoritative on its own). `readers[]` lists every file that reads that
-property. This runs regardless of whether the read is drivable: a bare
-`process.env.MODE === 'x'` comparison is admitted as undriven (section
-5.10: it types as `any`), yet its literal is still recorded as a real stub
-demand. The `process.env` proof itself stays entirely checker-based;
+property. This runs regardless of whether the read is drivable: a
+`process.env.MODE === 'x'` comparison written in place in a condition is
+admitted as undriven (section 4: only a bound operand is followed), yet
+its literal is still recorded as a real stub demand. The `process.env` proof itself stays entirely checker-based;
 nothing here adds `node_modules` access to the main walk.
 
 **`param-type-resolve` gives an IMPORTED parameter type its declared

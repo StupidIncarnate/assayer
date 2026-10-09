@@ -99,7 +99,7 @@ describe('readValueFlowExitLayerTransformer', () => {
     });
   });
 
-  describe('the shapes it refuses (each stays the marked ConditionalExpression dark spot)', () => {
+  describe('the shapes it refuses (each is left to the walk, which reads the ternary as a value-position branch)', () => {
     it('EDGE: {`const x = ternary; const w = x; return w`} => NON-adjacent def/use does not match', () => {
       readValueFlowExitLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });

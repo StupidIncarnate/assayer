@@ -102,6 +102,56 @@ describe('handlerResultLayerTransformer', () => {
     });
   });
 
+  describe('implicitScopes', () => {
+    it('VALID: {one implicit scope given} => carried through', () => {
+      handlerResultLayerTransformerProxy();
+      const implicit = handlerResultLayerTransformer({ opensScope: ScopeRecordStub() });
+
+      expect(handlerResultLayerTransformer({ implicitScopes: [implicit] })).toStrictEqual({
+        branches: [],
+        exits: [],
+        calls: [],
+        valueUses: [],
+        exportedBindings: [],
+        indexDemands: [],
+        fallthroughArms: [],
+        nodes: [],
+        probeSites: [],
+        moduleEdges: [],
+        declaredShapes: [],
+        globalUses: [],
+        envReads: [],
+        reachedFns: [],
+        invokedFns: [],
+        descents: [],
+        implicitScopes: [implicit],
+      });
+    });
+
+    it('EMPTY: {no implicit scopes given} => the field is left out, as an absent opensScope is', () => {
+      handlerResultLayerTransformerProxy();
+
+      expect(handlerResultLayerTransformer({ implicitScopes: [] })).toStrictEqual({
+        branches: [],
+        exits: [],
+        calls: [],
+        valueUses: [],
+        exportedBindings: [],
+        indexDemands: [],
+        fallthroughArms: [],
+        nodes: [],
+        probeSites: [],
+        moduleEdges: [],
+        declaredShapes: [],
+        globalUses: [],
+        envReads: [],
+        reachedFns: [],
+        invokedFns: [],
+        descents: [],
+      });
+    });
+  });
+
   describe('opensScope', () => {
     it('VALID: {opensScope given} => carried through', () => {
       handlerResultLayerTransformerProxy();

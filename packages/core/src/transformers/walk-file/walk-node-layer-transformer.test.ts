@@ -93,4 +93,31 @@ describe('walkNodeLayerTransformer', () => {
       ]);
     });
   });
+
+  describe('implicit scopes', () => {
+    it('VALID: {a class with an initialized instance field and no constructor} => the field ternary is claimed by the implicit constructor, not the module', () => {
+      walkNodeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const node = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\nexport class Labeller {\n  label = flag ? 'a' : 'b';\n}\n",
+      );
+
+      const result = walkNodeLayerTransformer({ node, context: SEED });
+
+      const [moduleScope, constructorScope] = result.scopes;
+
+      expect({
+        scopePaths: result.scopes.map((scope) => scope.scopePath),
+        moduleBranches: moduleScope?.branches,
+        constructorBranches: constructorScope?.branches.map((branch) => branch.coverageId),
+        constructorExits: constructorScope?.exits.map((exit) => exit.coverageId),
+      }).toStrictEqual({
+        scopePaths: [['*module*'], ['*module*', 'Labeller', 'constructor']],
+        moduleBranches: [],
+        constructorBranches: ['*module*/Labeller/constructor/ternary:id:flag'],
+        constructorExits: ['*module*/Labeller/constructor/exit@top'],
+      });
+    });
+  });
 });

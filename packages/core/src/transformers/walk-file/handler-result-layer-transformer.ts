@@ -44,6 +44,7 @@ export const handlerResultLayerTransformer = ({
   invokedFns,
   descents,
   opensScope,
+  implicitScopes,
 }: {
   branches?: BranchNode[];
   exits?: ExitNode[];
@@ -62,6 +63,7 @@ export const handlerResultLayerTransformer = ({
   invokedFns?: InvokedFn[];
   descents?: Descent[];
   opensScope?: ScopeRecord;
+  implicitScopes?: HandlerResult[];
 }): HandlerResult => ({
   branches: branches ?? [],
   exits: exits ?? [],
@@ -80,4 +82,5 @@ export const handlerResultLayerTransformer = ({
   invokedFns: invokedFns ?? [],
   descents: descents ?? [],
   ...(opensScope === undefined ? {} : { opensScope }),
+  ...(implicitScopes === undefined || implicitScopes.length === 0 ? {} : { implicitScopes }),
 });

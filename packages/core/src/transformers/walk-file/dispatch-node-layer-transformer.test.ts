@@ -67,6 +67,28 @@ describe('dispatchNodeLayerTransformer', () => {
       expect(result.branches.map((branch) => branch.kind)).toStrictEqual(['if']);
     });
 
+    it('VALID: {a ternary in a call argument} => routed to the ternary handler, which records a ternary branch and no dark spot', () => {
+      dispatchNodeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\ndeclare function log(text: string): void;\nlog(flag ? 'a' : 'b');\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ConditionalExpression);
+
+      const result = dispatchNodeLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect({
+        branches: result.branches.map((branch) => branch.kind),
+        exits: result.exits,
+        nodes: result.nodes.map((walkNode) => ({ kind: walkNode.kind, handled: walkNode.handled })),
+      }).toStrictEqual({
+        branches: ['ternary'],
+        exits: [],
+        nodes: [{ kind: 'ConditionalExpression', handled: true }],
+      });
+    });
+
     it('VALID: {switch statement} => routed to the switch handler, which records one branch per case', () => {
       dispatchNodeLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });

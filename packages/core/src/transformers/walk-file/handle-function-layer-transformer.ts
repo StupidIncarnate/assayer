@@ -11,7 +11,8 @@
  *   analyzer to a new callable shape means adding it here and routing it in `dispatch-node`.
  *
  *   A parameter's default value runs inside this scope too, so it is walked here, under the same
- *   context as the body, and a ternary in it is a branch of this function.
+ *   context as the body, and a ternary in it is a branch of this function. A written constructor
+ *   walks its class's instance field initializers the same way, because construction runs them.
  *
  * USAGE:
  * handleFunctionLayerTransformer({ node: functionDeclaration, context });
@@ -44,14 +45,15 @@ import { walkContextTransformer } from '../walk-context/walk-context-transformer
 import { handleBlockLayerTransformer } from './handle-block-layer-transformer';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
 import { readAccountedLayerTransformer } from './read-accounted-layer-transformer';
-import { readBoundTernaryLayerTransformer } from './read-bound-ternary-layer-transformer';
 import { readConditionalExitLayerTransformer } from './read-conditional-exit-layer-transformer';
 import { readConditionTreeLayerTransformer } from './read-condition-tree-layer-transformer';
 import { readEntryAccessLayerTransformer } from './read-entry-access-layer-transformer';
 import { readExportFlagLayerTransformer } from './read-export-flag-layer-transformer';
 import { readFunctionNameLayerTransformer } from './read-function-name-layer-transformer';
+import { readInstanceInitializersLayerTransformer } from './read-instance-initializers-layer-transformer';
 import { readDeclaredTypeTextLayerTransformer } from './read-declared-type-text-layer-transformer';
 import { readTypeFactLayerTransformer } from './read-type-fact-layer-transformer';
+import { unwrapParenthesesLayerTransformer } from './unwrap-parentheses-layer-transformer';
 
 // The predicate kinds carrying a real COMPARISON — the operand's value or its length measured against
 // a threshold. A predicate signature is published ONLY when every leaf of the body's returned
@@ -143,22 +145,32 @@ export const handleFunctionLayerTransformer = ({
   const scoped = walkContextTransformer({ context, scopeSegment: name, params: declaredParams, exported });
 
   // A parameter's DEFAULT value is code of this function: it runs inside the function's scope, before
-  // the body, each time a caller leaves that argument out. So it is read under the function's own
-  // context, and a ternary there is a branch of this function (`read-bound-ternary`). Any other default
-  // is descended whole, so a call or an arrow function in it is still walked.
-  const defaults = node.getParameters().map((param) => {
-    const initializer = param.getInitializer();
-
-    return initializer === undefined
-      ? undefined
-      : readBoundTernaryLayerTransformer({ expression: initializer, context: walkContextTransformer({ context: scoped, tail: false }) });
-  });
-  const defaultResults = defaults.flatMap((result) => (result === undefined ? [] : [result]));
-  // A default that branches marks its parameter, so a derived case leaves that argument out and the
-  // branch runs (`applied-params`).
-  const params = declaredParams.map((param, index) =>
-    (defaults[index]?.branches.length ?? 0) > 0 ? paramDescriptorContract.parse({ ...param, branchingDefault: true }) : param,
+  // the body, each time a caller leaves that argument out. So it descends under the function's own
+  // context, and a ternary there is a branch of this function (`handle-ternary`). A call or an arrow
+  // function in any other default is walked the same way.
+  const paramInitializers = node.getParameters().map((param) => param.getInitializer());
+  const preludeContext = walkContextTransformer({ context: scoped, tail: false });
+  const defaults = paramInitializers.flatMap((initializer) =>
+    initializer === undefined ? [] : [{ node: initializer, context: preludeContext }],
   );
+  // A written constructor runs its class's instance field initializers too, after the defaults and
+  // before its own body, every time the class is constructed. So they descend under this scope's
+  // context, and the class walks none of them itself (`read-instance-initializers`). An overload
+  // signature has no body and runs nothing.
+  const fieldInitializers = (
+    Node.isConstructorDeclaration(node) && node.hasBody()
+      ? readInstanceInitializersLayerTransformer({ node: node.getParentOrThrow() })
+      : []
+  ).map((initializer) => ({ node: initializer, context: preludeContext }));
+  // A default that IS a ternary marks its parameter, so a derived case leaves that argument out and the
+  // branch runs (`applied-params`).
+  const params = declaredParams.map((param, index) => {
+    const initializer = paramInitializers[index];
+
+    return initializer !== undefined && Node.isConditionalExpression(unwrapParenthesesLayerTransformer({ node: initializer }))
+      ? paramDescriptorContract.parse({ ...param, branchingDefault: true })
+      : param;
+  });
   const body = node.getBody();
 
   const block = body !== undefined && Node.isBlock(body) ? body : undefined;
@@ -282,13 +294,9 @@ export const handleFunctionLayerTransformer = ({
       : conciseTernary.probeSites;
 
   return handlerResultLayerTransformer({
-    branches: [
-      ...defaultResults.flatMap((result) => result.branches),
-      ...(conciseTernary === undefined ? (blockResult?.branches ?? []) : conciseTernary.branches),
-    ],
+    branches: conciseTernary === undefined ? (blockResult?.branches ?? []) : conciseTernary.branches,
     exits,
-    probeSites: [...defaultResults.flatMap((result) => result.probeSites), ...probeSites],
-    fallthroughArms: defaultResults.flatMap((result) => result.fallthroughArms),
+    probeSites,
     nodes: [
       walkNodeContract.parse({
         kind: node.getKindName(),
@@ -298,7 +306,6 @@ export const handleFunctionLayerTransformer = ({
         endLine: node.getEndLineNumber(),
         handled: true,
       }),
-      ...defaultResults.flatMap((result) => result.nodes),
       ...(conciseTernary === undefined ? (blockResult?.nodes ?? []) : conciseTernary.nodes),
     ],
     opensScope: scopeRecordContract.parse({
@@ -317,7 +324,8 @@ export const handleFunctionLayerTransformer = ({
       ...(predicateSignature === undefined ? {} : { predicateSignature }),
     }),
     descents: [
-      ...defaultResults.flatMap((result) => result.descents),
+      ...defaults,
+      ...fieldInitializers,
       ...(conciseTernary === undefined
         ? block === undefined
           ? body === undefined

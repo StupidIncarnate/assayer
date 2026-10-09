@@ -424,7 +424,7 @@ describe('handleFunctionLayerTransformer', () => {
   });
 
   describe('a parameter default value', () => {
-    it('VALID: {text = value === 7 ? "then" : "else"} => a ternary branch of this function, keyed under its scope', () => {
+    it('VALID: {text = value === 7 ? "then" : "else"} => the ternary descends under this function\'s own scope, before the body', () => {
       handleFunctionLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
@@ -436,20 +436,37 @@ describe('handleFunctionLayerTransformer', () => {
       const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
 
       expect({
-        branches: result.branches.map((branch) => ({ coverageId: branch.coverageId, kind: branch.kind })),
-        fallthroughArms: result.fallthroughArms.map((fallthroughArm) => fallthroughArm.guardPath),
+        branches: result.branches,
+        descents: result.descents.map((descent) => ({
+          kind: descent.node.getKindName(),
+          scopePath: descent.context.scopePath,
+          guardPath: descent.context.guardPath,
+          tail: descent.context.tail,
+        })),
       }).toStrictEqual({
-        branches: [
-          {
-            coverageId: '*module*/label/ternary:BinaryExpression,id:value,EqualsEqualsEqualsToken,num:7',
-            kind: 'ternary',
-          },
-        ],
-        fallthroughArms: [
-          [{ branchCoverageId: '*module*/label/ternary:BinaryExpression,id:value,EqualsEqualsEqualsToken,num:7', arm: 'then' }],
-          [{ branchCoverageId: '*module*/label/ternary:BinaryExpression,id:value,EqualsEqualsEqualsToken,num:7', arm: 'else' }],
+        branches: [],
+        descents: [
+          { kind: 'ConditionalExpression', scopePath: ['*module*', 'label'], guardPath: [], tail: false },
+          { kind: 'ReturnStatement', scopePath: ['*module*', 'label'], guardPath: [], tail: true },
         ],
       });
+    });
+
+    it('VALID: {text = (value === 7 ? "then" : "else")} => a parenthesized ternary default marks the parameter branchingDefault too', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "export function label(value: number, text: string = (value === 7 ? 'then' : 'else')): string {\n  return text;\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.FunctionDeclaration);
+
+      const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.opensScope?.params).toStrictEqual([
+        { name: 'value', type: { kind: 'number' } },
+        { name: 'text', type: { kind: 'string' }, optional: true, branchingDefault: true },
+      ]);
     });
 
     it('VALID: {text = value === 7 ? "then" : "else"} => the parameter is marked branchingDefault, so a case leaves it out', () => {
@@ -506,6 +523,55 @@ describe('handleFunctionLayerTransformer', () => {
       const result = handleFunctionLayerTransformer({ node, context: MODULE_CONTEXT });
 
       expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['ArrowFunction', 'ReturnStatement']);
+    });
+  });
+
+  describe('a written constructor', () => {
+    it('VALID: {a class with an initialized instance field} => the constructor descends the initializer before its body, under its own scope', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\nexport class Labeller {\n  label = flag ? 'a' : 'b';\n  constructor() {\n    this.label = 'c';\n  }\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.Constructor);
+      const context = WalkContextStub({
+        scopePath: ['*module*', 'Labeller'],
+        guardPath: [],
+        params: [],
+        exported: true,
+        enclosingClass: { name: 'Labeller', constructable: true },
+      });
+
+      const result = handleFunctionLayerTransformer({ node, context });
+
+      expect(
+        result.descents.map((descent) => ({ kind: descent.node.getKindName(), scopePath: descent.context.scopePath, tail: descent.context.tail })),
+      ).toStrictEqual([
+        { kind: 'ConditionalExpression', scopePath: ['*module*', 'Labeller', 'constructor'], tail: false },
+        { kind: 'ExpressionStatement', scopePath: ['*module*', 'Labeller', 'constructor'], tail: true },
+      ]);
+    });
+
+    it('EMPTY: {a method of a class with an initialized instance field} => the method descends only its own body', () => {
+      handleFunctionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\nexport class Labeller {\n  label = flag ? 'a' : 'b';\n  read(): string {\n    return this.label;\n  }\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
+      const context = WalkContextStub({
+        scopePath: ['*module*', 'Labeller'],
+        guardPath: [],
+        params: [],
+        exported: true,
+        enclosingClass: { name: 'Labeller', constructable: true },
+      });
+
+      const result = handleFunctionLayerTransformer({ node, context });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['ReturnStatement']);
     });
   });
 });

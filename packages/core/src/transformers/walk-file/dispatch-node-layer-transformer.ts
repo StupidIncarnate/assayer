@@ -30,6 +30,7 @@ import { handleImportLayerTransformer } from './handle-import-layer-transformer'
 import { handleMemberAccessLayerTransformer } from './handle-member-access-layer-transformer';
 import { handleSourceFileLayerTransformer } from './handle-source-file-layer-transformer';
 import { handleSwitchLayerTransformer } from './handle-switch-layer-transformer';
+import { handleTernaryLayerTransformer } from './handle-ternary-layer-transformer';
 import { handleTypeDeclarationLayerTransformer } from './handle-type-declaration-layer-transformer';
 import { handleVariableLayerTransformer } from './handle-variable-layer-transformer';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
@@ -72,6 +73,12 @@ export const dispatchNodeLayerTransformer = ({
 
   if (Node.isReturnStatement(node) || Node.isThrowStatement(node)) {
     return handleExitLayerTransformer({ node, context });
+  }
+
+  // A ternary the walk reaches is in a VALUE position: one that is an exit was consumed by
+  // `read-conditional-exit` before the walk got to it. Its arms meet again at the enclosing statement.
+  if (Node.isConditionalExpression(node)) {
+    return handleTernaryLayerTransformer({ node, context });
   }
 
   // A bare block (not a scope body) still sequences statements, so early-return guards survive it.

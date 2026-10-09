@@ -254,12 +254,12 @@ describe('handleClassLayerTransformer', () => {
   });
 
   describe('the descents it asks for', () => {
-    it('VALID: {class with several members} => one descent per member', () => {
+    it('VALID: {class with several members} => one descent per member, since none of them is an instance field initializer', () => {
       handleClassLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile(
         'src/f.ts',
-        'class C {\n  v = 1;\n  constructor() {}\n  m(): void {}\n}\n',
+        'class C {\n  static v = 1;\n  constructor() {}\n  m(): void {}\n}\n',
       );
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
 
@@ -287,6 +287,96 @@ describe('handleClassLayerTransformer', () => {
       const result = handleClassLayerTransformer({ node, context: guarded });
 
       expect(result.descents.map((descent) => descent.context.guardPath)).toStrictEqual([[]]);
+    });
+  });
+
+  describe('instance field initializers', () => {
+    it('VALID: {an instance field with an initializer, no constructor} => opens the implicit constructor over the initializer', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\nexport class Labeller {\n  label = flag ? 'a' : 'b';\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      const implicit = result.implicitScopes?.[0];
+
+      expect({
+        count: result.implicitScopes?.length,
+        scopePath: implicit?.opensScope?.scopePath,
+        access: implicit?.opensScope?.access,
+        descents: implicit?.descents.map((descent) => descent.node.getKindName()),
+      }).toStrictEqual({
+        count: 1,
+        scopePath: ['*module*', 'Labeller', 'constructor'],
+        access: { kind: 'constructor', className: 'Labeller' },
+        descents: ['ConditionalExpression'],
+      });
+    });
+
+    it('VALID: {an instance field with an initializer} => the class descends the rest of the field, never its initializer', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\nexport class Labeller {\n  label = flag ? 'a' : 'b';\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect(result.descents.map((descent) => descent.node.getKindName())).toStrictEqual(['Identifier']);
+    });
+
+    it('VALID: {a static field with an initializer} => descended by the class, and no implicit constructor', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\nexport class Labeller {\n  static label = flag ? 'a' : 'b';\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect({
+        implicitScopes: result.implicitScopes,
+        descents: result.descents.map((descent) => descent.node.getKindName()),
+      }).toStrictEqual({ implicitScopes: undefined, descents: ['PropertyDeclaration'] });
+    });
+
+    it('VALID: {an instance field and a written constructor} => no implicit constructor, since the written one walks the initializer', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "declare const flag: boolean;\nexport class Labeller {\n  label = flag ? 'a' : 'b';\n  constructor() {}\n}\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect({
+        implicitScopes: result.implicitScopes,
+        descents: result.descents.map((descent) => descent.node.getKindName()),
+      }).toStrictEqual({ implicitScopes: undefined, descents: ['Identifier', 'Constructor'] });
+    });
+
+    it('EMPTY: {an instance field with no initializer} => no implicit constructor, since construction runs nothing for it', () => {
+      handleClassLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class Labeller {\n  label?: string;\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ClassDeclaration);
+
+      const result = handleClassLayerTransformer({ node, context: MODULE_CONTEXT });
+
+      expect({
+        implicitScopes: result.implicitScopes,
+        descents: result.descents.map((descent) => descent.node.getKindName()),
+      }).toStrictEqual({ implicitScopes: undefined, descents: ['PropertyDeclaration'] });
     });
   });
 });

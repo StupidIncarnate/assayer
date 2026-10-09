@@ -52,9 +52,10 @@ export const readValueFlowExitLayerTransformer = ({
     return NO_MATCH;
   }
 
-  // (a) a `const` declaring EXACTLY ONE identifier binding. `let`/reassignment and destructuring stay
-  // the current dark spot — the tight `≡ return cond ? y : z` equivalence holds only for a single,
-  // never-rebound const.
+  // (a) a `const` declaring EXACTLY ONE identifier binding. The tight `≡ return cond ? y : z`
+  // equivalence holds only for a single, never-rebound const. A `let`, a reassignment or a
+  // destructuring is left to the walk, which reads its ternary as a value-position branch whose arms
+  // meet again at the statement.
   if (!Node.isVariableStatement(declStatement)) {
     return NO_MATCH;
   }

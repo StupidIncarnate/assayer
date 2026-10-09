@@ -748,4 +748,115 @@ describe('analyzeFileBroker', () => {
       });
     });
   });
+
+  describe('a ternary in a value position', () => {
+    // A ternary whose value flows into a call is a branch of the function it runs in. Its two arms meet
+    // again at the statement, so both cases reach the one implicit exit, and nothing is a dark spot.
+    it('VALID: {log(value > 5 ? a : b) in an exported function} => one case per arm, both reaching the end of the body', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "declare function log(text: string): void;\n\nexport function pick(value: number): void {\n  log(value > 5 ? 'then' : 'else');\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/pick.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/pick.ts' });
+
+      expect({
+        cases: result.functions.map((fn) => ({ name: fn.entry.name, cases: fn.cases })),
+        darkSpots: result.darkSpots,
+        undriven: result.undriven,
+        lints: result.lints,
+      }).toStrictEqual({
+        cases: [
+          {
+            name: 'pick',
+            cases: [
+              {
+                arrange: [{ kind: 'param', param: 'value', value: 6 }],
+                reachesPath: ['*module*/pick/exit@top'],
+                salient: true,
+              },
+              {
+                arrange: [{ kind: 'param', param: 'value', value: 5 }],
+                reachesPath: ['*module*/pick/exit@top'],
+                salient: false,
+              },
+            ],
+          },
+        ],
+        darkSpots: [],
+        undriven: [],
+        lints: [],
+      });
+    });
+
+    // An instance field's initializer runs when the class is constructed. A class with no constructor
+    // of its own gets the one the language supplies, so the ternary is a branch of `constructor`, and a
+    // case constructing the class runs it. The welded `value` kills the `then` arm.
+    it('VALID: {an instance field ternary welded to 3, no written constructor} => the implicit constructor runs it, and the dead arm is linted', () => {
+      analyzeFileBrokerProxy();
+      const source = "const value = 3;\n\nexport class Labeller {\n  label = value > 5 ? 'then' : 'else';\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/labeller.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/labeller.ts' });
+
+      expect({
+        entries: result.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases })),
+        darkSpots: result.darkSpots,
+        undriven: result.undriven,
+        lints: result.lints,
+      }).toStrictEqual({
+        entries: [
+          {
+            name: 'constructor',
+            access: { kind: 'constructor', className: 'Labeller' },
+            cases: [{ arrange: [], reachesPath: ['*module*/Labeller/constructor/exit@top'], salient: true }],
+          },
+        ],
+        darkSpots: [],
+        undriven: [],
+        lints: [
+          {
+            rule: 'unreachable-exit',
+            name: 'constructor',
+            message:
+              '`constructor` can never run the arm on line 4: `value` is welded to `3`, so the branch on line 4 always ' +
+              'takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+            startLine: 4,
+            endLine: 4,
+          },
+        ],
+      });
+    });
+
+    // The ternary inside the condition reads `process.argv`, which no case can set, so it is a branch
+    // admitted undriven on its own line, exactly as the `if` that compares its value is.
+    it('VALID: {a ternary inside an if condition, reading process.argv} => two branches, each admitted undriven, and no dark spot', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "if (((process.argv[2] === undefined ? undefined : Number(process.argv[2])) ?? 0) > 5) {\n  console.log('then');\n}\n\nconsole.log('else');\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/argv.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/argv.ts' });
+
+      const [moduleEntry] = result.functions;
+
+      expect({
+        entries: result.functions.map((fn) => fn.entry.name),
+        branches: moduleEntry?.branches.map((branch) => ({ kind: branch.kind, startLine: branch.startLine })),
+        darkSpots: result.darkSpots,
+        undriven: result.undriven.map((entry) => ({ name: entry.name, startLine: entry.startLine })),
+      }).toStrictEqual({
+        entries: ['*module*'],
+        branches: [
+          { kind: 'if', startLine: 1 },
+          { kind: 'ternary', startLine: 1 },
+        ],
+        darkSpots: [],
+        undriven: [
+          { name: '*module*', startLine: 1 },
+          { name: '*module*', startLine: 1 },
+        ],
+      });
+    });
+  });
 });
