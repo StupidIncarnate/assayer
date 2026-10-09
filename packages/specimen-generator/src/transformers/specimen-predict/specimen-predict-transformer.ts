@@ -27,7 +27,9 @@
  *   scope earns no case, a named entry (a function, a method, an arrow in a variable or object) still
  *   gets each admission on the branch's own line. The module is admitted as a whole on line 1, and an
  *   inline function that is called where it is written, such as an immediately-invoked arrow, is
- *   admitted as a whole on its own first line.
+ *   admitted as a whole on its own first line. A whole-scope admission is one admission for the scope,
+ *   however many branches in it no test can steer. Only admissions on branch lines are one per branch.
+ *   A function expression bound to a variable is a named entry, like a function declaration.
  *
  * A leaf that reads a `T | undefined` value from `process.env` or `process.argv` is written as a
  * ternary of its own. That ternary is a branch too. An environment read goes both ways unless the
@@ -97,7 +99,16 @@ export const specimenPredictTransformer = ({
 
   // The nearest function around the focus. The module has none. An inline function is one that is
   // called where it is written: its parent, past any parentheses, is a call that names it as the callee.
-  const scope = focus.getFirstAncestor((ancestor) => Node.isFunctionLikeDeclaration(ancestor));
+  const scope = focus.getFirstAncestor(
+    (ancestor) =>
+      Node.isFunctionDeclaration(ancestor) ||
+      Node.isFunctionExpression(ancestor) ||
+      Node.isArrowFunction(ancestor) ||
+      Node.isMethodDeclaration(ancestor) ||
+      Node.isConstructorDeclaration(ancestor) ||
+      Node.isGetAccessorDeclaration(ancestor) ||
+      Node.isSetAccessorDeclaration(ancestor),
+  );
   const isInlineCalled =
     scope !== undefined &&
     (Node.isArrowFunction(scope) || Node.isFunctionExpression(scope)) &&
@@ -166,15 +177,14 @@ export const specimenPredictTransformer = ({
     .sort((left, right) => left.startLine - right.startLine);
 
   const wholeScopeLine = scope === undefined ? 1 : scope.getStartLineNumber();
-  const undriven =
-    verdict === 'undriven'
-      ? [focus, ...leafNodes.filter(({ isArgv }) => isArgv).map(({ node }) => node)]
-          .map((node) => ({
-            startLine:
-              scopeEarnsCase || (scope !== undefined && !isInlineCalled) ? node.getStartLineNumber() : wholeScopeLine,
-          }))
-          .sort((left, right) => left.startLine - right.startLine)
-      : [];
+  const admitsOnBranchLines = scopeEarnsCase || (scope !== undefined && !isInlineCalled);
+  const unsteerableNodes = [focus, ...leafNodes.filter(({ isArgv }) => isArgv).map(({ node }) => node)];
+  const branchLineAdmissions = unsteerableNodes
+    .map((node) => ({ startLine: node.getStartLineNumber() }))
+    .sort((left, right) => left.startLine - right.startLine);
+  const wholeScopeAdmissions = [{ startLine: wholeScopeLine }];
+  const undrivenAdmissions = admitsOnBranchLines ? branchLineAdmissions : wholeScopeAdmissions;
+  const undriven = verdict === 'undriven' ? undrivenAdmissions : [];
 
   return specimenOutcomeContract.parse({
     branches,

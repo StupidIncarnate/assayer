@@ -298,6 +298,65 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
+    it('VALID: {leaf from process.argv, in a function expression bound to a const, arms return} => the admission is on the if line, not line 1', () => {
+      const source = [
+        'export const classify = function (): string {',
+        '    if (Number(process.argv[2]) > 5) {',
+        '        return "then";',
+        '    }',
+        '    return "else";',
+        '};',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'statement',
+        arms: ['then', 'else'],
+        slotArm: 'return',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'if', line: 2, driven: 'never' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 2 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {argv if and argv leaf ternary, in an arrow called where it is written, arms return} => the arrow is admitted once as a whole', () => {
+      const source = [
+        'export const result = ((): string => {',
+        '    if (((process.argv[2] === undefined ? undefined : Number(process.argv[2])) ?? 0) > 5) {',
+        '        return "then";',
+        '    }',
+        '    return "else";',
+        '})();',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'statement',
+        arms: ['then', 'else'],
+        slotArm: 'return',
+        provenances: ['external', 'literal', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [
+          { kind: 'if', line: 2, driven: 'never' },
+          { kind: 'ternary', line: 2, driven: 'never' },
+        ],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 1 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
     it.each([
       {
         scope: 'a class method',
