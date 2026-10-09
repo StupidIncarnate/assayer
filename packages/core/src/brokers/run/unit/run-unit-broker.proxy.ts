@@ -21,7 +21,7 @@ import { writeFileProxy } from '#gateway/node/fs__promises/write-file/write-file
 
 // Every scenario names the run it stages. A path no scenario staged reaches an unstaged call, which
 // throws.
-export const runUnitBrokerProxy = (): {
+export const runUnitBrokerProxy = ({ coreRoot }: { coreRoot?: string } = {}): {
   // The run directory, the case set, the target's probe plan, the shim and the run artifact a run may
   // write, each staged to succeed at its exact path. `contentHash` names the probe plan, which is keyed
   // on the source's content hash. `repoRoot` is the root whose committed stub overlay loads empty.
@@ -87,7 +87,7 @@ export const runUnitBrokerProxy = (): {
   stubOverlayLoadBrokerProxy();
   const overlayLoadHandle = registerMock({ fn: stubOverlayLoadBroker });
 
-  const runner = runExecuteCasesBrokerProxy();
+  const runner = runExecuteCasesBrokerProxy(coreRoot === undefined ? {} : { coreRoot });
   const moduleFormat = moduleFormatReadBrokerProxy();
   const walk = fileWalkBrokerProxy();
   const dirs = ensureDirProxy();

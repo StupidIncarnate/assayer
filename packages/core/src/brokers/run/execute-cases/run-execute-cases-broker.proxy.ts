@@ -3,10 +3,11 @@ import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
 
 import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';
 
-// The worker is addressed by the runner path every core runtime stub names. Each run is answered by its
+// The worker is addressed by the runner path under `coreRoot`, which is `/core` unless a caller
+// runs the broker against a real core folder. Each run is answered by its
 // test-path pattern, the one part of the request that names which run is executing. A run directory no
 // scenario staged gets no answer, and the broker's reply parse throws.
-export const runExecuteCasesBrokerProxy = (): {
+export const runExecuteCasesBrokerProxy = ({ coreRoot = '/core' }: { coreRoot?: string } = {}): {
   succeeds: ({ runDir }: { runDir: string }) => void;
   fails: ({ runDir }: { runDir: string }) => void;
   crashes: ({ runDir, stack }: { runDir: string; stack: string }) => void;
@@ -18,7 +19,7 @@ export const runExecuteCasesBrokerProxy = (): {
   const workerProxy = forkWorkerProxy();
   const replies = new Map<string, unknown>();
   const requests: { testPathPattern: unknown; message: unknown }[] = [];
-  const runner = '/core/run-jest.js';
+  const runner = `${coreRoot}/run-jest.js`;
 
   workerProxy.answersThenExits({
     modulePath: runner,
