@@ -17,15 +17,16 @@
  *   own line, because Assayer names the branch a case cannot steer. The module scope is admitted as a
  *   whole, on line 1. An inline function that is called where it is written, such as an
  *   immediately-invoked arrow, is admitted as a whole on its own first line.
- * - Undriven, and the scope runs when the module loads (the module itself, or an inline function
- *   called where it is written): loading the module evaluates the focus once. When both arms of a
- *   statement fall through to the same exit, one case reaches that exit, so the focus goes one way.
- *   In every other undriven scope no case evaluates the focus, and it never goes either way.
+ * - Undriven, and both arms of a statement fall through to the code after the branch: a case can
+ *   reach the scope's exit without deciding the branch. That case runs the branch once, with
+ *   whatever value the test process has, so the focus goes one way. This holds in every scope: the
+ *   module, an inline function, a function, a method, a constructor, a generator.
+ * - Undriven, and the arms return (or the focus is a ternary): the branch decides which exit is
+ *   reached, so no case is derived and the focus never goes either way.
  *
  * A leaf that reads a `T | undefined` value from `process.env` or `process.argv` is written as a
  * ternary of its own. That ternary is a branch too: an environment read goes both ways unless its
- * scope is undriven, and an argument read never goes both ways. In an undriven scope the leaf ternary
- * gets the same answer as the focus.
+ * scope is undriven. An undriven leaf ternary gets the same answer as the focus it sits in.
  *
  * USAGE:
  * specimenPredictTransformer({ source, focusKind: 'statement', arms: ['then', 'else'], slotArm: 'return', provenances: ['param'] });
@@ -94,9 +95,8 @@ export const specimenPredictTransformer = ({
     scope !== undefined &&
     (Node.isArrowFunction(scope) || Node.isFunctionExpression(scope)) &&
     isCalledInPlaceGuard({ node: scope });
-  const runsAtModuleLoad = scope === undefined || isInlineCalled;
   const fallsThrough = focusKind === 'statement' && slotArm !== 'return';
-  const undrivenDriven = runsAtModuleLoad && fallsThrough ? ('one-way' as const) : ('never' as const);
+  const undrivenDriven = fallsThrough ? ('one-way' as const) : ('never' as const);
   const focusDriven = { driven: 'both-ways', locked: 'one-way', undriven: undrivenDriven } as const;
 
   const leafBranches = branchNodes

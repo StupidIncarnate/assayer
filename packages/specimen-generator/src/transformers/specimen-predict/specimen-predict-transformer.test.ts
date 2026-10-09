@@ -298,35 +298,84 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
-    it('VALID: {leaf from process.argv, in a method whose arms log} => a named entry is not run by loading the module, so the if never runs', () => {
-      const source = [
-        'export class Classify {',
-        '    public run(): void {',
-        '        if (Number(process.argv[2]) > 5) {',
-        '            console.log("then");',
-        '        }',
-        '        console.log("else");',
-        '    }',
-        '}',
-      ].join('\n');
+    it.each([
+      {
+        scope: 'a class method',
+        source: [
+          'export class Classify {',
+          '    public run(): void {',
+          '        if (Number(process.argv[2]) > 5) {',
+          '            console.log("then");',
+          '        }',
+          '        console.log("else");',
+          '    }',
+          '}',
+        ].join('\n'),
+        line: 3,
+        slotArm: 'log' as const,
+      },
+      {
+        scope: 'a function',
+        source: [
+          'export function classify(): void {',
+          '    if (Number(process.argv[2]) > 5) {',
+          '        console.log("then");',
+          '    }',
+          '    console.log("else");',
+          '}',
+        ].join('\n'),
+        line: 2,
+        slotArm: 'log' as const,
+      },
+      {
+        scope: 'a constructor',
+        source: [
+          'export class Classify {',
+          '    public constructor() {',
+          '        if (Number(process.argv[2]) > 5) {',
+          '            console.log("then");',
+          '        }',
+          '        console.log("else");',
+          '    }',
+          '}',
+        ].join('\n'),
+        line: 3,
+        slotArm: 'log' as const,
+      },
+      {
+        scope: 'a generator',
+        source: [
+          'export function* classify(): Generator<string> {',
+          '    if (Number(process.argv[2]) > 5) {',
+          '        yield "then";',
+          '    }',
+          '    yield "else";',
+          '}',
+        ].join('\n'),
+        line: 2,
+        slotArm: 'yield' as const,
+      },
+    ])(
+      'VALID: {leaf from process.argv, in $scope whose arms fall through} => a case reaches the exit without deciding the if, so it runs one way',
+      ({ source, line, slotArm }) => {
+        const result = specimenPredictTransformer({
+          source,
+          focusKind: 'statement',
+          arms: ['then', 'else'],
+          slotArm,
+          provenances: ['external', 'literal'],
+        });
 
-      const result = specimenPredictTransformer({
-        source,
-        focusKind: 'statement',
-        arms: ['then', 'else'],
-        slotArm: 'log',
-        provenances: ['external', 'literal'],
-      });
-
-      expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 3, driven: 'never' }],
-        caseFailures: [],
-        lints: [],
-        undriven: [{ startLine: 3 }],
-        darkSpots: [],
-        gaps: [],
-      });
-    });
+        expect(result).toStrictEqual({
+          branches: [{ kind: 'if', line, driven: 'one-way' }],
+          caseFailures: [],
+          lints: [],
+          undriven: [{ startLine: line }],
+          darkSpots: [],
+          gaps: [],
+        });
+      },
+    );
   });
 
   describe('a ternary focus', () => {
