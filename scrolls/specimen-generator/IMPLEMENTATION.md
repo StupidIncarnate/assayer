@@ -4,6 +4,9 @@ This file is the build plan for the first working slice of the generator. It lis
 the order to write them, and the rules every implementing agent follows. `PLAN.md` holds the direction and
 the open questions. This file holds only what gets built now.
 
+**State.** The slice is built: steps 1 to 9 are done. Step 10's triage is recorded in `TRIAGE-1.md`, and a
+second pass followed it. `ASSAYER-FINDINGS.md` lists what is still open.
+
 ## What the first slice delivers
 
 At the end of this slice, four things are true:
@@ -32,7 +35,7 @@ doc pages, the carry-over table, or retiring the hand-written specimens. `PLAN.m
 | What a generated test asserts | The observation shape below: each `if` and ternary driven both ways, one way, or never; failed cases; lints by rule and line; undriven, dark spots and gaps | Assayer's run engine already checks each case's input values against real execution. So the generator predicts only structure, and never has to copy Assayer's choice of values |
 | Exit lines | Not asserted in this slice | The run engine already fails a case that reaches a different exit than Assayer predicted. Where an implicit exit sits is the hardest thing to predict, and it matters most for the call layer, where cause A lives. Exit lines join the observation with the call layer |
 | Lint and admission wording | Not asserted. The rule name and the line are asserted | Core's own tests assert the exact wording. The generator would need one message template per lint case, which `ASSAYER-FINDINGS.md` lists as an open question |
-| First committed matrix | Focus `if` and `ternary`. Every container. Depth 1. Type arguments `number` and `boolean`. Provenances `param`, `env`, `literal`, `const`, `external` | The first generation used `number` alone, and it held no comparison at all: `gt`, `eq` and `not` return `boolean`, so they only fill the condition of `if<boolean>`. With `boolean` added, the generator writes 1,169 specimens and TypeScript refuses 19. Each generated test file takes about 8 seconds, because it starts Assayer's nested Jest run, so the suite takes about 12 minutes |
+| First committed matrix | Focus `if` and `ternary`. Every container. Depth 1. Type arguments `number` and `boolean`. Provenances `param`, `env`, `literal`, `const`, `external` | `boolean` is in the matrix because `gt`, `eq` and `not` return `boolean`, so they fill a condition only for `if<boolean>`. The run on 2026-10-08 wrote 1,169 specimens and TypeScript refused 19. Each generated test file takes about 8 seconds, because it starts Assayer's nested Jest run, so the suite takes about 12 minutes |
 | Test timeout in the generated repo | `testTimeout: 60000` in `smoke-repo/packages/syntax-repository/jest.config.js` | A generated test's first run in a worker starts the nested runner and its compiler, which takes longer than Jest's default 5 seconds. It is one setting for the whole repo, never one per test |
 | Environment reads of arrays | Not generated in this slice | `(process.env.KEY ?? '').split(',')` is never empty, so a length check on it goes one way only. The generator cannot predict that until shims are callees |
 | Left out of the first matrix | The `random` provenance, and the `array-at` and `array-includes` shims as fills | They predict pinning and shim behavior Assayer does not have yet. Those are new features, not parsing holes |
@@ -79,12 +82,38 @@ The prediction and the observation are one contract, `specimenOutcomeContract`. 
 
 | Field | Observation, from Assayer | Prediction, from the configs |
 |---|---|---|
-| `branches` | One row per branch in the file's analysis: its `kind`, its `startLine`, and `driven`. `driven` is `both-ways` when the passed cases' trace holds both a true and a false outcome for the branch's condition leaves. It is `one-way` when only one appears, and `never` when no case evaluated it. Sorted by line, then kind | One row for the focus node, at the line the generator wrote it on. `both-ways` when a leaf is settable. `one-way` when every leaf is known. `never` when a leaf is `external` |
+| `branches` | One row per branch in the file's analysis: its `kind`, its `startLine`, and `driven`. `driven` is `both-ways` when the passed cases' trace holds both a true and a false outcome for the branch's condition leaves. It is `one-way` when only one appears, and `never` when no case evaluated it. Sorted by line, then kind | One row for the focus node, at the line the generator wrote it on. `both-ways` when a leaf is settable. `one-way` when every leaf is known. For an undriven focus: `one-way` when both arms meet again after the branch, or when the ternary's value is not the scope's exit. `never` when the arms reach different exits. See "Undriven rules" below |
 | `caseFailures` | One row per case whose status is `failed` or `errored`: its status and its message | Always empty |
-| `lints` | `rule` and `startLine` of every lint, sorted by line | Locked specimens only: one `unreachable-exit` row per dead arm. The line is the dead arm's first statement. The trailing arm that is just the code after the branch is never dead. This follows cause E in `ASSAYER-FINDINGS.md`, which decided that Assayer reports a dead arm in every scope |
-| `undriven` | `startLine` of every undriven admission | One row when a leaf is `external`, at the start line of the scope that holds the focus. Line 1 for the module scope |
+| `lints` | `rule` and `startLine` of every lint, sorted by line | Locked specimens only: one `unreachable-exit` row per dead arm. The line is the dead arm's first statement. The last arm of a statement whose arms do not return is just the code after the branch, so it is never dead. Assayer reports a dead arm in every scope, including an arm that falls through |
+| `undriven` | `startLine` of every undriven admission | One row for each branch no test can steer, on the rules below. A `process.argv` read can never be steered, so each argv leaf ternary gets a row too. Rows are sorted |
 | `darkSpots` | `startLine` of every dark spot | Always empty. Every syntax in the first matrix is one Assayer claims to handle |
 | `gaps` | `name` of every gap | Always empty |
+
+**Undriven rules.** A leaf is undriven when it comes from outside the program. No test can set it.
+
+- Both arms meet again after the branch. A case reaches the scope's exit without deciding the branch, and
+  that case runs the branch once with the values the test process has. The focus goes `one-way`. This holds
+  for a statement whose arms log or yield. It holds for a ternary whose value is not the exit: a field, a
+  static field, a call argument, a `yield`, an object property, an exported const, a module statement or a
+  default parameter. It holds in every scope.
+- The arms reach different exits. The branch decides which exit a case reaches, so no case is derived and
+  the focus goes `never`. This is a statement whose arms return, and a ternary that is itself the exit
+  (`return cond ? a : b`, or a concise arrow body).
+
+**Where an undriven admission sits.** There is one admission for each branch no test can steer.
+
+- When the scope earns a case (the focus goes `one-way`), every admission sits on its own branch's line, in
+  every scope. A class field's ternary runs in a `constructor` entry, because Assayer runs instance-field
+  initializers in the constructor.
+- When the scope earns no case, a named entry (a function, a method, an arrow in a variable or an object)
+  still gets each admission on the branch's own line. The module is admitted as a whole on line 1. An inline
+  function called where it is written, such as an immediately-invoked arrow, is admitted as a whole on its
+  own first line.
+
+A leaf that reads a `T | undefined` value from `process.env` or `process.argv` is written as a ternary of
+its own, and that ternary is a branch too. An environment read goes both ways unless the focus is undriven,
+and then it gets the focus's answer. `specimen-predict-transformer.ts` states the same rules in its
+`PURPOSE` comment.
 
 The prediction comes from the configs and the generated source text only. The file that builds it,
 `specimen-predict-transformer.ts`, never imports Assayer and never reads Assayer's output. Rule P4 forbids
@@ -216,7 +245,7 @@ Every other contract has a `-contract.test.ts` and a `.stub.ts`.
 
 | File | What it holds |
 |---|---|
-| `statics/matrix/matrix-statics.ts` | `focus` `['if', 'ternary']`, `depth` 1, `plainest` `['param', 'env', 'const']`, `typeArguments` `['number']`, `provenances` `['param', 'env', 'literal', 'const', 'external']`, `excludedFills` `['array-at', 'array-includes', 'math-random']` |
+| `statics/matrix/matrix-statics.ts` | `focus` `['if', 'ternary']`, `depth` 1, `plainest` `['param', 'env', 'const']`, `typeArguments` `['number', 'boolean']`, `provenances` `['param', 'env', 'literal', 'const', 'external']`, `excludedFills` `['array-at', 'array-includes', 'math-random']` |
 | `statics/provenance/provenance-statics.ts` | Per provenance: how a test treats it (`sets`, `known` or `unsettable`) and when a slot offers it (`params`, `module-load` or `always`). Copied from the prototype's `provenances.ts`, without `random` |
 | `statics/type-list/type-list-statics.ts` | Per base type (`number`, `string`, `boolean`): the known value, the array samples, the `process.env` read, the `process.env` array read, the `process.argv` read, the `process.argv` array read. Copied from the prototype's `types.ts`, without the `random` fields and without `fromRandom` |
 | `statics/generator-layout/generator-layout-statics.ts` | The declaration folder names and suffixes, the output root's segments, the manifest and refusals file names, and the test file suffix |
@@ -363,24 +392,23 @@ Who: the orchestrator.
 
 ### Step 10. First run against Assayer, and triage
 
-Who: the orchestrator, with the user deciding each cause.
+Who: the orchestrator, with the user deciding each cause. `TRIAGE-1.md` records the first triage and the
+decisions on it.
 
 A failing generated test means Assayer and the configs disagree. A human decides which one is wrong.
 
 1. Group the failures by the field that differs and the shape of the specimen, such as "every getter
    specimen reports a gap", or "every module-scope locked specimen has no lint".
-2. Record each group as a row in `ASSAYER-FINDINGS.md`, with two or three specimen folders as examples.
-3. Ask the user for each group: is Assayer wrong, or is the config wrong?
-4. **Assayer wrong:** fix it the way `packages/core/CLAUDE.md` section 6 says. Add a hand-written specimen
-   to `manual-smoke-repo/` and its registry line first, then the handler change. The generated specimens
-   that caught it pass once the fix lands.
+2. Record each group in a triage file, with two or three specimen folders as examples.
+3. Decide for each group: is Assayer wrong, or is the config wrong?
+4. **Assayer wrong:** fix it the way `packages/core/CLAUDE.md` section 6 says. The generated specimen that
+   caught the bug is the regression specimen for its fix, so no extra hand-written specimen is required. A
+   hand-written specimen's test that the fix changes is updated by reading the code, never by copying
+   Assayer's new output. The generated specimens that caught it pass once the fix lands.
 5. **Config wrong:** fix the declaration or the prediction rule, then regenerate.
 6. Never change a prediction rule because Assayer's output says something else. That is rule P4.
-
-Already expected to fail, from the first prototype's runs:
-
-- Cause E: a dead arm at module scope after an `if` whose `else` falls through gets no lint.
-- Possibly getters, setters, static fields and generators, if Assayer does not treat them as entries.
+7. Run the generated suite one folder per command, such as `npm run test:generated -- if/class`. The whole
+   suite in one command runs out of memory on this machine.
 
 ## Rules for every implementing agent
 
@@ -488,7 +516,7 @@ OPEN — <anything you could not do, or a change you need outside your files. "n
 
 In the order `PLAN.md` gives:
 
-1. Widen the matrix: `boolean`, then `string` (cause F), depth 2, the `random` provenance once Assayer pins.
+1. Widen the matrix: `string` (cause F), depth 2, the `random` provenance once Assayer pins.
 2. Exit lines in the observation, together with the call layer in `CALLABLES.md`.
 3. Shims as callees, the shim engine check, and the shim doc set, in `SHIMS.md`.
 4. The stub dimension, in `STUBS.md`.

@@ -1,5 +1,7 @@
 # Prototype 2: what you declare, and what comes out
 
+`packages/specimen-generator` supersedes this prototype. This file is kept for its findings.
+
 This file shows the second prototype's declaration files next to the specimens they generate. It covers
 layer 2 of the build order in `PLAN.md`, containers crossed with syntax, plus a first cut of shims. A
 shim is written into a specimen as a call to its builtin. The call matrix in `CALLABLES.md` is not built
