@@ -37,20 +37,19 @@ export const fillVariantsTransformer = ({
   plainest: readonly Provenance[];
   excludedFills: readonly string[];
 }): { tree: FillTree; path: string[]; provenance: Provenance }[] => {
-  const offered = offeredProvenancesTransformer({ slot, enabled });
-
   return focus.holes.flatMap((hole) => {
     if (hole.name in focus.anchors) {
       return [];
     }
 
+    const offered = offeredProvenancesTransformer({ slot, enabled, holeType: hole.type });
     const leaves = offered.map((provenance) => ({
       tree: defaultFillLayerTransformer({
         instance: focus,
         varying: { hole: hole.name, fill: leafLayerTransformer({ instance: focus, hole, provenance }) },
         plainest,
-        offered,
-        slotName: slot.name,
+        slot,
+        enabled,
       }),
       path: [hole.name],
       provenance,
@@ -85,8 +84,8 @@ export const fillVariantsTransformer = ({
             instance: focus,
             varying: { hole: hole.name, fill: sub.tree },
             plainest,
-            offered,
-            slotName: slot.name,
+            slot,
+            enabled,
           }),
           path: [hole.name, candidate.label, ...sub.path],
           provenance: sub.provenance,

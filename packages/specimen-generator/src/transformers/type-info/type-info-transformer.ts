@@ -1,12 +1,12 @@
 /**
  * PURPOSE: Turns a type's text into what the generator knows about it. It lists only the base types
  * in typeListStatics and derives `readonly X[]` and `X | undefined` from them, so a composite type
- * needs no entry of its own. Reach for this when a leaf needs its known value or its env and
+ * needs no entry of its own. An array has no env text. Reach for this when a leaf needs its known value or its env and
  * external source text.
  *
  * USAGE:
  * typeInfoTransformer({ typeText: 'readonly number[]' });
- * // Returns { known: [10, 20, 30], samples: [[10, 20, 30]], env: "...split(',').map(Number)", external: '...' }
+ * // Returns { known: [10, 20, 30], samples: [[10, 20, 30]], external: 'process.argv.slice(2).map(Number)' }
  */
 import { typeInfoContract } from '../../contracts/type-info/type-info-contract';
 import type { TypeInfo } from '../../contracts/type-info/type-info-contract';
@@ -30,7 +30,6 @@ export const typeInfoTransformer = ({ typeText }: { typeText: string }): TypeInf
     return typeInfoContract.parse({
       known: samples,
       samples: [samples],
-      env: base.envArray,
       external: base.externalArray,
     });
   }

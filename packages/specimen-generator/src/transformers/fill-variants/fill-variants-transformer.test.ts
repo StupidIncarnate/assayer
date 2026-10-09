@@ -115,11 +115,62 @@ const SEVEN = syntaxInstancesTransformer({
   ),
 });
 
+const ARRAY_LENGTH_PROGRAM = ProgramStub({
+  code: `declare global {
+  interface ReadonlyArray<T> {
+    readonly length: number;
+  }
+}
+export const arrayLengthSyntax = syntax({
+  description: 'the length of an array of numbers',
+  code: <T>(receiver: readonly T[]): number => receiver.length,
+});
+`,
+  fileName: 'array-length.syntax.ts',
+});
+const ARRAY_LENGTH = syntaxInstancesTransformer({
+  syntaxes: ARRAY_LENGTH_PROGRAM.getSourceFiles().map((sourceFile) =>
+    syntaxShapeTransformer({
+      sourceFile,
+      checker: ARRAY_LENGTH_PROGRAM.getTypeChecker(),
+      declared: {
+        description: 'the length of an array of numbers',
+        code: (receiver: readonly number[]) => receiver.length,
+      },
+      origin: 'syntax',
+      typeArguments: ['number'],
+    }),
+  ),
+});
+
 const IF_PLUS_SCALE = IF_NUMBER.flatMap((focus) =>
   PLUS.flatMap((plus) => SCALE.map((scale) => ({ focus, plus, scale }))),
 );
 
 describe('fillVariantsTransformer', () => {
+  it('VALID: {array-length, depth: 0, module-load slot, enabled: [literal, env, external]} => the array hole is offered literal and external, never env', () => {
+    const result = ARRAY_LENGTH.flatMap((focus) =>
+      fillVariantsTransformer({
+        focus,
+        depth: 0,
+        slot: {
+          name: 'statement',
+          kind: 'statement',
+          reach: 'module-load',
+          arm: 'log',
+          marker: ts.factory.createCallExpression(ts.factory.createIdentifier('$stmts'), undefined, []),
+          hasParams: false,
+        },
+        instances: [...ARRAY_LENGTH],
+        enabled: ['literal', 'env', 'external'],
+        plainest: ['param', 'env', 'const'],
+        excludedFills: [],
+      }),
+    );
+
+    expect(result.map((variant) => variant.provenance)).toStrictEqual(['literal', 'external']);
+  });
+
   it('VALID: {if-number, depth: 0, slot with $params, enabled: [const, literal, param, env, external]} => one variant per offered provenance in enabled order, env left out', () => {
     const result = IF_NUMBER.flatMap((focus) =>
       fillVariantsTransformer({

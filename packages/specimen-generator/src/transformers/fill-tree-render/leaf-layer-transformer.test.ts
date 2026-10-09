@@ -176,28 +176,24 @@ describe('leafLayerTransformer', () => {
       ]);
     });
 
-    it('VALID: {provenance: env, type: readonly number[]} => declares a split and map read', () => {
-      const names = new Map<Parameters<typeof leafLayerTransformer>[0]['leaf'], string>();
-      const params = new Map<string, string>();
-      const decls = new Map<string, string>();
-
-      leafLayerTransformer({
-        leaf: {
-          kind: 'leaf',
-          owner: 'array-length',
-          hole: 'receiver',
-          type: 'readonly number[]',
-          provenance: 'env',
-          value: [10],
-        },
-        names,
-        params,
-        decls,
-      });
-
-      expect([...decls]).toStrictEqual([
-        ['receiver', "const receiver = (process.env.RECEIVER ?? '').split(',').map(Number);"],
-      ]);
+    it('ERROR: {provenance: env, type: readonly number[]} => throws, since an array has no env read', () => {
+      expect(() => {
+        return leafLayerTransformer({
+          leaf: {
+            kind: 'leaf',
+            owner: 'array-length',
+            hole: 'receiver',
+            type: 'readonly number[]',
+            provenance: 'env',
+            value: [10],
+          },
+          names: new Map(),
+          params: new Map(),
+          decls: new Map(),
+        });
+      }).toThrow(
+        /^The leaf array-length\.receiver has the provenance 'env' for the type 'readonly number\[\]', which has no env read\. An env read of an array is never empty, so it is not generated\. Remove 'env' from the hole's offered provenances\.$/u,
+      );
     });
   });
 

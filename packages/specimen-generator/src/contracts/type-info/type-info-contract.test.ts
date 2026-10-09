@@ -16,6 +16,16 @@ describe('typeInfoContract', () => {
       });
     });
 
+    it('EMPTY: {env: omitted} => parses, since an array type has no env text', () => {
+      const result = typeInfoContract.parse({
+        known: [10],
+        samples: [[10]],
+        external: 'process.argv.slice(2).map(Number)',
+      });
+
+      expect(result).toStrictEqual({ known: [10], samples: [[10]], external: 'process.argv.slice(2).map(Number)' });
+    });
+
     it('EMPTY: {samples: []} => parses, since a type may list no samples', () => {
       const typeInfo = TypeInfoStub({ samples: [] });
 

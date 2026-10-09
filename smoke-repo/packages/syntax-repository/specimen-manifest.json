@@ -5894,20 +5894,6 @@
     "verdict": "locked"
   },
   {
-    "folder": "if-number-iife-cond-array-length-boolean-receiver-env",
-    "relPath": "packages/syntax-repository/src/if/iife/if-number-iife-cond-array-length-boolean-receiver-env/if-number-iife-cond-array-length-boolean-receiver-env.ts",
-    "focus": "if",
-    "container": "iife",
-    "slot": "body",
-    "path": "cond › array-length-boolean › receiver",
-    "provenance": "env",
-    "uses": [
-      "if",
-      "array-length"
-    ],
-    "verdict": "driven"
-  },
-  {
     "folder": "if-number-iife-cond-array-length-boolean-receiver-external",
     "relPath": "packages/syntax-repository/src/if/iife/if-number-iife-cond-array-length-boolean-receiver-external/if-number-iife-cond-array-length-boolean-receiver-external.ts",
     "focus": "if",
@@ -5934,20 +5920,6 @@
       "array-length"
     ],
     "verdict": "locked"
-  },
-  {
-    "folder": "if-number-iife-cond-array-length-number-receiver-env",
-    "relPath": "packages/syntax-repository/src/if/iife/if-number-iife-cond-array-length-number-receiver-env/if-number-iife-cond-array-length-number-receiver-env.ts",
-    "focus": "if",
-    "container": "iife",
-    "slot": "body",
-    "path": "cond › array-length-number › receiver",
-    "provenance": "env",
-    "uses": [
-      "if",
-      "array-length"
-    ],
-    "verdict": "driven"
   },
   {
     "folder": "if-number-iife-cond-array-length-number-receiver-external",
@@ -6101,20 +6073,6 @@
     "verdict": "locked"
   },
   {
-    "folder": "if-number-module-statement-cond-array-length-boolean-receiver-env",
-    "relPath": "packages/syntax-repository/src/if/module/if-number-module-statement-cond-array-length-boolean-receiver-env/if-number-module-statement-cond-array-length-boolean-receiver-env.ts",
-    "focus": "if",
-    "container": "module",
-    "slot": "statement",
-    "path": "cond › array-length-boolean › receiver",
-    "provenance": "env",
-    "uses": [
-      "if",
-      "array-length"
-    ],
-    "verdict": "driven"
-  },
-  {
     "folder": "if-number-module-statement-cond-array-length-boolean-receiver-external",
     "relPath": "packages/syntax-repository/src/if/module/if-number-module-statement-cond-array-length-boolean-receiver-external/if-number-module-statement-cond-array-length-boolean-receiver-external.ts",
     "focus": "if",
@@ -6141,20 +6099,6 @@
       "array-length"
     ],
     "verdict": "locked"
-  },
-  {
-    "folder": "if-number-module-statement-cond-array-length-number-receiver-env",
-    "relPath": "packages/syntax-repository/src/if/module/if-number-module-statement-cond-array-length-number-receiver-env/if-number-module-statement-cond-array-length-number-receiver-env.ts",
-    "focus": "if",
-    "container": "module",
-    "slot": "statement",
-    "path": "cond › array-length-number › receiver",
-    "provenance": "env",
-    "uses": [
-      "if",
-      "array-length"
-    ],
-    "verdict": "driven"
   },
   {
     "folder": "if-number-module-statement-cond-array-length-number-receiver-external",
@@ -13491,20 +13435,6 @@
     "verdict": "locked"
   },
   {
-    "folder": "ternary-number-class-static-field-cond-array-length-boolean-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/class/ternary-number-class-static-field-cond-array-length-boolean-receiver-env/ternary-number-class-static-field-cond-array-length-boolean-receiver-env.ts",
-    "focus": "ternary",
-    "container": "class",
-    "slot": "static-field",
-    "path": "cond › array-length-boolean › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
-  },
-  {
     "folder": "ternary-number-class-static-field-cond-array-length-boolean-receiver-external",
     "relPath": "packages/syntax-repository/src/ternary/class/ternary-number-class-static-field-cond-array-length-boolean-receiver-external/ternary-number-class-static-field-cond-array-length-boolean-receiver-external.ts",
     "focus": "ternary",
@@ -13531,20 +13461,6 @@
       "array-length"
     ],
     "verdict": "locked"
-  },
-  {
-    "folder": "ternary-number-class-static-field-cond-array-length-number-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/class/ternary-number-class-static-field-cond-array-length-number-receiver-env/ternary-number-class-static-field-cond-array-length-number-receiver-env.ts",
-    "focus": "ternary",
-    "container": "class",
-    "slot": "static-field",
-    "path": "cond › array-length-number › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
   },
   {
     "folder": "ternary-number-class-static-field-cond-array-length-number-receiver-external",
@@ -14940,20 +14856,6 @@
     "verdict": "locked"
   },
   {
-    "folder": "ternary-number-iife-cond-array-length-boolean-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/iife/ternary-number-iife-cond-array-length-boolean-receiver-env/ternary-number-iife-cond-array-length-boolean-receiver-env.ts",
-    "focus": "ternary",
-    "container": "iife",
-    "slot": "body",
-    "path": "cond › array-length-boolean › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
-  },
-  {
     "folder": "ternary-number-iife-cond-array-length-boolean-receiver-external",
     "relPath": "packages/syntax-repository/src/ternary/iife/ternary-number-iife-cond-array-length-boolean-receiver-external/ternary-number-iife-cond-array-length-boolean-receiver-external.ts",
     "focus": "ternary",
@@ -14980,20 +14882,6 @@
       "array-length"
     ],
     "verdict": "locked"
-  },
-  {
-    "folder": "ternary-number-iife-cond-array-length-number-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/iife/ternary-number-iife-cond-array-length-number-receiver-env/ternary-number-iife-cond-array-length-number-receiver-env.ts",
-    "focus": "ternary",
-    "container": "iife",
-    "slot": "body",
-    "path": "cond › array-length-number › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
   },
   {
     "folder": "ternary-number-iife-cond-array-length-number-receiver-external",
@@ -15147,20 +15035,6 @@
     "verdict": "locked"
   },
   {
-    "folder": "ternary-number-module-exported-const-cond-array-length-boolean-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/module/ternary-number-module-exported-const-cond-array-length-boolean-receiver-env/ternary-number-module-exported-const-cond-array-length-boolean-receiver-env.ts",
-    "focus": "ternary",
-    "container": "module",
-    "slot": "exported-const",
-    "path": "cond › array-length-boolean › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
-  },
-  {
     "folder": "ternary-number-module-exported-const-cond-array-length-boolean-receiver-external",
     "relPath": "packages/syntax-repository/src/ternary/module/ternary-number-module-exported-const-cond-array-length-boolean-receiver-external/ternary-number-module-exported-const-cond-array-length-boolean-receiver-external.ts",
     "focus": "ternary",
@@ -15187,20 +15061,6 @@
       "array-length"
     ],
     "verdict": "locked"
-  },
-  {
-    "folder": "ternary-number-module-exported-const-cond-array-length-number-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/module/ternary-number-module-exported-const-cond-array-length-number-receiver-env/ternary-number-module-exported-const-cond-array-length-number-receiver-env.ts",
-    "focus": "ternary",
-    "container": "module",
-    "slot": "exported-const",
-    "path": "cond › array-length-number › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
   },
   {
     "folder": "ternary-number-module-exported-const-cond-array-length-number-receiver-external",
@@ -15354,20 +15214,6 @@
     "verdict": "locked"
   },
   {
-    "folder": "ternary-number-module-statement-cond-array-length-boolean-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/module/ternary-number-module-statement-cond-array-length-boolean-receiver-env/ternary-number-module-statement-cond-array-length-boolean-receiver-env.ts",
-    "focus": "ternary",
-    "container": "module",
-    "slot": "statement",
-    "path": "cond › array-length-boolean › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
-  },
-  {
     "folder": "ternary-number-module-statement-cond-array-length-boolean-receiver-external",
     "relPath": "packages/syntax-repository/src/ternary/module/ternary-number-module-statement-cond-array-length-boolean-receiver-external/ternary-number-module-statement-cond-array-length-boolean-receiver-external.ts",
     "focus": "ternary",
@@ -15394,20 +15240,6 @@
       "array-length"
     ],
     "verdict": "locked"
-  },
-  {
-    "folder": "ternary-number-module-statement-cond-array-length-number-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/module/ternary-number-module-statement-cond-array-length-number-receiver-env/ternary-number-module-statement-cond-array-length-number-receiver-env.ts",
-    "focus": "ternary",
-    "container": "module",
-    "slot": "statement",
-    "path": "cond › array-length-number › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
   },
   {
     "folder": "ternary-number-module-statement-cond-array-length-number-receiver-external",
@@ -15975,20 +15807,6 @@
     "verdict": "locked"
   },
   {
-    "folder": "ternary-number-object-literal-property-cond-array-length-boolean-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/object-literal/ternary-number-object-literal-property-cond-array-length-boolean-receiver-env/ternary-number-object-literal-property-cond-array-length-boolean-receiver-env.ts",
-    "focus": "ternary",
-    "container": "object-literal",
-    "slot": "property",
-    "path": "cond › array-length-boolean › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
-  },
-  {
     "folder": "ternary-number-object-literal-property-cond-array-length-boolean-receiver-external",
     "relPath": "packages/syntax-repository/src/ternary/object-literal/ternary-number-object-literal-property-cond-array-length-boolean-receiver-external/ternary-number-object-literal-property-cond-array-length-boolean-receiver-external.ts",
     "focus": "ternary",
@@ -16015,20 +15833,6 @@
       "array-length"
     ],
     "verdict": "locked"
-  },
-  {
-    "folder": "ternary-number-object-literal-property-cond-array-length-number-receiver-env",
-    "relPath": "packages/syntax-repository/src/ternary/object-literal/ternary-number-object-literal-property-cond-array-length-number-receiver-env/ternary-number-object-literal-property-cond-array-length-number-receiver-env.ts",
-    "focus": "ternary",
-    "container": "object-literal",
-    "slot": "property",
-    "path": "cond › array-length-number › receiver",
-    "provenance": "env",
-    "uses": [
-      "ternary",
-      "array-length"
-    ],
-    "verdict": "driven"
   },
   {
     "folder": "ternary-number-object-literal-property-cond-array-length-number-receiver-external",

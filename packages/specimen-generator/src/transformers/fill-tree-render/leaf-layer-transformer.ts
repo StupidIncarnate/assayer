@@ -75,6 +75,12 @@ export const leafLayerTransformer = ({
     decls.set(name, printer.printNode(ts.EmitHint.Unspecified, declaration, emptyFile));
   }
   if (leaf.provenance === 'env') {
+    const envText = typeInfoTransformer({ typeText: leaf.type }).env;
+    if (envText === undefined) {
+      throw new Error(
+        `The leaf ${leaf.owner}.${leaf.hole} has the provenance 'env' for the type '${leaf.type}', which has no env read. An env read of an array is never empty, so it is not generated. Remove 'env' from the hole's offered provenances.`,
+      );
+    }
     const declaration = ts.factory.createVariableStatement(
       undefined,
       ts.factory.createVariableDeclarationList(
@@ -84,7 +90,7 @@ export const leafLayerTransformer = ({
             undefined,
             undefined,
             parseSnippetExpressionTransformer({
-              text: typeInfoTransformer({ typeText: leaf.type }).env,
+              text: envText,
               rename: { from: 'KEY', to: name.replace(/([a-z0-9])([A-Z])/gu, '$1_$2').toUpperCase() },
             }),
           ),

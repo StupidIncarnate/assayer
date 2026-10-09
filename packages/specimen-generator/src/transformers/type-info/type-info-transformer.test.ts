@@ -30,24 +30,22 @@ describe('typeInfoTransformer', () => {
   });
 
   describe('readonly arrays', () => {
-    it('VALID: {typeText: "readonly number[]"} => returns the samples as the known value and the array reads', () => {
+    it('VALID: {typeText: "readonly number[]"} => returns the samples as the known value and the external read, with no env read', () => {
       const result = typeInfoTransformer({ typeText: 'readonly number[]' });
 
       expect(result).toStrictEqual({
         known: [10, 20, 30],
         samples: [[10, 20, 30]],
-        env: "(process.env.KEY ?? '').split(',').map(Number)",
         external: 'process.argv.slice(2).map(Number)',
       });
     });
 
-    it('VALID: {typeText: "readonly string[]"} => returns the string array reads', () => {
+    it('VALID: {typeText: "readonly string[]"} => returns the string external read, with no env read', () => {
       const result = typeInfoTransformer({ typeText: 'readonly string[]' });
 
       expect(result).toStrictEqual({
         known: ['a', 'b', 'c'],
         samples: [['a', 'b', 'c']],
-        env: "(process.env.KEY ?? '').split(',')",
         external: 'process.argv.slice(2)',
       });
     });

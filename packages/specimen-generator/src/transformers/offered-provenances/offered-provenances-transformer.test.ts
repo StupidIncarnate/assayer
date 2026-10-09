@@ -20,6 +20,7 @@ describe('offeredProvenancesTransformer', () => {
             hasParams: false,
           },
           enabled: [name],
+          holeType: 'number',
         });
 
         expect(result).toStrictEqual([name]);
@@ -41,6 +42,7 @@ describe('offeredProvenancesTransformer', () => {
             hasParams: true,
           },
           enabled: [name],
+          holeType: 'number',
         });
 
         expect(result).toStrictEqual([name]);
@@ -60,6 +62,7 @@ describe('offeredProvenancesTransformer', () => {
             hasParams: false,
           },
           enabled: [name],
+          holeType: 'number',
         });
 
         expect(result).toStrictEqual([]);
@@ -81,6 +84,7 @@ describe('offeredProvenancesTransformer', () => {
             hasParams: false,
           },
           enabled: [name],
+          holeType: 'number',
         });
 
         expect(result).toStrictEqual([name]);
@@ -100,6 +104,7 @@ describe('offeredProvenancesTransformer', () => {
             hasParams: false,
           },
           enabled: [name],
+          holeType: 'number',
         });
 
         expect(result).toStrictEqual([]);
@@ -119,6 +124,7 @@ describe('offeredProvenancesTransformer', () => {
           hasParams: true,
         },
         enabled: ['literal', 'param', 'env'],
+        holeType: 'number',
       });
 
       expect(result).toStrictEqual(['literal', 'param']);
@@ -135,9 +141,46 @@ describe('offeredProvenancesTransformer', () => {
           hasParams: true,
         },
         enabled: [],
+        holeType: 'number',
       });
 
       expect(result).toStrictEqual([]);
+    });
+  });
+
+  describe('array-typed holes', () => {
+    it('VALID: {enabled: [param, env, literal, external], holeType: readonly number[], slot: module-load with $params} => drops env only', () => {
+      const result = offeredProvenancesTransformer({
+        slot: {
+          name: 'statement',
+          kind: 'statement',
+          reach: 'module-load',
+          arm: 'log',
+          marker: ts.factory.createCallExpression(ts.factory.createIdentifier('$stmts'), undefined, []),
+          hasParams: true,
+        },
+        enabled: ['param', 'env', 'literal', 'external'],
+        holeType: 'readonly number[]',
+      });
+
+      expect(result).toStrictEqual(['param', 'literal', 'external']);
+    });
+
+    it('VALID: {enabled: [param, env, literal, external], holeType: number, slot: module-load with $params} => keeps env', () => {
+      const result = offeredProvenancesTransformer({
+        slot: {
+          name: 'statement',
+          kind: 'statement',
+          reach: 'module-load',
+          arm: 'log',
+          marker: ts.factory.createCallExpression(ts.factory.createIdentifier('$stmts'), undefined, []),
+          hasParams: true,
+        },
+        enabled: ['param', 'env', 'literal', 'external'],
+        holeType: 'number',
+      });
+
+      expect(result).toStrictEqual(['param', 'env', 'literal', 'external']);
     });
   });
 });
