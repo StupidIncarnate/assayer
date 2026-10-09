@@ -14,7 +14,7 @@ import ts from '#gateway/npm/typescript';
 import type { LoadedSyntax } from '../../contracts/loaded-syntax/loaded-syntax-contract';
 import { DeclarationError } from '../../errors/declaration/declaration-error';
 import { generatorLayoutStatics } from '../../statics/generator-layout/generator-layout-statics';
-import { findAllLayerTransformer } from './find-all-layer-transformer';
+import { collectNodesTransformer } from '../collect-nodes/collect-nodes-transformer';
 import { readDeclaredLayerTransformer } from './read-declared-layer-transformer';
 
 export const syntaxShapeTransformer = ({
@@ -38,9 +38,9 @@ export const syntaxShapeTransformer = ({
   const name = file.slice(file.lastIndexOf('/') + 1).replace(suffix, '');
   const fromDeclared = readDeclaredLayerTransformer({ declared, file, origin });
 
-  const [codeProperty] = findAllLayerTransformer({
+  const [codeProperty] = collectNodesTransformer({
     node: sourceFile,
-    predicate: (node): node is ts.PropertyAssignment =>
+    matches: (node): node is ts.PropertyAssignment =>
       ts.isPropertyAssignment(node) && ts.isIdentifier(node.name) && node.name.text === 'code',
   });
   const arrow = codeProperty?.initializer;
@@ -70,9 +70,9 @@ export const syntaxShapeTransformer = ({
     symbol,
   }));
   const returnType = checker.typeToString(checker.getReturnTypeOfSignature(signature));
-  const arms = findAllLayerTransformer({
+  const arms = collectNodesTransformer({
     node: arrow.body,
-    predicate: (node): node is ts.CallExpression =>
+    matches: (node): node is ts.CallExpression =>
       ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === '$arm',
   }).map((call) => {
     const [first] = call.arguments;
@@ -143,7 +143,7 @@ export const syntaxShapeTransformer = ({
   const isStatement = !isShim && ts.isBlock(arrow.body);
   if (
     isStatement &&
-    findAllLayerTransformer({ node: arrow.body, predicate: ts.isReturnStatement }).length > 0
+    collectNodesTransformer({ node: arrow.body, matches: ts.isReturnStatement }).length > 0
   ) {
     throw new DeclarationError({
       file,

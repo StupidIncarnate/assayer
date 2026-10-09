@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Builds one manifest row for a planned specimen. It takes the plan's plain fields, and the
- * `uses` and `provenances` that fillTreeFactsTransformer reads off the plan's tree, so it needs no
+ * `uses` and `provenances` that fillTreeUsesTransformer and fillTreeLeavesTransformer read off the plan's tree, so it needs no
  * TypeScript nodes. The verdict comes from specimenVerdictTransformer, the same rule the
  * prediction uses.
  *

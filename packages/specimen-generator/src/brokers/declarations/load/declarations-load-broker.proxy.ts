@@ -1,12 +1,12 @@
 import { readFileSyncProxy } from '#gateway/node/fs/read-file-sync/read-file-sync.proxy';
 import { readdirSyncProxy } from '#gateway/node/fs/readdir-sync/readdir-sync.proxy';
-import { resolvePackageRootProxy } from '#gateway/node/module/resolve-package-root/resolve-package-root.proxy';
 import { join } from '#gateway/node/path';
 import { readTsconfigProxy } from '#gateway/npm/typescript/read-tsconfig/read-tsconfig.proxy';
 
 import { requireActual } from '@dungeonmaster/testing/register-mock';
 
 import { generatorLayoutStatics } from '../../../statics/generator-layout/generator-layout-statics';
+import { typescriptLibLocateBrokerProxy } from '../../typescript-lib/locate/typescript-lib-locate-broker.proxy';
 
 export const declarationsLoadBrokerProxy = (): {
   // A declarations folder holding exactly these files, each given by its path under the root (`kit.ts`,
@@ -21,7 +21,7 @@ export const declarationsLoadBrokerProxy = (): {
   // A declarations folder whose tsconfig TypeScript cannot read.
   setupUnreadableConfig: ({ declarationsRoot }: { declarationsRoot: string }) => void;
 } => {
-  resolvePackageRootProxy();
+  typescriptLibLocateBrokerProxy();
   const tsconfigs = readTsconfigProxy();
   const reads = readFileSyncProxy();
   const realFs = requireActual<{ readFileSync: (path: string, encoding: 'utf8') => string }>({ module: 'fs' });

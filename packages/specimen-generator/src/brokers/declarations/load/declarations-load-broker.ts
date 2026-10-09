@@ -13,7 +13,6 @@
 import { readFileSync, readdirSync } from '#gateway/node/fs';
 import { basename, join } from '#gateway/node/path';
 import { createContext, runInContext } from '#gateway/node/vm';
-import { resolvePackageRoot } from '#gateway/node/module';
 import ts from '#gateway/npm/typescript';
 import { readTsconfig } from '#gateway/npm/typescript';
 
@@ -26,6 +25,7 @@ import { matrixStatics } from '../../../statics/matrix/matrix-statics';
 import { containerShapeTransformer } from '../../../transformers/container-shape/container-shape-transformer';
 import { declarationExportNameTransformer } from '../../../transformers/declaration-export-name/declaration-export-name-transformer';
 import { syntaxShapeTransformer } from '../../../transformers/syntax-shape/syntax-shape-transformer';
+import { typescriptLibLocateBroker } from '../../typescript-lib/locate/typescript-lib-locate-broker';
 
 export const declarationsLoadBroker = ({
   declarationsRoot,
@@ -57,15 +57,14 @@ export const declarationsLoadBroker = ({
   // `typescript` package, because the bundled compiler keeps its own copies in memory, not on disk.
   const rootNames = [...new Set([...tsconfig.fileNames, ...declarationFiles.map(({ filePath }) => filePath)])];
   const owned = new Set(rootNames);
-  const typescriptRoot = resolvePackageRoot({ specifier: 'typescript' });
-  if (typescriptRoot === null) {
+  const libLocation = typescriptLibLocateBroker();
+  if (libLocation === null) {
     throw new DeclarationError({
       file: configFilePath,
       message:
         "cannot find the 'typescript' package, which holds the lib files the declarations are checked against. Install it as a dev dependency.",
     });
   }
-  const libLocation = join(typescriptRoot, 'lib');
   const base = ts.createCompilerHost(tsconfig.options, true);
   const host: ts.CompilerHost = {
     ...base,

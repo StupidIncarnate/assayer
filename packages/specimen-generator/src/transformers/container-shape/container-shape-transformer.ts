@@ -15,7 +15,7 @@ import { z } from '#gateway/npm/zod';
 import type { ContainerSlot } from '../../contracts/container-slot/container-slot-contract';
 import type { LoadedContainer } from '../../contracts/loaded-container/loaded-container-contract';
 import { DeclarationError } from '../../errors/declaration/declaration-error';
-import { collectNodesLayerTransformer } from './collect-nodes-layer-transformer';
+import { collectNodesTransformer } from '../collect-nodes/collect-nodes-transformer';
 import { nearestCallableLayerTransformer } from './nearest-callable-layer-transformer';
 import { readMarkerSlotLayerTransformer } from './read-marker-slot-layer-transformer';
 
@@ -45,7 +45,7 @@ export const containerShapeTransformer = ({
   }
   const { description, slots: declaredSlots } = parsed.data;
 
-  const [codeProperty] = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isPropertyAssignment }).filter(
+  const [codeProperty] = collectNodesTransformer({ node: sourceFile, matches: ts.isPropertyAssignment }).filter(
     (property) => ts.isIdentifier(property.name) && property.name.text === 'code',
   );
   const arrow = codeProperty?.initializer;
@@ -56,7 +56,7 @@ export const containerShapeTransformer = ({
     });
   }
 
-  const calls = collectNodesLayerTransformer({ node: arrow, matches: ts.isCallExpression });
+  const calls = collectNodesTransformer({ node: arrow, matches: ts.isCallExpression });
   const markers = calls.filter(
     (call) =>
       readMarkerSlotLayerTransformer({ call, markerName: '$stmts' }) !== undefined ||
@@ -133,7 +133,7 @@ export const containerShapeTransformer = ({
     sourceFile,
     slots,
     markers,
-    isClass: collectNodesLayerTransformer({ node: arrow, matches: ts.isClassDeclaration }).some(
+    isClass: collectNodesTransformer({ node: arrow, matches: ts.isClassDeclaration }).some(
       (declaration) => declaration.name?.text === '$Entry',
     ),
     exportsDefault: calls.some((call) => ts.isIdentifier(call.expression) && call.expression.text === '$exportDefault'),

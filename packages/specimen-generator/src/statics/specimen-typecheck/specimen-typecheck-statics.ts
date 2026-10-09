@@ -14,7 +14,7 @@ export const specimenTypecheckStatics = {
     noImplicitReturns: true,
     target: 'ES2022',
     module: 'commonjs',
-    lib: ['lib.es2022.d.ts'],
+    lib: ['es2022'],
     types: ['node'],
     noEmit: true,
   },

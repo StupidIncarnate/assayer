@@ -11,13 +11,13 @@
  * // Returns [] when every file is clean, or [{ relPath, messages }] for each file TypeScript rejects
  */
 import ts from '#gateway/npm/typescript';
-import { resolvePackageRoot } from '#gateway/node/module';
 import { join } from '#gateway/node/path';
 
 import { specimenTypeErrorContract } from '../../../contracts/specimen-type-error/specimen-type-error-contract';
 import type { SpecimenTypeError } from '../../../contracts/specimen-type-error/specimen-type-error-contract';
 import type { GeneratedFile } from '../../../contracts/generated-file/generated-file-contract';
 import { specimenTypecheckStatics } from '../../../statics/specimen-typecheck/specimen-typecheck-statics';
+import { typescriptLibLocateBroker } from '../../typescript-lib/locate/typescript-lib-locate-broker';
 
 export const specimensTypecheckBroker = ({
   files,
@@ -25,16 +25,7 @@ export const specimensTypecheckBroker = ({
   files: readonly GeneratedFile[];
 }): SpecimenTypeError[] => {
   const currentDirectory = ts.sys.getCurrentDirectory();
-  // The statics name each lib by its file (`lib.es2022.d.ts`), and the converter wants the short name (`es2022`).
-  const converted = ts.convertCompilerOptionsFromJson(
-    {
-      ...specimenTypecheckStatics.compilerOptions,
-      lib: specimenTypecheckStatics.compilerOptions.lib.map((file) =>
-        file.replace('lib.', '').replace('.d.ts', ''),
-      ),
-    },
-    currentDirectory,
-  );
+  const converted = ts.convertCompilerOptionsFromJson(specimenTypecheckStatics.compilerOptions, currentDirectory);
   if (converted.errors.length > 0) {
     const problems = converted.errors
       .map((error) => ts.flattenDiagnosticMessageText(error.messageText, ' '))
@@ -44,13 +35,12 @@ export const specimensTypecheckBroker = ({
     );
   }
 
-  const typescriptRoot = resolvePackageRoot({ specifier: 'typescript' });
-  if (typescriptRoot === null) {
+  const libLocation = typescriptLibLocateBroker();
+  if (libLocation === null) {
     throw new Error(
       "cannot find the 'typescript' package, which holds the lib files the specimens are checked against. Install it as a dev dependency.",
     );
   }
-  const libLocation = join(typescriptRoot, 'lib');
   const virtualFiles = new Map(files.map((file) => [join(currentDirectory, file.relPath), file]));
   const base = ts.createCompilerHost(converted.options, true);
   const host: ts.CompilerHost = {

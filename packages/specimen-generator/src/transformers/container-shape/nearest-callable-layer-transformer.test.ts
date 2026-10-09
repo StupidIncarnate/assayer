@@ -1,6 +1,6 @@
 import ts from '#gateway/npm/typescript';
 
-import { collectNodesLayerTransformer } from './collect-nodes-layer-transformer';
+import { collectNodesTransformer } from '../collect-nodes/collect-nodes-transformer';
 import { nearestCallableLayerTransformer } from './nearest-callable-layer-transformer';
 
 describe('nearestCallableLayerTransformer', () => {
@@ -13,8 +13,8 @@ describe('nearestCallableLayerTransformer', () => {
       ['get accessor', 'const c = () => { class K { get run() { return marker(); } } };', ts.SyntaxKind.GetAccessor],
     ])('VALID: {marker inside a %s} => returns that node', (_label, source, kind) => {
       const sourceFile = ts.createSourceFile('a.ts', source, ts.ScriptTarget.ES2022, true);
-      const arrows = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
-      const markers = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
+      const arrows = collectNodesTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
+      const markers = collectNodesTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
 
       const result = arrows.flatMap((arrow) =>
         markers.map((marker) => nearestCallableLayerTransformer({ node: marker, stop: arrow })?.kind),
@@ -30,8 +30,8 @@ describe('nearestCallableLayerTransformer', () => {
         ts.ScriptTarget.ES2022,
         true,
       );
-      const arrows = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
-      const markers = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
+      const arrows = collectNodesTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
+      const markers = collectNodesTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
 
       const result = arrows.flatMap((arrow) =>
         markers.map((marker) => nearestCallableLayerTransformer({ node: marker, stop: arrow })?.getText(sourceFile)),
@@ -42,8 +42,8 @@ describe('nearestCallableLayerTransformer', () => {
 
     it('EMPTY: {marker directly in the stop arrow} => returns undefined', () => {
       const sourceFile = ts.createSourceFile('a.ts', 'const c = () => { marker(); };', ts.ScriptTarget.ES2022, true);
-      const arrows = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
-      const markers = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
+      const arrows = collectNodesTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
+      const markers = collectNodesTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
 
       const result = arrows.flatMap((arrow) => markers.map((marker) => nearestCallableLayerTransformer({ node: marker, stop: arrow })));
 
@@ -52,8 +52,8 @@ describe('nearestCallableLayerTransformer', () => {
 
     it('EMPTY: {marker inside a block and a variable declaration, no function} => returns undefined', () => {
       const sourceFile = ts.createSourceFile('a.ts', 'const c = () => { if (true) { const x = marker(); } };', ts.ScriptTarget.ES2022, true);
-      const arrows = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
-      const markers = collectNodesLayerTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
+      const arrows = collectNodesTransformer({ node: sourceFile, matches: ts.isArrowFunction }).slice(0, 1);
+      const markers = collectNodesTransformer({ node: sourceFile, matches: ts.isCallExpression }).slice(0, 1);
 
       const result = arrows.flatMap((arrow) => markers.map((marker) => nearestCallableLayerTransformer({ node: marker, stop: arrow })));
 
