@@ -52,11 +52,19 @@ Assayer that does the AST and type-graph work.
 `codex-of-consentient-craft` must be checked out as a sibling directory, next
 to this repo, on disk.
 
-Verify a change with both `npm run ward` and `npm run test:syntax`. Run
-both commands. The specimen catalogue (the example files under
-`manual-smoke-repo/packages/syntax-repository` that exercise Assayer's supported
-syntax) is not part of `ward`'s test graph, so `ward` alone will not catch a
-regression there.
+Verify a change with `npm run ward`, `npm run test:syntax` and
+`npm run test:generated`. Run all three commands. Neither specimen catalogue
+is part of `ward`'s test graph, so `ward` alone will not catch a regression in
+either:
+
+- `manual-smoke-repo/packages/syntax-repository` holds the hand-written
+  specimens. `npm run test:syntax` runs their tests.
+- `smoke-repo/packages/syntax-repository` holds the specimens the
+  `@assayer/specimen-generator` package writes, each with a test that runs
+  Assayer on it and compares the outcome with the generator's prediction.
+  `npm run test:generated` runs them. Never edit a file there by hand. Change
+  the generator or its declarations, then run `npm run generate:specimens`.
+  Ward fails while the committed files differ from a fresh generation.
 
 ## Write in plain language, everywhere
 
