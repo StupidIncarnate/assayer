@@ -24,7 +24,7 @@
  */
 import { harnessLoadResultContract } from '../../../contracts/harness-load-result/harness-load-result-contract';
 import type { HarnessLoadResult } from '../../../contracts/harness-load-result/harness-load-result-contract';
-import { types } from '#gateway/node/util';
+import { isNativeError } from '#gateway/node/util__types';
 import { createContext, runInContext } from '#gateway/node/vm';
 
 import ts from '#gateway/npm/typescript';
@@ -83,7 +83,7 @@ export const harnessLoadBroker = ({
     // would get a stringified error where the message belongs.
     return harnessLoadResultContract.parse({
       ok: false,
-      message: types.isNativeError(error) ? error.message : String(error),
+      message: isNativeError(error) ? error.message : String(error),
     });
   }
 

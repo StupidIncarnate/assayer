@@ -603,7 +603,7 @@ It runs `transpileModule` (with no require hook, and nothing added to the
 module cache), then runs the result inside a bare sandbox holding a
 CommonJS shell and exactly one reachable import: `@assayer/core`, bound to
 that call's own collector. A thrown error inside the sandbox is read using
-`util.types.isNativeError`, never `instanceof Error`, because an error
+`isNativeError` from `#gateway/node/util__types`, never `instanceof Error`, because an error
 raised inside the sandbox belongs to that sandbox's own separate
 constructor, and `instanceof` would not recognize it.
 
