@@ -26,8 +26,49 @@ const ENV_LEAF = ConditionLeafStub({
   id: 'm#leaf',
   operandParamName: 'value',
   operandEnvVarName: 'VALUE',
+  operandEnvSteps: [{ kind: 'number' }],
   operandType: { kind: 'number' },
   predicate: { kind: 'gt', literal: 5 },
+});
+
+// `const cond = Number(process.env.COND); if (cond)`: a bare truthiness read of a coerced number.
+const ENV_TRUTHY_LEAF = ConditionLeafStub({
+  id: 'm#leaf',
+  operandParamName: 'cond',
+  operandEnvVarName: 'COND',
+  operandEnvSteps: [{ kind: 'number' }],
+  operandType: { kind: 'number' },
+  predicate: { kind: 'truthy' },
+});
+
+// `const flag = process.env.FLAG === 'true'; if (flag)`: a boolean built by comparing the string.
+const ENV_FLAG_LEAF = ConditionLeafStub({
+  id: 'm#leaf',
+  operandParamName: 'flag',
+  operandEnvVarName: 'FLAG',
+  operandEnvSteps: [{ kind: 'equals', literal: 'true', negated: false }],
+  operandType: { kind: 'boolean' },
+  predicate: { kind: 'truthy' },
+});
+
+// `const items = (process.env.ITEMS ?? '').split(',').map(Number); if (items.length)`.
+const ENV_LIST_LEAF = ConditionLeafStub({
+  id: 'm#leaf',
+  operandParamName: 'items',
+  operandEnvVarName: 'ITEMS',
+  operandEnvSteps: [{ kind: 'default', value: '' }, { kind: 'split', separator: ',' }, { kind: 'map' }],
+  operandType: { kind: 'array', element: { kind: 'unknown', text: 'unknown' } },
+  predicate: { kind: 'length-neq', literal: 0 },
+});
+
+// `const text = process.env.TEXT ?? ''; if (text.length > 2)`.
+const ENV_TEXT_LEAF = ConditionLeafStub({
+  id: 'm#leaf',
+  operandParamName: 'text',
+  operandEnvVarName: 'TEXT',
+  operandEnvSteps: [{ kind: 'default', value: '' }],
+  operandType: { kind: 'string' },
+  predicate: { kind: 'length-gt', literal: 2 },
 });
 
 const NUMBER_PARAMS = [
@@ -459,6 +500,118 @@ describe('causeArrangeTransformer', () => {
       });
 
       expect(result).toStrictEqual({ unreachable: false, unfillable: [], arrangements: [[]] });
+    });
+
+    // "Anything but 0" names no value of its own. The number representative 7 is one it admits, so the
+    // truthy arm still writes a variable, exactly as a param's fill would hand it 7. With no variable
+    // written, `Number(undefined)` is NaN, which is falsy, and the case would reach the other arm.
+    it('VALID: {Number env operand, truthy wanted} => the representative 7, written as a string', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_TRUTHY_LEAF, want: true }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'COND', value: '7' }]],
+      });
+    });
+
+    it('VALID: {Number env operand, falsy wanted} => "0"', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_TRUTHY_LEAF, want: false }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'COND', value: '0' }]],
+      });
+    });
+
+    it("VALID: {=== 'true' env operand, true wanted} => the compared literal itself", () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_FLAG_LEAF, want: true }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'FLAG', value: 'true' }]],
+      });
+    });
+
+    it("VALID: {=== 'true' env operand, false wanted} => a string other than the literal", () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_FLAG_LEAF, want: false }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'FLAG', value: 'abc123' }]],
+      });
+    });
+
+    it('VALID: {split env list, non-empty wanted} => one item', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_LIST_LEAF, want: true }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'ITEMS', value: 'a' }]],
+      });
+    });
+
+    // `''.split(',')` is `['']`, so no environment empties a split list: that arm is unreachable.
+    it('VALID: {split env list, empty wanted} => unreachable, since a split list always holds an item', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_LIST_LEAF, want: false }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({ unreachable: true, unfillable: [], arrangements: [] });
+    });
+
+    it('VALID: {env string, length over 2 wanted} => a three-character string', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_TEXT_LEAF, want: true }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'TEXT', value: 'abc' }]],
+      });
+    });
+
+    it('VALID: {env string, length of 2 or less wanted} => the empty string', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_TEXT_LEAF, want: false }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'TEXT', value: '' }]],
+      });
     });
 
     // envDrivable alone is not enough — a leaf with no `operandEnvVarName` names no environment

@@ -44,6 +44,7 @@ const codeSwitchFunction = FunctionAnalysisStub({
   exits: [],
   cases: [],
 });
+const { entry: moduleEntry } = codeSwitchFunction;
 
 describe('gatherEnvReadsTransformer', () => {
   describe('one file reading two env properties', () => {
@@ -86,6 +87,82 @@ describe('gatherEnvReadsTransformer', () => {
       // regardless of input order; the final env-stub value math sorts them downstream.
       expect(gatherEnvReadsTransformer({ blobs: [first, second] })).toStrictEqual([
         { property: 'CODE', literals: ['x', 1, 2], readers: ['src/a-reader.ts', 'src/b-reader.ts'] },
+      ]);
+    });
+  });
+
+  describe('a leaf whose steps change what its literal means', () => {
+    it("VALID: {const flag = process.env.FLAG === 'on'; if (flag === false)} => the comparison's literal, never the boolean", () => {
+      const blob = CompiledFileBlobStub({
+        relPath: 'src/flag.ts',
+        moduleGraph: { edges: [], references: [], globalUses: [], envReads: [] },
+        analysis: FileAnalysisStub({
+          functions: [
+            FunctionAnalysisStub({
+              entry: moduleEntry,
+              branches: [
+                {
+                  coverageId: '*module*/if:id:flag,EqualsEqualsEqualsToken,false',
+                  kind: 'if',
+                  condition: {
+                    kind: 'leaf',
+                    id: '*module*/if:id:flag,EqualsEqualsEqualsToken,false#leaf',
+                    operandParamName: 'flag',
+                    operandEnvVarName: 'FLAG',
+                    operandEnvSteps: [{ kind: 'equals', literal: 'on', negated: false }],
+                    operandType: { kind: 'boolean' },
+                    predicate: { kind: 'eq', literal: false },
+                  },
+                  startLine: 2,
+                  endLine: 2,
+                },
+              ],
+              exits: [],
+              cases: [],
+            }),
+          ],
+        }),
+      });
+
+      expect(gatherEnvReadsTransformer({ blobs: [blob] })).toStrictEqual([
+        { property: 'FLAG', literals: ['on'], readers: ['src/flag.ts'] },
+      ]);
+    });
+
+    it("VALID: {const text = process.env.TEXT ?? ''; if (text.length > 3)} => no literal, since 3 is a length", () => {
+      const blob = CompiledFileBlobStub({
+        relPath: 'src/text.ts',
+        moduleGraph: { edges: [], references: [], globalUses: [], envReads: [] },
+        analysis: FileAnalysisStub({
+          functions: [
+            FunctionAnalysisStub({
+              entry: moduleEntry,
+              branches: [
+                {
+                  coverageId: '*module*/if:id:text,length,GreaterThanToken,num:3',
+                  kind: 'if',
+                  condition: {
+                    kind: 'leaf',
+                    id: '*module*/if:id:text,length,GreaterThanToken,num:3#leaf',
+                    operandParamName: 'text',
+                    operandEnvVarName: 'TEXT',
+                    operandEnvSteps: [{ kind: 'default', value: '' }],
+                    operandType: { kind: 'string' },
+                    predicate: { kind: 'length-gt', literal: 3 },
+                  },
+                  startLine: 2,
+                  endLine: 2,
+                },
+              ],
+              exits: [],
+              cases: [],
+            }),
+          ],
+        }),
+      });
+
+      expect(gatherEnvReadsTransformer({ blobs: [blob] })).toStrictEqual([
+        { property: 'TEXT', literals: [], readers: ['src/text.ts'] },
       ]);
     });
   });

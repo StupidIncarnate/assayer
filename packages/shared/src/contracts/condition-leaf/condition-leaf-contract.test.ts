@@ -90,9 +90,44 @@ describe('conditionLeafContract', () => {
         predicate: { kind: 'truthy' },
       });
     });
+
+    it('VALID: {an env operand read through steps} => carries the env var name and its steps in order', () => {
+      const result = conditionLeafContract.parse({
+        kind: 'leaf',
+        id: 'stub/if:id:receiver#leaf',
+        operandParamName: 'receiver',
+        operandEnvVarName: 'RECEIVER',
+        operandEnvSteps: [{ kind: 'default', value: '' }, { kind: 'split', separator: ',' }, { kind: 'map' }],
+        operandType: { kind: 'array', element: { kind: 'unknown', text: 'unknown' } },
+        predicate: { kind: 'length-neq', literal: 0 },
+      });
+
+      expect(result).toStrictEqual({
+        kind: 'leaf',
+        id: 'stub/if:id:receiver#leaf',
+        operandParamName: 'receiver',
+        operandEnvVarName: 'RECEIVER',
+        operandEnvSteps: [{ kind: 'default', value: '' }, { kind: 'split', separator: ',' }, { kind: 'map' }],
+        operandType: { kind: 'array', element: { kind: 'unknown', text: 'unknown' } },
+        predicate: { kind: 'length-neq', literal: 0 },
+      });
+    });
   });
 
   describe('invalid leaves', () => {
+    it('INVALID: {operandEnvSteps: []} => throws, since a raw read carries no steps field at all', () => {
+      expect(() => {
+        return conditionLeafContract.parse({
+          kind: 'leaf',
+          id: 'stub#leaf',
+          operandEnvVarName: 'MODE',
+          operandEnvSteps: [],
+          operandType: { kind: 'string' },
+          predicate: { kind: 'truthy' },
+        });
+      }).toThrow(/Too small: expected array to have >=1 items/u);
+    });
+
     it('INVALID: {kind: "and"} => throws, since a connective is not a leaf', () => {
       expect(() => {
         return conditionLeafContract.parse({

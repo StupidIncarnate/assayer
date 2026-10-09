@@ -1,0 +1,175 @@
+/**
+ * PURPOSE: Reads one expression as a chain of pure steps applied to ONE `process.env.<NAME>` read,
+ *   and answers the variable's name plus the steps in the order the code applies them. It answers
+ *   nothing for any expression it cannot run backwards. `read-env-operand` is its only caller, and
+ *   starts it at a branch operand's identifier.
+ *
+ *   The shapes it reads, each from node KINDS and literal VALUES (`getLiteralValue()`), never source
+ *   text:
+ *   - `process.env.NAME` or `process.env['NAME']`, the read itself.
+ *   - `x ?? '<literal>'` on the raw read: a `default` step.
+ *   - `Number(x)` on a string: a `number` step.
+ *   - `x === <literal>`, `x == <literal>`, and their negations, on a string, a number or a boolean:
+ *     an `equals` step. The literal may sit on either side.
+ *   - `x.split('<literal>')` on a string: a `split` step.
+ *   - `xs.map(f)` on an array, with exactly one argument: a `map` step.
+ *   - Parentheses, which are formatting.
+ *   - An identifier bound by a same-file `const`, which it follows to that `const`'s initializer.
+ *     A `let` or `var` could be reassigned before the branch runs, so it stops there.
+ *
+ *   `read-const-binding` follows a binding by symbol, and `seen` holds every declaration already
+ *   followed, so a cycle of bindings stops. `read-env-access` reads the `process.env` access itself.
+ *
+ *   `Number` must be the runtime global. The analyzer's parse resolves it to the standard library, so
+ *   a file that writes its own `const Number = …` gives the checker a declaration in THIS file, and
+ *   the reader declines: `String` would not be the inverse of that function.
+ *
+ * USAGE:
+ * readEnvChainLayerTransformer({ node: initializer, seen: [] });
+ * // Returns { name: 'RECEIVER', steps: [{ kind: 'default', value: '' }, { kind: 'split', separator: ',' }] }
+ * //   for `(process.env.RECEIVER ?? '').split(',')`, or undefined
+ */
+import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
+
+import { envStepContract } from '@assayer/shared/contracts';
+
+import { envOperandReadoutContract } from '../../contracts/env-operand-readout/env-operand-readout-contract';
+import type { EnvOperandReadout } from '../../contracts/env-operand-readout/env-operand-readout-contract';
+import { envSourceStatics } from '../../statics/env-source/env-source-statics';
+import { envStepsTypeTransformer } from '../env-steps-type/env-steps-type-transformer';
+import { readConstBindingLayerTransformer } from './read-const-binding-layer-transformer';
+import { readEnvAccessLayerTransformer } from './read-env-access-layer-transformer';
+import { readLiteralValueLayerTransformer } from './read-literal-value-layer-transformer';
+
+const EQUALITY_OPERATORS = new Set([SyntaxKind.EqualsEqualsEqualsToken, SyntaxKind.EqualsEqualsToken]);
+const INEQUALITY_OPERATORS = new Set([SyntaxKind.ExclamationEqualsEqualsToken, SyntaxKind.ExclamationEqualsToken]);
+
+export const readEnvChainLayerTransformer = ({
+  node,
+  seen,
+}: {
+  node: Node;
+  seen: readonly Node[];
+}): EnvOperandReadout | undefined => {
+  if (Node.isParenthesizedExpression(node)) {
+    return readEnvChainLayerTransformer({ node: node.getExpression(), seen });
+  }
+
+  if (Node.isIdentifier(node)) {
+    const declaration = readConstBindingLayerTransformer({ node, seen });
+    const initializer = declaration?.getInitializer();
+
+    return declaration === undefined || initializer === undefined
+      ? undefined
+      : readEnvChainLayerTransformer({ node: initializer, seen: [...seen, declaration] });
+  }
+
+  const access = readEnvAccessLayerTransformer({ node });
+
+  if (access !== undefined) {
+    return access;
+  }
+
+  if (Node.isBinaryExpression(node)) {
+    const operator = node.getOperatorToken().getKind();
+    const left = node.getLeft();
+    const right = node.getRight();
+
+    // `x ?? '<literal>'` on the raw read only: every later step already returns a value, so a
+    // fallback there would never run.
+    if (operator === SyntaxKind.QuestionQuestionToken) {
+      const inner = readEnvChainLayerTransformer({ node: left, seen });
+      const fallback = readLiteralValueLayerTransformer({ node: right });
+
+      return inner === undefined || inner.steps.length > 0 || typeof fallback !== 'string'
+        ? undefined
+        : envOperandReadoutContract.parse({
+            name: inner.name,
+            steps: [envStepContract.parse({ kind: 'default', value: fallback })],
+          });
+    }
+
+    if (!EQUALITY_OPERATORS.has(operator) && !INEQUALITY_OPERATORS.has(operator)) {
+      return undefined;
+    }
+
+    // The literal may sit on either side, so try the chain on the left first, then on the right.
+    const leftLiteral = readLiteralValueLayerTransformer({ node: left });
+    const [chainNode, literal] = leftLiteral === undefined ? [left, readLiteralValueLayerTransformer({ node: right })] : [right, leftLiteral];
+    const inner = readEnvChainLayerTransformer({ node: chainNode, seen });
+
+    if (inner === undefined || literal === undefined || literal === null) {
+      return undefined;
+    }
+
+    const innerKind = envStepsTypeTransformer({ steps: inner.steps }).kind;
+
+    return innerKind === 'array'
+      ? undefined
+      : envOperandReadoutContract.parse({
+          name: inner.name,
+          steps: [
+            ...inner.steps,
+            envStepContract.parse({ kind: 'equals', literal, negated: INEQUALITY_OPERATORS.has(operator) }),
+          ],
+        });
+  }
+
+  if (!Node.isCallExpression(node)) {
+    return undefined;
+  }
+
+  const callee = node.getExpression();
+  const [argument, ...extraArguments] = node.getArguments();
+
+  // A second argument means a call this does not model, whatever the callee is called:
+  // `parseInt(x, 10)` is not `Number(x)`, and `split(',', 2)` caps the length.
+  if (argument === undefined || extraArguments.length > 0) {
+    return undefined;
+  }
+
+  // `Number(x)`, where `Number` is the ambient one. A file with its own `Number` in scope means
+  // something else by it, and `String` would not be its inverse.
+  if (Node.isIdentifier(callee)) {
+    if (
+      callee.getText() !== envSourceStatics.coercion ||
+      (callee.getSymbol()?.getDeclarations() ?? []).some((declared) => declared.getSourceFile() === callee.getSourceFile())
+    ) {
+      return undefined;
+    }
+
+    const inner = readEnvChainLayerTransformer({ node: argument, seen });
+
+    return inner === undefined || envStepsTypeTransformer({ steps: inner.steps }).kind !== 'string'
+      ? undefined
+      : envOperandReadoutContract.parse({ name: inner.name, steps: [...inner.steps, envStepContract.parse({ kind: 'number' })] });
+  }
+
+  if (!Node.isPropertyAccessExpression(callee)) {
+    return undefined;
+  }
+
+  const inner = readEnvChainLayerTransformer({ node: callee.getExpression(), seen });
+
+  if (inner === undefined) {
+    return undefined;
+  }
+
+  const innerKind = envStepsTypeTransformer({ steps: inner.steps }).kind;
+  const method = callee.getName();
+
+  if (method === envSourceStatics.methods.split) {
+    const separator = readLiteralValueLayerTransformer({ node: argument });
+
+    return innerKind !== 'string' || typeof separator !== 'string' || separator.length === 0
+      ? undefined
+      : envOperandReadoutContract.parse({
+          name: inner.name,
+          steps: [...inner.steps, envStepContract.parse({ kind: 'split', separator })],
+        });
+  }
+
+  return method === envSourceStatics.methods.map && innerKind === 'array'
+    ? envOperandReadoutContract.parse({ name: inner.name, steps: [...inner.steps, envStepContract.parse({ kind: 'map' })] })
+    : undefined;
+};

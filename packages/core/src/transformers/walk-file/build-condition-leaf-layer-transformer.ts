@@ -23,6 +23,7 @@ import { conditionTreeReadoutContract } from '../../contracts/condition-tree-rea
 import type { ConditionTreeReadout } from '../../contracts/condition-tree-readout/condition-tree-readout-contract';
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
+import { envStepsTypeTransformer } from '../env-steps-type/env-steps-type-transformer';
 import { readConstOperandLayerTransformer } from './read-const-operand-layer-transformer';
 import { readEnvOperandLayerTransformer } from './read-env-operand-layer-transformer';
 import { readOperandTypeLayerTransformer } from './read-operand-type-layer-transformer';
@@ -40,8 +41,10 @@ export const buildConditionLeafLayerTransformer = ({
 }): ConditionTreeReadout => {
   // WHERE the operand's value came from — a different question from what its type is, asked of a
   // different reader. Recorded wherever it is true; whether an entry can be driven through it is
-  // policy, and policy lives in the projections.
-  const envVarName = readEnvOperandLayerTransformer({ node: readout.operandNode });
+  // policy, and policy lives in the projections. An environment read also decides the operand's TYPE:
+  // the analyzer loads no Node types, so the checker types every step built on `process.env` as `any`,
+  // while the steps themselves say what Node declares (`env-steps-type`).
+  const envRead = readEnvOperandLayerTransformer({ node: readout.operandNode });
 
   // Whether the operand is WELDED to a same-file constant — a value the analyzer EVALUATES rather than
   // an input a case sets. A scalar `const` welds a value, an array `const` welds its length. Recorded
@@ -69,15 +72,19 @@ export const buildConditionLeafLayerTransformer = ({
       ...(readout.operandPropertyPath === undefined ? {} : { operandPropertyPath: readout.operandPropertyPath }),
       ...(readout.operandTypeRef === undefined ? {} : { operandTypeRef: readout.operandTypeRef }),
       ...(readout.operandIsTypeof === undefined ? {} : { operandIsTypeof: readout.operandIsTypeof }),
-      ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
+      ...(envRead === undefined ? {} : { operandEnvVarName: envRead.name }),
+      ...(envRead === undefined || envRead.steps.length === 0 ? {} : { operandEnvSteps: envRead.steps }),
       ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
       ...(constOperand?.length === undefined ? {} : { operandConstLength: constOperand.length }),
       ...(callPosition === undefined ? {} : { operandCallPosition: { line: callPosition.line, column: callPosition.column } }),
-      operandType: readOperandTypeLayerTransformer({
-        node: readout.operandNode,
-        context,
-        ...(readout.operandName === undefined ? {} : { name: readout.operandName }),
-      }),
+      operandType:
+        envRead === undefined
+          ? readOperandTypeLayerTransformer({
+              node: readout.operandNode,
+              context,
+              ...(readout.operandName === undefined ? {} : { name: readout.operandName }),
+            })
+          : envStepsTypeTransformer({ steps: envRead.steps }),
       predicate: readout.predicate,
     }),
     // The site wraps the LEAF EXPRESSION as written, not the operand the readout picked out. Wrapping in

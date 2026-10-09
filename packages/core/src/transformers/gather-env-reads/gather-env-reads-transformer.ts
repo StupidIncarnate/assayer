@@ -7,8 +7,11 @@
  *   Two facts on each finished blob feed it, neither re-parsing:
  *   - the module graph's `envReads` — bare `process.env.<X>` reads the walk captured, carrying the
  *     property and any equality-comparison literal (`process.env.MODE === 'production'`), and
- *   - the Number-coerced branch leaves — a `Number(process.env.CODE)` discriminant reads as a branch
- *     leaf whose `operandEnvVarName` names the property and whose predicate literal is the case value.
+ *   - the env-read branch leaves — a `Number(process.env.CODE)` discriminant reads as a branch leaf
+ *     whose `operandEnvVarName` names the property and whose predicate literal is the case value. A
+ *     leaf whose steps compare the variable (`process.env.FLAG === 'on'`) contributes that comparison's
+ *     literal instead, because its predicate literal is a boolean, not a value of the variable. A
+ *     length predicate contributes no literal: a length is not a value either.
  *   A file appears as a reader through EITHER, so an unbranched read and a switch-driving read both
  *   count. Iterated in sorted reader order and unioned so the collected literals and readers are
  *   byte-identical regardless of blob input order. The per-property value guess stays downstream.
@@ -19,9 +22,12 @@
  */
 import { gatherEnvReadsContract } from '../../contracts/gather-env-reads/gather-env-reads-contract';
 import type { GatherEnvReads } from '../../contracts/gather-env-reads/gather-env-reads-contract';
-import type { CompiledFileBlob } from '@assayer/shared/contracts';
+import { representativeValueContract } from '@assayer/shared/contracts';
+import type { CompiledFileBlob, PredicateKind } from '@assayer/shared/contracts';
 
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
+
+const VALUE_PREDICATES = new Set<PredicateKind>(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']);
 
 export const gatherEnvReadsTransformer = ({
   blobs,
@@ -39,17 +45,30 @@ export const gatherEnvReadsTransformer = ({
       const leafReads = (blob.analysis?.functions ?? [])
         .flatMap((fn) => fn.branches)
         .flatMap((branch) => conditionLeavesTransformer({ condition: branch.condition }))
-        .flatMap((leaf) =>
-          leaf.operandEnvVarName === undefined
+        .flatMap((leaf) => {
+          // A predicate literal is a value of the VARIABLE only while every step keeps the value as it
+          // is, up to `Number`, and the predicate compares that value. After a comparison or a split the
+          // literal is a boolean or a length, so the comparison step's own literal is the one recorded.
+          const steps = leaf.operandEnvSteps ?? [];
+          const valuePreserving = steps.every((step) => step.kind === 'default' || step.kind === 'number');
+          const predicateLiterals =
+            valuePreserving && leaf.predicate.literal !== undefined && VALUE_PREDICATES.has(leaf.predicate.kind)
+              ? [leaf.predicate.literal]
+              : [];
+          const stepLiterals = steps.flatMap((step) =>
+            step.kind === 'equals' ? [representativeValueContract.parse(step.literal)] : [],
+          );
+
+          return leaf.operandEnvVarName === undefined
             ? []
             : [
                 {
                   property: String(leaf.operandEnvVarName),
-                  literals: leaf.predicate.literal === undefined ? [] : [leaf.predicate.literal],
+                  literals: [...stepLiterals, ...predicateLiterals],
                   reader: blob.relPath,
                 },
-              ],
-        );
+              ];
+        });
 
       return [...channelReads, ...leafReads];
     });

@@ -88,6 +88,57 @@ describe('buildConditionLeafLayerTransformer', () => {
       });
     });
 
+    // The checker types `process.env.TEXT ?? ''` as `any`, because the analyzer loads no Node types. The
+    // steps say it is a string, and that is the type the leaf carries.
+    it("VALID: {const text = process.env.TEXT ?? ''} => the env var, its steps, and the string type the steps give", () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', "const text = process.env.TEXT ?? '';\nif (text.length) {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getFirstDescendantByKindOrThrow(SyntaxKind.Identifier);
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: { operandNode, operandName: 'text', predicate: PredicateStub({ kind: 'length-neq', literal: 0 }) },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'text',
+        operandEnvVarName: 'TEXT',
+        operandEnvSteps: [{ kind: 'default', value: '' }],
+        operandType: { kind: 'string' },
+        predicate: { kind: 'length-neq', literal: 0 },
+      });
+    });
+
+    it('VALID: {const mode = process.env.MODE} => the env var with no steps, typed as a string', () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', "const mode = process.env.MODE;\nif (mode === 'big') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: { operandNode, operandName: 'mode', predicate: PredicateStub({ kind: 'eq', literal: 'big' }) },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'mode',
+        operandEnvVarName: 'MODE',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'big' },
+      });
+    });
+
     it('VALID: {a call operand} => the leaf carries the call position and no name', () => {
       buildConditionLeafLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });

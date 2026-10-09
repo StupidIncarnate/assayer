@@ -15,6 +15,11 @@
  *   wherever it is true — whether an entry can actually be driven through it is policy, and policy
  *   lives in the projections.
  *
+ *   `operandEnvSteps` lists the pure transformations between that environment read and the operand,
+ *   in the order the code applies them (`env-step-contract`). It is present only when there is at
+ *   least one step, so a leaf that holds the raw string has no `operandEnvSteps` at all. A case runs
+ *   these steps backwards to find the string that puts the operand on the arm it wants.
+ *
  *   `operandCallPosition` anchors WHERE a call operand is written, keyed to the same source coordinate
  *   the call site records. It appears when the operand is a CALL (`if (tooBig(x))`), whose predicate
  *   reads as bare `truthy` because a single-file parse cannot type the callee. The position is the
@@ -57,6 +62,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
+import { envStepContract } from '../env-step/env-step-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
@@ -69,6 +75,7 @@ export const conditionLeafContract = z.object({
   operandPropertyPath: z.array(z.string().min(1).brand<'ConditionLeafOperandPropertyPath'>()).min(1).optional(),
   operandTypeRef: z.string().min(1).brand<'ConditionLeafOperandTypeRef'>().optional(),
   operandEnvVarName: z.string().min(1).brand<'ConditionLeafOperandEnvVarName'>().optional(),
+  operandEnvSteps: z.array(envStepContract).min(1).optional(),
   operandConstValue: representativeValueContract.optional(),
   operandConstLength: z.number().int().nonnegative().brand<'ConditionLeafOperandConstLength'>().optional(),
   operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).brand<'ConditionLeafOperandCallPosition'>().optional(),

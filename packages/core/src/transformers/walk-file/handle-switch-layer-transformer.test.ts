@@ -93,8 +93,43 @@ describe('handleSwitchLayerTransformer', () => {
             id: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:1#leaf',
             operandParamName: 'code',
             operandEnvVarName: 'CODE',
+            operandEnvSteps: [{ kind: 'number' }],
             operandType: { kind: 'number' },
             predicate: { kind: 'eq', literal: 1 },
+          },
+          startLine: 3,
+          endLine: 5,
+        },
+      ]);
+    });
+
+    // A raw read holds the environment's own string, so it carries no steps, and its type is the
+    // `string` Node declares rather than the `any` the analyzer's typeless parse would give it.
+    it('VALID: {a switch on a raw process.env.MODE read} => each leaf carries the env source and a string type', () => {
+      handleSwitchLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "const mode = process.env.MODE;\nswitch (mode) {\n  case 'dev':\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerTransformer({
+        node,
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false, tail: true }),
+      });
+
+      expect(result.branches).toStrictEqual([
+        {
+          coverageId: '*module*/switch:id:mode,EqualsEqualsEqualsToken,str:dev',
+          kind: 'switch',
+          condition: {
+            kind: 'leaf',
+            id: '*module*/switch:id:mode,EqualsEqualsEqualsToken,str:dev#leaf',
+            operandParamName: 'mode',
+            operandEnvVarName: 'MODE',
+            operandType: { kind: 'string' },
+            predicate: { kind: 'eq', literal: 'dev' },
           },
           startLine: 3,
           endLine: 5,

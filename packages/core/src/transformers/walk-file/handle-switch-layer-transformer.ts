@@ -31,6 +31,7 @@ import { branchNodeContract, exitNodeContract, guardStepContract } from '@assaye
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../contracts/walk-node/walk-node-contract';
+import { envStepsTypeTransformer } from '../env-steps-type/env-steps-type-transformer';
 import { exitCoverageIdTransformer } from '../exit-coverage-id/exit-coverage-id-transformer';
 import { walkContextTransformer } from '../walk-context/walk-context-transformer';
 import { desugarSwitchLayerTransformer } from './desugar-switch-layer-transformer';
@@ -50,15 +51,19 @@ export const handleSwitchLayerTransformer = ({
   context: WalkContext;
 }): ReturnType<typeof handlerResultLayerTransformer> => {
   const desugared = desugarSwitchLayerTransformer({ switchStatement: node, scopePath: context.scopePath });
-  const operandType = readOperandTypeLayerTransformer({
-    node: desugared.discNode,
-    context,
-    ...(desugared.discName === undefined ? {} : { name: desugared.discName }),
-  });
   // WHERE the discriminant's value came from, read exactly as an `if` reads its operand — so a
   // module-scope switch on `Number(process.env.X)` is DRIVEN by setting X before import, not admitted
-  // undriven. A param or a welded const reads as no env source and this stays undefined.
-  const envVarName = readEnvOperandLayerTransformer({ node: desugared.discNode });
+  // undriven. A param or a welded const reads as no env source and this stays undefined. An env read
+  // also decides the discriminant's type, exactly as `build-condition-leaf` decides an operand's.
+  const envRead = readEnvOperandLayerTransformer({ node: desugared.discNode });
+  const operandType =
+    envRead === undefined
+      ? readOperandTypeLayerTransformer({
+          node: desugared.discNode,
+          context,
+          ...(desugared.discName === undefined ? {} : { name: desugared.discName }),
+        })
+      : envStepsTypeTransformer({ steps: envRead.steps });
   // Whether the discriminant is welded to a same-file `const` — evaluated, not steered, exactly as an
   // `if` operand is: the case whose literal matches is live and the rest are unreachable exits.
   const constOperand = readConstOperandLayerTransformer({ node: desugared.discNode });
@@ -78,7 +83,8 @@ export const handleSwitchLayerTransformer = ({
         kind: 'leaf',
         id: `${caseInfo.branchCoverageId}#leaf`,
         ...(desugared.discName === undefined ? {} : { operandParamName: desugared.discName }),
-        ...(envVarName === undefined ? {} : { operandEnvVarName: envVarName }),
+        ...(envRead === undefined ? {} : { operandEnvVarName: envRead.name }),
+        ...(envRead === undefined || envRead.steps.length === 0 ? {} : { operandEnvSteps: envRead.steps }),
         ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
         operandType,
         // A case the parse could read as a literal is an equality on that value. One it could not

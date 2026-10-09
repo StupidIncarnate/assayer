@@ -1,17 +1,20 @@
 /**
- * PURPOSE: The exact shape the analyzer recognizes as reading the process environment —
- *   `Number(process.env.<NAME>)`.
+ * PURPOSE: The names the analyzer recognizes when it reads a value from the process environment:
+ *   `process.env.<NAME>`, plus the steps it can run backwards from a branch operand to the string the
+ *   environment holds: the `Number(x)` coercion, and the `x.split(s)` and `xs.map(f)` methods.
  *
- *   These are NAMES of runtime globals, not a naming convention: `process` and `Number` mean one
- *   thing each in a JavaScript program, and `read-env-operand` proves that meaning rather than
- *   assuming it — it asks the checker whether anything in the file declares them, and declines when
- *   something does. A file that shadows either is opting out of this rule, not evading it.
+ *   These are NAMES of runtime globals and standard methods, not a naming convention: `process` and
+ *   `Number` mean one thing each in a JavaScript program, and `read-env-access` (for `process`) and
+ *   `read-env-chain` (for `Number`) prove that meaning rather than assuming it. It asks the checker whether anything in the file declares them, and
+ *   declines when something does. A file that shadows either is opting out of this rule, not evading it.
  *
- *   `coercion` is `Number` and only `Number` because it is the one whose INVERSE the derivation can
- *   write down: `Number(String(6)) === 6` for every value the range engine picks, so a case can put
- *   an operand where a predicate wants it. `cause-arrange` owns that inverse, because branding its
- *   result needs a contract and a statics file may import none. Widening this set without an inverse
- *   beside it would derive cases that cannot drive what they claim.
+ *   Each name here has an inverse in `env-encode`. `Number` inverts through `String`, `split` through
+ *   joining items with the same separator, and `map` keeps the array's length. Adding a name here
+ *   without its inverse in `env-encode` would derive cases that cannot drive what they claim.
+ *
+ *   `fillers` are the one-character items `env-encode` joins to build a split list of a wanted length.
+ *   It takes the first one the separator does not contain, so joining adds no extra separator. Three
+ *   are enough for any separator that is not made of all three.
  *
  * USAGE:
  * envSourceStatics.global;
@@ -21,4 +24,9 @@ export const envSourceStatics = {
   global: 'process',
   property: 'env',
   coercion: 'Number',
+  methods: {
+    split: 'split',
+    map: 'map',
+  },
+  fillers: ['a', 'b', 'c'],
 } as const;

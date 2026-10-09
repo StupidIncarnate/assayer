@@ -53,10 +53,12 @@
  *
  *   An operand read from the ENVIRONMENT is arranged as a binding of its own, because it is set by a
  *   different act: a param is applied as an argument, while an environment variable is written before
- *   the module is imported. The value is `String(...)` of the point the domain engine picked — the
- *   exact inverse of the `Number` coercion `read-env-operand` insists on, which is the whole reason
- *   that rung stops where it does. So the case says `VALUE="6"`, which is what a human would type to
- *   reproduce it, and `Number("6") > 5` decides the arm exactly as derivation claimed.
+ *   the module is imported. The value is the string `env-encode` finds by running the leaf's steps
+ *   backwards from the operand's narrowed domain, and `read-env-operand` records only steps that have
+ *   an inverse. So for `Number(process.env.VALUE) > 5` the case says `VALUE="6"`, which is what a human
+ *   would type to reproduce it, and `Number("6") > 5` decides the arm exactly as derivation claimed. The
+ *   operand's domain also STARTS from what its steps can produce at all (`env-steps-domain`): a split
+ *   list is never empty, so a guard that wants it empty is an unreachable arm, not a case.
  *
  *   `envDrivable` is why the same fact does not become the same binding everywhere. Reading the
  *   environment is a fact about the CODE, so the leaf carries it wherever it is true; being DRIVEN by
@@ -96,6 +98,8 @@ import { arrayCardinalityStatics } from '../../statics/array-cardinality/array-c
 import { representativeValueStatics } from '../../statics/representative-value/representative-value-statics';
 import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transformer';
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
+import { envEncodeTransformer } from '../env-encode/env-encode-transformer';
+import { envStepsDomainTransformer } from '../env-steps-domain/env-steps-domain-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { harnessKeyPathTransformer } from '../harness-key-path/harness-key-path-transformer';
 import { intersectDomainsTransformer } from '../intersect-domains/intersect-domains-transformer';
@@ -141,7 +145,15 @@ export const causeArrangeTransformer = ({
       return acc.set(operand, valueDomainContract.parse({ lengthMin: length, lengthMax: length }));
     }
 
-    return acc;
+    // An ENVIRONMENT read starts from every value its steps can produce at all — a split list is never
+    // empty and never null — so a guard wanting a value outside that intersects to nothing, and the arm
+    // behind it is reported unreachable rather than given a case that could never reach it.
+    const envSeed =
+      requirement.leaf.operandEnvVarName === undefined
+        ? undefined
+        : envStepsDomainTransformer({ steps: requirement.leaf.operandEnvSteps ?? [] });
+
+    return envSeed === undefined ? acc : acc.set(operand, envSeed);
   }, new Map<string, ValueDomain>());
 
   const domainByOperand = requirements.reduce<Map<string, ValueDomain>>((acc, requirement) => {
@@ -258,16 +270,33 @@ export const causeArrangeTransformer = ({
     fills.flatMap((entry) => (entry.result.kind === 'filled' ? [[String(entry.name), entry.result.binding] as const] : [])),
   );
 
-  // Which local bindings are environment reads, keyed by the same operand name the values above are.
-  // Read off the leaves rather than passed in, because the leaf is where the walk recorded it.
+  // Which local bindings are environment reads, keyed by the same operand name the values above are,
+  // each with the string that puts it where this cause's guards want it. Read off the leaves rather
+  // than passed in, because the leaf is where the walk recorded it. `env-encode` runs the leaf's steps
+  // backwards from the operand's narrowed domain, so the string is whatever the code's own
+  // transformations turn into an admitted value: `String(6)` through `Number`, the literal itself
+  // through `=== 'true'`, six comma-joined items through `.split(',')`. A domain that names no value of
+  // its own takes the type's representative, exactly as a param's fill does, so "anything but 0"
+  // still writes a variable rather than leaving it unset.
+  // An operand no string can encode writes no variable, the same as a domain that realizes nothing.
   const envByOperand = envDrivable
-    ? requirements.reduce<Map<string, string>>((acc, requirement) => {
+    ? requirements.reduce<Map<string, ArrangeBinding>>((acc, requirement) => {
         const operand = requirement.leaf.operandParamName;
         const envVarName = requirement.leaf.operandEnvVarName;
+        const value =
+          operand === undefined || envVarName === undefined
+            ? undefined
+            : envEncodeTransformer({
+                steps: requirement.leaf.operandEnvSteps ?? [],
+                domain: domainWithIndexDemands.get(operand) ?? valueDomainContract.parse({}),
+                type: requirement.leaf.operandType,
+              });
 
-        return operand === undefined || envVarName === undefined ? acc : acc.set(operand, envVarName);
-      }, new Map<string, string>())
-    : new Map<string, string>();
+        return operand === undefined || value === undefined
+          ? acc
+          : acc.set(operand, arrangeBindingContract.parse({ kind: 'env', name: envVarName, value }));
+      }, new Map<string, ArrangeBinding>())
+    : new Map<string, ArrangeBinding>();
 
   // Each operand's own type, read off the leaf that names it, so a domain that excludes the type's
   // representative realizes the next one rather than leaving the fill to land on the excluded point.
@@ -406,13 +435,7 @@ export const causeArrangeTransformer = ({
         // Only operands this cause actually CONSTRAINS get an environment binding. An unconstrained one
         // is a variable the flow never reads on this path, and writing it would claim a setup the case
         // does not depend on.
-        ...[...envByOperand.entries()].flatMap(([operand, envVarName]) => {
-          const value = bound.get(operand);
-
-          return value === undefined
-            ? []
-            : [arrangeBindingContract.parse({ kind: 'env', name: envVarName, value: String(value) })];
-        }),
+        ...envByOperand.values(),
       ];
 
       // The general invariant: every VALUE-carrying binding this cause just built must be a value OF the
