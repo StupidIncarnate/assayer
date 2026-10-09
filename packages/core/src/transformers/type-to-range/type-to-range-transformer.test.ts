@@ -157,6 +157,44 @@ describe('typeToRangeTransformer', () => {
     });
   });
 
+  describe('string comparison predicates', () => {
+    it('VALID: {string, gt "m"} => an appended string satisfies, the literal violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'gt', literal: 'm' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['ma'] }),
+        violating: ValueDomainStub({ members: ['m'] }),
+      });
+    });
+
+    it('VALID: {string, gte "m"} => the literal satisfies, the empty string violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'gte', literal: 'm' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['m'] }),
+        violating: ValueDomainStub({ members: [''] }),
+      });
+    });
+
+    it('VALID: {string, lt "m"} => the empty string satisfies, the literal violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'lt', literal: 'm' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: [''] }),
+        violating: ValueDomainStub({ members: ['m'] }),
+      });
+    });
+
+    it('VALID: {string, lte "m"} => the literal satisfies, an appended string violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'lte', literal: 'm' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: ['m'] }),
+        violating: ValueDomainStub({ members: ['ma'] }),
+      });
+    });
+  });
+
   describe('truthy and falsy predicates', () => {
     // A truthy string's non-empty member is the representative value, not a single letter — the same
     // 'abc123' every unconstrained string fills. It reads clearly and never collides with the empty

@@ -105,6 +105,7 @@ import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transfor
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
 import { envSolveTransformer } from '../env-solve/env-solve-transformer';
 import { envStepsDomainTransformer } from '../env-steps-domain/env-steps-domain-transformer';
+import { evaluateConstPredicateLayerTransformer } from './evaluate-const-predicate-layer-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { harnessKeyPathTransformer } from '../harness-key-path/harness-key-path-transformer';
 import { intersectDomainsTransformer } from '../intersect-domains/intersect-domains-transformer';
@@ -166,6 +167,20 @@ export const causeArrangeTransformer = ({
     const operand = operandKeyTransformer({ leaf: requirement.leaf });
 
     if (operand === undefined) {
+      return acc;
+    }
+
+    if (requirement.leaf.operandConstValue !== undefined) {
+      const satisfied = evaluateConstPredicateLayerTransformer({
+        value: requirement.leaf.operandConstValue,
+        predicateKind: requirement.leaf.predicate.kind,
+        ...(requirement.leaf.predicate.literal === undefined ? {} : { literal: requirement.leaf.predicate.literal }),
+      });
+
+      if (satisfied !== requirement.want) {
+        return acc.set(operand, valueDomainContract.parse({ members: [] }));
+      }
+
       return acc;
     }
 

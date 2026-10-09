@@ -100,6 +100,9 @@
       "#gateway/node/path": ["../../../packages/@gateway/node/src/path/path"],
       "#gateway/node/process": ["../../../packages/@gateway/node/src/process/process"],
       "#gateway/node/util": ["../../../packages/@gateway/node/src/util/util"],
+      "#gateway/node/util__types": [
+        "../../../packages/@gateway/node/src/util__types/util__types"
+      ],
       "#gateway/node/vm": ["../../../packages/@gateway/node/src/vm/vm"],
       "#gateway/npm/ts-morph": ["../../../packages/@gateway/npm/src/ts-morph/ts-morph"],
       "#gateway/npm/typescript": ["../../../packages/@gateway/npm/src/typescript/typescript"],

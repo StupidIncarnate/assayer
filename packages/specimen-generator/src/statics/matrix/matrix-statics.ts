@@ -14,7 +14,7 @@ export const matrixStatics = {
   },
   plainest: ['param', 'env', 'const'],
   // `boolean` is what lets an `if` or ternary take a comparison such as `value > 5` as its condition.
-  typeArguments: ['number', 'boolean'],
+  typeArguments: ['number', 'boolean', 'string'],
   provenances: ['param', 'env', 'literal', 'const', 'external'],
   excludedFills: ['array-at', 'array-includes', 'math-random'],
 } as const;

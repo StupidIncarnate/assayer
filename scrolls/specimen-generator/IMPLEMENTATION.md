@@ -40,7 +40,7 @@ doc pages, the carry-over table, or retiring the hand-written specimens. `PLAN.m
 | Environment reads of arrays | Not generated in this slice | `(process.env.KEY ?? '').split(',')` is never empty, so a length check on it goes one way only. The generator cannot predict that until shims are callees |
 | Left out of the first matrix | The `random` provenance, and the `array-at` and `array-includes` shims as fills | They predict pinning and shim behavior Assayer does not have yet. Those are new features, not parsing holes |
 | Formatting of generated files | The TypeScript printer only. No prettier | One less dependency. The printer's output is deterministic |
-| Output layout | `smoke-repo/packages/syntax-repository/src/<focus>/<container>/<specimen>/<specimen>.ts`, with `<specimen>.test.ts` beside it | It mirrors the manual repo's package shape, so the same jest, tsconfig and desktop steps work against either repo |
+| Output layout | `smoke-repo/packages/syntax-repository/src/<focus>/<container>/<verdict>/<specimen>/<specimen>.ts`, with `<specimen>.test.ts` beside it. `<verdict>` is `driven`, `locked` or `undriven` | It mirrors the manual repo's package shape, so the same jest, tsconfig and desktop steps work against either repo. The verdict folder lets a reader open every specimen of one verdict together |
 | What the generated smoke repo is checked by | Its own scripts: `generate:specimens`, `test:generated`, `typecheck:generated` | `smoke-repo/` stays out of ward's graph and out of lint, as consumer code does today |
 
 ## The generated test
@@ -55,8 +55,8 @@ import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 describe('if-number-function-declaration-body-cond-gt-number-value-param', () => {
   it('VALID: {value: param} => if on line 2 driven both ways, every case passes', async () => {
     const observation = await specimenObserveBroker({
-      repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..'),
-      relPath: 'packages/syntax-repository/src/if/function-declaration/if-number-function-declaration-body-cond-gt-number-value-param/if-number-function-declaration-body-cond-gt-number-value-param.ts',
+      repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
+      relPath: 'packages/syntax-repository/src/if/function-declaration/driven/if-number-function-declaration-body-cond-gt-number-value-param/if-number-function-declaration-body-cond-gt-number-value-param.ts',
     });
 
     expect(observation).toStrictEqual({
@@ -143,8 +143,8 @@ smoke-repo/                             generated except for the four config fil
     package.json  tsconfig.json  jest.config.js        hand-written
     specimen-manifest.json              generated
     REFUSED.md                          generated
-    src/<focus>/<container>/<specimen>/<specimen>.ts   generated
-    src/<focus>/<container>/<specimen>/<specimen>.test.ts   generated
+    src/<focus>/<container>/<verdict>/<specimen>/<specimen>.ts   generated
+    src/<focus>/<container>/<verdict>/<specimen>/<specimen>.test.ts   generated
 ```
 
 ## The build, step by step

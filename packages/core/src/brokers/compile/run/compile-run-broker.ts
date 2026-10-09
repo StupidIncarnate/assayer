@@ -170,12 +170,15 @@ export const compileRunBroker = async ({
       ? []
       : resolvedStable.errors.map((error) => ({ namespace: stable.resultEntry.namespace, ...error }));
 
-  const errors = [
-    ...(stable === undefined ? [] : stable.errors),
-    ...stableResolveErrors,
-    ...currentErrors,
-    ...resolveErrors,
-  ];
+  const errors =
+    currentBranch === stableBranch
+      ? [
+          ...(stable === undefined ? [] : stable.errors),
+          ...stableResolveErrors,
+          ...currentErrors,
+          ...resolveErrors,
+        ]
+      : [...currentErrors, ...resolveErrors];
 
   if (errors.length > 0) {
     return compileResultContract.parse({ status: 'errors', results, errors });

@@ -1,5 +1,5 @@
 {
-  "repoRoot": "./manual-smoke-repo",
+  "repoRoot": "./smoke-repo",
   "exclude": [],
   "stableBranch": "master"
 }

@@ -9,6 +9,9 @@
  * Every other specimen gets its predicted outcome, its test file and its manifest row. The output is
  * sorted, so one set of declarations always gives one result.
  *
+ * Each specimen sits at `src/<focus>/<container>/<verdict>/<folder>/<folder>.ts`. The verdict folder is
+ * `driven`, `locked` or `undriven`, so a reader can open every specimen of one verdict together.
+ *
  * USAGE:
  * specimensGenerateBroker({ declarationsRoot: '/repo/packages/specimen-generator/declarations', args });
  * // Returns { files, refused, manifest }. Throws when a focus or container name is unknown, or when
@@ -23,7 +26,7 @@ import { hasAllLiteralNodeGuard } from '../../../guards/has-all-literal-node/has
 import { generatorLayoutStatics } from '../../../statics/generator-layout/generator-layout-statics';
 import { matrixStatics } from '../../../statics/matrix/matrix-statics';
 import { armReachedTransformer } from '../../../transformers/arm-reached/arm-reached-transformer';
-import { fillTreeLeavesTransformer } from '../../../transformers/fill-tree-leaves/fill-tree-leaves-transformer';
+import { fillTreeProvenancesTransformer } from '../../../transformers/fill-tree-provenances/fill-tree-provenances-transformer';
 import { fillTreeRenderTransformer } from '../../../transformers/fill-tree-render/fill-tree-render-transformer';
 import { fillTreeUsesTransformer } from '../../../transformers/fill-tree-uses/fill-tree-uses-transformer';
 import { fillVariantsTransformer } from '../../../transformers/fill-variants/fill-variants-transformer';
@@ -112,7 +115,9 @@ export const specimensGenerateBroker = ({
                   resultType: focus.syntax.kind === 'statement' ? 'string' : focus.returnType,
                   entryName,
                 });
-                const directory = [output.sourceFolder, focus.syntax.name, container.name, folder];
+                const provenances = fillTreeProvenancesTransformer({ tree });
+                const verdict = specimenVerdictTransformer({ provenances });
+                const directory = [output.sourceFolder, focus.syntax.name, container.name, verdict, folder];
                 const tail = [...directory, folder].join('/');
 
                 return {
@@ -122,6 +127,8 @@ export const specimensGenerateBroker = ({
                   tree,
                   path,
                   provenance,
+                  provenances,
+                  verdict,
                   folder,
                   source,
                   directoryDepth: directory.length,
@@ -155,9 +162,7 @@ export const specimensGenerateBroker = ({
   const kept = planned.filter(({ relPath }) => !reasonByRelPath.has(relPath));
 
   const built = kept.map((specimen) => {
-    const { focus, slot, tree, path, provenance, folder } = specimen;
-    const provenances = fillTreeLeavesTransformer({ tree }).map((leaf) => leaf.provenance);
-    const verdict = specimenVerdictTransformer({ provenances });
+    const { focus, slot, tree, path, provenance, provenances, verdict, folder } = specimen;
     const prediction = specimenPredictTransformer({
       source: specimen.source,
       focusKind: focus.syntax.kind,

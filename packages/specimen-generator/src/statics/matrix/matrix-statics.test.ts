@@ -9,7 +9,7 @@ describe('matrixStatics', () => {
           depth: 1,
         },
         plainest: ['param', 'env', 'const'],
-        typeArguments: ['number', 'boolean'],
+        typeArguments: ['number', 'boolean', 'string'],
         provenances: ['param', 'env', 'literal', 'const', 'external'],
         excludedFills: ['array-at', 'array-includes', 'math-random'],
       });

@@ -341,9 +341,41 @@ describe('compileRunBroker', () => {
   });
 
   describe('a stable file that fails to parse (both a stable branch and the current branch resolved)', () => {
-    it("ERROR: {stableBranch configured, one stable file with invalid syntax, no current files} => returns status errors with the stable namespace's relPath/line/column/message, never writes the manifest", async () => {
+    it("VALID: {stableBranch configured, one stable file with invalid syntax, no current files} => on a branch returns status ok without errors from master, writes the manifest", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
+      proxy.stableChanged({
+        configDir: '/repo',
+        ref: 'master',
+        sha: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+        lsTreeStdout: `100644 blob e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\tsrc/broken.ts\n`,
+        blobs: [{ blobSha: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', content: 'const x = ;;;{{{' }],
+      });
+      proxy.queueCurrentFiles({ configDir: '/repo', contents: [] });
+      proxy.manifestWriteSucceeds({ configDir: '/repo' });
+      const config = AssayerConfigStub({ stableBranch: 'master' });
+
+      const result = await compileRunBroker({
+        configDir: '/repo',
+        config,
+        assayerVersion: '1.0.0',
+        configHash: CONFIG_HASH,
+      });
+
+      expect(result).toStrictEqual({
+        status: 'ok',
+        results: [
+          { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
+          { namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 0 },
+        ],
+        errors: [],
+      });
+      expect(proxy.wasManifestWritten({ configDir: '/repo' })).toBe(true);
+    });
+
+    it("ERROR: {on stable branch master, one file with invalid syntax} => returns status errors with master relPath/line/column/message, never writes the manifest", async () => {
+      const proxy = compileRunBrokerProxy();
+      proxy.onCurrentBranch({ name: 'master' });
       proxy.stableChanged({
         configDir: '/repo',
         ref: 'master',
@@ -365,7 +397,7 @@ describe('compileRunBroker', () => {
         status: 'errors',
         results: [
           { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 1 },
-          { namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 0 },
+          { namespace: 'master', branch: 'master', mode: 'net-new', fileCount: 0 },
         ],
         errors: [{ namespace: 'master', relPath: 'src/broken.ts', line: 1, column: 11, message: 'Expression expected.' }],
       });
@@ -374,7 +406,7 @@ describe('compileRunBroker', () => {
   });
 
   describe('a resolver error with both a stable branch and the current branch resolved', () => {
-    it("ERROR: {stableBranch and currentBranch both processed, resolver returns an error} => status errors carrying the SAME resolution error under BOTH namespaces (stable is stitched too)", async () => {
+    it("ERROR: {stableBranch and currentBranch both processed, resolver returns an error} => status errors carrying the resolution error under current namespace only", async () => {
       const proxy = compileRunBrokerProxy();
       proxy.onCurrentBranch({ name: 'feature-x' });
       const stableContent = 'export const stable = 1;\n';
@@ -403,7 +435,6 @@ describe('compileRunBroker', () => {
           { namespace: 'feature-x', branch: 'feature-x', mode: 'net-new', fileCount: 1 },
         ],
         errors: [
-          { namespace: 'master', relPath: 'src/x.ts', line: 3, column: 10, message: "cannot resolve import './missing'" },
           { namespace: 'feature-x', relPath: 'src/x.ts', line: 3, column: 10, message: "cannot resolve import './missing'" },
         ],
       });

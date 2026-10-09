@@ -60,6 +60,7 @@ import type { ArmValues } from '../../contracts/arm-values/arm-values-contract';
 import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
 import { typeofDomainTransformer } from '../typeof-domain/typeof-domain-transformer';
 import type { TypeofTag } from '../typeof-tag/typeof-tag-transformer';
+import { stringComparisonLayerTransformer } from './string-comparison-layer-transformer';
 
 export const typeToRangeTransformer = ({
   type,
@@ -152,25 +153,23 @@ export const typeToRangeTransformer = ({
     case 'neq':
       return armValuesContract.parse({ satisfying: otherThanLiteral, violating: isLiteral });
     case 'gt':
-      return armValuesContract.parse({
-        satisfying: { min: num, minExclusive: true },
-        violating: { max: num },
-      });
     case 'gte':
-      return armValuesContract.parse({
-        satisfying: { min: num },
-        violating: { max: num, maxExclusive: true },
-      });
     case 'lt':
-      return armValuesContract.parse({
-        satisfying: { max: num, maxExclusive: true },
-        violating: { min: num },
-      });
     case 'lte':
-      return armValuesContract.parse({
-        satisfying: { max: num },
-        violating: { min: num, minExclusive: true },
-      });
+      if (type.kind === 'string' && typeof literal === 'string') {
+        return stringComparisonLayerTransformer({ predicateKind, literal });
+      }
+
+      if (predicateKind === 'gt') {
+        return armValuesContract.parse({ satisfying: { min: num, minExclusive: true }, violating: { max: num } });
+      }
+      if (predicateKind === 'gte') {
+        return armValuesContract.parse({ satisfying: { min: num }, violating: { max: num, maxExclusive: true } });
+      }
+      if (predicateKind === 'lt') {
+        return armValuesContract.parse({ satisfying: { max: num, maxExclusive: true }, violating: { min: num } });
+      }
+      return armValuesContract.parse({ satisfying: { max: num }, violating: { min: num, minExclusive: true } });
     // A UNION with a falsy point among its members (`number | undefined` has 0, `boolean | undefined`
     // has `false`) is truthy everywhere but those points, and falsy exactly at them, so it reads the way
     // a lone `number` does: an exclusion on one side, the points on the other. Sampling the truthy side
