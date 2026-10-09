@@ -20,6 +20,7 @@
  * const engine = moduleFormatRunHarness();
  * const result = await engine.run({ fixture: 'esm', relPath: 'src/grade.ts', runId: 'r1' });
  */
+import { closeForkWorkers } from '#gateway/node/child_process';
 import { ensureDirSync, existsSync, readFileSync, rmSync, writeFileSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { dirname, join, resolve } from '#gateway/node/path';
@@ -95,6 +96,7 @@ const FIXTURES = {
 export const moduleFormatRunHarness = (): {
   beforeEach: () => void;
   afterEach: () => void;
+  closeWorkers: () => Promise<void>;
   run: (params: { fixture: keyof typeof FIXTURES; relPath: string; runId: string }) => Promise<RunResult>;
   shimFiles: (params: { runId: string }) => string[];
 } => ({
@@ -102,6 +104,9 @@ export const moduleFormatRunHarness = (): {
     rmSync(CACHE_DIR, { recursive: true, force: true });
     ensureDirSync(CACHE_DIR);
   },
+  // The wrapped Jest runs in one warm worker that every run in a test file shares. A test file calls
+  // this once from `afterAll`, so the worker does not outlive the file.
+  closeWorkers: closeForkWorkers,
   afterEach: (): void => {
     rmSync(CACHE_DIR, { recursive: true, force: true });
     rmSync(FIXTURES_ROOT, { recursive: true, force: true });

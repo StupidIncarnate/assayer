@@ -11,6 +11,7 @@ interface MockWorker extends EventEmitter {
   ref: () => void;
   unref: () => void;
   send: ChildProcess['send'];
+  kill: ChildProcess['kill'];
 }
 
 // `fork(modulePath, args, options)` is the real call, addressed by the module path. A staged worker
@@ -31,10 +32,12 @@ export const forkWorkerProxy = (): {
   getForkCalls: (params: { modulePath: string }) => RecordedCalls;
   getSentMessages: (params: { modulePath: string }) => readonly unknown[];
   getRefCount: (params: { modulePath: string }) => { ref: number; unref: number };
+  getKillSignals: (params: { modulePath: string }) => readonly unknown[];
 } => {
   const handle = registerMock({ fn: fork });
   const sentByModule = new Map<string, unknown[]>();
   const refsByModule = new Map<string, { ref: number; unref: number }>();
+  const killsByModule = new Map<string, unknown[]>();
 
   const buildWorker = ({
     modulePath,
@@ -45,7 +48,9 @@ export const forkWorkerProxy = (): {
   }): ChildProcess => {
     const sent: unknown[] = [];
     const refs = { ref: 0, unref: 0 };
+    const kills: unknown[] = [];
     sentByModule.set(modulePath, sent);
+    killsByModule.set(modulePath, kills);
     refsByModule.set(modulePath, refs);
     const worker = new EventEmitter() as MockWorker;
     worker.stderr = new Readable({
@@ -74,6 +79,14 @@ export const forkWorkerProxy = (): {
       });
       return true;
     }) as ChildProcess['send'];
+    // A killed worker exits the way a real one does, with no code and the signal it was sent.
+    worker.kill = ((signal: NodeJS.Signals): boolean => {
+      kills.push(signal);
+      setImmediate(() => {
+        worker.emit('exit', null, signal);
+      });
+      return true;
+    }) as ChildProcess['kill'];
     return worker as ChildProcess;
   };
 
@@ -114,5 +127,6 @@ export const forkWorkerProxy = (): {
     getSentMessages: ({ modulePath }): readonly unknown[] => sentByModule.get(modulePath) ?? [],
     getRefCount: ({ modulePath }): { ref: number; unref: number } =>
       refsByModule.get(modulePath) ?? { ref: 0, unref: 0 },
+    getKillSignals: ({ modulePath }): readonly unknown[] => killsByModule.get(modulePath) ?? [],
   };
 };

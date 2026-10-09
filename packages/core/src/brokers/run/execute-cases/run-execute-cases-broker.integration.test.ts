@@ -7,6 +7,8 @@ import { moduleFormatRunHarness } from '../../../../test/harnesses/module-format
 describe('runExecuteCasesBroker (integration)', () => {
   const engine = moduleFormatRunHarness();
 
+  afterAll(engine.closeWorkers);
+
   describe('a CommonJS consumer', () => {
     it('VALID: {commonjs tsconfig, no package type} => runs as CommonJS, and every case reaches its predicted exit', async () => {
       const result = await engine.run({ fixture: 'commonjs', relPath: 'src/grade.ts', runId: 'r-cjs' });

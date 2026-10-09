@@ -21,6 +21,7 @@
  * const result = await engine.run({ relPath: 'packages/syntax-repository/src/happy-path/boolean/and/and.ts', runId: 'r1' });
  * engine.savedRun({ runId: 'r1' }); // => the RunResult parsed back off disk
  */
+import { closeForkWorkers } from '#gateway/node/child_process';
 import { ensureDirSync, readFileSync, rmSync } from '#gateway/node/fs';
 import { tmpdir } from '#gateway/node/os';
 import { join, resolve } from '#gateway/node/path';
@@ -40,6 +41,7 @@ const CACHE_DIR = join(tmpdir(), `assayer-engine-${String(pid)}`);
 export const runUnitHarness = (): {
   beforeEach: () => void;
   afterEach: () => void;
+  closeWorkers: () => Promise<void>;
   run: ({ relPath, runId }: { relPath: string; runId: string }) => Promise<RunResult>;
   savedRun: ({ runId }: { runId: string }) => RunResult;
 } => {
@@ -51,6 +53,9 @@ export const runUnitHarness = (): {
     afterEach: (): void => {
       rmSync(CACHE_DIR, { recursive: true, force: true });
     },
+    // The wrapped Jest runs in one warm worker that every run in a test file shares. A test file calls
+    // this once from `afterAll`, so the worker does not outlive the file.
+    closeWorkers: closeForkWorkers,
     run: async ({ relPath, runId }: { relPath: string; runId: string }): Promise<RunResult> => {
       const absPath = join(SMOKE_REPO, relPath);
 

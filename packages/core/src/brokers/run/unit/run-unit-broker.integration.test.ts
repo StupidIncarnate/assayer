@@ -66,6 +66,11 @@ const CHILDREN = specimenCatalogue()
   .map((relPath) => relPath);
 
 describe('runUnitBroker (integration)', () => {
+  // Every describe below shares the one warm worker, so it is stopped once, after the last of them.
+  const workers = runUnitHarness();
+
+  afterAll(workers.closeWorkers);
+
   describe('a real run against a real specimen', () => {
     const engine = runUnitHarness();
 

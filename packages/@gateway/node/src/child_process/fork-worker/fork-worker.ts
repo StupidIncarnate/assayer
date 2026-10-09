@@ -12,6 +12,8 @@
  * The wire format is `{ id, message }` out and `{ id, reply }` back. The id pairs each reply with its
  * request, so concurrent requests cannot swap answers. The worker module must answer in that shape.
  *
+ * `closeForkWorkers` stops every pooled worker, for a caller that must leave none running.
+ *
  * The worker never keeps the caller's process alive on its own. It holds the caller's event loop only
  * while a request is waiting for its reply, and the worker exits when the caller's process ends and
  * its IPC channel disconnects.
@@ -29,7 +31,7 @@
 import { fork } from 'child_process';
 import { Socket } from 'net';
 
-const liveWorkers = new Map<string, { request: (params: { message: unknown }) => Promise<unknown> }>();
+import { forkWorkerPool } from './fork-worker-pool';
 
 export const forkWorker = ({
   modulePath,
@@ -37,9 +39,9 @@ export const forkWorker = ({
 }: {
   modulePath: string;
   execArgv: string[];
-}): { request: (params: { message: unknown }) => Promise<unknown> } => {
+}): { request: (params: { message: unknown }) => Promise<unknown>; close: () => Promise<void> } => {
   const key = JSON.stringify([modulePath, execArgv]);
-  const live = liveWorkers.get(key);
+  const live = forkWorkerPool.get(key);
 
   if (live !== undefined) {
     return live;
@@ -72,7 +74,7 @@ export const forkWorker = ({
   // `exit` and `error` both end the worker. Each rejects whatever is still waiting, and drops the worker
   // from the pool so the next call forks a fresh one.
   child.on('exit', (code: number | null, signal: NodeJS.Signals | null) => {
-    liveWorkers.delete(key);
+    forkWorkerPool.delete(key);
     const stderr = Buffer.concat(stderrChunks).toString('utf8').trim();
     const error = new Error(
       `[child_process/forkWorker] the worker ${modulePath} exited with code ${String(code)} and signal ` +
@@ -86,7 +88,7 @@ export const forkWorker = ({
   });
 
   child.on('error', (failure: Error) => {
-    liveWorkers.delete(key);
+    forkWorkerPool.delete(key);
     const error = new Error(`[child_process/forkWorker] the worker ${modulePath} failed: ${failure.message}`);
     const owed = [...waiting.values()];
     waiting.clear();
@@ -113,9 +115,18 @@ export const forkWorker = ({
         }
         child.send({ id: ids.next, message });
       }),
+    // SIGKILL, because the worker holds nothing that needs a clean shutdown. The promise settles on
+    // the `exit` event, which also drops the worker from the pool.
+    close: async (): Promise<void> =>
+      new Promise((resolve) => {
+        child.once('exit', () => {
+          resolve();
+        });
+        child.kill('SIGKILL');
+      }),
   };
 
-  liveWorkers.set(key, worker);
+  forkWorkerPool.set(key, worker);
 
   return worker;
 };
