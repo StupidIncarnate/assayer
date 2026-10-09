@@ -181,7 +181,8 @@ Verify: `npm run ward -- -- packages/specimen-generator packages/core/src/broker
 
 ### Step 3. Contracts, statics and errors
 
-Who: three agents, in parallel.
+Who: three agents. Groups 3b and 3c run in parallel first. Group 3a runs after them, because its fill
+tree imports the `Provenance` type that group 3b defines.
 
 Types-only contracts hold TypeScript syntax nodes, which Zod cannot check. They have no test and no stub.
 Every other contract has a `-contract.test.ts` and a `.stub.ts`.
@@ -201,6 +202,7 @@ Every other contract has a `-contract.test.ts` and a `.stub.ts`.
 
 | Contract | Fields |
 |---|---|
+| `provenance` | The enum `param`, `env`, `literal`, `const`, `random`, `external`. The fill tree and the manifest entry both use it |
 | `specimen-outcome` | `branches` (kind `if`, `switch` or `ternary`; line; driven `both-ways`, `one-way` or `never`), `caseFailures` (status `failed` or `errored`; message), `lints` (rule; startLine), `undriven` (startLine), `darkSpots` (startLine), `gaps` (name) |
 | `generated-file` | `relPath` (relative to the output root), `content` |
 | `refused-specimen` | `folder`, `reason` (TypeScript's messages, joined) |

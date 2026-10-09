@@ -1,0 +1,58 @@
+{
+  "name": "@assayer/specimen-generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generates Assayer's specimen matrix and the tests that drive it",
+  "imports": {
+    "#gateway/npm/*": "@assayer/npm/*",
+    "#gateway/node/*": "@assayer/node/*",
+    "#gateway/browser/*": "@assayer/browser/*",
+    "#gateway/bin/*": "@assayer/bin/*"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/startup/start-specimen-generator.ts",
+      "import": "./dist/src/startup/start-specimen-generator.js",
+      "require": "./dist/src/startup/start-specimen-generator.js",
+      "types": "./dist/src/startup/start-specimen-generator.d.ts"
+    },
+    "./observe": {
+      "source": "./src/brokers/specimen/observe/specimen-observe-broker.ts",
+      "import": "./dist/src/brokers/specimen/observe/specimen-observe-broker.js",
+      "require": "./dist/src/brokers/specimen/observe/specimen-observe-broker.js",
+      "types": "./dist/src/brokers/specimen/observe/specimen-observe-broker.d.ts"
+    },
+    "./package.json": "./package.json",
+    "./*.proxy": {
+      "source": "./src/*.proxy.ts"
+    },
+    "./*.stub": {
+      "source": "./src/*.stub.ts"
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "bin": {
+    "specimen-generator": "./dist/bin/specimen-generator-entry.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
+    "test": "dungeonmaster-ward --only test",
+    "typecheck": "dungeonmaster-ward --only typecheck",
+    "lint": "dungeonmaster-ward --only lint",
+    "ward": "dungeonmaster-ward",
+    "postbuild": "chmod +x dist/bin/*.js 2>/dev/null || true"
+  },
+  "dependencies": {
+    "@assayer/core": "*",
+    "@assayer/node": "*",
+    "@assayer/npm": "*",
+    "@assayer/shared": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.15",
+    "typescript": "^6.0.3"
+  }
+}

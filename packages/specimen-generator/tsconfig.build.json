@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "./",
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.ward/build.tsbuildinfo",
+    "customConditions": [
+      "gateway-dist",
+      "source"
+    ]
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.proxy.ts",
+    "**/*.proxy.tsx",
+    "**/*.stub.ts",
+    "**/*.stub.tsx",
+    "**/*.stories.tsx",
+    "**/*.harness.ts",
+    "playwright.config.ts",
+    "test/**",
+    "src/.test-tmp/**",
+    "src/_lint-testbed/**"
+  ]
+}

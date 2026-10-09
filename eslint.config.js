@@ -43,6 +43,10 @@ module.exports = [
             // excluded here for the same reason manual-smoke-repo is: linting it under the
             // dungeonmaster ruleset would fail enforce-project-structure.
             'eslint-rules/**',
+            // The specimen generator's declarations are consumer-shaped code with holes: classes whose
+            // methods ignore `this`, generators, unnamed functions. The rules forbid the shapes these
+            // files exist to show. The generator typechecks every declaration itself when it loads them.
+            'packages/specimen-generator/declarations/**',
         ],
     },
     {

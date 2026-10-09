@@ -39,6 +39,7 @@ export * from './run/console-save/run-console-save-broker';
 export * from './run/console-find/run-console-find-broker';
 
 export * from './file/walk/file-walk-broker';
+export * from './analyze/file/analyze-file-broker';
 
 export * from './param-type/resolve/param-type-resolve-broker';
 
