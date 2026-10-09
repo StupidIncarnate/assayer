@@ -1,18 +1,18 @@
 /**
  * PURPOSE: Parses the text of one expression into a node that can be placed inside other code. The
  * text comes from a place the generator does not build with nodes: a type's env or external read in
- * typeListStatics, or an expression the printer just wrote. It can rename one identifier, for the
- * `KEY` placeholder in an env read. Reach for this when a node is needed from such text.
+ * typeListStatics, or an expression the focus renderer just printed. It can rename one identifier,
+ * for the `KEY` placeholder in an env read. Reach for this when a node is needed from such text.
  *
  * USAGE:
- * parseExpressionLayerTransformer({ text: 'Number(process.env.KEY)', rename: { from: 'KEY', to: 'VALUE' } });
+ * parseSnippetExpressionTransformer({ text: 'Number(process.env.KEY)', rename: { from: 'KEY', to: 'VALUE' } });
  * // Returns the node for `Number(process.env.VALUE)`
  */
 import ts from '#gateway/npm/typescript';
 
-import { synthesizeLayerTransformer } from './synthesize-layer-transformer';
+import { synthesizeNodeTransformer } from '../synthesize-node/synthesize-node-transformer';
 
-export const parseExpressionLayerTransformer = ({
+export const parseSnippetExpressionTransformer = ({
   text,
   rename,
 }: {
@@ -28,9 +28,9 @@ export const parseExpressionLayerTransformer = ({
 
   if (initializer === undefined) {
     throw new Error(
-      `The generator could not read '${text}' as one expression. Fix the text where it comes from, such as the env or external read of the type in typeListStatics.`,
+      `The generator could not read '${text}' as one expression. Fix the text where it comes from: the env or external read of the type in typeListStatics, or the focus renderer's output.`,
     );
   }
 
-  return ts.visitNode(initializer, (child) => synthesizeLayerTransformer({ node: child, rename }), ts.isExpression);
+  return ts.visitNode(initializer, (child) => synthesizeNodeTransformer({ node: child, rename }), ts.isExpression);
 };

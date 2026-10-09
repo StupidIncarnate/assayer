@@ -15,7 +15,7 @@ import ts from '#gateway/npm/typescript';
 
 import type { FillTree } from '../../contracts/fill-tree/fill-tree-contract';
 import { leafLayerTransformer } from './leaf-layer-transformer';
-import { parseExpressionLayerTransformer } from './parse-expression-layer-transformer';
+import { parseSnippetExpressionTransformer } from '../parse-snippet-expression/parse-snippet-expression-transformer';
 import { shimCallLayerTransformer } from './shim-call-layer-transformer';
 import { swapHolesLayerTransformer } from './swap-holes-layer-transformer';
 
@@ -57,7 +57,7 @@ export const renderNodeLayerTransformer = ({
 
     return [
       name,
-      parseExpressionLayerTransformer({
+      parseSnippetExpressionTransformer({
         text: printer.printNode(ts.EmitHint.Unspecified, rendered, child.instance.syntax.sourceFile),
       }),
     ];

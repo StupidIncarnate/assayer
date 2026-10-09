@@ -30,10 +30,11 @@ export const declarationsLoadBrokerProxy = (): {
 
   return {
     setupTree: ({ declarationsRoot, files }): void => {
-      // TypeScript's own lib files are not the code under test. The compiler reads them through the same file
-      // system call, so they are answered from the real disk, and every declaration is still staged by its path.
+      // Installed type files are not the code under test: TypeScript's lib, `@types/node` and what it
+      // references. The compiler reads them through the same file system call, so anything under
+      // `node_modules` is answered from the real disk, and every declaration is still staged by its path.
       reads.implementsMatchingPath({
-        path: (value) => typeof value === 'string' && value.includes('/typescript/lib/'),
+        path: (value) => typeof value === 'string' && value.includes('/node_modules/'),
         fn: (path) => realFs.readFileSync(path, 'utf8'),
       });
       for (const { folder } of [containers, syntax, shims]) {

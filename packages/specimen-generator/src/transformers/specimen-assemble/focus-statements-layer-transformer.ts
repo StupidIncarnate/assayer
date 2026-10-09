@@ -12,8 +12,8 @@ import ts from '#gateway/npm/typescript';
 
 import type { ContainerSlot } from '../../contracts/container-slot/container-slot-contract';
 import type { LoadedContainer } from '../../contracts/loaded-container/loaded-container-contract';
-import { parseExpressionLayerTransformer } from './parse-expression-layer-transformer';
-import { parseStatementsLayerTransformer } from './parse-statements-layer-transformer';
+import { parseSnippetExpressionTransformer } from '../parse-snippet-expression/parse-snippet-expression-transformer';
+import { parseSnippetStatementsTransformer } from '../parse-snippet-statements/parse-snippet-statements-transformer';
 
 export const focusStatementsLayerTransformer = ({
   container,
@@ -27,10 +27,10 @@ export const focusStatementsLayerTransformer = ({
   focusKind: 'expression' | 'statement';
 }): readonly ts.Statement[] => {
   if (focusKind === 'statement') {
-    return parseStatementsLayerTransformer({ text });
+    return parseSnippetStatementsTransformer({ text });
   }
 
-  const expression = parseExpressionLayerTransformer({ text });
+  const expression = parseSnippetExpressionTransformer({ text });
   if (slot.arm === 'return') {
     return [ts.factory.createReturnStatement(expression)];
   }

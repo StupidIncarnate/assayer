@@ -15,10 +15,10 @@ import ts from '#gateway/npm/typescript';
 
 import type { ContainerSlot } from '../../contracts/container-slot/container-slot-contract';
 import type { LoadedContainer } from '../../contracts/loaded-container/loaded-container-contract';
-import type { fillTreeRenderTransformer } from '../fill-tree-render/fill-tree-render-transformer';
+import type { RenderedFill } from '../../contracts/rendered-fill/rendered-fill-contract';
 import { focusStatementsLayerTransformer } from './focus-statements-layer-transformer';
-import { parseExpressionLayerTransformer } from './parse-expression-layer-transformer';
-import { parseStatementsLayerTransformer } from './parse-statements-layer-transformer';
+import { parseSnippetExpressionTransformer } from '../parse-snippet-expression/parse-snippet-expression-transformer';
+import { parseSnippetStatementsTransformer } from '../parse-snippet-statements/parse-snippet-statements-transformer';
 import { rewriteContainerLayerTransformer } from './rewrite-container-layer-transformer';
 
 export const specimenAssembleTransformer = ({
@@ -31,7 +31,7 @@ export const specimenAssembleTransformer = ({
 }: {
   container: LoadedContainer;
   slot: ContainerSlot;
-  rendered: ReturnType<typeof fillTreeRenderTransformer>;
+  rendered: RenderedFill;
   focusKind: 'expression' | 'statement';
   resultType: string;
   entryName: string;
@@ -47,7 +47,7 @@ export const specimenAssembleTransformer = ({
       ? focusStatementsLayerTransformer({ container, slot, text: rendered.text, focusKind })
       : [];
   const focusExpression =
-    slot.kind === 'expression' ? parseExpressionLayerTransformer({ text: rendered.text }) : undefined;
+    slot.kind === 'expression' ? parseSnippetExpressionTransformer({ text: rendered.text }) : undefined;
 
   const body = ts.visitNode(
     container.arrow.body,
@@ -71,7 +71,7 @@ export const specimenAssembleTransformer = ({
   }
 
   const statements = [
-    ...rendered.declarations.flatMap((declaration) => parseStatementsLayerTransformer({ text: declaration.text })),
+    ...rendered.declarations.flatMap((declaration) => parseSnippetStatementsTransformer({ text: declaration.text })),
     ...body.statements,
   ];
   const exportsSomething = statements.some(

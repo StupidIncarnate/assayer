@@ -15,7 +15,7 @@ import ts from '#gateway/npm/typescript';
 
 import type { ContainerSlot } from '../../contracts/container-slot/container-slot-contract';
 import type { LoadedContainer } from '../../contracts/loaded-container/loaded-container-contract';
-import { parseTypeLayerTransformer } from './parse-type-layer-transformer';
+import { parseSnippetTypeTransformer } from '../parse-snippet-type/parse-snippet-type-transformer';
 
 export const rewriteContainerLayerTransformer = ({
   node,
@@ -54,13 +54,13 @@ export const rewriteContainerLayerTransformer = ({
             undefined,
             param.name,
             undefined,
-            parseTypeLayerTransformer({ text: param.type }),
+            parseSnippetTypeTransformer({ text: param.type }),
           ),
         )
       : undefined;
   }
   if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName) && node.typeName.text === '$R') {
-    return parseTypeLayerTransformer({ text: resultType });
+    return parseSnippetTypeTransformer({ text: resultType });
   }
   if (ts.isIdentifier(node) && node.text === '$Entry') {
     return ts.factory.createIdentifier(entryName);

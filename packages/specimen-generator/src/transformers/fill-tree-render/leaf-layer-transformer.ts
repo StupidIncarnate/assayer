@@ -14,8 +14,8 @@ import ts from '#gateway/npm/typescript';
 import type { FillTree } from '../../contracts/fill-tree/fill-tree-contract';
 import { typeInfoTransformer } from '../type-info/type-info-transformer';
 import { literalNodeLayerTransformer } from './literal-node-layer-transformer';
-import { parseExpressionLayerTransformer } from './parse-expression-layer-transformer';
-import { parseTypeLayerTransformer } from './parse-type-layer-transformer';
+import { parseSnippetExpressionTransformer } from '../parse-snippet-expression/parse-snippet-expression-transformer';
+import { parseSnippetTypeTransformer } from '../parse-snippet-type/parse-snippet-type-transformer';
 
 export const leafLayerTransformer = ({
   leaf,
@@ -37,7 +37,7 @@ export const leafLayerTransformer = ({
     return literalNodeLayerTransformer({ value: leaf.value });
   }
   if (leaf.provenance === 'external') {
-    return parseExpressionLayerTransformer({ text: typeInfoTransformer({ typeText: leaf.type }).external });
+    return parseSnippetExpressionTransformer({ text: typeInfoTransformer({ typeText: leaf.type }).external });
   }
 
   const taken = new Set(names.values());
@@ -65,7 +65,7 @@ export const leafLayerTransformer = ({
           ts.factory.createVariableDeclaration(
             name,
             undefined,
-            parseTypeLayerTransformer({ text: leaf.type }),
+            parseSnippetTypeTransformer({ text: leaf.type }),
             literalNodeLayerTransformer({ value: leaf.value }),
           ),
         ],
@@ -83,7 +83,7 @@ export const leafLayerTransformer = ({
             name,
             undefined,
             undefined,
-            parseExpressionLayerTransformer({
+            parseSnippetExpressionTransformer({
               text: typeInfoTransformer({ typeText: leaf.type }).env,
               rename: { from: 'KEY', to: name.replace(/([a-z0-9])([A-Z])/gu, '$1_$2').toUpperCase() },
             }),

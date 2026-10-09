@@ -12,6 +12,8 @@
 import ts from '#gateway/npm/typescript';
 
 import type { FillTree } from '../../contracts/fill-tree/fill-tree-contract';
+import { renderedFillContract } from '../../contracts/rendered-fill/rendered-fill-contract';
+import type { RenderedFill } from '../../contracts/rendered-fill/rendered-fill-contract';
 import { renderNodeLayerTransformer } from './render-node-layer-transformer';
 
 export const fillTreeRenderTransformer = ({
@@ -20,11 +22,7 @@ export const fillTreeRenderTransformer = ({
 }: {
   tree: FillTree;
   armKind?: 'log' | 'return' | 'yield';
-}): {
-  text: string;
-  params: { name: string; type: string }[];
-  declarations: { name: string; text: string }[];
-} => {
+}): RenderedFill => {
   const names = new Map<FillTree, string>();
   const params = new Map<string, string>();
   const decls = new Map<string, string>();
@@ -35,11 +33,11 @@ export const fillTreeRenderTransformer = ({
       ? tree.instance.syntax.sourceFile
       : ts.createSourceFile('focus.ts', '', ts.ScriptTarget.ES2022, false);
 
-  return {
+  return renderedFillContract.parse({
     text: ts.isBlock(body)
       ? body.statements.map((statement) => printer.printNode(ts.EmitHint.Unspecified, statement, sourceFile)).join('\n')
       : printer.printNode(ts.EmitHint.Unspecified, body, sourceFile),
     params: [...params].map(([name, type]) => ({ name, type })),
     declarations: [...decls].map(([name, text]) => ({ name, text })),
-  };
+  });
 };

@@ -1,5 +1,6 @@
 import ts from '#gateway/npm/typescript';
 
+import { RenderedFillStub } from '../../contracts/rendered-fill/rendered-fill.stub';
 import { containerShapeTransformer } from '../container-shape/container-shape-transformer';
 import { specimenAssembleTransformer } from './specimen-assemble-transformer';
 
@@ -250,11 +251,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: "if (value > 5) {\n    return 'then';\n}\nreturn 'else';",
               params: [{ name: 'value', type: 'number' }],
               declarations: [],
-            },
+            }),
             focusKind: 'statement',
             resultType: 'string',
             entryName: 'ifFunction',
@@ -283,11 +284,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: "value > 5 ? 'then' : 'else'",
               params: [{ name: 'value', type: 'number' }],
               declarations: [],
-            },
+            }),
             focusKind: 'expression',
             resultType: 'string',
             entryName: 'ternaryFunction',
@@ -313,14 +314,14 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: 'receiver.at(arrayLengthReceiver.length)',
               params: [
                 { name: 'receiver', type: 'readonly number[]' },
                 { name: 'arrayLengthReceiver', type: 'readonly number[]' },
               ],
               declarations: [],
-            },
+            }),
             focusKind: 'expression',
             resultType: 'number | undefined',
             entryName: 'atFunction',
@@ -346,11 +347,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: "if (value > 5) {\n    return 'then';\n}\nreturn 'else';",
               params: [],
               declarations: [{ name: 'value', text: 'const value: number = 3;' }],
-            },
+            }),
             focusKind: 'statement',
             resultType: 'string',
             entryName: 'IfClass',
@@ -383,11 +384,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: "if (value > 5) {\n    return 'then';\n}\nreturn 'else';",
               params: [],
               declarations: [{ name: 'value', text: 'const value: number = 3;' }],
-            },
+            }),
             focusKind: 'statement',
             resultType: 'string',
             entryName: 'IfClass',
@@ -420,11 +421,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: "cond ? 'then' : 'else'",
               params: [],
               declarations: [{ name: 'cond', text: 'const cond = Number(process.env.COND);' }],
-            },
+            }),
             focusKind: 'expression',
             resultType: 'string',
             entryName: 'TernaryClass',
@@ -452,11 +453,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: "if (value > 5) {\n    console.log('then');\n}\nconsole.log('else');",
               params: [],
               declarations: [{ name: 'value', text: 'const value = Number(process.env.VALUE);' }],
-            },
+            }),
             focusKind: 'statement',
             resultType: 'string',
             entryName: 'moduleEntry',
@@ -488,11 +489,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: 'value > 5',
               params: [],
               declarations: [{ name: 'value', text: 'const value = Number(process.env.VALUE);' }],
-            },
+            }),
             focusKind: 'expression',
             resultType: 'boolean',
             entryName: 'moduleEntry',
@@ -513,7 +514,7 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: { text: 'Number(process.argv[2])', params: [], declarations: [] },
+            rendered: RenderedFillStub({ text: 'Number(process.argv[2])', params: [], declarations: [] }),
             focusKind: 'expression',
             resultType: 'number',
             entryName: 'moduleValue',
@@ -530,11 +531,11 @@ describe('specimenAssembleTransformer', () => {
         specimenAssembleTransformer({
           container,
           slot,
-          rendered: {
+          rendered: RenderedFillStub({
             text: "if (value > 5) {\n    yield 'then';\n}\nyield 'else';",
             params: [{ name: 'value', type: 'number' }],
             declarations: [],
-          },
+          }),
           focusKind: 'statement',
           resultType: 'string',
           entryName: 'ifGenerator',
@@ -561,7 +562,7 @@ describe('specimenAssembleTransformer', () => {
         specimenAssembleTransformer({
           container,
           slot,
-          rendered: { text: 'value > 5', params: [{ name: 'value', type: 'number' }], declarations: [] },
+          rendered: RenderedFillStub({ text: 'value > 5', params: [{ name: 'value', type: 'number' }], declarations: [] }),
           focusKind: 'expression',
           resultType: 'boolean',
           entryName: 'valueGenerator',
@@ -585,11 +586,11 @@ describe('specimenAssembleTransformer', () => {
         specimenAssembleTransformer({
           container,
           slot,
-          rendered: {
+          rendered: RenderedFillStub({
             text: "if (value > 5) {\n    return 'then';\n}\nreturn 'else';",
             params: [{ name: 'value', type: 'number' }],
             declarations: [],
-          },
+          }),
           focusKind: 'statement',
           resultType: 'string',
           entryName: 'ifEntry',
@@ -620,11 +621,11 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: {
+            rendered: RenderedFillStub({
               text: "if (value > 5) {\n    return 'then';\n}\nreturn 'else';",
               params: [{ name: 'value', type: 'number' }],
               declarations: [],
-            },
+            }),
             focusKind: 'statement',
             resultType: 'string',
             entryName: 'ifObject',
@@ -655,7 +656,7 @@ describe('specimenAssembleTransformer', () => {
           specimenAssembleTransformer({
             container,
             slot,
-            rendered: { text: 'Number(process.argv[2])', params: [], declarations: [] },
+            rendered: RenderedFillStub({ text: 'Number(process.argv[2])', params: [], declarations: [] }),
             focusKind: 'expression',
             resultType: 'number',
             entryName: 'valueObject',
@@ -672,7 +673,7 @@ describe('specimenAssembleTransformer', () => {
         specimenAssembleTransformer({
           container,
           slot,
-          rendered: { text: "return 'x';", params: [], declarations: [] },
+          rendered: RenderedFillStub({ text: "return 'x';", params: [], declarations: [] }),
           focusKind: 'statement',
           resultType: 'string',
           entryName: 'moduleValue',
@@ -689,7 +690,7 @@ describe('specimenAssembleTransformer', () => {
         specimenAssembleTransformer({
           container,
           slot,
-          rendered: { text: "return 'x';", params: [], declarations: [] },
+          rendered: RenderedFillStub({ text: "return 'x';", params: [], declarations: [] }),
           focusKind: 'statement',
           resultType: 'string',
           entryName: 'misused',
@@ -706,7 +707,7 @@ describe('specimenAssembleTransformer', () => {
         specimenAssembleTransformer({
           container,
           slot,
-          rendered: { text: 'Number(process.argv[2])', params: [], declarations: [] },
+          rendered: RenderedFillStub({ text: 'Number(process.argv[2])', params: [], declarations: [] }),
           focusKind: 'expression',
           resultType: 'number',
           entryName: 'whole',

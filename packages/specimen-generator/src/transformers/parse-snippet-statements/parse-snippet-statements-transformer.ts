@@ -5,14 +5,14 @@
  * focus and for each top-of-file declaration.
  *
  * USAGE:
- * parseStatementsLayerTransformer({ text: "const value: number = 3;" });
+ * parseSnippetStatementsTransformer({ text: "const value: number = 3;" });
  * // Returns the nodes for the one statement
  */
 import ts from '#gateway/npm/typescript';
 
-import { synthesizeLayerTransformer } from './synthesize-layer-transformer';
+import { synthesizeNodeTransformer } from '../synthesize-node/synthesize-node-transformer';
 
-export const parseStatementsLayerTransformer = ({ text }: { text: string }): readonly ts.Statement[] => {
+export const parseSnippetStatementsTransformer = ({ text }: { text: string }): readonly ts.Statement[] => {
   const sourceFile = ts.createSourceFile(
     'snippet.ts',
     `async function* snippet() {\n${text}\n}`,
@@ -28,5 +28,5 @@ export const parseStatementsLayerTransformer = ({ text }: { text: string }): rea
     );
   }
 
-  return ts.visitNode(body, (child) => synthesizeLayerTransformer({ node: child }), ts.isBlock).statements;
+  return ts.visitNode(body, (child) => synthesizeNodeTransformer({ node: child }), ts.isBlock).statements;
 };

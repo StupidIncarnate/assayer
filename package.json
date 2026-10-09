@@ -19,6 +19,9 @@
     "test": "dungeonmaster-ward --only test",
     "test:syntax": "jest --config manual-smoke-repo/packages/syntax-repository/jest.config.js",
     "typecheck:syntax": "npm run typecheck --prefix manual-smoke-repo",
+    "generate:specimens": "tsx --conditions=source packages/specimen-generator/bin/specimen-generator-entry.ts",
+    "test:generated": "jest --config smoke-repo/packages/syntax-repository/jest.config.js",
+    "typecheck:generated": "npm run typecheck --prefix smoke-repo",
     "test:eslint-rules": "jest --config eslint-rules/jest.config.js",
     "postinstall": "if command -v dungeonmaster >/dev/null 2>&1; then dungeonmaster gateway-sync; fi"
   },
