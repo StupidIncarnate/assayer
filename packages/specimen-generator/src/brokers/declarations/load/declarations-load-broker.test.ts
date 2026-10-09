@@ -128,7 +128,7 @@ describe('declarationsLoadBroker', () => {
           holes: ['receiver'],
           returnType: 'number',
           arms: [],
-          allowedTypeArguments: ['number'],
+          allowedTypeArguments: ['number', 'boolean'],
           anchors: '{}',
         },
         {
