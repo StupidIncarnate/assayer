@@ -12,7 +12,7 @@ describe('if-boolean-object-literal-arrow-property-cond-nullish-boolean-value-ex
             branches: [{ kind: 'if', line: 3, driven: 'never' }, { kind: 'ternary', line: 3, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 3 }],
+            undriven: [{ startLine: 3 }, { startLine: 3 }],
             darkSpots: [],
             gaps: []
         });

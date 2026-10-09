@@ -12,7 +12,7 @@ describe('if-number-module-statement-cond-nullish-number-value-external', () => 
             branches: [{ kind: 'if', line: 1, driven: 'one-way' }, { kind: 'ternary', line: 1, driven: 'one-way' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 1 }],
+            undriven: [{ startLine: 1 }, { startLine: 1 }],
             darkSpots: [],
             gaps: []
         });

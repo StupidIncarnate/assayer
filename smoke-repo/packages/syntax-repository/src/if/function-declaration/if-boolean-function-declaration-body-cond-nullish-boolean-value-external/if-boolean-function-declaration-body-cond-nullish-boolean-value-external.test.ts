@@ -12,7 +12,7 @@ describe('if-boolean-function-declaration-body-cond-nullish-boolean-value-extern
             branches: [{ kind: 'if', line: 2, driven: 'never' }, { kind: 'ternary', line: 2, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 2 }],
+            undriven: [{ startLine: 2 }, { startLine: 2 }],
             darkSpots: [],
             gaps: []
         });

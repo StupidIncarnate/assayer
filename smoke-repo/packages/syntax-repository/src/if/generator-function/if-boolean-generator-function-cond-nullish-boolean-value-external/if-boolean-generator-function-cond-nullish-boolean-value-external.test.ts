@@ -12,7 +12,7 @@ describe('if-boolean-generator-function-cond-nullish-boolean-value-external', ()
             branches: [{ kind: 'if', line: 2, driven: 'one-way' }, { kind: 'ternary', line: 2, driven: 'one-way' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 2 }],
+            undriven: [{ startLine: 2 }, { startLine: 2 }],
             darkSpots: [],
             gaps: []
         });

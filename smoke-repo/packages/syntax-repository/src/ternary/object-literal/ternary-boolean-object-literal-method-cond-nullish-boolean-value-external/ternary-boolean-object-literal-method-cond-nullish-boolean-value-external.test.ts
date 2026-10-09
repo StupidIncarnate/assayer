@@ -12,7 +12,7 @@ describe('ternary-boolean-object-literal-method-cond-nullish-boolean-value-exter
             branches: [{ kind: 'ternary', line: 3, driven: 'never' }, { kind: 'ternary', line: 3, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 3 }],
+            undriven: [{ startLine: 3 }, { startLine: 3 }],
             darkSpots: [],
             gaps: []
         });

@@ -12,7 +12,7 @@ describe('if-number-function-declaration-body-cond-nullish-number-value-external
             branches: [{ kind: 'if', line: 2, driven: 'never' }, { kind: 'ternary', line: 2, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 2 }],
+            undriven: [{ startLine: 2 }, { startLine: 2 }],
             darkSpots: [],
             gaps: []
         });

@@ -12,7 +12,7 @@ describe('ternary-boolean-default-export-cond-nullish-boolean-value-external', (
             branches: [{ kind: 'ternary', line: 2, driven: 'never' }, { kind: 'ternary', line: 2, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 2 }],
+            undriven: [{ startLine: 2 }, { startLine: 2 }],
             darkSpots: [],
             gaps: []
         });

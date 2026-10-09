@@ -241,7 +241,7 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
-    it('VALID: {leaf from process.argv, in an arrow called where it is written, arms log} => the arrow is admitted on its own first line and its if runs once', () => {
+    it('VALID: {leaf from process.argv, in an arrow called where it is written, arms log} => the if inside the arrow runs once, so the admission is on the if line', () => {
       const source = [
         '(() => {',
         '    if (Number(process.argv[2]) > 5) {',
@@ -264,7 +264,7 @@ describe('specimenPredictTransformer', () => {
         branches: [{ kind: 'if', line: 2, driven: 'one-way' }],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 1 }],
+        undriven: [{ startLine: 2 }],
         darkSpots: [],
         gaps: [],
       });
@@ -415,7 +415,6 @@ describe('specimenPredictTransformer', () => {
         source,
         focusKind: 'expression',
         arms: ['then', 'else'],
-        slotName: 'default-param',
         provenances: ['external', 'literal'],
       });
 
@@ -440,7 +439,6 @@ describe('specimenPredictTransformer', () => {
         source,
         focusKind: 'expression',
         arms: ['then', 'else'],
-        slotName: 'body',
         slotArm: 'return',
         provenances: ['external', 'literal'],
       });
@@ -450,6 +448,149 @@ describe('specimenPredictTransformer', () => {
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 2 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it.each([
+      {
+        position: 'a class field',
+        source: ['export class Classify {', '    public label = Number(process.argv[2]) > 5 ? "then" : "else";', '}'].join('\n'),
+        line: 2,
+      },
+      {
+        position: 'a static class field',
+        source: ['export class Classify {', '    public static label = Number(process.argv[2]) > 5 ? "then" : "else";', '}'].join('\n'),
+        line: 2,
+      },
+      {
+        position: 'a call argument',
+        source: ['console.log(', '    Number(process.argv[2]) > 5 ? "then" : "else",', ');', 'export {};'].join('\n'),
+        line: 2,
+      },
+      {
+        position: 'a yield',
+        source: [
+          'export function* classify(): Generator<string> {',
+          '    yield Number(process.argv[2]) > 5 ? "then" : "else";',
+          '}',
+        ].join('\n'),
+        line: 2,
+      },
+      {
+        position: 'an object property',
+        source: ['export const holder = {', '    label: Number(process.argv[2]) > 5 ? "then" : "else",', '};'].join('\n'),
+        line: 2,
+      },
+      {
+        position: 'an exported const',
+        source: ['', 'export const label = Number(process.argv[2]) > 5 ? "then" : "else";'].join('\n'),
+        line: 2,
+      },
+      {
+        position: 'a module statement',
+        source: ['const label = 1;', 'console.log(Number(process.argv[2]) > 5 ? "then" : "else");', 'export { label };'].join('\n'),
+        line: 2,
+      },
+      {
+        position: 'a function body statement',
+        source: [
+          'export function classify(): void {',
+          '    console.log(Number(process.argv[2]) > 5 ? "then" : "else");',
+          '}',
+        ].join('\n'),
+        line: 2,
+      },
+    ])(
+      'VALID: {ternary in $position, leaf from process.argv} => the arms meet again, so it runs one way and is admitted on its own line',
+      ({ source, line }) => {
+        const result = specimenPredictTransformer({
+          source,
+          focusKind: 'expression',
+          arms: ['then', 'else'],
+          provenances: ['external', 'literal'],
+        });
+
+        expect(result).toStrictEqual({
+          branches: [{ kind: 'ternary', line, driven: 'one-way' }],
+          caseFailures: [],
+          lints: [],
+          undriven: [{ startLine: line }],
+          darkSpots: [],
+          gaps: [],
+        });
+      },
+    );
+
+    it('VALID: {ternary as a concise arrow body, leaf from process.argv} => the value is the exit, so it never runs', () => {
+      const source = [
+        'export const classify = (): string =>',
+        '    Number(process.argv[2]) > 5 ? "then" : "else";',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'expression',
+        arms: ['then', 'else'],
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 2 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {ternary returned in parentheses, leaf from process.argv} => the value is still the exit, so it never runs', () => {
+      const source = [
+        'export function classify(): string {',
+        '    return (Number(process.argv[2]) > 5 ? "then" : "else");',
+        '}',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'expression',
+        arms: ['then', 'else'],
+        slotArm: 'return',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 2 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {ternary returned from an arrow called where it is written, leaf from process.argv} => the arrow is admitted as a whole on its first line', () => {
+      const source = [
+        'export const label = (() => {',
+        '    return Number(process.argv[2]) > 5 ? "then" : "else";',
+        '})();',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'expression',
+        arms: ['then', 'else'],
+        slotArm: 'return',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 1 }],
         darkSpots: [],
         gaps: [],
       });
@@ -517,7 +658,7 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
-    it('VALID: {maybe-number read from process.argv} => the argv ternary and the if never run', () => {
+    it('VALID: {maybe-number read from process.argv} => the argv ternary and the if never run, and each is admitted on its own line', () => {
       const source = [
         'export function classify(): string {',
         '    if (((process.argv[2] === undefined ? undefined : Number(process.argv[2])) ?? 0) > 5) {',
@@ -542,13 +683,13 @@ describe('specimenPredictTransformer', () => {
         ],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 2 }],
+        undriven: [{ startLine: 2 }, { startLine: 2 }],
         darkSpots: [],
         gaps: [],
       });
     });
 
-    it('VALID: {env ternary in a scope undriven by an argv leaf} => loading the module runs the env ternary once too', () => {
+    it('VALID: {env ternary in a scope undriven by an argv leaf} => loading the module runs the env ternary once too, and only the if is admitted', () => {
       const source = [
         'const limit = process.env.LIMIT === undefined ? undefined : Number(process.env.LIMIT);',
         '',
@@ -574,7 +715,39 @@ describe('specimenPredictTransformer', () => {
         ],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 1 }],
+        undriven: [{ startLine: 3 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {argv leaf ternary and an argv-read if, at module level} => each is admitted on its own line, sorted', () => {
+      const source = [
+        'const limit = process.argv[2] === undefined ? undefined : Number(process.argv[2]);',
+        '',
+        'if ((limit ?? 0) > 5) {',
+        '    console.log("then");',
+        '}',
+        'console.log("else");',
+        'export {};',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'statement',
+        arms: ['then', 'else'],
+        slotArm: 'log',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [
+          { kind: 'ternary', line: 1, driven: 'one-way' },
+          { kind: 'if', line: 3, driven: 'one-way' },
+        ],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 1 }, { startLine: 3 }],
         darkSpots: [],
         gaps: [],
       });

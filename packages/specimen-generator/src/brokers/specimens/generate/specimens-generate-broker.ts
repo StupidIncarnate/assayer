@@ -163,7 +163,6 @@ export const specimensGenerateBroker = ({
       focusKind: focus.syntax.kind,
       arms: focus.syntax.arms,
       provenances,
-      slotName: slot.name,
       ...(slot.arm === undefined ? {} : { slotArm: slot.arm }),
       ...(verdict === 'locked' ? { liveArm: armReachedTransformer({ tree }) } : {}),
     });

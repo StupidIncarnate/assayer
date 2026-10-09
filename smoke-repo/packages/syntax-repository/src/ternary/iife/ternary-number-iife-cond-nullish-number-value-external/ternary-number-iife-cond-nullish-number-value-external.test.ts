@@ -12,7 +12,7 @@ describe('ternary-number-iife-cond-nullish-number-value-external', () => {
             branches: [{ kind: 'ternary', line: 2, driven: 'never' }, { kind: 'ternary', line: 2, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 1 }],
+            undriven: [{ startLine: 1 }, { startLine: 1 }],
             darkSpots: [],
             gaps: []
         });

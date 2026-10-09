@@ -12,7 +12,7 @@ describe('ternary-number-class-method-cond-nullish-number-value-external', () =>
             branches: [{ kind: 'ternary', line: 3, driven: 'never' }, { kind: 'ternary', line: 3, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 3 }],
+            undriven: [{ startLine: 3 }, { startLine: 3 }],
             darkSpots: [],
             gaps: []
         });

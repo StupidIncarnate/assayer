@@ -12,7 +12,7 @@ describe('if-number-class-constructor-body-cond-nullish-number-value-external', 
             branches: [{ kind: 'if', line: 3, driven: 'one-way' }, { kind: 'ternary', line: 3, driven: 'one-way' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 3 }],
+            undriven: [{ startLine: 3 }, { startLine: 3 }],
             darkSpots: [],
             gaps: []
         });
