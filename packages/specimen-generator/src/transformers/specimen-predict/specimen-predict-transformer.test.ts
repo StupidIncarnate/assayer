@@ -404,6 +404,57 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
+    it('VALID: {ternary in a parameter default, leaf from process.argv} => a case reaches the return without deciding the ternary, so it runs one way', () => {
+      const source = [
+        'export function classify(label: string = Number(process.argv[2]) > 5 ? "then" : "else"): string {',
+        '    return label;',
+        '}',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'expression',
+        arms: ['then', 'else'],
+        slotName: 'default-param',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'ternary', line: 1, driven: 'one-way' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 1 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
+    it('VALID: {ternary returned, leaf from process.argv} => the ternary is the exit, so it never runs', () => {
+      const source = [
+        'export function classify(): string {',
+        '    return Number(process.argv[2]) > 5 ? "then" : "else";',
+        '}',
+      ].join('\n');
+
+      const result = specimenPredictTransformer({
+        source,
+        focusKind: 'expression',
+        arms: ['then', 'else'],
+        slotName: 'body',
+        slotArm: 'return',
+        provenances: ['external', 'literal'],
+      });
+
+      expect(result).toStrictEqual({
+        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        caseFailures: [],
+        lints: [],
+        undriven: [{ startLine: 2 }],
+        darkSpots: [],
+        gaps: [],
+      });
+    });
+
     it('VALID: {ternary in a field, known value reaches then} => one way, the else arm is unreachable', () => {
       const source = [
         'const value: number = 7;',

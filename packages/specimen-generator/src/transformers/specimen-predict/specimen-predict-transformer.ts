@@ -21,8 +21,12 @@
  *   reach the scope's exit without deciding the branch. That case runs the branch once, with
  *   whatever value the test process has, so the focus goes one way. This holds in every scope: the
  *   module, an inline function, a function, a method, a constructor, a generator.
- * - Undriven, and the arms return (or the focus is a ternary): the branch decides which exit is
- *   reached, so no case is derived and the focus never goes either way.
+ * - Undriven, and the focus is a ternary in a parameter's default value (the `default-param` slot):
+ *   both arms flow into the parameter and meet at the body's one return. A case reaches that exit
+ *   without deciding the ternary, and runs the ternary once, so the focus goes one way.
+ * - Undriven, and the arms return (or the focus is a ternary whose value is the exit, such as
+ *   `return cond ? a : b`): the branch decides which exit is reached, so no case is derived and the
+ *   focus never goes either way.
  *
  * A leaf that reads a `T | undefined` value from `process.env` or `process.argv` is written as a
  * ternary of its own. That ternary is a branch too: an environment read goes both ways unless its
@@ -47,6 +51,7 @@ export const specimenPredictTransformer = ({
   slotArm,
   provenances,
   liveArm,
+  slotName,
 }: {
   source: string;
   focusKind: 'statement' | 'expression';
@@ -54,6 +59,7 @@ export const specimenPredictTransformer = ({
   slotArm?: 'return' | 'log' | 'yield';
   provenances: readonly Provenance[];
   liveArm?: string;
+  slotName?: string;
 }): SpecimenOutcome => {
   const verdict = specimenVerdictTransformer({ provenances });
   const sourceFile = new Project({ useInMemoryFileSystem: true }).createSourceFile('specimen.ts', source);
@@ -96,7 +102,8 @@ export const specimenPredictTransformer = ({
     (Node.isArrowFunction(scope) || Node.isFunctionExpression(scope)) &&
     isCalledInPlaceGuard({ node: scope });
   const fallsThrough = focusKind === 'statement' && slotArm !== 'return';
-  const undrivenDriven = fallsThrough ? ('one-way' as const) : ('never' as const);
+  const flowsIntoBinding = focusKind === 'expression' && slotName === 'default-param';
+  const undrivenDriven = fallsThrough || flowsIntoBinding ? ('one-way' as const) : ('never' as const);
   const focusDriven = { driven: 'both-ways', locked: 'one-way', undriven: undrivenDriven } as const;
 
   const leafBranches = branchNodes
