@@ -1,3 +1,4 @@
+import { FallthroughArmStub } from '../../contracts/fallthrough-arm/fallthrough-arm.stub';
 import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { WalkNodeStub } from '../../contracts/walk-node/walk-node.stub';
@@ -16,6 +17,7 @@ describe('handlerResultLayerTransformer', () => {
         valueUses: [],
         exportedBindings: [],
         indexDemands: [],
+        fallthroughArms: [],
         nodes: [],
         probeSites: [],
         moduleEdges: [],
@@ -38,6 +40,7 @@ describe('handlerResultLayerTransformer', () => {
         valueUses: [],
         exportedBindings: [],
         indexDemands: [],
+        fallthroughArms: [],
         nodes: [WalkNodeStub()],
         probeSites: [],
         moduleEdges: [],
@@ -61,6 +64,31 @@ describe('handlerResultLayerTransformer', () => {
         valueUses: [],
         exportedBindings: [],
         indexDemands: [demand],
+        fallthroughArms: [],
+        nodes: [],
+        probeSites: [],
+        moduleEdges: [],
+        declaredShapes: [],
+        globalUses: [],
+        envReads: [],
+        reachedFns: [],
+        invokedFns: [],
+        descents: [],
+      });
+    });
+
+    it('VALID: {fallthroughArms given} => carried through', () => {
+      handlerResultLayerTransformerProxy();
+      const arm = FallthroughArmStub();
+
+      expect(handlerResultLayerTransformer({ fallthroughArms: [arm] })).toStrictEqual({
+        branches: [],
+        exits: [],
+        calls: [],
+        valueUses: [],
+        exportedBindings: [],
+        indexDemands: [],
+        fallthroughArms: [arm],
         nodes: [],
         probeSites: [],
         moduleEdges: [],
@@ -85,6 +113,7 @@ describe('handlerResultLayerTransformer', () => {
         valueUses: [],
         exportedBindings: [],
         indexDemands: [],
+        fallthroughArms: [],
         nodes: [],
         probeSites: [],
         moduleEdges: [],

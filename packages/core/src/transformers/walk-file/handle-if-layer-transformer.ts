@@ -15,6 +15,10 @@
  *   precisely so the enclosing scope owns that probe); minting a second one here would fire twice on
  *   one execution and fail a case that predicted only one of them.
  *
+ *   An arm that falls through into the code after the `if` gets no exit at all, so it is recorded on
+ *   the `fallthroughArms` channel instead. That record is the only thing that lets a dead arm of this
+ *   shape (`if (value > 5) { log(); } next();` with `value` welded to `3`) be reported.
+ *
  *   Each completion emits its PROBE SITE here too, from the same expression that mints the exit's id,
  *   for the same reason a leaf does: derive the sites in a second pass and the runtime observation
  *   could key under an id the analyzer never produced. The site is the ARM, because a completion has
@@ -23,13 +27,14 @@
  *
  * USAGE:
  * handleIfLayerTransformer({ node: ifStatement, context });
- * // Returns a HandlerResult with the branch, per-arm descents, and any completion exits
+ * // Returns a HandlerResult with the branch, per-arm descents, any completion exits, and any fall-through arms
  */
 import { Node } from '#gateway/npm/ts-morph';
 import type { IfStatement } from '#gateway/npm/ts-morph';
 
 import { branchNodeContract, exitNodeContract, guardStepContract } from '@assayer/shared/contracts';
 
+import { fallthroughArmContract } from '../../contracts/fallthrough-arm/fallthrough-arm-contract';
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../contracts/walk-node/walk-node-contract';
@@ -39,6 +44,7 @@ import { deriveBranchIdLayerTransformer } from './derive-branch-id-layer-transfo
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
 import { readAccountedLayerTransformer } from './read-accounted-layer-transformer';
 import { readConditionTreeLayerTransformer } from './read-condition-tree-layer-transformer';
+import { readTerminalLayerTransformer } from './read-terminal-layer-transformer';
 
 export const handleIfLayerTransformer = ({
   node,
@@ -116,9 +122,39 @@ export const handleIfLayerTransformer = ({
       })
     : [];
 
+  // An arm whose statements can run to their end and continue into the code after the `if` owns no
+  // exit of its own, so the exit-based reachability check never sees it. Each one is recorded with its
+  // guard path and statement span, so `derive-cases` can report it when no value can enter it. Two
+  // kinds of arm are left out because their exits already speak for them: an arm that always exits
+  // (`read-terminal`), whose `return` or `throw` is the exit, and every arm of a tail `if` with an else,
+  // which gets its own completion exit above or ends in a construct that emitted one.
+  const fallthroughArms =
+    context.tail && elseStatement !== undefined
+      ? []
+      : arms.flatMap(({ step, statement }) => {
+          if (readTerminalLayerTransformer({ node: statement })) {
+            return [];
+          }
+          const statements = Node.isBlock(statement) ? statement.getStatements() : [statement];
+          const [first] = statements;
+          const last = statements.at(-1);
+          // An empty arm runs no statement, so there is no dead code in it to report.
+          if (first === undefined || last === undefined) {
+            return [];
+          }
+          return [
+            fallthroughArmContract.parse({
+              guardPath: [...context.guardPath, step],
+              startLine: first.getStartLineNumber(),
+              endLine: last.getEndLineNumber(),
+            }),
+          ];
+        });
+
   return handlerResultLayerTransformer({
     branches: [branch],
     exits: completions.map(({ exit }) => exit),
+    fallthroughArms,
     probeSites: [...readout.sites, ...completions.map(({ site }) => site)],
     nodes: [
       walkNodeContract.parse({

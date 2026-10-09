@@ -46,6 +46,7 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
   const valueUses = [...handled.valueUses, ...child.looseValueUses];
   const exportedBindings = [...handled.exportedBindings, ...child.looseExportedBindings];
   const indexDemands = [...handled.indexDemands, ...child.looseIndexDemands];
+  const fallthroughArms = [...handled.fallthroughArms, ...child.looseFallthroughArms];
   const { opensScope } = handled;
 
   if (opensScope === undefined) {
@@ -57,6 +58,7 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
       looseValueUses: valueUses,
       looseExportedBindings: exportedBindings,
       looseIndexDemands: indexDemands,
+      looseFallthroughArms: fallthroughArms,
       nodes,
       probeSites,
       moduleEdges,
@@ -68,7 +70,7 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
     });
   }
 
-  const completed = scopeRecordContract.parse({ ...opensScope, branches, exits, calls, valueUses, exportedBindings, indexDemands });
+  const completed = scopeRecordContract.parse({ ...opensScope, branches, exits, calls, valueUses, exportedBindings, indexDemands, fallthroughArms });
 
   return walkFactsContract.parse({
     scopes: [completed, ...child.scopes],
@@ -78,6 +80,7 @@ export const walkNodeLayerTransformer = ({ node, context }: { node: Node; contex
     looseValueUses: [],
     looseExportedBindings: [],
     looseIndexDemands: [],
+    looseFallthroughArms: [],
     nodes,
     probeSites,
     moduleEdges,

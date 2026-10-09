@@ -17,6 +17,7 @@ import type { BranchNode, EnvRead, ExitNode, GlobalUse, ModuleEdge } from '@assa
 import type { CallSite } from '../../contracts/call-site/call-site-contract';
 import type { DeclaredShape } from '../../contracts/declared-shape/declared-shape-contract';
 import type { Descent } from '../../contracts/descent/descent-contract';
+import type { FallthroughArm } from '../../contracts/fallthrough-arm/fallthrough-arm-contract';
 import type { HandlerResult } from '../../contracts/handler-result/handler-result-contract';
 import type { IndexDemand } from '../../contracts/index-demand/index-demand-contract';
 import type { InvokedFn } from '../../contracts/invoked-fn/invoked-fn-contract';
@@ -32,6 +33,7 @@ export const handlerResultLayerTransformer = ({
   valueUses,
   exportedBindings,
   indexDemands,
+  fallthroughArms,
   nodes,
   probeSites,
   moduleEdges,
@@ -49,6 +51,7 @@ export const handlerResultLayerTransformer = ({
   valueUses?: ValueUse[];
   exportedBindings?: string[];
   indexDemands?: IndexDemand[];
+  fallthroughArms?: FallthroughArm[];
   nodes?: WalkNode[];
   probeSites?: ProbeSite[];
   moduleEdges?: ModuleEdge[];
@@ -66,6 +69,7 @@ export const handlerResultLayerTransformer = ({
   valueUses: valueUses ?? [],
   exportedBindings: exportedBindings ?? [],
   indexDemands: indexDemands ?? [],
+  fallthroughArms: fallthroughArms ?? [],
   nodes: nodes ?? [],
   probeSites: probeSites ?? [],
   moduleEdges: moduleEdges ?? [],

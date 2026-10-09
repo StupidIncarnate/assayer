@@ -1,5 +1,6 @@
 import { scopeRecordContract } from './scope-record-contract';
 import { ScopeRecordStub } from './scope-record.stub';
+import { FallthroughArmStub } from '../fallthrough-arm/fallthrough-arm.stub';
 import { IndexDemandStub } from '../index-demand/index-demand.stub';
 
 describe('scopeRecordContract', () => {
@@ -62,6 +63,36 @@ describe('scopeRecordContract', () => {
       const result = scopeRecordContract.parse(record);
 
       expect(result).toStrictEqual(record);
+    });
+
+    it('VALID: {fallthroughArms} => carries the fall-through arm records', () => {
+      const record = ScopeRecordStub({
+        fallthroughArms: [FallthroughArmStub()],
+      });
+
+      const result = scopeRecordContract.parse(record);
+
+      expect(result.fallthroughArms).toStrictEqual([
+        { guardPath: [{ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'then' }], startLine: 4, endLine: 4 },
+      ]);
+    });
+
+    it('EMPTY: {fallthroughArms omitted} => defaults to an empty list', () => {
+      const result = scopeRecordContract.parse({
+        scopePath: ['classify'],
+        name: 'classify',
+        kind: 'function',
+        exported: true,
+        access: { kind: 'named' },
+        params: [],
+        returnType: { kind: 'string' },
+        startLine: 1,
+        endLine: 3,
+        branches: [],
+        exits: [],
+      });
+
+      expect(result.fallthroughArms).toStrictEqual([]);
     });
   });
 

@@ -384,7 +384,14 @@ the same expression). From there it flows through the existing math:
 (the set of possible values) containing exactly that one value, and the
 arm the value cannot satisfy falls out of `is-domain-empty` as an
 `unreachableExits` entry, a lint, never a second, bogus test case. The
-lint's text comes from `transformers/unreachable-lint`.
+lint's text comes from `transformers/unreachable-lint`. A dead arm that
+does not exit, because its statements fall through to the code after the
+`if`, has no exit to report. `handle-if` records each arm like that on the
+scope's `fallthroughArms` channel, with its guard path and its statement
+span. `derive-cases` runs the same emptiness check over the buckets that
+enter the arm, and reports a dead one on the same `unreachable-exit` rule,
+from the arm's first statement line to its last. A dead arm covers every
+exit and nested arm inside it, so Assayer reports that region once.
 
 **Drive an inline function that nothing calls by name.** Touch
 `transformers/follow-calls`, which routes each shape to its own handler:

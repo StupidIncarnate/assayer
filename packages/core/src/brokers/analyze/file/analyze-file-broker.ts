@@ -107,6 +107,9 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
         // comparison here so derive-cases splits its true/false return into two salient cases.
         ...(fn.predicateSignature === undefined ? {} : { returnPredicate: fn.predicateSignature }),
         ...(scope === undefined || scope.indexDemands.length === 0 ? {} : { indexDemands: scope.indexDemands }),
+        // The scope's fall-through arms, so an arm a welded constant kills is linted even though it owns
+        // no exit.
+        ...(scope === undefined || scope.fallthroughArms.length === 0 ? {} : { fallthroughArms: scope.fallthroughArms }),
       }),
     };
   });
@@ -294,7 +297,14 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
       unreachableLintTransformer({
         name: funnel.host,
         displayName: entry.displayName,
-        unreachableExits: [{ line: entry.line, guardLines: entry.guardLines, ...(entry.welded === undefined ? {} : { welded: entry.welded }) }],
+        unreachableExits: [
+          {
+            line: entry.line,
+            guardLines: entry.guardLines,
+            ...(entry.armEndLine === undefined ? {} : { armEndLine: entry.armEndLine }),
+            ...(entry.welded === undefined ? {} : { welded: entry.welded }),
+          },
+        ],
       }),
     ),
   );

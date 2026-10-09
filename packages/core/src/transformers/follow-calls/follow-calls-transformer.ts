@@ -127,6 +127,7 @@ export const followCallsTransformer = ({
     cases: DerivedTestCase[];
     unreachable: {
       line: number;
+      armEndLine?: number;
       guardLines: number[];
       welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
       displayName: string;

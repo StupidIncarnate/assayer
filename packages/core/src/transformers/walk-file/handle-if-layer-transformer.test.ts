@@ -280,4 +280,144 @@ describe('handleIfLayerTransformer', () => {
       expect(result.exits).toStrictEqual([]);
     });
   });
+
+  describe('fall-through arms', () => {
+    it('VALID: {non-tail if with an else, both arms fall through} => one fall-through arm per arm', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', NEITHER_ARM_RETURNS_SOURCE);
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: NON_TAIL_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([
+        {
+          guardPath: [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' }],
+          startLine: 4,
+          endLine: 4,
+        },
+        {
+          guardPath: [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' }],
+          startLine: 6,
+          endLine: 6,
+        },
+      ]);
+    });
+
+    it('VALID: {non-tail if, then arm of two statements} => the arm spans its first to its last statement', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n    noop();\n  }\n  noop();\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: NON_TAIL_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([
+        {
+          guardPath: [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' }],
+          startLine: 4,
+          endLine: 5,
+        },
+      ]);
+    });
+
+    it('VALID: {tail if with NO else} => the then arm falls through into the scope end, so it is recorded', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: TAIL_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([
+        {
+          guardPath: [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' }],
+          startLine: 4,
+          endLine: 4,
+        },
+      ]);
+    });
+
+    it('EMPTY: {tail if WITH an else} => no fall-through arm, since each arm owns a completion exit', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', NEITHER_ARM_RETURNS_SOURCE);
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: TAIL_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([]);
+    });
+
+    it('EMPTY: {non-tail if whose only arm returns} => no fall-through arm, since its return is the exit', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', THEN_RETURNS_SOURCE);
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: NON_TAIL_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([]);
+    });
+
+    it('EMPTY: {non-tail if with an empty then block} => no fall-through arm, since no statement runs there', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function classify(value: number) {\n  if (value > 5) {\n  }\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: NON_TAIL_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([]);
+    });
+
+    it('VALID: {non-block arm} => the bare statement is the arm span', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) noop();\n  noop();\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: NON_TAIL_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([
+        {
+          guardPath: [{ branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' }],
+          startLine: 3,
+          endLine: 3,
+        },
+      ]);
+    });
+
+    it('VALID: {if reached through an enclosing guard} => the arm carries the FULL guard path', () => {
+      handleIfLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        'declare function noop(): void;\nfunction classify(value: number) {\n  if (value > 5) {\n    noop();\n  }\n}\n',
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement);
+
+      const result = handleIfLayerTransformer({ node, context: NESTED_GUARD_CONTEXT });
+
+      expect(result.fallthroughArms).toStrictEqual([
+        {
+          guardPath: [
+            { branchCoverageId: 'classify/if:id:flag', arm: 'then' },
+            { branchCoverageId: 'classify/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' },
+          ],
+          startLine: 4,
+          endLine: 4,
+        },
+      ]);
+    });
+  });
 });

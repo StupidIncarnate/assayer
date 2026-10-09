@@ -185,6 +185,86 @@ describe('analyzeFileBroker', () => {
     });
   });
 
+  describe('a dead arm that falls through (welded const)', () => {
+    // The dead `then` arm continues into the code after the `if`, so it owns no exit. Its fall-through
+    // record is what reports it, on the same lint rule a dead exit uses, in every scope alike.
+    it('VALID: {module scope, value welded to 3, dead then arm logs} => an unreachable-exit lint on the arm', () => {
+      analyzeFileBrokerProxy();
+      const source = "const value = 3;\n\nif (value > 5) {\n  console.log('then');\n}\n\nconsole.log('else');\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/log-arm.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/log-arm.ts' });
+
+      expect({ undriven: result.undriven, lints: result.lints }).toStrictEqual({
+        undriven: [],
+        lints: [
+          {
+            rule: 'unreachable-exit',
+            name: '*module*',
+            message:
+              '`log-arm.ts` can never run the arm on line 4: `value` is welded to `3`, so the branch on line 3 always ' +
+              'takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+            startLine: 4,
+            endLine: 4,
+          },
+        ],
+      });
+    });
+
+    it('VALID: {function scope, dead then arm of two statements} => the lint spans both statement lines', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "const value = 3;\n\nexport function run(): void {\n  if (value > 5) {\n    console.log('a');\n    console.log('b');\n  }\n  console.log('after');\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/run.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/run.ts' });
+
+      expect(result.lints).toStrictEqual([
+        {
+          rule: 'unreachable-exit',
+          name: 'run',
+          message:
+            '`run` can never run the arm on lines 5 to 6: `value` is welded to `3`, so the branch on line 4 always ' +
+            'takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+          startLine: 5,
+          endLine: 6,
+        },
+      ]);
+    });
+
+    it('EMPTY: {function scope, value welded to 7, live then arm logs} => no lint, since the trailing code is never dead', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "const value = 7;\n\nexport function run(): void {\n  if (value > 5) {\n    console.log('then');\n  }\n  console.log('after');\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/run.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/run.ts' });
+
+      expect(result.lints).toStrictEqual([]);
+    });
+
+    it('VALID: {private folded into its caller, literal 3 welded at the call, dead arm of two lines} => the lint keys on the caller and spans the arm', () => {
+      analyzeFileBrokerProxy();
+      const source =
+        "function decide(value: number): string {\n  if (value > 5) {\n    console.log('a');\n    console.log('b');\n  }\n  return 'done';\n}\n\nexport function report(): string {\n  return decide(3);\n}\n";
+      const walked = walkFileTransformer({ source, relPath: 'src/funnel.ts' });
+
+      const result = analyzeFileBroker({ walked, relPath: 'src/funnel.ts' });
+
+      expect(result.lints).toStrictEqual([
+        {
+          rule: 'unreachable-exit',
+          name: 'report',
+          message:
+            '`decide` can never run the arm on lines 3 to 4: `value` is welded to `3`, so the branch on line 2 always ' +
+            'takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+          startLine: 3,
+          endLine: 4,
+        },
+      ]);
+    });
+  });
+
   describe('class methods', () => {
     it('VALID: {exported class method} => analysed under the class path (was a declared gap)', () => {
       analyzeFileBrokerProxy();

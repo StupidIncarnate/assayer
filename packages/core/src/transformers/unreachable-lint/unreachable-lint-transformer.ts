@@ -11,6 +11,12 @@
  *     its welded value (or fixed length), never "the guards cannot all hold at once", which is false
  *     when there is a single always-true guard.
  *
+ *   The dead code is one of two shapes, and the message names which one the reader deletes: an EXIT (a
+ *   `return`, a `throw`, an arm's completion) is one line, and a FALL-THROUGH arm (one whose statements
+ *   continue into the code after the branch, marked by `armEndLine`) is the span of its statements. A
+ *   dead arm keeps the `unreachable-exit` rule: it is the "arm the value could never satisfy" that rule
+ *   exists to report, and an arm that ends a scope is already reported under it as an exit.
+ *
  *   `name` keys the lint to its entry (a module scope stays `*module*`); `displayName` is what the
  *   message shows — a module's label, an anonymous scope's callsite, or a named function's own name —
  *   so the reader never meets a cache key, neither the internal `*module*` token nor an anonymous
@@ -32,6 +38,7 @@ export const unreachableLintTransformer = ({
   displayName: string;
   unreachableExits: {
     line: number;
+    armEndLine?: number;
     guardLines: number[];
     welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
   }[];
@@ -43,16 +50,25 @@ export const unreachableLintTransformer = ({
         ? `welded to \`${JSON.stringify(unreachable.welded?.value)}\``
         : `welded to a fixed length of ${String(unreachable.welded.length)}`;
 
+    // A dead EXIT is one line. A dead fall-through ARM is the span of its statements, so the message
+    // names the whole span the reader deletes.
+    const target =
+      unreachable.armEndLine === undefined
+        ? `reach the exit on line ${String(unreachable.line)}`
+        : unreachable.armEndLine === unreachable.line
+          ? `run the arm on line ${String(unreachable.line)}`
+          : `run the arm on lines ${String(unreachable.line)} to ${String(unreachable.armEndLine)}`;
+
     const message =
       unreachable.welded === undefined
-        ? `\`${displayName}\` can never reach the exit on line ${String(unreachable.line)}: the guards on ${unreachable.guardLines.length === 1 ? 'line' : 'lines'} ${unreachable.guardLines.map((line) => String(line)).join(', ')} cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.`
-        : `\`${displayName}\` can never reach the exit on line ${String(unreachable.line)}: ${subject} is ${weldedTo}, so the branch on line ${String(unreachable.welded.line)} always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.`;
+        ? `\`${displayName}\` can never ${target}: the guards on ${unreachable.guardLines.length === 1 ? 'line' : 'lines'} ${unreachable.guardLines.map((line) => String(line)).join(', ')} cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.`
+        : `\`${displayName}\` can never ${target}: ${subject} is ${weldedTo}, so the branch on line ${String(unreachable.welded.line)} always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.`;
 
     return lintEntryContract.parse({
       rule: 'unreachable-exit',
       name,
       message,
       startLine: unreachable.line,
-      endLine: unreachable.line,
+      endLine: unreachable.armEndLine ?? unreachable.line,
     });
   });

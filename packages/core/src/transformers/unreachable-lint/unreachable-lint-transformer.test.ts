@@ -86,4 +86,49 @@ describe('unreachableLintTransformer', () => {
       );
     });
   });
+
+  describe('a dead fall-through arm', () => {
+    // An arm that continues into the code after the branch is a region, not an exit: the message names
+    // the arm and its span, and the lint's endLine is the arm's last statement line.
+    it('VALID: {one-line arm, value welded to 3} => a lint naming the arm on its single line', () => {
+      const [lint] = unreachableLintTransformer({
+        name: '*module*',
+        displayName: 'log-arm.ts',
+        unreachableExits: [
+          {
+            line: line(4),
+            armEndLine: line(4),
+            guardLines: [line(3)],
+            welded: { line: line(3), operand: 'value', value: representativeValueContract.parse(3) },
+          },
+        ],
+      });
+
+      expect(lint).toStrictEqual({
+        rule: 'unreachable-exit',
+        name: '*module*',
+        message:
+          '`log-arm.ts` can never run the arm on line 4: `value` is welded to `3`, so the branch on line 3 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+        startLine: 4,
+        endLine: 4,
+      });
+    });
+
+    it('VALID: {arm spanning lines 4 to 6, contradictory guards} => a lint naming the span and ending on its last line', () => {
+      const [lint] = unreachableLintTransformer({
+        name,
+        displayName: label,
+        unreachableExits: [{ line: line(4), armEndLine: line(6), guardLines: [line(2), line(3)] }],
+      });
+
+      expect(lint).toStrictEqual({
+        rule: 'unreachable-exit',
+        name: 'classify',
+        message:
+          '`classify` can never run the arm on lines 4 to 6: the guards on lines 2, 3 cannot all hold at once. Either a comparison is wrong, or this branch is dead and should be deleted.',
+        startLine: 4,
+        endLine: 6,
+      });
+    });
+  });
 });

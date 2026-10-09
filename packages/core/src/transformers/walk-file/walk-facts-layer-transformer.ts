@@ -2,7 +2,8 @@
  * PURPOSE: The merge that folds a node's children back together — one `WalkFacts` per channel,
  *   concatenated in descent order so the walk's output is byte-identical run to run.
  *
- *   Branches and exits travel as LOOSE facts: they belong to the nearest enclosing scope and are
+ *   Branches, exits and the other scope channels (calls, value uses, exported bindings, index demands,
+ *   fall-through arms) travel as LOOSE facts: they belong to the nearest enclosing scope and are
  *   claimed on the way back up by whichever node opened it. Everything else here — nodes, probe sites,
  *   module edges, declared shapes, global uses, env reads, reached and invoked functions — is FLAT: a
  *   fact about the file that no scope ever claims. The vocabulary a handler answers in lives in
@@ -26,6 +27,7 @@ export const walkFactsLayerTransformer = ({ facts }: { facts: WalkFacts[] }): Wa
       looseValueUses: [...merged.looseValueUses, ...next.looseValueUses],
       looseExportedBindings: [...merged.looseExportedBindings, ...next.looseExportedBindings],
       looseIndexDemands: [...merged.looseIndexDemands, ...next.looseIndexDemands],
+      looseFallthroughArms: [...merged.looseFallthroughArms, ...next.looseFallthroughArms],
       nodes: [...merged.nodes, ...next.nodes],
       probeSites: [...merged.probeSites, ...next.probeSites],
       moduleEdges: [...merged.moduleEdges, ...next.moduleEdges],
@@ -43,6 +45,7 @@ export const walkFactsLayerTransformer = ({ facts }: { facts: WalkFacts[] }): Wa
       looseValueUses: [],
       looseExportedBindings: [],
       looseIndexDemands: [],
+      looseFallthroughArms: [],
       nodes: [],
       probeSites: [],
       moduleEdges: [],

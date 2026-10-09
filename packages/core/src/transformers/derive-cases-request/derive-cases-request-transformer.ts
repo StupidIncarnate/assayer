@@ -6,9 +6,10 @@
  *   option added to the engine reached only whichever file the author had open. Eight bugs came from
  *   that, tracked in `plan/followups.md` under "Four places build the same request by hand".
  *
- *   `exits` and `returnPredicate` are the same act at every call site, so they are read straight off
- *   `scope` with no per-caller choice: `exits` is `scope.exits`, and `returnPredicate` is
- *   `scope.predicateSignature` when the scope has one. A caller that skipped `returnPredicate` used to be
+ *   `exits`, `fallthroughArms` and `returnPredicate` are the same act at every call site, so they are
+ *   read straight off `scope` with no per-caller choice: `exits` is `scope.exits`, `fallthroughArms` is
+ *   `scope.fallthroughArms` when the scope has any, and `returnPredicate` is `scope.predicateSignature`
+ *   when the scope has one. A caller that skipped `returnPredicate` used to be
  *   exactly how a branchless callback like `ns.filter(n => n > 5)` collapsed to one test case instead of
  *   splitting true from false — folding the read in here is what makes that omission impossible to repeat.
  *
@@ -39,7 +40,7 @@
  *   scope: callee, params: callee.params, welds: weldByParam, envDrivable: false, harness,
  * }));
  * // Returns the exact argument object deriveCasesTransformer takes — { params, branches, exits,
- * //   envDrivable, returnPredicate?, harness? }
+ * //   envDrivable, returnPredicate?, harness?, indexDemands?, fallthroughArms? }
  */
 import type { ParamDescriptor, RepresentativeValue } from '@assayer/shared/contracts';
 
@@ -67,4 +68,5 @@ export const deriveCasesRequestTransformer = ({
   ...(scope.predicateSignature === undefined ? {} : { returnPredicate: scope.predicateSignature }),
   ...(harness === undefined ? {} : { harness }),
   ...(scope.indexDemands.length === 0 ? {} : { indexDemands: scope.indexDemands }),
+  ...(scope.fallthroughArms.length === 0 ? {} : { fallthroughArms: scope.fallthroughArms }),
 });

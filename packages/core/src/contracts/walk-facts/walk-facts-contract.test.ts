@@ -1,3 +1,4 @@
+import { FallthroughArmStub } from '../fallthrough-arm/fallthrough-arm.stub';
 import { IndexDemandStub } from '../index-demand/index-demand.stub';
 import { ScopeRecordStub } from '../scope-record/scope-record.stub';
 import { WalkNodeStub } from '../walk-node/walk-node.stub';
@@ -16,6 +17,14 @@ describe('walkFactsContract', () => {
 
     it('VALID: {scopes and nodes} => parses a populated fact set', () => {
       const facts = WalkFactsStub({ scopes: [ScopeRecordStub()], nodes: [WalkNodeStub()] });
+
+      const result = walkFactsContract.parse(facts);
+
+      expect(result).toStrictEqual(facts);
+    });
+
+    it('VALID: {looseFallthroughArms} => parses walk facts with fall-through arms', () => {
+      const facts = WalkFactsStub({ looseFallthroughArms: [FallthroughArmStub()] });
 
       const result = walkFactsContract.parse(facts);
 

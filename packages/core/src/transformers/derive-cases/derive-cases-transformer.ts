@@ -25,6 +25,12 @@
  *   whose values could not come from the guards. `2^branches` growth is the ceiling a later rung caps;
  *   v1 specimens sit at <= 2 branches.
  *
+ *   A FALL-THROUGH arm (`fallthroughArms`: an arm whose statements continue into the code after the
+ *   branch, so it owns no exit) is dead by the same emptiness check, asked of every bucket that ENTERS
+ *   it rather than every bucket that maps to an exit. It rides the same `unreachableExits` list, marked
+ *   by `armEndLine`, so one lint channel names every dead region. A dead arm subsumes every exit and
+ *   nested arm inside it, so one deletion is named once.
+ *
  *   `envDrivable` says whether THIS entry is one the environment is an input to — a module scope,
  *   which runs when imported and reads the environment as it goes. It is passed down rather than
  *   inferred because it is a fact about the entry, and the leaves only know a fact about the code.
@@ -52,8 +58,8 @@
  *   never admitted undriven, since a branchless predicate is always callable.
  *
  * USAGE:
- * deriveCasesTransformer({ params, branches, exits, envDrivable: false, returnPredicate });
- * // Returns { cases: [{ reachesPath, arrange, salient }, …], unreachableExits: [{ line, guardLines }, …],
+ * deriveCasesTransformer({ params, branches, exits, envDrivable: false, returnPredicate, fallthroughArms });
+ * // Returns { cases: [{ reachesPath, arrange, salient }, …], unreachableExits: [{ line, armEndLine?, guardLines }, …],
  * //   undrivenBranches: [{ line, operand? }, …], unfillable: [{ param, type }, …] }
  */
 import { derivedTestCaseContract } from '@assayer/shared/contracts';
@@ -61,6 +67,7 @@ import type { BranchNode, ConditionNode, DerivedTestCase, ExitNode, ParamDescrip
 
 import { undrivenCauseContract } from '../../contracts/undriven-cause/undriven-cause-contract';
 import type { UndrivenCause } from '../../contracts/undriven-cause/undriven-cause-contract';
+import type { FallthroughArm } from '../../contracts/fallthrough-arm/fallthrough-arm-contract';
 import type { IndexDemand } from '../../contracts/index-demand/index-demand-contract';
 import { isPredicateConstrainingGuard } from '../../guards/is-predicate-constraining/is-predicate-constraining-guard';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
@@ -79,6 +86,7 @@ export const deriveCasesTransformer = ({
   returnPredicate,
   harness,
   indexDemands,
+  fallthroughArms,
 }: {
   params: ParamDescriptor[];
   branches: BranchNode[];
@@ -87,10 +95,12 @@ export const deriveCasesTransformer = ({
   returnPredicate?: ConditionNode;
   harness?: { entry: string; params: readonly string[] } | undefined;
   indexDemands?: IndexDemand[];
+  fallthroughArms?: FallthroughArm[];
 }): {
   cases: DerivedTestCase[];
   unreachableExits: {
     line: number;
+    armEndLine?: number;
     guardLines: number[];
     welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
   }[];
@@ -269,6 +279,7 @@ export const deriveCasesTransformer = ({
 
     return {
       predWant: bucket.predWant,
+      armByBranch,
       arrange: causeArrangeTransformer({
         requirements: bucket.requirements,
         params: applied,
@@ -322,33 +333,62 @@ export const deriveCasesTransformer = ({
   // An exit is unreachable iff at least one bucket maps to it and EVERY bucket that maps to it is
   // infeasible. A dead middle exit (its guards contradict) is reached only by infeasible buckets; an
   // exit two feasible buckets share is reachable.
-  const unreachableExits = steerableExits.flatMap((exit) => {
+  const deadExits = steerableExits.flatMap((exit) => {
     const mapping = evaluated.filter(
       (entry) => entry.exit !== undefined && String(entry.exit.coverageId) === String(exit.coverageId),
     );
     const unreachable = mapping.length > 0 && mapping.every((entry) => entry.arrange.unreachable);
 
-    if (!unreachable) {
+    return unreachable ? [{ guardPath: exit.guardPath, line: exit.line }] : [];
+  });
+
+  // A fall-through arm owns no exit, so no bucket ever MAPS to it. It is entered by every bucket whose
+  // arms satisfy its whole guard path, and it is dead iff at least one bucket enters it and every one of
+  // them is infeasible. The same emptiness check as an exit, asked of the region instead of an exit.
+  const deadArms = (fallthroughArms ?? []).flatMap((arm) => {
+    if (arm.guardPath.some((step) => unsteerableIds.has(step.branchCoverageId))) {
       return [];
     }
+    const entering = evaluated.filter((entry) =>
+      arm.guardPath.every((step) => entry.armByBranch.get(String(step.branchCoverageId)) === String(step.arm)),
+    );
+    const unreachable = entering.length > 0 && entering.every((entry) => entry.arrange.unreachable);
 
-    // The welded branch on this exit's guard path, if any — the accurate reason the arm is dead.
-    const [welded] = exit.guardPath.flatMap((step) => {
-      const entry = weldedByBranch.get(String(step.branchCoverageId));
-      return entry === undefined ? [] : [entry];
-    });
+    return unreachable ? [{ guardPath: arm.guardPath, line: arm.startLine, armEndLine: arm.endLine }] : [];
+  });
 
-    return [
-      {
-        line: exit.line,
-        guardLines: exit.guardPath.flatMap((step) => {
+  // A dead arm is reported once, as the whole region, and it SUBSUMES everything inside it: an exit or a
+  // nested arm whose guard path extends a dead arm's path is dead for the same reason, and a second lint
+  // inside the region would name the same deletion twice. Each entry's path keys are compared as joined
+  // `branch:arm` strings, so "extends" is a plain prefix check over those keys.
+  const deadArmKeys = deadArms.map((arm) => arm.guardPath.map((step) => `${String(step.branchCoverageId)}:${String(step.arm)}`));
+  const unreachableExits = [...deadExits, ...deadArms]
+    .filter((dead) => {
+      const keys = dead.guardPath.map((step) => `${String(step.branchCoverageId)}:${String(step.arm)}`);
+
+      return !deadArmKeys.some(
+        (armKeys) =>
+          (armKeys.length < keys.length || (armKeys.length === keys.length && !('armEndLine' in dead))) &&
+          armKeys.every((key, index) => key === keys[index]),
+      );
+    })
+    .map((dead) => {
+      // The welded branch on the guard path, if any — the accurate reason the code behind it is dead.
+      const [welded] = dead.guardPath.flatMap((step) => {
+        const entry = weldedByBranch.get(String(step.branchCoverageId));
+        return entry === undefined ? [] : [entry];
+      });
+
+      return {
+        line: Number(dead.line),
+        ...('armEndLine' in dead ? { armEndLine: Number(dead.armEndLine) } : {}),
+        guardLines: dead.guardPath.flatMap((step) => {
           const line = lineByBranch.get(step.branchCoverageId);
           return line === undefined ? [] : [line];
         }),
         ...(welded === undefined ? {} : { welded }),
-      },
-    ];
-  });
+      };
+    });
 
   // Every parameter the fill seam refused, deduped by name across the buckets that asked. Buckets are
   // enumerated deterministically and a Map keeps first-seen order, so the list is byte-stable. An

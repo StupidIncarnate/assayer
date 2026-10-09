@@ -4,6 +4,7 @@ import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/cond
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
 
+import { FallthroughArmStub } from '../../contracts/fallthrough-arm/fallthrough-arm.stub';
 import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 import { deriveCasesTransformer } from './derive-cases-transformer';
 
@@ -524,6 +525,163 @@ describe('deriveCasesTransformer', () => {
         undrivenBranches: [],
         unfillable: [],
       });
+    });
+  });
+
+  describe('a fall-through arm no value can enter', () => {
+    // `const value = 3; if (value > 5) { log(); } log();`: the dead `then` arm owns no exit, so only its
+    // fall-through record can report it. It rides `unreachableExits` with the arm's span.
+    const WELDED_THREE = BranchNodeStub({
+      coverageId: 'run/if:value',
+      startLine: 3,
+      condition: {
+        kind: 'leaf',
+        id: 'run/if:value#leaf',
+        operandParamName: 'value',
+        operandConstValue: 3,
+        operandType: { kind: 'number' },
+        predicate: { kind: 'gt', literal: 5 },
+      },
+    });
+    const PARAM_BRANCH = BranchNodeStub({
+      coverageId: 'run/if:n',
+      startLine: 4,
+      condition: { kind: 'leaf', id: 'run/if:n#leaf', operandParamName: 'n', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 1 } },
+    });
+    const TRAILING_EXIT = ExitNodeStub({ coverageId: 'run/exit@complete', kind: 'implicit', guardPath: [], line: 7 });
+
+    it('VALID: {then arm welded dead, falls through} => the live case, and the dead arm reported with its span and weld', () => {
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [WELDED_THREE],
+        exits: [TRAILING_EXIT],
+        envDrivable: false,
+        fallthroughArms: [FallthroughArmStub({ guardPath: [{ branchCoverageId: 'run/if:value', arm: 'then' }], startLine: 4, endLine: 5 })],
+      });
+
+      expect(result).toStrictEqual({
+        cases: [{ reachesPath: ['run/exit@complete'], arrange: [], salient: true }],
+        unreachableExits: [{ line: 4, armEndLine: 5, guardLines: [3], welded: { line: 3, operand: 'value', value: 3 } }],
+        undrivenBranches: [],
+        unfillable: [],
+      });
+    });
+
+    it('EMPTY: {else arm of the same welded branch} => no report, since the weld always takes that arm', () => {
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [WELDED_THREE],
+        exits: [TRAILING_EXIT],
+        envDrivable: false,
+        fallthroughArms: [FallthroughArmStub({ guardPath: [{ branchCoverageId: 'run/if:value', arm: 'else' }], startLine: 6, endLine: 6 })],
+      });
+
+      expect(result.unreachableExits).toStrictEqual([]);
+    });
+
+    it('VALID: {an arm whose guards contradict} => the dead arm names the guard lines and carries no weld', () => {
+      const outer = BranchNodeStub({
+        coverageId: 'run/if:big',
+        startLine: 2,
+        condition: { kind: 'leaf', id: 'run/if:big#leaf', operandParamName: 'n', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 5 } },
+      });
+      const inner = BranchNodeStub({
+        coverageId: 'run/if:small',
+        startLine: 3,
+        condition: { kind: 'leaf', id: 'run/if:small#leaf', operandParamName: 'n', operandType: { kind: 'number' }, predicate: { kind: 'lt', literal: 3 } },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'n', type: { kind: 'number' } })],
+        branches: [outer, inner],
+        exits: [TRAILING_EXIT],
+        envDrivable: false,
+        fallthroughArms: [
+          FallthroughArmStub({
+            guardPath: [
+              { branchCoverageId: 'run/if:big', arm: 'then' },
+              { branchCoverageId: 'run/if:small', arm: 'then' },
+            ],
+            startLine: 4,
+            endLine: 4,
+          }),
+        ],
+      });
+
+      expect(result.unreachableExits).toStrictEqual([{ line: 4, armEndLine: 4, guardLines: [2, 3] }]);
+    });
+
+    it('VALID: {a dead arm holding a nested exit and a nested arm} => only the outer arm is reported', () => {
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'n', type: { kind: 'number' } })],
+        branches: [WELDED_THREE, PARAM_BRANCH],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'run/return@inner',
+            guardPath: [
+              { branchCoverageId: 'run/if:value', arm: 'then' },
+              { branchCoverageId: 'run/if:n', arm: 'then' },
+            ],
+            line: 5,
+          }),
+          TRAILING_EXIT,
+        ],
+        envDrivable: false,
+        fallthroughArms: [
+          FallthroughArmStub({ guardPath: [{ branchCoverageId: 'run/if:value', arm: 'then' }], startLine: 4, endLine: 6 }),
+          FallthroughArmStub({
+            guardPath: [
+              { branchCoverageId: 'run/if:value', arm: 'then' },
+              { branchCoverageId: 'run/if:n', arm: 'else' },
+            ],
+            startLine: 6,
+            endLine: 6,
+          }),
+        ],
+      });
+
+      expect(result.unreachableExits).toStrictEqual([
+        { line: 4, armEndLine: 6, guardLines: [3], welded: { line: 3, operand: 'value', value: 3 } },
+      ]);
+    });
+
+    it('EMPTY: {a dead-looking arm behind an un-steerable branch} => no report, since nothing derives behind that branch', () => {
+      const opaque = BranchNodeStub({
+        coverageId: 'run/if:opaque',
+        startLine: 2,
+        condition: { kind: 'leaf', id: 'run/if:opaque#leaf', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 5 } },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [opaque, WELDED_THREE],
+        exits: [TRAILING_EXIT],
+        envDrivable: false,
+        fallthroughArms: [
+          FallthroughArmStub({
+            guardPath: [
+              { branchCoverageId: 'run/if:opaque', arm: 'then' },
+              { branchCoverageId: 'run/if:value', arm: 'then' },
+            ],
+            startLine: 4,
+            endLine: 4,
+          }),
+        ],
+      });
+
+      expect(result.unreachableExits).toStrictEqual([]);
+    });
+
+    it('EDGE: {an arm guarded by a branch the entry does not carry} => no report, since no bucket enters it', () => {
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [WELDED_THREE],
+        exits: [TRAILING_EXIT],
+        envDrivable: false,
+        fallthroughArms: [FallthroughArmStub({ guardPath: [{ branchCoverageId: 'run/if:elsewhere', arm: 'then' }], startLine: 9, endLine: 9 })],
+      });
+
+      expect(result.unreachableExits).toStrictEqual([]);
     });
   });
 

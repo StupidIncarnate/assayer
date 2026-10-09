@@ -40,7 +40,7 @@
  *
  * USAGE:
  * funnelNamedCasesTransformer({ scope: outer, scopes, welds: new Map() });
- * // Returns { cases, unreachable: [{ line, guardLines, welded?, displayName }],
+ * // Returns { cases, unreachable: [{ line, armEndLine?, guardLines, welded?, displayName }],
  * //   consumed: [{ name, startLine, params }], unfillable: [{ param, type, owner }] }
  */
 import { arrangeBindingContract, derivedTestCaseContract } from '@assayer/shared/contracts';
@@ -68,6 +68,7 @@ export const funnelNamedCasesTransformer = ({
   cases: DerivedTestCase[];
   unreachable: {
     line: number;
+    armEndLine?: number;
     guardLines: number[];
     welded?: { line: number; operand?: string; value?: RepresentativeValue; length?: number };
     displayName: string;

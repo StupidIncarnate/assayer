@@ -3,6 +3,7 @@ import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-nod
 import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
 import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 
+import { FallthroughArmStub } from '../../contracts/fallthrough-arm/fallthrough-arm.stub';
 import { ScopeRecordStub } from '../../contracts/scope-record/scope-record.stub';
 import { IndexDemandStub } from '../../contracts/index-demand/index-demand.stub';
 import { deriveCasesRequestTransformer } from './derive-cases-request-transformer';
@@ -151,6 +152,36 @@ describe('deriveCasesRequestTransformer', () => {
       });
 
       expect('indexDemands' in result).toBe(false);
+    });
+  });
+
+  describe('fallthroughArms', () => {
+    it('VALID: {scope has fall-through arms} => the request carries them', () => {
+      const arm = FallthroughArmStub({ guardPath: [{ branchCoverageId: 'inner/if:value', arm: 'then' }], startLine: 3, endLine: 3 });
+      const scopeWithArms = ScopeRecordStub({ ...SCOPE, fallthroughArms: [arm] });
+      const result = deriveCasesRequestTransformer({
+        scope: scopeWithArms,
+        params: scopeWithArms.params,
+        welds: undefined,
+        envDrivable: false,
+        harness: undefined,
+      });
+
+      expect(result.fallthroughArms).toStrictEqual([
+        { guardPath: [{ branchCoverageId: 'inner/if:value', arm: 'then' }], startLine: 3, endLine: 3 },
+      ]);
+    });
+
+    it('EMPTY: {scope has no fall-through arms} => the request carries no fallthroughArms key at all', () => {
+      const result = deriveCasesRequestTransformer({
+        scope: SCOPE,
+        params: SCOPE.params,
+        welds: undefined,
+        envDrivable: false,
+        harness: undefined,
+      });
+
+      expect('fallthroughArms' in result).toBe(false);
     });
   });
 });

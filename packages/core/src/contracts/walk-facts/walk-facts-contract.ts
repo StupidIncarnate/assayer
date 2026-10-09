@@ -15,6 +15,7 @@ import { branchNodeContract, envReadContract, exitNodeContract, globalUseContrac
 
 import { callSiteContract } from '../call-site/call-site-contract';
 import { declaredShapeContract } from '../declared-shape/declared-shape-contract';
+import { fallthroughArmContract } from '../fallthrough-arm/fallthrough-arm-contract';
 import { invokedFnContract } from '../invoked-fn/invoked-fn-contract';
 import { probeSiteContract } from '../probe-site/probe-site-contract';
 import { indexDemandContract } from '../index-demand/index-demand-contract';
@@ -37,6 +38,9 @@ export const walkFactsContract = z.object({
   looseExportedBindings: z.array(z.string().min(1).brand<'WalkFactsLooseExportedBindings'>()),
   // Loose on its own channel: index demands belong to the nearest enclosing scope and are claimed on the way back up.
   looseIndexDemands: z.array(indexDemandContract),
+  // Loose on its own channel: a fall-through arm belongs to the nearest enclosing scope and is claimed on
+  // the way back up.
+  looseFallthroughArms: z.array(fallthroughArmContract),
   nodes: z.array(walkNodeContract),
   // Flat like `nodes`, not loose like branches/exits: a probe site is a position in the FILE, so no
   // scope ever claims it.

@@ -13,6 +13,7 @@ import type { BranchNode, EnvRead, ExitNode, GlobalUse, ModuleEdge } from '@assa
 import type { CallSite } from '../call-site/call-site-contract';
 import type { DeclaredShape } from '../declared-shape/declared-shape-contract';
 import type { Descent } from '../descent/descent-contract';
+import type { FallthroughArm } from '../fallthrough-arm/fallthrough-arm-contract';
 import type { IndexDemand } from '../index-demand/index-demand-contract';
 import type { InvokedFn } from '../invoked-fn/invoked-fn-contract';
 import type { ProbeSite } from '../probe-site/probe-site-contract';
@@ -31,6 +32,9 @@ export interface HandlerResult {
   exportedBindings: string[];
   /** The array indexing operations this node made — loose, claimed by the enclosing scope like calls. */
   indexDemands: IndexDemand[];
+  /** The branch arms this node opened whose statements fall through to the code after the branch —
+   * loose, claimed by the enclosing scope like calls. */
+  fallthroughArms: FallthroughArm[];
   nodes: WalkNode[];
   /** Where the instrumenter must wrap, keyed by the id the analyzer already derived. */
   probeSites: ProbeSite[];
