@@ -1,8 +1,8 @@
 /**
  * PURPOSE: The MAIN barrel for @assayer/core — the surface a consumer's own code imports. Today that is
  *   the harness artifact and nothing else: `assayerHarness`, the registration seam a colocated
- *   `<basename>.harness.ts` calls, and `HarnessDeclaration`, the published type its argument is checked
- *   against.
+ *   `<basename>.harness.ts` calls, and `HarnessDeclarationInput`, the published type its argument is
+ *   checked against. `HarnessDeclaration` is the validated result it returns.
  *
  *   It is deliberately narrow. Every other subpath (`./brokers`, `./adapters`, `./contracts`,
  *   `./transformers`, `./testing`) is Assayer's own plumbing, and the bare specifier is what the input-gap
@@ -17,4 +17,7 @@
 
 export { assayerHarnessTransformer as assayerHarness } from './src/transformers/assayer-harness/assayer-harness-transformer';
 
-export type { HarnessDeclaration } from './src/contracts/harness-declaration/harness-declaration-contract';
+export type {
+  HarnessDeclaration,
+  HarnessDeclarationInput,
+} from './src/contracts/harness-declaration/harness-declaration-contract';

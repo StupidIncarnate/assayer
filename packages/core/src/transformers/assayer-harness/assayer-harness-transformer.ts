@@ -19,7 +19,10 @@
  * // Returns the validated HarnessDeclaration — values pass through by reference
  */
 import { harnessDeclarationContract } from '../../contracts/harness-declaration/harness-declaration-contract';
-import type { HarnessDeclaration } from '../../contracts/harness-declaration/harness-declaration-contract';
+import type {
+  HarnessDeclaration,
+  HarnessDeclarationInput,
+} from '../../contracts/harness-declaration/harness-declaration-contract';
 
-export const assayerHarnessTransformer = ({ inputs }: HarnessDeclaration): HarnessDeclaration =>
+export const assayerHarnessTransformer = ({ inputs }: HarnessDeclarationInput): HarnessDeclaration =>
   harnessDeclarationContract.parse({ inputs });

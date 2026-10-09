@@ -32,3 +32,8 @@ export const harnessDeclarationContract = z.object({
 }).brand<'HarnessDeclaration'>();
 
 export type HarnessDeclaration = z.infer<typeof harnessDeclarationContract>;
+
+// What an author writes. `z.infer` is the parsed output, which carries the brands, and a plain object
+// literal cannot be assigned to a branded type. `z.input` has no brands, so it is the type
+// `assayerHarness` accepts.
+export type HarnessDeclarationInput = z.input<typeof harnessDeclarationContract>;

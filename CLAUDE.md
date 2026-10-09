@@ -135,7 +135,8 @@ same catalogue of example files the e2e suite drives. Point `--repo` at a
 cache compiled from it.
 
 Populate that cache the same way the e2e suite does. The source of truth for
-these steps is `packages/app/test/harnesses/smoke-repo-app.harness.ts`:
+these steps is `compileSmokeCache` in
+`packages/app/test/harnesses/smoke-cache.harness.ts`:
 
 1. Write an `assayer.config.json` whose `repoRoot` is the ABSOLUTE path to
    the smoke-repo.

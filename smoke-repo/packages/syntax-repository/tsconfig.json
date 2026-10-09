@@ -71,7 +71,32 @@
       // `<basename>.harness.ts` imports `assayerHarness` from it, exactly as the input-gap invoice
       // instructs. It resolves to core's MAIN barrel, which publishes that seam and nothing else.
       "@assayer/core": ["../../../packages/core/index.ts"],
-      "@assayer/shared/contracts": ["../../../packages/shared/src/contracts/contracts"]
+      "@assayer/shared/contracts": ["../../../packages/shared/src/contracts/contracts"],
+      "@assayer/shared/transformers": [
+        "../../../packages/shared/src/transformers/transformers"
+      ],
+      // Core and shared import their outside dependencies through `#gateway/...` subpaths, which a
+      // package.json `imports` map answers. `moduleResolution: "node"` does not read `imports`, so each
+      // subpath core's production code imports is listed here, mapped at the gateway's own source. A
+      // gateway file sits at `src/<name>/<name>.ts`, which one `*` cannot express, so the list is
+      // explicit. A new `#gateway/...` import in core's production code needs a line here.
+      "#gateway/bin/git": ["../../../packages/@gateway/bin/src/git/git"],
+      "#gateway/node/child_process": [
+        "../../../packages/@gateway/node/src/child_process/child_process"
+      ],
+      "#gateway/node/crypto": ["../../../packages/@gateway/node/src/crypto/crypto"],
+      "#gateway/node/fs": ["../../../packages/@gateway/node/src/fs/fs"],
+      "#gateway/node/fs__promises": [
+        "../../../packages/@gateway/node/src/fs__promises/fs__promises"
+      ],
+      "#gateway/node/module": ["../../../packages/@gateway/node/src/module/module"],
+      "#gateway/node/path": ["../../../packages/@gateway/node/src/path/path"],
+      "#gateway/node/process": ["../../../packages/@gateway/node/src/process/process"],
+      "#gateway/node/util": ["../../../packages/@gateway/node/src/util/util"],
+      "#gateway/node/vm": ["../../../packages/@gateway/node/src/vm/vm"],
+      "#gateway/npm/ts-morph": ["../../../packages/@gateway/npm/src/ts-morph/ts-morph"],
+      "#gateway/npm/typescript": ["../../../packages/@gateway/npm/src/typescript/typescript"],
+      "#gateway/npm/zod": ["../../../packages/@gateway/npm/src/zod/zod"]
     }
   },
   "include": ["src/**/*"]
