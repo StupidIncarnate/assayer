@@ -114,8 +114,6 @@ export const assembleShimTransformer = ({
     // subject[entry.name] would find nothing for one, and a module scope is no property at all.
     '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh }),',
     '          entryName: entry.name,',
-    // The access tells the interpreter a module entry's load is what it awaits.
-    '          access: entry.access,',
     '          exitIds: entry.exitIds,',
     '          testCase,',
     '          probe: globalThis.__P,',

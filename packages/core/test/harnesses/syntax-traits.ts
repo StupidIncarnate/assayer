@@ -51,6 +51,7 @@ export type SyntaxTrait =
   | 'access:default'
   | 'access:method'
   | 'access:constructor'
+  | 'access:object-member'
   | 'access:module'
   | 'access:unreachable'
   | 'access:through-caller'

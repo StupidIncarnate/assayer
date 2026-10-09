@@ -15,11 +15,13 @@
  *     so importing it runs the call and its one happy-path case reaches the module's single exit). A
  *     module whose branch turns on an OPAQUE operand earns no case at all, so it is admitted in
  *     `undriven` instead of dropped silently;
- *   - a `method` whose class needs constructor arguments IS a gap: something real is untested and
- *     needs a harness, so it is named rather than dropped;
- *   - a `constructor` is a gap too: it is reached through `new`, which the runner does not model, and
- *     its logic is real;
- *   - everything else is drivable, and the runner resolves it through its access.
+ *   - an instance `method` whose class needs constructor arguments IS a gap: something real is untested
+ *     and needs a harness, so it is named rather than dropped. A `static` method needs no instance, so
+ *     it is drivable whatever its class's constructor takes;
+ *   - everything else is drivable, and the runner resolves it through its access. A `constructor` is
+ *     drivable too: the runner constructs the class with the case's arguments. A constructor whose
+ *     argument no value can be built for derives no case, so the analysis already reports it as an
+ *     input gap.
  *
  *   Reporting the gap rather than driving it is the whole point. Handing an unconstructable entry to
  *   the runner produces a FAILING case against correct code, which reads as the analyzer being
@@ -71,7 +73,7 @@ export const caseSetProjectionTransformer = ({
   // on an opaque operand earns no case at all and is admitted in `undriven` instead.
   const owed = analysis.functions.filter((fn) => fn.entry.access.kind !== 'unreachable' && fn.cases.length > 0);
   const blocked = owed.filter(
-    (fn) => fn.entry.access.kind === 'constructor' || (fn.entry.access.kind === 'method' && !fn.entry.access.constructable),
+    (fn) => fn.entry.access.kind === 'method' && !fn.entry.access.constructable && fn.entry.access.static !== true,
   );
 
   // The run loads a harness only when a case actually reaches for one — a supplied input is the only
@@ -107,10 +109,7 @@ export const caseSetProjectionTransformer = ({
       ...analysis.gaps,
       ...blocked.map((fn) => ({
         name: fn.entry.name,
-        reason:
-          fn.entry.access.kind === 'constructor'
-            ? 'a constructor is reached through `new`, which the runner does not drive — needs a harness'
-            : 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
+        reason: 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
       })),
     ],
     darkSpots: analysis.darkSpots,

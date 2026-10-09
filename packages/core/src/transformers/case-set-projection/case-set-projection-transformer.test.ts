@@ -230,17 +230,54 @@ describe('caseSetProjectionTransformer', () => {
     });
   });
 
+  describe('static methods', () => {
+    // A static method lives on the class, so the arguments its constructor needs never come into it.
+    it('VALID: {a static method whose class needs ctor args} => runnable, never a gap', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: {
+              name: 'parse',
+              scopePath: ['Repo', 'parse'],
+              params: [{ name: 'name', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 4,
+              access: { kind: 'method', className: 'Repo', constructable: false, static: true },
+            },
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/repo.ts',
+        modulePath: '/abs/src/repo.ts',
+      });
+
+      expect({ entries: result.entries, gaps: result.gaps }).toStrictEqual({
+        entries: [
+          {
+            name: 'parse',
+            access: { kind: 'method', className: 'Repo', constructable: false, static: true },
+            exitIds: ['formatGreeting/return@if-then'],
+            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+          },
+        ],
+        gaps: [],
+      });
+    });
+  });
+
   describe('constructors', () => {
-    // Driving it as a method resolves the CLASS, and applying that without `new` throws — a failing
-    // case against correct code, for every class with an explicit constructor.
-    it('VALID: {a constructor} => a NAMED gap rather than something driven', () => {
+    // The runner constructs the class with the case's arguments, the way `new` runs the body.
+    it('VALID: {a constructor with cases} => runnable, carrying the access that reaches it', () => {
       const analysis = FileAnalysisStub({
         functions: [
           FunctionAnalysisStub({
             entry: {
               name: 'constructor',
               scopePath: ['Gauge', 'constructor'],
-              params: [],
+              params: [{ name: 'name', type: { kind: 'string' } }],
               returnType: { kind: 'unknown', text: 'void' },
               line: 2,
               access: { kind: 'constructor', className: 'Gauge' },
@@ -256,14 +293,50 @@ describe('caseSetProjectionTransformer', () => {
       });
 
       expect({ entries: result.entries, gaps: result.gaps }).toStrictEqual({
-        entries: [],
-        gaps: [
+        entries: [
           {
             name: 'constructor',
-            reason: 'a constructor is reached through `new`, which the runner does not drive — needs a harness',
+            access: { kind: 'constructor', className: 'Gauge' },
+            exitIds: ['formatGreeting/return@if-then'],
+            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
           },
         ],
+        gaps: [],
       });
+    });
+  });
+
+  describe('object members', () => {
+    it('VALID: {a function stored on an exported object} => runnable, carrying the access that reaches it', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: {
+              name: 'run',
+              scopePath: ['*module*', 'run'],
+              params: [{ name: 'name', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 2,
+              access: { kind: 'object-member', objectName: 'api', property: 'run' },
+            },
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({
+        analysis,
+        relPath: 'src/api.ts',
+        modulePath: '/abs/src/api.ts',
+      });
+
+      expect(result.entries).toStrictEqual([
+        {
+          name: 'run',
+          access: { kind: 'object-member', objectName: 'api', property: 'run' },
+          exitIds: ['formatGreeting/return@if-then'],
+          cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+        },
+      ]);
     });
   });
 
@@ -276,12 +349,12 @@ describe('caseSetProjectionTransformer', () => {
         functions: [
           FunctionAnalysisStub({
             entry: {
-              name: 'constructor',
-              scopePath: ['Gauge', 'constructor'],
-              params: [],
-              returnType: { kind: 'unknown', text: 'void' },
-              line: 2,
-              access: { kind: 'constructor', className: 'Gauge' },
+              name: 'find',
+              scopePath: ['Repo', 'find'],
+              params: [{ name: 'id', type: { kind: 'string' } }],
+              returnType: { kind: 'string' },
+              line: 4,
+              access: { kind: 'method', className: 'Repo', constructable: false },
             },
           }),
         ],
@@ -290,15 +363,15 @@ describe('caseSetProjectionTransformer', () => {
 
       const result = caseSetProjectionTransformer({
         analysis,
-        relPath: 'src/gauge.ts',
-        modulePath: '/abs/src/gauge.ts',
+        relPath: 'src/repo.ts',
+        modulePath: '/abs/src/repo.ts',
       });
 
       expect(result.gaps).toStrictEqual([
         { name: 'audit', reason: 'the fill seam refuses `report`' },
         {
-          name: 'constructor',
-          reason: 'a constructor is reached through `new`, which the runner does not drive — needs a harness',
+          name: 'find',
+          reason: 'its class needs constructor arguments, so no instance can be built to drive it — needs a harness',
         },
       ]);
     });

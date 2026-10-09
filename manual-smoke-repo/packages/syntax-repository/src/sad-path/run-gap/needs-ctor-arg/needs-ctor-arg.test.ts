@@ -7,13 +7,13 @@ import { fileWalkBroker as walkFileTransformer } from '@assayer/core/walk-file';
 const source = readFileSync(join(__dirname, 'needs-ctor-arg.ts'), 'utf8');
 const relPath = 'src/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts';
 
-describe('run-gap / needs-ctor-arg — a class whose constructor needs arguments makes its members a RUN GAP', () => {
-  // This is the RUN GAP rung: `Repo`'s constructor takes a required `url`, so nothing can build an
-  // instance to drive its method. `case-set-projection` turns both the constructor (reached through
-  // `new`, which the runner never models) and the non-constructable `find` into named gaps — understood
-  // perfectly, but the CALLER owes a harness before either can run. The file pairs them with a plain
-  // driven `tally`, so the file still has a runnable entry (and a Run button) beside the two gaps: the
-  // access kinds asserted here are exactly what `case-set-projection` reads to decide gap-vs-drivable.
+describe('run-gap / needs-ctor-arg — a class whose constructor needs arguments makes its instance method a RUN GAP', () => {
+  // This is the RUN GAP rung: `Repo`'s constructor takes a required `url`, so no zero-argument call can
+  // build an instance to drive its method. `case-set-projection` turns the non-constructable `find` into
+  // a named gap — understood perfectly, but the CALLER owes a harness before it can run. The constructor
+  // itself is driven: the runner constructs `Repo` with the `url` its case arranges. The file pairs them
+  // with a plain driven `tally`: the access kinds asserted here are exactly what `case-set-projection`
+  // reads to decide gap-vs-drivable.
   it('VALID: {exported fn + class needing ctor args} => a driven named entry beside a constructor and a NON-constructable method', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'needs-ctor-arg.ts') }) });
 

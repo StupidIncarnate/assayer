@@ -13,12 +13,22 @@
  *   as uncallable. It is absent whenever the two agree, which is nearly always.
  *
  *   `constructable` is the escalation point: a class whose constructor needs arguments cannot be
- *   driven without them, so it becomes a NAMED gap ("needs a harness") rather than a silent skip or
- *   a false failure.
+ *   driven without them, so its instance methods become a NAMED gap ("needs a harness") rather than a
+ *   silent skip or a false failure. A `static` method is exempt, because it lives on the class itself
+ *   and needs no instance. `static` is absent on an instance method.
+ *
+ *   `accessor` marks a getter or a setter. Reading the property runs a getter, and assigning it runs a
+ *   setter, so the runner reads or writes the property when the case runs instead of calling a
+ *   function it found there. It is absent on an ordinary method.
  *
  *   `constructor` is its own kind rather than a method, because it is reached through `new` and NOT
  *   as a property: resolving it like a method yields the class itself, and applying that without
- *   `new` throws. It is a gap, not a failure — its logic is real and currently undriven.
+ *   `new` throws. The runner drives it by constructing the class with the case's arguments.
+ *
+ *   `object-member` is a function stored as a property of an object the module exports
+ *   (`export const api = { run() {…} }`). The module property is `objectName` (`default` for an
+ *   exported default object), and the function is that object's `property`. The runner calls it with
+ *   the object as `this`, the way an importer would.
  *
  *   `module` and `unreachable` are separate kinds because they are separate facts, and one name for
  *   both is what made the environment invisible. A module scope IS reached — importing the module
@@ -40,12 +50,29 @@
  */
 import { z } from '#gateway/npm/zod';
 
+const accessorContract = z.enum(['get', 'set']);
 
 export const entryAccessContract = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('named'), exportedName: z.string().min(1).brand<'EntryAccessExportedName'>().optional() }).brand<'EntryAccess'>(),
   z.object({ kind: z.literal('default') }).brand<'EntryAccess'>(),
-  z.object({ kind: z.literal('method'), className: z.string().min(1).brand<'EntryAccessClassName'>(), constructable: z.boolean() }).brand<'EntryAccess'>(),
+  z
+    .object({
+      kind: z.literal('method'),
+      className: z.string().min(1).brand<'EntryAccessClassName'>(),
+      constructable: z.boolean(),
+      static: z.literal(true).optional(),
+      accessor: accessorContract.optional(),
+    })
+    .brand<'EntryAccess'>(),
   z.object({ kind: z.literal('constructor'), className: z.string().min(1).brand<'EntryAccessClassName'>() }).brand<'EntryAccess'>(),
+  z
+    .object({
+      kind: z.literal('object-member'),
+      objectName: z.string().min(1).brand<'EntryAccessObjectName'>(),
+      property: z.string().min(1).brand<'EntryAccessProperty'>(),
+      accessor: accessorContract.optional(),
+    })
+    .brand<'EntryAccess'>(),
   z.object({ kind: z.literal('module') }).brand<'EntryAccess'>(),
   z.object({ kind: z.literal('unreachable') }).brand<'EntryAccess'>(),
   z.object({ kind: z.literal('through-caller'), callerName: z.string().min(1).brand<'EntryAccessCallerName'>() }).brand<'EntryAccess'>(),

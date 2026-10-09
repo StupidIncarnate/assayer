@@ -4,7 +4,31 @@ import { caseResolveEntryBroker } from './case-resolve-entry-broker';
 import { caseResolveEntryBrokerProxy } from './case-resolve-entry-broker.proxy';
 
 class Classifier {
+  public static readonly ceiling = 9;
+
   public readonly floor = 5;
+
+  public level = 0;
+
+  public static get top(): number {
+    return this.ceiling;
+  }
+
+  public get bottom(): number {
+    return this.floor;
+  }
+
+  public get threshold(): number {
+    return this.level;
+  }
+
+  public set threshold(value: number) {
+    this.level = value;
+  }
+
+  public static fits(value: number): boolean {
+    return value < this.ceiling;
+  }
 
   public classify(value: number): boolean {
     return value > this.floor;
@@ -141,6 +165,187 @@ describe('caseResolveEntryBroker', () => {
 
       expect(result).toBe(undefined);
     });
+
+    it('EDGE: {the class member is not a function} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { Classifier },
+        name: 'floor',
+        access: EntryAccessStub({ kind: 'method', className: 'Classifier', constructable: true }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    // A static method is on the class, never on an instance, and `this` is the class.
+    it('VALID: {a static method} => resolves a callable bound to the class itself', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { Classifier },
+        name: 'fits',
+        access: EntryAccessStub({ kind: 'method', className: 'Classifier', constructable: false, static: true }),
+      });
+
+      expect((result as (value: number) => boolean)(8)).toBe(true);
+    });
+
+    it('EMPTY: {a static method the class lacks} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { Classifier },
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'method', className: 'Classifier', constructable: true, static: true }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    // The getter body runs when the case applies the entry, not when it is resolved.
+    it('VALID: {a getter} => resolves a function that reads the property off a fresh instance', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { Classifier },
+        name: 'bottom',
+        access: EntryAccessStub({ kind: 'method', className: 'Classifier', constructable: true, accessor: 'get' }),
+      });
+
+      expect((result as () => number)()).toBe(5);
+    });
+
+    it('VALID: {a static getter} => resolves a function that reads the property off the class', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { Classifier },
+        name: 'top',
+        access: EntryAccessStub({
+          kind: 'method',
+          className: 'Classifier',
+          constructable: true,
+          static: true,
+          accessor: 'get',
+        }),
+      });
+
+      expect((result as () => number)()).toBe(9);
+    });
+
+    it('VALID: {a setter} => resolves a function that assigns its one argument and returns undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { Classifier },
+        name: 'threshold',
+        access: EntryAccessStub({ kind: 'method', className: 'Classifier', constructable: true, accessor: 'set' }),
+      });
+
+      expect((result as (value: number) => unknown)(7)).toBe(undefined);
+    });
+  });
+
+  describe('object members', () => {
+    // `this` is the object, the way an importer calling `api.classify(6)` binds it.
+    it('VALID: {a method on an exported object} => resolves a callable bound to that object', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { api: new Classifier() },
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'api', property: 'classify' }),
+      });
+
+      expect((result as (value: number) => boolean)(6)).toBe(true);
+    });
+
+    it('VALID: {a method on a default-exported object} => resolves it from `default`', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { default: new Classifier() },
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'default', property: 'classify' }),
+      });
+
+      expect((result as (value: number) => boolean)(4)).toBe(false);
+    });
+
+    it('VALID: {a getter on an exported object} => resolves a function that reads the property', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { api: new Classifier() },
+        name: 'bottom',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'api', property: 'bottom', accessor: 'get' }),
+      });
+
+      expect((result as () => number)()).toBe(5);
+    });
+
+    it('VALID: {a setter on an exported object} => resolves a function that assigns its one argument to the object', () => {
+      caseResolveEntryBrokerProxy();
+      const api = new Classifier();
+
+      const result = caseResolveEntryBroker({
+        subject: { api },
+        name: 'threshold',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'api', property: 'threshold', accessor: 'set' }),
+      });
+      (result as (value: number) => unknown)(7);
+
+      expect(api.level).toBe(7);
+    });
+
+    it('EMPTY: {the object is not on the module} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: {},
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'api', property: 'classify' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('EMPTY: {the object lacks the property} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { api: new Classifier() },
+        name: 'missing',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'api', property: 'missing' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('EDGE: {the module property is not an object} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { api: 5 },
+        name: 'classify',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'api', property: 'classify' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('EDGE: {the property is not a function} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: { api: new Classifier() },
+        name: 'floor',
+        access: EntryAccessStub({ kind: 'object-member', objectName: 'api', property: 'floor' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
   });
 
   describe('module scopes', () => {
@@ -174,14 +379,26 @@ describe('caseResolveEntryBroker', () => {
   });
 
   describe('constructors', () => {
-    // Resolving it would yield the class, which throws when applied without `new`.
-    it('EMPTY: {a constructor} => undefined, since it is reached through `new`', () => {
+    // A class throws when applied without `new`, so the entry constructs it, passing the case arguments on.
+    it('VALID: {a constructor} => resolves a function that constructs the class with the case arguments', () => {
       caseResolveEntryBrokerProxy();
 
       const result = caseResolveEntryBroker({
-        subject: { Classifier },
+        subject: { Date },
         name: 'constructor',
-        access: EntryAccessStub({ kind: 'constructor', className: 'Classifier' }),
+        access: EntryAccessStub({ kind: 'constructor', className: 'Date' }),
+      });
+
+      expect((result as (time: number) => Date)(0)).toStrictEqual(new Date(0));
+    });
+
+    it('EMPTY: {a constructor whose class is not on the module} => undefined', () => {
+      caseResolveEntryBrokerProxy();
+
+      const result = caseResolveEntryBroker({
+        subject: {},
+        name: 'constructor',
+        access: EntryAccessStub({ kind: 'constructor', className: 'Date' }),
       });
 
       expect(result).toBe(undefined);

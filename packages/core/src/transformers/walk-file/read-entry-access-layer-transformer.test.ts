@@ -170,7 +170,8 @@ describe('readEntryAccessLayerTransformer', () => {
       expect(readEntryAccessLayerTransformer({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'unreachable' });
     });
 
-    it('VALID: {get accessor of a class} => method, the same access shape a plain method gets', () => {
+    // A getter runs when the property is READ, so the runner must read it rather than call what it finds.
+    it('VALID: {get accessor of a class} => method carrying accessor: "get"', () => {
       readEntryAccessLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  get m(): string {\n    return "x";\n  }\n}\n');
@@ -181,10 +182,10 @@ describe('readEntryAccessLayerTransformer', () => {
           node,
           context: WalkContextStub({ enclosingClass: { name: 'C', constructable: true } }),
         }),
-      ).toStrictEqual({ kind: 'method', className: 'C', constructable: true });
+      ).toStrictEqual({ kind: 'method', className: 'C', constructable: true, accessor: 'get' });
     });
 
-    it('VALID: {set accessor of a class} => method, the same access shape a plain method gets', () => {
+    it('VALID: {set accessor of a class} => method carrying accessor: "set"', () => {
       readEntryAccessLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  set m(v: string) {}\n}\n');
@@ -195,13 +196,103 @@ describe('readEntryAccessLayerTransformer', () => {
           node,
           context: WalkContextStub({ enclosingClass: { name: 'C', constructable: true } }),
         }),
-      ).toStrictEqual({ kind: 'method', className: 'C', constructable: true });
+      ).toStrictEqual({ kind: 'method', className: 'C', constructable: true, accessor: 'set' });
+    });
+
+    // A static method lives on the class, not on an instance.
+    it('VALID: {static method of a class} => method carrying static: true', () => {
+      readEntryAccessLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  static m(): void {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
+
+      expect(
+        readEntryAccessLayerTransformer({
+          node,
+          context: WalkContextStub({ enclosingClass: { name: 'C', constructable: false } }),
+        }),
+      ).toStrictEqual({ kind: 'method', className: 'C', constructable: false, static: true });
+    });
+
+    it('VALID: {static getter of a class} => method carrying static: true and accessor: "get"', () => {
+      readEntryAccessLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  static get m(): string {\n    return "x";\n  }\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.GetAccessor);
+
+      expect(
+        readEntryAccessLayerTransformer({
+          node,
+          context: WalkContextStub({ enclosingClass: { name: 'C', constructable: true } }),
+        }),
+      ).toStrictEqual({ kind: 'method', className: 'C', constructable: true, static: true, accessor: 'get' });
+    });
+
+    // The class hands its identity to a field initializer, but an object in that field is not the class.
+    it('EDGE: {method of an object held in a class field} => unreachable, never a method of the class', () => {
+      readEntryAccessLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  handlers = {\n    m(): void {},\n  };\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
+
+      expect(
+        readEntryAccessLayerTransformer({
+          node,
+          context: WalkContextStub({ enclosingClass: { name: 'C', constructable: true } }),
+        }),
+      ).toStrictEqual({ kind: 'unreachable' });
     });
 
     it('EDGE: {method with no class in context} => unreachable rather than a guessed class name', () => {
       readEntryAccessLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'export class C {\n  m(): void {}\n}\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
+
+      expect(readEntryAccessLayerTransformer({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'unreachable' });
+    });
+  });
+
+  describe('object members', () => {
+    it('VALID: {arrow property of an exported object} => object-member naming the object and the property', () => {
+      readEntryAccessLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export const api = {\n  run: (): void => {},\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readEntryAccessLayerTransformer({ node, context: WalkContextStub() })).toStrictEqual({
+        kind: 'object-member',
+        objectName: 'api',
+        property: 'run',
+      });
+    });
+
+    it('VALID: {method of an exported object} => object-member', () => {
+      readEntryAccessLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export const api = {\n  run(): void {},\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
+
+      expect(readEntryAccessLayerTransformer({ node, context: WalkContextStub() })).toStrictEqual({
+        kind: 'object-member',
+        objectName: 'api',
+        property: 'run',
+      });
+    });
+
+    it('VALID: {arrow property of an unexported object} => unreachable', () => {
+      readEntryAccessLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const api = {\n  run: (): void => {},\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readEntryAccessLayerTransformer({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'unreachable' });
+    });
+
+    it('VALID: {method of an unexported object} => unreachable', () => {
+      readEntryAccessLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const api = {\n  run(): void {},\n};\n');
       const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
 
       expect(readEntryAccessLayerTransformer({ node, context: WalkContextStub() })).toStrictEqual({ kind: 'unreachable' });

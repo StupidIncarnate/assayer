@@ -13,17 +13,31 @@
  *
  *   A method is constructed PER CASE, not once: a case must not observe state a previous case left
  *   behind. Construction only happens for a class the projection already judged constructable, so
- *   the zero-argument call is a checked assumption rather than a hope.
+ *   the zero-argument call is a checked assumption rather than a hope. A `static` method lives on the
+ *   class itself, so it is read off the class and no instance is built.
  *
- *   The instance method is BOUND, because the interpreter applies it with no receiver; an unbound
- *   method loses `this` and throws on the first field it touches.
+ *   A method is BOUND to the instance, or to the class for a static one, because the interpreter
+ *   applies it with no receiver; an unbound method loses `this` and throws on the first field it
+ *   touches.
+ *
+ *   A getter or a setter resolves to a function that reads or assigns the property when the case
+ *   APPLIES it. Reading the property here would run the getter's body now, before the interpreter
+ *   resets the probe, so its exit would be wiped from the trace the case is judged by. A setter takes
+ *   the case's one argument as the value it assigns.
+ *
+ *   A `constructor` resolves to a function that constructs the class with the case's arguments, so
+ *   the constructor body runs with the arranged values exactly as `new` runs it.
+ *
+ *   An `object-member` is read off the exported object (`subject[objectName][property]`) and bound to
+ *   that object, the way an importer calling `api.run()` binds it. Its getter or setter is read or
+ *   assigned on the object when the case applies it, for the same reason a class accessor is.
  *
  *   A `module` scope resolves to `requireFresh` — the thunk that loads the module again under whatever
  *   the case has arranged. There is nothing else it COULD be: a module scope's body runs exactly
  *   once per load, so the only way to run it again, with different inputs, is to load it again. That
  *   makes every access kind the same shape to the interpreter — something to apply. In a CommonJS run
  *   the thunk returns the module; in an ESM run it returns the import's promise, which the interpreter
- *   awaits for a module entry.
+ *   awaits.
  *
  *   A `through-caller` entry is a private driven through the reachable caller that reaches it, so it
  *   resolves to that CALLER — a named module property. The interpreter then applies it with the
@@ -33,7 +47,7 @@
  *
  * USAGE:
  * caseResolveEntryBroker({ subject, name: 'classify', access: { kind: 'method', className: 'Classifier', constructable: true }, requireFresh });
- * // Returns the bound method, or undefined when the module does not carry it as a function
+ * // Returns the bound method, or undefined when the module does not carry it
  */
 import type { EntryAccess } from '@assayer/shared/contracts';
 
@@ -65,17 +79,71 @@ export const caseResolveEntryBroker = ({
     return typeof exported === 'function' ? (exported as DrivableEntry) : undefined;
   }
 
-  if (access.kind === 'method') {
+  if (access.kind === 'method' || access.kind === 'constructor') {
     const owner = subject[access.className];
 
     if (typeof owner !== 'function') {
       return undefined;
     }
 
-    const instance = Reflect.construct(owner, []) as Record<PropertyKey, unknown>;
-    const method = instance[name];
+    if (access.kind === 'constructor') {
+      return (...args: unknown[]): unknown => Reflect.construct(owner, args);
+    }
 
-    return typeof method === 'function' ? (method.bind(instance) as DrivableEntry) : undefined;
+    // A static member is a property of the class itself, which the module holds as a function.
+    const target =
+      access.static === true
+        ? (subject[access.className] as Record<PropertyKey, unknown>)
+        : (Reflect.construct(owner, []) as Record<PropertyKey, unknown>);
+
+    if (!(name in target)) {
+      return undefined;
+    }
+
+    if (access.accessor === 'get') {
+      return (): unknown => target[name];
+    }
+
+    if (access.accessor === 'set') {
+      return (...args: unknown[]): unknown => {
+        const [value] = args;
+        target[name] = value;
+
+        return undefined;
+      };
+    }
+
+    const method = target[name];
+
+    return typeof method === 'function' ? (method.bind(target) as DrivableEntry) : undefined;
+  }
+
+  if (access.kind === 'object-member') {
+    const holder = subject[String(access.objectName)];
+    const property = String(access.property);
+
+    if (typeof holder !== 'object' || holder === null || !(property in holder)) {
+      return undefined;
+    }
+
+    const target = holder as Record<PropertyKey, unknown>;
+
+    if (access.accessor === 'get') {
+      return (): unknown => target[property];
+    }
+
+    if (access.accessor === 'set') {
+      return (...args: unknown[]): unknown => {
+        const [value] = args;
+        target[property] = value;
+
+        return undefined;
+      };
+    }
+
+    const member = target[property];
+
+    return typeof member === 'function' ? (member.bind(target) as DrivableEntry) : undefined;
   }
 
   if (access.kind === 'module') {

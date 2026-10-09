@@ -238,6 +238,10 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/array/const-alias/const-alias.ts`]: ['access:named', 'param:array'],
   [`${CATALOGUE}/happy-path/array/const-literal/const-literal.ts`]: ['access:named'],
   [`${CATALOGUE}/happy-path/object/local-shape/local-shape.ts`]: ['access:named', 'param:object'],
+  // A method stored on an exported object: an importer calls `grader.grade(…)`, so it is an entry
+  // reached through the object, and its `if` on the `score` parameter drives both arms. This is the
+  // ONLY specimen exercising `access:object-member`.
+  [`${CATALOGUE}/happy-path/object-member/exported-object/exported-object.ts`]: ['access:object-member', 'branch:if'],
 
   // An INTERSECTION of two same-file interfaces (`v: Ay & Bee`). Not `isObject()` to the checker, but
   // `getProperties()` on the intersection already returns the MERGED members, so it reads through the
@@ -490,12 +494,12 @@ const DECLARATIONS = {
   // projects as no entry of its own; the file's one entry is `pick` (access:named).
   [`${CATALOGUE}/sad-path/ternary/arg-position/arg-position.ts`]: ['access:named', 'darkspot:ConditionalExpression'],
 
-  // A run GAP. A class whose constructor needs arguments cannot be instantiated, so both the
-  // constructor (reached through `new`, which the runner never models) and its method are named GAPS by
-  // case-set-projection — understood perfectly, but the CALLER owes a harness. `tally` is a plain driven
-  // `access:named` beside them, so the file keeps a runnable entry; `find`'s own `branch:if` rides its
-  // (non-constructable) method entry. This is the ONLY specimen exercising `access:constructor`, which is
-  // why it drops off the uncatalogued list below.
+  // A run GAP. A class whose constructor needs arguments has no zero-argument instance, so its instance
+  // method is a named GAP by case-set-projection — understood perfectly, but the CALLER owes a harness.
+  // The constructor is driven: the runner constructs the class with the `url` its case arranges. `tally`
+  // is a plain driven `access:named` beside them; `find`'s own `branch:if` rides its (non-constructable)
+  // method entry. This is the ONLY specimen exercising `access:constructor`, which is why it drops off
+  // the uncatalogued list below.
   [`${CATALOGUE}/sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts`]: ['access:constructor', 'access:method', 'access:named', 'branch:if'],
 
   // The REPO's debt: a private with real branching that nothing in the file calls, so nothing ever

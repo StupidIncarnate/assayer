@@ -9,6 +9,10 @@
  *   That distinction is why a nested helper is FOUND and recorded without becoming a fake entry
  *   that derived cases would try to drive directly.
  *
+ *   A function stored as a property of an exported object is reachable too, because an importer can
+ *   call it off that object. `read-object-member-access` answers that shape, the same reader
+ *   `read-entry-access` asks, so reach and access agree.
+ *
  *   Reach is read off the module's RESOLVED export table, not off the `export` keyword on the
  *   declaration: `const runIt = …; export default runIt;` and `export { runIt };` export the function
  *   just as surely as `export const runIt`, and the statement that says so sits elsewhere in the file.
@@ -21,8 +25,13 @@ import { Node } from '#gateway/npm/ts-morph';
 
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { readModuleExportLayerTransformer } from './read-module-export-layer-transformer';
+import { readObjectMemberAccessLayerTransformer } from './read-object-member-access-layer-transformer';
 
 export const readExportFlagLayerTransformer = ({ node, context }: { node: Node; context: WalkContext }): boolean => {
+  if (readObjectMemberAccessLayerTransformer({ node }) !== undefined) {
+    return true;
+  }
+
   if (
     Node.isMethodDeclaration(node) ||
     Node.isConstructorDeclaration(node) ||

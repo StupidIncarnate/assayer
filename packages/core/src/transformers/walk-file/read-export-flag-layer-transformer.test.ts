@@ -133,4 +133,42 @@ describe('readExportFlagLayerTransformer', () => {
       expect(readExportFlagLayerTransformer({ node, context: WalkContextStub({ exported: false }) })).toBe(false);
     });
   });
+
+  describe('object members', () => {
+    it('VALID: {arrow property of an exported object} => true, since an importer can call it off the object', () => {
+      readExportFlagLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export const api = {\n  run: (): void => {},\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readExportFlagLayerTransformer({ node, context: WalkContextStub({ exported: false }) })).toBe(true);
+    });
+
+    it('VALID: {method of an exported object} => true', () => {
+      readExportFlagLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'export const api = {\n  run(): void {},\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
+
+      expect(readExportFlagLayerTransformer({ node, context: WalkContextStub({ exported: false }) })).toBe(true);
+    });
+
+    it('VALID: {arrow property of an unexported object} => false', () => {
+      readExportFlagLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const api = {\n  run: (): void => {},\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.ArrowFunction);
+
+      expect(readExportFlagLayerTransformer({ node, context: WalkContextStub({ exported: false }) })).toBe(false);
+    });
+
+    it('VALID: {method of an unexported object} => false', () => {
+      readExportFlagLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const api = {\n  run(): void {},\n};\n');
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.MethodDeclaration);
+
+      expect(readExportFlagLayerTransformer({ node, context: WalkContextStub({ exported: false }) })).toBe(false);
+    });
+  });
 });

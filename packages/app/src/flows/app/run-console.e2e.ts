@@ -24,13 +24,11 @@ const INPUT_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/input-gap/ca
 // above is closable rather than merely printable.
 const HARNESS_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/callback-param/callback-param.ts';
 
-// The two ACCESS-shaped GAP lines a RUN surfaces for sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts —
-// `GAP <name> — <reason>`, both authored in core's case-set-projection. `Repo`'s constructor needs a
-// `url`, so no instance can be built: the constructor (reached through `new`) and the method `find` are
-// BOTH understood-but-unconstructable, the caller's debt to close with a harness. They ride beside the
-// file's one driven entry `tally`.
-const RUN_GAP_CONSTRUCTOR_LINE =
-  'GAP constructor — a constructor is reached through `new`, which the runner does not drive — needs a harness';
+// The ACCESS-shaped GAP line a RUN surfaces for sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts —
+// `GAP <name> — <reason>`, authored in core's case-set-projection. `Repo`'s constructor needs a `url`,
+// so the runner builds no zero-argument instance, and the instance method `find` is
+// understood-but-unconstructable, the caller's debt to close with a harness. The constructor itself is
+// driven: the runner constructs `Repo` with the `url` the case arranges. Both ride beside `tally`.
 const RUN_GAP_METHOD_LINE =
   'GAP find — its class needs constructor arguments, so no instance can be built to drive it — needs a harness';
 
@@ -114,7 +112,7 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(3);
   });
 
-  test('VALID: {sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives the one buildable entry and surfaces the two GAP rows for the unconstructable class', async ({ smokeWindow: window }) => {
+  test('VALID: {sad-path/run-gap/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives `tally` and the constructor and surfaces the GAP row for the unconstructable method', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${RUN_GAP_SPECIMEN}"]`).click();
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
@@ -123,29 +121,29 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     // parameter here — `value`, `url`, `id` — is a scalar the fill seam constructs happily, so the
     // file's own analysis invoices nothing and no gap shows yet. The panel IS populated — all four
     // derived cases across `tally`, the constructor and `find` are on screen, none run — so the absent
-    // gap rows are the finding rather than a panel that failed to render. The run below is what turns
-    // the two unconstructable entries into gaps, and it drives only `tally`.
+    // gap row is the finding rather than a panel that failed to render. The run below is what turns
+    // the unconstructable method into a gap.
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(4);
     await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
 
     await window.getByTestId('RUN_BUTTON').click();
 
-    // run-done: the case set drives ONLY the buildable `tally` (the unconstructable class members are
-    // gaps, not entries), so exactly one case runs and passes. The exit code is NOT the verdict — the run
-    // wrote an artifact whose GAPS travel to the panel, naming the constructor and `find` the caller must
-    // write a harness for, worded exactly as `assayer unit` prints them, in the case set's own order.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveText(
+    // run-done: the case set drives `tally`, and the constructor through `new Repo(url)` with the
+    // representative string the fill seam builds for `url`. Its body ends on line 6 with no value, so
+    // its exit carries `undefined`. `find` needs an instance no zero-argument call can build, so it is a
+    // gap, not an entry. The exit code is NOT the verdict — the run wrote an artifact whose GAP travels
+    // to the panel, worded exactly as `assayer unit` prints it.
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveText([
       'PASS tally(7) → 8 (reaches L2)',
-    );
-    await expect(window.getByTestId('RUN_GAP')).toHaveText([RUN_GAP_CONSTRUCTOR_LINE, RUN_GAP_METHOD_LINE]);
+      'PASS constructor("abc123") → undefined (reaches L6)',
+    ]);
+    await expect(window.getByTestId('RUN_GAP')).toHaveText([RUN_GAP_METHOD_LINE]);
     await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
 
     // The claim the panel's own header makes — every admission worded exactly as `assayer unit` prints
     // it — asserted as BYTES rather than left as prose. The console carries the real CLI report, so the
-    // same two rows appear there, indented and otherwise identical. This is the only check that reads
-    // both surfaces at once, and a wording change on either side that the other does not follow fails
-    // here.
-    await expect(window.getByTestId('RUN_CONSOLE_OUTPUT')).toContainText(`  ${RUN_GAP_CONSTRUCTOR_LINE}`);
+    // same row appears there, indented and otherwise identical. This is the only check that reads both
+    // surfaces at once, and a wording change on either side that the other does not follow fails here.
     await expect(window.getByTestId('RUN_CONSOLE_OUTPUT')).toContainText(`  ${RUN_GAP_METHOD_LINE}`);
   });
 

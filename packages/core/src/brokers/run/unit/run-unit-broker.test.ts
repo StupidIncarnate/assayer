@@ -130,7 +130,6 @@ describe('runUnitBroker', () => {
           '        const result = await caseInterpretBroker({\n' +
           '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh }),\n' +
           '          entryName: entry.name,\n' +
-          '          access: entry.access,\n' +
           '          exitIds: entry.exitIds,\n' +
           '          testCase,\n' +
           '          probe: globalThis.__P,\n' +

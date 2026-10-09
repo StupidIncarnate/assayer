@@ -6,7 +6,6 @@ import { caseInterpretBroker } from './case-interpret-broker';
 import { caseInterpretBrokerProxy } from './case-interpret-broker.proxy';
 import { deleteEnv, getEnv, setEnv } from '#gateway/node/process';
 import { HarnessDeclarationStub } from '../../../contracts/harness-declaration/harness-declaration.stub';
-import { EntryAccessStub } from '@assayer/shared/contracts/entry-access/entry-access.stub';
 
 const THEN = CoverageIdStub({ value: 'grade/return@then' });
 const ELSE = CoverageIdStub({ value: 'grade/return@else' });
@@ -668,11 +667,10 @@ describe('caseInterpretBroker', () => {
     });
   });
 
-  // In an ESM run, loading a module again is an import promise, and the module body runs only once it
-  // settles. A module entry's load is awaited inside the arranged environment; any other entry's result
-  // is not awaited.
-  describe('an entry whose load settles later', () => {
-    it('VALID: {access module} => awaits the load, so the body reads the arranged environment and its exit is observed', async () => {
+  // An async function's exit after an `await`, and an ESM module's body once its import settles, run
+  // only when the returned promise settles. The promise is awaited inside the arranged environment.
+  describe('an entry whose result settles later', () => {
+    it('VALID: {a re-loaded module whose load is a promise} => awaits it, so the body reads the arranged environment and its exit is observed', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: 'PE3_LEVEL', value: '7' }] });
@@ -683,7 +681,6 @@ describe('caseInterpretBroker', () => {
           return probe.x(THEN, Number(getEnv('PE3_LEVEL')));
         },
         entryName: '*module*',
-        access: EntryAccessStub({ kind: 'module' }),
         exitIds: [THEN, ELSE],
         testCase,
         probe,
@@ -699,7 +696,7 @@ describe('caseInterpretBroker', () => {
       expect(getEnv('PE3_LEVEL')).toBe(undefined);
     });
 
-    it('VALID: {access named, the entry is async} => does not await it, so an exit after an await is not observed', async () => {
+    it('VALID: {an async function whose return follows an await} => awaits it, so the exit after the await is observed', async () => {
       caseInterpretBrokerProxy();
       const probe = ProbeRuntimeStub();
       const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
@@ -710,8 +707,32 @@ describe('caseInterpretBroker', () => {
           return probe.x(THEN, 1);
         },
         entryName: 'grade',
-        access: EntryAccessStub({ kind: 'named' }),
         exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: '1' }],
+      });
+    });
+
+    it('ERROR: {an async function that rejects after an await} => errored with the rejection message', async () => {
+      caseInterpretBrokerProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
+
+      const result = await caseInterpretBroker({
+        entry: async () => {
+          await Promise.resolve();
+          throw new Error('boom');
+        },
+        entryName: 'grade',
+        exitIds: [THEN],
         testCase,
         probe,
       });
@@ -722,7 +743,66 @@ describe('caseInterpretBroker', () => {
         status: 'errored',
         observedPath: [],
         trace: [],
-        message: "reached no exit in 'grade'",
+        message: 'threw before reaching an exit: boom',
+      });
+    });
+  });
+
+  // A generator function's call runs none of its body. The body, and the exit at its end, run only while
+  // something iterates the generator.
+  describe('an entry that returns a generator', () => {
+    it('VALID: {a generator function} => iterates it to its end, so the exit at the end of its body is observed', async () => {
+      caseInterpretBrokerProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
+
+      const result = await caseInterpretBroker({
+        *entry (): Generator<string> {
+          yield 'else';
+          probe.x(THEN, 'done');
+        },
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: 'done' }],
+      });
+    });
+
+    it('EDGE: {a generator that never ends} => errored, saying the case stopped iterating it at the step limit', async () => {
+      caseInterpretBrokerProxy();
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [] });
+
+      const result = await caseInterpretBroker({
+        *entry (): Generator<number> {
+          for (let count = 0; ; count += 1) {
+            yield count;
+          }
+        },
+        entryName: 'grade',
+        exitIds: [THEN],
+        testCase,
+        probe,
+      });
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'errored',
+        observedPath: [],
+        trace: [],
+        message:
+          "'grade' returned a generator that yielded 10000 values without finishing, so the case stopped iterating " +
+          'it before it reached an exit. A case drives a generator by iterating it to its end, so a generator that ' +
+          'never ends reaches no exit a case can observe.',
       });
     });
   });

@@ -54,27 +54,30 @@
  *   reader who sees `errored` looks at the arrange that was handed in. Reporting a thrown case as
  *   `failed` sends them to the wrong one.
  *
- *   `access` is the entry's access. For a `module` entry the interpreter awaits what the entry returns,
- *   because in an ESM run re-loading a module is asynchronous, and the environment must stay arranged
- *   until the module body has run.
+ *   What the entry returns is let finish before the probe events are read, through `caseSettleBroker`: a
+ *   promise is awaited and a generator is iterated to its end. An async function's `return` after an
+ *   `await`, a re-loaded ESM module's body, and a generator's body all run only then, and each is an exit
+ *   the case predicts. The environment stays arranged until they finish. A generator that does not finish
+ *   within the step limit is `errored`, and the message says the case stopped iterating it.
  *
  * USAGE:
- * await caseInterpretBroker({ entry, entryName, access, exitIds, testCase, probe, harness });
+ * await caseInterpretBroker({ entry, entryName, exitIds, testCase, probe, harness });
  * // Returns { entryName, testCase, status: 'passed', observedPath, trace }
  */
 import { deleteEnv, getEnv, setEnv } from '#gateway/node/process';
 
 import { caseResultContract } from '@assayer/shared/contracts';
-import type { CaseResult, DerivedTestCase, Coverage, EntryAccess } from '@assayer/shared/contracts';
+import type { CaseResult, DerivedTestCase, Coverage } from '@assayer/shared/contracts';
 
 import type { HarnessDeclaration } from '../../../contracts/harness-declaration/harness-declaration-contract';
 import type { ProbeRuntime } from '../../../contracts/probe-runtime/probe-runtime-contract';
+import { caseSettleStatics } from '../../../statics/case-settle/case-settle-statics';
 import { harnessValueTransformer } from '../../../transformers/harness-value/harness-value-transformer';
+import { caseSettleBroker } from '../settle/case-settle-broker';
 
 export const caseInterpretBroker = async ({
   entry,
   entryName,
-  access,
   exitIds,
   testCase,
   probe,
@@ -82,7 +85,6 @@ export const caseInterpretBroker = async ({
 }: {
   entry: unknown;
   entryName: string;
-  access?: EntryAccess;
   exitIds: Coverage['id'][];
   testCase: DerivedTestCase;
   probe: ProbeRuntime;
@@ -169,14 +171,22 @@ export const caseInterpretBroker = async ({
       setEnv(binding.name, binding.value);
     }
 
-    const applied: unknown = Reflect.apply(entry, undefined, args);
+    // The result finishes running HERE, inside the environment the case arranged: an async entry's
+    // exit after its first `await`, an ESM module's body once its import settles, and a generator's body
+    // once something iterates it are all exits the case predicts.
+    const finished = await caseSettleBroker({ result: Reflect.apply(entry, undefined, args) });
 
-    // A module entry is the thunk that loads the module again. In an ESM run that load is an import
-    // promise, and the module body runs only once it settles, so it is awaited here, inside the
-    // environment the case arranged. Any other entry's result is never awaited: an async function's
-    // later work is not part of the exit the case predicts.
-    if (access?.kind === 'module') {
-      await applied;
+    if (!finished) {
+      return caseResultContract.parse({
+        entryName,
+        testCase,
+        status: 'errored',
+        trace: probe.events,
+        message:
+          `'${entryName}' returned a generator that yielded ${String(caseSettleStatics.limits.generatorSteps)} values ` +
+          'without finishing, so the case stopped iterating it before it reached an exit. A case drives a generator ' +
+          'by iterating it to its end, so a generator that never ends reaches no exit a case can observe.',
+      });
     }
   } catch (error) {
     return caseResultContract.parse({

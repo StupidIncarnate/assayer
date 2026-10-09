@@ -14,7 +14,6 @@ const BODY = [
   '        const result = await caseInterpretBroker({',
   '          entry: caseResolveEntryBroker({ subject, name: entry.name, access: entry.access, requireFresh }),',
   '          entryName: entry.name,',
-  '          access: entry.access,',
   '          exitIds: entry.exitIds,',
   '          testCase,',
   '          probe: globalThis.__P,',
