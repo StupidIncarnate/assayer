@@ -71,6 +71,44 @@ const ENV_TEXT_LEAF = ConditionLeafStub({
   predicate: { kind: 'length-gt', literal: 2 },
 });
 
+// `process.env.VALUE === undefined`, read in place: the raw read compared with the global undefined.
+const ENV_UNSET_TEST_LEAF = ConditionLeafStub({
+  id: 'm#leaf.a',
+  operandParamName: 'process.env.VALUE',
+  operandEnvVarName: 'VALUE',
+  operandType: { kind: 'string' },
+  predicate: { kind: 'undefined-eq' },
+});
+
+// `const value = process.env.VALUE === undefined ? undefined : Number(process.env.VALUE); if (value ?? 0)`.
+const ENV_GUARDED_LEAF = ConditionLeafStub({
+  id: 'm#leaf.b',
+  operandParamName: 'value',
+  operandEnvVarName: 'VALUE',
+  operandEnvSteps: [{ kind: 'guard' }, { kind: 'number' }],
+  operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+  predicate: { kind: 'truthy' },
+});
+
+// `const value = Number(process.env.VALUE); if (value === 7)`.
+const ENV_NUMBER_EQ_LEAF = ConditionLeafStub({
+  id: 'm#leaf.c',
+  operandParamName: 'value',
+  operandEnvVarName: 'VALUE',
+  operandEnvSteps: [{ kind: 'number' }],
+  operandType: { kind: 'number' },
+  predicate: { kind: 'eq', literal: 7 },
+});
+
+// `process.env.VALUE !== '7'`, read in place.
+const ENV_RAW_NEQ_LEAF = ConditionLeafStub({
+  id: 'm#leaf.d',
+  operandParamName: 'process.env.VALUE',
+  operandEnvVarName: 'VALUE',
+  operandType: { kind: 'string' },
+  predicate: { kind: 'neq', literal: '7' },
+});
+
 const NUMBER_PARAMS = [
   ParamDescriptorStub({ name: 'score', type: { kind: 'number' } }),
   ParamDescriptorStub({ name: 'bonus', type: { kind: 'number' } }),
@@ -600,7 +638,9 @@ describe('causeArrangeTransformer', () => {
       });
     });
 
-    it('VALID: {env string, length of 2 or less wanted} => the empty string', () => {
+    // The shortest length the arm admits is 0, the `''` fallback itself, and leaving TEXT unset is the
+    // input that runs that fallback.
+    it("VALID: {env string, length of 2 or less wanted} => TEXT left unset, the input that runs the ?? '' fallback", () => {
       const result = causeArrangeTransformer({
         ...ConditionCauseStub({ requirements: [{ leaf: ENV_TEXT_LEAF, want: false }] }),
         params: [],
@@ -610,8 +650,93 @@ describe('causeArrangeTransformer', () => {
       expect(result).toStrictEqual({
         unreachable: false,
         unfillable: [],
-        arrangements: [[{ kind: 'env', name: 'TEXT', value: '' }]],
+        arrangements: [[{ kind: 'env', name: 'TEXT' }]],
       });
+    });
+
+    it('VALID: {process.env.VALUE === undefined, read in place, wanted true} => VALUE left unset', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: ENV_UNSET_TEST_LEAF, want: true }] }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'VALUE' }]],
+      });
+    });
+
+    it('VALID: {process.env.VALUE === undefined wanted false, the guarded value truthy} => one VALUE both reads agree on', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({
+          requirements: [
+            { leaf: ENV_UNSET_TEST_LEAF, want: false },
+            { leaf: ENV_GUARDED_LEAF, want: true },
+          ],
+        }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'VALUE', value: '7' }]],
+      });
+    });
+
+    it('VALID: {process.env.VALUE === undefined wanted true, the guarded value falsy} => VALUE left unset, which both reads accept', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({
+          requirements: [
+            { leaf: ENV_UNSET_TEST_LEAF, want: true },
+            { leaf: ENV_GUARDED_LEAF, want: false },
+          ],
+        }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({
+        unreachable: false,
+        unfillable: [],
+        arrangements: [[{ kind: 'env', name: 'VALUE' }]],
+      });
+    });
+
+    // An unset VALUE leaves the guarded value undefined, which is falsy, so no input meets both reads.
+    it('INVALID: {process.env.VALUE === undefined wanted true, the guarded value truthy} => unreachable', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({
+          requirements: [
+            { leaf: ENV_UNSET_TEST_LEAF, want: true },
+            { leaf: ENV_GUARDED_LEAF, want: true },
+          ],
+        }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({ unreachable: true, unfillable: [], arrangements: [] });
+    });
+
+    // '7' meets `Number(VALUE) === 7` and fails `VALUE !== '7'`, and the string representative fails the
+    // other way. Another string ('07') would meet both, so the case is dropped without calling it dead.
+    it("EDGE: {Number(VALUE) === 7 and VALUE !== '7'} => no arrangement, and not unreachable", () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({
+          requirements: [
+            { leaf: ENV_NUMBER_EQ_LEAF, want: true },
+            { leaf: ENV_RAW_NEQ_LEAF, want: true },
+          ],
+        }),
+        params: [],
+        envDrivable: true,
+      });
+
+      expect(result).toStrictEqual({ unreachable: false, unfillable: [], arrangements: [] });
     });
 
     // envDrivable alone is not enough — a leaf with no `operandEnvVarName` names no environment

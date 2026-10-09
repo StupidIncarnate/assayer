@@ -235,9 +235,23 @@ so the class walks it under the scope the class sits in.
 
 **Read a parameter's default value.** Touch `handle-function`, which
 descends each default under the function's own context, so a ternary
-there reaches `handle-ternary` as a branch of the function. A parameter
-whose default is a ternary is marked `branchingDefault`, and
-`applied-params` leaves it out of every case, so the default runs.
+there reaches `handle-ternary` as a branch of the function.
+`read-parameter-defaults` lists them: the parameter's own default, then
+the default of each element a destructured parameter unpacks
+(`{ a = 1 }`, `[a = 1]`), nested patterns included. A parameter whose own
+default is a ternary is marked `branchingDefault`, and `applied-params`
+leaves it out of every case, so the default runs. A default inside a
+destructured pattern is not marked. The object case already omits an
+optional property, and the array cases include the empty array, so the
+default runs there.
+
+**Read a decorator's arguments.** Touch `read-decorators`, the one list
+of a class's decorators: the class's own, each member's, and each member
+parameter's. `handle-class` descends them under the scope the class sits
+in, because a decorator runs when the class is defined, and `handle-class`
+keeps a decorated field's own descent free of them so none is walked
+twice. A ternary in a decorator argument is a branch of that scope, which
+is the module for a top-level class.
 
 **Change how coverage IDs are computed.** Touch `transformers/coverage-id`
 and `transformers/exit-coverage-id`.
@@ -497,22 +511,44 @@ it as `envReads`, and the stub stitch (section 9) aggregates these into
 per-property environment stubs.
 
 **Drive a branch whose operand is read from the environment.** Touch
-`read-env-operand` and `read-env-chain`. They follow a branch operand's
-identifier through same-file `const` bindings down to one
-`process.env.<X>` read, and record each step on the way that Assayer can
-run backwards, in the order the code applies it: a `?? '<literal>'`
-fallback, `Number(x)`, a comparison with a literal, `x.split('<literal>')`,
-and `xs.map(f)`. The leaf carries the variable as `operandEnvVarName` and
-the steps as `operandEnvSteps` (`env-step-contract`). The steps also give
-the operand its type (`env-steps-type`), because the checker types every
-step built on `process.env` as `any` (section 5.10). `cause-arrange` starts
-the operand's domain from what the steps can produce at all
-(`env-steps-domain`: a split list is never empty), and writes the variable
-with `env-encode`, which runs the steps backwards from the operand's
-narrowed domain. A step with no inverse, such as `parseInt(x, 10)` or a
-template string, ends the chain, and the branch stays undriven. A
-condition that reads `process.env.X` in place, with no binding in between,
-is not followed either, so it stays undriven too.
+`read-env-operand` and `read-env-chain`. They read a branch operand that
+is a `process.env.<X>` read written in place, or follow an identifier
+through same-file `const` bindings down to one, and record each step on
+the way that Assayer can run backwards, in the order the code applies it:
+a `??` fallback, an unset guard (`x === undefined ? undefined : <chain>`,
+read by `read-env-guard`), `Number(x)`, a comparison with a literal,
+`x.split('<literal>')`, and `xs.map(f)`. The leaf carries the variable as
+`operandEnvVarName` and the steps as `operandEnvSteps`
+(`env-step-contract`). An operand read in place has no binding to name
+it, so `env-operand-key` names it by the read and its steps
+(`process.env.MODE`). The steps also give the operand its type
+(`env-steps-type`), because the checker types every step built on
+`process.env` as `any` (section 5.10). `cause-arrange` keys the operand's
+domain by that same read-and-steps name (`operand-key`), starts it from
+what the steps can produce at all (`env-steps-domain`: a split list is
+never empty), and decides each variable once per case with `env-solve`.
+`env-solve` takes each chain's answer from `env-encode`, which runs the
+steps backwards from the chain's narrowed domain, and keeps the first one
+every read of the variable meets (`is-env-requirement-met` runs the steps
+forward). A step with no inverse, such as `parseInt(x, 10)` or a template
+string, ends the chain, and the branch stays undriven.
+
+**Leave an environment variable unset in a case.** Touch `env-encode`
+and the `env` arm of `arrange-binding-contract`. The domain's `null`
+point stands for "unset" on a chain that can hold `undefined`
+(`is-env-steps-nullable`: the raw read, or a guard with no fallback
+after it). `env-encode` answers `null` for it, and for a `??` fallback
+whose own value is the one wanted, because leaving the variable unset is
+the input that runs the fallback. The case then carries an `env` binding
+with no `value`, which `case-interpret` turns into removing the
+variable, never into the empty string. A comparison with the global
+`undefined` reads as `undefined-eq` or `undefined-neq`
+(`read-condition`, `is-global-undefined`), and it steers a branch only
+on such a chain (`is-predicate-constraining`), because no other input a
+case arranges can be `undefined`. `env-solve` reports a case
+`unreachable` only when one read needs the variable unset and another
+read fails on an unset one (`is-env-unset-only`). Candidates that merely
+all miss drop the case and claim nothing.
 
 **Change import resolution (the stitch).** Touch
 `brokers/compile/resolve-graph`, plus `brokers/tsconfig/owner`
@@ -895,12 +931,14 @@ Two consequences of the hermetic walk follow, and both are load-bearing:
   `any`, because no `@types/node` is loaded. So an environment operand's
   TYPE comes from its recorded steps instead (`env-steps-type`): the raw
   read is a `string`, `Number(x)` a `number`, a comparison a `boolean`,
-  and a `split` an array. That is the type Node itself declares, minus
-  `undefined`, which no case can write. Driving reaches exactly the steps
-  `env-encode` can run backwards (section 4 lists them), so a case can put
-  the operand where a predicate wants it: `String` inverts `Number`, the
-  literal itself makes `=== '<literal>'` true, and n items joined by the
-  separator give a `split` list of length n. Any other step ends the
+  a `split` an array, and an unset guard the union of `undefined` and
+  what its chain builds. The raw read's own unset state is the domain's
+  `null` point, which a case writes by leaving the variable unset
+  (section 4). Driving reaches exactly the steps `env-encode` can run
+  backwards (section 4 lists them), so a case can put the operand where a
+  predicate wants it: `String` inverts `Number`, the literal itself makes
+  `=== '<literal>'` true, n items joined by the separator give a `split`
+  list of length n, and an unset variable makes `=== undefined` true. Any other step ends the
   chain and the branch stays honestly undriven, because guessing an
   inverse would put a failing case against correct code. Loading
   `@types/node` into this project would type more of the chain, and doing
@@ -1617,9 +1655,10 @@ representative value for anything else, marked `guessed: true` (meaning
 this is a best-effort guess a human can later correct, never treated as
 authoritative on its own). `readers[]` lists every file that reads that
 property. This runs regardless of whether the read is drivable: a
-`process.env.MODE === 'x'` comparison written in place in a condition is
-admitted as undriven (section 4: only a bound operand is followed), yet
-its literal is still recorded as a real stub demand. The `process.env` proof itself stays entirely checker-based;
+branch inside a function is admitted as undriven, because only an entry
+that runs when its module loads is driven by the environment
+(`envDrivable` in `cause-arrange`), yet its literal is still recorded as
+a real stub demand. The `process.env` proof itself stays entirely checker-based;
 nothing here adds `node_modules` access to the main walk.
 
 **`param-type-resolve` gives an IMPORTED parameter type its declared

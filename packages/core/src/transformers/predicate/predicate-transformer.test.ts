@@ -224,4 +224,61 @@ describe('predicateTransformer', () => {
       ).toStrictEqual(PredicateStub({ kind: 'unrecognized' }));
     });
   });
+
+  describe('comparisons with the global undefined', () => {
+    it('VALID: {x === undefined} => undefined-eq, carrying no literal', () => {
+      expect(
+        predicateTransformer({
+          opKind: 'EqualsEqualsEqualsToken',
+          isLengthAccess: false,
+          isTypeofAccess: false,
+          isUndefinedComparison: true,
+        }),
+      ).toStrictEqual(PredicateStub({ kind: 'undefined-eq' }));
+    });
+
+    it('VALID: {x !== undefined} => undefined-neq, carrying no literal', () => {
+      expect(
+        predicateTransformer({
+          opKind: 'ExclamationEqualsEqualsToken',
+          isLengthAccess: false,
+          isTypeofAccess: false,
+          isUndefinedComparison: true,
+        }),
+      ).toStrictEqual(PredicateStub({ kind: 'undefined-neq' }));
+    });
+
+    it('EDGE: {x > undefined} => unrecognized, since only the strict equality pair names an undefined test', () => {
+      expect(
+        predicateTransformer({
+          opKind: 'GreaterThanToken',
+          isLengthAccess: false,
+          isTypeofAccess: false,
+          isUndefinedComparison: true,
+        }),
+      ).toStrictEqual(PredicateStub({ kind: 'unrecognized' }));
+    });
+
+    it('EDGE: {x == undefined} => unrecognized, since a loose comparison is also true for null', () => {
+      expect(
+        predicateTransformer({
+          opKind: 'EqualsEqualsToken',
+          isLengthAccess: false,
+          isTypeofAccess: false,
+          isUndefinedComparison: true,
+        }),
+      ).toStrictEqual(PredicateStub({ kind: 'unrecognized' }));
+    });
+
+    it('EDGE: {xs.length === undefined} => unrecognized, since a length is never undefined', () => {
+      expect(
+        predicateTransformer({
+          opKind: 'EqualsEqualsEqualsToken',
+          isLengthAccess: true,
+          isTypeofAccess: false,
+          isUndefinedComparison: true,
+        }),
+      ).toStrictEqual(PredicateStub({ kind: 'unrecognized' }));
+    });
+  });
 });

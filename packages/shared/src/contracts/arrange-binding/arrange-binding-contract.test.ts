@@ -21,6 +21,12 @@ describe('arrangeBindingContract', () => {
       expect(result).toStrictEqual({ kind: 'env', name: 'LEVEL', value: '' });
     });
 
+    it('EMPTY: {kind: "env", no value} => parses, leaving the variable unset', () => {
+      const result = arrangeBindingContract.parse({ kind: 'env', name: 'LEVEL' });
+
+      expect(result).toStrictEqual({ kind: 'env', name: 'LEVEL' });
+    });
+
     it('INVALID: {kind: "env", name: ""} => throws, since an empty name addresses no environment slot', () => {
       expect(() => {
         return arrangeBindingContract.parse({ kind: 'env', name: '', value: '6' });

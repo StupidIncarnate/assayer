@@ -7,7 +7,9 @@
  *   `typeof` read becomes the `typeof-*` family, which constrains the operand's RUNTIME TAG instead of
  *   its value; a condition with NO comparison operator is a truthiness test on the operand itself, and
  *   a bare `.length` with no operator is the length-axis truthiness test, `length-neq` carrying 0;
- *   everything else is `unrecognized`.
+ *   a strict `===`/`!==` against the global `undefined` becomes `undefined-eq`/`undefined-neq`, which
+ *   carry no literal because `undefined` is not a value a domain holds; everything else is
+ *   `unrecognized`.
  *
  *   One operator table serves all three axes, and zero is not a special case on any of them.
  *   `s.length === 0` is `length-eq` carrying 0 exactly as `s.length === 3` carries 3 — so a bound the
@@ -21,6 +23,8 @@
  * USAGE:
  * predicateTransformer({ opKind: 'EqualsEqualsEqualsToken', isLengthAccess: false, isTypeofAccess: false, rightLiteral: 'open' });
  * // Returns { kind: 'eq', literal: 'open' } (validated Predicate)
+ * predicateTransformer({ opKind: 'EqualsEqualsEqualsToken', isLengthAccess: false, isTypeofAccess: false, isUndefinedComparison: true });
+ * // Returns { kind: 'undefined-eq' }
  */
 import { predicateContract } from '@assayer/shared/contracts';
 import type { Predicate, RepresentativeValue } from '@assayer/shared/contracts';
@@ -29,11 +33,13 @@ export const predicateTransformer = ({
   opKind,
   isLengthAccess,
   isTypeofAccess,
+  isUndefinedComparison,
   rightLiteral,
 }: {
   opKind: string;
   isLengthAccess: boolean;
   isTypeofAccess: boolean;
+  isUndefinedComparison?: boolean;
   rightLiteral?: RepresentativeValue;
 }): Predicate => {
   // No operator at all (`if (flag)`) is a TRUTHINESS test on the operand — not an unclassifiable
@@ -63,6 +69,13 @@ export const predicateTransformer = ({
               : opKind === 'LessThanEqualsToken'
                 ? 'lte'
                 : 'unrecognized';
+
+  // `x === undefined` compares the VALUE itself against the one thing no literal can carry, so it has a
+  // kind of its own on the value axis. Only the strict pair reads: `x == undefined` is also true for
+  // `null`, which is a different test.
+  if (isUndefinedComparison === true && !isLengthAccess && !isTypeofAccess && (comparison === 'eq' || comparison === 'neq')) {
+    return predicateContract.parse({ kind: comparison === 'eq' ? 'undefined-eq' : 'undefined-neq' });
+  }
 
   // The axis is the only thing `.length`/`typeof` changes. A length threshold must be a NUMBER, so a
   // non-numeric right-hand side falls through to unrecognized rather than becoming an unorderable bound.

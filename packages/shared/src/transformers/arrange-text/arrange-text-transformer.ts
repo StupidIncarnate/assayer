@@ -14,6 +14,9 @@
  *   argument nothing accepts, naming neither the variable that actually decided the arm nor the fact
  *   that it was the environment. Error text is product surface (P1), and that line was a lie in it.
  *
+ *   An environment variable the case leaves UNSET renders as `unset NAME`, the shell command that
+ *   reproduces it. `NAME=""` would be a different input: the variable set to the empty string.
+ *
  *   An `object` param is an argument too, so it renders positionally like a scalar param — as the
  *   object literal a reader would pass, its properties in the same sorted order the arrange carries. It
  *   NESTS exactly as an array param does: a property holding an object or an array renders whole, to
@@ -35,7 +38,7 @@
  *
  * USAGE:
  * arrangeTextTransformer({ arrange: testCase.arrange });
- * // Returns '6, 2' for params, 'LEVEL="6"' for an environment read, '{"db":{"host":"x"}}' for an
+ * // Returns '6, 2' for params, 'LEVEL="6"' for an environment read, 'unset LEVEL' for an unset one, '{"db":{"host":"x"}}' for an
  * // object, '<harness inputs.audit.report>' for a harness-supplied input, or '...[6,9]' /
  * // '...<harness inputs.collect.sinks>' for either kind realizing a rest parameter
  */
@@ -50,7 +53,9 @@ export const arrangeTextTransformer = ({ arrange }: { arrange: DerivedTestCase['
         const spread = (binding.kind === 'array' || binding.kind === 'harness') && binding.rest === true ? '...' : '';
 
         return binding.kind === 'env'
-          ? `${String(binding.name)}=${JSON.stringify(binding.value)}`
+          ? binding.value === undefined
+            ? `unset ${String(binding.name)}`
+            : `${String(binding.name)}=${JSON.stringify(binding.value)}`
           : binding.kind === 'harness'
             ? `${spread}<harness ${String(binding.key)}>`
             : `${spread}${JSON.stringify(binding.value)}`;

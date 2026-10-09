@@ -4,8 +4,12 @@
  *   them, so `(process.env.RECEIVER ?? '').split(',').map(Number)` is `default`, `split`, `map`.
  *
  *   Each step is one Assayer can run BACKWARDS. A case decides which value the operand must hold, and
- *   `env-encode` walks the steps in reverse to find the string to write into the environment:
- *   - `default` is `x ?? '<value>'`. It changes nothing for a variable that is set.
+ *   `env-encode` walks the steps in reverse to find what to write into the environment, which may be
+ *   leaving the variable unset:
+ *   - `guard` is `x === undefined ? undefined : <later steps>`. An unset variable stays `undefined`, and
+ *     the later steps run only on a variable that is set. It is always the first step.
+ *   - `default` is `x ?? <value>`, on the raw read or after a `guard`. It changes nothing for a variable
+ *     that is set, and the variable being unset is the input that makes the fallback run.
  *   - `number` is `Number(x)`. `String` is its inverse.
  *   - `equals` is `x === <literal>`, or `x !== <literal>` when `negated` is true. `true` inverts to the
  *     literal itself, and `false` to any value other than the literal.
@@ -20,8 +24,15 @@ import { z } from '#gateway/npm/zod';
 
 export const envStepContract = z.discriminatedUnion('kind', [
   z.object({
+    kind: z.literal('guard'),
+  }).brand<'EnvStep'>(),
+  z.object({
     kind: z.literal('default'),
-    value: z.string().brand<'EnvStepValue'>(),
+    value: z.union([
+      z.string().brand<'EnvStepValue'>(),
+      z.number().brand<'EnvStepValue'>(),
+      z.boolean(),
+    ]),
   }).brand<'EnvStep'>(),
   z.object({
     kind: z.literal('number'),

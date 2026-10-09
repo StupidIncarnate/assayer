@@ -17,6 +17,24 @@ describe('envStepContract', () => {
       expect(result).toStrictEqual({ kind: 'default', value: '' });
     });
 
+    it('VALID: {kind: "default", value: 0} => parses a number fallback', () => {
+      const result = envStepContract.parse({ kind: 'default', value: 0 });
+
+      expect(result).toStrictEqual({ kind: 'default', value: 0 });
+    });
+
+    it('VALID: {kind: "default", value: false} => parses a boolean fallback', () => {
+      const result = envStepContract.parse({ kind: 'default', value: false });
+
+      expect(result).toStrictEqual({ kind: 'default', value: false });
+    });
+
+    it('VALID: {kind: "guard"} => parses the unset guard', () => {
+      const result = envStepContract.parse({ kind: 'guard' });
+
+      expect(result).toStrictEqual({ kind: 'guard' });
+    });
+
     it('VALID: {kind: "number"} => parses the Number coercion', () => {
       const result = envStepContract.parse({ kind: 'number' });
 
@@ -52,6 +70,12 @@ describe('envStepContract', () => {
     it('INVALID: {kind: "equals", literal: null} => throws validation error', () => {
       expect(() => {
         return envStepContract.parse({ kind: 'equals', literal: null, negated: false });
+      }).toThrow(/Invalid input/u);
+    });
+
+    it('INVALID: {kind: "default", value: null} => throws validation error', () => {
+      expect(() => {
+        return envStepContract.parse({ kind: 'default', value: null });
       }).toThrow(/Invalid input/u);
     });
 

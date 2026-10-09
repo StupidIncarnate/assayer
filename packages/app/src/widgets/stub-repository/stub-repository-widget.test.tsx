@@ -9,7 +9,7 @@ import { render, waitFor } from '#gateway/npm/testing-library__react';
 const CROSS_FILE_TYPES = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/types.ts';
 const READER_A = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/cross-file-shape.ts';
 const READER_B = 'packages/syntax-repository/src/happy-path/object/cross-file-shape/reader-b.ts';
-const MULTI_READ = 'packages/syntax-repository/src/sad-path/env-object/multi-read/multi-read.ts';
+const MULTI_READ = 'packages/syntax-repository/src/happy-path/env-object/multi-read/multi-read.ts';
 
 describe('StubRepositoryWidget', () => {
   describe('with a merged stub view', () => {

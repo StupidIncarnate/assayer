@@ -165,6 +165,43 @@ describe('gatherEnvReadsTransformer', () => {
         { property: 'TEXT', literals: [], readers: ['src/text.ts'] },
       ]);
     });
+
+    it('VALID: {a guarded Number read compared with 5} => 5, since a guard keeps a set variable as it is', () => {
+      const blob = CompiledFileBlobStub({
+        relPath: 'src/guarded.ts',
+        moduleGraph: { edges: [], references: [], globalUses: [], envReads: [] },
+        analysis: FileAnalysisStub({
+          functions: [
+            FunctionAnalysisStub({
+              entry: moduleEntry,
+              branches: [
+                {
+                  coverageId: '*module*/if:id:value,EqualsEqualsEqualsToken,num:5',
+                  kind: 'if',
+                  condition: {
+                    kind: 'leaf',
+                    id: '*module*/if:id:value,EqualsEqualsEqualsToken,num:5#leaf',
+                    operandParamName: 'value',
+                    operandEnvVarName: 'VALUE',
+                    operandEnvSteps: [{ kind: 'guard' }, { kind: 'number' }],
+                    operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+                    predicate: { kind: 'eq', literal: 5 },
+                  },
+                  startLine: 2,
+                  endLine: 2,
+                },
+              ],
+              exits: [],
+              cases: [],
+            }),
+          ],
+        }),
+      });
+
+      expect(gatherEnvReadsTransformer({ blobs: [blob] })).toStrictEqual([
+        { property: 'VALUE', literals: [5], readers: ['src/guarded.ts'] },
+      ]);
+    });
   });
 
   describe('a file with no env reads', () => {

@@ -8,26 +8,24 @@
  *   the type graph. This adds only the SOURCE, which no type can supply, and the steps a case runs
  *   backwards to put the operand on the arm it wants (`env-encode`).
  *
- *   The operand must be an IDENTIFIER bound by a same-file `const`. `read-env-chain` follows that
- *   binding, through any further `const` bindings, down to one `process.env.<NAME>` read, and keeps
- *   every step it can invert: a `?? '<literal>'` fallback, `Number(x)`, a comparison with a literal,
- *   `x.split('<literal>')` and `xs.map(f)`. Anything else on the way stays unrecognized and therefore
- *   honestly undriven: `parseInt(x, 10)`, a hand-written parser, a template string. Guessing an inverse
- *   for one of those would put a FAILING case against correct code, which reads as the analyzer being
- *   wrong.
- *
- *   A condition that reads `process.env.X` in place, with no binding in between, is not an identifier
- *   operand, so this reader answers nothing for it, and its branch stays undriven.
+ *   The operand is either the read itself, written in place (`process.env.MODE === 'production'`,
+ *   `Number(process.env.SIZE) > 5`), or an identifier bound by a same-file `const`. `read-env-chain`
+ *   follows any binding, through further `const` bindings, down to one `process.env.<NAME>` read, and
+ *   keeps every step it can invert: a `??` fallback, an `x === undefined ? undefined : …` guard,
+ *   `Number(x)`, a comparison with a literal, `x.split('<literal>')` and `xs.map(f)`. Anything else on
+ *   the way stays unrecognized and therefore honestly undriven: `parseInt(x, 10)`, a hand-written
+ *   parser, a template string. Guessing an inverse for one of those would put a FAILING case against
+ *   correct code, which reads as the analyzer being wrong.
  *
  * USAGE:
- * readEnvOperandLayerTransformer({ node: operandIdentifier });
+ * readEnvOperandLayerTransformer({ node: readout.operandNode });
  * // Returns { name: 'VALUE', steps: [{ kind: 'number' }] } for `const value = Number(process.env.VALUE)`,
  * //   or undefined
  */
-import { Node } from '#gateway/npm/ts-morph';
+import type { Node } from '#gateway/npm/ts-morph';
 
 import type { EnvOperandReadout } from '../../contracts/env-operand-readout/env-operand-readout-contract';
 import { readEnvChainLayerTransformer } from './read-env-chain-layer-transformer';
 
 export const readEnvOperandLayerTransformer = ({ node }: { node: Node }): EnvOperandReadout | undefined =>
-  Node.isIdentifier(node) ? readEnvChainLayerTransformer({ node, seen: [] }) : undefined;
+  readEnvChainLayerTransformer({ node, seen: [] });

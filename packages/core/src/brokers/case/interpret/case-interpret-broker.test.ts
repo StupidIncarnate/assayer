@@ -429,6 +429,33 @@ describe('caseInterpretBroker', () => {
       expect(restoredValue).toBe('prior-value');
     });
 
+    it('EMPTY: {an env binding with no value, a prior value} => removed for the entry, then restored to the prior value', async () => {
+      caseInterpretBrokerProxy();
+      const NAME = 'ASSAYER_JEST_INTERPRET_CASE_ENV_UNSET';
+      setEnv(NAME, 'prior-value');
+      const probe = ProbeRuntimeStub();
+      const testCase = DerivedTestCaseStub({ reachesPath: [THEN], arrange: [{ kind: 'env', name: NAME }] });
+
+      const result = await caseInterpretBroker({
+        entry: () => probe.x(THEN, String(getEnv(NAME))),
+        entryName: 'grade',
+        exitIds: [THEN, ELSE],
+        testCase,
+        probe,
+      });
+      const restoredValue = getEnv(NAME);
+      deleteEnv(NAME);
+
+      expect(result).toStrictEqual({
+        entryName: 'grade',
+        testCase,
+        status: 'passed',
+        observedPath: [THEN],
+        trace: [{ id: THEN, kind: 'exit', valueText: 'undefined' }],
+      });
+      expect(restoredValue).toBe('prior-value');
+    });
+
     // The case the PURPOSE doc calls out by name: an unrestored variable would poison every case that
     // runs after this one, and a throw must not skip the restore in `finally`.
     it('ERROR: {the entry throws with an env binding set} => still restored to the prior value', async () => {

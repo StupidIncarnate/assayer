@@ -23,10 +23,106 @@ describe('envEncodeTransformer', () => {
       ).toBe('ab');
     });
 
-    it('EDGE: {steps: [], members: [null]} => undefined, since no string written to the environment is null', () => {
+    it('EMPTY: {steps: [], members: [null]} => null, leaving the variable unset', () => {
       expect(
         envEncodeTransformer({ steps: [], domain: ValueDomainStub({ members: [null] }), type: { kind: 'string' } }),
+      ).toBe(null);
+    });
+
+    it('VALID: {steps: [], excluded: [null]} => the string representative, since any set variable is defined', () => {
+      expect(
+        envEncodeTransformer({ steps: [], domain: ValueDomainStub({ excluded: [null] }), type: { kind: 'string' } }),
+      ).toBe('abc123');
+    });
+
+    it('EDGE: {number, members: [null]} => undefined, since Number never returns null', () => {
+      expect(
+        envEncodeTransformer({ steps: [EnvStepStub({ kind: 'number' })], domain: ValueDomainStub({ members: [null] }), type: { kind: 'number' } }),
       ).toBe(undefined);
+    });
+  });
+
+  describe('a fallback', () => {
+    it("VALID: {default '', exactly ''} => null, since leaving the variable unset is what runs the fallback", () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'default', value: '' })],
+          domain: ValueDomainStub({ lengthMin: 0, lengthMax: 0 }),
+          type: { kind: 'string' },
+        }),
+      ).toBe(null);
+    });
+
+    it("VALID: {default '', length not 0} => a set string, since the fallback cannot give it", () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'default', value: '' })],
+          domain: ValueDomainStub({ lengthExcluded: [0] }),
+          type: { kind: 'string' },
+        }),
+      ).toBe('a');
+    });
+  });
+
+  describe('a guard', () => {
+    it('VALID: {guard, number, members: [null]} => null, since an unset variable leaves the operand undefined', () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' })],
+          domain: ValueDomainStub({ members: [null] }),
+          type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+        }),
+      ).toBe(null);
+    });
+
+    it('VALID: {guard, number, anything but 0} => the number representative written with String', () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' })],
+          domain: ValueDomainStub({ excluded: [0] }),
+          type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+        }),
+      ).toBe('7');
+    });
+
+    it('VALID: {guard, number, exactly 0} => "0"', () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' })],
+          domain: ValueDomainStub({ members: [0] }),
+          type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+        }),
+      ).toBe('0');
+    });
+
+    it('VALID: {guard alone, members: ["on"]} => "on", since the guard passes a set variable through', () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' })],
+          domain: ValueDomainStub({ members: ['on'] }),
+          type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'string' }] },
+        }),
+      ).toBe('on');
+    });
+
+    it('VALID: {guard, number, default 0, exactly 0} => null, since the fallback after the guard gives 0', () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' }), EnvStepStub({ kind: 'default', value: 0 })],
+          domain: ValueDomainStub({ members: [0] }),
+          type: { kind: 'number' },
+        }),
+      ).toBe(null);
+    });
+
+    it('VALID: {guard, number, default 0, greater than 5} => "6", a set variable', () => {
+      expect(
+        envEncodeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' }), EnvStepStub({ kind: 'default', value: 0 })],
+          domain: ValueDomainStub({ min: 5, minExclusive: true }),
+          type: { kind: 'number' },
+        }),
+      ).toBe('6');
     });
   });
 

@@ -194,4 +194,51 @@ describe('isPredicateConstrainingGuard', () => {
       expect(isPredicateConstrainingGuard({ leaf })).toBe(false);
     });
   });
+
+  describe('a comparison with the global undefined', () => {
+    it('VALID: {process.env.MODE === undefined, read in place} => true, since a case can leave MODE unset', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'process.env.MODE',
+        operandEnvVarName: 'MODE',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'undefined-eq' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+    });
+
+    it('VALID: {a guarded Number read !== undefined} => true, since the guard keeps an unset variable undefined', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'value',
+        operandEnvVarName: 'VALUE',
+        operandEnvSteps: [{ kind: 'guard' }, { kind: 'number' }],
+        operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+        predicate: { kind: 'undefined-neq' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(true);
+    });
+
+    it('INVALID: {Number(process.env.VALUE) === undefined} => false, since Number never returns undefined', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'value',
+        operandEnvVarName: 'VALUE',
+        operandEnvSteps: [{ kind: 'number' }],
+        operandType: { kind: 'number' },
+        predicate: { kind: 'undefined-eq' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(false);
+    });
+
+    it('INVALID: {a parameter === undefined} => false, since no arranged value is undefined', () => {
+      const leaf = ConditionLeafStub({
+        operandParamName: 'v',
+        operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'string' }] },
+        predicate: { kind: 'undefined-eq' },
+      });
+
+      expect(isPredicateConstrainingGuard({ leaf })).toBe(false);
+    });
+  });
 });

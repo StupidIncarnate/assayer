@@ -17,9 +17,10 @@
  *
  *   `null` is a KEYWORD node (`NullKeyword`) and reads as the literal value `null`, which is a
  *   first-class `RepresentativeValue` (`representative-value-contract`) — so `v === null` reads
- *   exactly as `v === 'a'` does. `undefined` is not a keyword but an IDENTIFIER, and stays unread:
- *   `RepresentativeValue` has no `undefined` member, so there is no domain value to carry even if the
- *   identifier were resolved.
+ *   exactly as `v === 'a'` does. `undefined` is not a keyword but an IDENTIFIER, and
+ *   `RepresentativeValue` has no `undefined` member, so it is never read as a literal. A right side
+ *   that is the global `undefined` (`is-global-undefined`) is passed to `predicateTransformer` as its
+ *   own fact instead, and `v === undefined` reads as an `undefined-eq` test on `v`.
  *
  *   It takes the condition EXPRESSION rather than the `if` that owns it, so a ternary, a `while`,
  *   or a `do` can reuse it unchanged when their handlers arrive.
@@ -47,6 +48,7 @@ import { Node } from '#gateway/npm/ts-morph';
 
 import type { ConditionReadout } from '../../contracts/condition-readout/condition-readout-contract';
 
+import { isGlobalUndefinedGuard } from '../../guards/is-global-undefined/is-global-undefined-guard';
 import { predicateTransformer } from '../predicate/predicate-transformer';
 import { readLiteralValueLayerTransformer } from './read-literal-value-layer-transformer';
 import { readPropertyPathLayerTransformer } from './read-property-path-layer-transformer';
@@ -105,6 +107,7 @@ export const readConditionLayerTransformer = ({ condition }: { condition: Node }
       opKind,
       isLengthAccess,
       isTypeofAccess: typeOfExpr !== undefined,
+      isUndefinedComparison: right !== undefined && isGlobalUndefinedGuard({ node: right }),
       ...(rightLiteral === undefined ? {} : { rightLiteral }),
     }),
   };

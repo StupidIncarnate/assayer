@@ -238,13 +238,30 @@ describe('readConditionLayerTransformer', () => {
       expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'neq', literal: null });
     });
 
-    // `undefined` is NOT a keyword — it is an IDENTIFIER referencing the global binding — so it stays
-    // unread exactly as before: `RepresentativeValue` has no `undefined` member, so there is no literal
-    // to carry even once the identifier is recognized as meaning "no value".
-    it('VALID: {v === undefined} => an unrecognized predicate, since undefined is an Identifier, not a keyword', () => {
+    // `undefined` is NOT a keyword — it is an IDENTIFIER referencing the global binding. It carries no
+    // literal, so the comparison reads as its own predicate kind on the operand.
+    it('VALID: {v === undefined} => an undefined-eq predicate with no literal', () => {
       readConditionLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'if (v === undefined) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'undefined-eq' });
+    });
+
+    it('VALID: {v !== undefined} => an undefined-neq predicate with no literal', () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (v !== undefined) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'undefined-neq' });
+    });
+
+    it('EDGE: {v === undefined, with a local binding named undefined} => unrecognized, since that name is not the global', () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const undefined = 1;\nif (v === undefined) {}\n');
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
 
       expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'unrecognized' });

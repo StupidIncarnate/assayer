@@ -139,6 +139,91 @@ describe('buildConditionLeafLayerTransformer', () => {
       });
     });
 
+    it("VALID: {process.env.MODE === 'production', read in place} => named by the read, with no object-member path", () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (process.env.MODE === 'production') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: {
+          operandNode,
+          operandRootName: 'process',
+          operandPropertyPath: ['env', 'MODE'],
+          predicate: PredicateStub({ kind: 'eq', literal: 'production' }),
+        },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'process.env.MODE',
+        operandEnvVarName: 'MODE',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'production' },
+      });
+    });
+
+    it('VALID: {Number(process.env.SIZE) > 5, read in place} => named by the read and its step, with no call position', () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (Number(process.env.SIZE) > 5) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: { operandNode, predicate: PredicateStub({ kind: 'gt', literal: 5 }) },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'Number(process.env.SIZE)',
+        operandEnvVarName: 'SIZE',
+        operandEnvSteps: [{ kind: 'number' }],
+        operandType: { kind: 'number' },
+        predicate: { kind: 'gt', literal: 5 },
+      });
+    });
+
+    it("EDGE: {typeof process.env.MODE === 'string'} => no env read, since the runtime tag is not a value the steps model", () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (typeof process.env.MODE === 'string') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.TypeOfExpression).getExpression();
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: {
+          operandNode,
+          operandRootName: 'process',
+          operandPropertyPath: ['env', 'MODE'],
+          operandIsTypeof: true,
+          predicate: PredicateStub({ kind: 'typeof-eq', literal: 'string' }),
+        },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'process',
+        operandPropertyPath: ['env', 'MODE'],
+        operandIsTypeof: true,
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'typeof-eq', literal: 'string' },
+      });
+    });
+
     it('VALID: {a call operand} => the leaf carries the call position and no name', () => {
       buildConditionLeafLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });

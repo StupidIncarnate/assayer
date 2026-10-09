@@ -278,6 +278,52 @@ describe('typeToRangeTransformer', () => {
     });
   });
 
+  describe('comparisons with the global undefined', () => {
+    // `null` is the domain's one nullish point, so the arm that wants `undefined` names it, and the other
+    // arm is every value but it.
+    it('VALID: {string, undefined-eq} => null satisfies, everything but null violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'undefined-eq' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: [null] }),
+        violating: ValueDomainStub({ excluded: [null] }),
+      });
+    });
+
+    it('VALID: {string, undefined-neq} => everything but null satisfies, null violates', () => {
+      const result = typeToRangeTransformer({ type: { kind: 'string' }, predicateKind: 'undefined-neq' });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ excluded: [null] }),
+        violating: ValueDomainStub({ members: [null] }),
+      });
+    });
+
+    it('VALID: {object, undefined-eq} => null satisfies, and the defined side names nothing', () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({ kind: 'object', properties: [] }),
+        predicateKind: 'undefined-eq',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub({ members: [null] }),
+        violating: ValueDomainStub(),
+      });
+    });
+
+    it('VALID: {object, undefined-neq} => the defined side names nothing, and null violates', () => {
+      const result = typeToRangeTransformer({
+        type: TypeDescriptorStub({ kind: 'object', properties: [] }),
+        predicateKind: 'undefined-neq',
+      });
+
+      expect(result).toStrictEqual({
+        satisfying: ValueDomainStub(),
+        violating: ValueDomainStub({ members: [null] }),
+      });
+    });
+  });
+
   describe('typeof predicates', () => {
     // Every member has a scalar point, so both sides realize a real value — the case that actually
     // steers a branch.

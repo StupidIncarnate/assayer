@@ -135,8 +135,7 @@ describe('compileStubGraphBroker (integration)', () => {
     // `process.env.MODE === 'production'`. The stitch folds each into one env stub keyed
     // `process.env#<PROP>`, its `values` the compared literals GUESSED plus a representative for
     // anything else (numeric `7` for CODE, the string representative for MODE), `guessed: true`, and
-    // this file its reader. Asserted independent of the sad-path RUN verdict: the MODE branch is
-    // admitted undriven, but its literal is a real stub demand regardless.
+    // this file its reader.
     it("VALID: {CODE in a switch, MODE in a bare compare} => two env stubs, CODE guessed [1,2,7], MODE ['abc123','production'], this file the reader", async () => {
       const result = await stitch.stubMultiRead();
 

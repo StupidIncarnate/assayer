@@ -9,7 +9,9 @@
  *
  *   `operandEnvVarName` names WHERE the operand's value entered the program, which is a different
  *   question from what its type is and is answered by a different reader. It appears when the
- *   operand's binding is initialized from the process environment, and it is what makes a scope
+ *   operand IS a process environment read, written in place or held by a `const` the read initializes,
+ *   and an in-place read is then named by the read itself in `operandParamName`
+ *   (`process.env.MODE`). It is what makes a scope
  *   nothing can call drivable anyway: the environment is an input like any other, so a case that
  *   sets it before the module loads picks the arm. It is stated here as a FACT about the code
  *   wherever it is true — whether an entry can actually be driven through it is policy, and policy

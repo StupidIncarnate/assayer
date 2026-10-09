@@ -32,6 +32,12 @@
  *   positional slots the parameter stands for, never hand over as a single argument nested one level too
  *   deep. Carried only when true, so a plain harness binding serializes exactly as it always did.
  *
+ *   An `env` binding with no `value` leaves the variable UNSET: the run removes it before the entry runs.
+ *   A variable set to the empty string and a variable that is not set at all are different inputs, and
+ *   code can tell them apart (`process.env.X === undefined`, `process.env.X ?? 'fallback'`). The empty
+ *   string is a value like any other, so it stays `value: ''`, and only the absence of `value` means
+ *   unset.
+ *
  *   It is its OWN contract so every transformer that BUILDS an arrange — `derive-cases`, `cause-arrange`,
  *   the funnel's param fill — names one binding directly instead of indexing into the case's array type.
  *
@@ -39,6 +45,7 @@
  * arrangeBindingContract.parse({ kind: 'param', param: 'name', value: '' });
  * arrangeBindingContract.parse({ kind: 'array', param: 'items', value: [7] });
  * arrangeBindingContract.parse({ kind: 'object', param: 'config', value: { db: { host: 'localhost' } } });
+ * arrangeBindingContract.parse({ kind: 'env', name: 'MODE' });
  * // Returns a validated ArrangeBinding (discriminated on `kind`)
  */
 import { z } from '#gateway/npm/zod';
@@ -55,7 +62,8 @@ export const arrangeBindingContract = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('env'),
     name: z.string().min(1).brand<'ArrangeBindingName'>(),
-    value: z.string().brand<'ArrangeBindingValue'>(),
+    // Absent when the case leaves the variable UNSET — see the PURPOSE doc above.
+    value: z.string().brand<'ArrangeBindingValue'>().optional(),
   }).brand<'ArrangeBinding'>(),
   z.object({
     kind: z.literal('object'),

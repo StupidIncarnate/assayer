@@ -25,6 +25,10 @@
  *   partition them — `unrecognized` and a bare truthy/falsy read both leave the axis untouched on both
  *   sides, so this only fires for a genuine `.length` comparison.
  *
+ *   A comparison with the global `undefined` constrains only an environment read that can hold
+ *   `undefined` (`is-env-steps-nullable`), because the only input a case can make undefined is a
+ *   variable it leaves unset. On a parameter it reads, and steers nothing.
+ *
  *   Every other operand is realized the way `cause-arrange`'s own operand cartesian realizes it: the
  *   domain's own value where it names one (`domain-values`, UNFILTERED — `null` is a value the
  *   `non-nullish` violating arm names on purpose, per `representative-value-contract`, even though no
@@ -49,6 +53,7 @@ import { lengthCandidatesTransformer } from '../../transformers/length-candidate
 import { representativeValueTransformer } from '../../transformers/representative-value/representative-value-transformer';
 import { typeToRangeTransformer } from '../../transformers/type-to-range/type-to-range-transformer';
 import { isDomainUnconstrainedGuard } from '../is-domain-unconstrained/is-domain-unconstrained-guard';
+import { isEnvStepsNullableGuard } from '../is-env-steps-nullable/is-env-steps-nullable-guard';
 import { isFalsyArmGuard } from '../is-falsy-arm/is-falsy-arm-guard';
 import { isTypeFillableGuard } from '../is-type-fillable/is-type-fillable-guard';
 
@@ -68,6 +73,14 @@ export const isPredicateConstrainingGuard = ({ leaf }: { leaf?: ConditionLeaf })
       !isDomainUnconstrainedGuard({ domain: armValues.satisfying }) ||
       !isDomainUnconstrainedGuard({ domain: armValues.violating })
     );
+  }
+
+  // A comparison with `undefined` steers only an operand a case can actually make undefined: an
+  // environment variable the case leaves unset, read through a chain that keeps `undefined`. Nothing
+  // else a case arranges can be `undefined`, and the domain's `null` point would arrange `null`, which
+  // `=== undefined` rejects.
+  if (leaf.predicate.kind === 'undefined-eq' || leaf.predicate.kind === 'undefined-neq') {
+    return leaf.operandEnvVarName !== undefined && isEnvStepsNullableGuard({ steps: leaf.operandEnvSteps ?? [] });
   }
 
   const isFalsyArmEligible =

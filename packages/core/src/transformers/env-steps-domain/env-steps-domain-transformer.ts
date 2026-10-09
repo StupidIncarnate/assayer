@@ -6,12 +6,13 @@
  *   a case that could never reach it.
  *
  *   Two facts limit an operand:
- *   - Any step at all makes the operand non-nullish. Only the raw read is `undefined` when the
- *     variable is unset, and a fallback, a coercion, a comparison and a split all return a value.
+ *   - A chain that ends in a value is non-nullish. A fallback, a coercion, a comparison and a split all
+ *     return one. Only the raw read, and a `guard` with no fallback after it, are `undefined` when the
+ *     variable is unset (`is-env-steps-nullable`), so neither limits null.
  *   - `x.split(s)` always returns at least one item, even for an empty string (`''.split(',')` is
  *     `['']`), and `map` keeps that length. So an operand built by `split` has a length of at least 1.
  *
- *   The raw read limits nothing a case can set, so it answers `undefined`.
+ *   A chain that can hold `undefined` limits nothing a case can set, so it answers `undefined`.
  *
  * USAGE:
  * envStepsDomainTransformer({ steps: [{ kind: 'split', separator: ',' }] });
@@ -19,11 +20,12 @@
  */
 import type { EnvStep } from '@assayer/shared/contracts';
 
+import { isEnvStepsNullableGuard } from '../../guards/is-env-steps-nullable/is-env-steps-nullable-guard';
 import { valueDomainContract } from '../../contracts/value-domain/value-domain-contract';
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 
 export const envStepsDomainTransformer = ({ steps }: { steps: readonly EnvStep[] }): ValueDomain | undefined =>
-  steps.length === 0
+  isEnvStepsNullableGuard({ steps })
     ? undefined
     : valueDomainContract.parse({
         excluded: [null],

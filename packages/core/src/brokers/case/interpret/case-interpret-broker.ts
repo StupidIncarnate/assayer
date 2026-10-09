@@ -30,7 +30,8 @@
  *   the first write and restored in `finally` — including when the entry throws, which is exactly
  *   when an unrestored variable would go on to poison every case after it and make the failure look
  *   like it belongs to some other file. A variable that was ABSENT is restored to absent rather than
- *   to the empty string: `X=''` and no `X` are different inputs, and the code under test can tell.
+ *   to the empty string: `X=''` and no `X` are different inputs, and the code under test can tell. The
+ *   same holds on the way in: an env binding with no value REMOVES its variable for the case.
  *
  *   The observed path is every trace exit event whose id is one of THIS ENTRY'S exits, in firing order;
  *   a case passes when the predicted `reachesPath` is a CONTIGUOUS SUFFIX of it — the last N observed exit
@@ -167,8 +168,15 @@ export const caseInterpretBroker = async ({
   const restore = envBindings.map((binding) => ({ name: binding.name, prior: getEnv(binding.name) }));
 
   try {
+    // A binding with no value leaves its variable UNSET, so it is removed rather than written: a
+    // variable the outer process happens to hold would otherwise reach the code as a value the case
+    // never arranged.
     for (const binding of envBindings) {
-      setEnv(binding.name, binding.value);
+      if (binding.value === undefined) {
+        deleteEnv(binding.name);
+      } else {
+        setEnv(binding.name, binding.value);
+      }
     }
 
     // The result finishes running HERE, inside the environment the case arranged: an async entry's

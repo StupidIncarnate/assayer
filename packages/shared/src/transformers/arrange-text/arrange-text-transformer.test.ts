@@ -79,6 +79,20 @@ describe('arrangeTextTransformer', () => {
 
       expect(result).toBe('PORT="1", RETRIES="2"');
     });
+
+    it('EMPTY: {an env binding with no value} => unset NAME, the command that leaves the variable unset', () => {
+      const { arrange } = DerivedTestCaseStub({ arrange: [{ kind: 'env', name: 'LEVEL' }] });
+      const result = arrangeTextTransformer({ arrange });
+
+      expect(result).toBe('unset LEVEL');
+    });
+
+    it('EMPTY: {an env binding set to ""} => LEVEL="", which differs from unset', () => {
+      const { arrange } = DerivedTestCaseStub({ arrange: [{ kind: 'env', name: 'LEVEL', value: '' }] });
+      const result = arrangeTextTransformer({ arrange });
+
+      expect(result).toBe('LEVEL=""');
+    });
   });
 
   describe('harness bindings render as the key that supplied them', () => {

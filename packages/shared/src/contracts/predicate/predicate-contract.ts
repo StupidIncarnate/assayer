@@ -13,6 +13,12 @@
  *   null nor undefined, and falls through to `b` otherwise. It carries no literal — it partitions the
  *   operand's declared type into its non-null values (satisfying) and null (violating).
  *
+ *   `undefined-eq`/`undefined-neq` are a strict comparison with the global `undefined` (`x === undefined`,
+ *   `x !== undefined`). They carry no literal, because `undefined` is not a value a domain or a case can
+ *   carry. A case can make the comparison true only where the operand can actually BE undefined through
+ *   an input: a variable read from the process environment that the case leaves unset. Everywhere else
+ *   the comparison reads but steers nothing (`is-predicate-constraining`).
+ *
  *   `typeof-eq`/`typeof-neq` are a `typeof` comparison (`typeof target === 'string'`): a THIRD axis,
  *   next to the plain value axis and the length axis, that partitions the operand's type by which
  *   members produce the literal's RUNTIME TAG (`'string'`, `'number'`, `'boolean'`, `'object'`,
@@ -47,6 +53,8 @@ export const predicateContract = z.object({
       'truthy',
       'falsy',
       'non-nullish',
+      'undefined-eq',
+      'undefined-neq',
       'typeof-eq',
       'typeof-neq',
       'unrecognized',

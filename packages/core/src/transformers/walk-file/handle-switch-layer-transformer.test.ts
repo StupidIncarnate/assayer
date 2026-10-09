@@ -137,6 +137,39 @@ describe('handleSwitchLayerTransformer', () => {
       ]);
     });
 
+    // Read in place, the discriminant has no binding to name it, so it is named by the read itself.
+    it('VALID: {a switch on process.env.MODE in place} => each leaf named by the read, with the env source and a string type', () => {
+      handleSwitchLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile(
+        'src/f.ts',
+        "switch (process.env.MODE) {\n  case 'dev':\n    noop();\n    break;\n  default:\n    noop();\n}\ndeclare function noop(): void;\n",
+      );
+      const node = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
+
+      const result = handleSwitchLayerTransformer({
+        node,
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: false, tail: true }),
+      });
+
+      expect(result.branches).toStrictEqual([
+        {
+          coverageId: '*module*/switch:PropertyAccessExpression,PropertyAccessExpression,id:process,id:env,id:MODE,EqualsEqualsEqualsToken,str:dev',
+          kind: 'switch',
+          condition: {
+            kind: 'leaf',
+            id: '*module*/switch:PropertyAccessExpression,PropertyAccessExpression,id:process,id:env,id:MODE,EqualsEqualsEqualsToken,str:dev#leaf',
+            operandParamName: 'process.env.MODE',
+            operandEnvVarName: 'MODE',
+            operandType: { kind: 'string' },
+            predicate: { kind: 'eq', literal: 'dev' },
+          },
+          startLine: 2,
+          endLine: 4,
+        },
+      ]);
+    });
+
     it('EDGE: {enum-member cases only} => a branch carrying an unrecognized predicate, never a dropped clause', () => {
       handleSwitchLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });

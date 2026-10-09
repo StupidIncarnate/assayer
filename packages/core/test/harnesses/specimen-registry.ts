@@ -583,22 +583,20 @@ const DECLARATIONS = {
   // controls, so it is admitted UNDRIVEN. `makeClassifier` is the sole `access:named` entry.
   [`${CATALOGUE}/sad-path/undriven/returned-closure/returned-closure.ts`]: ['access:named', 'undriven'],
 
-  // ENV-as-OBJECT: `process.env` is an object, and its properties feed the stub stitch REGARDLESS of
-  // drivability. `multi-read` reads two: `CODE` via `Number(process.env.CODE)` in a switch (DRIVEN, one
-  // env case per arm, `operand:env`), and `MODE` via a bare `process.env.MODE === 'production'` compare
-  // (UNDRIVEN — it types as `any` in the hermetic walk, §5.10). The bare compare is the `env:property`
-  // capture: its literal is a real stub demand even though no case can steer the arm. So the file drives
-  // the switch clean but ADMITS the `if` undriven — an unclean run, hence sad-path. The env stubs it
-  // contributes (`process.env#CODE` → guessed `[1,2,7]`, `process.env#MODE` → `['abc123','production']`)
-  // are asserted in `compile-stub-graph-broker.integration.test.ts`, independent of this run verdict.
-  [`${CATALOGUE}/sad-path/env-object/multi-read/multi-read.ts`]: [
+  // ENV-as-OBJECT: `process.env` is an object, and its properties feed the stub stitch. `multi-read`
+  // reads two: `MODE` IN PLACE, in a bare `process.env.MODE === 'production'` compare, and `CODE` through
+  // `const statusCode = Number(process.env.CODE)`, the discriminant of a switch. Both are environment
+  // operands (`operand:env`), so a case writes MODE and CODE before the import and every arm is driven.
+  // The in-place compare is also the `env:property` capture: its literal is a stub demand. Nothing is
+  // admitted, so the run is clean. The env stubs it contributes are asserted in
+  // `compile-stub-graph-broker.integration.test.ts`.
+  [`${CATALOGUE}/happy-path/env-object/multi-read/multi-read.ts`]: [
     'access:module',
     'branch:if',
     'branch:switch',
     'callee:node-global',
     'env:property',
     'operand:env',
-    'undriven',
   ],
 
   // UNREACHABLE — an exit no input reaches, whose finding is a BUILD ERROR (an unreachable-exit lint)

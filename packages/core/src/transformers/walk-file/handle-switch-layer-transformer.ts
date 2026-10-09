@@ -31,6 +31,7 @@ import { branchNodeContract, exitNodeContract, guardStepContract } from '@assaye
 import { probeSiteContract } from '../../contracts/probe-site/probe-site-contract';
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { walkNodeContract } from '../../contracts/walk-node/walk-node-contract';
+import { envOperandKeyTransformer } from '../env-operand-key/env-operand-key-transformer';
 import { envStepsTypeTransformer } from '../env-steps-type/env-steps-type-transformer';
 import { exitCoverageIdTransformer } from '../exit-coverage-id/exit-coverage-id-transformer';
 import { walkContextTransformer } from '../walk-context/walk-context-transformer';
@@ -67,6 +68,10 @@ export const handleSwitchLayerTransformer = ({
   // Whether the discriminant is welded to a same-file `const` — evaluated, not steered, exactly as an
   // `if` operand is: the case whose literal matches is live and the rest are unreachable exits.
   const constOperand = readConstOperandLayerTransformer({ node: desugared.discNode });
+  // A discriminant that reads the environment in place (`switch (process.env.MODE)`) has no name of
+  // its own, so it is named by the read and its steps, exactly as an `if` operand read in place is.
+  const operandParamName =
+    desugared.discName ?? (envRead === undefined ? undefined : envOperandKeyTransformer({ name: envRead.name, steps: envRead.steps }));
 
   // A `case` is already an equality test on one discriminant, so it IS a one-leaf condition tree —
   // the same shape an `if` builds, reached without a decomposition pass.
@@ -82,7 +87,7 @@ export const handleSwitchLayerTransformer = ({
       condition: {
         kind: 'leaf',
         id: `${caseInfo.branchCoverageId}#leaf`,
-        ...(desugared.discName === undefined ? {} : { operandParamName: desugared.discName }),
+        ...(operandParamName === undefined ? {} : { operandParamName }),
         ...(envRead === undefined ? {} : { operandEnvVarName: envRead.name }),
         ...(envRead === undefined || envRead.steps.length === 0 ? {} : { operandEnvSteps: envRead.steps }),
         ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),

@@ -211,6 +211,20 @@ export const typeToRangeTransformer = ({
         satisfying: rep === undefined ? {} : { excluded: [null] },
         violating: { members: [null] },
       });
+    // A comparison with the global `undefined` names the nullish point the way `??` does: `null` is the
+    // domain's one nullish value (`representative-value-contract`), and the other side is every value
+    // but it. Whether a case can actually PUT an operand there is not this engine's question: only an
+    // environment variable left unset can (`is-predicate-constraining`).
+    case 'undefined-eq':
+      return armValuesContract.parse({
+        satisfying: { members: [null] },
+        violating: rep === undefined ? {} : { excluded: [null] },
+      });
+    case 'undefined-neq':
+      return armValuesContract.parse({
+        satisfying: rep === undefined ? {} : { excluded: [null] },
+        violating: { members: [null] },
+      });
     // The runtime-tag axis: `literal` here is always the STRING tag `typeof` compared against
     // (`predicateTransformer` never emits this kind otherwise), never a value of the operand's own
     // type. `typeof-eq`'s satisfying side is the tag-matching side and its violating side is

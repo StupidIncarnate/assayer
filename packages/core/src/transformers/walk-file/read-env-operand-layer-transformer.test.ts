@@ -364,11 +364,160 @@ describe('readEnvOperandLayerTransformer', () => {
       expect(result).toBe(undefined);
     });
 
-    it('EMPTY: {an operand that is not an identifier} => nothing, even when it reads process.env in place', () => {
+  });
+
+  describe('a read written in place', () => {
+    it("VALID: {process.env.MODE === 'production'} => the env var with no steps", () => {
       readEnvOperandLayerTransformerProxy();
 
       const result = readEnvOperandLayerTransformer({
         node: operandOf({ source: "if (process.env.MODE === 'production') {} else {}" }),
+      });
+
+      expect(result).toStrictEqual({ name: 'MODE', steps: [] });
+    });
+
+    it('VALID: {Number(process.env.SIZE) > 5} => the env var and its number step', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({ node: operandOf({ source: 'if (Number(process.env.SIZE) > 5) {} else {}' }) });
+
+      expect(result).toStrictEqual({ name: 'SIZE', steps: [{ kind: 'number' }] });
+    });
+  });
+
+  describe('a guard that keeps an unset variable undefined', () => {
+    it('VALID: {V === undefined ? undefined : Number(V)} => a guard, then the number step', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: 'const value = process.env.V === undefined ? undefined : Number(process.env.V);\nif (value) {} else {}',
+        }),
+      });
+
+      expect(result).toStrictEqual({ name: 'V', steps: [{ kind: 'guard' }, { kind: 'number' }] });
+    });
+
+    it("VALID: {V !== undefined ? V === 'true' : undefined} => a guard, then the equals step, since !== swaps the arms", () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: "const value = process.env.V !== undefined ? process.env.V === 'true' : undefined;\nif (value) {} else {}",
+        }),
+      });
+
+      expect(result).toStrictEqual({ name: 'V', steps: [{ kind: 'guard' }, { kind: 'equals', literal: 'true', negated: false }] });
+    });
+
+    it('VALID: {undefined === V ? undefined : V} => a guard alone, with the undefined on the left', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({ source: 'const value = undefined === process.env.V ? undefined : process.env.V;\nif (value) {} else {}' }),
+      });
+
+      expect(result).toStrictEqual({ name: 'V', steps: [{ kind: 'guard' }] });
+    });
+
+    it('VALID: {(V === undefined ? undefined : Number(V)) ?? 0} => the guard, the number step, then the fallback', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: 'const value = (process.env.V === undefined ? undefined : Number(process.env.V)) ?? 0;\nif (value > 5) {} else {}',
+        }),
+      });
+
+      expect(result).toStrictEqual({ name: 'V', steps: [{ kind: 'guard' }, { kind: 'number' }, { kind: 'default', value: 0 }] });
+    });
+
+    it("VALID: {a guarded number with a string fallback} => nothing, since the fallback is not the chain's type", () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: "const value = (process.env.V === undefined ? undefined : Number(process.env.V)) ?? 'x';\nif (value) {} else {}",
+        }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {a guarded number compared with 7} => nothing, since the comparison would see the undefined too', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: 'const value = (process.env.V === undefined ? undefined : Number(process.env.V)) === 7;\nif (value) {} else {}',
+        }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {Number of a guard} => nothing, since Number would see the undefined', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: 'const value = Number(process.env.V === undefined ? undefined : process.env.V);\nif (value) {} else {}',
+        }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {a guard on one variable and a chain on another} => nothing', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: 'const value = process.env.V === undefined ? undefined : Number(process.env.W);\nif (value) {} else {}',
+        }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {an unset arm that is not undefined} => nothing', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({ source: 'const value = process.env.V === undefined ? 0 : Number(process.env.V);\nif (value) {} else {}' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {a loose == undefined} => nothing, since it is also true for null', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({ source: 'const value = process.env.V == undefined ? undefined : Number(process.env.V);\nif (value) {} else {}' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {a ternary whose condition is not a comparison} => nothing', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({ source: 'const value = process.env.V ? undefined : Number(process.env.V);\nif (value) {} else {}' }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {a guard on a value that is not the raw read} => nothing', () => {
+      readEnvOperandLayerTransformerProxy();
+
+      const result = readEnvOperandLayerTransformer({
+        node: operandOf({
+          source: 'const value = Number(process.env.V) === undefined ? undefined : Number(process.env.V);\nif (value) {} else {}',
+        }),
       });
 
       expect(result).toBe(undefined);

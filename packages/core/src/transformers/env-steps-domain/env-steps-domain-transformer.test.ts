@@ -57,6 +57,27 @@ describe('envStepsDomainTransformer', () => {
     });
   });
 
+  describe('a chain that can hold undefined', () => {
+    it('VALID: {guard, number} => undefined, since an unset variable leaves the operand undefined', () => {
+      expect(envStepsDomainTransformer({ steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' })] })).toBe(undefined);
+    });
+
+    it('VALID: {guard, number, default 0} => never null, since the fallback replaces undefined', () => {
+      expect(
+        envStepsDomainTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' }), EnvStepStub({ kind: 'default', value: 0 })],
+        }),
+      ).toStrictEqual({
+        minExclusive: false,
+        maxExclusive: false,
+        lengthMinExclusive: false,
+        lengthMaxExclusive: false,
+        lengthExcluded: [],
+        excluded: [null],
+      });
+    });
+  });
+
   describe('the raw read', () => {
     it('EMPTY: {steps: []} => undefined, since the raw string limits nothing a case can set', () => {
       expect(envStepsDomainTransformer({ steps: [] })).toBe(undefined);

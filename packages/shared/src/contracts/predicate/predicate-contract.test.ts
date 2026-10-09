@@ -29,6 +29,22 @@ describe('predicateContract', () => {
       expect(result).toStrictEqual({ kind: 'eq', literal: 'blocked' });
     });
 
+    it('VALID: {kind: "undefined-eq"} => parses without a literal', () => {
+      const predicate = PredicateStub({ kind: 'undefined-eq' });
+
+      const result = predicateContract.parse(predicate);
+
+      expect(result).toStrictEqual({ kind: 'undefined-eq' });
+    });
+
+    it('VALID: {kind: "undefined-neq"} => parses without a literal', () => {
+      const predicate = PredicateStub({ kind: 'undefined-neq' });
+
+      const result = predicateContract.parse(predicate);
+
+      expect(result).toStrictEqual({ kind: 'undefined-neq' });
+    });
+
     // The runtime-tag axis: the literal is always the STRING tag `typeof` compared against.
     it('VALID: {kind: "typeof-eq", literal: "string"} => parses with the runtime-tag literal', () => {
       const predicate = PredicateStub({ kind: 'typeof-eq', literal: 'string' });

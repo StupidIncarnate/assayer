@@ -47,10 +47,11 @@ export const gatherEnvReadsTransformer = ({
         .flatMap((branch) => conditionLeavesTransformer({ condition: branch.condition }))
         .flatMap((leaf) => {
           // A predicate literal is a value of the VARIABLE only while every step keeps the value as it
-          // is, up to `Number`, and the predicate compares that value. After a comparison or a split the
-          // literal is a boolean or a length, so the comparison step's own literal is the one recorded.
+          // is, up to `Number`, and the predicate compares that value. A guard keeps a set variable as
+          // it is too. After a comparison or a split the literal is a boolean or a length, so the
+          // comparison step's own literal is the one recorded.
           const steps = leaf.operandEnvSteps ?? [];
-          const valuePreserving = steps.every((step) => step.kind === 'default' || step.kind === 'number');
+          const valuePreserving = steps.every((step) => step.kind === 'default' || step.kind === 'number' || step.kind === 'guard');
           const predicateLiterals =
             valuePreserving && leaf.predicate.literal !== undefined && VALUE_PREDICATES.has(leaf.predicate.kind)
               ? [leaf.predicate.literal]

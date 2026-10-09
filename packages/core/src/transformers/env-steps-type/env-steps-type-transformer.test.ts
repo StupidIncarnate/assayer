@@ -39,6 +39,29 @@ describe('envStepsTypeTransformer', () => {
       ).toStrictEqual({ kind: 'array', element: { kind: 'unknown', text: 'unknown' } });
     });
 
+    it('VALID: {guard, number} => number or undefined, since the guard keeps an unset variable undefined', () => {
+      expect(envStepsTypeTransformer({ steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' })] })).toStrictEqual({
+        kind: 'union',
+        members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }],
+      });
+    });
+
+    it("VALID: {guard, equals 'true'} => boolean or undefined", () => {
+      expect(
+        envStepsTypeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'equals', literal: 'true', negated: false })],
+        }),
+      ).toStrictEqual({ kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'boolean' }] });
+    });
+
+    it('VALID: {guard, number, default 0} => a number, since the fallback replaces undefined', () => {
+      expect(
+        envStepsTypeTransformer({
+          steps: [EnvStepStub({ kind: 'guard' }), EnvStepStub({ kind: 'number' }), EnvStepStub({ kind: 'default', value: 0 })],
+        }),
+      ).toStrictEqual({ kind: 'number' });
+    });
+
     it('VALID: {number, equals} => a boolean, the type of the last step', () => {
       expect(
         envStepsTypeTransformer({ steps: [EnvStepStub({ kind: 'number' }), EnvStepStub({ kind: 'equals', literal: 7, negated: true })] }),

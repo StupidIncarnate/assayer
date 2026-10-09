@@ -37,7 +37,7 @@ const CATALOGUE = 'packages/syntax-repository/src';
 const NODE_TSCONFIG = '{ "compilerOptions": { "moduleResolution": "node", "esModuleInterop": true } }';
 
 export const BRANCH_LOCAL_REL = `${CATALOGUE}/happy-path/object/branch-local/branch-local.ts`;
-export const MULTI_READ_REL = `${CATALOGUE}/sad-path/env-object/multi-read/multi-read.ts`;
+export const MULTI_READ_REL = `${CATALOGUE}/happy-path/env-object/multi-read/multi-read.ts`;
 
 const CROSS_FILE_SHAPE_DIR = `${CATALOGUE}/happy-path/object/cross-file-shape`;
 export const CROSS_FILE_SHAPE_TYPES_REL = `${CROSS_FILE_SHAPE_DIR}/types.ts`;
