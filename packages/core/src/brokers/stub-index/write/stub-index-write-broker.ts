@@ -13,6 +13,7 @@
 import type { StubIndex } from '@assayer/shared/contracts';
 
 import { ensureDir, rename, writeFile } from '#gateway/node/fs__promises';
+import { dirname } from '#gateway/node/path';
 
 export const stubIndexWriteBroker = async ({
   configDir,
@@ -24,7 +25,8 @@ export const stubIndexWriteBroker = async ({
   index: StubIndex;
 }): Promise<void> => {
   const dir = `${configDir}/.assayer/cache/stubs`;
-  await ensureDir(dir);
+  const tmpPath = `${dir}/${namespace}.json.tmp`;
+  await ensureDir(dirname(tmpPath));
 
   const canonical = {
     layoutHash: index.layoutHash,
@@ -34,7 +36,6 @@ export const stubIndexWriteBroker = async ({
   };
 
   const content = JSON.stringify(canonical);
-  const tmpPath = `${dir}/${namespace}.json.tmp`;
 
   await writeFile(tmpPath, content);
   await rename(tmpPath, `${dir}/${namespace}.json`);

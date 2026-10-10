@@ -242,9 +242,15 @@ export const deriveCasesTransformer = ({
 
   const unsteerableIds = new Set(unsteerable.map((entry) => entry.branchCoverageId));
   const steerableBranches = branches.filter((branch) => !unsteerableIds.has(branch.coverageId));
-  // An exit behind an un-steerable branch derives no case: with the branch's arms indistinguishable,
-  // every case it produced would arrange the same inputs and misclaim its exit.
-  const steerableExits = exits.filter((exit) => !exit.guardPath.some((step) => unsteerableIds.has(step.branchCoverageId)));
+  // For callable entries (envDrivable: false), an exit requiring an un-steerable branch's non-fallback
+  // arm ('then') derives no case: with the branch un-steerable, no case can arrange the condition to hold.
+  // The fallback arm ('else') represents the unconstrained execution path, so exits along the 'else' path survive.
+  // For module-load entries (envDrivable: true), the entry is not callable, so an unsteerable branch derives no case.
+  const steerableExits = envDrivable
+    ? exits.filter((exit) => !exit.guardPath.some((step) => unsteerableIds.has(step.branchCoverageId)))
+    : exits.filter(
+        (exit) => !exit.guardPath.some((step) => unsteerableIds.has(step.branchCoverageId) && step.arm !== 'else'),
+      );
 
   // The returnPredicate rides the SAME steerability gate. An un-steerable one is dropped (not admitted
   // undriven — the entry is still callable, it just cannot split its two return values apart), so the
@@ -269,8 +275,16 @@ export const deriveCasesTransformer = ({
   // Each bucket is arranged into values and mapped to the exit control flow reaches: the MAXIMAL-length
   // guard path the bucket's arms satisfy, so the bare trailing exit ([] guard path) is chosen only when
   // no guarded exit matches. Exactly one exit is maximal for a proper guard tree; none ⇒ drop the bucket.
+  const unsteerableArmDefaults = envDrivable
+    ? new Map<string, string>()
+    : new Map(
+        [...unsteerableIds].map((id) => [String(id), 'else'] as const),
+      );
   const evaluated = buckets.map((bucket) => {
-    const armByBranch = new Map(bucket.arms.map((step) => [String(step.branchCoverageId), String(step.arm)] as const));
+    const armByBranch = new Map<string, string>([
+      ...unsteerableArmDefaults,
+      ...bucket.arms.map((step) => [String(step.branchCoverageId), String(step.arm)] as const),
+    ]);
     const consistent = steerableExits.filter((exit) =>
       exit.guardPath.every((step) => armByBranch.get(String(step.branchCoverageId)) === String(step.arm)),
     );

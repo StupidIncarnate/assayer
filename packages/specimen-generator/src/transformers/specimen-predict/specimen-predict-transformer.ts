@@ -143,7 +143,9 @@ export const specimenPredictTransformer = ({
         ? ('driven' as const)
         : verdict === 'locked' && arm === liveArm
           ? ('driven' as const)
-          : ('never' as const);
+          : verdict === 'undriven' && arm === 'else' && scope !== undefined && !isInlineCalled
+            ? ('driven' as const)
+            : ('never' as const);
 
     return {
       kind: focusKindName,

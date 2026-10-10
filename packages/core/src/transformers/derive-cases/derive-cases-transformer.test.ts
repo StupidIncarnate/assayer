@@ -736,7 +736,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {an opaque call guard} => no case for its exits, and the branch admitted undriven with no operand', () => {
+    it('VALID: {an opaque call guard} => fallback arm case, then arm dropped, and the branch admitted undriven with no operand', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [OPAQUE_CALL_BRANCH],
@@ -748,7 +748,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [{ reachesPath: ['opaqueIf/return@else'], arrange: [], salient: true }],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
         unfillable: [],
@@ -769,7 +769,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a non-param local operand} => no case for its exits, and the branch admitted undriven naming the operand', () => {
+    it('VALID: {a non-param local operand} => fallback arm case, and the branch admitted undriven naming the operand', () => {
       const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 's', type: { kind: 'number' } })],
         branches: [NON_PARAM_BRANCH],
@@ -781,7 +781,13 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [
+          {
+            reachesPath: ['nonParam/return@else'],
+            arrange: [{ kind: 'param', param: 's', value: 7 }],
+            salient: true,
+          },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand', operand: 'u' }],
         unfillable: [],
@@ -806,7 +812,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {an object-member operand over a param} => un-steerable, no case, admission names the property read', () => {
+    it('VALID: {an object-member operand over a param} => un-steerable, fallback case, admission names the property read', () => {
       const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 'config', type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] } })],
         branches: [OBJECT_MEMBER_BRANCH],
@@ -818,7 +824,21 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [
+          {
+            reachesPath: ['decide/return@else'],
+            arrange: [
+              {
+                kind: 'object',
+                param: 'config',
+                value: {
+                  mode: 'abc123',
+                },
+              },
+            ],
+            salient: true,
+          },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand', operand: 'config.mode' }],
         unfillable: [],
@@ -842,7 +862,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a typeof read of an opaque operand} => un-steerable, no case, cause names the typeof limit', () => {
+    it('VALID: {a typeof read of an opaque operand} => un-steerable, fallback case, cause names the typeof limit', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [TYPEOF_BRANCH],
@@ -854,7 +874,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [{ reachesPath: ['checkTypeof/return@else'], arrange: [], salient: true }],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-typeof' }],
         unfillable: [],
@@ -884,7 +904,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a typeof narrowing a union with a non-scalar member} => un-steerable, no case, cause names the shape limit', () => {
+    it('VALID: {a typeof narrowing a union with a non-scalar member} => un-steerable, fallback case, cause names the shape limit', () => {
       const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({
@@ -904,7 +924,21 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [
+          {
+            reachesPath: ['choose/return@else'],
+            arrange: [
+              {
+                kind: 'object',
+                param: 'target',
+                value: {
+                  label: 'abc123',
+                },
+              },
+            ],
+            salient: true,
+          },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 2, cause: 'unarrangeable-typeof-member', operand: 'target' }],
         unfillable: [],
@@ -977,7 +1011,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a property path more than one segment deep} => un-steerable, no case, same cause as a one-segment read', () => {
+    it('VALID: {a property path more than one segment deep} => un-steerable, fallback case, same cause as a one-segment read', () => {
       const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({
@@ -998,7 +1032,25 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [
+          {
+            reachesPath: ['checkDeep/return@else'],
+            arrange: [
+              {
+                kind: 'object',
+                param: 'config',
+                value: {
+                  db: {
+                    retry: {
+                      backoff: 7,
+                    },
+                  },
+                },
+              },
+            ],
+            salient: true,
+          },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 4, cause: 'unarrangeable-operand', operand: 'config.db.retry.backoff' }],
         unfillable: [],
@@ -1022,7 +1074,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a param compared against a non-literal} => un-steerable, no case, and the cause is the comparison', () => {
+    it('VALID: {a param compared against a non-literal} => un-steerable, fallback case, and the cause is the comparison', () => {
       const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 'm', type: { kind: 'string' } })],
         branches: [UNREAD_COMPARISON_BRANCH],
@@ -1034,7 +1086,19 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [
+          {
+            reachesPath: ['pick/return@else'],
+            arrange: [
+              {
+                kind: 'param',
+                param: 'm',
+                value: 'abc123',
+              },
+            ],
+            salient: true,
+          },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 4, cause: 'unread-comparison', operand: 'm' }],
         unfillable: [],
@@ -1044,7 +1108,7 @@ describe('deriveCasesTransformer', () => {
     // A WELDED constant is arrangeable without an input, but weldedness only says what the operand IS —
     // it says nothing about what the comparison DEMANDS. With an unreadable right-hand side there is
     // still no arm to prefer, so the single-value domain reaches both and the branch stays undriven.
-    it('VALID: {a welded const compared against a non-literal} => un-steerable, never two cases over one value', () => {
+    it('VALID: {a welded const compared against a non-literal} => un-steerable, fallback case over one value', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [
@@ -1069,7 +1133,13 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [
+          {
+            reachesPath: ['weld/return@else'],
+            arrange: [],
+            salient: true,
+          },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unread-comparison', operand: 'level' }],
         unfillable: [],
@@ -1111,11 +1181,17 @@ describe('deriveCasesTransformer', () => {
 
     // The SAME branch is un-steerable when the entry is NOT env-driven — a function's captured `const`
     // is frozen by the time it is called, so setting the variable then changes nothing.
-    it('VALID: {an env operand, NOT envDrivable} => un-steerable, so no case and the branch admitted undriven', () => {
+    it('VALID: {an env operand, NOT envDrivable} => un-steerable, fallback case and the branch admitted undriven', () => {
       const result = deriveCasesTransformer({ params: [], branches: [ENV_BRANCH], exits: ENV_EXITS, envDrivable: false });
 
       expect(result).toStrictEqual({
-        cases: [],
+        cases: [
+          {
+            reachesPath: ['mod/exit@else'],
+            arrange: [],
+            salient: true,
+          },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand', operand: 'value' }],
         unfillable: [],

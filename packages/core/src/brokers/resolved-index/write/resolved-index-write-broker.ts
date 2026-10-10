@@ -13,6 +13,8 @@ import type { ResolvedIndex } from '@assayer/shared/contracts';
 
 import { ensureDir, rename, writeFile } from '#gateway/node/fs__promises';
 
+import { dirname } from '#gateway/node/path';
+
 export const resolvedIndexWriteBroker = async ({
   configDir,
   namespace,
@@ -23,8 +25,6 @@ export const resolvedIndexWriteBroker = async ({
   index: ResolvedIndex;
 }): Promise<void> => {
   const dir = `${configDir}/.assayer/cache/resolved`;
-  await ensureDir(dir);
-
   const canonical = {
     layoutHash: index.layoutHash,
     tsconfigHash: index.tsconfigHash,
@@ -33,6 +33,7 @@ export const resolvedIndexWriteBroker = async ({
 
   const content = JSON.stringify(canonical);
   const tmpPath = `${dir}/${namespace}.json.tmp`;
+  await ensureDir(dirname(tmpPath));
 
   await writeFile(tmpPath, content);
   await rename(tmpPath, `${dir}/${namespace}.json`);

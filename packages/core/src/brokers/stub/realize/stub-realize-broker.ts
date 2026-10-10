@@ -84,7 +84,6 @@ export const stubRealizeBroker = ({
 
     return (
       fn.branches.length > 0 &&
-      fn.cases.length === 0 &&
       leaves.length > 0 &&
       leaves.every((leaf) => isObjectMemberLeafGuard({ leaf }) && paramNames.has(String(leaf.operandParamName)))
     );

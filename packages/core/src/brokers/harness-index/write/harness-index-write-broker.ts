@@ -12,6 +12,7 @@
  */
 import type { HarnessIndex } from '@assayer/shared/contracts';
 import { ensureDir, rename, writeFile } from '#gateway/node/fs__promises';
+import { dirname } from '#gateway/node/path';
 
 export const harnessIndexWriteBroker = async ({
   configDir,
@@ -23,7 +24,8 @@ export const harnessIndexWriteBroker = async ({
   index: HarnessIndex;
 }): Promise<void> => {
   const dir = `${configDir}/.assayer/cache/harness`;
-  await ensureDir(dir);
+  const tmpPath = `${dir}/${namespace}.json.tmp`;
+  await ensureDir(dirname(tmpPath));
 
   const canonical = {
     layoutHash: index.layoutHash,
@@ -43,7 +45,6 @@ export const harnessIndexWriteBroker = async ({
   };
 
   const content = JSON.stringify(canonical);
-  const tmpPath = `${dir}/${namespace}.json.tmp`;
 
   await writeFile(tmpPath, content);
   await rename(tmpPath, `${dir}/${namespace}.json`);

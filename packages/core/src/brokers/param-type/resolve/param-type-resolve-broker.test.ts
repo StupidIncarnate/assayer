@@ -287,9 +287,26 @@ describe('paramTypeResolveBroker', () => {
         ],
       });
 
-      // The derived CASES are untouched by this fix — this overlay derives none for an object-member
-      // entry either way (that payoff is `stub-realize`'s, run separately); only the display moved.
-      expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+      // The derived CASES keep the unconstrained fallback case — full steering of the object-member
+      // entry is `stub-realize`'s payoff, run separately; the fallback else case runs.
+      expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([
+        {
+          arrange: [
+            {
+              kind: 'object',
+              param: 'config',
+              value: {
+                mode: 'abc123',
+                region: 'abc123',
+              },
+            },
+          ],
+          reachesPath: [
+            '*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else',
+          ],
+          salient: true,
+        },
+      ]);
     });
   });
 

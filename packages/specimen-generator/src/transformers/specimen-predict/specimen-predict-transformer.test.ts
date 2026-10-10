@@ -192,7 +192,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'if', arm: 'then', line: 3, driven: 'never' },
-          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -225,7 +225,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'if', arm: 'then', line: 3, driven: 'never' },
-          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -349,7 +349,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'if', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -463,7 +463,7 @@ describe('specimenPredictTransformer', () => {
         expect(result).toStrictEqual({
           branches: [
             { kind: 'if', arm: 'then', line, driven: 'never' },
-            { kind: 'if', arm: 'else', line, driven: 'never' },
+            { kind: 'if', arm: 'else', line, driven: 'driven' },
           ],
           caseFailures: [],
           lints: [],
@@ -521,7 +521,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'ternary', arm: 'then', line: 1, driven: 'never' },
-          { kind: 'ternary', arm: 'else', line: 1, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 1, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -549,7 +549,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -564,16 +564,19 @@ describe('specimenPredictTransformer', () => {
         position: 'a class field',
         source: ['export class Classify {', '    public label = Number(process.argv[2]) > 5 ? "then" : "else";', '}'].join('\n'),
         line: 2,
+        driven: 'never' as const,
       },
       {
         position: 'a static class field',
         source: ['export class Classify {', '    public static label = Number(process.argv[2]) > 5 ? "then" : "else";', '}'].join('\n'),
         line: 2,
+        driven: 'never' as const,
       },
       {
         position: 'a call argument',
         source: ['console.log(', '    Number(process.argv[2]) > 5 ? "then" : "else",', ');', 'export {};'].join('\n'),
         line: 2,
+        driven: 'never' as const,
       },
       {
         position: 'a yield',
@@ -583,21 +586,25 @@ describe('specimenPredictTransformer', () => {
           '}',
         ].join('\n'),
         line: 2,
+        driven: 'driven' as const,
       },
       {
         position: 'an object property',
         source: ['export const holder = {', '    label: Number(process.argv[2]) > 5 ? "then" : "else",', '};'].join('\n'),
         line: 2,
+        driven: 'never' as const,
       },
       {
         position: 'an exported const',
         source: ['', 'export const label = Number(process.argv[2]) > 5 ? "then" : "else";'].join('\n'),
         line: 2,
+        driven: 'never' as const,
       },
       {
         position: 'a module statement',
         source: ['const label = 1;', 'console.log(Number(process.argv[2]) > 5 ? "then" : "else");', 'export { label };'].join('\n'),
         line: 2,
+        driven: 'never' as const,
       },
       {
         position: 'a function body statement',
@@ -607,10 +614,11 @@ describe('specimenPredictTransformer', () => {
           '}',
         ].join('\n'),
         line: 2,
+        driven: 'driven' as const,
       },
     ])(
       'VALID: {ternary in $position, leaf from process.argv} => the arms meet again, so it runs one way and is admitted on its own line',
-      ({ source, line }) => {
+      ({ source, line, driven }) => {
         const result = specimenPredictTransformer({
           source,
           focusKind: 'expression',
@@ -621,7 +629,7 @@ describe('specimenPredictTransformer', () => {
         expect(result).toStrictEqual({
           branches: [
             { kind: 'ternary', arm: 'then', line, driven: 'never' },
-            { kind: 'ternary', arm: 'else', line, driven: 'never' },
+            { kind: 'ternary', arm: 'else', line, driven },
           ],
           caseFailures: [],
           lints: [],
@@ -648,7 +656,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -676,7 +684,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -802,7 +810,7 @@ describe('specimenPredictTransformer', () => {
       expect(result).toStrictEqual({
         branches: [
           { kind: 'if', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
           { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
           { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
         ],

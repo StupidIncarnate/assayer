@@ -142,7 +142,16 @@ describe('composeCrossFilePredicatesBroker', () => {
       const walked = walkFileTransformer({ source: WELDED_CALLER, relPath: 'src/report.ts' });
       const analysis = analyzeFileBroker({ walked, relPath: 'src/report.ts' });
 
-      expect(analysis.lints).toStrictEqual([]);
+      expect(analysis.lints).toStrictEqual([
+        {
+          rule: 'unreachable-exit',
+          name: 'report',
+          message:
+            '`report` can never reach the exit on line 14: `LEVEL` is welded to `7`, so the branch on line 10 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm should be deleted.',
+          startLine: 14,
+          endLine: 14,
+        },
+      ]);
 
       const result = composeCrossFilePredicatesBroker({ analysis, walked, root: '/repo', relPath: 'src/report.ts' });
 
