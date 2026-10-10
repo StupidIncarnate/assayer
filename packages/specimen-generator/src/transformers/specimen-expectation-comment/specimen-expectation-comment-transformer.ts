@@ -40,7 +40,7 @@ export const specimenExpectationCommentTransformer = ({
   const branchLines =
     prediction.branches.length === 0
       ? [' * - none']
-      : prediction.branches.map(({ kind, line, driven }) => ` * - ${kind} on line ${line}: ${driven}`);
+      : prediction.branches.map(({ kind, arm, line, driven }) => ` * - ${kind} ${arm} on line ${line}: ${driven}`);
   const lintLines =
     prediction.lints.length === 0
       ? [' * - none']

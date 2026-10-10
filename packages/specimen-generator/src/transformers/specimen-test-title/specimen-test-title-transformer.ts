@@ -4,14 +4,19 @@
  *
  * USAGE:
  * specimenTestTitleTransformer({ provenance: 'param', varyingLeaf: 'value', prediction });
- * // Returns 'VALID: {value: param} => if on line 2 driven both ways, every case passes'
+ * // Returns 'VALID: {value: param} => if then on line 2 driven, every case passes'
  */
 import type { Provenance } from '../../contracts/provenance/provenance-contract';
 import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 
+const ARM_ORDER: Record<string, number> = {
+  then: 0,
+  'else-if': 1,
+  else: 2,
+};
+
 const drivenWords: Record<SpecimenOutcome['branches'][number]['driven'], string> = {
-  'both-ways': 'driven both ways',
-  'one-way': 'locked one way',
+  driven: 'driven',
   never: 'never run',
 };
 
@@ -25,8 +30,14 @@ export const specimenTestTitleTransformer = ({
   prediction: SpecimenOutcome;
 }): string => {
   const branchText = [...prediction.branches]
-    .sort((left, right) => left.line - right.line)
-    .map(({ kind, line, driven }) => `${kind} on line ${line} ${drivenWords[driven]}`)
+    .sort(
+      (left, right) =>
+        left.line - right.line ||
+        left.kind.localeCompare(right.kind) ||
+        (ARM_ORDER[left.arm] ?? Number.MAX_SAFE_INTEGER) - (ARM_ORDER[right.arm] ?? Number.MAX_SAFE_INTEGER) ||
+        left.arm.localeCompare(right.arm),
+    )
+    .map(({ kind, arm, line, driven }) => `${kind} ${arm} on line ${line} ${drivenWords[driven]}`)
     .join('; ');
   const lintTexts = [...prediction.lints]
     .sort((left, right) => left.startLine - right.startLine)

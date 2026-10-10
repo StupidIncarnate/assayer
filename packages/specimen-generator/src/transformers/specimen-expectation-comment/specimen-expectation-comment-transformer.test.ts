@@ -2,9 +2,12 @@ import { SpecimenOutcomeStub } from '../../contracts/specimen-outcome/specimen-o
 import { specimenExpectationCommentTransformer } from './specimen-expectation-comment-transformer';
 
 describe('specimenExpectationCommentTransformer', () => {
-  it('VALID: {driven specimen with one if branch} => formats expectations with branch and none for others', () => {
+  it('VALID: {driven specimen with two if branch arms} => formats expectations with branch arms and none for others', () => {
     const prediction = SpecimenOutcomeStub({
-      branches: [{ kind: 'if', line: 15, driven: 'both-ways' }],
+      branches: [
+        { kind: 'if', arm: 'then', line: 15, driven: 'driven' },
+        { kind: 'if', arm: 'else', line: 15, driven: 'driven' },
+      ],
       caseFailures: [],
       lints: [],
       undriven: [],
@@ -31,7 +34,8 @@ describe('specimenExpectationCommentTransformer', () => {
         ' * Verdict: driven',
         ' *',
         ' * Expected branches:',
-        ' * - if on line 15: both-ways',
+        ' * - if then on line 15: driven',
+        ' * - if else on line 15: driven',
         ' *',
         ' * Expected lint errors:',
         ' * - none',
@@ -51,7 +55,10 @@ describe('specimenExpectationCommentTransformer', () => {
 
   it('VALID: {locked specimen with lints} => formats branches and lints', () => {
     const prediction = SpecimenOutcomeStub({
-      branches: [{ kind: 'if', line: 12, driven: 'one-way' }],
+      branches: [
+        { kind: 'if', arm: 'then', line: 12, driven: 'never' },
+        { kind: 'if', arm: 'else', line: 12, driven: 'driven' },
+      ],
       caseFailures: [],
       lints: [{ rule: 'unreachable-exit', startLine: 16 }],
       undriven: [],
@@ -78,7 +85,8 @@ describe('specimenExpectationCommentTransformer', () => {
         ' * Verdict: locked',
         ' *',
         ' * Expected branches:',
-        ' * - if on line 12: one-way',
+        ' * - if then on line 12: never',
+        ' * - if else on line 12: driven',
         ' *',
         ' * Expected lint errors:',
         ' * - unreachable-exit on line 16',
@@ -98,7 +106,10 @@ describe('specimenExpectationCommentTransformer', () => {
 
   it('VALID: {undriven specimen} => formats undriven lines', () => {
     const prediction = SpecimenOutcomeStub({
-      branches: [{ kind: 'if', line: 12, driven: 'one-way' }],
+      branches: [
+        { kind: 'if', arm: 'then', line: 12, driven: 'never' },
+        { kind: 'if', arm: 'else', line: 12, driven: 'never' },
+      ],
       caseFailures: [],
       lints: [],
       undriven: [{ startLine: 12 }],
@@ -125,7 +136,8 @@ describe('specimenExpectationCommentTransformer', () => {
         ' * Verdict: undriven',
         ' *',
         ' * Expected branches:',
-        ' * - if on line 12: one-way',
+        ' * - if then on line 12: never',
+        ' * - if else on line 12: never',
         ' *',
         ' * Expected lint errors:',
         ' * - none',

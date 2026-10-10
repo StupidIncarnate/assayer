@@ -19,7 +19,7 @@ const SOURCE =
 
 describe('specimenObserveBroker', () => {
   describe('the outcome it returns', () => {
-    it('VALID: {a file with one if and a run that evaluated nothing} => one branch driven never, and nothing else', async () => {
+    it('VALID: {a file with one if and a run that evaluated nothing} => two branch arms driven never, and nothing else', async () => {
       const proxy = specimenObserveBrokerProxy();
       proxy.setupObservedRun({
         repoRoot: REPO_ROOT,
@@ -32,7 +32,12 @@ describe('specimenObserveBroker', () => {
       const outcome = await specimenObserveBroker({ repoRoot: REPO_ROOT, relPath: REL_PATH });
 
       expect(outcome).toStrictEqual(
-        SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }),
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
       );
     });
 
@@ -56,7 +61,10 @@ describe('specimenObserveBroker', () => {
 
       expect(outcome).toStrictEqual(
         SpecimenOutcomeStub({
-          branches: [{ kind: 'if', line: 2, driven: 'never' }],
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
           gaps: [{ name: 'score' }],
           undriven: [{ startLine: 1 }],
         }),
@@ -78,7 +86,12 @@ describe('specimenObserveBroker', () => {
       const outcome = await specimenObserveBroker({ repoRoot: REPO_ROOT, relPath: REL_PATH });
 
       expect(outcome).toStrictEqual(
-        SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }),
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
       );
     });
   });

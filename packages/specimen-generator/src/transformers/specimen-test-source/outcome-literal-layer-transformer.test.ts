@@ -18,7 +18,7 @@ describe('outcomeLiteralLayerTransformer', () => {
 
   it('VALID: {one row in every array} => prints each row with its keys in contract order', () => {
     const prediction = SpecimenOutcomeStub({
-      branches: [{ kind: 'switch', line: 4, driven: 'never' }],
+      branches: [{ kind: 'switch', arm: 'case-1', line: 4, driven: 'never' }],
       caseFailures: [{ status: 'errored', message: 'boom' }],
       lints: [{ rule: 'dead-surface', startLine: 7 }],
       undriven: [{ startLine: 1 }],
@@ -33,7 +33,7 @@ describe('outcomeLiteralLayerTransformer', () => {
     expect(printer.printNode(ts.EmitHint.Unspecified, node, sourceFile)).toBe(
       [
         '{',
-        "    branches: [{ kind: 'switch', line: 4, driven: 'never' }],",
+        "    branches: [{ kind: 'switch', arm: 'case-1', line: 4, driven: 'never' }],",
         "    caseFailures: [{ status: 'errored', message: 'boom' }],",
         "    lints: [{ rule: 'dead-surface', startLine: 7 }],",
         '    undriven: [{ startLine: 1 }],',

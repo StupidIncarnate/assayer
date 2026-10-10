@@ -5,7 +5,10 @@ import type { SpecimenOutcome } from './specimen-outcome-contract';
 
 export const SpecimenOutcomeStub = ({ ...props }: StubArgument<SpecimenOutcome> = {}): SpecimenOutcome =>
   specimenOutcomeContract.parse({
-    branches: [{ kind: 'if', line: 2, driven: 'both-ways' }],
+    branches: [
+      { kind: 'if', arm: 'then', line: 2, driven: 'driven' },
+      { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
+    ],
     caseFailures: [],
     lints: [],
     undriven: [],

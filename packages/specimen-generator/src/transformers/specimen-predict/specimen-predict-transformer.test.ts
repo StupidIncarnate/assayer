@@ -21,7 +21,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 2, driven: 'both-ways' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 2, driven: 'driven' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [],
@@ -53,7 +56,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 3, driven: 'one-way' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 3, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
+        ],
         caseFailures: [],
         lints: [{ rule: 'unreachable-exit', startLine: 4 }],
         undriven: [],
@@ -83,7 +89,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 3, driven: 'one-way' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 3, driven: 'driven' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [{ rule: 'unreachable-exit', startLine: 6 }],
         undriven: [],
@@ -114,7 +123,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 2, driven: 'one-way' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
+        ],
         caseFailures: [],
         lints: [{ rule: 'unreachable-exit', startLine: 3 }],
         undriven: [],
@@ -144,7 +156,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 3, driven: 'one-way' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 3, driven: 'driven' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [],
@@ -175,7 +190,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 3, driven: 'never' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 3, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 3 }],
@@ -205,7 +223,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 3, driven: 'never' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 3, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 3 }],
@@ -232,7 +253,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 1, driven: 'one-way' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 1, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 1, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 1 }],
@@ -261,7 +285,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 2, driven: 'one-way' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 2 }],
@@ -289,7 +316,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 2, driven: 'never' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 1 }],
@@ -317,7 +347,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 2, driven: 'never' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 2 }],
@@ -346,8 +379,10 @@ describe('specimenPredictTransformer', () => {
 
       expect(result).toStrictEqual({
         branches: [
-          { kind: 'if', line: 2, driven: 'never' },
-          { kind: 'ternary', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
         ],
         caseFailures: [],
         lints: [],
@@ -426,7 +461,10 @@ describe('specimenPredictTransformer', () => {
         });
 
         expect(result).toStrictEqual({
-          branches: [{ kind: 'if', line, driven: 'one-way' }],
+          branches: [
+            { kind: 'if', arm: 'then', line, driven: 'never' },
+            { kind: 'if', arm: 'else', line, driven: 'never' },
+          ],
           caseFailures: [],
           lints: [],
           undriven: [{ startLine: line }],
@@ -454,7 +492,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 2, driven: 'both-ways' }],
+        branches: [
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'driven' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'driven' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [],
@@ -478,7 +519,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 1, driven: 'one-way' }],
+        branches: [
+          { kind: 'ternary', arm: 'then', line: 1, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 1, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 1 }],
@@ -503,7 +547,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        branches: [
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 2 }],
@@ -572,7 +619,10 @@ describe('specimenPredictTransformer', () => {
         });
 
         expect(result).toStrictEqual({
-          branches: [{ kind: 'ternary', line, driven: 'one-way' }],
+          branches: [
+            { kind: 'ternary', arm: 'then', line, driven: 'never' },
+            { kind: 'ternary', arm: 'else', line, driven: 'never' },
+          ],
           caseFailures: [],
           lints: [],
           undriven: [{ startLine: line }],
@@ -596,7 +646,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        branches: [
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 2 }],
@@ -621,7 +674,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        branches: [
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 2 }],
@@ -646,7 +702,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 2, driven: 'never' }],
+        branches: [
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [{ startLine: 1 }],
@@ -674,7 +733,10 @@ describe('specimenPredictTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 3, driven: 'one-way' }],
+        branches: [
+          { kind: 'ternary', arm: 'then', line: 3, driven: 'driven' },
+          { kind: 'ternary', arm: 'else', line: 3, driven: 'never' },
+        ],
         caseFailures: [],
         lints: [{ rule: 'unreachable-exit', startLine: 5 }],
         undriven: [],
@@ -706,8 +768,10 @@ describe('specimenPredictTransformer', () => {
 
       expect(result).toStrictEqual({
         branches: [
-          { kind: 'ternary', line: 1, driven: 'both-ways' },
-          { kind: 'if', line: 3, driven: 'both-ways' },
+          { kind: 'ternary', arm: 'then', line: 1, driven: 'driven' },
+          { kind: 'ternary', arm: 'else', line: 1, driven: 'driven' },
+          { kind: 'if', arm: 'then', line: 3, driven: 'driven' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
@@ -737,8 +801,10 @@ describe('specimenPredictTransformer', () => {
 
       expect(result).toStrictEqual({
         branches: [
-          { kind: 'if', line: 2, driven: 'never' },
-          { kind: 'ternary', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
         ],
         caseFailures: [],
         lints: [],
@@ -769,8 +835,10 @@ describe('specimenPredictTransformer', () => {
 
       expect(result).toStrictEqual({
         branches: [
-          { kind: 'ternary', line: 1, driven: 'one-way' },
-          { kind: 'if', line: 3, driven: 'one-way' },
+          { kind: 'ternary', arm: 'then', line: 1, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 1, driven: 'never' },
+          { kind: 'if', arm: 'then', line: 3, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
         ],
         caseFailures: [],
         lints: [],
@@ -801,8 +869,10 @@ describe('specimenPredictTransformer', () => {
 
       expect(result).toStrictEqual({
         branches: [
-          { kind: 'ternary', line: 1, driven: 'one-way' },
-          { kind: 'if', line: 3, driven: 'one-way' },
+          { kind: 'ternary', arm: 'then', line: 1, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 1, driven: 'never' },
+          { kind: 'if', arm: 'then', line: 3, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 3, driven: 'never' },
         ],
         caseFailures: [],
         lints: [],

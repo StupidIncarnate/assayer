@@ -39,7 +39,7 @@
  *
  * USAGE:
  * specimenPredictTransformer({ source, focusKind: 'statement', arms: ['then', 'else'], slotArm: 'return', provenances: ['param'] });
- * // Returns { branches: [{ kind: 'if', line: 2, driven: 'both-ways' }], caseFailures: [], lints: [], undriven: [], darkSpots: [], gaps: [] }
+ * // Returns { branches: [{ kind: 'if', arm: 'then', line: 2, driven: 'driven' }, { kind: 'if', arm: 'else', line: 2, driven: 'driven' }], caseFailures: [], lints: [], undriven: [], darkSpots: [], gaps: [] }
  */
 import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
@@ -48,6 +48,12 @@ import type { Provenance } from '../../contracts/provenance/provenance-contract'
 import { specimenOutcomeContract } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 import { specimenVerdictTransformer } from '../specimen-verdict/specimen-verdict-transformer';
+
+const ARM_ORDER: Record<string, number> = {
+  then: 0,
+  'else-if': 1,
+  else: 2,
+};
 
 export const specimenPredictTransformer = ({
   source,
@@ -122,9 +128,30 @@ export const specimenPredictTransformer = ({
   const valueIsExit =
     focusKind === 'expression' && parent !== undefined && (Node.isReturnStatement(parent) || Node.isArrowFunction(parent));
   const armsMeetAgain = focusKind === 'statement' ? slotArm !== 'return' : !valueIsExit;
-  const undrivenDriven = armsMeetAgain ? ('one-way' as const) : ('never' as const);
-  const focusDriven = { driven: 'both-ways', locked: 'one-way', undriven: undrivenDriven } as const;
-  const scopeEarnsCase = focusDriven[verdict] !== 'never';
+  const scopeEarnsCase = verdict !== 'undriven' || armsMeetAgain;
+
+  if (verdict === 'locked' && (liveArm === undefined || !arms.includes(liveArm))) {
+    throw new Error(
+      `specimen prediction: a locked specimen needs the arm its known values reach, one of ${arms.join(', ')}. It was given ${String(liveArm)}.`,
+    );
+  }
+
+  const focusKindName = Node.isIfStatement(focus) ? ('if' as const) : ('ternary' as const);
+  const focusBranches = ['then', 'else'].map((arm) => {
+    const driven =
+      verdict === 'driven'
+        ? ('driven' as const)
+        : verdict === 'locked' && arm === liveArm
+          ? ('driven' as const)
+          : ('never' as const);
+
+    return {
+      kind: focusKindName,
+      arm,
+      line: focus.getStartLineNumber(),
+      driven,
+    };
+  });
 
   const leafNodes = branchNodes
     .filter((node) => node !== focus)
@@ -143,22 +170,28 @@ export const specimenPredictTransformer = ({
 
       return { node, isArgv: !reads.includes('env') };
     });
-  const leafBranches = leafNodes.map(({ node, isArgv }) => ({
-    kind: 'ternary' as const,
-    line: node.getStartLineNumber(),
-    driven: isArgv || verdict === 'undriven' ? undrivenDriven : ('both-ways' as const),
-  }));
+  const leafBranches = leafNodes.flatMap(({ node }) => [
+    {
+      kind: 'ternary' as const,
+      arm: 'then',
+      line: node.getStartLineNumber(),
+      driven: verdict === 'driven' ? ('driven' as const) : ('never' as const),
+    },
+    {
+      kind: 'ternary' as const,
+      arm: 'else',
+      line: node.getStartLineNumber(),
+      driven: verdict === 'driven' ? ('driven' as const) : ('never' as const),
+    },
+  ]);
 
-  const branches = [
-    { kind: Node.isIfStatement(focus) ? ('if' as const) : ('ternary' as const), line: focus.getStartLineNumber(), driven: focusDriven[verdict] },
-    ...leafBranches,
-  ].sort((left, right) => left.line - right.line || left.kind.localeCompare(right.kind));
-
-  if (verdict === 'locked' && (liveArm === undefined || !arms.includes(liveArm))) {
-    throw new Error(
-      `specimen prediction: a locked specimen needs the arm its known values reach, one of ${arms.join(', ')}. It was given ${String(liveArm)}.`,
-    );
-  }
+  const branches = [...focusBranches, ...leafBranches].sort(
+    (left, right) =>
+      left.line - right.line ||
+      left.kind.localeCompare(right.kind) ||
+      (ARM_ORDER[left.arm] ?? Number.MAX_SAFE_INTEGER) - (ARM_ORDER[right.arm] ?? Number.MAX_SAFE_INTEGER) ||
+      left.arm.localeCompare(right.arm),
+  );
 
   const lastArm = arms.at(-1);
   const deadArms =

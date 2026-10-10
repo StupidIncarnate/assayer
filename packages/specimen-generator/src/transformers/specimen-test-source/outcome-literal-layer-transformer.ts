@@ -18,10 +18,11 @@ export const outcomeLiteralLayerTransformer = ({
 }): ts.ObjectLiteralExpression => {
   const { factory } = ts;
 
-  const branches = prediction.branches.map(({ kind, line, driven }) =>
+  const branches = prediction.branches.map(({ kind, arm, line, driven }) =>
     factory.createObjectLiteralExpression(
       [
         factory.createPropertyAssignment('kind', factory.createStringLiteral(kind, true)),
+        factory.createPropertyAssignment('arm', factory.createStringLiteral(arm, true)),
         factory.createPropertyAssignment('line', factory.createNumericLiteral(line)),
         factory.createPropertyAssignment('driven', factory.createStringLiteral(driven, true)),
       ],

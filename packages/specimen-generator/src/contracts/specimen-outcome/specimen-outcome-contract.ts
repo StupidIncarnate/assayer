@@ -4,7 +4,7 @@
  * shape serves both, so a generated test compares like with like.
  *
  * USAGE:
- * specimenOutcomeContract.parse({ branches: [{ kind: 'if', line: 2, driven: 'both-ways' }], caseFailures: [], lints: [], undriven: [], darkSpots: [], gaps: [] });
+ * specimenOutcomeContract.parse({ branches: [{ kind: 'if', arm: 'then', line: 2, driven: 'driven' }], caseFailures: [], lints: [], undriven: [], darkSpots: [], gaps: [] });
  * // Returns a SpecimenOutcome
  */
 import { z } from '#gateway/npm/zod';
@@ -15,8 +15,9 @@ export const specimenOutcomeContract = z
       z
         .object({
           kind: z.enum(['if', 'switch', 'ternary']),
+          arm: z.string().min(1).brand<'SpecimenOutcomeBranchesArm'>(),
           line: z.number().int().positive().brand<'SpecimenOutcomeBranchesLine'>(),
-          driven: z.enum(['both-ways', 'one-way', 'never']),
+          driven: z.enum(['driven', 'never']),
         })
         .brand<'SpecimenOutcomeBranches'>(),
     ),

@@ -29,7 +29,7 @@ describe('specimenTestSourceTransformer', () => {
           "            relPath: 'packages/syntax-repository/src/if/function-declaration/if-number-function-declaration-body-cond-gt-number-value-param/if-number-function-declaration-body-cond-gt-number-value-param.ts'",
           '        });',
           '        expect(observation).toStrictEqual({',
-          "            branches: [{ kind: 'if', line: 2, driven: 'both-ways' }],",
+          "            branches: [{ kind: 'if', arm: 'then', line: 2, driven: 'driven' }, { kind: 'if', arm: 'else', line: 2, driven: 'driven' }],",
           '            caseFailures: [],',
           '            lints: [],',
           '            undriven: [],',
@@ -88,9 +88,9 @@ describe('specimenTestSourceTransformer', () => {
     it('VALID: {several branches, a failure, lints, undriven, dark spots and gaps} => prints every row in contract order', () => {
       const prediction = SpecimenOutcomeStub({
         branches: [
-          { kind: 'if', line: 2, driven: 'one-way' },
-          { kind: 'ternary', line: 6, driven: 'never' },
-          { kind: 'switch', line: 9, driven: 'both-ways' },
+          { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 6, driven: 'never' },
+          { kind: 'switch', arm: 'case-1', line: 9, driven: 'driven' },
         ],
         caseFailures: [{ status: 'failed', message: 'first' }],
         lints: [
@@ -123,7 +123,7 @@ describe('specimenTestSourceTransformer', () => {
           "            relPath: 'p/b.ts'",
           '        });',
           '        expect(observation).toStrictEqual({',
-          '            branches: [{ kind: \'if\', line: 2, driven: \'one-way\' }, { kind: \'ternary\', line: 6, driven: \'never\' }, { kind: \'switch\', line: 9, driven: \'both-ways\' }],',
+          "            branches: [{ kind: 'if', arm: 'then', line: 2, driven: 'never' }, { kind: 'ternary', arm: 'else', line: 6, driven: 'never' }, { kind: 'switch', arm: 'case-1', line: 9, driven: 'driven' }],",
           "            caseFailures: [{ status: 'failed', message: 'first' }],",
           "            lints: [{ rule: 'unreachable-exit', startLine: 4 }, { rule: 'dead-surface', startLine: 8 }],",
           '            undriven: [{ startLine: 1 }],',

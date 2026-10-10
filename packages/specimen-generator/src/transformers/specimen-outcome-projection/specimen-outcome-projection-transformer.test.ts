@@ -41,7 +41,12 @@ describe('specimenOutcomeProjectionTransformer', () => {
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
-        SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'both-ways' }] }),
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'driven' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
+          ],
+        }),
       );
     });
 
@@ -71,7 +76,12 @@ describe('specimenOutcomeProjectionTransformer', () => {
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
       expect(result).toStrictEqual(
-        SpecimenOutcomeStub({ branches: [{ kind: 'ternary', line: 5, driven: 'one-way' }] }),
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'ternary', arm: 'then', line: 5, driven: 'driven' },
+            { kind: 'ternary', arm: 'else', line: 5, driven: 'never' },
+          ],
+        }),
       );
     });
 
@@ -97,7 +107,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'one-way' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
+          ],
+        }),
+      );
     });
 
     it('EMPTY: {no cases at all} => driven never', () => {
@@ -106,7 +123,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
+      );
     });
 
     it('VALID: {only a failed case evaluated the leaf both ways} => driven never', () => {
@@ -141,7 +165,10 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
-          branches: [{ kind: 'if', line: 2, driven: 'never' }],
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
           caseFailures: [{ status: 'failed', message: '' }],
         }),
       );
@@ -176,7 +203,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
+      );
     });
 
     it('VALID: {and branch whose leaves each saw one different outcome} => driven both-ways', () => {
@@ -212,7 +246,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 3, driven: 'both-ways' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 3, driven: 'driven' },
+            { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
+          ],
+        }),
+      );
     });
 
     it('VALID: {or branch under a not, only the inner right leaf evaluated true} => driven one-way', () => {
@@ -244,7 +285,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 3, driven: 'one-way' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 3, driven: 'driven' },
+            { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+          ],
+        }),
+      );
     });
 
     it('VALID: {two branches listed out of line order} => rows sorted by line', () => {
@@ -279,8 +327,10 @@ describe('specimenOutcomeProjectionTransformer', () => {
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
           branches: [
-            { kind: 'if', line: 2, driven: 'never' },
-            { kind: 'ternary', line: 9, driven: 'one-way' },
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+            { kind: 'ternary', arm: 'then', line: 9, driven: 'driven' },
+            { kind: 'ternary', arm: 'else', line: 9, driven: 'never' },
           ],
         }),
       );
@@ -316,8 +366,10 @@ describe('specimenOutcomeProjectionTransformer', () => {
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
           branches: [
-            { kind: 'if', line: 4, driven: 'never' },
-            { kind: 'ternary', line: 4, driven: 'never' },
+            { kind: 'if', arm: 'then', line: 4, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 4, driven: 'never' },
+            { kind: 'ternary', arm: 'then', line: 4, driven: 'never' },
+            { kind: 'ternary', arm: 'else', line: 4, driven: 'never' },
           ],
         }),
       );
@@ -340,7 +392,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'one-way' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'driven' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
+      );
     });
 
     it('EMPTY: {functions without branches} => no branch rows', () => {
@@ -367,7 +426,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
+      );
     });
 
     it('VALID: {a scope branch whose leaf a passed case saw true} => the row reads one-way through the leaf id', () => {
@@ -387,7 +453,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'one-way' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'driven' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
+      );
     });
 
     it('VALID: {the same coverageId in a function and in a scope} => one row', () => {
@@ -403,7 +476,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [branch] });
 
-      expect(result).toStrictEqual(SpecimenOutcomeStub({ branches: [{ kind: 'if', line: 2, driven: 'never' }] }));
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 2, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          ],
+        }),
+      );
     });
   });
 

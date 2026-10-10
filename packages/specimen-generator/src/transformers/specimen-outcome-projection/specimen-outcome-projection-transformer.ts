@@ -19,6 +19,12 @@ import type { BranchNode, FileAnalysis, RunResult } from '@assayer/shared/contra
 import { specimenOutcomeContract } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 
+const ARM_ORDER: Record<string, number> = {
+  then: 0,
+  'else-if': 1,
+  else: 2,
+};
+
 export const specimenOutcomeProjectionTransformer = ({
   analysis,
   run,
@@ -49,7 +55,7 @@ export const specimenOutcomeProjectionTransformer = ({
     }
   }
 
-  const branches = [...branchesByCoverageId.values()].map((branch) => {
+  const branches = [...branchesByCoverageId.values()].flatMap((branch) => {
     let sawTrue = false;
     let sawFalse = false;
     const pending = [branch.condition];
@@ -64,10 +70,28 @@ export const specimenOutcomeProjectionTransformer = ({
         pending.push(node.left, node.right);
       }
     }
-    const driven = sawTrue && sawFalse ? 'both-ways' : sawTrue || sawFalse ? 'one-way' : 'never';
-    return { kind: branch.kind, line: branch.startLine, driven };
+    return [
+      {
+        kind: branch.kind,
+        arm: 'then',
+        line: branch.startLine,
+        driven: sawTrue ? ('driven' as const) : ('never' as const),
+      },
+      {
+        kind: branch.kind,
+        arm: 'else',
+        line: branch.startLine,
+        driven: sawFalse ? ('driven' as const) : ('never' as const),
+      },
+    ];
   });
-  branches.sort((a, b) => a.line - b.line || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
+  branches.sort(
+    (a, b) =>
+      a.line - b.line ||
+      a.kind.localeCompare(b.kind) ||
+      (ARM_ORDER[a.arm] ?? Number.MAX_SAFE_INTEGER) - (ARM_ORDER[b.arm] ?? Number.MAX_SAFE_INTEGER) ||
+      a.arm.localeCompare(b.arm),
+  );
 
   const caseFailures = run.cases.flatMap((runCase) =>
     runCase.status === 'passed' ? [] : [{ status: runCase.status, message: runCase.message ?? '' }],

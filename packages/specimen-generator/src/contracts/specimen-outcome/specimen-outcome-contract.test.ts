@@ -3,13 +3,16 @@ import { SpecimenOutcomeStub } from './specimen-outcome.stub';
 
 describe('specimenOutcomeContract', () => {
   describe('valid outcomes', () => {
-    it('VALID: {stub default} => parses one branch driven both ways and nothing else', () => {
+    it('VALID: {stub default} => parses two branch arms driven and nothing else', () => {
       const outcome = SpecimenOutcomeStub();
 
       const result = specimenOutcomeContract.parse(outcome);
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'if', line: 2, driven: 'both-ways' }],
+        branches: [
+          { kind: 'if', arm: 'then', line: 2, driven: 'driven' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
+        ],
         caseFailures: [],
         lints: [],
         undriven: [],
@@ -20,7 +23,7 @@ describe('specimenOutcomeContract', () => {
 
     it('VALID: {every list filled} => parses every row', () => {
       const outcome = SpecimenOutcomeStub({
-        branches: [{ kind: 'ternary', line: 3, driven: 'never' }] as never,
+        branches: [{ kind: 'ternary', arm: 'else', line: 3, driven: 'never' }] as never,
         caseFailures: [{ status: 'errored', message: 'boom' }] as never,
         lints: [{ rule: 'unreachable-exit', startLine: 5 }] as never,
         undriven: [{ startLine: 1 }] as never,
@@ -31,7 +34,7 @@ describe('specimenOutcomeContract', () => {
       const result = specimenOutcomeContract.parse(outcome);
 
       expect(result).toStrictEqual({
-        branches: [{ kind: 'ternary', line: 3, driven: 'never' }],
+        branches: [{ kind: 'ternary', arm: 'else', line: 3, driven: 'never' }],
         caseFailures: [{ status: 'errored', message: 'boom' }],
         lints: [{ rule: 'unreachable-exit', startLine: 5 }],
         undriven: [{ startLine: 1 }],
@@ -46,25 +49,34 @@ describe('specimenOutcomeContract', () => {
       expect(() => {
         return specimenOutcomeContract.parse({
           ...SpecimenOutcomeStub(),
-          branches: [{ kind: 'loop', line: 2, driven: 'both-ways' }],
+          branches: [{ kind: 'loop', arm: 'then', line: 2, driven: 'driven' }],
         });
       }).toThrow(/Invalid option: expected one of/u);
+    });
+
+    it('INVALID: {branches: [{arm: ""}]} => throws, since arm needs at least one character', () => {
+      expect(() => {
+        return specimenOutcomeContract.parse({
+          ...SpecimenOutcomeStub(),
+          branches: [{ kind: 'if', arm: '', line: 2, driven: 'driven' }],
+        });
+      }).toThrow(/Too small: expected string to have >=1 characters/u);
     });
 
     it('INVALID: {branches: [{line: 0}]} => throws, since lines start at 1', () => {
       expect(() => {
         return specimenOutcomeContract.parse({
           ...SpecimenOutcomeStub(),
-          branches: [{ kind: 'if', line: 0, driven: 'both-ways' }],
+          branches: [{ kind: 'if', arm: 'then', line: 0, driven: 'driven' }],
         });
       }).toThrow(/Too small: expected number to be >0/u);
     });
 
-    it('INVALID: {branches: [{driven: "twice"}]} => throws, since driven has three values', () => {
+    it('INVALID: {branches: [{driven: "twice"}]} => throws, since driven has two values', () => {
       expect(() => {
         return specimenOutcomeContract.parse({
           ...SpecimenOutcomeStub(),
-          branches: [{ kind: 'if', line: 2, driven: 'twice' }],
+          branches: [{ kind: 'if', arm: 'then', line: 2, driven: 'twice' }],
         });
       }).toThrow(/Invalid option: expected one of/u);
     });
