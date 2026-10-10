@@ -10,6 +10,9 @@
  *   the union of `undefined` and what the later steps build, with `undefined` spelled the way the
  *   checker spells it, so the operand reads exactly as a declared `number | undefined` does.
  *
+ *   A command-line read built from the same steps is typed the same way. Its `root` matters only for
+ *   `process.argv.slice(<index>)`, which starts as a `string[]` and never holds `undefined`.
+ *
  *   The raw read is a `string` rather than `string | undefined`. Its unset state is still an input a
  *   case can arrange: the domain's `null` point stands for it (`env-encode`), and only a predicate that
  *   tests for it (`=== undefined`, the `??` operand's nullish test) ever names that point.
@@ -21,9 +24,17 @@
 import { typeDescriptorContract } from '@assayer/shared/contracts';
 import type { EnvStep, TypeDescriptor } from '@assayer/shared/contracts';
 
+import type { ExternalOperandReadout } from '../../contracts/external-operand-readout/external-operand-readout-contract';
 import { isEnvStepsNullableGuard } from '../../guards/is-env-steps-nullable/is-env-steps-nullable-guard';
 
-export const envStepsTypeTransformer = ({ steps }: { steps: readonly EnvStep[] }): TypeDescriptor => {
+export const envStepsTypeTransformer = ({
+  steps,
+  root,
+}: {
+  steps: readonly EnvStep[];
+  root?: ExternalOperandReadout['root'];
+}): TypeDescriptor => {
+  const isTail = root?.kind === 'argv' && root.shape === 'tail';
   const built = steps.reduce<TypeDescriptor>((type, step) => {
     switch (step.kind) {
       case 'number':
@@ -39,9 +50,9 @@ export const envStepsTypeTransformer = ({ steps }: { steps: readonly EnvStep[] }
       default:
         return type;
     }
-  }, typeDescriptorContract.parse({ kind: 'string' }));
+  }, typeDescriptorContract.parse(isTail ? { kind: 'array', element: { kind: 'string' } } : { kind: 'string' }));
 
-  return steps.length > 0 && isEnvStepsNullableGuard({ steps })
+  return !isTail && steps.length > 0 && isEnvStepsNullableGuard({ steps })
     ? typeDescriptorContract.parse({ kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, built] })
     : built;
 };

@@ -1,5 +1,6 @@
 import { EnvStepStub } from '@assayer/shared/contracts/env-step/env-step.stub';
 
+import { ExternalOperandReadoutStub } from '../../contracts/external-operand-readout/external-operand-readout.stub';
 import { envStepsTypeTransformer } from './env-steps-type-transformer';
 
 describe('envStepsTypeTransformer', () => {
@@ -66,6 +67,20 @@ describe('envStepsTypeTransformer', () => {
       expect(
         envStepsTypeTransformer({ steps: [EnvStepStub({ kind: 'number' }), EnvStepStub({ kind: 'equals', literal: 7, negated: true })] }),
       ).toStrictEqual({ kind: 'boolean' });
+    });
+  });
+
+  describe('a command-line read', () => {
+    it('VALID: {root: argv tail, steps: []} => a string array, never undefined', () => {
+      const { root } = ExternalOperandReadoutStub({ root: { kind: 'argv', shape: 'tail', index: 2 } });
+
+      expect(envStepsTypeTransformer({ steps: [], root })).toStrictEqual({ kind: 'array', element: { kind: 'string' } });
+    });
+
+    it('VALID: {root: argv element, steps: []} => a string, the same as an environment read', () => {
+      const { root } = ExternalOperandReadoutStub({ root: { kind: 'argv', shape: 'element', index: 2 } });
+
+      expect(envStepsTypeTransformer({ steps: [], root })).toStrictEqual({ kind: 'string' });
     });
   });
 });

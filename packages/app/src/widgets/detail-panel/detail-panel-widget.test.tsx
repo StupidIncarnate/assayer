@@ -608,10 +608,9 @@ describe('DetailPanelWidget', () => {
       expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner\n  ↳ it is not exported');
     });
 
-    // The pure-statement shape. The entry's two derived cases arrange NOTHING and each claims a
-    // different exit, so at most one could ever hold — and the run drives neither, reporting 0/0.
-    // Listing them would promise tests that cannot exist.
-    it('VALID: {an undriven entry with derived cases} => its cases are not listed as tests', () => {
+    // The pure-statement shape. The entry's access is `unreachable`, so the run executes none of its
+    // derived cases, and the panel lists none of them.
+    it('VALID: {an unreachable undriven entry with derived cases} => its cases are not listed as tests', () => {
       DetailPanelWidgetProxy();
       const analysis = FileAnalysisStub({
         functions: [FunctionAnalysisStub({ entry: MODULE_ENTRY })],
@@ -623,6 +622,26 @@ describe('DetailPanelWidget', () => {
       expect(queryAllByTestId('TEST_CASE_ROW')).toStrictEqual([]);
       expect(queryAllByTestId('TEST_ENTRY')).toStrictEqual([]);
       expect(getByTestId('UNDRIVEN').textContent).toBe('L1: welded-const.ts\n  ↳ Runs at import time (no entry parameters)');
+    });
+
+    // The un-steerable-branch shape: the entry is undriven, but it still derives the case for the arm
+    // default execution takes, and the run executes that case. The panel lists it beside the admission.
+    it('VALID: {a callable undriven entry with a fallback case} => the case row and the admission both show', () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            entry: EntrySignatureStub({ name: 'classify', params: [] }),
+            cases: [{ reachesPath: ['classify/return@else'], arrange: [] }],
+          }),
+        ],
+        undriven: [UndrivenEntryStub({ name: 'classify', reason: 'Condition has no parameter or env var to steer it' })],
+      });
+
+      const { getAllByTestId, getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
+
+      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual(['not run classify()']);
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: classify\n  ↳ Condition has no parameter or env var to steer it');
     });
 
     // A file whose only entry is undriven is NOT an empty file, and must never read like one.

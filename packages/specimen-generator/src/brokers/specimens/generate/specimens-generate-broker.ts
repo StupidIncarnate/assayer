@@ -180,7 +180,7 @@ export const specimensGenerateBroker = ({
       arms: focus.syntax.arms,
       provenances,
       ...(slot.arm === undefined ? {} : { slotArm: slot.arm }),
-      ...(verdict === 'locked' ? { liveArm: armReachedTransformer({ tree }) } : {}),
+      ...(verdict === 'locked' || verdict === 'undriven' ? { liveArm: armReachedTransformer({ tree }) } : {}),
     });
     const draftComment = specimenExpectationCommentTransformer({
       ...commentParams,

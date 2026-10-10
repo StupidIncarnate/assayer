@@ -1,7 +1,7 @@
 /**
  * PURPOSE: Builds ONE condition leaf from a readout: the operand's name or object-member root, where its
- *   value comes from (an environment variable, read in place or through a `const`, a same-file
- *   constant, a call), its type, and the predicate. `read-condition-tree` calls it for every leaf it reads, so every leaf of a condition
+ *   value comes from (an environment variable, read in place or through a `const`, a command-line
+ *   read, a same-file constant, a call), its type, and the predicate. `read-condition-tree` calls it for every leaf it reads, so every leaf of a condition
  *   carries the same facts no matter which connective put it there. `read-nullish-leaf` is the sibling
  *   that reads a value-position `??` operand.
  *
@@ -25,6 +25,7 @@ import { probeSiteContract } from '../../contracts/probe-site/probe-site-contrac
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { envOperandKeyTransformer } from '../env-operand-key/env-operand-key-transformer';
 import { envStepsTypeTransformer } from '../env-steps-type/env-steps-type-transformer';
+import { readArgvOperandLayerTransformer } from './read-argv-operand-layer-transformer';
 import { readConstOperandLayerTransformer } from './read-const-operand-layer-transformer';
 import { readEnvOperandLayerTransformer } from './read-env-operand-layer-transformer';
 import { readOperandTypeLayerTransformer } from './read-operand-type-layer-transformer';
@@ -49,6 +50,12 @@ export const buildConditionLeafLayerTransformer = ({
   // model, so it is not read as an environment operand.
   const envRead =
     readout.operandIsTypeof === true ? undefined : readEnvOperandLayerTransformer({ node: readout.operandNode });
+
+  // A command-line read is a third source. No case can set it, so it never makes a branch drivable,
+  // but the value it holds when a case runs is known, which is what picks the fallback arm of an
+  // un-steerable branch (`condition-default-value`). A `typeof` read of it is kept: running the read
+  // forward gives its runtime tag too.
+  const argvRead = envRead === undefined ? readArgvOperandLayerTransformer({ node: readout.operandNode }) : undefined;
 
   // Whether the operand is WELDED to a same-file constant — a value the analyzer EVALUATES rather than
   // an input a case sets. A scalar `const` welds a value, an array `const` welds its length. Recorded
@@ -88,6 +95,7 @@ export const buildConditionLeafLayerTransformer = ({
       ...(readout.operandIsTypeof === undefined ? {} : { operandIsTypeof: readout.operandIsTypeof }),
       ...(envRead === undefined ? {} : { operandEnvVarName: envRead.name }),
       ...(envRead === undefined || envRead.steps.length === 0 ? {} : { operandEnvSteps: envRead.steps }),
+      ...(argvRead === undefined ? {} : { operandArgvRead: argvRead }),
       ...(constOperand?.value === undefined ? {} : { operandConstValue: constOperand.value }),
       ...(constOperand?.length === undefined ? {} : { operandConstLength: constOperand.length }),
       ...(callPosition === undefined ? {} : { operandCallPosition: { line: callPosition.line, column: callPosition.column } }),

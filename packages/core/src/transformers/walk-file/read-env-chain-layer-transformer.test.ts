@@ -21,7 +21,7 @@ describe('readEnvChainLayerTransformer', () => {
 
       const result = readEnvChainLayerTransformer({ node: initializerOf({ source: 'const subject = process.env.MODE;' }), seen: [] });
 
-      expect(result).toStrictEqual({ name: 'MODE', steps: [] });
+      expect(result).toStrictEqual({ root: { kind: 'env', name: 'MODE' }, steps: [] });
     });
 
     it("EMPTY: {process.env['']} => nothing, since an empty key names no variable", () => {
@@ -51,7 +51,7 @@ describe('readEnvChainLayerTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        name: 'N',
+        root: { kind: 'env', name: 'N' },
         steps: [{ kind: 'default', value: '0' }, { kind: 'number' }, { kind: 'equals', literal: 3, negated: false }],
       });
     });
@@ -64,7 +64,7 @@ describe('readEnvChainLayerTransformer', () => {
         seen: [],
       });
 
-      expect(result).toStrictEqual({ name: 'FLAG', steps: [{ kind: 'equals', literal: 'on', negated: false }] });
+      expect(result).toStrictEqual({ root: { kind: 'env', name: 'FLAG' }, steps: [{ kind: 'equals', literal: 'on', negated: false }] });
     });
 
     it("VALID: {process.env.FLAG != 'on'} => a loose inequality reads as a negated equals", () => {
@@ -75,7 +75,7 @@ describe('readEnvChainLayerTransformer', () => {
         seen: [],
       });
 
-      expect(result).toStrictEqual({ name: 'FLAG', steps: [{ kind: 'equals', literal: 'on', negated: true }] });
+      expect(result).toStrictEqual({ root: { kind: 'env', name: 'FLAG' }, steps: [{ kind: 'equals', literal: 'on', negated: true }] });
     });
 
     it("EMPTY: {split('')} => nothing, since an empty separator splits into characters", () => {
@@ -135,6 +135,74 @@ describe('readEnvChainLayerTransformer', () => {
 
       const result = readEnvChainLayerTransformer({
         node: initializerOf({ source: "const subject = process.env.P + 'x';" }),
+        seen: [],
+      });
+
+      expect(result).toBe(undefined);
+    });
+  });
+
+  describe('a command-line read', () => {
+    it('VALID: {Number(process.argv[2])} => the argv element with a number step', () => {
+      readEnvChainLayerTransformerProxy();
+
+      const result = readEnvChainLayerTransformer({ node: initializerOf({ source: 'const subject = Number(process.argv[2]);' }), seen: [] });
+
+      expect(result).toStrictEqual({ root: { kind: 'argv', shape: 'element', index: 2 }, steps: [{ kind: 'number' }] });
+    });
+
+    it("VALID: {process.argv[2] === 'yes'} => the argv element with an equals step", () => {
+      readEnvChainLayerTransformerProxy();
+
+      const result = readEnvChainLayerTransformer({
+        node: initializerOf({ source: "const subject = process.argv[2] === 'yes';" }),
+        seen: [],
+      });
+
+      expect(result).toStrictEqual({
+        root: { kind: 'argv', shape: 'element', index: 2 },
+        steps: [{ kind: 'equals', literal: 'yes', negated: false }],
+      });
+    });
+
+    it('VALID: {process.argv.slice(2).map(Number)} => the argv tail with a map step', () => {
+      readEnvChainLayerTransformerProxy();
+
+      const result = readEnvChainLayerTransformer({
+        node: initializerOf({ source: 'const subject = process.argv.slice(2).map(Number);' }),
+        seen: [],
+      });
+
+      expect(result).toStrictEqual({ root: { kind: 'argv', shape: 'tail', index: 2 }, steps: [{ kind: 'map' }] });
+    });
+
+    it('VALID: {process.argv[2] === undefined ? undefined : Number(process.argv[2])} => a guard, then number', () => {
+      readEnvChainLayerTransformerProxy();
+
+      const result = readEnvChainLayerTransformer({
+        node: initializerOf({ source: 'const subject = process.argv[2] === undefined ? undefined : Number(process.argv[2]);' }),
+        seen: [],
+      });
+
+      expect(result).toStrictEqual({ root: { kind: 'argv', shape: 'element', index: 2 }, steps: [{ kind: 'guard' }, { kind: 'number' }] });
+    });
+
+    it('VALID: {a guard on argv[2] over a chain on argv[3]} => nothing, since the guard tests another entry', () => {
+      readEnvChainLayerTransformerProxy();
+
+      const result = readEnvChainLayerTransformer({
+        node: initializerOf({ source: 'const subject = process.argv[2] === undefined ? undefined : Number(process.argv[3]);' }),
+        seen: [],
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {Number(process.argv.slice(2))} => nothing, since Number reads a string', () => {
+      readEnvChainLayerTransformerProxy();
+
+      const result = readEnvChainLayerTransformer({
+        node: initializerOf({ source: 'const subject = Number(process.argv.slice(2));' }),
         seen: [],
       });
 

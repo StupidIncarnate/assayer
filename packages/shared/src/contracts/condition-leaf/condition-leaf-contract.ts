@@ -22,6 +22,11 @@
  *   least one step, so a leaf that holds the raw string has no `operandEnvSteps` at all. A case runs
  *   these steps backwards to find the string that puts the operand on the arm it wants.
  *
+ *   `operandArgvRead` records that the operand holds a value read from `process.argv`, plus the steps
+ *   on top of that read (`argv-read-contract`). No case can set argv, so it never makes a branch
+ *   drivable. It tells the derivation which arm an un-steerable branch takes when a case runs, because
+ *   the run worker starts with no command-line arguments of its own.
+ *
  *   `operandCallPosition` anchors WHERE a call operand is written, keyed to the same source coordinate
  *   the call site records. It appears when the operand is a CALL (`if (tooBig(x))`), whose predicate
  *   reads as bare `truthy` because a single-file parse cannot type the callee. The position is the
@@ -64,6 +69,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
+import { argvReadContract } from '../argv-read/argv-read-contract';
 import { envStepContract } from '../env-step/env-step-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
@@ -78,6 +84,7 @@ export const conditionLeafContract = z.object({
   operandTypeRef: z.string().min(1).brand<'ConditionLeafOperandTypeRef'>().optional(),
   operandEnvVarName: z.string().min(1).brand<'ConditionLeafOperandEnvVarName'>().optional(),
   operandEnvSteps: z.array(envStepContract).min(1).optional(),
+  operandArgvRead: argvReadContract.optional(),
   operandConstValue: representativeValueContract.optional(),
   operandConstLength: z.number().int().nonnegative().brand<'ConditionLeafOperandConstLength'>().optional(),
   operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).brand<'ConditionLeafOperandCallPosition'>().optional(),

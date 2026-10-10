@@ -12,15 +12,17 @@
  *   never reach gets an `unreachable-exit` lint on its first line. The last arm of a statement whose
  *   arms do not return is just the code after the branch, so it is never dead.
  * - Undriven, when a leaf comes from outside the program: no test can set the leaf. The focus is
- *   admitted as undriven, and whether any case runs it depends on where its two arms lead:
+ *   admitted as undriven. When a case runs the branch, the focus goes the one way the test process's
+ *   values take it (`liveArm`). Whether a case runs it depends on where its two arms lead:
  *   - Both arms meet again after the branch, so a case reaches the scope's exit without deciding the
- *     branch. That case runs the branch once, with whatever value the test process has, so the focus
- *     goes one way. This holds for a statement whose arms log or yield, and for a ternary whose value
- *     is not the exit: a field, a static field, a call argument, a `yield`, an object property, an
- *     exported const, a module statement or a default parameter. It holds in every scope.
- *   - The arms reach different exits, so the branch decides which exit a case reaches. No case is
- *     derived and the focus never goes either way. This is a statement whose arms return, and a
- *     ternary that is itself the exit (`return cond ? a : b`, or a concise arrow body).
+ *     branch. This holds for a statement whose arms log or yield, and for a ternary whose value is not
+ *     the exit: a field, a static field, a call argument, a `yield`, an object property, an exported
+ *     const, a module statement or a default parameter. It holds in every scope, because code that
+ *     runs when the module loads runs in every case of the file.
+ *   - The arms reach different exits. This is a statement whose arms return, and a ternary that is
+ *     itself the exit (`return cond ? a : b`, or a concise arrow body). A named entry still gets one
+ *     case, which reaches whichever arm the test process's values take. An inline function called
+ *     where it is written gets no case, so its focus never goes either way.
  * - Where each undriven admission sits. When the scope earns a case (the focus goes one way), every
  *   admission sits on its own branch's line, in every scope. A class field's ternary runs in a
  *   `constructor` entry, because Assayer runs instance-field initializers in the constructor. When the
@@ -32,10 +34,12 @@
  *   A function expression bound to a variable is a named entry, like a function declaration.
  *
  * A leaf that reads a `T | undefined` value from `process.env` or `process.argv` is written as a
- * ternary of its own. That ternary is a branch too. An environment read goes both ways unless the
- * focus is undriven, and then it gets the focus's answer. An argv read can never be steered, so it is
- * always undriven and gets the focus's answer too. An undriven specimen therefore has one admission for
- * the focus and one for each argv leaf ternary, each on its own line, sorted.
+ * ternary of its own, `<read> === undefined ? undefined : <value>`. That ternary is a branch too. An
+ * environment read goes both ways in a driven specimen. In an undriven specimen no rule predicts it,
+ * so the prediction refuses it. An argv read can never be steered, so it is always undriven. It runs
+ * whenever the focus runs, and the test process passes no argument, so it takes `then`. An undriven
+ * specimen therefore has one admission for the focus and one for each argv leaf ternary, each on its
+ * own line, sorted.
  *
  * USAGE:
  * specimenPredictTransformer({ source, focusKind: 'statement', arms: ['then', 'else'], slotArm: 'return', provenances: ['param'] });
@@ -129,10 +133,21 @@ export const specimenPredictTransformer = ({
     focusKind === 'expression' && parent !== undefined && (Node.isReturnStatement(parent) || Node.isArrowFunction(parent));
   const armsMeetAgain = focusKind === 'statement' ? slotArm !== 'return' : !valueIsExit;
   const scopeEarnsCase = verdict !== 'undriven' || armsMeetAgain;
+  // Some case runs the branch when a case reaches the scope's exit without deciding it, or when the
+  // scope is a named entry. Assayer derives one case for a named entry that reaches whichever arm the
+  // test process's values take. Module-load code runs in every case of its file, so a module statement,
+  // a field, an object property and an exported const all run whenever the arms meet again.
+  const branchRuns = scopeEarnsCase || (scope !== undefined && !isInlineCalled);
 
   if (verdict === 'locked' && (liveArm === undefined || !arms.includes(liveArm))) {
     throw new Error(
       `specimen prediction: a locked specimen needs the arm its known values reach, one of ${arms.join(', ')}. It was given ${String(liveArm)}.`,
+    );
+  }
+
+  if (verdict === 'undriven' && branchRuns && (liveArm === undefined || !arms.includes(liveArm))) {
+    throw new Error(
+      `specimen prediction: an undriven specimen whose branch runs in a case needs the arm the test process's values reach, one of ${arms.join(', ')}. It was given ${String(liveArm)}.`,
     );
   }
 
@@ -143,7 +158,7 @@ export const specimenPredictTransformer = ({
         ? ('driven' as const)
         : verdict === 'locked' && arm === liveArm
           ? ('driven' as const)
-          : verdict === 'undriven' && arm === 'else' && scope !== undefined && !isInlineCalled
+          : verdict === 'undriven' && branchRuns && arm === liveArm
             ? ('driven' as const)
             : ('never' as const);
 
@@ -170,22 +185,41 @@ export const specimenPredictTransformer = ({
         );
       }
 
-      return { node, isArgv: !reads.includes('env') };
+      const isArgv = !reads.includes('env');
+
+      if (verdict === 'undriven' && !isArgv) {
+        throw new Error(
+          `specimen prediction: the process.env ternary on line ${String(node.getStartLineNumber())} sits in an undriven specimen, and no rule predicts which way it goes there. Give the leaf a provenance other than env, or drop the external leaf. The source is:\n${source}`,
+        );
+      }
+
+      // The generator writes an argv leaf as `process.argv[2] === undefined ? undefined : <read>`. The
+      // test process passes no argument past the script path, so whenever the ternary runs it takes `then`.
+      const isUnsetCheck =
+        Node.isBinaryExpression(condition) &&
+        condition.getOperatorToken().getKind() === SyntaxKind.EqualsEqualsEqualsToken &&
+        Node.isIdentifier(condition.getRight()) &&
+        condition.getRight().getText() === 'undefined';
+
+      if (isArgv && !isUnsetCheck) {
+        throw new Error(
+          `specimen prediction: the process.argv ternary on line ${String(node.getStartLineNumber())} does not test \`=== undefined\`, so no rule predicts which arm it takes. Write the leaf as \`process.argv[2] === undefined ? undefined : <read>\`. The source is:\n${source}`,
+        );
+      }
+
+      return { node, isArgv };
     });
-  const leafBranches = leafNodes.flatMap(({ node }) => [
-    {
+  const leafBranches = leafNodes.flatMap(({ node }) =>
+    ['then', 'else'].map((arm) => ({
       kind: 'ternary' as const,
-      arm: 'then',
+      arm,
       line: node.getStartLineNumber(),
-      driven: verdict === 'driven' ? ('driven' as const) : ('never' as const),
-    },
-    {
-      kind: 'ternary' as const,
-      arm: 'else',
-      line: node.getStartLineNumber(),
-      driven: verdict === 'driven' ? ('driven' as const) : ('never' as const),
-    },
-  ]);
+      driven:
+        verdict === 'driven' || (verdict === 'undriven' && branchRuns && arm === 'then')
+          ? ('driven' as const)
+          : ('never' as const),
+    })),
+  );
 
   const branches = [...focusBranches, ...leafBranches].sort(
     (left, right) =>
@@ -212,13 +246,12 @@ export const specimenPredictTransformer = ({
     .sort((left, right) => left.startLine - right.startLine);
 
   const wholeScopeLine = scope === undefined ? 1 : scope.getStartLineNumber();
-  const admitsOnBranchLines = scopeEarnsCase || (scope !== undefined && !isInlineCalled);
   const unsteerableNodes = [focus, ...leafNodes.filter(({ isArgv }) => isArgv).map(({ node }) => node)];
   const branchLineAdmissions = unsteerableNodes
     .map((node) => ({ startLine: node.getStartLineNumber() }))
     .sort((left, right) => left.startLine - right.startLine);
   const wholeScopeAdmissions = [{ startLine: wholeScopeLine }];
-  const undrivenAdmissions = admitsOnBranchLines ? branchLineAdmissions : wholeScopeAdmissions;
+  const undrivenAdmissions = branchRuns ? branchLineAdmissions : wholeScopeAdmissions;
   const undriven = verdict === 'undriven' ? undrivenAdmissions : [];
 
   return specimenOutcomeContract.parse({

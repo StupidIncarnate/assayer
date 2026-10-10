@@ -72,6 +72,7 @@ import type { IndexDemand } from '../../contracts/index-demand/index-demand-cont
 import { isPredicateConstrainingGuard } from '../../guards/is-predicate-constraining/is-predicate-constraining-guard';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { causeArrangeTransformer } from '../cause-arrange/cause-arrange-transformer';
+import { conditionDefaultValueTransformer } from '../condition-default-value/condition-default-value-transformer';
 import { conditionLeavesTransformer } from '../condition-leaves/condition-leaves-transformer';
 import { inputBucketsTransformer } from '../input-buckets/input-buckets-transformer';
 import { predictedOutputTransformer } from '../predicted-output/predicted-output-transformer';
@@ -242,14 +243,29 @@ export const deriveCasesTransformer = ({
 
   const unsteerableIds = new Set(unsteerable.map((entry) => entry.branchCoverageId));
   const steerableBranches = branches.filter((branch) => !unsteerableIds.has(branch.coverageId));
-  // For callable entries (envDrivable: false), an exit requiring an un-steerable branch's non-fallback
-  // arm ('then') derives no case: with the branch un-steerable, no case can arrange the condition to hold.
-  // The fallback arm ('else') represents the unconstrained execution path, so exits along the 'else' path survive.
+  const unsteerableBranches = branches.filter((branch) => unsteerableIds.has(branch.coverageId));
+  const defaultArmByBranch = new Map<string, 'then' | 'else'>(
+    unsteerableBranches.map((branch) => [
+      String(branch.coverageId),
+      conditionDefaultValueTransformer({ condition: branch.condition }) === true ? 'then' : 'else',
+    ]),
+  );
+  // For callable entries (envDrivable: false), an exit requiring an un-steerable branch's non-default
+  // arm derives no case: with the branch un-steerable, no case can arrange the condition to hold the other way.
+  // The default arm is the arm the code takes with nothing arranged: `then` only where the condition is
+  // provably true when the case runs (`condition-default-value`), and `else` everywhere else.
   // For module-load entries (envDrivable: true), the entry is not callable, so an unsteerable branch derives no case.
   const steerableExits = envDrivable
     ? exits.filter((exit) => !exit.guardPath.some((step) => unsteerableIds.has(step.branchCoverageId)))
     : exits.filter(
-        (exit) => !exit.guardPath.some((step) => unsteerableIds.has(step.branchCoverageId) && step.arm !== 'else'),
+        (exit) =>
+          !exit.guardPath.some((step) => {
+            if (!unsteerableIds.has(step.branchCoverageId)) {
+              return false;
+            }
+            const defaultArm = defaultArmByBranch.get(String(step.branchCoverageId)) ?? 'else';
+            return step.arm !== defaultArm;
+          }),
       );
 
   // The returnPredicate rides the SAME steerability gate. An un-steerable one is dropped (not admitted
@@ -278,7 +294,10 @@ export const deriveCasesTransformer = ({
   const unsteerableArmDefaults = envDrivable
     ? new Map<string, string>()
     : new Map(
-        [...unsteerableIds].map((id) => [String(id), 'else'] as const),
+        unsteerableBranches.map((branch) => [
+          String(branch.coverageId),
+          defaultArmByBranch.get(String(branch.coverageId)) ?? 'else',
+        ] as const),
       );
   const evaluated = buckets.map((bucket) => {
     const armByBranch = new Map<string, string>([

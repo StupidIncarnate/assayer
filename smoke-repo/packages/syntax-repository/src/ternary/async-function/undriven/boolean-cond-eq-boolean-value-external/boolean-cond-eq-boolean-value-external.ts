@@ -4,8 +4,8 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - ternary then on line 24: never
- * - ternary else on line 24: driven
+ * - ternary then on line 24: driven
+ * - ternary else on line 24: never
  *
  * Expected lint errors:
  * - none

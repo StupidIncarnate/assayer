@@ -3,6 +3,7 @@ import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-resul
 import { ConditionLeafStub } from '@assayer/shared/contracts/condition-leaf/condition-leaf.stub';
 import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
 import { EntryGapStub } from '@assayer/shared/contracts/entry-gap/entry-gap.stub';
+import { ExitNodeStub } from '@assayer/shared/contracts/exit-node/exit-node.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
 import { LintEntryStub } from '@assayer/shared/contracts/lint-entry/lint-entry.stub';
@@ -213,7 +214,7 @@ describe('specimenOutcomeProjectionTransformer', () => {
       );
     });
 
-    it('VALID: {and branch whose leaves each saw one different outcome} => driven both-ways', () => {
+    it('VALID: {and branch, one case with left true and right false} => else driven only', () => {
       const analysis = FileAnalysisStub({
         functions: [
           FunctionAnalysisStub({
@@ -249,14 +250,14 @@ describe('specimenOutcomeProjectionTransformer', () => {
       expect(result).toStrictEqual(
         SpecimenOutcomeStub({
           branches: [
-            { kind: 'if', arm: 'then', line: 3, driven: 'driven' },
+            { kind: 'if', arm: 'then', line: 3, driven: 'never' },
             { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
           ],
         }),
       );
     });
 
-    it('VALID: {or branch under a not, only the inner right leaf evaluated true} => driven one-way', () => {
+    it('VALID: {or branch under a not, only the inner right leaf evaluated true} => the not flips it to else', () => {
       const analysis = FileAnalysisStub({
         functions: [
           FunctionAnalysisStub({
@@ -281,6 +282,117 @@ describe('specimenOutcomeProjectionTransformer', () => {
       });
       const run = RunResultStub({
         cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/if:nor#leaf.1', kind: 'cond', outcome: true })] })],
+      });
+
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
+
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 3, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
+          ],
+        }),
+      );
+    });
+
+    it('VALID: {not over a leaf the case saw true} => else driven, then never', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            branches: [
+              BranchNodeStub({
+                coverageId: 'f/if:n',
+                kind: 'if',
+                startLine: 3,
+                endLine: 5,
+                condition: { kind: 'not', operand: ConditionLeafStub({ id: 'f/if:n#leaf' }) },
+              }),
+            ],
+          }),
+        ],
+      });
+      const run = RunResultStub({
+        cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/if:n#leaf', kind: 'cond', outcome: true })] })],
+      });
+
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
+
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 3, driven: 'never' },
+            { kind: 'if', arm: 'else', line: 3, driven: 'driven' },
+          ],
+        }),
+      );
+    });
+
+    it('VALID: {or branch, left leaf true and right leaf never ran} => then driven only', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            branches: [
+              BranchNodeStub({
+                coverageId: 'f/if:or',
+                kind: 'if',
+                startLine: 3,
+                endLine: 5,
+                condition: {
+                  kind: 'or',
+                  left: ConditionLeafStub({ id: 'f/if:or#leaf.0' }),
+                  right: ConditionLeafStub({ id: 'f/if:or#leaf.1' }),
+                },
+              }),
+            ],
+          }),
+        ],
+      });
+      const run = RunResultStub({
+        cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/if:or#leaf.0', kind: 'cond', outcome: true })] })],
+      });
+
+      const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });
+
+      expect(result).toStrictEqual(
+        SpecimenOutcomeStub({
+          branches: [
+            { kind: 'if', arm: 'then', line: 3, driven: 'driven' },
+            { kind: 'if', arm: 'else', line: 3, driven: 'never' },
+          ],
+        }),
+      );
+    });
+
+    it('VALID: {no leaf of the condition traced, case reached an exit guarded by then} => then read off the exit', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            branches: [
+              BranchNodeStub({
+                coverageId: 'f/if:nn',
+                kind: 'if',
+                startLine: 3,
+                endLine: 5,
+                condition: {
+                  kind: 'and',
+                  left: ConditionLeafStub({ id: 'f/if:nn#leaf.0' }),
+                  right: ConditionLeafStub({ id: 'f/if:nn#leaf.1' }),
+                },
+              }),
+            ],
+            exits: [
+              ExitNodeStub({
+                coverageId: 'f/return@then',
+                guardPath: [{ branchCoverageId: 'f/if:nn', arm: 'then' }],
+                line: 4,
+              }),
+            ],
+          }),
+        ],
+      });
+      const run = RunResultStub({
+        cases: [CaseResultStub({ trace: [TraceEventStub({ id: 'f/return@then', kind: 'exit' })] })],
       });
 
       const result = specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches: [] });

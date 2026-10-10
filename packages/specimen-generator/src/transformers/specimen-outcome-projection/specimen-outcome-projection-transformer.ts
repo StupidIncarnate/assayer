@@ -10,14 +10,19 @@
  * A trace event is tied to a branch only by exact equality between the event's id and a condition
  * leaf id from the analysis. An id's text is never parsed or prefix-matched.
  *
+ * An arm is driven when a passed case's leaf outcomes, combined through the branch's own condition
+ * tree, give that arm's value. When they cannot settle it, the arm is read off the guard path of the
+ * exit the case reached, again matched by exact id.
+ *
  * USAGE:
  * specimenOutcomeProjectionTransformer({ analysis, run, scopeBranches });
  * // Returns a SpecimenOutcome: branches, caseFailures, lints, undriven, darkSpots and gaps, each sorted
  */
-import type { BranchNode, FileAnalysis, RunResult } from '@assayer/shared/contracts';
+import type { BranchNode, ExitNode, FileAnalysis, RunResult } from '@assayer/shared/contracts';
 
 import { specimenOutcomeContract } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-outcome-contract';
+import { conditionOutcomesLayerTransformer } from './condition-outcomes-layer-transformer';
 
 const ARM_ORDER: Record<string, number> = {
   then: 0,
@@ -34,19 +39,27 @@ export const specimenOutcomeProjectionTransformer = ({
   run: RunResult;
   scopeBranches: readonly BranchNode[];
 }): SpecimenOutcome => {
-  const outcomesByLeafId = new Map<string, Set<boolean>>();
-  for (const runCase of run.cases) {
+  const passedCases = run.cases.flatMap((runCase) => {
     if (runCase.status !== 'passed') {
-      continue;
+      return [];
     }
+    const outcomesByLeafId = new Map<string, Set<boolean>>();
+    const exitIds = new Set<string>();
     for (const event of runCase.trace) {
-      if (event.kind === 'cond' && event.outcome !== undefined) {
+      if (event.kind === 'exit') {
+        exitIds.add(event.id);
+      } else if (event.outcome !== undefined) {
         const seen = outcomesByLeafId.get(event.id) ?? new Set<boolean>();
         seen.add(event.outcome);
         outcomesByLeafId.set(event.id, seen);
       }
     }
-  }
+    return [{ outcomesByLeafId, exitIds }];
+  });
+
+  const exitsByCoverageId = new Map<string, ExitNode>(
+    analysis.functions.flatMap((fn) => fn.exits).map((exit) => [exit.coverageId, exit]),
+  );
 
   const branchesByCoverageId = new Map<string, BranchNode>();
   for (const branch of [...analysis.functions.flatMap((fn) => fn.branches), ...scopeBranches]) {
@@ -58,17 +71,19 @@ export const specimenOutcomeProjectionTransformer = ({
   const branches = [...branchesByCoverageId.values()].flatMap((branch) => {
     let sawTrue = false;
     let sawFalse = false;
-    const pending = [branch.condition];
-    for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
-      if (node.kind === 'leaf') {
-        const seen = outcomesByLeafId.get(node.id);
-        sawTrue ||= seen?.has(true) === true;
-        sawFalse ||= seen?.has(false) === true;
-      } else if (node.kind === 'not') {
-        pending.push(node.operand);
-      } else {
-        pending.push(node.left, node.right);
-      }
+    for (const { outcomesByLeafId, exitIds } of passedCases) {
+      const values = conditionOutcomesLayerTransformer({ condition: branch.condition, outcomesByLeafId });
+      // A condition the leaf outcomes cannot settle is read off the exit the case reached instead.
+      const arms =
+        values.size > 0
+          ? [...values].map((value) => (value ? 'then' : 'else'))
+          : [...exitIds].flatMap((exitId) =>
+              (exitsByCoverageId.get(exitId)?.guardPath ?? [])
+                .filter((step) => step.branchCoverageId === branch.coverageId)
+                .map((step) => String(step.arm)),
+            );
+      sawTrue ||= arms.includes('then');
+      sawFalse ||= arms.includes('else');
     }
     return [
       {

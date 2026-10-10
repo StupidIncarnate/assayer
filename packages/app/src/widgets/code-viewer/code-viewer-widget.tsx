@@ -13,10 +13,8 @@
  *   carries a verbatim copy of both admissions, which says nothing the analysis does not already say
  *   and says it only after a click.
  *
- *   The gutter counts only the entries a run DRIVES. An undriven entry's cases are derived but never
- *   executed, so counting them would mark a module scope's branches as covered while the run reports
- *   0/0 — a coverage number for tests that cannot run is the same lie the dark-spot shading exists to
- *   break, told in digits.
+ *   The gutter counts only the cases of entries a run executes: access not `unreachable`, and at least
+ *   one case. Counting a case nothing runs would show coverage for a test that cannot run.
  *
  *   A span covering the WHOLE file is not shaded, and that is a rule about the treatment rather than
  *   about any one scope. Shading means "this region differs from the rest of the file"; a span with no
@@ -38,7 +36,7 @@ import type { CompiledFileView } from '@assayer/shared/contracts';
 import { SourceEditorLayerWidget } from './source-editor-layer-widget';
 import { caseGutterMarkersTransformer } from '../../transformers/case-gutter-markers/case-gutter-markers-transformer';
 import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
-import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
+import { runnableFunctionsTransformer } from '../../transformers/runnable-functions/runnable-functions-transformer';
 import { undrivenLineTransformer } from '../../transformers/undriven-line/undriven-line-transformer';
 
 export interface CodeViewerWidgetProps {
@@ -55,13 +53,8 @@ export const CodeViewerWidget = ({ fileView, hoveredLine, onLineHover }: CodeVie
 
   const markers = useMemo(() => {
     const gutterMarkers = caseGutterMarkersTransformer({
-      // Counts only what a run drives. An undriven entry's cases are never executed, so counting them
-      // would mark a module scope's branches as covered while the run beside it reports 0/0 — the
-      // detail panel narrows through this same transformer, so the two panes cannot disagree.
-      functions: drivenFunctionsTransformer({
-        functions: fileView?.analysis?.functions ?? [],
-        undriven: fileView?.analysis?.undriven ?? [],
-      }),
+      // The detail panel narrows through this same transformer, so the two panes cannot disagree.
+      functions: runnableFunctionsTransformer({ functions: fileView?.analysis?.functions ?? [] }),
     });
     // Adapter inputs allow raw primitives; map the branded markers to the adapter's raw shape.
     return gutterMarkers.map((marker) => ({ line: marker.line, count: marker.count }));

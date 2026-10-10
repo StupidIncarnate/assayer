@@ -430,6 +430,23 @@ predicate actually constrain the outcome (`guards/is-predicate-constraining`)?
 It reports which one failed as the `undriven-cause`, because the two have
 different fixes.
 
+**Pick the fallback arm of an un-steerable branch.** Touch
+`transformers/condition-default-value`, which combines leaves through
+`not`, `and` and `or`, and `transformers/leaf-default-value`, which
+answers for one leaf. When no case can steer a branch
+in a callable entry, `derive-cases` still builds one case: the arm the
+code takes with nothing arranged. That arm is `then` only when the
+condition is provably true at the moment a case runs. Everywhere else it
+is `else`. A leaf has a known value in two situations only. The first is
+a command-line read: `operandArgvRead`, which `read-argv-operand` records
+through the same `read-env-chain` an environment read uses, and which
+`transformers/argv-read-value` runs forward. The run worker starts with
+no arguments of its own, so `process.argv[2]` is `undefined` and
+`process.argv.slice(2)` is `[]`. The second is a value welded to a
+same-file constant. Assayer never guesses a value from a type. A call
+such as `!isReady()` returns whatever the callee returns, so a guess
+there would build a case that fails against correct code.
+
 **Evaluate a branch welded to a literal constant.** Capture the value at
 the exact point where it becomes welded: `read-const-operand-layer-transformer`
 for a same-file `const` (it stamps `operandConstValue` or

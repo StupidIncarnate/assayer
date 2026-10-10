@@ -16,6 +16,11 @@
  *   It takes the first one the separator does not contain, so joining adds no extra separator. Three
  *   are enough for any separator that is not made of all three.
  *
+ *   `argv` names the command-line read, `process.argv[<index>]` or `process.argv.slice(<index>)`. No
+ *   case can set argv, so these names need no inverse. `runnerLength` is how many entries argv holds
+ *   in the worker that runs a case: the Node binary and the worker's entry file. `forkWorker` starts
+ *   that worker with no arguments of its own, so every entry from this index on is absent.
+ *
  * USAGE:
  * envSourceStatics.global;
  * // Returns 'process'
@@ -29,4 +34,9 @@ export const envSourceStatics = {
     map: 'map',
   },
   fillers: ['a', 'b', 'c'],
+  argv: {
+    property: 'argv',
+    slice: 'slice',
+    runnerLength: 2,
+  },
 } as const;

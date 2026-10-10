@@ -63,6 +63,7 @@ export * from './array-cardinality/array-cardinality-contract';
 
 export * from './env-read/env-read-contract';
 export * from './env-step/env-step-contract';
+export * from './argv-read/argv-read-contract';
 
 export * from './predicate/predicate-contract';
 

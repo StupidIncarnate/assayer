@@ -1,12 +1,15 @@
 /**
- * PURPOSE: Reads one expression as a chain of pure steps applied to ONE `process.env.<NAME>` read,
- *   and answers the variable's name plus the steps in the order the code applies them. It answers
- *   nothing for any expression it cannot run backwards. `read-env-operand` is its only caller, and
- *   starts it at a branch operand's identifier.
+ * PURPOSE: Reads one expression as a chain of pure steps applied to ONE read from outside the program,
+ *   and answers that read plus the steps in the order the code applies them. The read is a
+ *   `process.env.<NAME>` read (`read-env-access`) or a command-line read (`read-argv-access`). It
+ *   answers nothing for any expression it cannot run backwards. `read-env-operand` keeps only an
+ *   environment chain, and `read-argv-operand` only a command-line one. Both start it at a branch
+ *   operand.
  *
  *   The shapes it reads, each from node KINDS and literal VALUES (`getLiteralValue()`), never source
  *   text:
  *   - `process.env.NAME` or `process.env['NAME']`, the read itself.
+ *   - `process.argv[<index>]` or `process.argv.slice(<index>)`, the command-line read itself.
  *   - `x ?? '<literal>'` on the raw read: a `default` step.
  *   - `x === undefined ? undefined : <chain>` on the raw read (or `x !== undefined ? <chain> :
  *     undefined`), where the chain reads the same variable: a `guard` step, then the chain's steps. An
@@ -35,18 +38,19 @@
  *
  * USAGE:
  * readEnvChainLayerTransformer({ node: initializer, seen: [] });
- * // Returns { name: 'RECEIVER', steps: [{ kind: 'default', value: '' }, { kind: 'split', separator: ',' }] }
+ * // Returns { root: { kind: 'env', name: 'RECEIVER' }, steps: [{ kind: 'default', value: '' }, { kind: 'split', separator: ',' }] }
  * //   for `(process.env.RECEIVER ?? '').split(',')`, or undefined
  */
 import { Node, SyntaxKind } from '#gateway/npm/ts-morph';
 
 import { envStepContract } from '@assayer/shared/contracts';
 
-import { envOperandReadoutContract } from '../../contracts/env-operand-readout/env-operand-readout-contract';
-import type { EnvOperandReadout } from '../../contracts/env-operand-readout/env-operand-readout-contract';
+import { externalOperandReadoutContract } from '../../contracts/external-operand-readout/external-operand-readout-contract';
+import type { ExternalOperandReadout } from '../../contracts/external-operand-readout/external-operand-readout-contract';
 import { envSourceStatics } from '../../statics/env-source/env-source-statics';
 import { isEnvStepsNullableGuard } from '../../guards/is-env-steps-nullable/is-env-steps-nullable-guard';
 import { envStepsTypeTransformer } from '../env-steps-type/env-steps-type-transformer';
+import { readArgvAccessLayerTransformer } from './read-argv-access-layer-transformer';
 import { readConstBindingLayerTransformer } from './read-const-binding-layer-transformer';
 import { readEnvAccessLayerTransformer } from './read-env-access-layer-transformer';
 import { readEnvGuardLayerTransformer } from './read-env-guard-layer-transformer';
@@ -61,7 +65,7 @@ export const readEnvChainLayerTransformer = ({
 }: {
   node: Node;
   seen: readonly Node[];
-}): EnvOperandReadout | undefined => {
+}): ExternalOperandReadout | undefined => {
   if (Node.isParenthesizedExpression(node)) {
     return readEnvChainLayerTransformer({ node: node.getExpression(), seen });
   }
@@ -78,7 +82,13 @@ export const readEnvChainLayerTransformer = ({
   const access = readEnvAccessLayerTransformer({ node });
 
   if (access !== undefined) {
-    return access;
+    return externalOperandReadoutContract.parse({ root: { kind: 'env', name: access.name }, steps: [] });
+  }
+
+  const argvRoot = readArgvAccessLayerTransformer({ node });
+
+  if (argvRoot !== undefined) {
+    return externalOperandReadoutContract.parse({ root: argvRoot, steps: [] });
   }
 
   // `x === undefined ? undefined : <chain>` (`read-env-guard`), where `x` is the raw read and the chain
@@ -89,12 +99,14 @@ export const readEnvChainLayerTransformer = ({
     const read = readEnvChainLayerTransformer({ node: guarded.tested, seen });
     const chain = readEnvChainLayerTransformer({ node: guarded.setArm, seen });
 
+    // Both reads are parsed by one contract, so equal roots serialize identically.
     return read === undefined ||
       read.steps.length > 0 ||
-      chain?.name !== read.name ||
+      chain === undefined ||
+      JSON.stringify(chain.root) !== JSON.stringify(read.root) ||
       chain.steps.some((step) => step.kind === 'guard')
       ? undefined
-      : envOperandReadoutContract.parse({ name: read.name, steps: [envStepContract.parse({ kind: 'guard' }), ...chain.steps] });
+      : externalOperandReadoutContract.parse({ root: read.root, steps: [envStepContract.parse({ kind: 'guard' }), ...chain.steps] });
   }
 
   if (Node.isBinaryExpression(node)) {
@@ -108,7 +120,10 @@ export const readEnvChainLayerTransformer = ({
     if (operator === SyntaxKind.QuestionQuestionToken) {
       const inner = readEnvChainLayerTransformer({ node: left, seen });
       const fallback = readLiteralValueLayerTransformer({ node: right });
-      const built = inner === undefined ? undefined : envStepsTypeTransformer({ steps: inner.steps.filter((step) => step.kind !== 'guard') });
+      const built =
+        inner === undefined
+          ? undefined
+          : envStepsTypeTransformer({ steps: inner.steps.filter((step) => step.kind !== 'guard'), root: inner.root });
 
       return inner === undefined ||
         fallback === undefined ||
@@ -116,8 +131,8 @@ export const readEnvChainLayerTransformer = ({
         !isEnvStepsNullableGuard({ steps: inner.steps }) ||
         built?.kind !== typeof fallback
         ? undefined
-        : envOperandReadoutContract.parse({
-            name: inner.name,
+        : externalOperandReadoutContract.parse({
+            root: inner.root,
             steps: [...inner.steps, envStepContract.parse({ kind: 'default', value: fallback })],
           });
     }
@@ -135,15 +150,15 @@ export const readEnvChainLayerTransformer = ({
       return undefined;
     }
 
-    const innerKind = envStepsTypeTransformer({ steps: inner.steps }).kind;
+    const innerKind = envStepsTypeTransformer({ steps: inner.steps, root: inner.root }).kind;
 
     // A guard's `undefined` would be compared too, which the guard step cannot express, so a comparison
     // is read only on a chain that holds a value. The raw read is the one nullable chain it accepts,
     // because an unset variable is simply not equal to the literal.
     return innerKind === 'array' || (inner.steps.length > 0 && isEnvStepsNullableGuard({ steps: inner.steps }))
       ? undefined
-      : envOperandReadoutContract.parse({
-          name: inner.name,
+      : externalOperandReadoutContract.parse({
+          root: inner.root,
           steps: [
             ...inner.steps,
             envStepContract.parse({ kind: 'equals', literal, negated: INEQUALITY_OPERATORS.has(operator) }),
@@ -176,9 +191,9 @@ export const readEnvChainLayerTransformer = ({
 
     const inner = readEnvChainLayerTransformer({ node: argument, seen });
 
-    return inner === undefined || envStepsTypeTransformer({ steps: inner.steps }).kind !== 'string'
+    return inner === undefined || envStepsTypeTransformer({ steps: inner.steps, root: inner.root }).kind !== 'string'
       ? undefined
-      : envOperandReadoutContract.parse({ name: inner.name, steps: [...inner.steps, envStepContract.parse({ kind: 'number' })] });
+      : externalOperandReadoutContract.parse({ root: inner.root, steps: [...inner.steps, envStepContract.parse({ kind: 'number' })] });
   }
 
   if (!Node.isPropertyAccessExpression(callee)) {
@@ -191,7 +206,7 @@ export const readEnvChainLayerTransformer = ({
     return undefined;
   }
 
-  const innerKind = envStepsTypeTransformer({ steps: inner.steps }).kind;
+  const innerKind = envStepsTypeTransformer({ steps: inner.steps, root: inner.root }).kind;
   const method = callee.getName();
 
   if (method === envSourceStatics.methods.split) {
@@ -199,13 +214,13 @@ export const readEnvChainLayerTransformer = ({
 
     return innerKind !== 'string' || typeof separator !== 'string' || separator.length === 0
       ? undefined
-      : envOperandReadoutContract.parse({
-          name: inner.name,
+      : externalOperandReadoutContract.parse({
+          root: inner.root,
           steps: [...inner.steps, envStepContract.parse({ kind: 'split', separator })],
         });
   }
 
   return method === envSourceStatics.methods.map && innerKind === 'array'
-    ? envOperandReadoutContract.parse({ name: inner.name, steps: [...inner.steps, envStepContract.parse({ kind: 'map' })] })
+    ? externalOperandReadoutContract.parse({ root: inner.root, steps: [...inner.steps, envStepContract.parse({ kind: 'map' })] })
     : undefined;
 };

@@ -224,6 +224,52 @@ describe('buildConditionLeafLayerTransformer', () => {
       });
     });
 
+    it("VALID: {process.argv[2] === 'yes', read in place} => the leaf carries the argv read with no steps", () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (process.argv[2] === 'yes') {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: { operandNode, predicate: PredicateStub({ kind: 'eq', literal: 'yes' }) },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandArgvRead: { shape: 'element', index: 2, steps: [] },
+        operandType: { kind: 'unknown', text: 'any' },
+        predicate: { kind: 'eq', literal: 'yes' },
+      });
+    });
+
+    it('VALID: {const n = Number(process.argv[2])} => the leaf carries the argv read and its number step', () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'const n = Number(process.argv[2]);\nif (n) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: { operandNode: condition, operandName: 'n', predicate: PredicateStub({ kind: 'truthy' }) },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'n',
+        operandArgvRead: { shape: 'element', index: 2, steps: [{ kind: 'number' }] },
+        operandType: { kind: 'number' },
+        predicate: { kind: 'truthy' },
+      });
+    });
+
     it('VALID: {a call operand} => the leaf carries the call position and no name', () => {
       buildConditionLeafLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });

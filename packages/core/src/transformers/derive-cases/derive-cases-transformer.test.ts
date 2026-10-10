@@ -755,6 +755,77 @@ describe('deriveCasesTransformer', () => {
       });
     });
 
+    // `if (!isReady())`: the call's value is not known when a case runs, so nothing proves which arm the
+    // code takes. The fallback stays `else`, the arm a case reaches when the call returns a truthy value.
+    const NOT_OPAQUE_CALL_BRANCH = BranchNodeStub({
+      coverageId: 'opaqueIf/if:not-call',
+      startLine: 3,
+      condition: {
+        kind: 'not',
+        operand: {
+          kind: 'leaf',
+          id: 'opaqueIf/if:not-call#leaf',
+          operandType: { kind: 'boolean' },
+          predicate: { kind: 'truthy' },
+        },
+      },
+    });
+
+    it('VALID: {!opaqueCall()} => else arm case derived as fallback, since the call has no known value', () => {
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [NOT_OPAQUE_CALL_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'opaqueIf/return@then', guardPath: [{ branchCoverageId: 'opaqueIf/if:not-call', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'opaqueIf/return@else', guardPath: [{ branchCoverageId: 'opaqueIf/if:not-call', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [{ reachesPath: ['opaqueIf/return@else'], arrange: [], salient: true }],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
+        unfillable: [],
+      });
+    });
+
+    // `if (!Number(process.argv[2]))`: the run worker has no argument at index 2, so `Number` gives NaN,
+    // and the negation is true. The fallback is the `then` arm, the arm the code really takes.
+    const NOT_ARGV_NUMBER_BRANCH = BranchNodeStub({
+      coverageId: 'argvIf/if:not-argv',
+      startLine: 3,
+      condition: {
+        kind: 'not',
+        operand: {
+          kind: 'leaf',
+          id: 'argvIf/if:not-argv#leaf',
+          operandArgvRead: { shape: 'element', index: 2, steps: [{ kind: 'number' }] },
+          operandType: { kind: 'unknown', text: 'any' },
+          predicate: { kind: 'truthy' },
+        },
+      },
+    });
+
+    it('VALID: {!Number(process.argv[2])} => then arm case derived as fallback, since the condition is true when a case runs', () => {
+      const result = deriveCasesTransformer({
+        params: [],
+        branches: [NOT_ARGV_NUMBER_BRANCH],
+        exits: [
+          ExitNodeStub({ coverageId: 'argvIf/return@then', guardPath: [{ branchCoverageId: 'argvIf/if:not-argv', arm: 'then' }], line: 4 }),
+          ExitNodeStub({ coverageId: 'argvIf/return@else', guardPath: [{ branchCoverageId: 'argvIf/if:not-argv', arm: 'else' }], line: 6 }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result).toStrictEqual({
+        cases: [{ reachesPath: ['argvIf/return@then'], arrange: [], salient: true }],
+        unreachableExits: [],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
+        unfillable: [],
+      });
+    });
+
     // `const u = s; if (u > 5)`: the operand IS a named binding, but `u` is not a param of the entry —
     // only `s` is — so it cannot be arranged either. The admission names the un-arrangeable operand.
     const NON_PARAM_BRANCH = BranchNodeStub({

@@ -24,8 +24,12 @@
  */
 import type { Node } from '#gateway/npm/ts-morph';
 
+import { envOperandReadoutContract } from '../../contracts/env-operand-readout/env-operand-readout-contract';
 import type { EnvOperandReadout } from '../../contracts/env-operand-readout/env-operand-readout-contract';
 import { readEnvChainLayerTransformer } from './read-env-chain-layer-transformer';
 
-export const readEnvOperandLayerTransformer = ({ node }: { node: Node }): EnvOperandReadout | undefined =>
-  readEnvChainLayerTransformer({ node, seen: [] });
+export const readEnvOperandLayerTransformer = ({ node }: { node: Node }): EnvOperandReadout | undefined => {
+  const chain = readEnvChainLayerTransformer({ node, seen: [] });
+
+  return chain?.root.kind === 'env' ? envOperandReadoutContract.parse({ name: chain.root.name, steps: chain.steps }) : undefined;
+};

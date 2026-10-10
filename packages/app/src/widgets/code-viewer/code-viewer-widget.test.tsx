@@ -178,9 +178,9 @@ describe('CodeViewerWidget', () => {
   });
 
   describe('undriven entries', () => {
-    // The pure-statement shape: a module scope whose derived cases nothing executes. Counting them
-    // would mark its branches as covered while the run reports 0/0.
-    it('VALID: {an undriven entry with derived cases} => its cases are not counted in the gutter', () => {
+    // The pure-statement shape: a module scope with `unreachable` access, so the run executes none of
+    // its derived cases. Counting them would show coverage for tests that never run.
+    it('VALID: {an unreachable undriven entry with derived cases} => its cases are not counted in the gutter', () => {
       CodeViewerWidgetProxy();
       const fileView = CompiledFileViewStub({
         displayLines: LOOP_DISPLAY_LINES,

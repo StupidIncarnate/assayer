@@ -60,10 +60,11 @@
  *   on open; an entry the runner cannot reach through its access is added by the case-set projection,
  *   so it arrives with the first run. Reading both at once would print the file's half twice.
  *
- *   An undriven entry's derived cases are not listed. They exist in the analysis and nothing will ever
- *   execute them, so listing them would advertise pending tests while the run beside them reports 0/0.
- *   `drivenFunctionsTransformer` owns that narrowing; the code viewer's gutter reads through the same
- *   one, so neither surface counts a case the other cannot.
+ *   The panel lists cases only for entries a run executes: access not `unreachable`, and at least one
+ *   case. That is core's own rule. An entry named in `undriven` still lists the cases it has, such as
+ *   the case for the arm default execution takes. `runnableFunctionsTransformer` owns that narrowing.
+ *   The code viewer's gutter reads through the same transformer, so neither surface counts a case the
+ *   other cannot.
  *
  *   The cross-file imports and ambient globals the file uses (`resolvedEdges`, already scoped to this
  *   file — each edge's `from` IS this path) live in their OWN dedicated Contracts tab, never mixed in
@@ -84,7 +85,7 @@ import type { ReactElement } from '#gateway/npm/react';
 import { Box, Tabs, Text, Stack, Button, Group } from '#gateway/npm/mantine__core';
 import type { FileAnalysis, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
 
-import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
+import { runnableFunctionsTransformer } from '../../transformers/runnable-functions/runnable-functions-transformer';
 import type { RunMode } from '../../contracts/status-view/status-view-contract';
 import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
 import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
@@ -137,16 +138,11 @@ export const DetailPanelWidget = ({
   // stitch pass. A positive fact about the FILE (not a run and not an admission), so it sits outside
   // the has-entries branch and shows the moment the file is opened.
   const edges = resolvedEdges ?? [];
-  // The entries a run will actually drive. An undriven entry keeps its admission row above and loses
-  // its case list: nothing executes those cases, so listing them would promise tests the run reports
-  // as 0/0.
+  // The entries a run executes. An undriven entry with a case keeps its admission row above and also
+  // lists the case it has.
   const functions = useMemo(
-    () =>
-      drivenFunctionsTransformer({
-        functions: analysis === undefined ? [] : analysis.functions,
-        undriven,
-      }),
-    [analysis, undriven],
+    () => runnableFunctionsTransformer({ functions: analysis === undefined ? [] : analysis.functions }),
+    [analysis],
   );
 
   return (

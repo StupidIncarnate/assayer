@@ -16,6 +16,10 @@
  *   - `split` is `x.split('<separator>')`. A length of n inverts to n items joined by the separator.
  *   - `map` is `xs.map(f)`. It keeps the array's length, which is the only fact a case asks of it.
  *
+ *   A command-line read (`argv-read-contract`) uses the same steps on top of `process.argv`. No case
+ *   can set argv, so Assayer runs those steps forward instead, to learn the value the operand holds
+ *   when a case runs.
+ *
  * USAGE:
  * envStepContract.parse({ kind: 'split', separator: ',' });
  * // Returns a validated EnvStep (branded fields)

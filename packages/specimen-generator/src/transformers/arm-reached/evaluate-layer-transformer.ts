@@ -21,6 +21,32 @@ export const evaluateLayerTransformer = ({
   isFocus: boolean;
 }): ReturnType<LoadedSyntax['code']> => {
   if (tree.kind === 'leaf') {
+    // An external leaf is the `external` text typeListStatics writes for its type, and these are the
+    // values that text produces in the test process, which passes no argument past the script path.
+    // `process.argv[2] === undefined ? undefined : ...` is undefined, `process.argv.slice(2)...` is
+    // empty, `Number(process.argv[2])` is NaN, `process.argv[2] ?? ''` is '', and
+    // `process.argv[2] === 'yes'` is false.
+    if (tree.provenance === 'external') {
+      if (/^\w+ \| undefined$/u.test(tree.type)) {
+        return undefined;
+      }
+      if (/^readonly \w+\[\]$/u.test(tree.type)) {
+        return [];
+      }
+      if (tree.type === 'number') {
+        return NaN;
+      }
+      if (tree.type === 'string') {
+        return '';
+      }
+      if (tree.type === 'boolean') {
+        return false;
+      }
+      throw new Error(
+        `The external leaf ${tree.owner}.${tree.hole} has the type '${tree.type}', and the generator does not know what its external text produces in the test process. Add the type's value to evaluateLayerTransformer beside its entry in typeListStatics.`,
+      );
+    }
+
     if (provenanceStatics[tree.provenance].test !== 'known') {
       throw new Error(
         `The value of ${tree.owner}.${tree.hole} is not known, because its provenance is '${tree.provenance}'. Only literal and const leaves have a value the generator can evaluate. Give this leaf one of those provenances.`,

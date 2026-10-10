@@ -107,7 +107,7 @@ describe('evaluateLayerTransformer', () => {
     expect(result).toBe(7);
   });
 
-  it.each(['param', 'env', 'external'] as const)('ERROR: {a %s leaf} => throws that the value is not known', (provenance) => {
+  it.each(['param', 'env'] as const)('ERROR: {a %s leaf} => throws that the value is not known', (provenance) => {
     expect(() =>
       evaluateLayerTransformer({
         tree: { kind: 'leaf', owner: 'plus', hole: 'a', type: 'number', provenance, value: 7 },
@@ -118,6 +118,62 @@ describe('evaluateLayerTransformer', () => {
         `^The value of plus\\.a is not known, because its provenance is '${provenance}'\\. Only literal and const leaves have a value the generator can evaluate\\. Give this leaf one of those provenances\\.$`,
         'u',
       ),
+    );
+  });
+
+  it('VALID: {an external boolean leaf} => returns false', () => {
+    const result = evaluateLayerTransformer({
+      tree: { kind: 'leaf', owner: 'not', hole: 'value', type: 'boolean', provenance: 'external', value: true },
+      isFocus: false,
+    });
+
+    expect(result).toBe(false);
+  });
+
+  it('VALID: {an external number leaf} => returns NaN', () => {
+    const result = evaluateLayerTransformer({
+      tree: { kind: 'leaf', owner: 'plus', hole: 'a', type: 'number', provenance: 'external', value: 7 },
+      isFocus: false,
+    });
+
+    expect(result).toBeNaN();
+  });
+
+  it('VALID: {an external string leaf} => returns empty string', () => {
+    const result = evaluateLayerTransformer({
+      tree: { kind: 'leaf', owner: 'concat', hole: 'a', type: 'string', provenance: 'external', value: 'x' },
+      isFocus: false,
+    });
+
+    expect(result).toBe('');
+  });
+
+  it('VALID: {an external array leaf} => returns empty array', () => {
+    const result = evaluateLayerTransformer({
+      tree: { kind: 'leaf', owner: 'array-length', hole: 'receiver', type: 'readonly number[]', provenance: 'external', value: [1] },
+      isFocus: false,
+    });
+
+    expect(result).toStrictEqual([]);
+  });
+
+  it('VALID: {an external maybe-number leaf} => returns undefined', () => {
+    const result = evaluateLayerTransformer({
+      tree: { kind: 'leaf', owner: 'nullish', hole: 'value', type: 'number | undefined', provenance: 'external', value: 7 },
+      isFocus: false,
+    });
+
+    expect(result).toBe(undefined);
+  });
+
+  it('ERROR: {an external leaf of a type the generator does not list} => throws, naming the leaf and the type', () => {
+    expect(() =>
+      evaluateLayerTransformer({
+        tree: { kind: 'leaf', owner: 'plus', hole: 'a', type: 'bigint', provenance: 'external', value: 7 },
+        isFocus: false,
+      }),
+    ).toThrow(
+      /^The external leaf plus\.a has the type 'bigint', and the generator does not know what its external text produces in the test process\. Add the type's value to evaluateLayerTransformer beside its entry in typeListStatics\.$/u,
     );
   });
 
