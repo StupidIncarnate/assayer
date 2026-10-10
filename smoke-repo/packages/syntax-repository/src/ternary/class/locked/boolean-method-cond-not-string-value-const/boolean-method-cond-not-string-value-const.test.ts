@@ -3,15 +3,15 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('boolean-method-cond-not-string-value-const', () => {
-    it('VALID: {value: const} => ternary on line 25 locked one way, unreachable-exit on line 25, every case passes', async () => {
+    it('VALID: {value: const} => ternary then on line 26 never run; ternary else on line 26 driven, unreachable-exit on line 26, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/ternary/class/locked/boolean-method-cond-not-string-value-const/boolean-method-cond-not-string-value-const.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'ternary', line: 25, driven: 'one-way' }],
+            branches: [{ kind: 'ternary', arm: 'then', line: 26, driven: 'never' }, { kind: 'ternary', arm: 'else', line: 26, driven: 'driven' }],
             caseFailures: [],
-            lints: [{ rule: 'unreachable-exit', startLine: 25 }],
+            lints: [{ rule: 'unreachable-exit', startLine: 26 }],
             undriven: [],
             darkSpots: [],
             gaps: []

@@ -4,19 +4,21 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - if on line 23: never
- * - ternary on line 23: never
+ * - if then on line 25: never
+ * - if else on line 25: never
+ * - ternary then on line 25: never
+ * - ternary else on line 25: never
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
- * - line 22
+ * Expected undriven errors:
+ * - line 24
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export const stringCondNullishStringValueExternal = ((): string => {

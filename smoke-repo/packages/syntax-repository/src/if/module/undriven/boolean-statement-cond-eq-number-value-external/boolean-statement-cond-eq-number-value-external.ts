@@ -4,18 +4,19 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - if on line 21: one-way
+ * - if then on line 22: never
+ * - if else on line 22: never
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
- * - line 21
+ * Expected undriven errors:
+ * - line 22
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 if (Number(process.argv[2]) === 7) {

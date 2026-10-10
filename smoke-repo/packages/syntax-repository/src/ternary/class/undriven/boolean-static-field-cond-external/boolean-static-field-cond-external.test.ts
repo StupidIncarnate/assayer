@@ -3,16 +3,16 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('boolean-static-field-cond-external', () => {
-    it('VALID: {cond: external} => ternary on line 22 locked one way, undriven from line 22, every case passes', async () => {
+    it('VALID: {cond: external} => ternary then on line 23 never run; ternary else on line 23 never run, undriven from line 23, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/ternary/class/undriven/boolean-static-field-cond-external/boolean-static-field-cond-external.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'ternary', line: 22, driven: 'one-way' }],
+            branches: [{ kind: 'ternary', arm: 'then', line: 23, driven: 'never' }, { kind: 'ternary', arm: 'else', line: 23, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 22 }],
+            undriven: [{ startLine: 23 }],
             darkSpots: [],
             gaps: []
         });

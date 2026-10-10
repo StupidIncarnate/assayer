@@ -4,18 +4,19 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - ternary on line 23: never
+ * - ternary then on line 24: never
+ * - ternary else on line 24: never
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
- * - line 23
+ * Expected undriven errors:
+ * - line 24
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export class BooleanStaticMethodCondEqBooleanValueExternal {

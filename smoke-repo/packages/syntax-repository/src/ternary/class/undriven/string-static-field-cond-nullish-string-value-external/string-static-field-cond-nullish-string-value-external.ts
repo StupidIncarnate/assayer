@@ -4,20 +4,22 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - ternary on line 24: one-way
- * - ternary on line 24: one-way
+ * - ternary then on line 26: never
+ * - ternary then on line 26: never
+ * - ternary else on line 26: never
+ * - ternary else on line 26: never
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
- * - line 24
- * - line 24
+ * Expected undriven errors:
+ * - line 26
+ * - line 26
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export class StringStaticFieldCondNullishStringValueExternal {

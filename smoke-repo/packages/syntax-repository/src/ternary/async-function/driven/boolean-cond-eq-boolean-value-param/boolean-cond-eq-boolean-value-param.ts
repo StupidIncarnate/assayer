@@ -4,18 +4,19 @@
  * Verdict: driven
  *
  * Expected branches:
- * - ternary on line 23: both-ways
+ * - ternary then on line 24: driven
+ * - ternary else on line 24: driven
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export async function booleanCondEqBooleanValueParam(value: boolean): Promise<string> {

@@ -4,18 +4,19 @@
  * Verdict: locked
  *
  * Expected branches:
- * - if on line 24: one-way
+ * - if then on line 25: driven
+ * - if else on line 25: never
  *
- * Expected lints:
- * - unreachable-exit on line 27
+ * Expected lint errors:
+ * - unreachable-exit on line 28
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 const cond: number = 3;

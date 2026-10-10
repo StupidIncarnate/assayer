@@ -3,16 +3,16 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('number-cond-external', () => {
-    it('VALID: {cond: external} => if on line 22 locked one way, undriven from line 22, every case passes', async () => {
+    it('VALID: {cond: external} => if then on line 23 never run; if else on line 23 never run, undriven from line 23, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/if/generator-function/undriven/number-cond-external/number-cond-external.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'if', line: 22, driven: 'one-way' }],
+            branches: [{ kind: 'if', arm: 'then', line: 23, driven: 'never' }, { kind: 'if', arm: 'else', line: 23, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 22 }],
+            undriven: [{ startLine: 23 }],
             darkSpots: [],
             gaps: []
         });

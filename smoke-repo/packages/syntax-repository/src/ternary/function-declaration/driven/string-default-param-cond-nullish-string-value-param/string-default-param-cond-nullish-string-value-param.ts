@@ -4,18 +4,19 @@
  * Verdict: driven
  *
  * Expected branches:
- * - ternary on line 21: both-ways
+ * - ternary then on line 22: driven
+ * - ternary else on line 22: driven
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export function stringDefaultParamCondNullishStringValueParam(value: string | undefined, label: string = value ?? '' ? 'then' : 'else'): string {

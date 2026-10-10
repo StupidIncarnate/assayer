@@ -3,13 +3,13 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('boolean-cond-eq-number-value-param', () => {
-    it('VALID: {value: param} => if on line 23 driven both ways, every case passes', async () => {
+    it('VALID: {value: param} => if then on line 24 driven; if else on line 24 driven, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/if/async-function/driven/boolean-cond-eq-number-value-param/boolean-cond-eq-number-value-param.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'if', line: 23, driven: 'both-ways' }],
+            branches: [{ kind: 'if', arm: 'then', line: 24, driven: 'driven' }, { kind: 'if', arm: 'else', line: 24, driven: 'driven' }],
             caseFailures: [],
             lints: [],
             undriven: [],

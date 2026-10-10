@@ -4,19 +4,21 @@
  * Verdict: driven
  *
  * Expected branches:
- * - ternary on line 22: both-ways
- * - ternary on line 24: both-ways
+ * - ternary then on line 24: driven
+ * - ternary else on line 24: driven
+ * - ternary then on line 26: driven
+ * - ternary else on line 26: driven
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 const value = process.env.VALUE === undefined ? undefined : Number(process.env.VALUE);

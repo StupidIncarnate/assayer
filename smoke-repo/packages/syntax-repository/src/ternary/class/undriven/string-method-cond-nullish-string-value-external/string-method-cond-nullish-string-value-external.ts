@@ -4,20 +4,22 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - ternary on line 25: never
- * - ternary on line 25: never
+ * - ternary then on line 27: never
+ * - ternary then on line 27: never
+ * - ternary else on line 27: never
+ * - ternary else on line 27: never
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
- * - line 25
- * - line 25
+ * Expected undriven errors:
+ * - line 27
+ * - line 27
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export class StringMethodCondNullishStringValueExternal {

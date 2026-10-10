@@ -3,16 +3,16 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('number-statement-cond-string-length-receiver-external', () => {
-    it('VALID: {receiver: external} => if on line 21 locked one way, undriven from line 21, every case passes', async () => {
+    it('VALID: {receiver: external} => if then on line 22 never run; if else on line 22 never run, undriven from line 22, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/if/module/undriven/number-statement-cond-string-length-receiver-external/number-statement-cond-string-length-receiver-external.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'if', line: 21, driven: 'one-way' }],
+            branches: [{ kind: 'if', arm: 'then', line: 22, driven: 'never' }, { kind: 'if', arm: 'else', line: 22, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 21 }],
+            undriven: [{ startLine: 22 }],
             darkSpots: [],
             gaps: []
         });

@@ -4,18 +4,19 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - ternary on line 21: never
+ * - ternary then on line 22: never
+ * - ternary else on line 22: never
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
- * - line 21
+ * Expected undriven errors:
+ * - line 22
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export const booleanExpressionBodyCondNotNumberValueExternal = (): string => !Number(process.argv[2]) ? 'then' : 'else';

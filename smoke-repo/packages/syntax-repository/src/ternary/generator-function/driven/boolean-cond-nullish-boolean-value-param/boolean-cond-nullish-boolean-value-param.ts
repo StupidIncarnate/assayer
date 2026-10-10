@@ -4,18 +4,19 @@
  * Verdict: driven
  *
  * Expected branches:
- * - ternary on line 22: both-ways
+ * - ternary then on line 23: driven
+ * - ternary else on line 23: driven
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 export function* booleanCondNullishBooleanValueParam(value: boolean | undefined): Generator<string> {

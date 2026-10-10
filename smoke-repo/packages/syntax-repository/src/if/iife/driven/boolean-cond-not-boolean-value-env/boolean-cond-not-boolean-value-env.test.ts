@@ -3,13 +3,13 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('boolean-cond-not-boolean-value-env', () => {
-    it('VALID: {value: env} => if on line 24 driven both ways, every case passes', async () => {
+    it('VALID: {value: env} => if then on line 25 driven; if else on line 25 driven, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/if/iife/driven/boolean-cond-not-boolean-value-env/boolean-cond-not-boolean-value-env.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'if', line: 24, driven: 'both-ways' }],
+            branches: [{ kind: 'if', arm: 'then', line: 25, driven: 'driven' }, { kind: 'if', arm: 'else', line: 25, driven: 'driven' }],
             caseFailures: [],
             lints: [],
             undriven: [],

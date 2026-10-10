@@ -4,18 +4,19 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - ternary on line 22: never
+ * - ternary then on line 23: never
+ * - ternary else on line 23: never
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
- * - line 22
+ * Expected undriven errors:
+ * - line 23
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 const booleanCondExternal = (): string => {

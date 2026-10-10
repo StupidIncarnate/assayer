@@ -4,18 +4,19 @@
  * Verdict: locked
  *
  * Expected branches:
- * - ternary on line 25: one-way
+ * - ternary then on line 26: driven
+ * - ternary else on line 26: never
  *
- * Expected lints:
- * - unreachable-exit on line 25
+ * Expected lint errors:
+ * - unreachable-exit on line 26
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 const receiver: string = 'abc';

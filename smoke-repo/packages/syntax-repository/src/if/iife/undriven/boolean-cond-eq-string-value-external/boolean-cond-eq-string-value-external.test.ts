@@ -3,16 +3,16 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('boolean-cond-eq-string-value-external', () => {
-    it('VALID: {value: external} => if on line 22 never run, undriven from line 21, every case passes', async () => {
+    it('VALID: {value: external} => if then on line 23 never run; if else on line 23 never run, undriven from line 22, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/if/iife/undriven/boolean-cond-eq-string-value-external/boolean-cond-eq-string-value-external.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'if', line: 22, driven: 'never' }],
+            branches: [{ kind: 'if', arm: 'then', line: 23, driven: 'never' }, { kind: 'if', arm: 'else', line: 23, driven: 'never' }],
             caseFailures: [],
             lints: [],
-            undriven: [{ startLine: 21 }],
+            undriven: [{ startLine: 22 }],
             darkSpots: [],
             gaps: []
         });

@@ -4,18 +4,19 @@
  * Verdict: driven
  *
  * Expected branches:
- * - ternary on line 24: both-ways
+ * - ternary then on line 25: driven
+ * - ternary else on line 25: driven
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 const cond = Number(process.env.COND);

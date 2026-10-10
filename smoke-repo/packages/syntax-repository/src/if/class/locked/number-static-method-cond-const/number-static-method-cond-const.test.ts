@@ -3,15 +3,15 @@ import { join } from 'path';
 import { specimenObserveBroker } from '@assayer/specimen-generator/observe';
 
 describe('number-static-method-cond-const', () => {
-    it('VALID: {cond: const} => if on line 25 locked one way, unreachable-exit on line 28, every case passes', async () => {
+    it('VALID: {cond: const} => if then on line 26 driven; if else on line 26 never run, unreachable-exit on line 29, every case passes', async () => {
         const observation = await specimenObserveBroker({
             repoRoot: join(__dirname, '..', '..', '..', '..', '..', '..', '..'),
             relPath: 'packages/syntax-repository/src/if/class/locked/number-static-method-cond-const/number-static-method-cond-const.ts'
         });
         expect(observation).toStrictEqual({
-            branches: [{ kind: 'if', line: 25, driven: 'one-way' }],
+            branches: [{ kind: 'if', arm: 'then', line: 26, driven: 'driven' }, { kind: 'if', arm: 'else', line: 26, driven: 'never' }],
             caseFailures: [],
-            lints: [{ rule: 'unreachable-exit', startLine: 28 }],
+            lints: [{ rule: 'unreachable-exit', startLine: 29 }],
             undriven: [],
             darkSpots: [],
             gaps: []

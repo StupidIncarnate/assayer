@@ -4,18 +4,19 @@
  * Verdict: driven
  *
  * Expected branches:
- * - if on line 24: both-ways
+ * - if then on line 25: driven
+ * - if else on line 25: driven
  *
- * Expected lints:
+ * Expected lint errors:
  * - none
  *
- * Expected undriven lines:
+ * Expected undriven errors:
  * - none
  *
- * Expected dark spots:
+ * Expected dark spot errors:
  * - none
  *
- * Expected gaps:
+ * Expected gap errors:
  * - none
  */
 const cond = process.env.COND ?? '';
