@@ -5,7 +5,7 @@
  *
  * Expected branches:
  * - ternary then on line 23: never
- * - ternary else on line 23: never
+ * - ternary else on line 23: driven
  *
  * Expected lint errors:
  * - none

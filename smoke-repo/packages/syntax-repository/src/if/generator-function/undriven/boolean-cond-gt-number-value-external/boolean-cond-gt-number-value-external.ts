@@ -5,7 +5,7 @@
  *
  * Expected branches:
  * - if then on line 23: never
- * - if else on line 23: never
+ * - if else on line 23: driven
  *
  * Expected lint errors:
  * - none
