@@ -8,7 +8,7 @@
  */
 import { useAssayerStatusResultContract } from '../../contracts/use-assayer-status-result/use-assayer-status-result-contract';
 import type { UseAssayerStatusResult } from '../../contracts/use-assayer-status-result/use-assayer-status-result-contract';
-import { useEffect, useState } from '#gateway/npm/react';
+import { useEffect, useMemo, useState } from '#gateway/npm/react';
 
 import { statusFetchBroker } from '../../brokers/status/fetch/status-fetch-broker';
 import type { StatusView } from '../../contracts/status-view/status-view-contract';
@@ -25,5 +25,8 @@ export const useAssayerStatusBinding = (): UseAssayerStatusResult => {
       .finally(() => { setLoading(false); });
   }, []);
 
-  return useAssayerStatusResultContract.parse({ data, loading, error });
+  return useMemo(
+    () => useAssayerStatusResultContract.parse({ data, loading, error }),
+    [data, loading, error],
+  );
 };

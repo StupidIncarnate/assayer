@@ -1,8 +1,0 @@
-const ifNumberDefaultExportCondStringLengthReceiverExternal = (): string => {
-    if ((process.argv[2] ?? '').length) {
-        return 'then';
-    }
-    return 'else';
-};
-
-export default ifNumberDefaultExportCondStringLengthReceiverExternal;

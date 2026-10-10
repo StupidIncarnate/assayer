@@ -8,7 +8,7 @@
  */
 import { useCompiledTreeResultContract } from '../../contracts/use-compiled-tree-result/use-compiled-tree-result-contract';
 import type { UseCompiledTreeResult } from '../../contracts/use-compiled-tree-result/use-compiled-tree-result-contract';
-import { useEffect, useState } from '#gateway/npm/react';
+import { useEffect, useMemo, useState } from '#gateway/npm/react';
 
 import { compiledTreeFetchBroker } from '../../brokers/compiled-tree/fetch/compiled-tree-fetch-broker';
 import type { CompiledTree } from '@assayer/shared/contracts';
@@ -25,5 +25,8 @@ export const useCompiledTreeBinding = (): UseCompiledTreeResult => {
       .finally(() => { setLoading(false); });
   }, []);
 
-  return useCompiledTreeResultContract.parse({ data, loading, error });
+  return useMemo(
+    () => useCompiledTreeResultContract.parse({ data, loading, error }),
+    [data, loading, error],
+  );
 };

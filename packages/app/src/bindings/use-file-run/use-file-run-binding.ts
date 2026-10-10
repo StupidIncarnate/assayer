@@ -23,7 +23,7 @@
  * const { run, loading, running, error, output, execute } = useFileRunBinding({ relPath });
  * // run is undefined until the file has been run at least once
  */
-import { useCallback, useEffect, useState } from '#gateway/npm/react';
+import { useCallback, useEffect, useMemo, useState } from '#gateway/npm/react';
 
 import { runSubscribeOutputBroker } from '../../brokers/run/subscribe-output/run-subscribe-output-broker';
 import { runExecuteBroker } from '../../brokers/run/execute/run-execute-broker';
@@ -111,5 +111,8 @@ export const useFileRunBinding = ({
       });
   }, [relPath]);
 
-  return { run, loading, running, error, output, execute };
+  return useMemo(
+    () => ({ run, loading, running, error, output, execute }),
+    [run, loading, running, error, output, execute],
+  );
 };

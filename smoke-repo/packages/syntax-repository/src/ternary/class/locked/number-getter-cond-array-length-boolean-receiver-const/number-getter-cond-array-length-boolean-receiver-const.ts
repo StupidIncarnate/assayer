@@ -1,0 +1,27 @@
+/**
+ * Specimen: ternary-number-class-getter-cond-array-length-boolean-receiver-const
+ *
+ * Verdict: locked
+ *
+ * Expected branches:
+ * - ternary on line 25: one-way
+ *
+ * Expected lints:
+ * - unreachable-exit on line 25
+ *
+ * Expected undriven lines:
+ * - none
+ *
+ * Expected dark spots:
+ * - none
+ *
+ * Expected gaps:
+ * - none
+ */
+const receiver: readonly boolean[] = [true, false, true];
+
+export class NumberGetterCondArrayLengthBooleanReceiverConst {
+    public get result(): string {
+        return receiver.length ? 'then' : 'else';
+    }
+}

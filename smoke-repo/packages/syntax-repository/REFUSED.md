@@ -2,145 +2,145 @@
 
 The generator does not write a specimen that TypeScript rejects, and lists it here with TypeScript's reason.
 
-- `if-boolean-arrow-function-block-body-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `if-boolean-default-export-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `if-boolean-function-expression-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `if-boolean-iife-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `if-boolean-module-statement-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `if-boolean-object-literal-arrow-property-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `if-boolean-object-literal-method-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `if-string-arrow-function-block-body-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-arrow-function-block-body-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-async-function-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-class-constructor-body-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-class-getter-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-class-getter-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-class-getter-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-class-getter-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-class-getter-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-class-getter-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-class-method-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-class-static-method-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-default-export-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-function-declaration-body-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-function-expression-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-generator-function-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-boolean-cond-env`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-number-cond-env`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-string-cond-env`: This kind of expression is always truthy.
-- `if-string-iife-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-boolean-cond-env`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-number-cond-env`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-string-cond-env`: This kind of expression is always truthy.
-- `if-string-module-statement-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-object-literal-arrow-property-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-number-cond-const`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-number-cond-external`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-number-cond-param`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-string-cond-const`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-string-cond-external`: This kind of expression is always truthy.
-- `if-string-object-literal-method-cond-ternary-string-cond-param`: This kind of expression is always truthy.
-- `ternary-boolean-arrow-function-block-body-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-arrow-function-expression-body-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-class-field-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-class-static-field-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-default-export-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-function-expression-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-iife-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-module-exported-const-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-module-statement-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-object-literal-arrow-property-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-object-literal-method-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
-- `ternary-boolean-object-literal-property-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-arrow-property-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-arrow-property-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-block-body-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-block-body-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-exported-const-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-expression-body-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-field-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-method-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-method-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-property-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-statement-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-statement-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `boolean-static-field-cond-eq-boolean-value-const`: This comparison appears to be unintentional because the types 'true' and 'false' have no overlap.
+- `string-arrow-property-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-arrow-property-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-block-body-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-body-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-body-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-body-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-body-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-body-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-body-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-body-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-body-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-body-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-env`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-env`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-env`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-constructor-body-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-getter-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-getter-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-getter-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-getter-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-getter-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-getter-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-method-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-method-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-method-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-method-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-method-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-method-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-method-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-method-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-method-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-method-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-method-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-method-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-method-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-method-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-method-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-method-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-method-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-method-cond-ternary-string-cond-param`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-boolean-cond-env`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-number-cond-env`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-string-cond-env`: This kind of expression is always truthy.
+- `string-statement-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-boolean-cond-const`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-boolean-cond-external`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-boolean-cond-param`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-number-cond-const`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-number-cond-external`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-number-cond-param`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-string-cond-const`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-string-cond-external`: This kind of expression is always truthy.
+- `string-static-method-cond-ternary-string-cond-param`: This kind of expression is always truthy.

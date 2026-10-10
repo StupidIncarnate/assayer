@@ -54,42 +54,27 @@ const UNUSED_LOCAL_CONTAINER = [
   '',
 ].join('\n');
 
-// With the container below, `x` has two slots, so its folder names carry the slot, and `x-y` has one.
-// `x` with slot `y` and `x-y` with slot `only` give the same folder name.
+// With the container below, `x` has two slots whose names normalize to the same slug, giving two
+// specimens the same path.
 const X_CONTAINER = [
   "import { $R, $stmts, container } from '../kit';",
   '',
   'export const xContainer = container({',
   "  description: 'a function with two bodies',",
   '  slots: {',
-  "    y: { reach: 'call', arm: 'return' },",
-  "    z: { reach: 'call', arm: 'return' },",
+  "    'y-z': { reach: 'call', arm: 'return' },",
+  "    yZ: { reach: 'call', arm: 'return' },",
   '  },',
   '  code: () => {',
   '    {',
   '      function $Entry($params: never): $R {',
-  "        $stmts('y');",
+  "        $stmts('y-z');",
   '      }',
   '    }',
   '    {',
   '      function $Entry($params: never): $R {',
-  "        $stmts('z');",
+  "        $stmts('yZ');",
   '      }',
-  '    }',
-  '  },',
-  '});',
-  '',
-].join('\n');
-
-const X_Y_CONTAINER = [
-  "import { $R, $stmts, container } from '../kit';",
-  '',
-  'export const xYContainer = container({',
-  "  description: 'a function with one body',",
-  "  slots: { only: { reach: 'call', arm: 'return' } },",
-  '  code: () => {',
-  '    function $Entry($params: never): $R {',
-  "      $stmts('only');",
   '    }',
   '  },',
   '});',
@@ -159,7 +144,6 @@ const CONTAINER_FILES = {
   ],
   colliding: [
     { relPath: 'containers/x.container.ts', content: X_CONTAINER },
-    { relPath: 'containers/x-y.container.ts', content: X_Y_CONTAINER },
   ],
 } as const;
 
@@ -167,21 +151,32 @@ export const specimensGenerateBrokerProxy = (): {
   // A declarations folder with the `if`, `gt`, `nullish` and `ternary` syntaxes and these containers:
   //   clean      (the default) `function-declaration`, with a statement slot `body` and an expression slot `default-param`
   //   refusing   `clean` plus `unused-local`, whose every specimen TypeScript rejects
-  //   colliding  `x` (slots `y` and `z`) and `x-y` (slot `only`), which give two specimens one folder name
+  //   colliding  `x` (slots `y-z` and `yZ`), which give two specimens one path
   setupTree: ({
     declarationsRoot,
     scenario,
+    syntaxes,
   }: {
     declarationsRoot: string;
     scenario?: keyof typeof CONTAINER_FILES;
+    syntaxes?: readonly ('if' | 'gt' | 'nullish' | 'ternary')[];
   }) => void;
 } => {
   const declarations = declarationsLoadBrokerProxy();
   specimensTypecheckBrokerProxy();
 
   return {
-    setupTree: ({ declarationsRoot, scenario = 'clean' }): void => {
-      declarations.setupTree({ declarationsRoot, files: [...SYNTAX_FILES, ...CONTAINER_FILES[scenario]] });
+    setupTree: ({ declarationsRoot, scenario = 'clean', syntaxes }): void => {
+      const syntaxFiles =
+        syntaxes === undefined
+          ? SYNTAX_FILES
+          : [
+              { relPath: 'kit.ts', content: KIT },
+              ...SYNTAX_FILES.filter(({ relPath }) =>
+                syntaxes.some((syntax) => relPath === `syntax/${syntax}.syntax.ts`),
+              ),
+            ];
+      declarations.setupTree({ declarationsRoot, files: [...syntaxFiles, ...CONTAINER_FILES[scenario]] });
     },
   };
 };

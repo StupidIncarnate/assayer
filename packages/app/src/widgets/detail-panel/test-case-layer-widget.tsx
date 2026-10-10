@@ -8,6 +8,7 @@
  * <TestCaseLayerWidget fn={fn} testCase={testCase} driver={driver} entryLabel={entryLabel} isModule={false} />
  * // Renders `<marker> <driver>(<arrange>) → <output> (reaches L<line>)` and, for a settled case, its outcome line
  */
+import { memo, useMemo } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Group, Text } from '#gateway/npm/mantine__core';
 import type { FunctionAnalysis, RunResult } from '@assayer/shared/contracts';
@@ -31,7 +32,8 @@ export interface TestCaseLayerWidgetProps {
   runMode?: RunMode | undefined;
 }
 
-export const TestCaseLayerWidget = ({
+export const TestCaseLayerWidget = memo(
+  ({
   fn,
   testCase,
   driver,
@@ -42,14 +44,21 @@ export const TestCaseLayerWidget = ({
   runMode,
 }: TestCaseLayerWidgetProps): ReactElement => {
   const active = hoveredLine !== undefined && hoveredLine !== null;
-  const exit = fn.exits.find((candidate) => candidate.coverageId === testCase.reachesPath[0]);
-  const touched = caseTouchedLinesTransformer({
-    functionAnalysis: fn,
-    reachesPath: testCase.reachesPath,
-  });
+  const exit = useMemo(
+    () => fn.exits.find((candidate) => candidate.coverageId === testCase.reachesPath[0]),
+    [fn.exits, testCase.reachesPath],
+  );
+  const touched = useMemo(
+    () =>
+      caseTouchedLinesTransformer({
+        functionAnalysis: fn,
+        reachesPath: testCase.reachesPath,
+      }),
+    [fn, testCase.reachesPath],
+  );
   const isMatch = active && touched.some((line) => line === hoveredLine);
-  const status = caseRunStatusTransformer({ run, testCase });
-  const result = caseRunResultTransformer({ run, testCase });
+  const status = useMemo(() => caseRunStatusTransformer({ run, testCase }), [run, testCase]);
+  const result = useMemo(() => caseRunResultTransformer({ run, testCase }), [run, testCase]);
   // A case the run did not pass never reached the exit on this row, so the row says
   // `predicted` rather than `reaches`. Printing the derived exit as though the run
   // landed there is the panel asserting an outcome that did not happen — and it
@@ -133,4 +142,4 @@ export const TestCaseLayerWidget = ({
       ) : null}
     </Box>
   );
-};
+});

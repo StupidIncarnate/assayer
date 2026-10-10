@@ -9,13 +9,34 @@
  * createHashRouter([{ element: <AppShellWidget />, children: [...routes] }]);
  * // Renders the nav header + the matched child route
  */
+import { useCallback, useEffect } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Anchor, Box, Group } from '#gateway/npm/mantine__core';
 import { Link, Outlet, useLocation } from '#gateway/npm/react-router-dom';
+import { window } from '#gateway/browser/window';
 
 export const AppShellWidget = (): ReactElement => {
   const location = useLocation();
   const onStubs = location.pathname === '/stubs';
+
+  const handleKeyDown = useCallback((event: KeyboardEvent): void => {
+    const isR = event.key.toLowerCase() === 'r';
+    const isF5 = event.key === 'F5';
+    const hasModifier = event.ctrlKey || event.metaKey;
+
+    if ((hasModifier && isR) || isF5) {
+      event.preventDefault();
+      window.location.reload();
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+
+    return (): void => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   return (
     <Box bg="dark.8" style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

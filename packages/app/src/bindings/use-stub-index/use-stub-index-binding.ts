@@ -8,7 +8,7 @@
  */
 import { useStubIndexResultContract } from '../../contracts/use-stub-index-result/use-stub-index-result-contract';
 import type { UseStubIndexResult } from '../../contracts/use-stub-index-result/use-stub-index-result-contract';
-import { useEffect, useState } from '#gateway/npm/react';
+import { useEffect, useMemo, useState } from '#gateway/npm/react';
 
 import { stubIndexFetchBroker } from '../../brokers/stub-index/fetch/stub-index-fetch-broker';
 import type { StubView } from '@assayer/shared/contracts';
@@ -25,5 +25,8 @@ export const useStubIndexBinding = (): UseStubIndexResult => {
       .finally(() => { setLoading(false); });
   }, []);
 
-  return useStubIndexResultContract.parse({ data, loading, error });
+  return useMemo(
+    () => useStubIndexResultContract.parse({ data, loading, error }),
+    [data, loading, error],
+  );
 };

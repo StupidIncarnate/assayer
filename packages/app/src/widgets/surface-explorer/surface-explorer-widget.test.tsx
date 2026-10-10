@@ -1,5 +1,6 @@
 import { MantineProvider } from '#gateway/npm/mantine__core';
-import { render, waitFor } from '#gateway/npm/testing-library__react';
+import { createEvent, fireEvent, render, waitFor } from '#gateway/npm/testing-library__react';
+import { clear, readItem, writeItem } from '#gateway/browser/localStorage';
 import { SurfaceExplorerWidget } from './surface-explorer-widget';
 import { SurfaceExplorerWidgetProxy } from './surface-explorer-widget.proxy';
 import { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
@@ -405,6 +406,207 @@ describe('SurfaceExplorerWidget', () => {
       });
 
       expect(getByTestId('FILE_TREE')).toBeInTheDocument();
+    });
+  });
+
+  describe('panel resizing', () => {
+    it('VALID: {rendered with tree} => renders left and right resize handles', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
+      });
+
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
+
+      await waitFor(() => {
+        expect(getByTestId('RESIZE_HANDLE_LEFT')).toBeInTheDocument();
+      });
+
+      expect(getByTestId('RESIZE_HANDLE_RIGHT')).toBeInTheDocument();
+    });
+
+    it('VALID: {saved widths in localStorage} => initializes sidebarWidth and detailWidth from localStorage', async () => {
+      writeItem({ key: 'assayer:sidebar-width', value: '450' });
+      writeItem({ key: 'assayer:detail-width', value: '500' });
+
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
+      });
+
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
+
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
+      });
+
+      expect(getByTestId('FILE_TREE').parentElement).toHaveStyle({ width: '450px' });
+    });
+
+    it('EDGE: {corrupted widths in localStorage} => falls back to default widths safely', async () => {
+      writeItem({ key: 'assayer:sidebar-width', value: 'not-a-number' });
+      writeItem({ key: 'assayer:detail-width', value: 'corrupt' });
+
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
+      });
+
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
+
+      await waitFor(() => {
+        expect(getByTestId('FILE_TREE')).toBeInTheDocument();
+      });
+
+      expect(getByTestId('FILE_TREE').parentElement).toHaveStyle({ width: '300px' });
+    });
+
+    it('VALID: {drag resize handles} => persists updated widths to localStorage on pointer up', async () => {
+      clear();
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({ nodes: [{ name: 'app.tsx', path: 'packages/web/app.tsx', kind: 'file' }] }),
+      });
+
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
+
+      await waitFor(() => {
+        expect(getByTestId('RESIZE_HANDLE_LEFT')).toBeInTheDocument();
+      });
+
+      const leftHandle = getByTestId('RESIZE_HANDLE_LEFT');
+      const downLeft = createEvent.pointerDown(leftHandle);
+      Object.assign(downLeft, { clientX: 300, pointerId: 1 });
+      fireEvent(leftHandle, downLeft);
+
+      const moveLeft = createEvent.pointerMove(leftHandle);
+      Object.assign(moveLeft, { clientX: 380, pointerId: 1 });
+      fireEvent(leftHandle, moveLeft);
+
+      const upLeft = createEvent.pointerUp(leftHandle);
+      Object.assign(upLeft, { pointerId: 1 });
+      fireEvent(leftHandle, upLeft);
+
+      expect(readItem({ key: 'assayer:sidebar-width' })).toBe('380');
+
+      const rightHandle = getByTestId('RESIZE_HANDLE_RIGHT');
+      const downRight = createEvent.pointerDown(rightHandle);
+      Object.assign(downRight, { clientX: 500, pointerId: 2 });
+      fireEvent(rightHandle, downRight);
+
+      const moveRight = createEvent.pointerMove(rightHandle);
+      Object.assign(moveRight, { clientX: 420, pointerId: 2 });
+      fireEvent(rightHandle, moveRight);
+
+      const upRight = createEvent.pointerUp(rightHandle);
+      Object.assign(upRight, { pointerId: 2 });
+      fireEvent(rightHandle, upRight);
+
+      expect(readItem({ key: 'assayer:detail-width' })).toBe('440');
+    });
+  });
+
+  describe('prev and next file navigation', () => {
+    it('VALID: {no file selected} => prev and next buttons are disabled', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({
+          nodes: [
+            { name: 'first.tsx', path: 'packages/web/first.tsx', kind: 'file' },
+            { name: 'second.tsx', path: 'packages/web/second.tsx', kind: 'file' },
+          ],
+        }),
+      });
+
+      const { getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
+
+      await waitFor(() => {
+        expect(getByTestId('NAV_PREV_FILE')).toBeInTheDocument();
+      });
+
+      expect(proxy.isPrevDisabled()).toBe(true);
+      expect(proxy.isNextDisabled()).toBe(true);
+    });
+
+    it('VALID: {first file selected in 2-file tree} => prev disabled, next enabled', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({
+          nodes: [
+            { name: 'first.tsx', path: 'packages/web/first.tsx', kind: 'file' },
+            { name: 'second.tsx', path: 'packages/web/second.tsx', kind: 'file' },
+          ],
+        }),
+      });
+      proxy.setupFile({
+        relPath: 'packages/web/first.tsx',
+        fileView: CompiledFileViewStub({
+          relPath: 'packages/web/first.tsx',
+          displayLines: [{ n: 1, text: 'const first = 1;', hash: STUB_HASH }],
+        }),
+      });
+
+      const { getByTestId, getByRole } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
+
+      await waitFor(() => {
+        expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
+      });
+
+      await proxy.clickFile({ label: 'first.tsx' });
+
+      await waitFor(() => {
+        expect(getByRole('textbox')).toBeInTheDocument();
+      });
+
+      expect(proxy.isPrevDisabled()).toBe(true);
+      expect(proxy.isNextDisabled()).toBe(false);
+    });
+
+    it('VALID: {click Next and Prev buttons} => cycles forward and backward between files', async () => {
+      const proxy = SurfaceExplorerWidgetProxy();
+      proxy.setupTree({
+        tree: CompiledTreeStub({
+          nodes: [
+            { name: 'first.tsx', path: 'packages/web/first.tsx', kind: 'file' },
+            { name: 'second.tsx', path: 'packages/web/second.tsx', kind: 'file' },
+          ],
+        }),
+      });
+      proxy.setupFile({
+        relPath: 'packages/web/first.tsx',
+        fileView: CompiledFileViewStub({
+          relPath: 'packages/web/first.tsx',
+          displayLines: [{ n: 1, text: 'const first = 1;', hash: STUB_HASH }],
+        }),
+      });
+      proxy.setupFile({
+        relPath: 'packages/web/second.tsx',
+        fileView: CompiledFileViewStub({
+          relPath: 'packages/web/second.tsx',
+          displayLines: [{ n: 1, text: 'const second = 2;', hash: STUB_HASH }],
+        }),
+      });
+
+      const { getByRole, getByTestId } = render(<SurfaceExplorerWidget />, { wrapper: MantineProvider });
+
+      await waitFor(() => {
+        expect(getByTestId('EXPLORER_HEADER')).toBeInTheDocument();
+      });
+
+      await proxy.clickFile({ label: 'first.tsx' });
+      await proxy.clickNextFile();
+
+      await waitFor(() => {
+        expect(getByRole('textbox')).toHaveTextContent('const second = 2;');
+      });
+
+      await proxy.clickPrevFile();
+
+      await waitFor(() => {
+        expect(getByRole('textbox')).toHaveTextContent('const first = 1;');
+      });
+
+      expect(proxy.isPrevDisabled()).toBe(true);
     });
   });
 });

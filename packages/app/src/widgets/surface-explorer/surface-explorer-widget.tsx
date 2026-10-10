@@ -28,15 +28,16 @@
  * <SurfaceExplorerWidget />
  * // Renders the explorer once the preload bridge resolves the compiled tree
  */
-import { useCallback, useState } from '#gateway/npm/react';
-import type { ReactElement } from '#gateway/npm/react';
-import { Box, Center, Flex, Tabs, Text } from '#gateway/npm/mantine__core';
+import { useCallback, useMemo, useRef, useState } from '#gateway/npm/react';
+import type { PointerEvent, ReactElement } from '#gateway/npm/react';
+import { ActionIcon, Box, Center, Flex, Group, Tabs, Text } from '#gateway/npm/mantine__core';
 import type { CompiledFileView } from '@assayer/shared/contracts';
 
 import { useCompiledTreeBinding } from '../../bindings/use-compiled-tree/use-compiled-tree-binding';
 import { useFileRunBinding } from '../../bindings/use-file-run/use-file-run-binding';
 import { useAssayerStatusBinding } from '../../bindings/use-assayer-status/use-assayer-status-binding';
 import { compiledFileFetchBroker } from '../../brokers/compiled-file/fetch/compiled-file-fetch-broker';
+import { treeFilePathsTransformer } from '../../transformers/tree-file-paths/tree-file-paths-transformer';
 import { ExplorerHeaderWidget } from '../explorer-header/explorer-header-widget';
 import { FileTreeWidget } from '../file-tree/file-tree-widget';
 import { CodeViewerWidget } from '../code-viewer/code-viewer-widget';
@@ -45,8 +46,20 @@ import { RawBlobViewerWidget } from '../raw-blob-viewer/raw-blob-viewer-widget';
 import { RunConsoleWidget } from '../run-console/run-console-widget';
 import { surfaceExplorerStatics } from '../../statics/surface-explorer/surface-explorer-statics';
 import { console } from '#gateway/browser/console';
+import { readItem, writeItem } from '#gateway/browser/localStorage';
 
-const SIDEBAR_WIDTH = 300;
+const DEFAULT_SIDEBAR_WIDTH = 300;
+const MIN_SIDEBAR_WIDTH = 180;
+const MAX_SIDEBAR_WIDTH = 800;
+
+const DEFAULT_DETAIL_WIDTH = 360;
+const MIN_DETAIL_WIDTH = 240;
+const MAX_DETAIL_WIDTH = 800;
+
+const SIDEBAR_WIDTH_STORAGE_KEY = 'assayer:sidebar-width';
+const DETAIL_WIDTH_STORAGE_KEY = 'assayer:detail-width';
+
+const RESIZE_HANDLE_WIDTH = 6;
 
 export const SurfaceExplorerWidget = (): ReactElement => {
   // `treeError`, not `error`: this widget is within reach of three unrelated failures — the tree
@@ -59,6 +72,30 @@ export const SurfaceExplorerWidget = (): ReactElement => {
   const [fileView, setFileView] = useState<CompiledFileView | null>(null);
   const [selectedRelPath, setSelectedRelPath] = useState<string | null>(null);
   const [hoveredLine, setHoveredLine] = useState<number | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    const raw = readItem({ key: SIDEBAR_WIDTH_STORAGE_KEY });
+    if (raw === null) {
+      return DEFAULT_SIDEBAR_WIDTH;
+    }
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) {
+      return DEFAULT_SIDEBAR_WIDTH;
+    }
+    return Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, parsed));
+  });
+  const [detailWidth, setDetailWidth] = useState<number>(() => {
+    const raw = readItem({ key: DETAIL_WIDTH_STORAGE_KEY });
+    if (raw === null) {
+      return DEFAULT_DETAIL_WIDTH;
+    }
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) {
+      return DEFAULT_DETAIL_WIDTH;
+    }
+    return Math.max(MIN_DETAIL_WIDTH, Math.min(MAX_DETAIL_WIDTH, parsed));
+  });
+  const dragLeftRef = useRef<{ startX: number; startWidth: number; currentWidth: number } | null>(null);
+  const dragRightRef = useRef<{ startX: number; startWidth: number; currentWidth: number } | null>(null);
   // Keyed on the selected path, so opening a file LOADS its last run and its report, and never starts
   // one.
   const fileRun = useFileRunBinding({ relPath: selectedRelPath });
@@ -78,14 +115,122 @@ export const SurfaceExplorerWidget = (): ReactElement => {
     setHoveredLine(line === null ? null : line);
   }, []);
 
+  const { execute: executeFileRun } = fileRun;
   const handleRun = useCallback((): void => {
     setDismissed(false);
     setRunRequested(true);
-    fileRun.execute();
-  }, [fileRun]);
+    executeFileRun();
+  }, [executeFileRun]);
 
   const handleConsoleHide = useCallback((): void => {
     setDismissed(true);
+  }, []);
+
+  const handleFileClick = useCallback(({ relPath }: { relPath: string }): void => {
+    setSelectedRelPath(relPath);
+    setHoveredLine(null);
+    setDismissed(false);
+    setRunRequested(false);
+    compiledFileFetchBroker({ relPath })
+      .then(setFileView)
+      .catch((error: unknown) => {
+        console.error('[surface-explorer] failed to load file', error);
+      });
+  }, []);
+
+  const filePaths = useMemo((): readonly string[] => {
+    if (tree === null) {
+      return [];
+    }
+    return tree.nodes.flatMap((node) => treeFilePathsTransformer({ node }));
+  }, [tree]);
+
+  const selectedIndex = selectedRelPath === null ? -1 : filePaths.indexOf(selectedRelPath);
+  const prevDisabled = selectedIndex <= 0;
+  const nextDisabled = selectedIndex === -1 || selectedIndex >= filePaths.length - 1;
+
+  const handlePrevFileClick = useCallback((): void => {
+    if (selectedIndex > 0) {
+      const prevPath = filePaths[selectedIndex - 1];
+      if (prevPath !== undefined) {
+        handleFileClick({ relPath: prevPath });
+      }
+    }
+  }, [filePaths, handleFileClick, selectedIndex]);
+
+  const handleNextFileClick = useCallback((): void => {
+    if (selectedIndex >= 0 && selectedIndex < filePaths.length - 1) {
+      const nextPath = filePaths[selectedIndex + 1];
+      if (nextPath !== undefined) {
+        handleFileClick({ relPath: nextPath });
+      }
+    }
+  }, [filePaths, handleFileClick, selectedIndex]);
+
+  const handleLeftPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>): void => {
+      if (typeof event.currentTarget.setPointerCapture === 'function') {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+      const startX = Number.isFinite(event.clientX) ? event.clientX : 0;
+      dragLeftRef.current = { startX, startWidth: sidebarWidth, currentWidth: sidebarWidth };
+    },
+    [sidebarWidth],
+  );
+
+  const handleLeftPointerMove = useCallback((event: PointerEvent<HTMLDivElement>): void => {
+    if (dragLeftRef.current === null) {
+      return;
+    }
+    const currentX = Number.isFinite(event.clientX) ? event.clientX : 0;
+    const delta = currentX - dragLeftRef.current.startX;
+    const clamped = Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, dragLeftRef.current.startWidth + delta));
+    dragLeftRef.current.currentWidth = clamped;
+    setSidebarWidth(clamped);
+  }, []);
+
+  const handleLeftPointerUp = useCallback((event: PointerEvent<HTMLDivElement>): void => {
+    if (dragLeftRef.current !== null) {
+      const finalWidth = dragLeftRef.current.currentWidth;
+      dragLeftRef.current = null;
+      if (typeof event.currentTarget.releasePointerCapture === 'function') {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      writeItem({ key: SIDEBAR_WIDTH_STORAGE_KEY, value: String(finalWidth) });
+    }
+  }, []);
+
+  const handleRightPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>): void => {
+      if (typeof event.currentTarget.setPointerCapture === 'function') {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+      const startX = Number.isFinite(event.clientX) ? event.clientX : 0;
+      dragRightRef.current = { startX, startWidth: detailWidth, currentWidth: detailWidth };
+    },
+    [detailWidth],
+  );
+
+  const handleRightPointerMove = useCallback((event: PointerEvent<HTMLDivElement>): void => {
+    if (dragRightRef.current === null) {
+      return;
+    }
+    const currentX = Number.isFinite(event.clientX) ? event.clientX : 0;
+    const delta = dragRightRef.current.startX - currentX;
+    const clamped = Math.max(MIN_DETAIL_WIDTH, Math.min(MAX_DETAIL_WIDTH, dragRightRef.current.startWidth + delta));
+    dragRightRef.current.currentWidth = clamped;
+    setDetailWidth(clamped);
+  }, []);
+
+  const handleRightPointerUp = useCallback((event: PointerEvent<HTMLDivElement>): void => {
+    if (dragRightRef.current !== null) {
+      const finalWidth = dragRightRef.current.currentWidth;
+      dragRightRef.current = null;
+      if (typeof event.currentTarget.releasePointerCapture === 'function') {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      writeItem({ key: DETAIL_WIDTH_STORAGE_KEY, value: String(finalWidth) });
+    }
   }, []);
 
   return (
@@ -128,7 +273,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 bg="dark.7"
                 p="xs"
                 style={{
-                  width: SIDEBAR_WIDTH,
+                  width: sidebarWidth,
                   flexShrink: 0,
                   overflow: 'auto',
                   borderRight: '1px solid var(--mantine-color-dark-4)',
@@ -137,22 +282,22 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 <FileTreeWidget
                   tree={tree}
                   selectedRelPath={selectedRelPath}
-                  onFileClick={({ relPath }: { relPath: string }): void => {
-                    setSelectedRelPath(relPath);
-                    setHoveredLine(null);
-                    // Both belong to the file they were made on. Carrying the dismissal across the tree
-                    // would mean closing the console once silences every file after it; carrying the
-                    // run request would hold the panel open over a file that has no report at all.
-                    setDismissed(false);
-                    setRunRequested(false);
-                    compiledFileFetchBroker({ relPath })
-                      .then(setFileView)
-                      .catch((error: unknown) => {
-                        console.error('[surface-explorer] failed to load file', error);
-                      });
-                  }}
+                  onFileClick={handleFileClick}
                 />
               </Box>
+              <Box
+                data-testid="RESIZE_HANDLE_LEFT"
+                onPointerDown={handleLeftPointerDown}
+                onPointerMove={handleLeftPointerMove}
+                onPointerUp={handleLeftPointerUp}
+                style={{
+                  width: RESIZE_HANDLE_WIDTH,
+                  cursor: 'col-resize',
+                  flexShrink: 0,
+                  backgroundColor: 'var(--mantine-color-dark-6)',
+                  touchAction: 'none',
+                }}
+              />
               <Tabs
                 defaultValue="code"
                 keepMounted={false}
@@ -162,19 +307,56 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 // where the root's overflow:hidden silently swallows them.
                 style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}
               >
-                <Tabs.List bg="dark.7">
+                <Tabs.List bg="dark.7" style={{ display: 'flex', alignItems: 'center' }}>
                   <Tabs.Tab value="code" data-testid="VIEW_TAB_CODE">
                     Code
                   </Tabs.Tab>
                   <Tabs.Tab value="raw" data-testid="VIEW_TAB_RAW">
                     Raw JSON
                   </Tabs.Tab>
+                  <Group gap={4} ml="auto" pr="xs" style={{ alignItems: 'center' }}>
+                    <ActionIcon
+                      data-testid="NAV_PREV_FILE"
+                      variant="subtle"
+                      color="gray"
+                      size="sm"
+                      disabled={prevDisabled}
+                      onClick={handlePrevFileClick}
+                      aria-label="Previous file"
+                    >
+                      &lt;
+                    </ActionIcon>
+                    <ActionIcon
+                      data-testid="NAV_NEXT_FILE"
+                      variant="subtle"
+                      color="gray"
+                      size="sm"
+                      disabled={nextDisabled}
+                      onClick={handleNextFileClick}
+                      aria-label="Next file"
+                    >
+                      &gt;
+                    </ActionIcon>
+                  </Group>
                 </Tabs.List>
                 <Tabs.Panel value="code" style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
                   <Flex style={{ height: '100%', minWidth: 0, minHeight: 0 }}>
                     <Flex bg="dark.8" style={{ flex: 1, minWidth: 0, minHeight: 0, flexDirection: 'column' }}>
                       <CodeViewerWidget fileView={fileView} onLineHover={handleLineHover} />
                     </Flex>
+                    <Box
+                      data-testid="RESIZE_HANDLE_RIGHT"
+                      onPointerDown={handleRightPointerDown}
+                      onPointerMove={handleRightPointerMove}
+                      onPointerUp={handleRightPointerUp}
+                      style={{
+                        width: RESIZE_HANDLE_WIDTH,
+                        cursor: 'col-resize',
+                        flexShrink: 0,
+                        backgroundColor: 'var(--mantine-color-dark-6)',
+                        touchAction: 'none',
+                      }}
+                    />
                     <DetailPanelWidget
                       analysis={fileView === null ? undefined : fileView.analysis}
                       resolvedEdges={fileView === null ? undefined : fileView.resolvedEdges}
@@ -185,6 +367,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                       runError={fileRun.error}
                       {...(status?.runMode === undefined ? {} : { runMode: status.runMode })}
                       onRun={handleRun}
+                      width={detailWidth}
                     />
                   </Flex>
                 </Tabs.Panel>

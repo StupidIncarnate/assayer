@@ -1,0 +1,23 @@
+/**
+ * Specimen: ternary-boolean-function-declaration-default-param-cond-gt-number-value-external
+ *
+ * Verdict: undriven
+ *
+ * Expected branches:
+ * - ternary on line 21: one-way
+ *
+ * Expected lints:
+ * - none
+ *
+ * Expected undriven lines:
+ * - line 21
+ *
+ * Expected dark spots:
+ * - none
+ *
+ * Expected gaps:
+ * - none
+ */
+export function booleanDefaultParamCondGtNumberValueExternal(label: string = Number(process.argv[2]) > 5 ? 'then' : 'else'): string {
+    return label;
+}

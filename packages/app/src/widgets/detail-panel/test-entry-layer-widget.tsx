@@ -7,6 +7,7 @@
  * <TestEntryLayerWidget fn={fn} relPath={relPath} hoveredLine={hoveredLine} run={run} runMode={runMode} />
  * // Renders `<label>(<params>) · N cases` and the case rows beneath it
  */
+import { memo } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Stack, Text } from '#gateway/npm/mantine__core';
 import type { FunctionAnalysis, RunResult } from '@assayer/shared/contracts';
@@ -23,13 +24,14 @@ export interface TestEntryLayerWidgetProps {
   runMode?: RunMode | undefined;
 }
 
-export const TestEntryLayerWidget = ({
-  fn,
-  relPath,
-  hoveredLine,
-  run,
-  runMode,
-}: TestEntryLayerWidgetProps): ReactElement => {
+export const TestEntryLayerWidget = memo(
+  ({
+    fn,
+    relPath,
+    hoveredLine,
+    run,
+    runMode,
+  }: TestEntryLayerWidgetProps): ReactElement => {
   // A module entry is reached by IMPORTING it, not calling it, so it shows a bare LABEL
   // (its single exported binding, else the file basename) with no `()` — never the
   // internal `*module*`. An ANONYMOUS entry carries its own label — the callsite that
@@ -78,4 +80,4 @@ export const TestEntryLayerWidget = ({
       </Stack>
     </Box>
   );
-};
+});

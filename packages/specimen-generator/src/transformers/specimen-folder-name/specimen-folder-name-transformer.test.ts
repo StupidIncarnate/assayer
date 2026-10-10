@@ -2,10 +2,9 @@ import { specimenFolderNameTransformer } from './specimen-folder-name-transforme
 
 describe('specimenFolderNameTransformer', () => {
   describe('folder', () => {
-    it('VALID: {container with one slot, path: [cond], provenance: param} => joins focus, container, path and provenance, with no slot', () => {
+    it('VALID: {container with one slot, path: [cond], provenance: param, typeArgument: number} => joins type argument, path and provenance, with no slot', () => {
       const result = specimenFolderNameTransformer({
-        focusLabel: 'if-number',
-        containerName: 'function-declaration',
+        typeArgument: 'number',
         slotName: 'body',
         multiSlot: false,
         path: ['cond'],
@@ -14,15 +13,46 @@ describe('specimenFolderNameTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        folder: 'if-number-function-declaration-cond-param',
-        entryName: 'ifNumberFunctionDeclarationCondParam',
+        folder: 'number-cond-param',
+        entryName: 'numberCondParam',
       });
     });
 
-    it('VALID: {container with several slots} => the slot name follows the container name', () => {
+    it('VALID: {non-generic syntax with no type argument} => joins path and provenance, with no slot or type argument', () => {
       const result = specimenFolderNameTransformer({
-        focusLabel: 'ternary-number',
-        containerName: 'object-literal',
+        slotName: 'body',
+        multiSlot: false,
+        path: ['cond'],
+        provenance: 'param',
+        isClass: false,
+      });
+
+      expect(result).toStrictEqual({
+        folder: 'cond-param',
+        entryName: 'condParam',
+      });
+    });
+
+    it('VALID: {focusLabel: if-number, syntaxName: if} => strips syntax prefix keeping type argument', () => {
+      const result = specimenFolderNameTransformer({
+        focusLabel: 'if-number',
+        syntaxName: 'if',
+        slotName: 'body',
+        multiSlot: false,
+        path: ['cond'],
+        provenance: 'param',
+        isClass: false,
+      });
+
+      expect(result).toStrictEqual({
+        folder: 'number-cond-param',
+        entryName: 'numberCondParam',
+      });
+    });
+
+    it('VALID: {container with several slots} => the slot name is included', () => {
+      const result = specimenFolderNameTransformer({
+        typeArgument: 'number',
         slotName: 'getter',
         multiSlot: true,
         path: ['cond'],
@@ -31,15 +61,14 @@ describe('specimenFolderNameTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        folder: 'ternary-number-object-literal-getter-cond-env',
-        entryName: 'ternaryNumberObjectLiteralGetterCondEnv',
+        folder: 'number-getter-cond-env',
+        entryName: 'numberGetterCondEnv',
       });
     });
 
     it('VALID: {path: [cond, gt-number, value]} => every path part is joined in order', () => {
       const result = specimenFolderNameTransformer({
-        focusLabel: 'if-number',
-        containerName: 'module',
+        typeArgument: 'number',
         slotName: 'body',
         multiSlot: false,
         path: ['cond', 'gt-number', 'value'],
@@ -48,15 +77,14 @@ describe('specimenFolderNameTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        folder: 'if-number-module-cond-gt-number-value-literal',
-        entryName: 'ifNumberModuleCondGtNumberValueLiteral',
+        folder: 'number-cond-gt-number-value-literal',
+        entryName: 'numberCondGtNumberValueLiteral',
       });
     });
 
     it('VALID: {path part in camelCase: lowerLimit} => the part is written in kebab case', () => {
       const result = specimenFolderNameTransformer({
-        focusLabel: 'if-number',
-        containerName: 'module',
+        typeArgument: 'number',
         slotName: 'body',
         multiSlot: false,
         path: ['lowerLimit'],
@@ -65,15 +93,13 @@ describe('specimenFolderNameTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        folder: 'if-number-module-lower-limit-const',
-        entryName: 'ifNumberModuleLowerLimitConst',
+        folder: 'number-lower-limit-const',
+        entryName: 'numberLowerLimitConst',
       });
     });
 
-    it('EMPTY: {path: []} => the provenance follows the container directly', () => {
+    it('EMPTY: {path: []} => the provenance is used directly', () => {
       const result = specimenFolderNameTransformer({
-        focusLabel: 'seven',
-        containerName: 'module',
         slotName: 'body',
         multiSlot: false,
         path: [],
@@ -82,8 +108,8 @@ describe('specimenFolderNameTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        folder: 'seven-module-external',
-        entryName: 'sevenModuleExternal',
+        folder: 'external',
+        entryName: 'external',
       });
     });
   });
@@ -91,8 +117,7 @@ describe('specimenFolderNameTransformer', () => {
   describe('entry name', () => {
     it('VALID: {isClass: true} => the entry name is PascalCase', () => {
       const result = specimenFolderNameTransformer({
-        focusLabel: 'if-number',
-        containerName: 'class',
+        typeArgument: 'number',
         slotName: 'method',
         multiSlot: true,
         path: ['cond'],
@@ -101,8 +126,8 @@ describe('specimenFolderNameTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        folder: 'if-number-class-method-cond-param',
-        entryName: 'IfNumberClassMethodCondParam',
+        folder: 'number-method-cond-param',
+        entryName: 'NumberMethodCondParam',
       });
     });
   });

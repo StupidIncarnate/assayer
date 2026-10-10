@@ -79,6 +79,7 @@
  * <DetailPanelWidget analysis={fileView.analysis} resolvedEdges={fileView.resolvedEdges} relPath={selectedRelPath} hoveredLine={hoveredLine} runError={fileRun.error} />
  * // Renders the Enrichment / Tests / Contracts tabbed panel, highlighting rows tied to the hovered line
  */
+import { useMemo } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Box, Tabs, Text, Stack, Button, Group } from '#gateway/npm/mantine__core';
 import type { FileAnalysis, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
@@ -101,7 +102,10 @@ export interface DetailPanelWidgetProps {
   relPath?: string | null;
   runMode?: RunMode;
   onRun?: () => void;
+  width?: number;
 }
+
+const DEFAULT_PANEL_WIDTH = 360;
 
 export const DetailPanelWidget = ({
   analysis,
@@ -113,6 +117,7 @@ export const DetailPanelWidget = ({
   relPath,
   runMode,
   onRun,
+  width,
 }: DetailPanelWidgetProps): ReactElement => {
   const enrichment = analysis === undefined ? [] : analysis.enrichment;
   // The gap channel has two producers and the run carries BOTH — the file's own input gaps plus the
@@ -134,16 +139,20 @@ export const DetailPanelWidget = ({
   // The entries a run will actually drive. An undriven entry keeps its admission row above and loses
   // its case list: nothing executes those cases, so listing them would promise tests the run reports
   // as 0/0.
-  const functions = drivenFunctionsTransformer({
-    functions: analysis === undefined ? [] : analysis.functions,
-    undriven,
-  });
+  const functions = useMemo(
+    () =>
+      drivenFunctionsTransformer({
+        functions: analysis === undefined ? [] : analysis.functions,
+        undriven,
+      }),
+    [analysis, undriven],
+  );
 
   return (
     <Box
       data-testid="DETAIL_PANEL"
       bg="dark.7"
-      style={{ width: 360, flexShrink: 0, overflow: 'auto', borderLeft: '1px solid var(--mantine-color-dark-4)' }}
+      style={{ width: width ?? DEFAULT_PANEL_WIDTH, flexShrink: 0, overflow: 'auto', borderLeft: '1px solid var(--mantine-color-dark-4)' }}
     >
       <Tabs defaultValue="tests" keepMounted={false}>
         <Tabs.List>

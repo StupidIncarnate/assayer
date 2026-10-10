@@ -15,6 +15,8 @@ import { RawBlobViewerWidgetProxy } from '../raw-blob-viewer/raw-blob-viewer-wid
 import { RunConsoleWidgetProxy } from '../run-console/run-console-widget.proxy';
 import type { CompiledTreeStub } from '@assayer/shared/contracts/compiled-tree/compiled-tree.stub';
 import type { CompiledFileViewStub } from '@assayer/shared/contracts/compiled-file-view/compiled-file-view.stub';
+import { readItemProxy } from '#gateway/browser/localStorage/read-item/read-item.proxy';
+import { writeItemProxy } from '#gateway/browser/localStorage/write-item/write-item.proxy';
 import { console } from '#gateway/browser/console';
 
 export const SurfaceExplorerWidgetProxy = (): {
@@ -29,6 +31,10 @@ export const SurfaceExplorerWidgetProxy = (): {
   hideRunConsole: () => Promise<void>;
   emitRunOutput: (params: { chunk: string }) => void;
   errorLogged: () => boolean;
+  clickPrevFile: () => Promise<void>;
+  clickNextFile: () => Promise<void>;
+  isPrevDisabled: () => boolean;
+  isNextDisabled: () => boolean;
 } => {
   const treeProxy = useCompiledTreeBindingProxy();
   const fileProxy = compiledFileFetchBrokerProxy();
@@ -46,6 +52,8 @@ export const SurfaceExplorerWidgetProxy = (): {
   DetailPanelWidgetProxy();
   RawBlobViewerWidgetProxy();
   RunConsoleWidgetProxy();
+  readItemProxy();
+  writeItemProxy();
   // Suppress + observe the surface-explorer's own console.error fallback so a failed file load
   // stays silent in the test output while still being assertable.
   const consoleErrorSpy = registerSpyOn({ object: console, method: 'error' });
@@ -85,5 +93,13 @@ export const SurfaceExplorerWidgetProxy = (): {
       runProxy.emitRunOutput({ chunk });
     },
     errorLogged: (): boolean => consoleErrorSpy.callsMatching([]).length > 0,
+    clickPrevFile: async (): Promise<void> => {
+      await userEvent.click(screen.getByTestId('NAV_PREV_FILE'));
+    },
+    clickNextFile: async (): Promise<void> => {
+      await userEvent.click(screen.getByTestId('NAV_NEXT_FILE'));
+    },
+    isPrevDisabled: (): boolean => screen.getByTestId('NAV_PREV_FILE').hasAttribute('disabled'),
+    isNextDisabled: (): boolean => screen.getByTestId('NAV_NEXT_FILE').hasAttribute('disabled'),
   };
 };

@@ -22,6 +22,7 @@ import { generationResultContract } from '../../../contracts/generation-result/g
 import { generatedFileContract } from '../../../contracts/generated-file/generated-file-contract';
 import type { GeneratorArgs } from '../../../contracts/generator-args/generator-args-contract';
 import { refusedSpecimenContract } from '../../../contracts/refused-specimen/refused-specimen-contract';
+import { specimenOutcomeContract } from '../../../contracts/specimen-outcome/specimen-outcome-contract';
 import { hasAllLiteralNodeGuard } from '../../../guards/has-all-literal-node/has-all-literal-node-guard';
 import { generatorLayoutStatics } from '../../../statics/generator-layout/generator-layout-statics';
 import { matrixStatics } from '../../../statics/matrix/matrix-statics';
@@ -33,6 +34,7 @@ import { fillVariantsTransformer } from '../../../transformers/fill-variants/fil
 import { manifestEntryTransformer } from '../../../transformers/manifest-entry/manifest-entry-transformer';
 import { refusedReportTransformer } from '../../../transformers/refused-report/refused-report-transformer';
 import { specimenAssembleTransformer } from '../../../transformers/specimen-assemble/specimen-assemble-transformer';
+import { specimenExpectationCommentTransformer } from '../../../transformers/specimen-expectation-comment/specimen-expectation-comment-transformer';
 import { specimenFolderNameTransformer } from '../../../transformers/specimen-folder-name/specimen-folder-name-transformer';
 import { specimenPredictTransformer } from '../../../transformers/specimen-predict/specimen-predict-transformer';
 import { specimenTestSourceTransformer } from '../../../transformers/specimen-test-source/specimen-test-source-transformer';
@@ -95,8 +97,7 @@ export const specimensGenerateBroker = ({
               .filter(({ tree }) => !hasAllLiteralNodeGuard({ tree }))
               .map(({ tree, path, provenance }) => {
                 const { folder, entryName } = specimenFolderNameTransformer({
-                  focusLabel: focus.label,
-                  containerName: container.name,
+                  typeArgument: focus.typeArgument,
                   slotName: slot.name,
                   multiSlot: container.slots.length > 1,
                   path,
@@ -141,11 +142,11 @@ export const specimensGenerateBroker = ({
       ),
     );
 
-  const folders = planned.map(({ folder }) => folder);
-  const collisions = [...new Set(folders.filter((folder, index) => folders.indexOf(folder) !== index))].sort();
+  const relPaths = planned.map(({ relPath }) => relPath);
+  const collisions = [...new Set(relPaths.filter((path, index) => relPaths.indexOf(path) !== index))].sort();
   if (collisions.length > 0) {
     throw new Error(
-      `Two specimens share one folder name: ${collisions.join(', ')}. Rename a container, slot or hole so the names differ, because the folder name is built from them.`,
+      `Two specimens share one path: ${collisions.join(', ')}. Rename a container, slot or hole so the names differ, because the folder name is built from them.`,
     );
   }
 
@@ -162,8 +163,18 @@ export const specimensGenerateBroker = ({
   const kept = planned.filter(({ relPath }) => !reasonByRelPath.has(relPath));
 
   const built = kept.map((specimen) => {
-    const { focus, slot, tree, path, provenance, provenances, verdict, folder } = specimen;
-    const prediction = specimenPredictTransformer({
+    const { focus, slot, tree, path, provenance, provenances, verdict, folder, container } = specimen;
+    const commentParams = {
+      focusLabel: focus.label,
+      containerName: container.name,
+      slotName: slot.name,
+      multiSlot: container.slots.length > 1,
+      path,
+      provenance,
+      verdict,
+    };
+
+    const barePrediction = specimenPredictTransformer({
       source: specimen.source,
       focusKind: focus.syntax.kind,
       arms: focus.syntax.arms,
@@ -171,6 +182,24 @@ export const specimensGenerateBroker = ({
       ...(slot.arm === undefined ? {} : { slotArm: slot.arm }),
       ...(verdict === 'locked' ? { liveArm: armReachedTransformer({ tree }) } : {}),
     });
+    const draftComment = specimenExpectationCommentTransformer({
+      ...commentParams,
+      prediction: barePrediction,
+    });
+    const lineOffset = draftComment.split('\n').length;
+    const prediction = specimenOutcomeContract.parse({
+      ...barePrediction,
+      branches: barePrediction.branches.map((branch) => ({ ...branch, line: branch.line + lineOffset })),
+      lints: barePrediction.lints.map((lint) => ({ ...lint, startLine: lint.startLine + lineOffset })),
+      undriven: barePrediction.undriven.map((item) => ({ ...item, startLine: item.startLine + lineOffset })),
+      darkSpots: barePrediction.darkSpots.map((item) => ({ ...item, startLine: item.startLine + lineOffset })),
+    });
+    const comment = specimenExpectationCommentTransformer({
+      ...commentParams,
+      prediction,
+    });
+    const finalSource = `${comment}\n${specimen.source}`;
+
     const title = specimenTestTitleTransformer({
       provenance,
       varyingLeaf: path.slice(-1).join(''),
@@ -189,7 +218,7 @@ export const specimensGenerateBroker = ({
 
     return {
       files: [
-        generatedFileContract.parse({ relPath: specimen.relPath, content: specimen.source }),
+        generatedFileContract.parse({ relPath: specimen.relPath, content: finalSource }),
         generatedFileContract.parse({ relPath: specimen.testRelPath, content: testSource }),
       ],
       entry: manifestEntryTransformer({
@@ -208,7 +237,12 @@ export const specimensGenerateBroker = ({
 
   const manifest = built
     .map(({ entry }) => entry)
-    .sort((left, right) => (left.folder < right.folder ? -1 : Number(left.folder > right.folder)));
+    .sort((left, right) => {
+      if (left.folder !== right.folder) {
+        return left.folder < right.folder ? -1 : 1;
+      }
+      return left.relPath < right.relPath ? -1 : Number(left.relPath > right.relPath);
+    });
   const sortedRefused = [...refused].sort((left, right) =>
     left.folder < right.folder ? -1 : Number(left.folder > right.folder),
   );

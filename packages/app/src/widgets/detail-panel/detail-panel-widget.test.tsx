@@ -975,4 +975,15 @@ describe('DetailPanelWidget', () => {
       expect(getByTestId('TESTS_EMPTY').textContent).toBe('No entries in this file');
     });
   });
+
+  describe('custom width', () => {
+    it('VALID: {width prop} => renders detail panel with specified width', () => {
+      DetailPanelWidgetProxy();
+      const customWidth = 450;
+
+      const { getByTestId } = render(<DetailPanelWidget analysis={undefined} width={customWidth} />, { wrapper: MantineProvider });
+
+      expect(getByTestId('DETAIL_PANEL')).toHaveStyle({ width: '450px' });
+    });
+  });
 });

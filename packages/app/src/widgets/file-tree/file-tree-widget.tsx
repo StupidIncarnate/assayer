@@ -7,6 +7,7 @@
  * <FileTreeWidget tree={tree} selectedRelPath={relPath} onFileClick={({ relPath }) => {}} />
  * // Renders every node in tree.nodes, recursing into directories
  */
+import { memo } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
 import { Stack } from '#gateway/npm/mantine__core';
 import type { CompiledTree } from '@assayer/shared/contracts';
@@ -19,19 +20,21 @@ export interface FileTreeWidgetProps {
   selectedRelPath?: string | null;
 }
 
-export const FileTreeWidget = ({
-  tree,
-  onFileClick,
-  selectedRelPath = null,
-}: FileTreeWidgetProps): ReactElement => (
-  <Stack gap={1} data-testid="FILE_TREE">
-    {tree.nodes.map((node) => (
-      <FileTreeNodeLayerWidget
-        key={node.path}
-        node={node}
-        onFileClick={onFileClick}
-        selectedRelPath={selectedRelPath}
-      />
-    ))}
-  </Stack>
+export const FileTreeWidget = memo(
+  ({
+    tree,
+    onFileClick,
+    selectedRelPath = null,
+  }: FileTreeWidgetProps): ReactElement => (
+    <Stack gap={1} data-testid="FILE_TREE">
+      {tree.nodes.map((node) => (
+        <FileTreeNodeLayerWidget
+          key={node.path}
+          node={node}
+          onFileClick={onFileClick}
+          selectedRelPath={selectedRelPath}
+        />
+      ))}
+    </Stack>
+  ),
 );

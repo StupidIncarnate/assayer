@@ -129,6 +129,34 @@ describe('FileTreeNodeLayerWidget', () => {
 
       expect(getByText('index.ts')).toBeInTheDocument();
     });
+
+    it('VALID: {node: dir with 2 files} => renders the recursive file count next to dir name', () => {
+      const { nodes } = CompiledTreeStub({
+        nodes: [
+          {
+            name: 'src',
+            path: 'src',
+            kind: 'dir',
+            children: [
+              { name: 'a.ts', path: 'src/a.ts', kind: 'file' },
+              { name: 'b.ts', path: 'src/b.ts', kind: 'file' },
+            ],
+          },
+        ],
+      });
+      const onFileClick = jest.fn();
+      FileTreeNodeLayerWidgetProxy();
+
+      const { getByTestId } = render((
+          <>
+            {nodes.map((node) => (
+              <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
+            ))}
+          </>
+        ), { wrapper: MantineProvider });
+
+      expect(getByTestId('FILE_TREE_DIR_COUNT')).toHaveTextContent('(2)');
+    });
   });
 
   describe('directory node with no children', () => {
