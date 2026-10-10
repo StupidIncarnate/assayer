@@ -342,7 +342,7 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                 <Tabs.Panel value="code" style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
                   <Flex style={{ height: '100%', minWidth: 0, minHeight: 0 }}>
                     <Flex bg="dark.8" style={{ flex: 1, minWidth: 0, minHeight: 0, flexDirection: 'column' }}>
-                      <CodeViewerWidget fileView={fileView} onLineHover={handleLineHover} />
+                      <CodeViewerWidget fileView={fileView} hoveredLine={hoveredLine} onLineHover={handleLineHover} />
                     </Flex>
                     <Box
                       data-testid="RESIZE_HANDLE_RIGHT"
@@ -358,10 +358,12 @@ export const SurfaceExplorerWidget = (): ReactElement => {
                       }}
                     />
                     <DetailPanelWidget
+                      key={selectedRelPath ?? 'empty'}
                       analysis={fileView === null ? undefined : fileView.analysis}
                       resolvedEdges={fileView === null ? undefined : fileView.resolvedEdges}
                       relPath={selectedRelPath}
                       hoveredLine={hoveredLine}
+                      onLineHover={handleLineHover}
                       run={fileRun.run}
                       running={fileRun.running}
                       runError={fileRun.error}

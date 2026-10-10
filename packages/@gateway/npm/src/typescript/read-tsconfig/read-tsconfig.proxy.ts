@@ -2,6 +2,7 @@ import { getParsedCommandLineOfConfigFile } from '../bundled-typescript/bundled-
 import type { CompilerOptions } from '../bundled-typescript/bundled-typescript';
 import { registerMock } from '@dungeonmaster/testing/register-mock';
 import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { clearTsconfigCache } from './read-tsconfig';
 
 // TypeScript's parse reads the disk through `ts.sys`, so it is staged by the exact config path. A staged config
 // answers with the file list, references and options a test names, in the shape TypeScript's parser returns them.
@@ -17,10 +18,12 @@ export const readTsconfigProxy = (): {
   unreadable: (params: { configFilePath: string }) => void;
   getCallsFor: (params: { configFilePath: string }) => RecordedCalls;
 } => {
+  clearTsconfigCache();
   const parseHandle = registerMock({ fn: getParsedCommandLineOfConfigFile });
 
   return {
     tsconfigAt: ({ configFilePath, fileNames, references = [], options = {} }): void => {
+      clearTsconfigCache();
       parseHandle.calledWith([configFilePath]).returns({
         options,
         fileNames,
@@ -29,6 +32,7 @@ export const readTsconfigProxy = (): {
       });
     },
     unreadable: ({ configFilePath }): void => {
+      clearTsconfigCache();
       parseHandle.calledWith([configFilePath]).returns(undefined);
     },
     getCallsFor: ({ configFilePath }): RecordedCalls => parseHandle.callsMatching([configFilePath]),

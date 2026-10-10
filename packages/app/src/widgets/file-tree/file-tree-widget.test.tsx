@@ -65,6 +65,23 @@ describe('FileTreeWidget', () => {
 
       expect(getByText(label)).toBeInTheDocument();
     });
+
+    it('VALID: {tree with file error count} => renders file error count in tree', () => {
+      const tree = CompiledTreeStub({
+        nodes: [
+          { name: 'app.tsx', path: 'app.tsx', kind: 'file' },
+        ],
+      });
+      tree.nodes.forEach((fileNode) => {
+        Object.assign(fileNode, { errorCount: 2 });
+      });
+      const onFileClick = jest.fn();
+      FileTreeWidgetProxy();
+
+      const { getByTestId } = render(<FileTreeWidget tree={tree} onFileClick={onFileClick} />, { wrapper: MantineProvider });
+
+      expect(getByTestId('FILE_TREE_FILE_ERROR_COUNT')).toHaveTextContent('! 2');
+    });
   });
 
   describe('file click behavior', () => {

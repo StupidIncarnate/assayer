@@ -18,6 +18,7 @@ export interface TreeNode {
   path: string;
   kind: z.infer<typeof treeNodeKindContract>;
   children?: TreeNode[] | undefined;
+  errorCount?: number | undefined;
 }
 
 // `children` is a getter whose return type wraps `z.core.$ZodType<TreeNode>`, so the lookup of
@@ -26,6 +27,7 @@ const treeNodeContract: z.ZodType<TreeNode> = z.object({
   name: z.string().min(1).brand<'TreeNodeName'>(),
   path: z.string().min(1).brand<'TreeNodePath'>(),
   kind: treeNodeKindContract,
+  errorCount: z.number().int().nonnegative().brand<'TreeNodeErrorCount'>().optional(),
   get children(): z.ZodOptional<z.ZodArray<z.core.$ZodType<TreeNode>>> {
     return z.array(treeNodeContract).optional();
   },

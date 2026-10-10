@@ -27,6 +27,26 @@ describe('compiledTreeContract', () => {
         kind: 'file',
       });
     });
+
+    it('VALID: {node with errorCount} => parses errorCount', () => {
+      const result = compiledTreeContract.parse({
+        summary: {
+          repoName: 'assayer',
+          branchName: 'master',
+          rootFolderName: 'smoke-repo',
+          tsCount: 1,
+          tsxCount: 0,
+        },
+        nodes: [{ name: 'index.ts', path: 'packages/shared/src/index.ts', kind: 'file', errorCount: 5 }],
+      });
+
+      expect(result.nodes[0]).toStrictEqual({
+        name: 'index.ts',
+        path: 'packages/shared/src/index.ts',
+        kind: 'file',
+        errorCount: 5,
+      });
+    });
   });
 
   describe('invalid compiled trees', () => {

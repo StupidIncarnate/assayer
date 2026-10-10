@@ -43,6 +43,51 @@ describe('FileTreeNodeLayerWidget', () => {
 
       expect(onFileClick.mock.calls).toStrictEqual([[{ relPath: 'app.tsx' }]]);
     });
+
+    it('VALID: {node: file with errorCount > 0} => renders error count badge in dark red', () => {
+      const { nodes } = CompiledTreeStub({
+        nodes: [{ name: 'app.tsx', path: 'app.tsx', kind: 'file' }],
+      });
+      const onFileClick = jest.fn();
+      FileTreeNodeLayerWidgetProxy();
+
+      const { getByTestId } = render(
+        <>
+          {nodes.map((node) => (
+            <FileTreeNodeLayerWidget
+              key={node.path}
+              node={({ ...node, errorCount: 3})}
+              onFileClick={onFileClick}
+            />
+          ))}
+        </>,
+        { wrapper: MantineProvider },
+      );
+
+      const errorBadge = getByTestId('FILE_TREE_FILE_ERROR_COUNT');
+
+      expect(errorBadge).toHaveTextContent('! 3');
+      expect(errorBadge).toHaveStyle({ color: 'var(--mantine-color-red-7)' });
+    });
+
+    it('EMPTY: {node: file without errorCount} => does not render error count badge', () => {
+      const { nodes } = CompiledTreeStub({
+        nodes: [{ name: 'app.tsx', path: 'app.tsx', kind: 'file' }],
+      });
+      const onFileClick = jest.fn();
+      FileTreeNodeLayerWidgetProxy();
+
+      const { queryByTestId } = render(
+        <>
+          {nodes.map((node) => (
+            <FileTreeNodeLayerWidget key={node.path} node={node} onFileClick={onFileClick} />
+          ))}
+        </>,
+        { wrapper: MantineProvider },
+      );
+
+      expect(queryByTestId('FILE_TREE_FILE_ERROR_COUNT')).toBe(null);
+    });
   });
 
   describe('directory node with children', () => {

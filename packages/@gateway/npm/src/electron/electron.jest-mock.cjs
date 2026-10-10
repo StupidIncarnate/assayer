@@ -22,6 +22,30 @@ BrowserWindow.prototype.loadURL = function loadURL(...args) {
   return electronDouble.browserWindow.loadURL(...args);
 };
 
+BrowserWindow.prototype.on = function on(...args) {
+  return electronDouble.browserWindow.on(...args);
+};
+
+BrowserWindow.prototype.getBounds = function getBounds(...args) {
+  return electronDouble.browserWindow.getBounds(...args);
+};
+
+BrowserWindow.prototype.isMaximized = function isMaximized(...args) {
+  return electronDouble.browserWindow.isMaximized(...args);
+};
+
+BrowserWindow.prototype.isFullScreen = function isFullScreen(...args) {
+  return electronDouble.browserWindow.isFullScreen(...args);
+};
+
+BrowserWindow.prototype.maximize = function maximize(...args) {
+  return electronDouble.browserWindow.maximize(...args);
+};
+
+BrowserWindow.prototype.setFullScreen = function setFullScreen(...args) {
+  return electronDouble.browserWindow.setFullScreen(...args);
+};
+
 module.exports = {
   __esModule: true,
   app: electronDouble.app,
@@ -30,6 +54,7 @@ module.exports = {
   ipcMain: electronDouble.ipcMain,
   ipcRenderer: electronDouble.ipcRenderer,
   Menu: electronDouble.Menu,
+  screen: electronDouble.screen,
 };
 
 Object.defineProperty(module.exports, 'default', {

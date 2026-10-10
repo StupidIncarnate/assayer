@@ -1499,5 +1499,56 @@ describe('deriveCasesTransformer', () => {
         unfillable: [],
       });
     });
+
+    it('VALID: {nullish condition: value ?? false on boolean | undefined param} => derives cases for true, undefined, and false', () => {
+      const nullishBranch = BranchNodeStub({
+        coverageId: 'decide/if:nullish',
+        condition: {
+          kind: 'and',
+          left: {
+            kind: 'leaf',
+            id: 'decide/if:nullish#leaf.1.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'boolean' }] },
+            predicate: { kind: 'non-nullish' },
+          },
+          right: {
+            kind: 'leaf',
+            id: 'decide/if:nullish#leaf.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'boolean' }] },
+            predicate: { kind: 'truthy' },
+          },
+        },
+      });
+      const thenExit = ExitNodeStub({
+        coverageId: 'decide/return@then',
+        guardPath: [{ branchCoverageId: 'decide/if:nullish', arm: 'then' }],
+        line: 3,
+      });
+      const elseExit = ExitNodeStub({
+        coverageId: 'decide/return@else',
+        guardPath: [{ branchCoverageId: 'decide/if:nullish', arm: 'else' }],
+        line: 5,
+      });
+
+      const result = deriveCasesTransformer({
+        params: [
+          ParamDescriptorStub({
+            name: 'value',
+            type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'boolean' }] },
+          }),
+        ],
+        branches: [nullishBranch],
+        exits: [thenExit, elseExit],
+        envDrivable: false,
+      });
+
+      expect(result.cases).toStrictEqual([
+        { reachesPath: ['decide/return@then'], arrange: [{ kind: 'param', param: 'value', value: true }], salient: true },
+        { reachesPath: ['decide/return@else'], arrange: [{ kind: 'param', param: 'value', value: null }], salient: true },
+        { reachesPath: ['decide/return@else'], arrange: [{ kind: 'param', param: 'value', value: false }], salient: false },
+      ]);
+    });
   });
 });

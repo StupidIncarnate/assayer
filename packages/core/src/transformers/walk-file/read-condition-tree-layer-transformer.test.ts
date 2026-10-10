@@ -546,9 +546,40 @@ describe('readConditionTreeLayerTransformer', () => {
       expect(wrappedResult.condition).toStrictEqual(bareResult.condition);
     });
 
+    it('VALID: {value ?? false, a falsy literal fallback} => value non-nullish and value truthy', () => {
+      readConditionTreeLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'declare const value: boolean | undefined;\nif (value ?? false) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const left = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = readConditionTreeLayerTransformer({ condition, context: NULLISH_CONTEXT, branchCoverageId: BRANCH, path: [] });
+
+      expect(result).toStrictEqual({
+        condition: {
+          kind: 'and',
+          left: {
+            kind: 'leaf',
+            id: 'B#leaf.1.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'boolean' }] },
+            predicate: { kind: 'non-nullish' },
+          },
+          right: {
+            kind: 'leaf',
+            id: 'B#leaf.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'boolean' }] },
+            predicate: { kind: 'truthy' },
+          },
+        },
+        sites: [{ id: 'B#leaf.0', kind: 'cond', start: left.getStart(), end: left.getEnd() }],
+      });
+    });
+
     // The operand's type is the checker's read of `welded` where the condition uses it, and the
     // checker narrows a `const` initialized to 3 to `number` there.
-    it('VALID: {const welded ?? 0} => the truthiness leaf carries the welded value', () => {
+    it('VALID: {const welded ?? 0} => non-nullish and truthiness leaves carry the welded value', () => {
       readConditionTreeLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'const welded: number | undefined = 3;\nif (welded ?? 0) {}\n');
@@ -562,12 +593,23 @@ describe('readConditionTreeLayerTransformer', () => {
       });
 
       expect(result.condition).toStrictEqual({
-        kind: 'leaf',
-        id: 'B#leaf.0',
-        operandParamName: 'welded',
-        operandConstValue: 3,
-        operandType: { kind: 'number' },
-        predicate: { kind: 'truthy' },
+        kind: 'and',
+        left: {
+          kind: 'leaf',
+          id: 'B#leaf.1.0',
+          operandParamName: 'welded',
+          operandConstValue: 3,
+          operandType: { kind: 'number' },
+          predicate: { kind: 'non-nullish' },
+        },
+        right: {
+          kind: 'leaf',
+          id: 'B#leaf.0',
+          operandParamName: 'welded',
+          operandConstValue: 3,
+          operandType: { kind: 'number' },
+          predicate: { kind: 'truthy' },
+        },
       });
     });
   });

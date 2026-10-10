@@ -71,4 +71,21 @@ describe('treeNodesTransformer', () => {
       expect(result).toStrictEqual([]);
     });
   });
+
+  describe('error counts', () => {
+    it('VALID: {errorCountsByPath with positive count} => adds errorCount to file node', () => {
+      const relPaths = ['packages/shared/src/index.ts', 'packages/shared/src/empty.ts'];
+      const errorCountsByPath = new Map([
+        ['packages/shared/src/index.ts', 3],
+        ['packages/shared/src/empty.ts', 0],
+      ]);
+
+      const result = treeNodesTransformer({ relPaths, errorCountsByPath });
+
+      expect(result[0]?.children?.[0]?.children?.[0]?.children).toStrictEqual([
+        { name: 'empty.ts', path: 'packages/shared/src/empty.ts', kind: 'file' },
+        { name: 'index.ts', path: 'packages/shared/src/index.ts', kind: 'file', errorCount: 3 },
+      ]);
+    });
+  });
 });

@@ -7,6 +7,7 @@ import { StubViewStub } from '@assayer/shared/contracts/stub-view/stub-view.stub
 import { desktopBootBroker } from './desktop-boot-broker';
 import { desktopBootBrokerProxy } from './desktop-boot-broker.proxy';
 import { DesktopStatusStub } from '../../../contracts/desktop-status/desktop-status.stub';
+import { WindowStateStub } from '../../../contracts/window-state/window-state.stub';
 
 describe('desktopBootBroker', () => {
   describe('booting the main process', () => {
@@ -15,6 +16,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -49,6 +51,7 @@ describe('desktopBootBroker', () => {
       const compiledFileView = CompiledFileViewStub();
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -81,6 +84,7 @@ describe('desktopBootBroker', () => {
       const run = RunResultStub();
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -115,6 +119,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -153,6 +158,7 @@ describe('desktopBootBroker', () => {
       const run = RunResultStub();
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -184,6 +190,7 @@ describe('desktopBootBroker', () => {
       const report = 'src/a.ts  0/1 passed\n  ERROR mapEach("oops")\n';
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -214,6 +221,7 @@ describe('desktopBootBroker', () => {
       const view = StubViewStub();
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -248,6 +256,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -279,6 +288,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -311,6 +321,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -342,6 +353,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -374,6 +386,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -404,6 +417,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: true, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -430,6 +444,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: false });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -471,6 +486,7 @@ describe('desktopBootBroker', () => {
       proxy.setupBoot({ dev: false, headless: true });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -515,6 +531,7 @@ describe('desktopBootBroker', () => {
       proxy.setupPlatform({ value: 'linux' });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -542,6 +559,7 @@ describe('desktopBootBroker', () => {
       proxy.setupPlatform({ value: 'darwin' });
 
       await desktopBootBroker({
+        repoPath: '/repo',
         statusChannel: 'assayer:status',
         compiledTreeChannel: 'assayer:compiled-tree',
         compiledFileChannel: 'assayer:compiled-file',
@@ -561,6 +579,295 @@ describe('desktopBootBroker', () => {
       proxy.emitAllWindowsClosed();
 
       expect(proxy.quitCalls()).toStrictEqual([]);
+    });
+  });
+
+  describe('window state persistence and restoration', () => {
+    it('VALID: {saved window state with valid coordinates} => opens BrowserWindow with restored x, y, width, height', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false, repoPath: '/repo' });
+      proxy.setupDisplays({
+        displays: [
+          {
+            id: 1,
+            bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+          },
+        ],
+      });
+      proxy.setupWindowStateFound({
+        repoPath: '/repo',
+        state: WindowStateStub({
+          width: 1400,
+          height: 900,
+          x: 200,
+          y: 150,
+        }),
+      });
+
+      await desktopBootBroker({
+        repoPath: '/repo',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.windowCallsWith({ options: { width: 1400, height: 900, x: 200, y: 150 } })).toStrictEqual([
+        [
+          {
+            width: 1400,
+            height: 900,
+            x: 200,
+            y: 150,
+            title: 'Assayer',
+            show: true,
+            webPreferences: {
+              preload: proxy.preloadPath(),
+              contextIsolation: true,
+              nodeIntegration: false,
+              sandbox: false,
+              offscreen: false,
+            },
+          },
+        ],
+      ]);
+    });
+
+    it('VALID: {saved window state with offscreen coordinates} => omits x and y from BrowserWindow options', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false, repoPath: '/repo' });
+      proxy.setupDisplays({
+        displays: [
+          {
+            id: 1,
+            bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+          },
+        ],
+      });
+      proxy.setupWindowStateFound({
+        repoPath: '/repo',
+        state: WindowStateStub({
+          width: 1400,
+          height: 900,
+          x: 3000,
+          y: 2000,
+        }),
+      });
+
+      await desktopBootBroker({
+        repoPath: '/repo',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.windowCallsWith({ options: { width: 1400, height: 900 } })).toStrictEqual([
+        [
+          {
+            width: 1400,
+            height: 900,
+            title: 'Assayer',
+            show: true,
+            webPreferences: {
+              preload: proxy.preloadPath(),
+              contextIsolation: true,
+              nodeIntegration: false,
+              sandbox: false,
+              offscreen: false,
+            },
+          },
+        ],
+      ]);
+    });
+
+    it('VALID: {saved window state with isMaximized: true} => restores maximized state', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false, repoPath: '/repo' });
+      proxy.setupWindowStateFound({
+        repoPath: '/repo',
+        state: WindowStateStub({
+          width: 1500,
+          height: 800,
+          isMaximized: true,
+        }),
+      });
+
+      await desktopBootBroker({
+        repoPath: '/repo',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.maximizeCalls()).toStrictEqual([[]]);
+    });
+
+    it('VALID: {saved window state with isFullScreen: true} => restores full-screen state', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false, repoPath: '/repo' });
+      proxy.setupWindowStateFound({
+        repoPath: '/repo',
+        state: WindowStateStub({
+          width: 1500,
+          height: 800,
+          isFullScreen: true,
+        }),
+      });
+
+      await desktopBootBroker({
+        repoPath: '/repo',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      expect(proxy.setFullScreenCalls()).toStrictEqual([[true]]);
+    });
+
+    it('VALID: {window resized and moved while in normal state} => persists new bounds and states on close', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false, repoPath: '/repo' });
+
+      await desktopBootBroker({
+        repoPath: '/repo',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      proxy.setupIsMaximized({ value: false });
+      proxy.setupIsFullScreen({ value: false });
+      proxy.setupWindowBounds({ bounds: { x: 120, y: 240, width: 1600, height: 950 } });
+      proxy.emitWindowEvent({ event: 'resize' });
+      proxy.emitWindowEvent({ event: 'move' });
+
+      proxy.emitWindowEvent({ event: 'close' });
+
+      await expect(proxy.savedWindowState({ repoPath: '/repo' })).resolves.toStrictEqual({
+        x: 120,
+        y: 240,
+        width: 1600,
+        height: 950,
+        isMaximized: false,
+        isFullScreen: false,
+      });
+    });
+
+    it('VALID: {window resized and moved while maximized} => does not update normal bounds on close', async () => {
+      const proxy = desktopBootBrokerProxy();
+      proxy.setupBoot({ dev: false, headless: false, repoPath: '/repo' });
+      proxy.setupDisplays({
+        displays: [
+          {
+            id: 1,
+            bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+          },
+        ],
+      });
+      proxy.setupWindowStateFound({
+        repoPath: '/repo',
+        state: WindowStateStub({
+          width: 1400,
+          height: 900,
+          x: 100,
+          y: 50,
+        }),
+      });
+
+      await desktopBootBroker({
+        repoPath: '/repo',
+        statusChannel: 'assayer:status',
+        compiledTreeChannel: 'assayer:compiled-tree',
+        compiledFileChannel: 'assayer:compiled-file',
+        stubsChannel: 'assayer:stubs',
+        runChannel: 'assayer:run',
+        savedRunChannel: 'assayer:saved-run',
+        savedConsoleChannel: 'assayer:saved-console',
+        runOutputChannel: 'assayer:run-output',
+        resolveStatus: () => DesktopStatusStub(),
+        resolveCompiledTree: async () => Promise.resolve(CompiledTreeStub()),
+        resolveStubs: async () => Promise.resolve(StubViewStub()),
+        resolveCompiledFile: async () => Promise.resolve(CompiledFileViewStub()),
+        resolveRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedRun: async () => Promise.resolve(RunResultStub()),
+        resolveSavedConsole: async () => Promise.resolve('src/a.ts  1/1 passed\n'),
+      });
+
+      proxy.setupIsMaximized({ value: true });
+      proxy.setupIsFullScreen({ value: false });
+      proxy.setupWindowBounds({ bounds: { x: 0, y: 0, width: 1920, height: 1080 } });
+      proxy.emitWindowEvent({ event: 'resize' });
+      proxy.emitWindowEvent({ event: 'move' });
+
+      proxy.emitWindowEvent({ event: 'close' });
+
+      await expect(proxy.savedWindowState({ repoPath: '/repo' })).resolves.toStrictEqual({
+        x: 100,
+        y: 50,
+        width: 1400,
+        height: 900,
+        isMaximized: true,
+        isFullScreen: false,
+      });
     });
   });
 });

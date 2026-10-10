@@ -39,6 +39,13 @@ export const electronProxy = (): {
   getRemoveAllListenersCallsFor: (params: { channel: string }) => RecordedCalls;
   getExposedApi: (params: { key: string }) => unknown;
   getExposeCallsFor: (params: { key: string }) => RecordedCalls;
+  setupDisplays: (params: { displays: readonly unknown[] }) => void;
+  setupWindowBounds: (params: { bounds: { x: number; y: number; width: number; height: number } }) => void;
+  setupIsMaximized: (params: { value: boolean }) => void;
+  setupIsFullScreen: (params: { value: boolean }) => void;
+  emitWindowEvent: (params: { event: string; args?: readonly unknown[] }) => void;
+  getMaximizeCalls: () => RecordedCalls;
+  getSetFullScreenCalls: () => RecordedCalls;
 } => {
   const electronDouble = ElectronDoubleStub();
 
@@ -84,6 +91,41 @@ export const electronProxy = (): {
   const exposeHandle = registerSpyOn({
     object: electronDouble.contextBridge,
     method: 'exposeInMainWorld',
+    passthrough: true,
+  });
+  registerSpyOn({
+    object: electronDouble.browserWindow,
+    method: 'on',
+    passthrough: true,
+  });
+  const windowGetBoundsHandle = registerSpyOn({
+    object: electronDouble.browserWindow,
+    method: 'getBounds',
+    passthrough: true,
+  });
+  const windowIsMaximizedHandle = registerSpyOn({
+    object: electronDouble.browserWindow,
+    method: 'isMaximized',
+    passthrough: true,
+  });
+  const windowIsFullScreenHandle = registerSpyOn({
+    object: electronDouble.browserWindow,
+    method: 'isFullScreen',
+    passthrough: true,
+  });
+  const windowMaximizeHandle = registerSpyOn({
+    object: electronDouble.browserWindow,
+    method: 'maximize',
+    passthrough: true,
+  });
+  const windowSetFullScreenHandle = registerSpyOn({
+    object: electronDouble.browserWindow,
+    method: 'setFullScreen',
+    passthrough: true,
+  });
+  const screenGetAllDisplaysHandle = registerSpyOn({
+    object: electronDouble.screen,
+    method: 'getAllDisplays',
     passthrough: true,
   });
 
@@ -208,5 +250,35 @@ export const electronProxy = (): {
       electronDouble.registry.mainWorld().get(key),
     getExposeCallsFor: ({ key }: { key: string }): RecordedCalls =>
       exposeHandle.callsMatching([key]),
+
+    setupDisplays: ({ displays }: { displays: readonly unknown[] }): void => {
+      screenGetAllDisplaysHandle.calledWith([]).returns(displays as unknown[]);
+    },
+    setupWindowBounds: ({
+      bounds,
+    }: {
+      bounds: { x: number; y: number; width: number; height: number };
+    }): void => {
+      windowGetBoundsHandle.calledWith([]).returns(bounds);
+    },
+    setupIsMaximized: ({ value }: { value: boolean }): void => {
+      windowIsMaximizedHandle.calledWith([]).returns(value);
+    },
+    setupIsFullScreen: ({ value }: { value: boolean }): void => {
+      windowIsFullScreenHandle.calledWith([]).returns(value);
+    },
+    emitWindowEvent: ({
+      event,
+      args = [],
+    }: {
+      event: string;
+      args?: readonly unknown[];
+    }): void => {
+      for (const listener of electronDouble.registry.windowListeners({ event })) {
+        listener(...args);
+      }
+    },
+    getMaximizeCalls: (): RecordedCalls => windowMaximizeHandle.callsMatching([]),
+    getSetFullScreenCalls: (): RecordedCalls => windowSetFullScreenHandle.callsMatching([]),
   };
 };

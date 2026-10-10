@@ -84,17 +84,17 @@ import type { ReactElement } from '#gateway/npm/react';
 import { Box, Tabs, Text, Stack, Button, Group } from '#gateway/npm/mantine__core';
 import type { FileAnalysis, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
 
-import { darkSpotLineTransformer } from '../../transformers/dark-spot-line/dark-spot-line-transformer';
 import { drivenFunctionsTransformer } from '../../transformers/driven-functions/driven-functions-transformer';
-import { undrivenLineTransformer } from '../../transformers/undriven-line/undriven-line-transformer';
 import type { RunMode } from '../../contracts/status-view/status-view-contract';
 import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
 import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
+import { ErrorCategoryLayerWidget } from './error-category-layer-widget';
 import { TestEntryLayerWidget } from './test-entry-layer-widget';
 
 export interface DetailPanelWidgetProps {
   analysis: FileAnalysis | undefined;
   hoveredLine?: number | null;
+  onLineHover?: (line: number | null) => void;
   run?: RunResult | undefined;
   running?: boolean;
   runError?: Error | null;
@@ -110,6 +110,7 @@ const DEFAULT_PANEL_WIDTH = 360;
 export const DetailPanelWidget = ({
   analysis,
   hoveredLine,
+  onLineHover,
   run,
   running,
   runError,
@@ -191,49 +192,45 @@ export const DetailPanelWidget = ({
             </Text>
           )}
 
-          {/* Outside the has-entries branch for the same reason the run error is: a dark spot is a
-              fact about the FILE, and a file whose only logic is an unfollowed loop has no entries to
-              hang it off — which is exactly when staying silent reads as "nothing to test here". */}
-          {darkSpots.map((darkSpot) => (
-            <Text
-              key={`${String(darkSpot.kind)}:${String(darkSpot.startLine)}-${String(darkSpot.endLine)}:${darkSpot.scopePath
-                .map((segment) => String(segment))
-                .join('/')}`}
-              data-testid="DARK_SPOT"
-              c="grape.4"
-              fz="xs"
-              ff="monospace"
-              mb="xs"
-            >
-              {darkSpotLineTransformer({ darkSpot })}
-            </Text>
-          ))}
+          {undriven.length === 0 ? null : (
+            <ErrorCategoryLayerWidget
+              category="undriven"
+              items={undriven}
+              hoveredLine={hoveredLine}
+              {...(onLineHover === undefined ? {} : { onLineHover })}
+              analysis={analysis}
+            />
+          )}
 
-          {/* Beside the dark spots and never folded into them: a dark spot is syntax Assayer never
-              parsed, this is syntax it parsed perfectly and cannot yet call. Outside the has-entries
-              branch because a file of pure module-scope branching has NO entries once the undriven one
-              is set aside — the case where staying silent says "nothing to test here". */}
-          {undriven.map((entry) => (
-            <Text
-              key={String(entry.name)}
-              data-testid="UNDRIVEN"
-              c="cyan.4"
-              fz="xs"
-              ff="monospace"
-              mb="xs"
-            >
-              {undrivenLineTransformer({ entry })}
-            </Text>
-          ))}
+          {lints.length === 0 ? null : (
+            <ErrorCategoryLayerWidget
+              category="lints"
+              items={lints}
+              hoveredLine={hoveredLine}
+              {...(onLineHover === undefined ? {} : { onLineHover })}
+              analysis={analysis}
+            />
+          )}
 
-          {/* The fourth admission, and the only one that colours like a warning: it is the repo's to
-              fix, not Assayer's to admit. Outside the has-entries branch like the other file-facts —
-              a file whose only content is a dead private has no entries to hang it off. */}
-          {lints.map((lint) => (
-            <Text key={String(lint.name)} data-testid="LINT" c="orange.4" fz="xs" ff="monospace" mb="xs">
-              {`LINT ${String(lint.name)} — ${String(lint.message)}`}
-            </Text>
-          ))}
+          {darkSpots.length === 0 ? null : (
+            <ErrorCategoryLayerWidget
+              category="darkSpots"
+              items={darkSpots}
+              hoveredLine={hoveredLine}
+              {...(onLineHover === undefined ? {} : { onLineHover })}
+              analysis={analysis}
+            />
+          )}
+
+          {gaps.length === 0 ? null : (
+            <ErrorCategoryLayerWidget
+              category="gaps"
+              items={gaps}
+              hoveredLine={hoveredLine}
+              {...(onLineHover === undefined ? {} : { onLineHover })}
+              analysis={analysis}
+            />
+          )}
 
           {/* An undriven entry or a lint is content, so a file that has one is never "empty" — the
               admission above IS this tab's content. */}
@@ -264,18 +261,13 @@ export const DetailPanelWidget = ({
                 </Group>
               )}
 
-              {gaps.map((gap) => (
-                <Text key={String(gap.name)} data-testid="RUN_GAP" c="yellow.5" fz="xs" ff="monospace">
-                  {`GAP ${String(gap.name)} — ${String(gap.reason)}`}
-                </Text>
-              ))}
-
               {functions.map((fn) => (
                 <TestEntryLayerWidget
                   key={fn.entry.name}
                   fn={fn}
                   relPath={relPath}
                   hoveredLine={hoveredLine}
+                  {...(onLineHover === undefined ? {} : { onLineHover })}
                   run={run}
                   runMode={runMode}
                 />

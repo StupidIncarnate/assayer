@@ -1,16 +1,16 @@
 /**
  * PURPOSE: One case row of the Tests tab — its run status marker, what the runner calls with which
- *   arrange values, the exit it reaches (or `predicted` when the run did not pass it), the INTELLIGENT
- *   badge on a salient case, and under a case the run did not pass, WHY it did not. The row dims when
- *   another line is hovered or when runMode is `intelligent` and the case is not salient.
+ *   arrange values, the exit line and return value, the INTELLIGENT badge on a salient case, and
+ *   under a case the run did not pass, WHY it did not. The row dims when another line is hovered or
+ *   when runMode is `intelligent` and the case is not salient.
  *
  * USAGE:
  * <TestCaseLayerWidget fn={fn} testCase={testCase} driver={driver} entryLabel={entryLabel} isModule={false} />
- * // Renders `<marker> <driver>(<arrange>) → <output> (reaches L<line>)` and, for a settled case, its outcome line
+ * // Renders `<marker> <driver>(<arrange>)` over `  => <line>: <returnValue>`
  */
-import { memo, useMemo } from '#gateway/npm/react';
+import { memo, useMemo, useState } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
-import { Box, Group, Text } from '#gateway/npm/mantine__core';
+import { ActionIcon, Box, Group, Popover, Text } from '#gateway/npm/mantine__core';
 import type { FunctionAnalysis, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
@@ -28,6 +28,7 @@ export interface TestCaseLayerWidgetProps {
   entryLabel: string;
   isModule: boolean;
   hoveredLine?: number | null | undefined;
+  onLineHover?: ((line: number | null) => void) | undefined;
   run?: RunResult | undefined;
   runMode?: RunMode | undefined;
 }
@@ -40,9 +41,11 @@ export const TestCaseLayerWidget = memo(
   entryLabel,
   isModule,
   hoveredLine,
+  onLineHover,
   run,
   runMode,
 }: TestCaseLayerWidgetProps): ReactElement => {
+  const [opened, setOpened] = useState(false);
   const active = hoveredLine !== undefined && hoveredLine !== null;
   const exit = useMemo(
     () => fn.exits.find((candidate) => candidate.coverageId === testCase.reachesPath[0]),
@@ -64,12 +67,11 @@ export const TestCaseLayerWidget = memo(
   // landed there is the panel asserting an outcome that did not happen — and it
   // makes a case that THREW read identically to one that merely came out elsewhere.
   const settled = result !== undefined && status !== 'passed';
-  const reach = `${settled ? 'predicted' : 'reaches'} L${exit?.line ?? '?'}`;
   const exitEvent =
     status === 'passed' && result !== undefined
       ? [...result.trace].reverse().find((event) => event.kind === 'exit' && event.id === testCase.reachesPath[0])
       : undefined;
-  const reachText = exitEvent === undefined ? reach : `${exitEvent.valueText} (${reach})`;
+  const returnValue = exitEvent === undefined ? '(not run)' : exitEvent.valueText;
   // Why it did not pass, in this panel's own L-number vocabulary. An errored case
   // carries the runner's message (it threw, was not callable, fired no exit probe);
   // a failed one has no message and is explained by where it DID come out.
@@ -83,7 +85,16 @@ export const TestCaseLayerWidget = memo(
   const grayed = runMode === 'intelligent' && !testCase.salient;
 
   return (
-    <Box>
+    <Box
+      onMouseEnter={() => {
+        if (exit?.line !== undefined) {
+          onLineHover?.(exit.line);
+        }
+      }}
+      onMouseLeave={() => {
+        onLineHover?.(null);
+      }}
+    >
       <Group gap={6} wrap="nowrap" align="baseline">
         <Text
           data-testid="TEST_CASE_ROW"
@@ -109,20 +120,72 @@ export const TestCaseLayerWidget = memo(
             {`${runStatusStatics.marker[status]} `}
           </Text>
           {isModule
-            ? `${entryLabel} → ${reachText}`
+            ? entryLabel
             : `${driver}(${arrangeTextTransformer({
                 arrange: testCase.arrange,
-              })}) → ${reachText}`}
+              })})`}
         </Text>
         {/* The salient (must-run) marker — its own inline span like CASE_STATUS, but a
             SIBLING of the row so it never enters the row's asserted text. It rides every
             salient row regardless of runMode; a non-salient row shows none. */}
         {testCase.salient ? (
-          <Text span data-testid="INTELLIGENT_BADGE" fz="xs" fw={600} c={runModeStatics.colour.intelligent}>
-            {runModeStatics.marker.intelligent}
-          </Text>
+          <Group gap={4} wrap="nowrap" align="center">
+            <Text span data-testid="INTELLIGENT_BADGE" fz="xs" fw={600} c={runModeStatics.colour.intelligent}>
+              {runModeStatics.marker.intelligent}
+            </Text>
+            <Popover
+              width={320}
+              position="bottom-start"
+              withArrow
+              shadow="md"
+              withinPortal={false}
+              transitionProps={{ duration: 0 }}
+              opened={opened}
+              onChange={setOpened}
+            >
+              <Popover.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="xs"
+                  aria-label="Explain intelligent badge"
+                  data-testid="INTELLIGENT_INFO_ICON"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setOpened((prev) => !prev);
+                  }}
+                >
+                  <Text span fz="xs" c="dimmed">
+                    ⓘ
+                  </Text>
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown
+                data-testid="INTELLIGENT_EXPLANATION"
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+              >
+                <Text fz="xs">{runModeStatics.explanation.intelligent}</Text>
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
         ) : null}
       </Group>
+      <Text
+        data-testid="CASE_RETURN"
+        ff="monospace"
+        fz="xs"
+        c={grayed || (active && !isMatch) ? 'dark.3' : 'gray.5'}
+        style={{
+          backgroundColor: !grayed && isMatch ? 'var(--mantine-color-blue-9)' : undefined,
+          borderRadius: 2,
+          paddingInline: 4,
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        {`  => ${exit?.line ?? '?'}: ${returnValue}`}
+      </Text>
       {/* WHY it did not pass, on the row itself. Without this the tab shows that a case
           failed and never what went wrong, so the reason lives only in the run console —
           a panel that opens on Run, can be dismissed, and is empty for a run someone did

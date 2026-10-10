@@ -37,6 +37,7 @@ const UNDRIVEN_ACCENT = '#3bc9db';
 
 const darkSpotLineDecoration = Decoration.line({ class: 'cm-dark-spot' });
 const undrivenLineDecoration = Decoration.line({ class: 'cm-undriven' });
+const hoveredLineDecoration = Decoration.line({ class: 'cm-hovered-line' });
 
 // One marker renders both gutter columns. Only the DOM mechanism is shared: what each column MEANS
 // is decided by the two gutter() calls below, which stay separate on purpose.
@@ -76,6 +77,7 @@ export const SourceEditorLayerWidget = ({
   markers,
   darkSpots,
   undriven,
+  hoveredLine,
   onLineHover,
 }: {
   value: string;
@@ -83,6 +85,7 @@ export const SourceEditorLayerWidget = ({
   markers?: readonly { line: number; count: number }[];
   darkSpots?: readonly { startLine: number; endLine: number; label: string }[];
   undriven?: readonly { startLine: number; endLine: number; label: string }[];
+  hoveredLine?: number | null;
   onLineHover?: (line: number | null) => void;
 }): ReactElement => {
   const countByLine = new Map((markers ?? []).map((marker) => [marker.line, marker.count]));
@@ -121,30 +124,38 @@ export const SourceEditorLayerWidget = ({
         },
         '.cm-undriven-marks': { width: '1.1em' },
         '.cm-undriven-icon': { color: UNDRIVEN_ACCENT, cursor: 'help' },
+        '.cm-hovered-line': {
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        },
       }),
-      EditorView.decorations.of((view) =>
-        Decoration.set(
-          [
-            ...spots.flatMap((spot) => {
-              const first = Math.max(1, spot.startLine);
-              const last = Math.min(spot.endLine, view.state.doc.lines);
+      EditorView.decorations.of((view) => {
+        const hoveredDecorations =
+          hoveredLine !== null && hoveredLine !== undefined && hoveredLine >= 1 && hoveredLine <= view.state.doc.lines
+            ? [hoveredLineDecoration.range(view.state.doc.line(hoveredLine).from)]
+            : [];
 
-              return Array.from({ length: Math.max(0, last - first + 1) }, (_ignored, offset) =>
-                darkSpotLineDecoration.range(view.state.doc.line(first + offset).from),
-              );
-            }),
-            ...undrivenSpans.flatMap((span) => {
-              const first = Math.max(1, span.startLine);
-              const last = Math.min(span.endLine, view.state.doc.lines);
+        const ranges = [
+          ...spots.flatMap((spot) => {
+            const first = Math.max(1, spot.startLine);
+            const last = Math.min(spot.endLine, view.state.doc.lines);
 
-              return Array.from({ length: Math.max(0, last - first + 1) }, (_ignored, offset) =>
-                undrivenLineDecoration.range(view.state.doc.line(first + offset).from),
-              );
-            }),
-          ],
-          true,
-        ),
-      ),
+            return Array.from({ length: Math.max(0, last - first + 1) }, (_ignored, offset) =>
+              darkSpotLineDecoration.range(view.state.doc.line(first + offset).from),
+            );
+          }),
+          ...undrivenSpans.flatMap((span) => {
+            const first = Math.max(1, span.startLine);
+            const last = Math.min(span.endLine, view.state.doc.lines);
+
+            return Array.from({ length: Math.max(0, last - first + 1) }, (_ignored, offset) =>
+              undrivenLineDecoration.range(view.state.doc.line(first + offset).from),
+            );
+          }),
+          ...hoveredDecorations,
+        ].sort((a, b) => a.from - b.from);
+
+        return Decoration.set(ranges, true);
+      }),
       gutter({
         class: 'cm-test-counts',
         lineMarker: (view, line) => {

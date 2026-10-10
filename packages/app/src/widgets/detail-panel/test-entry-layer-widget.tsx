@@ -20,6 +20,7 @@ export interface TestEntryLayerWidgetProps {
   fn: FunctionAnalysis;
   relPath?: string | null | undefined;
   hoveredLine?: number | null | undefined;
+  onLineHover?: ((line: number | null) => void) | undefined;
   run?: RunResult | undefined;
   runMode?: RunMode | undefined;
 }
@@ -29,6 +30,7 @@ export const TestEntryLayerWidget = memo(
     fn,
     relPath,
     hoveredLine,
+    onLineHover,
     run,
     runMode,
   }: TestEntryLayerWidgetProps): ReactElement => {
@@ -73,6 +75,7 @@ export const TestEntryLayerWidget = memo(
             entryLabel={entryLabel}
             isModule={isModule}
             hoveredLine={hoveredLine}
+            onLineHover={onLineHover}
             run={run}
             runMode={runMode}
           />

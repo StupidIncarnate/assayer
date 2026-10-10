@@ -24,7 +24,7 @@ export { ts as default } from 'ts-morph';
 export { findTsconfig } from './find-tsconfig/find-tsconfig';
 export { impliedNodeFormat } from './implied-node-format/implied-node-format';
 export { readNearestTsconfig } from './read-nearest-tsconfig/read-nearest-tsconfig';
-export { readTsconfig } from './read-tsconfig/read-tsconfig';
+export { clearTsconfigCache, readTsconfig } from './read-tsconfig/read-tsconfig';
 export { resolveModuleFile } from './resolve-module-file/resolve-module-file';
 export {
   EmitHint,

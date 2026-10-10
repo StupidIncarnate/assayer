@@ -23,18 +23,24 @@
  * });
  * // Resolves once the window has loaded
  */
-import { app, BrowserWindow, Menu, ipcMain } from '#gateway/npm/electron';
-import type { IpcMainInvokeEvent } from '#gateway/npm/electron';
+import { app, BrowserWindow, Menu, ipcMain, screen } from '#gateway/npm/electron';
+import type { IpcMainInvokeEvent, Rectangle } from '#gateway/npm/electron';
 import { resolveModulePath } from '#gateway/node/module';
 import { join } from '#gateway/node/path';
-import { getEnv, getPlatform } from '#gateway/node/process';
+import { getEnv, getPlatform, stderr } from '#gateway/node/process';
 import { pathToFileURL } from '#gateway/node/url';
 import type { CompiledTree, CompiledFileView, RunResult, StubView } from '@assayer/shared/contracts';
 
 import { ipcReplyTransformer } from '../../../transformers/ipc-reply/ipc-reply-transformer';
 import type { DesktopStatus } from '../../../contracts/desktop-status/desktop-status-contract';
+import { windowStateContract } from '../../../contracts/window-state/window-state-contract';
+import { isWindowWithinDisplaysGuard } from '../../../guards/is-window-within-displays/is-window-within-displays-guard';
+import { windowNormalBoundsTransformer } from '../../../transformers/window-normal-bounds/window-normal-bounds-transformer';
+import { windowStateLoadBroker } from '../../window-state/load/window-state-load-broker';
+import { windowStateSaveBroker } from '../../window-state/save/window-state-save-broker';
 
 export const desktopBootBroker = async ({
+  repoPath,
   statusChannel,
   compiledTreeChannel,
   compiledFileChannel,
@@ -51,6 +57,7 @@ export const desktopBootBroker = async ({
   resolveSavedRun,
   resolveSavedConsole,
 }: {
+  repoPath: string;
   statusChannel: string;
   compiledTreeChannel: string;
   compiledFileChannel: string;
@@ -119,12 +126,23 @@ export const desktopBootBroker = async ({
   // File/Edit/View/Window/Help bar. Set before the window is created so it opens menu-less.
   Menu.setApplicationMenu(null);
 
+  const savedState = await windowStateLoadBroker({ repoPath });
+  const displays = screen.getAllDisplays();
+  const hasValidPosition = isWindowWithinDisplaysGuard({
+    x: savedState.x,
+    y: savedState.y,
+    displays,
+  });
+
   const window = new BrowserWindow({
     // Wide enough for every column the explorer can show at once: tree + code + detail + the run
     // console. At 1100 the four do fit — but only by starving the code pane to ~60px, and the detail
     // panel clipped its own tab strip even before the console existed.
-    width: 1500,
-    height: 800,
+    width: savedState.width,
+    height: savedState.height,
+    ...(hasValidPosition && savedState.x !== undefined && savedState.y !== undefined
+      ? { x: savedState.x, y: savedState.y }
+      : {}),
     title: 'Assayer',
     // Headless for e2e: there is no Xvfb here, so tests set ASSAYER_HEADLESS=1 to create the
     // window hidden (Playwright still drives a hidden BrowserWindow) — it never pops up on the
@@ -144,6 +162,51 @@ export const desktopBootBroker = async ({
       offscreen: getEnv('ASSAYER_HEADLESS') === '1',
     },
   });
+
+  if (savedState.isMaximized) {
+    window.maximize();
+  }
+  if (savedState.isFullScreen) {
+    window.setFullScreen(true);
+  }
+
+  let normalBounds: Rectangle = windowNormalBoundsTransformer({
+    bounds: {
+      width: savedState.width,
+      height: savedState.height,
+      x: hasValidPosition && savedState.x !== undefined ? savedState.x : 0,
+      y: hasValidPosition && savedState.y !== undefined ? savedState.y : 0,
+    },
+  });
+
+  window.on('resize', () => {
+    if (!window.isMaximized() && !window.isFullScreen()) {
+      normalBounds = windowNormalBoundsTransformer({ bounds: window.getBounds() });
+    }
+  });
+
+  window.on('move', () => {
+    if (!window.isMaximized() && !window.isFullScreen()) {
+      normalBounds = windowNormalBoundsTransformer({ bounds: window.getBounds() });
+    }
+  });
+
+  window.on('close', () => {
+    const isMaximized = window.isMaximized();
+    const isFullScreen = window.isFullScreen();
+
+    windowStateSaveBroker({
+      repoPath,
+      state: windowStateContract.parse({
+        ...normalBounds,
+        isMaximized,
+        isFullScreen,
+      }),
+    }).catch((error: unknown) => {
+      stderr.write(`assayer: failed to persist window state: ${String(error)}\n`);
+    });
+  });
+
   await window.loadURL(rendererUrl);
 
   app.on('window-all-closed', () => {

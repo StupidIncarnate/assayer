@@ -43,10 +43,11 @@ import { undrivenLineTransformer } from '../../transformers/undriven-line/undriv
 
 export interface CodeViewerWidgetProps {
   fileView: CompiledFileView | null;
+  hoveredLine?: number | null;
   onLineHover?: (line: number | null) => void;
 }
 
-export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProps): ReactElement => {
+export const CodeViewerWidget = ({ fileView, hoveredLine, onLineHover }: CodeViewerWidgetProps): ReactElement => {
   const value = useMemo(
     () => (fileView === null ? '' : fileView.displayLines.map((line) => line.text).join('\n')),
     [fileView],
@@ -103,9 +104,10 @@ export const CodeViewerWidget = ({ fileView, onLineHover }: CodeViewerWidgetProp
         markers,
         darkSpots,
         undriven,
+        ...(hoveredLine === undefined ? {} : { hoveredLine }),
         ...(onLineHover === undefined ? {} : { onLineHover }),
       }),
-    [value, markers, darkSpots, undriven, onLineHover],
+    [value, markers, darkSpots, undriven, hoveredLine, onLineHover],
   );
 
   return (

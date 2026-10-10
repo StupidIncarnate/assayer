@@ -1,5 +1,5 @@
 import { MantineProvider } from '#gateway/npm/mantine__core';
-import { render } from '#gateway/npm/testing-library__react';
+import { fireEvent, render } from '#gateway/npm/testing-library__react';
 import userEvent from '#gateway/npm/testing-library__user-event';
 
 import { DetailPanelWidget } from './detail-panel-widget';
@@ -142,8 +142,7 @@ const LOOP_DARK_SPOT = DarkSpotStub({
   endLine: 6,
 });
 
-const LOOP_DARK_SPOT_TEXT =
-  'DARK ForOfStatement at L4-L6 in *module*/sumAll — Assayer has no handler for it, so nothing inside it is covered';
+const LOOP_DARK_SPOT_TEXT = 'L4: ForOfStatement';
 
 describe('DetailPanelWidget', () => {
   describe('with a file analysis', () => {
@@ -158,7 +157,7 @@ describe('DetailPanelWidget', () => {
 
       const caseRows = getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent);
 
-      expect(caseRows).toStrictEqual(['not run formatGreeting("") → reaches L3']);
+      expect(caseRows).toStrictEqual(['not run formatGreeting("")']);
     });
 
     // A case with no result must never render like one that passed — "not run" is stated, not
@@ -181,7 +180,7 @@ describe('DetailPanelWidget', () => {
       const { getByTestId } = render(<DetailPanelWidget analysis={MODULE_EXPORT_ANALYSIS} relPath={'src/happy-path/import-local/uses-greeting/uses-greeting.ts'} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message');
     });
 
     // With no export, the label falls back to the selected file's basename — the reader never sees the
@@ -192,7 +191,7 @@ describe('DetailPanelWidget', () => {
       const { getByTestId } = render(<DetailPanelWidget analysis={MODULE_NO_EXPORT_ANALYSIS} relPath={'src/happy-path/node-global/uses-console/uses-console.ts'} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('uses-console.ts · 1 cases');
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run uses-console.ts → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run uses-console.ts');
     });
 
     // An anonymous scope's `name` is its structural projection — cache-internal by ruling. A panel that
@@ -216,7 +215,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={ANONYMOUS_CALLBACK_ANALYSIS} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run rescale([101]) → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run rescale([101])');
     });
 
     // Same rule, named callee: `inner` keeps its own title because it HAS a name, while its row still
@@ -227,7 +226,7 @@ describe('DetailPanelWidget', () => {
       const { getByTestId } = render(<DetailPanelWidget analysis={THROUGH_CALLER_ANALYSIS} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('inner(n) · 1 cases');
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6) → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6)');
     });
   });
 
@@ -471,7 +470,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('ERROR formatGreeting("") → predicted L3');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('ERROR formatGreeting("")');
     });
 
     // A case nobody ran has no outcome to explain, and a passing one needs none: the row's own text
@@ -500,7 +499,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} run={run} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('RUN_GAP').textContent).toBe('GAP find — needs a harness');
+      expect(getByTestId('RUN_GAP').textContent).toBe('find — needs a harness');
     });
 
     // An input Assayer cannot construct is a fact about the FILE, true the moment it is opened. Making
@@ -512,7 +511,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('RUN_GAP').textContent).toBe('GAP audit — the fill seam refuses `report`');
+      expect(getByTestId('RUN_GAP').textContent).toBe('audit — the fill seam refuses `report`');
     });
 
     // A run's gaps are the file's own plus the access-shaped ones the case-set projection adds, so the
@@ -530,8 +529,8 @@ describe('DetailPanelWidget', () => {
       const { getAllByTestId } = render(<DetailPanelWidget analysis={analysis} run={run} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('RUN_GAP').map((element) => element.textContent)).toStrictEqual([
-        'GAP audit — the fill seam refuses `report`',
-        'GAP find — needs a harness',
+        'audit — the fill seam refuses `report`',
+        'find — needs a harness',
       ]);
     });
   });
@@ -571,7 +570,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={analysis} run={run} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('RUN_GAP').textContent).toBe('GAP find — needs a harness');
+      expect(getByTestId('RUN_GAP').textContent).toBe('find — needs a harness');
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
     });
 
@@ -585,7 +584,7 @@ describe('DetailPanelWidget', () => {
 
       expect(getAllByTestId('DARK_SPOT').map((element) => element.textContent)).toStrictEqual([
         LOOP_DARK_SPOT_TEXT,
-        'DARK TryStatement at L9-L12 in load — Assayer has no handler for it, so nothing inside it is covered',
+        'L9: TryStatement',
       ]);
     });
 
@@ -606,7 +605,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('UNDRIVEN').textContent).toBe('UNDRIVEN inner — it is not exported');
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner');
     });
 
     // The pure-statement shape. The entry's two derived cases arrange NOTHING and each claims a
@@ -623,9 +622,7 @@ describe('DetailPanelWidget', () => {
 
       expect(queryAllByTestId('TEST_CASE_ROW')).toStrictEqual([]);
       expect(queryAllByTestId('TEST_ENTRY')).toStrictEqual([]);
-      expect(getByTestId('UNDRIVEN').textContent).toBe(
-        'UNDRIVEN welded-const.ts — it runs at import time, so no case drove its branches',
-      );
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: welded-const.ts');
     });
 
     // A file whose only entry is undriven is NOT an empty file, and must never read like one.
@@ -665,10 +662,10 @@ describe('DetailPanelWidget', () => {
       const { getByTestId, getAllByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
-        'not run formatGreeting("") → reaches L3',
+        'not run formatGreeting("")',
       ]);
       expect(getByTestId('RUN_BUTTON').textContent).toBe('Run');
-      expect(getByTestId('UNDRIVEN').textContent).toBe('UNDRIVEN inner — it is not exported');
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner');
     });
 
     // Three admissions, three answers to "who owes this work?", three rows. Merged, each would order
@@ -683,9 +680,9 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={analysis} run={run} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('RUN_GAP').textContent).toBe('GAP find — needs a harness');
+      expect(getByTestId('RUN_GAP').textContent).toBe('find — needs a harness');
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
-      expect(getByTestId('UNDRIVEN').textContent).toBe('UNDRIVEN inner — it is not exported');
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner');
     });
 
     it('EMPTY: {analysis with nothing undriven} => no undriven row is rendered', () => {
@@ -694,6 +691,30 @@ describe('DetailPanelWidget', () => {
       const { queryAllByTestId } = render(<DetailPanelWidget analysis={FileAnalysisStub()} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('UNDRIVEN')).toStrictEqual([]);
+    });
+
+    it('VALID: {hovering error row} => calls onLineHover with error start line', () => {
+      DetailPanelWidgetProxy();
+      const analysis = FileAnalysisStub({ undriven: [UndrivenEntryStub({ name: 'inner', startLine: 3, endLine: 5 })] });
+      let hovered: number | null = null;
+
+      const { getByTestId } = render(
+        <DetailPanelWidget
+          analysis={analysis}
+          onLineHover={(line) => {
+            hovered = line;
+          }}
+        />,
+        { wrapper: MantineProvider },
+      );
+
+      fireEvent.mouseEnter(getByTestId('UNDRIVEN'));
+
+      expect(hovered).toBe(3);
+
+      fireEvent.mouseLeave(getByTestId('UNDRIVEN'));
+
+      expect(hovered).toBe(null);
     });
   });
 
@@ -706,7 +727,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('LINT').textContent).toBe('LINT unused — nothing calls it');
+      expect(getByTestId('LINT').textContent).toBe('L1: unused — nothing calls it');
     });
 
     // A file whose only content is a dead private is NOT empty: the lint is the tab's content, so the
@@ -718,7 +739,7 @@ describe('DetailPanelWidget', () => {
       const { queryAllByTestId, getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
       expect(queryAllByTestId('TESTS_EMPTY')).toStrictEqual([]);
-      expect(getByTestId('LINT').textContent).toBe('LINT decide — nothing in this file calls it, so it is dead surface');
+      expect(getByTestId('LINT').textContent).toBe('L1: decide — nothing in this file calls it, so it is dead surface');
     });
 
     it('EMPTY: {analysis with no lints} => no lint row is rendered', () => {
@@ -920,8 +941,8 @@ describe('DetailPanelWidget', () => {
       const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
-        'not run thing → reaches L4',
-        'not run thing → reaches L4',
+        'not run thing',
+        'not run thing',
       ]);
     });
 

@@ -11,6 +11,8 @@
  * // In a plain Node process, electronBinaryPath is the path to the Electron executable
  */
 
-export { app, BrowserWindow, contextBridge, ipcMain, ipcRenderer, Menu } from 'electron';
+export { app, BrowserWindow, contextBridge, ipcMain, ipcRenderer, Menu, screen } from 'electron';
 export type { IpcMainInvokeEvent } from 'electron';
+export type Display = Electron.Display;
+export type Rectangle = Electron.Rectangle;
 export { default } from 'electron';

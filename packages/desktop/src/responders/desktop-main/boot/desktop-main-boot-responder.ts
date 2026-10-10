@@ -30,6 +30,7 @@ export const DesktopMainBootResponder = async ({
   repoPath: string;
 }): Promise<void> =>
   desktopBootBroker({
+    repoPath,
     statusChannel: desktopBridgeStatics.channels.status,
     compiledTreeChannel: desktopBridgeStatics.channels.compiledTree,
     compiledFileChannel: desktopBridgeStatics.channels.compiledFile,

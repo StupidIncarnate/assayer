@@ -1,8 +1,9 @@
 import { MantineProvider } from '#gateway/npm/mantine__core';
-import { render } from '#gateway/npm/testing-library__react';
+import { fireEvent, render } from '#gateway/npm/testing-library__react';
 import { TestCaseLayerWidget } from './test-case-layer-widget';
 import { TestCaseLayerWidgetProxy } from './test-case-layer-widget.proxy';
 import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
+import { runModeStatics } from '../../statics/run-mode/run-mode-statics';
 import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
 import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
@@ -37,7 +38,7 @@ describe('TestCaseLayerWidget', () => {
     it('VALID: {salient case, no run} => the row reads not run, names the driver and the exit line, and carries the badge', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId, queryByTestId } = render((
+      const { getByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -52,10 +53,11 @@ describe('TestCaseLayerWidget', () => {
           </>
         ), { wrapper: MantineProvider });
 
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run decide(1) → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run decide(1)');
+      expect(getByTestId('CASE_RETURN').textContent).toBe('  => 4: (not run)');
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('not-run');
       expect(getByTestId('INTELLIGENT_BADGE').textContent).toBe('INTELLIGENT');
-      expect(queryByTestId('CASE_OUTCOME')).toBe(null);
+      expect(getByTestId('INTELLIGENT_INFO_ICON').textContent).toBe('ⓘ');
     });
 
     it('VALID: {module entry} => the row names the entry label with no call parens', () => {
@@ -76,7 +78,8 @@ describe('TestCaseLayerWidget', () => {
           </>
         ), { wrapper: MantineProvider });
 
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message');
+      expect(getByTestId('CASE_RETURN').textContent).toBe('  => 4: (not run)');
     });
   });
 
@@ -147,11 +150,65 @@ describe('TestCaseLayerWidget', () => {
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-running')).toBe('false');
       expect(queryByTestId('INTELLIGENT_BADGE')).toBe(null);
+      expect(queryByTestId('INTELLIGENT_INFO_ICON')).toBe(null);
+    });
+
+    it('VALID: {click on intelligent info icon} => opens popover with explanation text', () => {
+      TestCaseLayerWidgetProxy();
+
+      const { getByTestId, queryByTestId } = render((
+          <>
+            {DECIDE.cases.map((testCase) => (
+              <TestCaseLayerWidget
+                key={testCase.reachesPath.join('>')}
+                fn={DECIDE}
+                testCase={testCase}
+                driver="decide"
+                entryLabel="decide"
+                isModule={false}
+              />
+            ))}
+          </>
+        ), { wrapper: MantineProvider });
+
+      expect(queryByTestId('INTELLIGENT_EXPLANATION')).toBe(null);
+
+      fireEvent.click(getByTestId('INTELLIGENT_INFO_ICON'));
+
+      expect(getByTestId('INTELLIGENT_EXPLANATION').textContent).toBe(runModeStatics.explanation.intelligent);
+    });
+
+    it('VALID: {click on intelligent info icon} => stops click propagation to parent elements', () => {
+      TestCaseLayerWidgetProxy();
+      const clicks: string[] = [];
+
+      const { getByTestId } = render((
+          <div
+            onClick={() => {
+              clicks.push('parent');
+            }}
+          >
+            {DECIDE.cases.map((testCase) => (
+              <TestCaseLayerWidget
+                key={testCase.reachesPath.join('>')}
+                fn={DECIDE}
+                testCase={testCase}
+                driver="decide"
+                entryLabel="decide"
+                isModule={false}
+              />
+            ))}
+          </div>
+        ), { wrapper: MantineProvider });
+
+      fireEvent.click(getByTestId('INTELLIGENT_INFO_ICON'));
+
+      expect(clicks).toStrictEqual([]);
     });
   });
 
   describe('a settled run', () => {
-    it('VALID: {errored result with a message} => the row reads predicted and the outcome line carries the runner message', () => {
+    it('VALID: {errored result with a message} => the row names the driver and outcome line carries the runner message', () => {
       TestCaseLayerWidgetProxy();
       const run = RunResultStub({
         cases: [
@@ -180,11 +237,12 @@ describe('TestCaseLayerWidget', () => {
           </>
         ), { wrapper: MantineProvider });
 
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('ERROR decide(1) → predicted L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('ERROR decide(1)');
+      expect(getByTestId('CASE_RETURN').textContent).toBe('  => 4: (not run)');
       expect(getByTestId('CASE_OUTCOME').textContent).toBe('threw before reaching an exit: items.map is not a function');
     });
 
-    it('VALID: {passed result with exit trace} => the row shows the exit value with the exit line in parentheses', () => {
+    it('VALID: {passed result with exit trace} => the row shows the exit value on line 2', () => {
       TestCaseLayerWidgetProxy();
       const run = RunResultStub({
         cases: [
@@ -212,12 +270,13 @@ describe('TestCaseLayerWidget', () => {
           </>
         ), { wrapper: MantineProvider });
 
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('PASS decide(1) → 10 (reaches L4)');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('PASS decide(1)');
+      expect(getByTestId('CASE_RETURN').textContent).toBe('  => 4: 10');
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('passed');
       expect(queryByTestId('CASE_OUTCOME')).toBe(null);
     });
 
-    it('VALID: {passed result without exit trace} => falls back to reaches L<line>', () => {
+    it('VALID: {passed result without exit trace} => falls back to (not run) return value', () => {
       TestCaseLayerWidgetProxy();
       const run = RunResultStub({
         cases: [
@@ -244,7 +303,8 @@ describe('TestCaseLayerWidget', () => {
           </>
         ), { wrapper: MantineProvider });
 
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('PASS decide(1) → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('PASS decide(1)');
+      expect(getByTestId('CASE_RETURN').textContent).toBe('  => 4: (not run)');
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('passed');
       expect(queryByTestId('CASE_OUTCOME')).toBe(null);
     });

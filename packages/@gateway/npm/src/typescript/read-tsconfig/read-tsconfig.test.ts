@@ -1,4 +1,4 @@
-import { readTsconfig } from './read-tsconfig';
+import { clearTsconfigCache, readTsconfig } from './read-tsconfig';
 import { readTsconfigProxy } from './read-tsconfig.proxy';
 
 describe('readTsconfig', () => {
@@ -49,6 +49,43 @@ describe('readTsconfig', () => {
 
     expect(proxy.getCallsFor({ configFilePath: '/repo/tsconfig.json' }).map((call) => [call[0], call[1]])).toStrictEqual([
       ['/repo/tsconfig.json', undefined],
+    ]);
+  });
+
+  it('VALID: {read called multiple times for the same config} => returns memoized result and only parses once', () => {
+    const proxy = readTsconfigProxy();
+    proxy.tsconfigAt({
+      configFilePath: '/repo/packages/app/tsconfig.json',
+      fileNames: ['/repo/packages/app/src/main.ts'],
+      options: { strict: true },
+    });
+
+    const first = readTsconfig({ configFilePath: '/repo/packages/app/tsconfig.json' });
+    const second = readTsconfig({ configFilePath: '/repo/packages/app/tsconfig.json' });
+
+    expect(second).toStrictEqual(first);
+    expect(
+      proxy.getCallsFor({ configFilePath: '/repo/packages/app/tsconfig.json' }).map((call) => [call[0], call[1]]),
+    ).toStrictEqual([['/repo/packages/app/tsconfig.json', undefined]]);
+  });
+
+  it('VALID: {clearTsconfigCache called} => next read re-parses from disk', () => {
+    const proxy = readTsconfigProxy();
+    proxy.tsconfigAt({
+      configFilePath: '/repo/packages/app/tsconfig.json',
+      fileNames: ['/repo/packages/app/src/main.ts'],
+      options: { strict: true },
+    });
+
+    readTsconfig({ configFilePath: '/repo/packages/app/tsconfig.json' });
+    clearTsconfigCache();
+    readTsconfig({ configFilePath: '/repo/packages/app/tsconfig.json' });
+
+    expect(
+      proxy.getCallsFor({ configFilePath: '/repo/packages/app/tsconfig.json' }).map((call) => [call[0], call[1]]),
+    ).toStrictEqual([
+      ['/repo/packages/app/tsconfig.json', undefined],
+      ['/repo/packages/app/tsconfig.json', undefined],
     ]);
   });
 

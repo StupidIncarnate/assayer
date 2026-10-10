@@ -14,9 +14,12 @@ import type { ReactElement } from '#gateway/npm/react';
 import type { TreeNode } from '@assayer/shared/contracts';
 
 import { treeFileCountTransformer } from '../../transformers/tree-file-count/tree-file-count-transformer';
+import { errorCategoryStatics } from '../../statics/error-category/error-category-statics';
 
 const FILE_BUTTON_BASE_STYLE = {
-  display: 'block',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
   width: '100%',
   textAlign: 'left' as const,
   border: 'none',
@@ -27,7 +30,6 @@ const FILE_BUTTON_BASE_STYLE = {
   fontFamily: 'inherit',
   lineHeight: 'var(--mantine-line-height-sm)',
   overflow: 'hidden',
-  textOverflow: 'ellipsis',
   whiteSpace: 'nowrap' as const,
 };
 
@@ -89,6 +91,8 @@ export const FileTreeNodeLayerWidget = memo(
 
     if (node.kind === 'file') {
       const isSelected = node.path === selectedRelPath;
+      const {errorCount} = (node as TreeNode & { errorCount?: number });
+
       return (
         <button
           type="button"
@@ -103,7 +107,21 @@ export const FileTreeNodeLayerWidget = memo(
             color: isSelected ? 'var(--mantine-color-blue-light-color)' : 'inherit',
           }}
         >
-          {node.name}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{node.name}</span>
+          {errorCount !== undefined && errorCount > 0 ? (
+            <span
+              data-testid="FILE_TREE_FILE_ERROR_COUNT"
+              style={{
+                color: errorCategoryStatics.styleVar,
+                fontWeight: 600,
+                fontSize: 'var(--mantine-font-size-xs)',
+                marginLeft: 6,
+                flexShrink: 0,
+              }}
+            >
+              {`! ${errorCount}`}
+            </span>
+          ) : null}
         </button>
       );
     }

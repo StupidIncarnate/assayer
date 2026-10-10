@@ -61,4 +61,74 @@ describe('compiledTreeResolveBroker', () => {
       /ENOENT/u,
     );
   });
+
+  it('VALID: {cached blob analysis has errors} => attaches errorCount to file node', async () => {
+    const proxy = compiledTreeResolveBrokerProxy();
+    const hashA = 'a'.repeat(64);
+    const hashB = 'b'.repeat(64);
+    const manifest = AssayerCacheManifestStub({
+      namespaces: {
+        main: {
+          files: [
+            { relPath: 'a.ts', contentHash: hashA, analysisHash: hashA },
+            { relPath: 'b.tsx', contentHash: hashB, analysisHash: hashB },
+          ],
+        },
+      },
+    });
+    proxy.setupManifest({ repoPath: '/repo', manifest });
+    proxy.setupBlob({
+      repoPath: '/repo',
+      analysisHash: hashA,
+      blob: {
+        analysis: {
+          undriven: [{ name: 'u1' }],
+          lints: [{ message: 'l1' }, { message: 'l2' }],
+          darkSpots: [],
+          gaps: [{ name: 'g1' }],
+        },
+      },
+    });
+    proxy.setupBlob({
+      repoPath: '/repo',
+      analysisHash: hashB,
+      blob: {
+        analysis: {
+          undriven: [],
+          lints: [],
+          darkSpots: [],
+          gaps: [],
+        },
+      },
+    });
+
+    const result = await compiledTreeResolveBroker({ repoPath: '/repo' });
+
+    expect(result.nodes).toStrictEqual([
+      { name: 'a.ts', path: 'a.ts', kind: 'file', errorCount: 4 },
+      { name: 'b.tsx', path: 'b.tsx', kind: 'file' },
+    ]);
+  });
+
+  it('VALID: {cached blob is missing on disk} => gracefully skips error count and returns file without errorCount', async () => {
+    const proxy = compiledTreeResolveBrokerProxy();
+    const hashA = 'a'.repeat(64);
+    const manifest = AssayerCacheManifestStub({
+      namespaces: {
+        main: {
+          files: [
+            { relPath: 'a.ts', contentHash: hashA, analysisHash: hashA },
+          ],
+        },
+      },
+    });
+    proxy.setupManifest({ repoPath: '/repo', manifest });
+    proxy.missingBlob({ repoPath: '/repo', analysisHash: hashA });
+
+    const result = await compiledTreeResolveBroker({ repoPath: '/repo' });
+
+    expect(result.nodes).toStrictEqual([
+      { name: 'a.ts', path: 'a.ts', kind: 'file' },
+    ]);
+  });
 });

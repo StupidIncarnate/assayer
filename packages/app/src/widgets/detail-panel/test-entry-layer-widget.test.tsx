@@ -57,8 +57,8 @@ describe('TestEntryLayerWidget', () => {
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('decide(a, b) · 2 cases');
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
-        'not run decide(1) → reaches L4',
-        'not run decide(2) → reaches L4',
+        'not run decide(1)',
+        'not run decide(2)',
       ]);
     });
   });
@@ -70,7 +70,7 @@ describe('TestEntryLayerWidget', () => {
       const { getByTestId } = render(<TestEntryLayerWidget fn={MODULE_ENTRY} relPath={'src/message.ts'} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('message · 1 cases');
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run message');
     });
   });
 
@@ -81,7 +81,7 @@ describe('TestEntryLayerWidget', () => {
       const { getByTestId } = render(<TestEntryLayerWidget fn={THROUGH_CALLER_ENTRY} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('inner(n) · 1 cases');
-      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6) → reaches L4');
+      expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run outer(6)');
     });
   });
 });

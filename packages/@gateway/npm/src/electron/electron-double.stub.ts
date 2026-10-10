@@ -32,6 +32,9 @@ const rendererLog = jest.fn(
 const appLog = jest.fn(
   (_event: string, _listener: (...args: readonly unknown[]) => void): void => undefined,
 );
+const windowLog = jest.fn(
+  (_event: string, _listener: (...args: readonly unknown[]) => void): void => undefined,
+);
 const exposeLog = jest.fn((_key: string, _api: unknown): void => undefined);
 
 const registry = {
@@ -60,6 +63,10 @@ const registry = {
     appLog.mock.calls
       .filter(([loggedEvent]) => loggedEvent === event)
       .map(([, listener]) => listener),
+  windowListeners: ({ event }: { event: string }): ((...args: readonly unknown[]) => void)[] =>
+    windowLog.mock.calls
+      .filter(([loggedEvent]) => loggedEvent === event)
+      .map(([, listener]) => listener),
   mainWorld: (): Map<string, unknown> => new Map(exposeLog.mock.calls),
 };
 
@@ -86,6 +93,32 @@ const electronDouble = {
     setApplicationMenu: (_menu: unknown): void => undefined,
   },
 
+  screen: {
+    getAllDisplays: (): unknown[] => [
+      {
+        id: 1,
+        bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+        workArea: { x: 0, y: 0, width: 1920, height: 1040 },
+        scaleFactor: 1,
+        rotation: 0,
+        internal: true,
+        monochrome: false,
+        accelerometerSupport: 'unknown',
+        colorDepth: 24,
+        colorSpace: 'srgb',
+        depthPerComponent: 8,
+        detected: true,
+        displayFrequency: 60,
+        label: 'Primary Display',
+        maximumCursorSize: { width: 32, height: 32 },
+        nativeOrigin: { x: 0, y: 0 },
+        size: { width: 1920, height: 1080 },
+        touchSupport: 'unknown',
+        workAreaSize: { width: 1920, height: 1040 },
+      },
+    ],
+  },
+
   // The mock's `BrowserWindow` constructor calls `created` with its options, and every window's
   // `loadURL` calls `loadURL` here, so one spy sees every window.
   browserWindow: {
@@ -96,6 +129,21 @@ const electronDouble = {
           `electron double: BrowserWindow.loadURL('${url}') has no staged answer. Compose electronProxy from '#gateway/npm/electron/electron.proxy' and stage it with loadUrlResolves.`,
         ),
       ),
+    on: (event: string, listener: (...args: readonly unknown[]) => void): unknown => {
+      windowLog(event, listener);
+
+      return electronDouble.browserWindow;
+    },
+    getBounds: (): { x: number; y: number; width: number; height: number } => ({
+      x: 0,
+      y: 0,
+      width: 1500,
+      height: 800,
+    }),
+    isMaximized: (): boolean => false,
+    isFullScreen: (): boolean => false,
+    maximize: (): void => undefined,
+    setFullScreen: (_flag: boolean): void => undefined,
   },
 
   ipcMain: {

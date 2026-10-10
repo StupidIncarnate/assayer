@@ -112,7 +112,7 @@ export const readConditionTreeLayerTransformer = ({
     // probe.
     //
     // A LITERAL `b` is evaluated by its value, not read as a leaf, because no case can set a literal: a
-    // falsy one (`a ?? 0`) leaves just `a`, and a truthy one (`a ?? 5`) leaves `a || a is nullish`.
+    // falsy one (`a ?? false`, `a ?? 0`) reads as `a is non-nullish && a`, and a truthy one (`a ?? 5`) leaves `a || a is nullish`.
     if (operator === SyntaxKind.QuestionQuestionToken) {
       const truthyLeft = readConditionTreeLayerTransformer({
         condition: condition.getLeft(),
@@ -121,11 +121,6 @@ export const readConditionTreeLayerTransformer = ({
         path: [...path, 0],
       });
       const fallback = readLiteralValueLayerTransformer({ node: condition.getRight() });
-
-      if (fallback !== undefined && !fallback) {
-        return truthyLeft;
-      }
-
       const nullishOperand = unwrapParenthesesLayerTransformer({ node: condition.getLeft() });
       const nullishLeaf = buildConditionLeafLayerTransformer({
         readout: {
@@ -136,6 +131,17 @@ export const readConditionTreeLayerTransformer = ({
         context,
         id: coverageContract.shape.id.parse(`${branchCoverageId}#leaf${[...path, 1, 0].map((index) => `.${index}`).join('')}`),
       });
+
+      if (fallback !== undefined && !fallback) {
+        return conditionTreeReadoutContract.parse({
+          condition: conditionNodeContract.parse({
+            kind: 'and',
+            left: nullishLeaf.condition,
+            right: truthyLeft.condition,
+          }),
+          sites: truthyLeft.sites,
+        });
+      }
       const isNullish = conditionNodeContract.parse({ kind: 'not', operand: nullishLeaf.condition });
       const truthyRight =
         fallback === undefined
