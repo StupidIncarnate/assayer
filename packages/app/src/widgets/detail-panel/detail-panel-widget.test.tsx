@@ -605,7 +605,7 @@ describe('DetailPanelWidget', () => {
 
       const { getByTestId } = render(<DetailPanelWidget analysis={analysis} />, { wrapper: MantineProvider });
 
-      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner');
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner\n  ↳ it is not exported');
     });
 
     // The pure-statement shape. The entry's two derived cases arrange NOTHING and each claims a
@@ -622,7 +622,7 @@ describe('DetailPanelWidget', () => {
 
       expect(queryAllByTestId('TEST_CASE_ROW')).toStrictEqual([]);
       expect(queryAllByTestId('TEST_ENTRY')).toStrictEqual([]);
-      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: welded-const.ts');
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: welded-const.ts\n  ↳ Runs at import time (no entry parameters)');
     });
 
     // A file whose only entry is undriven is NOT an empty file, and must never read like one.
@@ -665,7 +665,7 @@ describe('DetailPanelWidget', () => {
         'not run formatGreeting("")',
       ]);
       expect(getByTestId('RUN_BUTTON').textContent).toBe('Run');
-      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner');
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner\n  ↳ it is not exported');
     });
 
     // Three admissions, three answers to "who owes this work?", three rows. Merged, each would order
@@ -682,7 +682,7 @@ describe('DetailPanelWidget', () => {
 
       expect(getByTestId('RUN_GAP').textContent).toBe('find — needs a harness');
       expect(getByTestId('DARK_SPOT').textContent).toBe(LOOP_DARK_SPOT_TEXT);
-      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner');
+      expect(getByTestId('UNDRIVEN').textContent).toBe('L1: inner\n  ↳ it is not exported');
     });
 
     it('EMPTY: {analysis with nothing undriven} => no undriven row is rendered', () => {

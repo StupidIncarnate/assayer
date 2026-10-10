@@ -35,7 +35,7 @@ describe('ErrorCategoryLayerWidget', () => {
 
       const item = getByTestId('UNDRIVEN');
 
-      expect(item.textContent).toBe('L3: inner');
+      expect(item.textContent).toBe('L3: inner\n  ↳ Runs at import time (no entry parameters)');
       expect(item).toHaveStyle({ backgroundColor: 'var(--mantine-color-blue-9)' });
 
       fireEvent.mouseEnter(item);

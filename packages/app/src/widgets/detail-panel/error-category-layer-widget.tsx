@@ -13,6 +13,7 @@ import { ActionIcon, Box, Group, Popover, Stack, Text } from '#gateway/npm/manti
 import type { DarkSpot, EntryGap, FileAnalysis, LintEntry, UndrivenEntry } from '@assayer/shared/contracts';
 
 import { errorCategoryStatics } from '../../statics/error-category/error-category-statics';
+import { undrivenTerseReasonTransformer } from '../../transformers/undriven-terse-reason/undriven-terse-reason-transformer';
 
 export type ErrorCategory = 'undriven' | 'lints' | 'darkSpots' | 'gaps';
 
@@ -116,10 +117,12 @@ export const ErrorCategoryLayerWidget = ({
                       : undefined,
                   borderRadius: 2,
                   paddingInline: 4,
+                  paddingBlock: 2,
                   cursor: 'pointer',
+                  whiteSpace: 'pre-wrap',
                 }}
               >
-                {`L${Number(entry.startLine)}: ${String(entry.label ?? entry.name)}`}
+                {`L${Number(entry.startLine)}: ${String(entry.label ?? entry.name)}\n  ↳ ${undrivenTerseReasonTransformer({ reason: entry.reason })}`}
               </Text>
             ))
           : null}
