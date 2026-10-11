@@ -19,6 +19,11 @@ import type { GeneratedFile } from '../../../contracts/generated-file/generated-
 import { specimenTypecheckStatics } from '../../../statics/specimen-typecheck/specimen-typecheck-statics';
 import { typescriptLibLocateBroker } from '../../typescript-lib/locate/typescript-lib-locate-broker';
 
+// Parsed lib files and `@types/node` files, kept for the life of the process. A typecheck parses
+// about a hundred of these, and they take most of its time. They never change during a run, so the
+// next typecheck reuses them. A generated specimen is never kept here.
+const diskSourceFiles = new Map<string, ts.SourceFile | undefined>();
+
 export const specimensTypecheckBroker = ({
   files,
 }: {
@@ -51,9 +56,16 @@ export const specimensTypecheckBroker = ({
     readFile: (fileName) => virtualFiles.get(fileName)?.content ?? base.readFile(fileName),
     getSourceFile: (fileName, languageVersionOrOptions, onError, shouldCreate) => {
       const virtual = virtualFiles.get(fileName);
-      return virtual === undefined
-        ? base.getSourceFile(fileName, languageVersionOrOptions, onError, shouldCreate)
-        : ts.createSourceFile(fileName, virtual.content, languageVersionOrOptions, true);
+      if (virtual !== undefined) {
+        return ts.createSourceFile(fileName, virtual.content, languageVersionOrOptions, true);
+      }
+      if (!diskSourceFiles.has(fileName)) {
+        diskSourceFiles.set(
+          fileName,
+          base.getSourceFile(fileName, languageVersionOrOptions, onError, shouldCreate),
+        );
+      }
+      return diskSourceFiles.get(fileName);
     },
   };
   const program = ts.createProgram([...virtualFiles.keys()], converted.options, host);

@@ -17,5 +17,6 @@ export const specimenTypecheckStatics = {
     lib: ['es2022'],
     types: ['node'],
     noEmit: true,
+    skipLibCheck: true,
   },
 } as const;

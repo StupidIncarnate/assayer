@@ -14,6 +14,7 @@ describe('specimenTypecheckStatics', () => {
           lib: ['es2022'],
           types: ['node'],
           noEmit: true,
+          skipLibCheck: true,
         },
       });
     });
