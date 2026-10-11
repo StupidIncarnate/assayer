@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { constOperandReadoutContract } from './const-operand-readout-contract';
 import type { ConstOperandReadout } from './const-operand-readout-contract';

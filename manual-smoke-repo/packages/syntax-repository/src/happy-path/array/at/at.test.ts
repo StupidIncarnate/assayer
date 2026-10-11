@@ -17,7 +17,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
   // Indexed access: `items.at(index)` returns `number | undefined`, now read as a real union — an
   // out-of-bounds index genuinely returns nothing, and the analysis says so. Two params: the
   // array-of-number FANS OUT over cardinality — empty/one/many — so the branchless flow reaches its
-  // single exit through three derived cases: a salient `[]` and two grayed twins `[7]` and `[7,7]`. The
+  // single exit through three derived cases: a fewest-runs `[]` and two every-route-only twins `[7]` and `[7,7]`. The
   // scalar `index` is FIXED at the number placeholder `7` across all three. The arranged values are
   // INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function elementAt(items: number[], index: number): number | undefined { return items.at(index) }} => array + number params, return read as a real optional union, three cardinality cases', () => {
@@ -45,7 +45,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [] },
               { kind: 'param', param: 'index', value: 0 },
             ],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -53,7 +53,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [7] },
               { kind: 'param', param: 'index', value: 0 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -61,7 +61,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [7, 8] },
               { kind: 'param', param: 'index', value: 0 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -69,7 +69,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [] },
               { kind: 'param', param: 'index', value: -1 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -77,7 +77,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [7] },
               { kind: 'param', param: 'index', value: -1 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -85,7 +85,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [7, 8] },
               { kind: 'param', param: 'index', value: -1 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -93,7 +93,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [] },
               { kind: 'param', param: 'index', value: 7 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -101,7 +101,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [7] },
               { kind: 'param', param: 'index', value: 7 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/elementAt/return@top'],
@@ -109,7 +109,7 @@ describe('array / at — a branchless function returning `items.at(index)`', () 
               { kind: 'array', param: 'items', value: [7, 8] },
               { kind: 'param', param: 'index', value: 7 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

@@ -6,7 +6,8 @@
  *   Each axis narrows on its own terms: bounds take the TIGHTER side (both the value's own and its
  *   length's, through the same `intersect-bounds` rule so the two cannot disagree), enumerations
  *   intersect (and an absent enumeration means "open", so it yields to whichever side has one), and
- *   exclusions accumulate — a value must avoid every point either side ruled out, on either axis.
+ *   exclusions accumulate — a value must avoid every point either side ruled out, on either axis — and
+ *   the text a value must contain, and the text it must not, accumulate from both sides.
  *
  *   Nothing here decides emptiness; `is-domain-empty` reads that off the result. Keeping the two apart
  *   matters because intersection is associative and must stay so — folding a whole guard path is one
@@ -66,6 +67,10 @@ export const intersectDomainsTransformer = ({
         ? left.members
         : left.members.filter((member) => right.members?.includes(member) === true);
 
+  // Text a value must contain, and text it must not, accumulate from both sides like exclusions do.
+  const includes = [...new Set([...(left.includes ?? []), ...(right.includes ?? [])])];
+  const notIncludes = [...new Set([...(left.notIncludes ?? []), ...(right.notIncludes ?? [])])];
+
   return valueDomainContract.parse({
     ...(value.min === undefined ? {} : { min: value.min }),
     minExclusive: value.minExclusive,
@@ -78,5 +83,7 @@ export const intersectDomainsTransformer = ({
     lengthExcluded: [...new Set([...left.lengthExcluded, ...right.lengthExcluded])],
     ...(members === undefined ? {} : { members }),
     excluded: [...new Set([...left.excluded, ...right.excluded])],
+    ...(includes.length === 0 ? {} : { includes }),
+    ...(notIncludes.length === 0 ? {} : { notIncludes }),
   });
 };

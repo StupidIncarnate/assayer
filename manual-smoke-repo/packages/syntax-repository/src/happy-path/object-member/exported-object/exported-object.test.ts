@@ -40,6 +40,7 @@ describe('object-member / exported-object — if/else inside a method of an expo
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 3,
               endLine: 5,
             },

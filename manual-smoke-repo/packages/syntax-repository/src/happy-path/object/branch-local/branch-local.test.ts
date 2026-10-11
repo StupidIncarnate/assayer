@@ -15,8 +15,8 @@ describe('object / branch-local — an `if` on an object-member operand, DRIVEN 
   // The per-file walk reads `config.mode` past the property access and records the operand:property fact
   // on the leaf — the root param it reads from (`config`), the `.member` chain (`['mode']`), and the
   // root's declared type-reference (`Config`) — while the property's own type reads `string` off a
-  // same-file interface. The per-file blob derives no case for it (arranging an object param's property
-  // is a consume-time step), so the analyze-only view still carries the branch as `cases: []`.
+  // same-file interface. The per-file blob cannot steer it (arranging an object param's property
+  // is a consume-time step), so the analyze-only view carries both routes as undriven cases.
   it('VALID: {if (config.mode === "a")} => the leaf records the property path, root type-ref, and reads the property type', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'branch-local.ts') }), relPath });
 
@@ -53,6 +53,7 @@ describe('object / branch-local — an `if` on an object-member operand, DRIVEN 
               operandType: { kind: 'string' },
               predicate: { kind: 'eq', literal: 'a' },
             },
+            guardPath: [],
             startLine: 6,
             endLine: 8,
           },
@@ -85,7 +86,25 @@ describe('object / branch-local — an `if` on an object-member operand, DRIVEN 
             line: 10,
           },
         ],
-        cases: [],
+        // Both routes through the object-member branch are declared. The per-file analysis cannot steer a property
+        // of an object param, so neither is driven and neither runs: the arranged object is a fill, not a value
+        // chosen to take its arm.
+        cases: [
+          {
+            reachesPath: ['*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then'],
+            arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
+            arms: [{ branchCoverageId: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'then' }],
+            driven: false,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: ['*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else'],
+            arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
+            arms: [{ branchCoverageId: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'else' }],
+            driven: false,
+            fewestRuns: true,
+          },
+        ],
       },
     ]);
   });
@@ -111,14 +130,14 @@ describe('object / branch-local — an `if` on an object-member operand, DRIVEN 
             '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then',
           ],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: [
             '*module*/decide/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else',
           ],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/decide/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ],
       undriven: [],

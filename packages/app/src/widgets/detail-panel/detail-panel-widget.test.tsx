@@ -4,7 +4,6 @@ import userEvent from '#gateway/npm/testing-library__user-event';
 
 import { DetailPanelWidget } from './detail-panel-widget';
 import { DetailPanelWidgetProxy } from './detail-panel-widget.proxy';
-import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
 import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
 import { DarkSpotStub } from '@assayer/shared/contracts/dark-spot/dark-spot.stub';
 import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
@@ -16,10 +15,11 @@ import { ResolvedEdgeStub } from '@assayer/shared/contracts/resolved-edge/resolv
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 import { UndrivenEntryStub } from '@assayer/shared/contracts/undriven-entry/undriven-entry.stub';
 
-// One entry with a salient case and its grayed breadth twin — both reaching the same exit, so the
-// second is the non-salient breadth. Drives the badge (rides every salient row) and the runMode gray
-// (the non-salient twin dims only under 'intelligent'). Cases render in array order: salient, then twin.
-const SALIENT_AND_BREADTH_ANALYSIS = FileAnalysisStub({
+// One entry with a route in the fewest-runs set, a second route outside it (both reaching the same exit),
+// and a third route through a branch Assayer cannot steer: undriven, so listed and never run. Every route
+// holds all three; Fewest runs holds the first and the undriven one (an undriven route can still be the
+// one that takes an arm). Cases render in array order.
+const TWO_SETS_ANALYSIS = FileAnalysisStub({
   functions: [
     FunctionAnalysisStub({
       entry: EntrySignatureStub({
@@ -29,11 +29,26 @@ const SALIENT_AND_BREADTH_ANALYSIS = FileAnalysisStub({
         access: { kind: 'module' },
         exportName: 'thing',
       }),
-      branches: [],
+      branches: [
+        {
+          coverageId: '*module*/if:opaque',
+          kind: 'if',
+          condition: { kind: 'leaf', id: '*module*/if:opaque#leaf.0', operandType: { kind: 'boolean' }, predicate: { kind: 'truthy' } },
+          startLine: 2,
+          endLine: 3,
+        },
+      ],
       exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
       cases: [
-        { reachesPath: ['*module*/exit@top'], arrange: [], salient: true },
-        { reachesPath: ['*module*/exit@top'], arrange: [{ kind: 'env', name: 'X', value: '1' }], salient: false },
+        { reachesPath: ['*module*/exit@top'], arrange: [], fewestRuns: true },
+        { reachesPath: ['*module*/exit@top'], arrange: [{ kind: 'env', name: 'X', value: '1' }], fewestRuns: false },
+        {
+          reachesPath: ['*module*/exit@top'],
+          arrange: [{ kind: 'env', name: 'X', value: '2' }],
+          arms: [{ branchCoverageId: '*module*/if:opaque', arm: 'else' }],
+          driven: false,
+          fewestRuns: true,
+        },
       ],
     }),
   ],
@@ -98,7 +113,6 @@ const ANONYMOUS_CALLBACK_ANALYSIS = FileAnalysisStub({
         {
           reachesPath: ['callback/return@then'],
           arrange: [{ kind: 'array', param: 'items', value: [101] }],
-          salient: true,
         },
       ],
     }),
@@ -120,7 +134,7 @@ const THROUGH_CALLER_ANALYSIS = FileAnalysisStub({
       }),
       branches: [],
       exits: [{ coverageId: 'inner/return@then', kind: 'return', guardPath: [], line: 4 }],
-      cases: [{ reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true }],
+      cases: [{ reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }] }],
     }),
   ],
   enrichment: [],
@@ -939,70 +953,88 @@ describe('DetailPanelWidget', () => {
     });
   });
 
-  describe('the salient badge and run mode', () => {
-    // The badge marks the execution subset and rides EVERY salient row regardless of runMode — a
-    // reviewer sees which cases are must-run even in thorough mode. The non-salient breadth twin has none.
-    it('VALID: {a salient case beside its grayed breadth twin} => only the salient row carries the INTELLIGENT badge', () => {
+  describe('the two case sets', () => {
+    // Every route lists every case, the undriven one included; Fewest runs lists the cases flagged
+    // fewestRuns. Both are labelled, with their counts, so a reader can check Assayer's accounting.
+    it('VALID: {three routes, two flagged fewest-runs} => Every route and Fewest runs are labelled with their counts', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />, { wrapper: MantineProvider });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={TWO_SETS_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
 
-      expect(getAllByTestId('INTELLIGENT_BADGE').map((element) => element.textContent)).toStrictEqual([
-        'INTELLIGENT',
+      expect(getAllByTestId('CASE_SET_LABEL').map((element) => element.textContent)).toStrictEqual([
+        'Every route · 3',
+        'Fewest runs · 2',
       ]);
     });
 
-    // The full breadth is always in the DOM (the title keeps the full count); the badge does not enter
-    // the row's own text, so the case content reads the same whether or not a row is badged.
-    it('VALID: {a salient case beside its breadth twin} => both rows render, badge never in the row text', () => {
+    it('VALID: {three routes, two flagged fewest-runs} => the rows of each set, the title keeping the every-route count', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
+      const { getAllByTestId, getByTestId } = render(<DetailPanelWidget analysis={TWO_SETS_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
 
+      expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('thing · 3 cases');
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
         'not run thing',
         'not run thing',
+        'not run thing',
+      ]);
+      expect(getAllByTestId('FEWEST_RUNS_ROW').map((element) => element.textContent)).toStrictEqual([
+        'not run thing',
+        'not run thing',
       ]);
     });
 
-    // thorough is the reviewer reading every derived case as live — nothing grays, whatever its salience.
-    it('VALID: {runMode: thorough} => every row is live (data-running true) regardless of salience', () => {
+    // Only a driven case in the fewest-runs set runs. The route outside the set and the undriven route
+    // are listed and dimmed, so a reviewer reads which cases the run executes.
+    it('VALID: {three routes} => only the driven fewest-runs route is running, the rest are listed not run', () => {
       DetailPanelWidgetProxy();
-      const {runMode} = StatusViewStub({ runMode: 'thorough' });
 
-      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />, { wrapper: MantineProvider });
+      const { getAllByTestId } = render(<DetailPanelWidget analysis={TWO_SETS_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
 
       expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
         'true',
-        'true',
+        'false',
+        'false',
       ]);
-    });
-
-    // intelligent grays the non-salient breadth so only the salient subset reads as running — the first
-    // (salient) row stays live, the twin goes data-running=false.
-    it('VALID: {runMode: intelligent} => the non-salient breadth grays out while the salient row stays live', () => {
-      DetailPanelWidgetProxy();
-      const {runMode} = StatusViewStub({ runMode: 'intelligent' });
-
-      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} runMode={runMode} />, { wrapper: MantineProvider });
-
-      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
+      expect(getAllByTestId('FEWEST_RUNS_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
         'true',
         'false',
       ]);
     });
 
-    // A panel not told a runMode is thorough by default — a repo without the config still shows every
-    // case live rather than guessing them grayed.
-    it('EMPTY: {no runMode prop} => defaults to thorough, every row live', () => {
+    it('VALID: {an undriven route} => it carries the undriven marker and its arms in both sets, and no driven route does', () => {
       DetailPanelWidgetProxy();
 
-      const { getAllByTestId } = render(<DetailPanelWidget analysis={SALIENT_AND_BREADTH_ANALYSIS} />, { wrapper: MantineProvider });
+      const { getAllByTestId, getByTestId } = render(<DetailPanelWidget analysis={TWO_SETS_ANALYSIS} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
 
-      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-running'))).toStrictEqual([
+      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.getAttribute('data-driven'))).toStrictEqual([
         'true',
         'true',
+        'false',
       ]);
+      expect(getByTestId('CASE_UNDRIVEN').textContent).toBe('undriven');
+      expect(getByTestId('FEWEST_RUNS_UNDRIVEN').textContent).toBe('undriven');
+      expect(getByTestId('CASE_ARMS').textContent).toBe('L2 else');
+      expect(getByTestId('FEWEST_RUNS_ARMS').textContent).toBe('L2 else');
+    });
+
+    it('VALID: {every case undriven} => the routes are listed and there is no Run button', () => {
+      DetailPanelWidgetProxy();
+      const [fn] = TWO_SETS_ANALYSIS.functions;
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            ...fn,
+            cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], driven: false }],
+          }),
+        ],
+        enrichment: [],
+      });
+
+      const { queryByTestId, getAllByTestId } = render(<DetailPanelWidget analysis={analysis} relPath={'src/happy-path/x/thing.ts'} />, { wrapper: MantineProvider });
+
+      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual(['not run thing']);
+      expect(queryByTestId('RUN_BUTTON')).toBe(null);
     });
   });
 

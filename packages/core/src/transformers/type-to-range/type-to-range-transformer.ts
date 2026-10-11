@@ -9,6 +9,9 @@
  *   domain that constrains nothing — the last of those is a safety property, not a convenience: an
  *   unread predicate must never be able to make a reachable path look impossible.
  *
+ *   `includes` lands on the domain's TEXT axis: the substring a string must contain on the satisfying side,
+ *   and must not on the violating side.
+ *
  *   A `.length` comparison lands on the domain's LENGTH axis, never its value axis. `s.length >= 3`
  *   says nothing about where `s` sits in an ordering of strings, so `min: 3` would assert a bound the
  *   source never wrote; realizing it as `members: ['aaa']` would sample it, and the next length guard
@@ -52,15 +55,21 @@
  * typeToRangeTransformer({ type: { kind: 'union', members: [{ kind: 'string' }, { kind: 'number' }] }, predicateKind: 'typeof-eq', literal: 'string' });
  * // Returns { satisfying: {members: ['abc123']}, violating: {members: [7]} }
  */
-import type { Predicate, RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
-import { representativeValueContract } from '@assayer/shared/contracts';
+import type {
+  Predicate,
+  RepresentativeValue,
+  TypeDescriptor,
+} from "@assayer/shared/contracts";
+import { representativeValueContract } from "@assayer/shared/contracts";
 
-import { armValuesContract } from '../../contracts/arm-values/arm-values-contract';
-import type { ArmValues } from '../../contracts/arm-values/arm-values-contract';
-import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
-import { typeofDomainTransformer } from '../typeof-domain/typeof-domain-transformer';
-import type { TypeofTag } from '../typeof-tag/typeof-tag-transformer';
-import { stringComparisonLayerTransformer } from './string-comparison-layer-transformer';
+import { armValuesContract } from "../../contracts/arm-values/arm-values-contract";
+import type { ArmValues } from "../../contracts/arm-values/arm-values-contract";
+import { representativeValueTransformer } from "../representative-value/representative-value-transformer";
+import { typeofDomainTransformer } from "../typeof-domain/typeof-domain-transformer";
+import type { TypeofTag } from "../typeof-tag/typeof-tag-transformer";
+import { truthinessRangeLayerTransformer } from './truthiness-range-layer-transformer';
+import { lengthComparisonLayerTransformer } from "./length-comparison-layer-transformer";
+import { stringComparisonLayerTransformer } from "./string-comparison-layer-transformer";
 
 export const typeToRangeTransformer = ({
   type,
@@ -68,15 +77,19 @@ export const typeToRangeTransformer = ({
   literal,
 }: {
   type: TypeDescriptor;
-  predicateKind: Predicate['kind'];
+  predicateKind: Predicate["kind"];
   literal?: string | number | boolean | null;
 }): ArmValues => {
   const rep = representativeValueTransformer({ type });
-  const num = typeof literal === 'number' ? literal : 0;
+  const num = typeof literal === "number" ? literal : 0;
   const unionOthers: RepresentativeValue[] =
-    type.kind === 'union'
-      ? type.members.flatMap((member) => (member.kind === 'literal' && member.value !== literal ? [member.value] : []))
-      : type.kind === 'boolean' && typeof literal === 'boolean'
+    type.kind === "union"
+      ? type.members.flatMap((member) =>
+          member.kind === "literal" && member.value !== literal
+            ? [member.value]
+            : [],
+        )
+      : type.kind === "boolean" && typeof literal === "boolean"
         ? [representativeValueContract.parse(!literal)]
         : [];
   const excludedPoint = literal === undefined ? rep : literal;
@@ -90,111 +103,77 @@ export const typeToRangeTransformer = ({
         ? {}
         : { excluded: [excludedPoint] };
   const literalPoint = literal === undefined ? rep : literal;
-  const isLiteral = literalPoint === undefined ? {} : { members: [literalPoint] };
+  const isLiteral =
+    literalPoint === undefined ? {} : { members: [literalPoint] };
   // Every arm that would be realized from the operand's OWN representative, for a type that has none.
   // Constraining nothing is the same safety property the unrecognized predicate relies on.
-  const unrealizable = armValuesContract.parse({ satisfying: {}, violating: {} });
-  // The falsy value each scalar member of a union can take: `0`, `''`, `false`, or a falsy literal
-  // member itself. Read in member order, so the list is deterministic.
-  const falsyPoints: RepresentativeValue[] =
-    type.kind === 'union'
-      ? type.members
-          .flatMap((member): RepresentativeValue[] =>
-            member.kind === 'number'
-              ? [representativeValueContract.parse(0)]
-              : member.kind === 'string'
-                ? [representativeValueContract.parse('')]
-                : member.kind === 'boolean'
-                  ? [representativeValueContract.parse(false)]
-                  : member.kind === 'literal' && !member.value
-                    ? [member.value]
-                    : [],
-          )
-          .filter((point, index, all) => all.indexOf(point) === index)
-      : [];
-
+  const unrealizable = armValuesContract.parse({
+    satisfying: {},
+    violating: {},
+  });
   switch (predicateKind) {
-    // The length axis, mirroring the value axis one line for one line. A length comparison becomes a
-    // length BOUND for the same reason a numeric one becomes a value bound: a bound intersects with
-    // the next guard, and a realized string does not. `length === 0` is not special here — it is
-    // `length-eq` carrying 0, and it still realizes '' against '' the moment a value is picked.
+    // The length axis, mirroring the value axis one line for one line (`length-comparison`).
     case 'length-eq':
-      return armValuesContract.parse({
-        satisfying: { lengthMin: num, lengthMax: num },
-        violating: { lengthExcluded: [num] },
-      });
     case 'length-neq':
-      return armValuesContract.parse({
-        satisfying: { lengthExcluded: [num] },
-        violating: { lengthMin: num, lengthMax: num },
-      });
     case 'length-gt':
-      return armValuesContract.parse({
-        satisfying: { lengthMin: num, lengthMinExclusive: true },
-        violating: { lengthMax: num },
-      });
     case 'length-gte':
-      return armValuesContract.parse({
-        satisfying: { lengthMin: num },
-        violating: { lengthMax: num, lengthMaxExclusive: true },
-      });
     case 'length-lt':
-      return armValuesContract.parse({
-        satisfying: { lengthMax: num, lengthMaxExclusive: true },
-        violating: { lengthMin: num },
-      });
     case 'length-lte':
+      return lengthComparisonLayerTransformer({ predicateKind, bound: num });
+    // A substring test narrows a STRING by the text it must (or must not) contain. Against anything else
+    // it names no value the engine can place, so it constrains nothing rather than narrowing a type the
+    // text could never appear in.
+    case "includes":
+      return type.kind === "string" && typeof literal === "string"
+        ? armValuesContract.parse({
+            satisfying: { includes: [literal] },
+            violating: { notIncludes: [literal] },
+          })
+        : unrealizable;
+    case "eq":
       return armValuesContract.parse({
-        satisfying: { lengthMax: num },
-        violating: { lengthMin: num, lengthMinExclusive: true },
+        satisfying: isLiteral,
+        violating: otherThanLiteral,
       });
-    case 'eq':
-      return armValuesContract.parse({ satisfying: isLiteral, violating: otherThanLiteral });
-    case 'neq':
-      return armValuesContract.parse({ satisfying: otherThanLiteral, violating: isLiteral });
-    case 'gt':
-    case 'gte':
-    case 'lt':
-    case 'lte':
-      if (type.kind === 'string' && typeof literal === 'string') {
+    case "neq":
+      return armValuesContract.parse({
+        satisfying: otherThanLiteral,
+        violating: isLiteral,
+      });
+    case "gt":
+    case "gte":
+    case "lt":
+    case "lte":
+      if (type.kind === "string" && typeof literal === "string") {
         return stringComparisonLayerTransformer({ predicateKind, literal });
       }
 
-      if (predicateKind === 'gt') {
-        return armValuesContract.parse({ satisfying: { min: num, minExclusive: true }, violating: { max: num } });
+      if (predicateKind === "gt") {
+        return armValuesContract.parse({
+          satisfying: { min: num, minExclusive: true },
+          violating: { max: num },
+        });
       }
-      if (predicateKind === 'gte') {
-        return armValuesContract.parse({ satisfying: { min: num }, violating: { max: num, maxExclusive: true } });
+      if (predicateKind === "gte") {
+        return armValuesContract.parse({
+          satisfying: { min: num },
+          violating: { max: num, maxExclusive: true },
+        });
       }
-      if (predicateKind === 'lt') {
-        return armValuesContract.parse({ satisfying: { max: num, maxExclusive: true }, violating: { min: num } });
+      if (predicateKind === "lt") {
+        return armValuesContract.parse({
+          satisfying: { max: num, maxExclusive: true },
+          violating: { min: num },
+        });
       }
-      return armValuesContract.parse({ satisfying: { max: num }, violating: { min: num, minExclusive: true } });
-    // A UNION with a falsy point among its members (`number | undefined` has 0, `boolean | undefined`
-    // has `false`) is truthy everywhere but those points, and falsy exactly at them, so it reads the way
-    // a lone `number` does: an exclusion on one side, the points on the other. Sampling the truthy side
-    // instead would make a welded constant intersect it to nothing and report a live arm dead. A union
-    // with no such point keeps the representative reading below.
+      return armValuesContract.parse({
+        satisfying: { max: num },
+        violating: { min: num, minExclusive: true },
+      });
+    // Truthiness reads the type's falsy points (`truthiness-range`).
     case 'truthy':
-      return type.kind === 'number'
-        ? armValuesContract.parse({ satisfying: { excluded: [0] }, violating: { members: [0] } })
-        : type.kind === 'boolean'
-          ? armValuesContract.parse({ satisfying: { members: [true] }, violating: { members: [false] } })
-          : falsyPoints.length > 0
-            ? armValuesContract.parse({ satisfying: { excluded: falsyPoints }, violating: { members: falsyPoints } })
-            : rep === undefined
-              ? unrealizable
-              : armValuesContract.parse({ satisfying: { members: [rep] }, violating: { members: [''] } });
     case 'falsy':
-      return type.kind === 'number'
-        ? armValuesContract.parse({ satisfying: { members: [0] }, violating: { excluded: [0] } })
-        : type.kind === 'boolean'
-          ? armValuesContract.parse({ satisfying: { members: [false] }, violating: { members: [true] } })
-          : falsyPoints.length > 0
-            ? armValuesContract.parse({ satisfying: { members: falsyPoints }, violating: { excluded: falsyPoints } })
-            : rep === undefined
-              ? unrealizable
-              : armValuesContract.parse({ satisfying: { members: [''] }, violating: { members: [rep] } });
+      return truthinessRangeLayerTransformer({ type, predicateKind });
     // The `??` operand: satisfying is every value but `null` — an exclusion, not a sample, because a
     // condition `a ?? b` intersects it with a truthiness read of the same `a` (`a` falsy but not
     // nullish), and a sampled representative would intersect `{0}` to nothing. Realized, it is the
@@ -205,7 +184,7 @@ export const typeToRangeTransformer = ({
     // non-null shape, `type-to-range` cannot), never the violating one. Narrowing the violating side to
     // `{}` here would be the G1 mistake one arm over — the same `??`-discards-a-legitimate-`null` shape
     // `plan/open-defects.md` names, just moved from a scalar operand to a composite one.
-    case 'non-nullish':
+    case "non-nullish":
       return armValuesContract.parse({
         satisfying: rep === undefined ? {} : { excluded: [null] },
         violating: { members: [null] },
@@ -214,12 +193,12 @@ export const typeToRangeTransformer = ({
     // domain's one nullish value (`representative-value-contract`), and the other side is every value
     // but it. Whether a case can actually PUT an operand there is not this engine's question: only an
     // environment variable left unset can (`is-predicate-constraining`).
-    case 'undefined-eq':
+    case "undefined-eq":
       return armValuesContract.parse({
         satisfying: { members: [null] },
         violating: rep === undefined ? {} : { excluded: [null] },
       });
-    case 'undefined-neq':
+    case "undefined-neq":
       return armValuesContract.parse({
         satisfying: rep === undefined ? {} : { excluded: [null] },
         violating: { members: [null] },
@@ -228,9 +207,10 @@ export const typeToRangeTransformer = ({
     // (`predicateTransformer` never emits this kind otherwise), never a value of the operand's own
     // type. `typeof-eq`'s satisfying side is the tag-matching side and its violating side is
     // everything else; `typeof-neq` is the exact mirror.
-    case 'typeof-eq':
-    case 'typeof-neq': {
-      const tag = typeof literal === 'string' ? (literal as TypeofTag) : undefined;
+    case "typeof-eq":
+    case "typeof-neq": {
+      const tag =
+        typeof literal === "string" ? (literal as TypeofTag) : undefined;
 
       if (tag === undefined) {
         return armValuesContract.parse({ satisfying: {}, violating: {} });
@@ -240,10 +220,12 @@ export const typeToRangeTransformer = ({
       const rest = typeofDomainTransformer({ type, tag, wantMatch: false });
 
       return armValuesContract.parse(
-        predicateKind === 'typeof-eq' ? { satisfying: matching, violating: rest } : { satisfying: rest, violating: matching },
+        predicateKind === "typeof-eq"
+          ? { satisfying: matching, violating: rest }
+          : { satisfying: rest, violating: matching },
       );
     }
-    case 'unrecognized':
+    case "unrecognized":
     default:
       // Unrecognized: constrain NOTHING on either arm. A predicate the analyzer could not read must
       // not narrow anything, or an unread guard would be able to prove a reachable exit impossible.

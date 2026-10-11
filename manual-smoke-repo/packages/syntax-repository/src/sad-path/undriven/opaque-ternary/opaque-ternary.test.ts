@@ -12,8 +12,7 @@ const relPath = 'src/sad-path/undriven/opaque-ternary/opaque-ternary.ts';
 // ternary. That sameness is the point of this rung.
 const BRANCH_REASON =
   '`opaqueTernary` has a branch on line 6 whose deciding value is neither one of its parameters nor an ' +
-  'environment variable, so no case can steer which arm runs: with nothing to vary, both arms would ' +
-  'arrange the same inputs and one would fail against correct code. Assayer understood the branch — ' +
+  'environment variable, so no case can steer which arm runs: Assayer declares a route for each arm and does not run them. Assayer understood the branch — ' +
   'this is not syntax it missed — but its execution model cannot set the value that decides it. Make ' +
   'the deciding value a parameter, or read it from the environment in a module scope, and each arm ' +
   'becomes a case Assayer drives.';
@@ -29,10 +28,15 @@ describe('undriven / opaque-ternary — a ternary whose condition is a same-file
     ]);
   });
 
-  it('VALID: {an un-steerable ternary} => no case is derived, since nothing can choose an arm', () => {
+  it('VALID: {an un-steerable ternary} => both arms are declared as undriven routes, since nothing can choose one', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-ternary.ts') }) });
 
-    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+    expect(
+      analysis.functions.flatMap((fn) => fn.cases).map((testCase) => ({ arms: testCase.arms.map((step) => String(step.arm)), driven: testCase.driven })),
+    ).toStrictEqual([
+      { arms: ['then'], driven: false },
+      { arms: ['else'], driven: false },
+    ]);
   });
 
   it('VALID: {a fully-understood ternary} => admits nothing as a dark spot', () => {

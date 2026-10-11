@@ -35,10 +35,15 @@ describe('undriven / opaque-module — a module scope branching on an opaque, no
 
   // The derivation emits NO case — nothing can steer or evaluate `Math.random()` — so a run reports
   // 0/0 rather than failing a spurious case against correct code.
-  it('VALID: {an opaque module operand} => no case is derived, since nothing can choose an arm', () => {
+  it('VALID: {an opaque module operand} => both arms are undriven routes, so the module runs no case', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-module.ts') }) });
 
-    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+    expect(
+      analysis.functions.flatMap((fn) => fn.cases).map((testCase) => ({ arms: testCase.arms.map((step) => String(step.arm)), driven: testCase.driven })),
+    ).toStrictEqual([
+      { arms: ['then'], driven: false },
+      { arms: ['else'], driven: false },
+    ]);
   });
 
   // NOT a dark spot and NOT a lint: the walk read this `if` and both arms perfectly, and neither arm is

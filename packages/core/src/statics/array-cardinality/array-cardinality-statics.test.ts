@@ -1,8 +1,8 @@
 import { arrayCardinalityStatics } from './array-cardinality-statics';
 
 describe('arrayCardinalityStatics', () => {
-  // `empty` leads so the empty array is the salient must-run representative for a branchless array; `one`
-  // and `many` follow as the grayed breadth. `max` is not in the fan-out.
+  // `empty` leads so the empty array is the fewest-runs representative for a branchless array; `one`
+  // and `many` follow in the every-route set only. `max` is not in the fan-out.
   it('VALID: {order} => empty leads, then one, then many', () => {
     expect(arrayCardinalityStatics.order).toStrictEqual(['empty', 'one', 'many']);
   });

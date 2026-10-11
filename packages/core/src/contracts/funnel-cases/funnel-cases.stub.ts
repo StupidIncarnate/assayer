@@ -5,7 +5,7 @@
  * FunnelCasesStub();
  * // Returns a valid FunnelCases
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 
 import { funnelCasesContract } from "./funnel-cases-contract";
 import type { FunnelCases } from "./funnel-cases-contract";

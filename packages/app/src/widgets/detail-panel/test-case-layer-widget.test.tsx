@@ -1,9 +1,7 @@
 import { MantineProvider } from '#gateway/npm/mantine__core';
-import { fireEvent, render } from '#gateway/npm/testing-library__react';
+import { render } from '#gateway/npm/testing-library__react';
 import { TestCaseLayerWidget } from './test-case-layer-widget';
 import { TestCaseLayerWidgetProxy } from './test-case-layer-widget.proxy';
-import { StatusViewStub } from '../../contracts/status-view/status-view.stub';
-import { runModeStatics } from '../../statics/run-mode/run-mode-statics';
 import { CaseResultStub } from '@assayer/shared/contracts/case-result/case-result.stub';
 import { EntrySignatureStub } from '@assayer/shared/contracts/entry-signature/entry-signature.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
@@ -18,27 +16,35 @@ const DECIDE = FunctionAnalysisStub({
   }),
   branches: [],
   exits: [{ coverageId: 'decide/return@top', kind: 'return', guardPath: [], line: 4 }],
-  cases: [{ reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 1 }], salient: true }],
+  cases: [{ reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 1 }], arms: [], driven: true, fewestRuns: true }],
 });
 
-const BREADTH = FunctionAnalysisStub({
+const UNDRIVEN_OUT_OF_SET = FunctionAnalysisStub({
   entry: EntrySignatureStub({
     name: 'decide',
     scopePath: ['*module*', 'decide'],
     params: [{ name: 'a', type: { kind: 'number' } }],
     access: { kind: 'named' },
   }),
-  branches: [],
+  branches: [{ coverageId: 'decide/if:a', kind: 'if', condition: { kind: 'leaf', id: 'decide/if:a#leaf.0', operandParamName: 'a', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 0 } }, startLine: 2, endLine: 3 }],
   exits: [{ coverageId: 'decide/return@top', kind: 'return', guardPath: [], line: 4 }],
-  cases: [{ reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 1 }], salient: false }],
+  cases: [
+    {
+      reachesPath: ['decide/return@top'],
+      arrange: [{ kind: 'param', param: 'a', value: 1 }],
+      arms: [{ branchCoverageId: 'decide/if:a', arm: 'then' }],
+      driven: false,
+      fewestRuns: false,
+    },
+  ],
 });
 
 describe('TestCaseLayerWidget', () => {
   describe('an unrun case', () => {
-    it('VALID: {salient case, no run} => the row reads not run, names the driver and the exit line, and carries the badge', () => {
+    it('VALID: {driven fewest-runs case, no run} => the row reads not run, names the driver and the exit line, and is a running row with no undriven marker', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId } = render((
+      const { getByTestId, queryByTestId } = render((
           <>
             {DECIDE.cases.map((testCase) => (
               <TestCaseLayerWidget
@@ -56,8 +62,8 @@ describe('TestCaseLayerWidget', () => {
       expect(getByTestId('TEST_CASE_ROW').textContent).toBe('not run decide(1)');
       expect(getByTestId('CASE_RETURN').textContent).toBe('  => 4: (not run)');
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('not-run');
-      expect(getByTestId('INTELLIGENT_BADGE').textContent).toBe('INTELLIGENT');
-      expect(getByTestId('INTELLIGENT_INFO_ICON').textContent).toBe('ⓘ');
+      expect(getByTestId('TEST_CASE_ROW').getAttribute('data-running')).toBe('true');
+      expect(queryByTestId('CASE_UNDRIVEN')).toBe(null);
     });
 
     it('VALID: {module entry} => the row names the entry label with no call parens', () => {
@@ -83,7 +89,7 @@ describe('TestCaseLayerWidget', () => {
     });
   });
 
-  describe('hover and run mode', () => {
+  describe('hover and run set', () => {
     it('VALID: {hoveredLine 4, the exit line} => data-match is true', () => {
       TestCaseLayerWidgetProxy();
 
@@ -128,82 +134,51 @@ describe('TestCaseLayerWidget', () => {
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('false');
     });
 
-    it('VALID: {runMode intelligent, non-salient case} => the row is grayed and shows no badge', () => {
+    it('VALID: {undriven case outside the fewest-runs set} => the row is not running, carries the undriven marker and its arms, and reads not run', () => {
       TestCaseLayerWidgetProxy();
-      const { runMode } = StatusViewStub({ runMode: 'intelligent' });
 
-      const { getByTestId, queryByTestId } = render((
+      const { getByTestId } = render((
           <>
-            {BREADTH.cases.map((testCase) => (
+            {UNDRIVEN_OUT_OF_SET.cases.map((testCase) => (
               <TestCaseLayerWidget
                 key={testCase.reachesPath.join('>')}
-                fn={BREADTH}
+                fn={UNDRIVEN_OUT_OF_SET}
                 testCase={testCase}
                 driver="decide"
                 entryLabel="decide"
                 isModule={false}
-                runMode={runMode}
               />
             ))}
           </>
         ), { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_CASE_ROW').getAttribute('data-running')).toBe('false');
-      expect(queryByTestId('INTELLIGENT_BADGE')).toBe(null);
-      expect(queryByTestId('INTELLIGENT_INFO_ICON')).toBe(null);
+      expect(getByTestId('TEST_CASE_ROW').getAttribute('data-driven')).toBe('false');
+      expect(getByTestId('TEST_CASE_ROW').getAttribute('data-status')).toBe('not-run');
+      expect(getByTestId('CASE_UNDRIVEN').textContent).toBe('undriven');
+      expect(getByTestId('CASE_ARMS').textContent).toBe('L2 then');
     });
 
-    it('VALID: {click on intelligent info icon} => opens popover with explanation text', () => {
+    it('VALID: {a hovered branch line on the case arms} => the arm branch line counts as touched', () => {
       TestCaseLayerWidgetProxy();
 
-      const { getByTestId, queryByTestId } = render((
+      const { getByTestId } = render((
           <>
-            {DECIDE.cases.map((testCase) => (
+            {UNDRIVEN_OUT_OF_SET.cases.map((testCase) => (
               <TestCaseLayerWidget
                 key={testCase.reachesPath.join('>')}
-                fn={DECIDE}
+                fn={UNDRIVEN_OUT_OF_SET}
                 testCase={testCase}
                 driver="decide"
                 entryLabel="decide"
                 isModule={false}
+                hoveredLine={2}
               />
             ))}
           </>
         ), { wrapper: MantineProvider });
 
-      expect(queryByTestId('INTELLIGENT_EXPLANATION')).toBe(null);
-
-      fireEvent.click(getByTestId('INTELLIGENT_INFO_ICON'));
-
-      expect(getByTestId('INTELLIGENT_EXPLANATION').textContent).toBe(runModeStatics.explanation.intelligent);
-    });
-
-    it('VALID: {click on intelligent info icon} => stops click propagation to parent elements', () => {
-      TestCaseLayerWidgetProxy();
-      const clicks: string[] = [];
-
-      const { getByTestId } = render((
-          <div
-            onClick={() => {
-              clicks.push('parent');
-            }}
-          >
-            {DECIDE.cases.map((testCase) => (
-              <TestCaseLayerWidget
-                key={testCase.reachesPath.join('>')}
-                fn={DECIDE}
-                testCase={testCase}
-                driver="decide"
-                entryLabel="decide"
-                isModule={false}
-              />
-            ))}
-          </div>
-        ), { wrapper: MantineProvider });
-
-      fireEvent.click(getByTestId('INTELLIGENT_INFO_ICON'));
-
-      expect(clicks).toStrictEqual([]);
+      expect(getByTestId('TEST_CASE_ROW').getAttribute('data-match')).toBe('true');
     });
   });
 

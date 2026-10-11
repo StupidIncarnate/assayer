@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { flatPropertyDemandContract } from './flat-property-demand-contract';
 import type { FlatPropertyDemand } from './flat-property-demand-contract';

@@ -39,7 +39,7 @@ describe('throughInvocationCasesTransformer', () => {
       expect({ access: result.analysis.entry.access, params: result.analysis.entry.params, cases: result.analysis.cases }).toStrictEqual({
         access: { kind: 'module' },
         params: [],
-        cases: [{ reachesPath: ['arrow/return@then'], arrange: [], salient: true }],
+        cases: [{ reachesPath: ['arrow/return@then'], arrange: [], arms: [{ branchCoverageId: 'arrow/if:n', arm: 'then' }], driven: true, fewestRuns: true }],
       });
     });
 
@@ -85,8 +85,8 @@ describe('throughInvocationCasesTransformer', () => {
 
       expect({ cases: result.analysis.cases, unreachableExits: result.unreachableExits }).toStrictEqual({
         cases: [
-          { reachesPath: ['arrow/return@then'], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
-          { reachesPath: ['arrow/return@else'], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
+          { reachesPath: ['arrow/return@then'], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], arms: [{ branchCoverageId: 'arrow/if:size', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: ['arrow/return@else'], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], arms: [{ branchCoverageId: 'arrow/if:size', arm: 'else' }], driven: true, fewestRuns: true },
         ],
         unreachableExits: [],
       });
@@ -99,10 +99,64 @@ describe('throughInvocationCasesTransformer', () => {
     // follower admits it undriven, exactly as a returned closure.
     const ARGS = CallSiteStub({ args: [{ kind: 'opaque' }] }).args;
 
-    it('VALID: {((n) => …)(opaque)} => no cases and no unreachable exits', () => {
+    // Nothing here can steer the branch, so each of its two routes is declared and neither runs.
+    it('VALID: {((n) => …)(opaque)} => one undriven case per arm and no unreachable exits', () => {
       const result = throughInvocationCasesTransformer({ arrow: N_ARROW, args: ARGS });
 
-      expect({ cases: result.analysis.cases, unreachableExits: result.unreachableExits }).toStrictEqual({ cases: [], unreachableExits: [] });
+      expect({
+        cases: result.analysis.cases.map((testCase) => ({ reachesPath: testCase.reachesPath, arms: testCase.arms, driven: testCase.driven })),
+        unreachableExits: result.unreachableExits,
+      }).toStrictEqual({
+        cases: [
+          { reachesPath: ['arrow/return@then'], arms: [{ branchCoverageId: 'arrow/if:n', arm: 'then' }], driven: false },
+          { reachesPath: ['arrow/return@else'], arms: [{ branchCoverageId: 'arrow/if:n', arm: 'else' }], driven: false },
+        ],
+        unreachableExits: [],
+      });
+    });
+  });
+
+  describe('an arrow whose branch reads a command-line argument', () => {
+    const ARGV_BRANCH = BranchNodeStub({
+      coverageId: 'arrow/if:argv',
+      startLine: 3,
+      condition: {
+        kind: 'not',
+        operand: {
+          kind: 'leaf',
+          id: 'arrow/if:argv#leaf',
+          operandArgvRead: { shape: 'element', index: 2, steps: [{ kind: 'number' }] },
+          operandType: { kind: 'unknown', text: 'any' },
+          predicate: { kind: 'truthy' },
+        },
+      },
+    });
+    const ARGV_ARROW = ScopeRecordStub({
+      scopePath: ['*module*', 'arrow'],
+      name: 'arrow',
+      exported: false,
+      access: { kind: 'unreachable' },
+      params: [],
+      returnType: { kind: 'string' },
+      startLine: 2,
+      endLine: 7,
+      branches: [ARGV_BRANCH],
+      exits: [
+        ExitNodeStub({ coverageId: 'arrow/return@then', guardPath: [{ branchCoverageId: 'arrow/if:argv', arm: 'then' }], line: 4 }),
+        ExitNodeStub({ coverageId: 'arrow/return@else', guardPath: [{ branchCoverageId: 'arrow/if:argv', arm: 'else' }], line: 6 }),
+      ],
+    });
+
+    it('VALID: {(() => { if (!Number(process.argv[2])) … })()} => the branch no case can steer is returned, so the follower can admit it', () => {
+      const result = throughInvocationCasesTransformer({ arrow: ARGV_ARROW, args: [] });
+
+      expect({
+        driven: result.analysis.cases.map((testCase) => testCase.driven),
+        undrivenBranches: result.undrivenBranches,
+      }).toStrictEqual({
+        driven: [true, false],
+        undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
+      });
     });
   });
 
@@ -145,8 +199,8 @@ describe('throughInvocationCasesTransformer', () => {
 
       expect({ cases: result.analysis.cases, unreachableExits: result.unreachableExits }).toStrictEqual({
         cases: [
-          { reachesPath: ['arrow/return@top'], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
-          { reachesPath: ['arrow/return@top'], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
+          { reachesPath: ['arrow/return@top'], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], arms: [{ branchCoverageId: 'arrow/return#leaf', arm: 'return-true' }], driven: true, fewestRuns: true },
+          { reachesPath: ['arrow/return@top'], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], arms: [{ branchCoverageId: 'arrow/return#leaf', arm: 'return-false' }], driven: true, fewestRuns: true },
         ],
         unreachableExits: [],
       });

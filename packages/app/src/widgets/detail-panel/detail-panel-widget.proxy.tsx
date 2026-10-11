@@ -3,6 +3,7 @@ import userEvent from '#gateway/npm/testing-library__user-event';
 
 import { ContractEntryLayerWidgetProxy } from './contract-entry-layer-widget.proxy';
 import { EnrichmentRowLayerWidgetProxy } from './enrichment-row-layer-widget.proxy';
+import { ErrorCategoryLayerWidgetProxy } from './error-category-layer-widget.proxy';
 import { TestEntryLayerWidgetProxy } from './test-entry-layer-widget.proxy';
 
 export const DetailPanelWidgetProxy = (): {
@@ -10,6 +11,7 @@ export const DetailPanelWidgetProxy = (): {
 } => {
   ContractEntryLayerWidgetProxy();
   EnrichmentRowLayerWidgetProxy();
+  ErrorCategoryLayerWidgetProxy();
   TestEntryLayerWidgetProxy();
 
   return {

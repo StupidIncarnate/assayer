@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { assayerCacheManifestContract } from './assayer-cache-manifest-contract';
 import type { AssayerCacheManifest } from './assayer-cache-manifest-contract';

@@ -21,12 +21,12 @@ describe('switch / pure-statement — a bare top-level switch DRIVEN by the envi
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'pure-statement.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [CASE_1_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '1' }], salient: true },
-      { reachesPath: [CASE_2_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '2' }], salient: true },
+      { reachesPath: [CASE_1_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '1' }], arms: [{ branchCoverageId: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:1', arm: 'then' }], driven: true, fewestRuns: true },
+      { reachesPath: [CASE_2_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '2' }], arms: [{ branchCoverageId: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:1', arm: 'else' }, { branchCoverageId: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:2', arm: 'then' }], driven: true, fewestRuns: true },
       // The default is reached when CODE is neither 1 nor 2. That names no value of its own, so the case
       // writes the number representative 7, the same value a number parameter's fill would get. The
       // case then reaches the default whatever the test process's own environment holds.
-      { reachesPath: [DEFAULT_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '7' }], salient: true },
+      { reachesPath: [DEFAULT_EXIT], arrange: [{ kind: 'env', name: 'CODE', value: '7' }], arms: [{ branchCoverageId: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:1', arm: 'else' }, { branchCoverageId: '*module*/switch:id:code,EqualsEqualsEqualsToken,num:2', arm: 'else' }], driven: true, fewestRuns: true },
     ]);
   });
 

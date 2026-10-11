@@ -18,8 +18,8 @@ describe('array / pop — a branchless function returning `items.pop()`', () => 
   // is `number | undefined`, and the walk reads that as a real union — `items.pop()` genuinely can
   // return nothing on an empty array, and the analysis now says so. Branchless, so all cases reach the
   // one exit — but an array param FANS OUT over cardinality: empty / one / many. Three cases arrange
-  // `items` as REAL arrays of the element type — the salient representative `[]` (empty), then the
-  // grayed twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient case is
+  // `items` as REAL arrays of the element type — the fewest-runs representative `[]` (empty), then the
+  // every-route-only twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the fewest-runs case is
   // the empty array; all three RUN, `intelligent` grays the two twins. Every value is a real array so
   // `items.pop()` runs on an actual array — a scalar placeholder would throw. The values are INPUTS
   // (P4); each case asserts only that the flow REACHES the exit.
@@ -42,17 +42,17 @@ describe('array / pop — a branchless function returning `items.pop()`', () => 
           {
             reachesPath: ['*module*/popLast/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/popLast/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/popLast/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

@@ -12,8 +12,7 @@ const relPath = 'src/sad-path/undriven/typeof-narrow-opaque/typeof-narrow-opaque
 // actually said about a real file, which is the only way the two can disagree.
 const BRANCH_REASON =
   '`checkKind` has a branch on line 6 whose deciding value is a `typeof` read, so no case can steer ' +
-  'which arm runs: with nothing to vary, both arms would arrange the same inputs and one would fail ' +
-  "against correct code. Assayer understood the branch — this is not syntax it missed — but the value " +
+  'which arm runs: Assayer declares a route for each arm and does not run them. Assayer understood the branch — this is not syntax it missed — but the value ' +
   "`typeof` applies to is neither one of this entry's parameters nor an environment variable, so " +
   'Assayer cannot yet ask what the comparison narrows. Make that value a parameter and each arm ' +
   'becomes a case Assayer drives.';
@@ -31,10 +30,15 @@ describe(
       expect(analysis.undriven).toStrictEqual([{ name: 'checkKind', reason: BRANCH_REASON, startLine: 6, endLine: 6 }]);
     });
 
-    it('VALID: {a typeof read of an opaque call} => no case is derived, so nothing fails against correct code', () => {
-      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-opaque.ts') }), relPath });
+    it('VALID: {a typeof read of an opaque call} => both arms are undriven routes, so nothing fails against correct code', () => {
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-opaque.ts') }) });
 
-      expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+      expect(
+        analysis.functions.flatMap((fn) => fn.cases).map((testCase) => ({ arms: testCase.arms.map((step) => String(step.arm)), driven: testCase.driven })),
+      ).toStrictEqual([
+        { arms: ['then'], driven: false },
+        { arms: ['else'], driven: false },
+      ]);
     });
 
     // NOT a dark spot: the walk read the `if`, both arms, and the `typeof` operand's own call. Only the

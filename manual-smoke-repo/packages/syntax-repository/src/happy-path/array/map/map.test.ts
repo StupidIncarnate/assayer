@@ -14,8 +14,8 @@ describe('array / map — a branchless function returning `items.map((n) => n * 
   // is projected as NO entry of its own: an anonymous callback arrow with no branching is transparent,
   // exactly like a branchless private, so nothing is admitted for it. Branchless, so all cases reach
   // the one exit — but an array param FANS OUT over cardinality: empty / one / many. Three cases
-  // arrange `items` as REAL arrays of the element type — the salient representative `[]` (empty), then
-  // the grayed twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient case
+  // arrange `items` as REAL arrays of the element type — the fewest-runs representative `[]` (empty), then
+  // the every-route-only twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the fewest-runs case
   // is the empty array; all three RUN, `intelligent` grays the two twins. Every value is a real array
   // so `items.map(...)` runs on an actual array. The values are INPUTS (P4); each case asserts only
   // that the flow REACHES the exit.
@@ -38,17 +38,17 @@ describe('array / map — a branchless function returning `items.map((n) => n * 
           {
             reachesPath: ['*module*/double/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/double/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/double/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

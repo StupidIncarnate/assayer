@@ -51,7 +51,7 @@ describe('union / mixed-union — a union whose members are NOT all scalars', ()
             { kind: 'param', param: 'target', value: 'abc123' },
             { kind: 'param', param: 'count', value: 2 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/pick/if:BinaryExpression,id:count,GreaterThanToken,num:1', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['*module*/pick/return@if:BinaryExpression,id:count,GreaterThanToken,num:1#else'],
@@ -59,7 +59,7 @@ describe('union / mixed-union — a union whose members are NOT all scalars', ()
             { kind: 'param', param: 'target', value: 'abc123' },
             { kind: 'param', param: 'count', value: 1 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/pick/if:BinaryExpression,id:count,GreaterThanToken,num:1', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ],
       gaps: [],

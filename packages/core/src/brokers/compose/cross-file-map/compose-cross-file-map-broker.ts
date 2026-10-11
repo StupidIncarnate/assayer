@@ -96,7 +96,7 @@ export const composeCrossFileMapBroker = ({
     );
 
     if (group === undefined) {
-      return { fn, refusals: [], hasCases: fn.cases.length > 0 };
+      return { fn, refusals: [], hasCases: fn.cases.some((testCase) => testCase.driven) };
     }
 
     const funnel = funnelCasesTransformer({ surface: group.host, callbacks: group.callbacks });

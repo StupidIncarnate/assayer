@@ -24,12 +24,12 @@ describe('function / expression — a branching function EXPRESSION assigned to 
           {
             reachesPath: ['*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then'],
             arrange: [{ kind: 'param', param: 'n', value: 6 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:BinaryExpression,id:n,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else'],
             arrange: [{ kind: 'param', param: 'n', value: 5 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:BinaryExpression,id:n,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
       },

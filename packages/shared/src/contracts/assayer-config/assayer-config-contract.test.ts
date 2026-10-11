@@ -7,7 +7,7 @@ describe('assayerConfigContract', () => {
       const result = assayerConfigContract.parse({});
 
       expect(JSON.stringify(result)).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       );
     });
 
@@ -23,7 +23,6 @@ describe('assayerConfigContract', () => {
         darkSpots: 'warn',
         deadSurface: 'error',
         inputGaps: 'error',
-        runMode: 'thorough',
       });
     });
 
@@ -31,12 +30,6 @@ describe('assayerConfigContract', () => {
       const result = assayerConfigContract.parse({ inputGaps: 'warn' });
 
       expect(result.inputGaps).toBe('warn');
-    });
-
-    it('VALID: {runMode: "intelligent"} => preserved as the display-only execution-subset toggle', () => {
-      const result = assayerConfigContract.parse({ runMode: 'intelligent' });
-
-      expect(result.runMode).toBe('intelligent');
     });
 
     it('VALID: {stableBranch: "main"} => parses optional field', () => {
@@ -107,12 +100,6 @@ describe('assayerConfigContract', () => {
       expect(() => {
         return assayerConfigContract.parse({ inputGaps: 'bogus' });
       }).toThrow(/Invalid option: expected one of \\"off\\"\|\\"warn\\"\|\\"error\\"/u);
-    });
-
-    it('INVALID: {runMode: "bogus"} => throws validation error', () => {
-      expect(() => {
-        return assayerConfigContract.parse({ runMode: 'bogus' });
-      }).toThrow(/Invalid option: expected one of \\"thorough\\"\|\\"intelligent\\"/u);
     });
   });
 });

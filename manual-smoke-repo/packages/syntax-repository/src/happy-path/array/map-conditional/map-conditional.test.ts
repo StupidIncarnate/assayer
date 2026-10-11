@@ -28,6 +28,13 @@ const CB_ELSE_THEN = `${CB_PATH}/return@${GT100}#else/${LT0}#then`;
 const CB_ELSE_ELSE = `${CB_PATH}/return@${GT100}#else/${LT0}#else`;
 const RESCALE_EXIT = '*module*/rescale/return@top';
 
+// The callback's two branches, and its iteration: whether the callback's body runs is an arm of rescale,
+// skipped over an empty array and run over any other.
+const GT100_BRANCH = `${CB_PATH}/${GT100}`;
+const LT0_BRANCH = `${CB_PATH}/${LT0}`;
+const ITERATES = `${CB_PATH}/iterates`;
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
+
 describe('array / map-conditional — `items.map((n) => …)` whose callback BRANCHES on the element, funnelled into rescale', () => {
   // THE capability. The callback is not called directly — nothing can call an anonymous arrow, and it
   // cannot be reached without calling `rescale`. So it is no separate entry: its steering values FUNNEL
@@ -48,14 +55,34 @@ describe('array / map-conditional — `items.map((n) => …)` whose callback BRA
         label: undefined,
         access: { kind: 'named' },
         cases: [
-          { reachesPath: [RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
-          { reachesPath: [CB_THEN, RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [101] }], salient: true },
-          { reachesPath: [CB_ELSE_THEN, RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [-1] }], salient: true },
-          { reachesPath: [CB_ELSE_ELSE, RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [100] }], salient: true },
+          { reachesPath: [RESCALE_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], arms: [step(ITERATES, 'skipped')], driven: true, fewestRuns: true },
+          {
+            reachesPath: [CB_THEN, RESCALE_EXIT],
+            arrange: [{ kind: 'array', param: 'items', value: [101] }],
+            arms: [step(ITERATES, 'runs'), step(GT100_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: false,
+          },
+          {
+            reachesPath: [CB_ELSE_THEN, RESCALE_EXIT],
+            arrange: [{ kind: 'array', param: 'items', value: [-1] }],
+            arms: [step(ITERATES, 'runs'), step(GT100_BRANCH, 'else'), step(LT0_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: false,
+          },
+          {
+            reachesPath: [CB_ELSE_ELSE, RESCALE_EXIT],
+            arrange: [{ kind: 'array', param: 'items', value: [100] }],
+            arms: [step(ITERATES, 'runs'), step(GT100_BRANCH, 'else'), step(LT0_BRANCH, 'else')],
+            driven: true,
+            fewestRuns: true,
+          },
           {
             reachesPath: [CB_THEN, CB_ELSE_THEN, RESCALE_EXIT],
             arrange: [{ kind: 'array', param: 'items', value: [101, -1] }],
-            salient: true,
+            arms: [step(ITERATES, 'runs'), step(GT100_BRANCH, 'then'), step(GT100_BRANCH, 'else'), step(LT0_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: true,
           },
         ],
       },

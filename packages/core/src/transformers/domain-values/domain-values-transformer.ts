@@ -36,15 +36,18 @@
  * domainValuesTransformer({ domain: { excluded: [7] }, type: { kind: 'number' } });
  * // Returns [8] — the representative 7 is excluded, so the next one
  */
-import { representativeValueContract } from '@assayer/shared/contracts';
-import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
+import { representativeValueContract } from "@assayer/shared/contracts";
+import type {
+  RepresentativeValue,
+  TypeDescriptor,
+} from "@assayer/shared/contracts";
 
-import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
-import { isLengthInDomainGuard } from '../../guards/is-length-in-domain/is-length-in-domain-guard';
-import { isWithinDomainBoundsGuard } from '../../guards/is-within-domain-bounds/is-within-domain-bounds-guard';
-import { representativeValueStatics } from '../../statics/representative-value/representative-value-statics';
-import { lengthCandidatesTransformer } from '../length-candidates/length-candidates-transformer';
-import { steppedRepresentativeLayerTransformer } from './stepped-representative-layer-transformer';
+import type { ValueDomain } from "../../contracts/value-domain/value-domain-contract";
+import { isValueInDomainGuard } from "../../guards/is-value-in-domain/is-value-in-domain-guard";
+import { isWithinDomainBoundsGuard } from "../../guards/is-within-domain-bounds/is-within-domain-bounds-guard";
+import { representativeValueStatics } from "../../statics/representative-value/representative-value-statics";
+import { lengthCandidatesTransformer } from "../length-candidates/length-candidates-transformer";
+import { steppedRepresentativeLayerTransformer } from "./stepped-representative-layer-transformer";
 
 // A length-bounded string is built by slicing this pattern to the required length. The guards bounded
 // a LENGTH and said nothing about content, so any deterministic filler satisfies them; a
@@ -60,12 +63,31 @@ export const domainValuesTransformer = ({
   type?: TypeDescriptor;
 }): RepresentativeValue[] => {
   if (domain.members !== undefined) {
-    return domain.members.filter(
-      (member) =>
-        !domain.excluded.includes(member) &&
-        isWithinDomainBoundsGuard({ value: member, domain }) &&
-        isLengthInDomainGuard({ value: member, domain }),
+    return domain.members.filter((member) =>
+      isValueInDomainGuard({ value: member, domain }),
     );
+  }
+
+  // A domain that REQUIRES text names no value, only what the value must contain, so the value is built from
+  // that text: the required pieces end to end, then padded with the filler pattern up to the shortest length
+  // the domain allows. The first build every constraint accepts is the value.
+  const required = domain.includes ?? [];
+
+  if (required.length > 0) {
+    const base = required.join("");
+    const floor = lengthCandidatesTransformer({ domain })?.[0] ?? 0;
+    const padded =
+      base +
+      PATTERN.repeat(
+        Math.ceil(Math.max(0, floor - base.length) / PATTERN.length),
+      ).slice(0, Math.max(0, floor - base.length));
+    const built = [...new Set([base, padded, ...required])].find((candidate) =>
+      isValueInDomainGuard({ value: candidate, domain }),
+    );
+
+    return built === undefined
+      ? []
+      : [representativeValueContract.parse(built)];
   }
 
   const lengths = lengthCandidatesTransformer({ domain });
@@ -74,9 +96,11 @@ export const domainValuesTransformer = ({
     return lengths
       .map((length) => {
         const size = length;
-        return representativeValueContract.parse(PATTERN.repeat(Math.ceil(size / PATTERN.length)).slice(0, size));
+        return representativeValueContract.parse(
+          PATTERN.repeat(Math.ceil(size / PATTERN.length)).slice(0, size),
+        );
       })
-      .filter((candidate) => !domain.excluded.includes(candidate))
+      .filter((candidate) => isValueInDomainGuard({ value: candidate, domain }))
       .slice(0, 1);
   }
 
@@ -88,7 +112,12 @@ export const domainValuesTransformer = ({
       : { from: domain.max, step: domain.maxExclusive ? -1 : 0, next: -1 };
 
   if (edge === undefined) {
-    return type === undefined ? [] : steppedRepresentativeLayerTransformer({ type, excluded: domain.excluded });
+    return type === undefined
+      ? []
+      : steppedRepresentativeLayerTransformer({
+          type,
+          excluded: domain.excluded,
+        });
   }
 
   const preferred = edge.from + edge.step;
@@ -97,7 +126,8 @@ export const domainValuesTransformer = ({
     .map((candidate) => representativeValueContract.parse(candidate))
     .filter(
       (candidate) =>
-        !domain.excluded.includes(candidate) && isWithinDomainBoundsGuard({ value: candidate, domain }),
+        !domain.excluded.includes(candidate) &&
+        isWithinDomainBoundsGuard({ value: candidate, domain }),
     )
     .slice(0, 1);
 };

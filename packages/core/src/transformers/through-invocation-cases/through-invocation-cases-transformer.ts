@@ -36,7 +36,11 @@ export const throughInvocationCasesTransformer = ({
 }: {
   arrow: ScopeRecord;
   args: CallArg[];
-}): { analysis: FunctionAnalysis; unreachableExits: ReturnType<typeof deriveCasesTransformer>['unreachableExits'] } => {
+}): {
+  analysis: FunctionAnalysis;
+  unreachableExits: ReturnType<typeof deriveCasesTransformer>['unreachableExits'];
+  undrivenBranches: ReturnType<typeof deriveCasesTransformer>['undrivenBranches'];
+} => {
   // Each arrow parameter the invocation WELDS a literal into — the single value that operand takes at
   // module load. The invocation passes no caller params through, so only the weld half is used; a
   // non-literal argument (an env-sourced call, an opaque expression) welds nothing.
@@ -77,5 +81,6 @@ export const throughInvocationCasesTransformer = ({
       ...(arrow.predicateSignature === undefined ? {} : { predicateSignature: arrow.predicateSignature }),
     }),
     unreachableExits: derived.unreachableExits,
+    undrivenBranches: derived.undrivenBranches,
   };
 };

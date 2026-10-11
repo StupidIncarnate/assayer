@@ -16,7 +16,7 @@ describe('configGenerateBroker', () => {
         ['/repo', { recursive: true }],
       ]);
       expect(proxy.getWrittenContentFor({ path: '/repo/assayer.config.json' })).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       );
       expect(result).toStrictEqual(AssayerConfigStub());
     });

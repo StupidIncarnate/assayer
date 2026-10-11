@@ -51,6 +51,7 @@ import { appliedParamsTransformer } from '../applied-params/applied-params-trans
 import { callArgBindingsTransformer } from '../call-arg-bindings/call-arg-bindings-transformer';
 import { deriveCasesRequestTransformer } from '../derive-cases-request/derive-cases-request-transformer';
 import { deriveCasesTransformer } from '../derive-cases/derive-cases-transformer';
+import { fewestRunsTransformer } from '../fewest-runs/fewest-runs-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { findReturnedPrivateTransformer } from '../find-returned-private/find-returned-private-transformer';
 
@@ -105,7 +106,14 @@ export const funnelNamedCasesTransformer = ({
     // A leaf exit — a literal return or a call the funnel does not follow — keeps its own case.
     if (exit === undefined || found === undefined) {
       return {
-        cases: [derivedTestCaseContract.parse({ reachesPath: baseCase.reachesPath, arrange: baseCase.arrange, salient: true })],
+        cases: [
+          derivedTestCaseContract.parse({
+            reachesPath: baseCase.reachesPath,
+            arrange: baseCase.arrange,
+            arms: baseCase.arms,
+            driven: baseCase.driven,
+          }),
+        ],
         unreachable: [],
         consumed: [] as { name: string; startLine: number; params: ParamDescriptor[] }[],
         unfillable: [] as { param: string; type: string; owner: string }[],
@@ -180,7 +188,8 @@ export const funnelNamedCasesTransformer = ({
               // exit that called it.
               reachesPath: [...subCase.reachesPath, exit.coverageId],
               arrange,
-              salient: true,
+              arms: [...baseCase.arms, ...subCase.arms],
+              driven: baseCase.driven && subCase.driven,
             }),
           ]
         : [];
@@ -195,7 +204,7 @@ export const funnelNamedCasesTransformer = ({
   });
 
   return {
-    cases: perBase.flatMap((entry) => entry.cases),
+    cases: fewestRunsTransformer({ cases: perBase.flatMap((entry) => entry.cases) }),
     // This scope's own welded-dead arms carry ITS display name; the deeper ones already carry theirs.
     unreachable: [
       ...derived.unreachableExits.map((exit) => ({ ...exit, displayName: scope.name })),

@@ -19,16 +19,28 @@ describe('derivedTestCaseContract', () => {
       expect(result).toStrictEqual(testCase);
     });
 
-    it('VALID: {no salient field} => defaults salient to true so stale cache blobs read as all-salient', () => {
+    it('VALID: {no arms, driven or fewestRuns} => defaults to no arms, driven, and in the fewest-runs set', () => {
       const result = derivedTestCaseContract.parse({ reachesPath: ['run/exit@implicit'], arrange: [] });
 
-      expect(result).toStrictEqual({ reachesPath: ['run/exit@implicit'], arrange: [], salient: true });
+      expect(result).toStrictEqual({ reachesPath: ['run/exit@implicit'], arrange: [], arms: [], driven: true, fewestRuns: true });
     });
 
-    it('VALID: {salient: false} => preserved as the not-must-run flag', () => {
-      const result = derivedTestCaseContract.parse({ reachesPath: ['run/exit@implicit'], arrange: [], salient: false });
+    it('VALID: {fewestRuns: false, driven: false} => preserved as an undriven case outside the fewest-runs set', () => {
+      const result = derivedTestCaseContract.parse({
+        reachesPath: ['run/exit@implicit'],
+        arrange: [],
+        arms: [{ branchCoverageId: 'run/if:a', arm: 'then' }],
+        driven: false,
+        fewestRuns: false,
+      });
 
-      expect(result).toStrictEqual({ reachesPath: ['run/exit@implicit'], arrange: [], salient: false });
+      expect(result).toStrictEqual({
+        reachesPath: ['run/exit@implicit'],
+        arrange: [],
+        arms: [{ branchCoverageId: 'run/if:a', arm: 'then' }],
+        driven: false,
+        fewestRuns: false,
+      });
     });
 
     it('VALID: {an array arrange} => parses the list of element values a case passes for the param', () => {

@@ -18,8 +18,8 @@ const NAMED_FUNCTION = FunctionAnalysisStub({
   branches: [],
   exits: [{ coverageId: 'decide/return@top', kind: 'return', guardPath: [], line: 4 }],
   cases: [
-    { reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 1 }], salient: true },
-    { reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 2 }], salient: false },
+    { reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 1 }], fewestRuns: true },
+    { reachesPath: ['decide/return@top'], arrange: [{ kind: 'param', param: 'a', value: 2 }], fewestRuns: false },
   ],
 });
 
@@ -45,21 +45,32 @@ const THROUGH_CALLER_ENTRY = FunctionAnalysisStub({
   }),
   branches: [],
   exits: [{ coverageId: 'inner/return@then', kind: 'return', guardPath: [], line: 4 }],
-  cases: [{ reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true }],
+  cases: [{ reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }] }],
 });
 
 describe('TestEntryLayerWidget', () => {
   describe('a named function', () => {
-    it('VALID: {two params, two cases} => the title carries the param list and the full case count, one row per case', () => {
+    it('VALID: {two params, two cases, one in the fewest-runs set} => the title carries the param list and the every-route count', () => {
       TestEntryLayerWidgetProxy();
 
-      const { getByTestId, getAllByTestId } = render(<TestEntryLayerWidget fn={NAMED_FUNCTION} />, { wrapper: MantineProvider });
+      const { getByTestId } = render(<TestEntryLayerWidget fn={NAMED_FUNCTION} />, { wrapper: MantineProvider });
 
       expect(getByTestId('TEST_ENTRY').firstElementChild?.textContent).toBe('decide(a, b) · 2 cases');
-      expect(getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent)).toStrictEqual([
-        'not run decide(1)',
-        'not run decide(2)',
+    });
+
+    it('VALID: {two cases, one in the fewest-runs set} => two labelled sets, Every route with both rows and Fewest runs with the one', () => {
+      TestEntryLayerWidgetProxy();
+
+      const { getAllByTestId } = render(<TestEntryLayerWidget fn={NAMED_FUNCTION} />, { wrapper: MantineProvider });
+
+      expect(getAllByTestId('CASE_SET_LABEL').map((element) => element.textContent)).toStrictEqual([
+        'Every route · 2',
+        'Fewest runs · 1',
       ]);
+      expect(
+        getAllByTestId('TEST_CASE_ROW').map((element) => element.textContent),
+      ).toStrictEqual(['not run decide(1)', 'not run decide(2)']);
+      expect(getAllByTestId('FEWEST_RUNS_ROW').map((element) => element.textContent)).toStrictEqual(['not run decide(1)']);
     });
   });
 

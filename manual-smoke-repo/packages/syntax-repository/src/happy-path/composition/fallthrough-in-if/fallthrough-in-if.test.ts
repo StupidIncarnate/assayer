@@ -21,19 +21,39 @@ describe('composition / fallthrough-in-if — an if arm ending in a switch that 
     expect(guards).toStrictEqual([[]]);
   });
 
-  // The full input-bucket set is the CROSS PRODUCT of both branches' arms — `value > 5` (satisfied /
-  // violated) times `mode === 'a'` (true / other) — so four buckets, ALL reaching the one trailing
-  // `return 1`. Since every bucket returns the same value out of the same exit, exactly ONE is the
-  // salient (must-run) representative and the other three are the grayed breadth. That the branching
-  // converges on one exit is not a reason to collapse the four distinct inputs.
-  it('VALID: {two converging branches} => four cases on the one return, exactly one salient', () => {
+  // `value > 5` guards the switch, so the switch is MET only on the route that took its `then` arm. Three
+  // routes reach the one trailing `return 1`: `value > 5` with `mode === 'a'`, `value > 5` with any other
+  // mode, and `value <= 5`, where the switch is never reached and so contributes no arm. There is no
+  // fourth route: no input takes the switch's arm while `value > 5` fails. Each route is the only one to
+  // take one of the arms (`mode === 'a'`, the switch's other arm, `value > 5` failing), so all three are in
+  // the fewest-runs set. That the branching converges on one exit is not a reason to collapse the routes.
+  it('VALID: {two converging branches, one nested} => three routes on the one return, all in the fewest runs', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'fallthrough-in-if.ts') }), relPath });
+    const IF = '*module*/tally/if:BinaryExpression,id:value,GreaterThanToken,num:5';
+    const SWITCH = '*module*/tally/switch:id:mode,EqualsEqualsEqualsToken,str:a';
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'a' }], salient: true },
-      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'abc123' }], salient: false },
-      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }, { kind: 'param', param: 'mode', value: 'a' }], salient: false },
-      { reachesPath: ['*module*/tally/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }, { kind: 'param', param: 'mode', value: 'abc123' }], salient: false },
+      {
+        reachesPath: ['*module*/tally/return@top'],
+        arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'a' }],
+        arms: [{ branchCoverageId: IF, arm: 'then' }, { branchCoverageId: SWITCH, arm: 'then' }],
+        driven: true,
+        fewestRuns: true,
+      },
+      {
+        reachesPath: ['*module*/tally/return@top'],
+        arrange: [{ kind: 'param', param: 'value', value: 6 }, { kind: 'param', param: 'mode', value: 'abc123' }],
+        arms: [{ branchCoverageId: IF, arm: 'then' }, { branchCoverageId: SWITCH, arm: 'else' }],
+        driven: true,
+        fewestRuns: true,
+      },
+      {
+        reachesPath: ['*module*/tally/return@top'],
+        arrange: [{ kind: 'param', param: 'value', value: 5 }, { kind: 'param', param: 'mode', value: 'abc123' }],
+        arms: [{ branchCoverageId: IF, arm: 'else' }],
+        driven: true,
+        fewestRuns: true,
+      },
     ]);
   });
 });

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { lintEntryContract } from './lint-entry-contract';
 import type { LintEntry } from './lint-entry-contract';

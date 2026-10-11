@@ -60,6 +60,7 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
                 },
                 predicate: { kind: 'eq', literal: 'get' },
               },
+              guardPath: [],
               startLine: 7,
               endLine: 9,
             },
@@ -79,6 +80,7 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
                 },
                 predicate: { kind: 'eq', literal: 'post' },
               },
+              guardPath: [{ branchCoverageId: CASE_GET, arm: 'else' }],
               startLine: 10,
               endLine: 12,
             },
@@ -89,17 +91,30 @@ describe('switch / no-default — a tail switch with no default, whose clauses f
     });
   });
 
-  // Every bucket — `get`, `post`, and the (unrepresentable, since the union is exactly those two)
-  // unmatched path — converges on the SAME `exit@top` (§5.13). The first is salient; the second is
-  // the grayed breadth twin. If a per-clause completion were minted instead, the `get` case would
-  // predict a different exit than the one actually observed and fail a real run — pinned end to end
-  // by `run-unit-broker.integration.test.ts`'s `SWITCH_NO_DEFAULT_SPECIMEN`.
-  it('VALID: {tail switch with no default} => both cases converge on the one exit, second grayed', () => {
+  // Two routes run, and both converge on the SAME `exit@top`. `post` is compared only when `get` missed, so
+  // its branch is met only on the `get`-else route. A third route, where both miss, has no input: the union
+  // is exactly those two members. Each route takes a different arm, so both are in the fewest-runs set. If
+  // a per-clause completion were minted instead, the `get` case would predict a different exit than the one
+  // actually observed and fail a real run — pinned end to end by `run-unit-broker.integration.test.ts`'s
+  // `SWITCH_NO_DEFAULT_SPECIMEN`.
+  it('VALID: {tail switch with no default} => two routes on the one exit, one per case, both in the fewest runs', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'no-default.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [TOP_EXIT], arrange: [{ kind: 'param', param: 'method', value: 'get' }], salient: true },
-      { reachesPath: [TOP_EXIT], arrange: [{ kind: 'param', param: 'method', value: 'post' }], salient: false },
+      {
+        reachesPath: [TOP_EXIT],
+        arrange: [{ kind: 'param', param: 'method', value: 'get' }],
+        arms: [{ branchCoverageId: CASE_GET, arm: 'then' }],
+        driven: true,
+        fewestRuns: true,
+      },
+      {
+        reachesPath: [TOP_EXIT],
+        arrange: [{ kind: 'param', param: 'method', value: 'post' }],
+        arms: [{ branchCoverageId: CASE_GET, arm: 'else' }, { branchCoverageId: CASE_POST, arm: 'then' }],
+        driven: true,
+        fewestRuns: true,
+      },
     ]);
   });
 

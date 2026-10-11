@@ -38,7 +38,7 @@ describe('object / cross-file-shape — types.ts, the DEFINITION file whose decl
         {
           reachesPath: ['*module*/withDefaults/return@top'],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123', retries: 7 } }],
-          salient: true,
+          arms: [], driven: true, fewestRuns: true,
         },
       ],
       undriven: [],

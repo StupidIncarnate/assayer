@@ -5,7 +5,7 @@
  * HarnessClassifyResultStub();
  * // Returns a valid HarnessClassifyResult
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 
 import { harnessClassifyResultContract } from "./harness-classify-result-contract";
 import type { HarnessClassifyResult } from "./harness-classify-result-contract";

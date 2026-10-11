@@ -13,7 +13,7 @@ describe('array / element-assign — a branchless function assigning `items[2] =
   // there is no value to type (P4). An index WRITE is a plain statement, not a branch or a returned
   // value, so the function falls off the end of its body: one IMPLICIT end-of-body exit, no branches.
   // Branchless, so `derive-cases` emits cases reaching that one exit — but the array param FANS OUT
-  // over cardinality, so the one exit is reached by THREE cases: value `[]` (salient), value `[7]`,
+  // over cardinality, so the one exit is reached by THREE cases: value `[]` (fewest-runs), value `[7]`,
   // value `[7, 7]`, emitted in that order. The scalar `value` is fixed to `7` across all three. The
   // values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function put(items: number[], value: number): void { items[2] = value }} => array-of-number + number params, void read as unknown, three cardinality cases reaching one implicit exit', () => {
@@ -41,7 +41,7 @@ describe('array / element-assign — a branchless function assigning `items[2] =
               { kind: 'array', param: 'items', value: [] },
               { kind: 'param', param: 'value', value: 7 },
             ],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/put/exit@top'],
@@ -49,7 +49,7 @@ describe('array / element-assign — a branchless function assigning `items[2] =
               { kind: 'array', param: 'items', value: [7] },
               { kind: 'param', param: 'value', value: 7 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/put/exit@top'],
@@ -57,7 +57,7 @@ describe('array / element-assign — a branchless function assigning `items[2] =
               { kind: 'array', param: 'items', value: [7, 8] },
               { kind: 'param', param: 'value', value: 7 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

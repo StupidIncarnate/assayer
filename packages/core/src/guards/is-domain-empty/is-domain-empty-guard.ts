@@ -23,6 +23,7 @@
  */
 import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
 import { lengthCandidatesTransformer } from '../../transformers/length-candidates/length-candidates-transformer';
+import { isTextInDomainGuard } from '../is-text-in-domain/is-text-in-domain-guard';
 import { isLengthInDomainGuard } from '../is-length-in-domain/is-length-in-domain-guard';
 import { isWithinDomainBoundsGuard } from '../is-within-domain-bounds/is-within-domain-bounds-guard';
 
@@ -45,8 +46,18 @@ export const isDomainEmptyGuard = ({ domain }: { domain?: ValueDomain }): boolea
     (member) =>
       !domain.excluded.includes(member) &&
       isWithinDomainBoundsGuard({ value: member, domain }) &&
-      isLengthInDomainGuard({ value: member, domain }),
+      isLengthInDomainGuard({ value: member, domain }) &&
+      isTextInDomainGuard({ value: member, domain }),
   );
 
-  return boundsCross || noLengthLeft || (domain.members !== undefined && survivors.length === 0);
+  // Text a value must contain cannot also be text it must not: `includes 'on'` and `notIncludes 'o'` leave
+  // nothing, and neither can a required text longer than the longest length the domain allows.
+  const longestAllowed = domain.lengthMax === undefined ? undefined : Number(domain.lengthMax) - (domain.lengthMaxExclusive ? 1 : 0);
+  const textContradicts = (domain.includes ?? []).some(
+    (required) =>
+      (domain.notIncludes ?? []).some((forbidden) => required.includes(forbidden)) ||
+      (longestAllowed !== undefined && required.length > longestAllowed),
+  );
+
+  return boundsCross || noLengthLeft || textContradicts || (domain.members !== undefined && survivors.length === 0);
 };

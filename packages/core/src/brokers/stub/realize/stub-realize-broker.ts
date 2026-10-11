@@ -11,8 +11,7 @@
  *   the stub stitch runs) combined with the committed overlay (`stub-view`, where a human correction
  *   WINS) — enumerates the entry's input buckets (`input-buckets`, reused unchanged), and arranges the
  *   object param per bucket (`object-arrange`). Each bucket maps to the exit control flow reaches by the
- *   SAME maximal-guard-path rule `derive-cases` uses, and each case is marked `salient` (first per
- *   predicted output). The branch is thus DRIVEN, and the undriven admission it carried is dropped.
+ *   SAME maximal-guard-path rule `derive-cases` uses, and each case carries the arms its route takes and the fewest-runs subset is marked. The branch is thus DRIVEN, and the undriven admission it carried is dropped.
  *
  *   Every arrange value is an INPUT (a human correction or a derived demand), never a code-derived
  *   output (P4): the cases assert reaching an exit structurally, never a returned value. A same-file
@@ -52,7 +51,7 @@ import { conditionLeavesTransformer } from '../../../transformers/condition-leav
 import { fillParamTransformer } from '../../../transformers/fill-param/fill-param-transformer';
 import { inputBucketsTransformer } from '../../../transformers/input-buckets/input-buckets-transformer';
 import { objectArrangeTransformer } from '../../../transformers/object-arrange/object-arrange-transformer';
-import { predictedOutputTransformer } from '../../../transformers/predicted-output/predicted-output-transformer';
+import { fewestRunsTransformer } from '../../../transformers/fewest-runs/fewest-runs-transformer';
 import { stubViewTransformer } from '../../../transformers/stub-view/stub-view-transformer';
 import { isObjectMemberLeafGuard } from '../../../guards/is-object-member-leaf/is-object-member-leaf-guard';
 import { analyzeFileBroker } from '../../analyze/file/analyze-file-broker';
@@ -247,6 +246,7 @@ export const stubRealizeBroker = ({
       const arrange = arranged.flatMap((entry) => (entry.binding === undefined ? [] : [entry.binding]));
 
       return {
+        arms: bucket.arms,
         exit: maximal.length === 1 ? maximal[0] : undefined,
         unreachable: arranged.some((entry) => entry.unreachable),
         // A bucket missing any binding cannot be run — the entry has a param no value of the right shape
@@ -256,31 +256,26 @@ export const stubRealizeBroker = ({
       };
     });
 
-    // Feasible buckets in enumeration order, de-duplicated by (exit, arrange), then marked salient — the
-    // first per predicted output is the execution representative — exactly as derive-cases does.
+    // Feasible routes in enumeration order, de-duplicated by (exit, arms, arrange), then the fewest-runs
+    // subset marked inside them — exactly as derive-cases does. Every route here is driven: the object
+    // param is arranged from the merged stub view, so each arm of every object-member branch is steered.
     const seen = new Set<string>();
     const feasible = evaluated.flatMap((entry) => {
       if (entry.exit === undefined || entry.unreachable || entry.unfillable) {
         return [];
       }
 
-      const signature = `${String(entry.exit.coverageId)}::${JSON.stringify(entry.arrange)}`;
+      const signature = `${String(entry.exit.coverageId)}::${JSON.stringify(entry.arms)}::${JSON.stringify(entry.arrange)}`;
 
       if (seen.has(signature)) {
         return [];
       }
       seen.add(signature);
 
-      return [{ reachesPath: [entry.exit.coverageId], arrange: entry.arrange, predictedOutput: predictedOutputTransformer({ reachesPath: [entry.exit.coverageId] }) }];
+      return [derivedTestCaseContract.parse({ reachesPath: [entry.exit.coverageId], arrange: entry.arrange, arms: entry.arms, driven: true })];
     });
 
-    const salientSeen = new Set<string>();
-    const cases: DerivedTestCase[] = feasible.map((entry) => {
-      const salient = !salientSeen.has(entry.predictedOutput);
-      salientSeen.add(entry.predictedOutput);
-
-      return derivedTestCaseContract.parse({ reachesPath: entry.reachesPath, arrange: entry.arrange, salient });
-    });
+    const cases: DerivedTestCase[] = fewestRunsTransformer({ cases: feasible });
 
     return {
       entry: fn.entry,

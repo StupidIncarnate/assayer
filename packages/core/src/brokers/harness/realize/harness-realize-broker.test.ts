@@ -119,7 +119,7 @@ describe('harnessRealizeBroker', () => {
             { kind: 'param', param: 'score', value: 6 },
             { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: [ELSE],
@@ -127,7 +127,7 @@ describe('harnessRealizeBroker', () => {
             { kind: 'param', param: 'score', value: 5 },
             { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ]);
     });
@@ -167,7 +167,7 @@ describe('harnessRealizeBroker', () => {
             { kind: 'param', param: 'size', value: 51 },
             { kind: 'harness', param: 'notify', key: 'inputs.isBig.notify' },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/isBig/predicate#leaf', arm: 'return-true' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['*module*/isBig/return@top'],
@@ -175,7 +175,7 @@ describe('harnessRealizeBroker', () => {
             { kind: 'param', param: 'size', value: 50 },
             { kind: 'harness', param: 'notify', key: 'inputs.isBig.notify' },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/isBig/predicate#leaf', arm: 'return-false' }], driven: true, fewestRuns: true,
         },
       ]);
     });
@@ -192,12 +192,12 @@ describe('harnessRealizeBroker', () => {
         {
           reachesPath: ['*module*/isBig/return@top'],
           arrange: [{ kind: 'param', param: 'size', value: 51 }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/isBig/predicate#leaf', arm: 'return-true' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['*module*/isBig/return@top'],
           arrange: [{ kind: 'param', param: 'size', value: 50 }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/isBig/predicate#leaf', arm: 'return-false' }], driven: true, fewestRuns: true,
         },
       ]);
     });
@@ -271,7 +271,7 @@ describe('harnessRealizeBroker', () => {
               { kind: 'param', param: 'score', value: 6 },
               { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: [ELSE],
@@ -279,7 +279,7 @@ describe('harnessRealizeBroker', () => {
               { kind: 'param', param: 'score', value: 5 },
               { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         casesSummarize: [],
@@ -313,7 +313,7 @@ describe('harnessRealizeBroker', () => {
               { kind: 'param', param: 'score', value: 6 },
               { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: [ELSE],
@@ -321,12 +321,12 @@ describe('harnessRealizeBroker', () => {
               { kind: 'param', param: 'score', value: 5 },
               { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         casesGrade: [
-          { reachesPath: [GRADE_THEN], arrange: [{ kind: 'param', param: 'score', value: 6 }], salient: true },
-          { reachesPath: [GRADE_ELSE], arrange: [{ kind: 'param', param: 'score', value: 5 }], salient: true },
+          { reachesPath: [GRADE_THEN], arrange: [{ kind: 'param', param: 'score', value: 6 }], arms: [{ branchCoverageId: '*module*/grade/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: [GRADE_ELSE], arrange: [{ kind: 'param', param: 'score', value: 5 }], arms: [{ branchCoverageId: '*module*/grade/if:BinaryExpression,id:score,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true },
         ],
         gapsAfter: [],
       });
@@ -402,8 +402,8 @@ describe('harnessRealizeBroker', () => {
         gaps: result.gaps,
       }).toStrictEqual({
         cases: [
-          { reachesPath: [FUNNELLED_THEN, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
-          { reachesPath: [FUNNELLED_ELSE, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+          { reachesPath: [FUNNELLED_THEN, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 11 }], arms: [{ branchCoverageId: '*module*/build/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: [FUNNELLED_ELSE, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 10 }], arms: [{ branchCoverageId: '*module*/build/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'else' }], driven: true, fewestRuns: true },
         ],
         gaps: [],
       });
@@ -433,7 +433,7 @@ describe('harnessRealizeBroker', () => {
               { kind: 'param', param: 'size', value: 11 },
               { kind: 'harness', param: 'report', key: 'inputs.build.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/build/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: [FUNNELLED_ELSE],
@@ -441,7 +441,7 @@ describe('harnessRealizeBroker', () => {
               { kind: 'param', param: 'size', value: 10 },
               { kind: 'harness', param: 'report', key: 'inputs.build.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/build/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         casesAudit: [],
@@ -467,7 +467,7 @@ describe('harnessRealizeBroker', () => {
         casesAfter: result.functions.flatMap((fn) => fn.cases),
       }).toStrictEqual({
         gapsBefore: [],
-        casesBefore: [{ reachesPath: [COLLECT_TOP], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        casesBefore: [{ reachesPath: [COLLECT_TOP], arrange: [{ kind: 'param', param: 'size', value: 7 }], arms: [], driven: true, fewestRuns: true }],
         casesAfter: [
           {
             reachesPath: [COLLECT_TOP],
@@ -475,7 +475,7 @@ describe('harnessRealizeBroker', () => {
               { kind: 'param', param: 'size', value: 7 },
               { kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true },
             ],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       });

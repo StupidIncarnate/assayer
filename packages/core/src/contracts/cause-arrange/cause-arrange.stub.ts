@@ -5,7 +5,7 @@
  * CauseArrangeStub();
  * // Returns a valid CauseArrange
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 
 import { causeArrangeContract } from "./cause-arrange-contract";
 import type { CauseArrange } from "./cause-arrange-contract";

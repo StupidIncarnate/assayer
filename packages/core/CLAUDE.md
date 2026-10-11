@@ -50,7 +50,7 @@ the bug this design avoids.
 ## 2. The model
 
 The type `contracts/walk-context` defines the context the walk carries down
-through three fields. How each one behaves when the walk crosses a
+through three fields (and a fourth, described below). How each one behaves when the walk crosses a
 function boundary (moving from an outer function into a nested one) is the
 whole design:
 
@@ -82,7 +82,15 @@ depending on which kind of scope (a "rung": module, function, class,
 nested function, or callback) the `if` happens to sit in, which is exactly
 the kind of per-scope duplication this design avoids.
 
-`transformers/walk-context` is the ONLY place these three rules live. Do
+A fourth field, `bindings`, follows the same direction as `guardPath`: it
+records what each local variable in reach holds, as an expression over the
+scope's parameters. Statements that follow one another extend it, an arm of
+an `if` starts from the `if`'s own, and crossing INTO a nested function
+RESETS it to empty, because the nested function does not run where the
+variable was last written. `handle-block` is the only place that extends
+it.
+
+`transformers/walk-context` is the ONLY place these rules live. Do
 not re-implement any of them inside a handler.
 
 ---
@@ -402,8 +410,8 @@ for an empty array, a one-element array, and a many-element array). Touch
 recursing for a nested shape like `number[][]` (so `[[7]]` is a valid
 many-element, one-inner-element case), plus the array-cardinality cartesian
 product folded into `transformers/cause-arrange`. `statics/array-cardinality`
-fixes the order these are generated in (empty first, since it's the most
-salient) and how many size classes there are. Every array parameter gets
+fixes the order these are generated in (empty first, so it is the case the
+fewest-runs choice meets first) and how many size classes there are. Every array parameter gets
 this fan-out. A `.length` guard on an array does record a length
 predicate. Where a `.length` guard constrains an object PROPERTY that is
 itself an array, that property is refused rather than filled, because
@@ -430,22 +438,56 @@ predicate actually constrain the outcome (`guards/is-predicate-constraining`)?
 It reports which one failed as the `undriven-cause`, because the two have
 different fixes.
 
-**Pick the fallback arm of an un-steerable branch.** Touch
-`transformers/condition-default-value`, which combines leaves through
-`not`, `and` and `or`, and `transformers/leaf-default-value`, which
-answers for one leaf. When no case can steer a branch
-in a callable entry, `derive-cases` still builds one case: the arm the
-code takes with nothing arranged. That arm is `then` only when the
-condition is provably true at the moment a case runs. Everywhere else it
-is `else`. A leaf has a known value in two situations only. The first is
-a command-line read: `operandArgvRead`, which `read-argv-operand` records
+**Declare the routes through an un-steerable branch.** Touch
+`transformers/input-buckets` (it enumerates the routes) and
+`transformers/derive-cases` (it marks which of them are driven). A branch
+no case can steer is still a branch: both of its arms are routes, and
+`derive-cases` declares a case for each, marked `driven: false`. An
+undriven case is listed in the entry's every-route set and is never run. A
+case's `arms` are the arms its route takes and nothing else. Assayer never
+picks an arm to stand in for the others, and never labels an arm first and
+then chooses an input on its own. There is exactly one exception, and it
+is a known value rather than a guess: a command-line read holds one value
+in the run worker (`operandArgvRead`, which `read-argv-operand` records
 through the same `read-env-chain` an environment read uses, and which
-`transformers/argv-read-value` runs forward. The run worker starts with
+`transformers/argv-read-value` runs forward). The run worker starts with
 no arguments of its own, so `process.argv[2]` is `undefined` and
-`process.argv.slice(2)` is `[]`. The second is a value welded to a
-same-file constant. Assayer never guesses a value from a type. A call
-such as `!isReady()` returns whatever the callee returns, so a guess
-there would build a case that fails against correct code.
+`process.argv.slice(2)` is `[]`. `transformers/condition-known-value`
+combines the leaves of a condition through `not`, `and` and `or`, and
+`transformers/leaf-known-value` answers for one leaf; a same-file constant
+answers the same way. The arm a known value selects is driven. The other
+arm of that branch is reachable in real use, where an argument is given,
+but nothing here can steer it, so its route is undriven. A call such as
+`!isReady()` returns whatever the callee returns, so it has no known
+value, and Assayer never guesses one from a type.
+
+**Choose which routes run.** Touch `transformers/fewest-runs` for the
+selection and `statics/run-case-set` for the one setting that names the
+set the runner runs. `guards/is-run-case` is the only reader of that
+setting, and `case-set-projection` the only caller, so the choice lives in
+one place. See section 5.13.
+
+**Follow a local variable's value.** A leaf whose operand is a local
+variable (`let data = n.length < 5 ? n : 'NoneTon'`, then
+`if (data === 'None') data = trim(data)`) carries `operandFlow`: what the
+variable holds at that point, as an expression over the entry's own
+parameters (`value-expr-contract`). `handle-block` threads the bindings
+down the walk statement by statement (`read-statement-bindings`), reading
+each initializer, assignment and `if` through `read-value-expr`, which
+follows a ternary (a `select` on the ternary's branch), a parameter, a
+pure string method, and a call to a function in the same file whose body
+is one `return`. A variable is followed only when every write to it is one
+of those statements (`read-write-tracking` asks the checker for the
+symbol's references): a write in a loop, a `switch`, a `try`, a nested
+function, or a compound assignment makes it untracked, and its branches
+stay undriven. A route then settles the expression by the arms it took
+(`transformers/route-resolve`): it becomes a parameter, which narrows the
+parameter's domain, a constant, which is evaluated, or a function of
+parameters, which is settled on the values the arrangement picked
+(`value-expr-evaluate`). `cause-arrange` reports which parameters a guard
+has decided (`pinned`): a route whose derived guard fails on a decided
+value is impossible and is dropped, and one that cannot be settled is kept
+and marked undriven.
 
 **Evaluate a branch welded to a literal constant.** Capture the value at
 the exact point where it becomes welded: `read-const-operand-layer-transformer`
@@ -1097,41 +1139,69 @@ the branch itself is still emitted, and the steerability gate in
 `derive-cases` admits it as undriven. Only a genuinely unrecognized SYNTAX
 shape becomes a dark spot, never merely a condition Assayer cannot steer.
 
-### 5.13 The full case set is the whole testable breadth; `salient` marks the subset worth running
+### 5.13 Every route is a case; the fewest runs are the ones that run
 
-`derive-cases` produces one test case for every input COMBINATION the
-code's logic actually distinguishes: the cartesian product of every
-branch's arms (keeping each arm's own short-circuit causes distinct), a
-branchless predicate's true and false return values, and every array
-parameter's cardinality classes (empty, one element, many elements, built
-by `array-arrange` and crossed together by `cause-arrange`). This holds
-even when several different combinations end up reaching the exact same
-exit.
+An entry carries two case sets, and `derive-cases` builds both. The
+every-route set, `FunctionAnalysis.cases`, has one case for every route
+that can actually run. A route is one way execution travels through the
+entry, taking one arm at every branch it MEETS: an arm counts whether it
+returns, fires a side effect, or does nothing, so `if (flag) doThing()` is
+two routes. A branch is met only when the arms already taken satisfy its
+own `guardPath`, so a branch nested in an arm is met only on a route that
+took that arm, and a route never names an arm of a branch it cannot reach.
+A switch's later cases are met only on the else arm of the earlier ones.
 
-Every case carries a `salient` flag. The salient subset is one
-representative case per distinct predicted output, the minimal set worth
-actually RUNNING. The full set, salient and non-salient together, is the
-file's whole testable breadth. So a file's total case count measures its
-breadth, and `salient` is what a reviewer should read as "must run."
+Sequential and nested branches are combined and every combination that
+contradicts itself is dropped: two guards on one parameter whose domains do
+not meet, a welded constant that rules an arm out, a local variable whose
+followed value cannot satisfy a guard. A route whose answer cannot be
+settled is KEPT and marked undriven. An arm that no route reaches is not a
+case: it is an `unreachable-exit` lint, whether the dead region is an exit,
+or a fall-through arm that owns none. A route through an undriven arm still
+counts for that check, so a welded constant rules an arm out whichever way
+an opaque branch beside it goes.
 
-"Predicted output" here means `reachesPath`, the exit path a case reaches,
-because two different buckets reaching the same exit path return the same
-literal value. There is exactly one exception: a branchless predicate's
-two possible return values leave through the same exit path, so a
-separate field, `predWant`, tells those two apart, and each one still
-earns its own salient case. Everything else that shares an exit path
-collapses together in the salient subset: the first case found is salient,
-and the rest exist in the full set as non-salient, "grayed" twins. A
-branch that converges back with another is therefore not dropped from the
-full set: even a bucket whose own flow never actually reaches a given
-branch (because an earlier branch already decided the path) still
-constrains that branch soundly, and stays in the full set as one of these
-grayed twins. Because Assayer does not model side effects, two buckets
-that differ only by a side effect over-collapse in the salient subset,
-though the full set still carries both of them separately. The
-cross-system stub repository (the demanded values for objects, arrays, and
-environment variables) is a SEPARATE artifact from this case set. The full
-requirements are D22 and D23 in `plan/requirements.md`.
+Every case carries:
+
+- `reachesPath`, the exit control flow reaches;
+- `arms`, the arms its route takes, one (branch, arm) step per branch met.
+  A branchless predicate's true and false returns are two more arms, named
+  by the comparison's first leaf (`return-true`, `return-false`). A callback
+  a host maps over an array has one more arm each, `skipped` or `runs`;
+- `driven`, whether Assayer can steer every branch on the route. An
+  undriven case is listed and never run;
+- `fewestRuns`, whether it belongs to the fewest-runs set.
+
+The fewest-runs set is the smallest subset in which every reachable arm is
+taken by at least one case (`transformers/fewest-runs`). It is a set cover
+over arms, in two passes. The first covers every arm some DRIVEN case
+takes, using driven cases only. The second covers the arms only an
+undriven case takes, using undriven cases only. Within a pass the cover is
+the minimum size, found exactly. Sizes are tried from one upward, and at
+each step the first arm no chosen case takes (in the order the cases first
+meet arms) is covered by the earliest case, in enumeration order, that
+takes it. That is the fixed tie-break, so the same entry always yields the
+same set. Cases that take exactly the same arms are one candidate, and the
+earliest stands for them. Past 24 distinct candidates a pass falls back to
+greedy (most uncovered arms first, earliest case on a tie). A branchless
+entry takes no arm at all, and its first case is the one run.
+
+The runner runs only cases that are driven AND in the fewest-runs set. One
+setting, `runCaseSetStatics.runs`, names the set; `is-run-case` reads it.
+The desktop detail panel shows both sets, "Every route" and "Fewest runs",
+so a human can check that Assayer accounted for every path.
+
+The every-route set still carries more than one case for a route where the
+input breadth differs inside the route: a compound condition keeps each
+short-circuit cause as its own arrangement, a union operand's `else` fans
+out one case per remaining member, and every array parameter spans its
+cardinalities. These cases take the same arms, so the fewest-runs set
+keeps the earliest of them. Because Assayer does not model side effects,
+two routes that differ only by a side effect are still two routes with
+different arms, and both run. The cross-system stub repository (the
+demanded values for objects, arrays, and environment variables) is a
+SEPARATE artifact from this case set. The full requirements are D22 and D23
+in `plan/requirements.md`.
 
 ---
 

@@ -41,8 +41,8 @@ describe('boolean / not — a negated operand inside an exported function', () =
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'not.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'ready', value: false }], salient: true },
-      { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'ready', value: true }], salient: true },
+      { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'ready', value: false }], arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: true },
+      { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'ready', value: true }], arms: [{ branchCoverageId: BRANCH, arm: 'else' }], driven: true, fewestRuns: true },
     ]);
   });
 });

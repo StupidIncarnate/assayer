@@ -12,6 +12,9 @@ const MODE_BRANCH =
   '*module*/if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:process,id:env,id:MODE,EqualsEqualsEqualsToken,str:production';
 const CASE_1_EXIT = '*module*/exit@switch:id:statusCode,EqualsEqualsEqualsToken,num:1#then';
 const CASE_2_EXIT = '*module*/exit@switch:id:statusCode,EqualsEqualsEqualsToken,num:2#then';
+const CASE_1 = '*module*/switch:id:statusCode,EqualsEqualsEqualsToken,num:1';
+const CASE_2 = '*module*/switch:id:statusCode,EqualsEqualsEqualsToken,num:2';
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
 const DEFAULT_EXIT =
   '*module*/exit@switch:id:statusCode,EqualsEqualsEqualsToken,num:1#else/switch:id:statusCode,EqualsEqualsEqualsToken,num:2#else';
 
@@ -34,70 +37,50 @@ describe('env-object / multi-read — two env reads, one in place and one throug
           operandType: { kind: 'string' },
           predicate: { kind: 'eq', literal: 'production' },
         },
+        guardPath: [],
         startLine: 1,
         endLine: 5,
       },
     ]);
   });
 
-  // Both arms of the `if` fall through to the switch, so the module's exits are the switch's three
-  // clause completions. Every case writes MODE and CODE before the import: MODE is the compared literal
-  // on the `then` arm and the string representative on the `else` arm; CODE is each case literal, and
-  // the number representative 7 for `default`, which matches neither. The first case per exit is the
-  // salient one, and the `else`-arm twins reach the same exits.
-  it('VALID: {an if on MODE before a switch on Number(CODE)} => one env case per arm combination, MODE written before CODE', () => {
+  // Both arms of the `if` fall through to the switch, so the module's exits are the switch's three clause
+  // completions, and every route meets both: the `if`, then the switch. The switch compares `2` only when the
+  // comparison with `1` missed, so it has three routes (`1`, `2`, and neither), and with the two arms of the
+  // `if` that is six every-route cases, in that order. Every case writes MODE and CODE before the import: MODE
+  // is the compared literal on the `then` arm and the string representative on the `else` arm; CODE is each
+  // case literal, and the number representative 7 for `default`, which matches neither. The fewest runs are
+  // the smallest set that takes all six arms, three routes, and of the several such sets the one the documented
+  // tie-break reaches: the first route covers MODE `then` and the switch's first arm, the second covers the
+  // switch's `else` then `2` arm, and the last covers the remaining arms, MODE `else` and the `default`.
+  it('VALID: {an if on MODE before a switch on Number(CODE)} => six every-route cases, MODE written before CODE', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'multi-read.ts') }), relPath });
 
-    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      {
-        reachesPath: [CASE_1_EXIT],
-        arrange: [
-          { kind: 'env', name: 'MODE', value: 'production' },
-          { kind: 'env', name: 'CODE', value: '1' },
-        ],
-        salient: true,
-      },
-      {
-        reachesPath: [CASE_2_EXIT],
-        arrange: [
-          { kind: 'env', name: 'MODE', value: 'production' },
-          { kind: 'env', name: 'CODE', value: '2' },
-        ],
-        salient: true,
-      },
-      {
-        reachesPath: [DEFAULT_EXIT],
-        arrange: [
-          { kind: 'env', name: 'MODE', value: 'production' },
-          { kind: 'env', name: 'CODE', value: '7' },
-        ],
-        salient: true,
-      },
-      {
-        reachesPath: [CASE_1_EXIT],
-        arrange: [
-          { kind: 'env', name: 'MODE', value: 'abc123' },
-          { kind: 'env', name: 'CODE', value: '1' },
-        ],
-        salient: false,
-      },
-      {
-        reachesPath: [CASE_2_EXIT],
-        arrange: [
-          { kind: 'env', name: 'MODE', value: 'abc123' },
-          { kind: 'env', name: 'CODE', value: '2' },
-        ],
-        salient: false,
-      },
-      {
-        reachesPath: [DEFAULT_EXIT],
-        arrange: [
-          { kind: 'env', name: 'MODE', value: 'abc123' },
-          { kind: 'env', name: 'CODE', value: '7' },
-        ],
-        salient: false,
-      },
-    ]);
+    const MODES = [
+      { value: 'production', arm: 'then' },
+      { value: 'abc123', arm: 'else' },
+    ];
+    const SWITCH_ROUTES = [
+      { exit: CASE_1_EXIT, code: '1', arms: [step(CASE_1, 'then')] },
+      { exit: CASE_2_EXIT, code: '2', arms: [step(CASE_1, 'else'), step(CASE_2, 'then')] },
+      { exit: DEFAULT_EXIT, code: '7', arms: [step(CASE_1, 'else'), step(CASE_2, 'else')] },
+    ];
+    const FEWEST_RUNS = new Set([0, 1, 5]);
+
+    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual(
+      MODES.flatMap((mode, modeIndex) =>
+        SWITCH_ROUTES.map((route, routeIndex) => ({
+          reachesPath: [route.exit],
+          arrange: [
+            { kind: 'env', name: 'MODE', value: mode.value },
+            { kind: 'env', name: 'CODE', value: route.code },
+          ],
+          arms: [step(MODE_BRANCH, mode.arm), ...route.arms],
+          driven: true,
+          fewestRuns: FEWEST_RUNS.has(modeIndex * SWITCH_ROUTES.length + routeIndex),
+        })),
+      ),
+    );
   });
 
   it('VALID: {both branches driven by the environment} => admits nothing undriven', () => {

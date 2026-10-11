@@ -22,6 +22,7 @@ import { z } from '#gateway/npm/zod';
 
 import { conditionNodeContract } from '../condition-node/condition-node-contract';
 import { coverageContract } from '../coverage/coverage-contract';
+import { guardStepContract } from '../guard-step/guard-step-contract';
 
 export const branchNodeContract = z.object({
   coverageId: coverageContract.shape.id,
@@ -30,6 +31,11 @@ export const branchNodeContract = z.object({
   // handle a case that cannot occur. Add a kind when its handler lands, never before.
   kind: z.enum(['if', 'switch', 'ternary']),
   condition: conditionNodeContract,
+  // The arms that must already have been taken for execution to MEET this branch: the guard path the walk
+  // carried down to it. A branch nested in an arm carries that arm; a branch after an early return carries
+  // the arm that did not return. It is what lets a route take one arm at every branch it meets and no arm
+  // at a branch it never reaches.
+  guardPath: z.array(guardStepContract).default([]),
   startLine: z.number().int().positive().brand<'BranchNodeStartLine'>(),
   endLine: z.number().int().positive().brand<'BranchNodeEndLine'>(),
 }).brand<'BranchNode'>();

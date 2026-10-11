@@ -33,7 +33,7 @@ describe('input-gap / truthy-object-param — a bare truthy read of an OBJECT pa
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'truthy-object-param.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [THEN], arrange: [{ kind: 'object', param: 'settings', value: { mode: 'abc123' } }], salient: true },
+      { reachesPath: [THEN], arrange: [{ kind: 'object', param: 'settings', value: { mode: 'abc123' } }], arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: true },
     ]);
   });
 

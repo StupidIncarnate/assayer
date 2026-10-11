@@ -1,28 +1,31 @@
-import { RepresentativeValueStub } from '@assayer/shared/contracts/representative-value/representative-value.stub';
-import { TypeDescriptorStub } from '@assayer/shared/contracts/type-descriptor/type-descriptor.stub';
+import { RepresentativeValueStub } from "@assayer/shared/contracts/representative-value/representative-value.stub";
+import { TypeDescriptorStub } from "@assayer/shared/contracts/type-descriptor/type-descriptor.stub";
 
-import { steppedRepresentativeLayerTransformer } from './stepped-representative-layer-transformer';
-import { steppedRepresentativeLayerTransformerProxy } from './stepped-representative-layer-transformer.proxy';
+import { steppedRepresentativeLayerTransformer } from "./stepped-representative-layer-transformer";
+import { steppedRepresentativeLayerTransformerProxy } from "./stepped-representative-layer-transformer.proxy";
 
-describe('steppedRepresentativeLayerTransformer', () => {
-  describe('the representative is excluded', () => {
-    it('VALID: {number, excluded: [7]} => [8]', () => {
+describe("steppedRepresentativeLayerTransformer", () => {
+  describe("the representative is excluded", () => {
+    it("VALID: {number, excluded: [7]} => [8]", () => {
       steppedRepresentativeLayerTransformerProxy();
 
       const result = steppedRepresentativeLayerTransformer({
-        type: TypeDescriptorStub({ kind: 'number' }),
+        type: TypeDescriptorStub({ kind: "number" }),
         excluded: [RepresentativeValueStub({ value: 7 })],
       });
 
       expect(result).toStrictEqual([8]);
     });
 
-    it('VALID: {number, excluded: [7, 8]} => [9], stepping past every excluded point', () => {
+    it("VALID: {number, excluded: [7, 8]} => [9], stepping past every excluded point", () => {
       steppedRepresentativeLayerTransformerProxy();
 
       const result = steppedRepresentativeLayerTransformer({
-        type: TypeDescriptorStub({ kind: 'number' }),
-        excluded: [RepresentativeValueStub({ value: 7 }), RepresentativeValueStub({ value: 8 })],
+        type: TypeDescriptorStub({ kind: "number" }),
+        excluded: [
+          RepresentativeValueStub({ value: 7 }),
+          RepresentativeValueStub({ value: 8 }),
+        ],
       });
 
       expect(result).toStrictEqual([9]);
@@ -32,23 +35,23 @@ describe('steppedRepresentativeLayerTransformer', () => {
       steppedRepresentativeLayerTransformerProxy();
 
       const result = steppedRepresentativeLayerTransformer({
-        type: TypeDescriptorStub({ kind: 'string' }),
-        excluded: [RepresentativeValueStub({ value: 'abc123' })],
+        type: TypeDescriptorStub({ kind: "string" }),
+        excluded: [RepresentativeValueStub({ value: "abc123" })],
       });
 
-      expect(result).toStrictEqual(['abc123_1']);
+      expect(result).toStrictEqual(["abc123_1"]);
     });
 
-    it('VALID: {undefined | false | true, excluded: [false]} => [true], the other literal member', () => {
+    it("VALID: {undefined | false | true, excluded: [false]} => [true], the other literal member", () => {
       steppedRepresentativeLayerTransformerProxy();
 
       const result = steppedRepresentativeLayerTransformer({
         type: TypeDescriptorStub({
-          kind: 'union',
+          kind: "union",
           members: [
-            { kind: 'unknown', text: 'undefined' },
-            { kind: 'literal', value: false },
-            { kind: 'literal', value: true },
+            { kind: "unknown", text: "undefined" },
+            { kind: "literal", value: false },
+            { kind: "literal", value: true },
           ],
         }),
         excluded: [RepresentativeValueStub({ value: false })],
@@ -62,37 +65,40 @@ describe('steppedRepresentativeLayerTransformer', () => {
 
       const result = steppedRepresentativeLayerTransformer({
         type: TypeDescriptorStub({
-          kind: 'union',
+          kind: "union",
           members: [
-            { kind: 'literal', value: 'a' },
-            { kind: 'literal', value: 'b' },
+            { kind: "literal", value: "a" },
+            { kind: "literal", value: "b" },
           ],
         }),
-        excluded: [RepresentativeValueStub({ value: 'a' }), RepresentativeValueStub({ value: 'b' })],
+        excluded: [
+          RepresentativeValueStub({ value: "a" }),
+          RepresentativeValueStub({ value: "b" }),
+        ],
       });
 
       expect(result).toStrictEqual([]);
     });
   });
 
-  describe('the representative is not excluded', () => {
-    it('EMPTY: {number, excluded: [0]} => [], so the ordinary fill stands', () => {
+  describe("the representative is not excluded", () => {
+    it("EMPTY: {number, excluded: [0]} => [], so the ordinary fill stands", () => {
       steppedRepresentativeLayerTransformerProxy();
 
       const result = steppedRepresentativeLayerTransformer({
-        type: TypeDescriptorStub({ kind: 'number' }),
+        type: TypeDescriptorStub({ kind: "number" }),
         excluded: [RepresentativeValueStub({ value: 0 })],
       });
 
       expect(result).toStrictEqual([]);
     });
 
-    it('EMPTY: {an object type with no representative} => []', () => {
+    it("EMPTY: {an object type with no representative} => []", () => {
       steppedRepresentativeLayerTransformerProxy();
 
       const result = steppedRepresentativeLayerTransformer({
-        type: TypeDescriptorStub({ kind: 'unknown', text: 'Thing' }),
-        excluded: [RepresentativeValueStub({ value: 'x' })],
+        type: TypeDescriptorStub({ kind: "unknown", text: "Thing" }),
+        excluded: [RepresentativeValueStub({ value: "x" })],
       });
 
       expect(result).toStrictEqual([]);

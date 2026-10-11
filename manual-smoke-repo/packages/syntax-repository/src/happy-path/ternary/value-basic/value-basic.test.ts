@@ -38,6 +38,7 @@ describe('ternary / value-basic — a value-flow `const x = ternary; return x` t
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 2,
               endLine: 2,
             },

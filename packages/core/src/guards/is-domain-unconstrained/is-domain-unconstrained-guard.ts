@@ -30,4 +30,6 @@ export const isDomainUnconstrainedGuard = ({ domain }: { domain?: ValueDomain })
     domain.max === undefined &&
     domain.lengthMin === undefined &&
     domain.lengthMax === undefined &&
-    domain.lengthExcluded.length === 0);
+    domain.lengthExcluded.length === 0 &&
+    (domain.includes ?? []).length === 0 &&
+    (domain.notIncludes ?? []).length === 0);

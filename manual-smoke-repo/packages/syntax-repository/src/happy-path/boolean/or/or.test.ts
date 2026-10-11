@@ -54,17 +54,17 @@ describe('boolean / or — a disjunction inside an exported function', () => {
           { kind: 'param', param: 'temp', value: 51 },
           { kind: 'param', param: 'smoke', value: false },
         ],
-        salient: true,
+        arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: true,
       },
       // 50 > 50 fails, so evaluation continues and `smoke` is the operand that decides. Same then exit
-      // as above, so it is the grayed breadth twin, not a second salient case.
+      // as above, so it is the every-route-only twin, not a second fewest-runs case.
       {
         reachesPath: [THEN],
         arrange: [
           { kind: 'param', param: 'temp', value: 50 },
           { kind: 'param', param: 'smoke', value: true },
         ],
-        salient: false,
+        arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: false,
       },
       // Both must fail for the disjunction to fail.
       {
@@ -73,7 +73,7 @@ describe('boolean / or — a disjunction inside an exported function', () => {
           { kind: 'param', param: 'temp', value: 50 },
           { kind: 'param', param: 'smoke', value: false },
         ],
-        salient: true,
+        arms: [{ branchCoverageId: BRANCH, arm: 'else' }], driven: true, fewestRuns: true,
       },
     ]);
   });

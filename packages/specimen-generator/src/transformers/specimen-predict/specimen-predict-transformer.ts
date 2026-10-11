@@ -20,18 +20,18 @@
  *     const, a module statement or a default parameter. It holds in every scope, because code that
  *     runs when the module loads runs in every case of the file.
  *   - The arms reach different exits. This is a statement whose arms return, and a ternary that is
- *     itself the exit (`return cond ? a : b`, or a concise arrow body). A named entry still gets one
- *     case, which reaches whichever arm the test process's values take. An inline function called
- *     where it is written gets no case, so its focus never goes either way.
+ *     itself the exit (`return cond ? a : b`, or a concise arrow body). Every function scope, a named
+ *     entry or an inline function called where it is written, still gets one case, which reaches the
+ *     arm the test process's values take. The module has no such case.
+ * - Routes through the other arm are undriven: Assayer declares them and does not run them. Only the
+ *   fewest-runs cases run, and the arm the known value selects is the one that is driven.
  * - Where each undriven admission sits. When the scope earns a case (the focus goes one way), every
  *   admission sits on its own branch's line, in every scope. A class field's ternary runs in a
  *   `constructor` entry, because Assayer runs instance-field initializers in the constructor. When the
- *   scope earns no case, a named entry (a function, a method, an arrow in a variable or object) still
- *   gets each admission on the branch's own line. The module is admitted as a whole on line 1, and an
- *   inline function that is called where it is written, such as an immediately-invoked arrow, is
- *   admitted as a whole on its own first line. A whole-scope admission is one admission for the scope,
- *   however many branches in it no test can steer. Only admissions on branch lines are one per branch.
- *   A function expression bound to a variable is a named entry, like a function declaration.
+ *   scope earns no case, the module is admitted as a whole on line 1. A whole-scope admission is one
+ *   admission for the scope, however many branches in it no test can steer. Only admissions on branch
+ *   lines are one per branch. A function expression bound to a variable is a named entry, like a
+ *   function declaration.
  *
  * A leaf that reads a `T | undefined` value from `process.env` or `process.argv` is written as a
  * ternary of its own, `<read> === undefined ? undefined : <value>`. That ternary is a branch too. An
@@ -47,7 +47,6 @@
  */
 import { Node, Project, SyntaxKind } from '#gateway/npm/ts-morph';
 
-import { isCalledInPlaceGuard } from '../../guards/is-called-in-place/is-called-in-place-guard';
 import type { Provenance } from '../../contracts/provenance/provenance-contract';
 import { specimenOutcomeContract } from '../../contracts/specimen-outcome/specimen-outcome-contract';
 import type { SpecimenOutcome } from '../../contracts/specimen-outcome/specimen-outcome-contract';
@@ -107,8 +106,7 @@ export const specimenPredictTransformer = ({
     );
   }
 
-  // The nearest function around the focus. The module has none. An inline function is one that is
-  // called where it is written: its parent, past any parentheses, is a call that names it as the callee.
+  // The nearest function around the focus. The module has none.
   const scope = focus.getFirstAncestor(
     (ancestor) =>
       Node.isFunctionDeclaration(ancestor) ||
@@ -119,10 +117,6 @@ export const specimenPredictTransformer = ({
       Node.isGetAccessorDeclaration(ancestor) ||
       Node.isSetAccessorDeclaration(ancestor),
   );
-  const isInlineCalled =
-    scope !== undefined &&
-    (Node.isArrowFunction(scope) || Node.isFunctionExpression(scope)) &&
-    isCalledInPlaceGuard({ node: scope });
   // The focus's value is the scope's exit when its parent, past any parentheses, is a `return` or an
   // arrow function (a concise body). Anywhere else the two arms meet again at the enclosing statement.
   const parent = focus.getFirstAncestor(
@@ -134,10 +128,10 @@ export const specimenPredictTransformer = ({
   const armsMeetAgain = focusKind === 'statement' ? slotArm !== 'return' : !valueIsExit;
   const scopeEarnsCase = verdict !== 'undriven' || armsMeetAgain;
   // Some case runs the branch when a case reaches the scope's exit without deciding it, or when the
-  // scope is a named entry. Assayer derives one case for a named entry that reaches whichever arm the
+  // scope is a function. Assayer derives one case for a named entry that reaches whichever arm the
   // test process's values take. Module-load code runs in every case of its file, so a module statement,
   // a field, an object property and an exported const all run whenever the arms meet again.
-  const branchRuns = scopeEarnsCase || (scope !== undefined && !isInlineCalled);
+  const branchRuns = scopeEarnsCase || scope !== undefined;
 
   if (verdict === 'locked' && (liveArm === undefined || !arms.includes(liveArm))) {
     throw new Error(

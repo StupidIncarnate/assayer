@@ -18,8 +18,8 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
   // annotation, now read as a real union — `items.shift()` genuinely can return nothing on an empty
   // array. Branchless, but the single array param FANS OUT over cardinality: three cases reach the one
   // exit, arranged with REAL arrays of the element type so `items.shift()` runs on an actual array. Emit
-  // order fixes salience — the empty `[]` is the salient representative; the one-element `[7]` and many
-  // `[7,7]` twins are the grayed breadth (all run under `thorough`; only `intelligent` grays the two).
+  // order fixes which case is fewest-runs — the empty `[]` is the fewest-runs representative; the one-element `[7]` and many
+  // `[7,7]` twins are the every-route-only breadth (all run under `thorough`; only the fewest-runs set runs).
   // Values are INPUTS (P4); each case asserts only that the flow REACHES the exit.
   it('VALID: {export function takeFirst(items: number[]): number | undefined { return items.shift() }} => array-of-number param, return read as a real optional union, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'shift.ts') }) });
@@ -40,17 +40,17 @@ describe('array / shift — a branchless function returning `items.shift()`', ()
           {
             reachesPath: ['*module*/takeFirst/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/takeFirst/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/takeFirst/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

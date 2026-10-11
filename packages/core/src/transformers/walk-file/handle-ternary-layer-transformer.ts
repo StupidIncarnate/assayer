@@ -74,6 +74,7 @@ export const handleTernaryLayerTransformer = ({
         coverageId: branchCoverageId,
         kind: 'ternary',
         condition: readout.condition,
+        guardPath: context.guardPath,
         startLine: node.getStartLineNumber(),
         endLine: node.getEndLineNumber(),
       }),

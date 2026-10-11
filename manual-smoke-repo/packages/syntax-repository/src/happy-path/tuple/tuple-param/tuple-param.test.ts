@@ -40,7 +40,7 @@ describe('tuple / tuple-param — a branchless function over a fixed-length, het
           {
             reachesPath: ['*module*/readPair/return@top'],
             arrange: [{ kind: 'array', param: 'pair', value: ['abc123', 7] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

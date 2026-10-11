@@ -80,11 +80,17 @@ export const exampleResolutionHarness = (): {
       const blobsDir = join(dir, '.assayer', 'cache', 'blobs');
       const cacheDir = join(dir, '.assayer', 'cache');
 
+      // Every file is on disk before the first compile. The first compile parses the tsconfig and
+      // memoizes its file list, so a file written after that is owned by no tsconfig.
+      const relPaths = [USES_CONSOLE, USES_PROCESS, CALLS_JOIN];
+      relPaths.forEach((relPath) => {
+        ensureDirSync(join(dir, dirname(relPath)));
+        writeFileSync(join(dir, relPath), readFileSync(join(SMOKE_REPO, relPath)));
+      });
+
       const files = await Promise.all(
-        [USES_CONSOLE, USES_PROCESS, CALLS_JOIN].map(async (relPath) => {
+        relPaths.map(async (relPath) => {
           const content = readFileSync(join(SMOKE_REPO, relPath));
-          ensureDirSync(join(dir, dirname(relPath)));
-          writeFileSync(join(dir, relPath), content);
           await compileProcessFileBroker({ root: dir, relPath, content, blobsDir });
           return { relPath, contentHash: contentHashTransformer({ content }), analysisHash: analysisHashTransformer({ content, options: {} }) };
         }),

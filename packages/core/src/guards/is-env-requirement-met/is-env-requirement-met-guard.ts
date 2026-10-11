@@ -104,6 +104,8 @@ export const isEnvRequirementMetGuard = ({
       return length !== undefined && (length < threshold) === want;
     case 'length-lte':
       return length !== undefined && (length <= threshold) === want;
+    case 'includes':
+      return (typeof value === 'string' && typeof literal === 'string' && value.includes(literal)) === want;
     case 'truthy':
       return Boolean(value) === want;
     case 'falsy':

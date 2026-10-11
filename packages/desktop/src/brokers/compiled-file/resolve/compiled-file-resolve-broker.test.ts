@@ -173,6 +173,9 @@ const BAND_LOW = 'if:BinaryExpression,id:n,LessThanToken,num:20';
 const HIGH_EXIT = `*module*/bandReading/return@${BAND_HIGH}#then`;
 const LOW_EXIT = `*module*/bandReading/return@${BAND_HIGH}#else/${BAND_LOW}#then`;
 const MID_EXIT = `*module*/bandReading/return@${BAND_HIGH}#else/${BAND_LOW}#else`;
+const BAND_ITERATES = '*module*/bandReading/iterates';
+const BAND_HIGH_ID = `*module*/bandReading/${BAND_HIGH}`;
+const BAND_LOW_ID = `*module*/bandReading/${BAND_LOW}`;
 const READINGS_EXIT = '*module*/bandReadings/return@top';
 const MAP_ANALYSIS = FileAnalysisStub({
   functions: [
@@ -188,9 +191,9 @@ const MAP_ANALYSIS = FileAnalysisStub({
       branches: [],
       exits: [{ coverageId: READINGS_EXIT, kind: 'return', guardPath: [], line: 3 }],
       cases: [
-        { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
-        { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [7] }], salient: false },
-        { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }], salient: false },
+        { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], fewestRuns: true },
+        { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [7] }], fewestRuns: false },
+        { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }], fewestRuns: false },
       ],
     },
   ],
@@ -271,6 +274,7 @@ const FUNNELLED_SOURCE =
   "const build = (size: number, report: (message: string) => string): string => {\n  if (size > 10) {\n    return report('over');\n  }\n\n  return report('under');\n};\n\nexport function audit(size: number): string {\n  return build(size, (m) => m);\n}\n";
 const FUNNELLED_HARNESS =
   "import { assayerHarness } from '@assayer/core';\n\nassayerHarness({ inputs: { build: { report: (message: string): string => message } } });\n";
+const FUNNELLED_BRANCH = '*module*/build/if:BinaryExpression,id:size,GreaterThanToken,num:10';
 const FUNNELLED_THEN = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#then';
 const FUNNELLED_ELSE = '*module*/build/return@if:BinaryExpression,id:size,GreaterThanToken,num:10#else';
 const AUDIT_TOP = '*module*/audit/return@top';
@@ -395,12 +399,16 @@ describe('compiledFileResolveBroker', () => {
           {
             reachesPath: ['*module*/classify/return@if:CallExpression,id:big,id:n#then'],
             arrange: [{ kind: 'param', param: 'n', value: 51 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:big,id:n', arm: 'then' }],
+            driven: true,
+            fewestRuns: true,
           },
           {
             reachesPath: ['*module*/classify/return@if:CallExpression,id:big,id:n#else'],
             arrange: [{ kind: 'param', param: 'n', value: 50 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:big,id:n', arm: 'else' }],
+            driven: true,
+            fewestRuns: true,
           },
         ],
         lints: [],
@@ -501,7 +509,9 @@ describe('compiledFileResolveBroker', () => {
           {
             reachesPath: ['*module*/readMode/return@top'],
             arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123' } }],
-            salient: true,
+            arms: [],
+            driven: true,
+            fewestRuns: true,
           },
         ],
         gaps: [],
@@ -536,8 +546,20 @@ describe('compiledFileResolveBroker', () => {
         undriven: result.analysis?.undriven,
       }).toStrictEqual({
         cases: [
-          { reachesPath: [DECIDE_THEN], arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }], salient: true },
-          { reachesPath: [DECIDE_ELSE], arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }], salient: true },
+          {
+            reachesPath: [DECIDE_THEN],
+            arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }],
+            arms: [{ branchCoverageId: DECIDE_BRANCH, arm: 'then' }],
+            driven: true,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: [DECIDE_ELSE],
+            arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
+            arms: [{ branchCoverageId: DECIDE_BRANCH, arm: 'else' }],
+            driven: true,
+            fewestRuns: true,
+          },
         ],
         undriven: [],
       });
@@ -568,11 +590,57 @@ describe('compiledFileResolveBroker', () => {
       });
 
       expect(result.analysis?.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-        { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
-        { reachesPath: [HIGH_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [80] }], salient: true },
-        { reachesPath: [LOW_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [19] }], salient: true },
-        { reachesPath: [MID_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [79] }], salient: true },
-        { reachesPath: [HIGH_EXIT, LOW_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [80, 19] }], salient: true },
+        {
+          reachesPath: [READINGS_EXIT],
+          arrange: [{ kind: 'array', param: 'items', value: [] }],
+          arms: [{ branchCoverageId: BAND_ITERATES, arm: 'skipped' }],
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: [HIGH_EXIT, READINGS_EXIT],
+          arrange: [{ kind: 'array', param: 'items', value: [80] }],
+          arms: [
+            { branchCoverageId: BAND_ITERATES, arm: 'runs' },
+            { branchCoverageId: BAND_HIGH_ID, arm: 'then' },
+          ],
+          driven: true,
+          fewestRuns: false,
+        },
+        {
+          reachesPath: [LOW_EXIT, READINGS_EXIT],
+          arrange: [{ kind: 'array', param: 'items', value: [19] }],
+          arms: [
+            { branchCoverageId: BAND_ITERATES, arm: 'runs' },
+            { branchCoverageId: BAND_HIGH_ID, arm: 'else' },
+            { branchCoverageId: BAND_LOW_ID, arm: 'then' },
+          ],
+          driven: true,
+          fewestRuns: false,
+        },
+        {
+          reachesPath: [MID_EXIT, READINGS_EXIT],
+          arrange: [{ kind: 'array', param: 'items', value: [79] }],
+          arms: [
+            { branchCoverageId: BAND_ITERATES, arm: 'runs' },
+            { branchCoverageId: BAND_HIGH_ID, arm: 'else' },
+            { branchCoverageId: BAND_LOW_ID, arm: 'else' },
+          ],
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: [HIGH_EXIT, LOW_EXIT, READINGS_EXIT],
+          arrange: [{ kind: 'array', param: 'items', value: [80, 19] }],
+          arms: [
+            { branchCoverageId: BAND_ITERATES, arm: 'runs' },
+            { branchCoverageId: BAND_HIGH_ID, arm: 'then' },
+            { branchCoverageId: BAND_HIGH_ID, arm: 'else' },
+            { branchCoverageId: BAND_LOW_ID, arm: 'then' },
+          ],
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
   });
@@ -608,8 +676,20 @@ describe('compiledFileResolveBroker', () => {
         gaps: result.analysis?.gaps,
       }).toStrictEqual({
         cases: [
-          { reachesPath: [FUNNELLED_THEN, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
-          { reachesPath: [FUNNELLED_ELSE, AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+          {
+            reachesPath: [FUNNELLED_THEN, AUDIT_TOP],
+            arrange: [{ kind: 'param', param: 'size', value: 11 }],
+            arms: [{ branchCoverageId: FUNNELLED_BRANCH, arm: 'then' }],
+            driven: true,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: [FUNNELLED_ELSE, AUDIT_TOP],
+            arrange: [{ kind: 'param', param: 'size', value: 10 }],
+            arms: [{ branchCoverageId: FUNNELLED_BRANCH, arm: 'else' }],
+            driven: true,
+            fewestRuns: true,
+          },
         ],
         gaps: [],
       });
@@ -651,7 +731,9 @@ describe('compiledFileResolveBroker', () => {
               { kind: 'param', param: 'score', value: 6 },
               { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: AUDIT_BRANCH, arm: 'then' }],
+            driven: true,
+            fewestRuns: true,
           },
           {
             reachesPath: [AUDIT_ELSE],
@@ -659,7 +741,9 @@ describe('compiledFileResolveBroker', () => {
               { kind: 'param', param: 'score', value: 5 },
               { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: AUDIT_BRANCH, arm: 'else' }],
+            driven: true,
+            fewestRuns: true,
           },
         ],
         gaps: [],

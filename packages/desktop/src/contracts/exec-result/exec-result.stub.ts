@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { execResultContract } from './exec-result-contract';
 import type { ExecResult } from './exec-result-contract';

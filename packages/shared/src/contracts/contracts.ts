@@ -67,6 +67,8 @@ export * from './argv-read/argv-read-contract';
 
 export * from './predicate/predicate-contract';
 
+export * from './value-expr/value-expr-contract';
+
 
 
 export * from './type-descriptor/type-descriptor-contract';

@@ -43,7 +43,7 @@ describe('object / generic-alias — generic-alias.ts, a reader of an imported G
         {
           reachesPath: ['*module*/openBox/return@top'],
           arrange: [{ kind: 'object', param: 'box', value: { value: 'abc123' } }],
-          salient: true,
+          arms: [], driven: true, fewestRuns: true,
         },
       ],
       gaps: [],

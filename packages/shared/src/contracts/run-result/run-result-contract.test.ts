@@ -20,7 +20,7 @@ describe('runResultContract', () => {
                 { kind: 'param', param: 'score', value: 6 },
                 { kind: 'param', param: 'bonus', value: 2 },
               ],
-              salient: true,
+              arms: [], driven: true, fewestRuns: true,
             },
             status: 'passed',
             observedPath: ['grade/return@then'],
@@ -109,7 +109,7 @@ describe('runResultContract', () => {
         cases: [
           {
             entryName: 'grade',
-            testCase: { reachesPath: ['grade/return@then'], arrange: [], salient: true },
+            testCase: { reachesPath: ['grade/return@then'], arrange: [], arms: [], driven: true, fewestRuns: true },
             status: 'failed',
             observedPath: [],
             trace: [],
@@ -121,7 +121,7 @@ describe('runResultContract', () => {
       expect(run.cases).toStrictEqual([
         {
           entryName: 'grade',
-          testCase: { reachesPath: ['grade/return@then'], arrange: [], salient: true },
+          testCase: { reachesPath: ['grade/return@then'], arrange: [], arms: [], driven: true, fewestRuns: true },
           status: 'failed',
           observedPath: [],
           trace: [],

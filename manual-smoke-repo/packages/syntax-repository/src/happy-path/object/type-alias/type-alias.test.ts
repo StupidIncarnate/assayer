@@ -44,7 +44,7 @@ describe('object / type-alias — a branchless function over a PLAIN (non-generi
           {
             reachesPath: ['*module*/pick/return@top'],
             arrange: [{ kind: 'object', param: 'cfg', value: { mode: 'abc123', retries: 7 } }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

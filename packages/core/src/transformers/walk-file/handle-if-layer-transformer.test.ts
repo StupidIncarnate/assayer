@@ -57,6 +57,7 @@ describe('handleIfLayerTransformer', () => {
             operandType: { kind: 'number' },
             predicate: { kind: 'gt', literal: 5 },
           },
+          guardPath: [],
           startLine: 2,
           endLine: 4,
         },

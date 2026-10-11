@@ -26,6 +26,14 @@ const LOW_EXIT = `*module*/bandReading/return@${HIGH}#else/${LOW}#then`;
 const MID_EXIT = `*module*/bandReading/return@${HIGH}#else/${LOW}#else`;
 const READINGS_EXIT = '*module*/bandReadings/return@top';
 
+// The sibling's two branches, and its iteration: whether the mapped function's body runs is an arm of
+// bandReadings, skipped over an empty array and run over any other. The fewest runs are the skipped route,
+// the route through both `else` arms, and the arm-crossing pair: the smallest set that takes all six arms.
+const HIGH_BRANCH = `*module*/bandReading/${HIGH}`;
+const LOW_BRANCH = `*module*/bandReading/${LOW}`;
+const ITERATES = '*module*/bandReading/iterates';
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
+
 describe('array / cross-file-map — `items.map(bandReading)` whose IMPORTED callee branches, funnelled into bandReadings', () => {
   // THE capability. `bandReading` is imported from a sibling file and mapped over `items`; it cannot be
   // reached without calling `bandReadings`, so it is NO separate entry — its branches FUNNEL into
@@ -44,14 +52,34 @@ describe('array / cross-file-map — `items.map(bandReading)` whose IMPORTED cal
         label: undefined,
         access: { kind: 'named' },
         cases: [
-          { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
-          { reachesPath: [HIGH_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [80] }], salient: true },
-          { reachesPath: [LOW_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [19] }], salient: true },
-          { reachesPath: [MID_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [79] }], salient: true },
+          { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], arms: [step(ITERATES, 'skipped')], driven: true, fewestRuns: true },
+          {
+            reachesPath: [HIGH_EXIT, READINGS_EXIT],
+            arrange: [{ kind: 'array', param: 'items', value: [80] }],
+            arms: [step(ITERATES, 'runs'), step(HIGH_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: false,
+          },
+          {
+            reachesPath: [LOW_EXIT, READINGS_EXIT],
+            arrange: [{ kind: 'array', param: 'items', value: [19] }],
+            arms: [step(ITERATES, 'runs'), step(HIGH_BRANCH, 'else'), step(LOW_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: false,
+          },
+          {
+            reachesPath: [MID_EXIT, READINGS_EXIT],
+            arrange: [{ kind: 'array', param: 'items', value: [79] }],
+            arms: [step(ITERATES, 'runs'), step(HIGH_BRANCH, 'else'), step(LOW_BRANCH, 'else')],
+            driven: true,
+            fewestRuns: true,
+          },
           {
             reachesPath: [HIGH_EXIT, LOW_EXIT, READINGS_EXIT],
             arrange: [{ kind: 'array', param: 'items', value: [80, 19] }],
-            salient: true,
+            arms: [step(ITERATES, 'runs'), step(HIGH_BRANCH, 'then'), step(HIGH_BRANCH, 'else'), step(LOW_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: true,
           },
         ],
       },

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { assayerConfigContract } from './assayer-config-contract';
 import type { AssayerConfig } from './assayer-config-contract';

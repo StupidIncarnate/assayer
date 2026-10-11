@@ -31,6 +31,13 @@ const CB_ELSE_THEN = `${CB_PATH}/return@${URGENT}#else/${LEN8}#then`;
 const CB_ELSE_ELSE = `${CB_PATH}/return@${URGENT}#else/${LEN8}#else`;
 const LABELTAGS_EXIT = '*module*/labelTags/return@top';
 
+// The callback's two branches and its iteration. Whether the callback's body runs is an arm of labelTags:
+// skipped over an empty array, run over any other.
+const URGENT_BRANCH = `${CB_PATH}/${URGENT}`;
+const LEN8_BRANCH = `${CB_PATH}/${LEN8}`;
+const ITERATES = `${CB_PATH}/iterates`;
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
+
 describe('array / string-element — `tags.map((tag) => …)` whose callback BRANCHES on STRING operands, funnelled into labelTags', () => {
   // The STRING twin of map-conditional. The callback is not called directly — nothing can call an
   // anonymous arrow, and it cannot be reached without calling `labelTags`. So it is no separate entry:
@@ -41,7 +48,8 @@ describe('array / string-element — `tags.map((tag) => …)` whose callback BRA
   // >8-char string (`['abc123abc']`) takes the `tag.length > 8` arm, and `['']` falls through. `[]` runs
   // the callback zero times (path is labelTags's exit alone); `['urgent', 'abc123abc']` crosses two arms
   // in one array, firing the callback once per element. Each value is an INPUT (P4); the case asserts only
-  // the reached PATH.
+  // the reached PATH and the arms taken. The fewest runs are the skipped route, the route through both
+  // `else` arms, and the pair: the smallest set that takes all six arms.
   it('VALID: {a map callback branching on STRING operands} => FUNNELLED into labelTags, array shapes of strings driving each arm', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'string-element.ts') }) });
 
@@ -53,18 +61,35 @@ describe('array / string-element — `tags.map((tag) => …)` whose callback BRA
         label: undefined,
         access: { kind: 'named' },
         cases: [
-          { reachesPath: [LABELTAGS_EXIT], arrange: [{ kind: 'array', param: 'tags', value: [] }], salient: true },
-          { reachesPath: [CB_THEN, LABELTAGS_EXIT], arrange: [{ kind: 'array', param: 'tags', value: ['urgent'] }], salient: true },
+          // Skipping the callback is an arm of labelTags, and so is running it.
+          { reachesPath: [LABELTAGS_EXIT], arrange: [{ kind: 'array', param: 'tags', value: [] }], arms: [step(ITERATES, 'skipped')], driven: true, fewestRuns: true },
+          {
+            reachesPath: [CB_THEN, LABELTAGS_EXIT],
+            arrange: [{ kind: 'array', param: 'tags', value: ['urgent'] }],
+            arms: [step(ITERATES, 'runs'), step(URGENT_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: false,
+          },
           {
             reachesPath: [CB_ELSE_THEN, LABELTAGS_EXIT],
             arrange: [{ kind: 'array', param: 'tags', value: ['abc123abc'] }],
-            salient: true,
+            arms: [step(ITERATES, 'runs'), step(URGENT_BRANCH, 'else'), step(LEN8_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: false,
           },
-          { reachesPath: [CB_ELSE_ELSE, LABELTAGS_EXIT], arrange: [{ kind: 'array', param: 'tags', value: [''] }], salient: true },
+          {
+            reachesPath: [CB_ELSE_ELSE, LABELTAGS_EXIT],
+            arrange: [{ kind: 'array', param: 'tags', value: [''] }],
+            arms: [step(ITERATES, 'runs'), step(URGENT_BRANCH, 'else'), step(LEN8_BRANCH, 'else')],
+            driven: true,
+            fewestRuns: true,
+          },
           {
             reachesPath: [CB_THEN, CB_ELSE_THEN, LABELTAGS_EXIT],
             arrange: [{ kind: 'array', param: 'tags', value: ['urgent', 'abc123abc'] }],
-            salient: true,
+            arms: [step(ITERATES, 'runs'), step(URGENT_BRANCH, 'then'), step(URGENT_BRANCH, 'else'), step(LEN8_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: true,
           },
         ],
       },

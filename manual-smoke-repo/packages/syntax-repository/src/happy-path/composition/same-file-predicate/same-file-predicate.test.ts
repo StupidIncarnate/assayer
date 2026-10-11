@@ -32,6 +32,7 @@ describe('composition / same-file-predicate — a caller guarded by a same-file 
               operandType: { kind: 'number' },
               predicate: { kind: 'gt', literal: 50 },
             },
+            guardPath: [],
             startLine: 6,
             endLine: 8,
           },
@@ -40,12 +41,12 @@ describe('composition / same-file-predicate — a caller guarded by a same-file 
           {
             reachesPath: ['*module*/classify/return@if:CallExpression,id:tooBig,id:x#then'],
             arrange: [{ kind: 'param', param: 'x', value: 51 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:tooBig,id:x', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/classify/return@if:CallExpression,id:tooBig,id:x#else'],
             arrange: [{ kind: 'param', param: 'x', value: 50 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:tooBig,id:x', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
       },

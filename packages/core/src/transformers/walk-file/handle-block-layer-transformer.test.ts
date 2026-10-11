@@ -1,6 +1,8 @@
 import { Project } from '#gateway/npm/ts-morph';
 import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/compiler-options.stub';
 
+import { ValueExprStub } from '@assayer/shared/contracts/value-expr/value-expr.stub';
+
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { handleBlockLayerTransformer } from './handle-block-layer-transformer';
 import { handleBlockLayerTransformerProxy } from './handle-block-layer-transformer.proxy';
@@ -238,6 +240,54 @@ describe('handleBlockLayerTransformer', () => {
         exits: [],
         nodes: [],
       });
+    });
+  });
+
+  describe('the bindings each statement starts from', () => {
+    const ASSIGN_SOURCE = "function f(n: string) {\n  let data = n;\n  data = 'b';\n  return data;\n}\n";
+
+    it('VALID: {let data = n; data = "b"; return data} => each statement sees what the statements before it left', () => {
+      handleBlockLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', ASSIGN_SOURCE);
+      const statements = sourceFile.getFunctionOrThrow('f').getStatements();
+      const key = String(sourceFile.getFunctionOrThrow('f').getVariableDeclarationOrThrow('data').getPos());
+
+      const result = handleBlockLayerTransformer({
+        statements,
+        context: WalkContextStub({ scopePath: ['f'], guardPath: [], params: [{ name: 'n', type: { kind: 'string' } }], exported: true }),
+      });
+
+      expect(result.descents.map((descent) => descent.context.bindings)).toStrictEqual([
+        undefined,
+        { [key]: ValueExprStub({ kind: 'param', name: 'n' }) },
+        { [key]: ValueExprStub({ kind: 'lit', value: 'b' }) },
+      ]);
+    });
+
+    it('VALID: {a block entered with bindings} => the first statement starts from the bindings it was handed', () => {
+      handleBlockLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'function f() {\n  return 1;\n}\n');
+      const statements = sourceFile.getFunctionOrThrow('f').getStatements();
+
+      const result = handleBlockLayerTransformer({
+        statements,
+        context: WalkContextStub({ scopePath: ['f'], guardPath: [], params: [], exported: true, bindings: { '7': ValueExprStub({ kind: 'param', name: 'n' }) } }),
+      });
+
+      expect(result.descents.map((descent) => descent.context.bindings)).toStrictEqual([{ '7': ValueExprStub({ kind: 'param', name: 'n' }) }]);
+    });
+
+    it('EMPTY: {no statements} => nothing to carry', () => {
+      handleBlockLayerTransformerProxy();
+
+      const result = handleBlockLayerTransformer({
+        statements: [],
+        context: WalkContextStub({ scopePath: ['f'], guardPath: [], params: [], exported: true, bindings: { '7': ValueExprStub({ kind: 'param', name: 'n' }) } }),
+      });
+
+      expect(result.descents).toStrictEqual([]);
     });
   });
 });

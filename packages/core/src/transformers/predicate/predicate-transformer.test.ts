@@ -281,4 +281,18 @@ describe('predicateTransformer', () => {
       ).toStrictEqual(PredicateStub({ kind: 'unrecognized' }));
     });
   });
+
+  describe('substring tests', () => {
+    it("VALID: {data.includes('on')} => includes carrying the text", () => {
+      expect(predicateTransformer({ opKind: '', isLengthAccess: false, isTypeofAccess: false, includesText: 'on' })).toStrictEqual(
+        PredicateStub({ kind: 'includes', literal: 'on' }),
+      );
+    });
+
+    it('EDGE: {an includes test with an operator as well} => includes still wins, since the call is the whole condition', () => {
+      expect(
+        predicateTransformer({ opKind: 'EqualsEqualsEqualsToken', isLengthAccess: false, isTypeofAccess: false, includesText: 'on' }),
+      ).toStrictEqual(PredicateStub({ kind: 'includes', literal: 'on' }));
+    });
+  });
 });

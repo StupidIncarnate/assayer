@@ -1,9 +1,9 @@
 /**
  * PURPOSE: The array cardinalities the arrange fan-out enumerates and the element COUNT each fills, so
  *   every array parameter derives one case per size class. The ORDER is load-bearing: `derive-cases`
- *   marks the FIRST case per predicted output salient, so `empty` leads and the empty `[]` is the
- *   salient representative for a branchless array (all cardinalities reach the same exit) while `one`
- *   and `many` follow as the grayed breadth. `max` is reserved for a future `.length`-guard rung and
+ *   keeps the EARLIEST case of a route in the fewest-runs set, so `empty` leads and the empty `[]` is
+ *   the one that runs for a branchless array (all cardinalities take the same arms) while `one`
+ *   and `many` follow in the every-route set only. `max` is reserved for a future `.length`-guard rung and
  *   is deliberately absent from the fan-out order.
  *
  * USAGE:

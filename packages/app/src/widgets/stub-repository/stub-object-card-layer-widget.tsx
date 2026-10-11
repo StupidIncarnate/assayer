@@ -9,14 +9,14 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Card, Stack, Text } from '#gateway/npm/mantine__core';
-import type { ObjectStub } from '@assayer/shared/contracts';
+import type { StubView } from '@assayer/shared/contracts';
 
 import { flattenPropertyDemandTransformer } from '../../transformers/flatten-property-demand/flatten-property-demand-transformer';
 import { StubPropertyRowLayerWidget } from './stub-property-row-layer-widget';
 import { StubReadersLayerWidget } from './stub-readers-layer-widget';
 
 export interface StubObjectCardLayerWidgetProps {
-  stub: ObjectStub;
+  stub: StubView['objectStubs'][number];
 }
 
 export const StubObjectCardLayerWidget = ({ stub }: StubObjectCardLayerWidgetProps): ReactElement => (

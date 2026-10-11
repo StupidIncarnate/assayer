@@ -74,10 +74,10 @@ describe('runUnitBroker (integration)', () => {
   describe('a real run against a real specimen', () => {
     const engine = runUnitHarness();
 
-    it('VALID: {an && specimen} => every derived case reaches the exit derivation predicted', async () => {
+    it('VALID: {an && specimen} => every fewest-runs case reaches the exit derivation predicted', async () => {
       const result = await engine.run({ relPath: AND_SPECIMEN, runId: 'r-and' });
 
-      expect(result.cases.map((testCase) => testCase.status)).toStrictEqual(['passed', 'passed', 'passed']);
+      expect(result.cases.map((testCase) => testCase.status)).toStrictEqual(['passed', 'passed']);
     });
 
     // A method is reached through an INSTANCE. Driving it as a module property found nothing and
@@ -167,17 +167,16 @@ describe('runUnitBroker (integration)', () => {
     });
 
     // The cross-file compose payoff, RUN and not merely derived: with both imported guards rebased onto
-    // `size`, the FULL input-bucket set is three cases — the two reachable exits get sound values that
-    // pass against the real siblings, plus one grayed breadth twin that converges on a reached exit and
-    // passes too — while the contradiction between `> 50` and `> 100` leaves the middle exit dead and
+    // `size`, the every-route set is three cases — the two reachable exits get sound values that
+    // pass against the real siblings, plus one more case that takes the same arms as one of them — while the contradiction between `> 50` and `> 100` leaves the middle exit dead and
     // rides the artifact as an unreachable-exit lint the responder can fail on.
-    it('VALID: {two imported guards whose thresholds contradict} => all three cases pass AND the unreachable-exit lint rides the artifact', async () => {
+    it('VALID: {two imported guards whose thresholds contradict} => both fewest-runs cases pass AND the unreachable-exit lint rides the artifact', async () => {
       const result = await engine.run({ relPath: CROSS_FILE_GUARDS_SPECIMEN, runId: 'r-cross-file' });
 
       expect({
         cases: result.cases.map((testCase) => testCase.status),
         lints: result.lints.map((lint) => ({ rule: lint.rule, name: String(lint.name) })),
-      }).toStrictEqual({ cases: ['passed', 'passed', 'passed'], lints: [{ rule: 'unreachable-exit', name: 'upload' }] });
+      }).toStrictEqual({ cases: ['passed', 'passed'], lints: [{ rule: 'unreachable-exit', name: 'upload' }] });
     });
 
     // The stub-repository payoff, RUN and not merely derived: `decide(config)` branches on `config.mode`,
@@ -352,7 +351,7 @@ describe('runUnitBroker (integration)', () => {
       expect({ runId: String(saved.runId), relPath: String(saved.relPath), count: saved.cases.length }).toStrictEqual({
         runId: 'r-artifact',
         relPath: AND_SPECIMEN,
-        count: 3,
+        count: 2,
       });
     });
 

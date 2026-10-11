@@ -135,6 +135,7 @@ export const composeCrossFilePredicatesBroker = ({
         coverageId: branch.coverageId,
         kind: branch.kind,
         condition: rebased,
+        guardPath: branch.guardPath,
         startLine: branch.startLine,
         endLine: branch.endLine,
       });

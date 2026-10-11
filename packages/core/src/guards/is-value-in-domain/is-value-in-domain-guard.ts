@@ -1,6 +1,6 @@
 /**
  * PURPOSE: Answers whether one concrete value is ADMITTED by a value domain — the whole of its
- *   enumeration, exclusions, numeric bounds, and length axis. It is the membership question object
+ *   enumeration, exclusions, numeric bounds, length axis, and required or forbidden text. It is the membership question object
  *   arrange asks of a stub value: given the domain a branch's requirement narrows a property to, does
  *   this human-supplied-or-derived stub value satisfy it, so the case can prefer it over a fresh fill?
  *
@@ -14,11 +14,12 @@
  * isValueInDomainGuard({ value: 'dev', domain: { excluded: ['a'] } });
  * // Returns true — 'dev' is not the excluded 'a', and no bound or length rules it out
  */
-import type { RepresentativeValue } from '@assayer/shared/contracts';
+import type { RepresentativeValue } from "@assayer/shared/contracts";
 
-import type { ValueDomain } from '../../contracts/value-domain/value-domain-contract';
-import { isLengthInDomainGuard } from '../is-length-in-domain/is-length-in-domain-guard';
-import { isWithinDomainBoundsGuard } from '../is-within-domain-bounds/is-within-domain-bounds-guard';
+import type { ValueDomain } from "../../contracts/value-domain/value-domain-contract";
+import { isLengthInDomainGuard } from "../is-length-in-domain/is-length-in-domain-guard";
+import { isTextInDomainGuard } from "../is-text-in-domain/is-text-in-domain-guard";
+import { isWithinDomainBoundsGuard } from "../is-within-domain-bounds/is-within-domain-bounds-guard";
 
 export const isValueInDomainGuard = ({
   value,
@@ -32,4 +33,5 @@ export const isValueInDomainGuard = ({
   (domain.members === undefined || domain.members.includes(value)) &&
   !domain.excluded.includes(value) &&
   isWithinDomainBoundsGuard({ value, domain }) &&
-  isLengthInDomainGuard({ value, domain });
+  isLengthInDomainGuard({ value, domain }) &&
+  isTextInDomainGuard({ value, domain });

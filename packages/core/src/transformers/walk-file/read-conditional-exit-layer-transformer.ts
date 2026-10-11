@@ -154,6 +154,7 @@ export const readConditionalExitLayerTransformer = ({
           coverageId: branchCoverageId,
           kind: 'ternary',
           condition: readout.condition,
+          guardPath: evalContext.guardPath,
           startLine: operand.getStartLineNumber(),
           endLine: operand.getEndLineNumber(),
         }),
@@ -228,6 +229,7 @@ export const readConditionalExitLayerTransformer = ({
               coverageId: branchCoverageId,
               kind: 'ternary',
               condition: readout.condition,
+              guardPath: context.guardPath,
               startLine: expression.getStartLineNumber(),
               endLine: expression.getEndLineNumber(),
             }),
@@ -276,6 +278,7 @@ export const readConditionalExitLayerTransformer = ({
     coverageId: branchCoverageId,
     kind: 'ternary',
     condition: readout.condition,
+    guardPath: context.guardPath,
     startLine: expression.getStartLineNumber(),
     endLine: expression.getEndLineNumber(),
   });

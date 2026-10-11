@@ -47,7 +47,7 @@ describe('harness / object-param — a harness supplies a whole SHAPE, not merel
           { kind: 'param', param: 'size', value: 11 },
           { kind: 'harness', param: 'sink', key: 'inputs.emit.sink' },
         ],
-        salient: true,
+        arms: [{ branchCoverageId: '*module*/emit/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'then' }], driven: true, fewestRuns: true,
       },
       {
         reachesPath: [ELSE],
@@ -55,7 +55,7 @@ describe('harness / object-param — a harness supplies a whole SHAPE, not merel
           { kind: 'param', param: 'size', value: 10 },
           { kind: 'harness', param: 'sink', key: 'inputs.emit.sink' },
         ],
-        salient: true,
+        arms: [{ branchCoverageId: '*module*/emit/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'else' }], driven: true, fewestRuns: true,
       },
     ]);
   });

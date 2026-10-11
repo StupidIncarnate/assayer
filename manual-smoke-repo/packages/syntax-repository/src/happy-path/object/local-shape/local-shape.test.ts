@@ -45,7 +45,7 @@ describe('object / local-shape — a branchless function over a locally-declared
           {
             reachesPath: ['*module*/pick/return@top'],
             arrange: [{ kind: 'object', param: 'cfg', value: { mode: 'abc123', retries: 7 } }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

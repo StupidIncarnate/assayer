@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { harnessDeclarationContract } from './harness-declaration-contract';
 import type { HarnessDeclaration } from './harness-declaration-contract';

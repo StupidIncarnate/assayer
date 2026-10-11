@@ -34,7 +34,7 @@ describe('object / generic-alias — box.ts, the DEFINITION file declaring the g
         {
           reachesPath: ['*module*/rewrap/return@top'],
           arrange: [{ kind: 'object', param: 'box', value: { value: 7 } }],
-          salient: true,
+          arms: [], driven: true, fewestRuns: true,
         },
       ],
       gaps: [],

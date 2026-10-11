@@ -10,8 +10,8 @@ const relPath = 'src/happy-path/array/unshift/unshift.ts';
 describe('array / unshift — a branchless function returning `items.unshift(value)`', () => {
   // Unlike pop/shift, `unshift` returns the array's NEW length, annotated `number` — so there is no
   // `undefined` to strip and the read matches the annotation exactly. The array-of-number param FANS OUT
-  // over cardinality: three cases reach the same exit with a REAL empty array `[]` (salient), a
-  // one-element array `[7]` and a many array `[7,7]` (both grayed twins), emitted in empty/one/many order.
+  // over cardinality: three cases reach the same exit with a REAL empty array `[]` (fewest-runs), a
+  // one-element array `[7]` and a many array `[7,7]` (both every-route-only twins), emitted in empty/one/many order.
   // The scalar `value` pushed onto it is FIXED at the number placeholder `7` across all three. Branchless;
   // the values are INPUTS (P4) and each case asserts only that the flow REACHES the exit.
   it('VALID: {export function prepend(items: number[], value: number): number { return items.unshift(value) }} => array + number params, three cardinality cases', () => {
@@ -39,7 +39,7 @@ describe('array / unshift — a branchless function returning `items.unshift(val
               { kind: 'array', param: 'items', value: [] },
               { kind: 'param', param: 'value', value: 7 },
             ],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/prepend/return@top'],
@@ -47,7 +47,7 @@ describe('array / unshift — a branchless function returning `items.unshift(val
               { kind: 'array', param: 'items', value: [7] },
               { kind: 'param', param: 'value', value: 7 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/prepend/return@top'],
@@ -55,7 +55,7 @@ describe('array / unshift — a branchless function returning `items.unshift(val
               { kind: 'array', param: 'items', value: [7, 8] },
               { kind: 'param', param: 'value', value: 7 },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

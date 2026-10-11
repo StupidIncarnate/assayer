@@ -42,6 +42,7 @@ describe('if / no-else — a tail if with no else, whose only arm falls through'
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 6,
               endLine: 8,
             },
@@ -52,18 +53,29 @@ describe('if / no-else — a tail if with no else, whose only arm falls through'
     });
   });
 
-  // Both buckets — condition true (`then` falls through to the scope's end) and condition false
-  // (the missing else) — converge on the SAME `exit@top`, exactly as any two buckets sharing an exit
-  // do (§5.13). The first is the salient representative; the second is the grayed breadth twin. If a
-  // per-arm completion were minted instead, this would be TWO cases with DIFFERENT `reachesPath`, and
-  // the `then` one would fail a real run — pinned end to end by
-  // `run-unit-broker.integration.test.ts`'s `TAIL_NO_ELSE_SPECIMEN`.
-  it('VALID: {tail if with no else} => both arms converge on the one exit, second grayed', () => {
+  // An arm counts whether it returns, fires a side effect, or does nothing, so an `if` with no `else` still
+  // has two arms: the body runs, or it does not. Both routes converge on the SAME `exit@top`, and each takes
+  // a different arm, so they are two cases and both are in the fewest-runs set. If a per-arm completion
+  // were minted instead, the two would have DIFFERENT `reachesPath`, and the `then` one would fail a real
+  // run — pinned end to end by `run-unit-broker.integration.test.ts`'s `TAIL_NO_ELSE_SPECIMEN`.
+  it('VALID: {tail if with no else} => two routes on the one exit, one per arm, both in the fewest runs', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'no-else.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [TOP_EXIT], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-      { reachesPath: [TOP_EXIT], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: false },
+      {
+        reachesPath: [TOP_EXIT],
+        arrange: [{ kind: 'param', param: 'value', value: 6 }],
+        arms: [{ branchCoverageId: BRANCH, arm: 'then' }],
+        driven: true,
+        fewestRuns: true,
+      },
+      {
+        reachesPath: [TOP_EXIT],
+        arrange: [{ kind: 'param', param: 'value', value: 5 }],
+        arms: [{ branchCoverageId: BRANCH, arm: 'else' }],
+        driven: true,
+        fewestRuns: true,
+      },
     ]);
   });
 

@@ -12,14 +12,7 @@ describe('desktopStatusContract', () => {
         version: '1.0.0',
         message: 'Assayer core online',
         repoPath: '/home/user/project',
-        runMode: 'thorough',
       });
-    });
-
-    it('VALID: {runMode: "intelligent"} => carries the display-only run mode through', () => {
-      const result = desktopStatusContract.parse(DesktopStatusStub({ runMode: 'intelligent' }));
-
-      expect(result.runMode).toBe('intelligent');
     });
   });
 

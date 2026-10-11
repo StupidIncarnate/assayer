@@ -2,8 +2,8 @@
  * PURPOSE: The detail-view right panel — three tabs over a file's derived analysis. The Enrichment
  *   tab lists per-line data facts (symbol, type, and the representative value range for branch
  *   operands); the Tests tab lists, per entry, the FULL input-bucket set of test cases Assayer would
- *   generate (arrange values in, the exit each reaches) — every salient case carrying an INTELLIGENT
- *   badge marking the execution subset; the Contracts tab is a DevTools-style inspector of the type
+ *   generate (arrange values in, the exit each reaches) in two labelled sets, "Every route" and "Fewest
+ *   runs", so a reader can check Assayer accounted for every path; the Contracts tab is a DevTools-style inspector of the type
  *   contracts at the file's edges (below). When a code line is hovered (hoveredLine), the rows whose
  *   coverage runs through that line are highlighted and the rest are dimmed, so the gutter counts
  *   read as "these cases". Pure prop-driven; shows empty prompts when nothing is derived.
@@ -21,12 +21,12 @@
  *   names the caller. Printing them beside the entry describes a call that never happens, which is the
  *   same lie `arrangeTextTransformer` refuses when it declines to render a module case as `*module*("6")`.
  *
- *   `runMode` is a display-only lens over that same full set: `intelligent` grays the non-salient
- *   breadth (each grayed row marked `data-running="false"`) so a reviewer reads only the salient
- *   subset, while `thorough` — the default, and any runMode the panel is not told — shows every row
- *   live. It never changes which cases exist or which the run engine executes; the entry title keeps
- *   the FULL count.
- *
+ *   Each entry shows its two sets, "Every route" (every case, undriven ones included) and "Fewest runs"
+ *   (the cases flagged `fewestRuns`). Assayer runs only the driven cases of the fewest-runs set; every
+ *   other row is listed, marked `data-running="false"`, and reads "not run". A case on a route through
+ *   a branch Assayer cannot steer carries an `undriven` marker. The entry title keeps the every-route
+ *   count.
+
  *   This panel is the SINGLE surface that shows a run error (`runError`), and no other may repeat it.
  *   It owns the error because it is the only one on screen for every failure: `useFileRunBinding`
  *   raises `error` both when a saved run fails to LOAD (on opening a file) and when a run fails to
@@ -61,8 +61,8 @@
  *   so it arrives with the first run. Reading both at once would print the file's half twice.
  *
  *   The panel lists cases only for entries a run executes: access not `unreachable`, and at least one
- *   case. That is core's own rule. An entry named in `undriven` still lists the cases it has, such as
- *   the case for the arm default execution takes. `runnableFunctionsTransformer` owns that narrowing.
+ *   case. That is core's own rule. An entry named in `undriven` still lists the routes it has, each one
+ *   marked undriven and not run. `runnableFunctionsTransformer` owns that narrowing.
  *   The code viewer's gutter reads through the same transformer, so neither surface counts a case the
  *   other cannot.
  *
@@ -86,7 +86,6 @@ import { Box, Tabs, Text, Stack, Button, Group } from '#gateway/npm/mantine__cor
 import type { FileAnalysis, ResolvedEdge, RunResult } from '@assayer/shared/contracts';
 
 import { runnableFunctionsTransformer } from '../../transformers/runnable-functions/runnable-functions-transformer';
-import type { RunMode } from '../../contracts/status-view/status-view-contract';
 import { ContractEntryLayerWidget } from './contract-entry-layer-widget';
 import { EnrichmentRowLayerWidget } from './enrichment-row-layer-widget';
 import { ErrorCategoryLayerWidget } from './error-category-layer-widget';
@@ -101,7 +100,6 @@ export interface DetailPanelWidgetProps {
   runError?: Error | null;
   resolvedEdges?: readonly ResolvedEdge[] | undefined;
   relPath?: string | null;
-  runMode?: RunMode;
   onRun?: () => void;
   width?: number;
 }
@@ -117,7 +115,6 @@ export const DetailPanelWidget = ({
   runError,
   resolvedEdges,
   relPath,
-  runMode,
   onRun,
   width,
 }: DetailPanelWidgetProps): ReactElement => {
@@ -144,6 +141,10 @@ export const DetailPanelWidget = ({
     () => runnableFunctionsTransformer({ functions: analysis === undefined ? [] : analysis.functions }),
     [analysis],
   );
+
+  // Run offers a verdict only when some case actually runs; a file whose routes are all undriven lists
+  // them and has nothing to execute.
+  const hasRunSet = functions.some((fn) => fn.cases.some((testCase) => testCase.driven && testCase.fewestRuns));
 
   return (
     <Box
@@ -245,15 +246,17 @@ export const DetailPanelWidget = ({
                   <Text data-testid="TESTS_HINT" c="dimmed" fz="xs" fs="italic">
                     Hover a line to highlight its cases.
                   </Text>
-                  <Button
-                    data-testid="RUN_BUTTON"
-                    size="compact-xs"
-                    variant="light"
-                    loading={running === true}
-                    onClick={onRun}
-                  >
-                    Run
-                  </Button>
+                  {hasRunSet ? (
+                    <Button
+                      data-testid="RUN_BUTTON"
+                      size="compact-xs"
+                      variant="light"
+                      loading={running === true}
+                      onClick={onRun}
+                    >
+                      Run
+                    </Button>
+                  ) : null}
                 </Group>
               )}
 
@@ -265,7 +268,6 @@ export const DetailPanelWidget = ({
                   hoveredLine={hoveredLine}
                   {...(onLineHover === undefined ? {} : { onLineHover })}
                   run={run}
-                  runMode={runMode}
                 />
               ))}
             </Stack>

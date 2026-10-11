@@ -6,15 +6,19 @@
  *   derived cases are read from the analysis blob, the results from a run artifact that may be older.
  *   Matching by index would quietly attribute the wrong verdict the moment either list changed.
  *
- *   `salient` is deliberately OUT of that identity: it is a must-run display opinion, not part of what
- *   a case IS. A stale all-salient blob must still match a fresh run whose cases carry the same path
- *   and arrange, so the identity is exactly { reachesPath, arrange }.
+ *   `fewestRuns`, `driven` and `arms` are deliberately OUT of that identity: they say which set a case
+ *   belongs to and which route it labels, not what the case IS. A stale blob must still match a fresh
+ *   run whose cases carry the same path and arrange, so the identity is exactly { reachesPath, arrange }.
+ *
+ *   Only the run set is ever executed: a case that is undriven, or outside the fewest-runs set, has no
+ *   result by definition, even when another case shares its exit and arrange. It is listed and never
+ *   run, so it answers undefined here and reads as not run.
  *
  *   Every reader of a case's verdict goes through here — the status a row renders and the message it
  *   explains itself with are two questions about ONE result, and two copies of the match would let the
  *   panel show a status from one case and a message from another.
  *
- *   Undefined means the case has no result — nobody has executed it.
+ *   Undefined means the case has no result — nobody has executed it, or it is not in the run set.
  *
  * USAGE:
  * caseRunResultTransformer({ run, testCase });
@@ -29,6 +33,10 @@ export const caseRunResultTransformer = ({
   run: RunResult | undefined;
   testCase: DerivedTestCase;
 }): CaseResult | undefined => {
+  if (!testCase.driven || !testCase.fewestRuns) {
+    return undefined;
+  }
+
   const identity = JSON.stringify({ reachesPath: testCase.reachesPath, arrange: testCase.arrange });
 
   return run?.cases.find(

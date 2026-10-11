@@ -9,7 +9,7 @@
  *   indistinguishable from `value < 1` and `value > 1`, which really is impossible. A domain keeps the
  *   constraint rather than a sample of it, so an empty intersection means EMPTY.
  *
- *   Four ways to constrain, because predicates constrain in four different shapes, and intersection
+ *   Five ways to constrain, because predicates constrain in five different shapes, and intersection
  *   is what forces them to coexist in one object rather than in a union:
  *   - `min`/`max` (with exclusivity) — numeric comparisons. Absent = unbounded that way.
  *   - `lengthMin`/`lengthMax`/`lengthExcluded` — the SAME shapes one axis over, for `.length`
@@ -25,6 +25,10 @@
  *   - `excluded` — values it must not take. `x !== 0` is an open domain minus a point, and modelling
  *     it as "the single sample 1" instead is how a later `x > 5` would intersect to nothing and report
  *     correct code as unreachable.
+ *
+ *   - `includes`/`notIncludes` — text a string must contain and text it must not. `data.includes('on')`
+ *     is neither a bound nor a member: it names a substring, and several of them intersect by
+ *     accumulating, exactly as exclusions do. Absent means no text is required or forbidden.
  *
  *   The two axes are read over DIFFERENT number lines, and that asymmetry is deliberate. `min`/`max`
  *   bound a value the type graph only says is a number, so they are read over the reals — `> 1` and
@@ -58,6 +62,8 @@ export const valueDomainContract = z.object({
   lengthExcluded: z.array(z.number().brand<'ValueDomainLengthExcluded'>()).default([]),
   members: z.array(representativeValueContract).optional(),
   excluded: z.array(representativeValueContract).default([]),
+  includes: z.array(z.string().brand<'ValueDomainIncludes'>()).optional(),
+  notIncludes: z.array(z.string().brand<'ValueDomainNotIncludes'>()).optional(),
 }).brand<'ValueDomain'>();
 
 export type ValueDomain = z.infer<typeof valueDomainContract>;

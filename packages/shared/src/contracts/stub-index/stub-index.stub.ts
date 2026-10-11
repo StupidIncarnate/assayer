@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { stubIndexContract } from './stub-index-contract';
 import type { StubIndex } from './stub-index-contract';

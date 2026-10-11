@@ -44,7 +44,7 @@ describe('harness / callback-param — a colocated harness PAYS the callback gap
           { kind: 'param', param: 'size', value: 11 },
           { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
         ],
-        salient: true,
+        arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'then' }], driven: true, fewestRuns: true,
       },
       {
         reachesPath: [ELSE],
@@ -52,7 +52,7 @@ describe('harness / callback-param — a colocated harness PAYS the callback gap
           { kind: 'param', param: 'size', value: 10 },
           { kind: 'harness', param: 'report', key: 'inputs.audit.report' },
         ],
-        salient: true,
+        arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'else' }], driven: true, fewestRuns: true,
       },
     ]);
   });

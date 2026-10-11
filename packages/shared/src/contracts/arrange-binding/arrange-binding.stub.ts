@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { arrangeBindingContract } from './arrange-binding-contract';
 import type { ArrangeBinding } from './arrange-binding-contract';

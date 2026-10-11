@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { walkFactsContract } from './walk-facts-contract';
 import type { WalkFacts } from './walk-facts-contract';

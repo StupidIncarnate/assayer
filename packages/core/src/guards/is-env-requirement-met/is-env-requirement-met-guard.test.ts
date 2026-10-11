@@ -74,6 +74,18 @@ describe('isEnvRequirementMetGuard', () => {
       expect(isEnvRequirementMetGuard({ steps: [], predicate: PredicateStub({ kind: 'gt', literal: 'b' }), want: true, raw: 'c' })).toBe(true);
     });
 
+    it('VALID: {includes, raw containing the text} => true', () => {
+      expect(isEnvRequirementMetGuard({ steps: [], predicate: PredicateStub({ kind: 'includes', literal: 'on' }), want: true, raw: 'Tonic' })).toBe(
+        true,
+      );
+    });
+
+    it('VALID: {includes, raw missing the text, wants false} => true', () => {
+      expect(isEnvRequirementMetGuard({ steps: [], predicate: PredicateStub({ kind: 'includes', literal: 'on' }), want: false, raw: 'No' })).toBe(
+        true,
+      );
+    });
+
     it('VALID: {truthy, raw ""} => false, since the empty string is falsy', () => {
       expect(isEnvRequirementMetGuard({ steps: [], predicate: PredicateStub({ kind: 'truthy' }), want: true, raw: '' })).toBe(false);
     });

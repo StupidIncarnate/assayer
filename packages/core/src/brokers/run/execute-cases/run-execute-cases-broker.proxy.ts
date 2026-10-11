@@ -1,5 +1,5 @@
 import { forkWorkerProxy } from '#gateway/node/child_process/fork-worker/fork-worker.proxy';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 import { testPathPatternTransformer } from '../../../transformers/test-path-pattern/test-path-pattern-transformer';
 

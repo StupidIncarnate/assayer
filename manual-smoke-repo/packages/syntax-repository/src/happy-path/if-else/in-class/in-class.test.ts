@@ -38,6 +38,7 @@ describe('if-else / in-class — if/else inside an exported class method', () =>
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 3,
               endLine: 5,
             },

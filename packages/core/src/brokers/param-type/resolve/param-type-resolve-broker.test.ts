@@ -72,7 +72,7 @@ describe('paramTypeResolveBroker', () => {
           {
             reachesPath: ['*module*/readMode/return@top'],
             arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123' } }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
         gaps: [],
@@ -112,12 +112,12 @@ describe('paramTypeResolveBroker', () => {
           {
             reachesPath: ['*module*/total/return@top'],
             arrange: [{ kind: 'array', param: 'configs', value: [] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/total/return@top'],
             arrange: [{ kind: 'array', param: 'configs', value: [{ mode: 'abc123', region: 'abc123' }] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/total/return@top'],
@@ -131,7 +131,7 @@ describe('paramTypeResolveBroker', () => {
                 ],
               },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
         gaps: [],
@@ -159,7 +159,7 @@ describe('paramTypeResolveBroker', () => {
           {
             reachesPath: ['*module*/echo/return@top'],
             arrange: [{ kind: 'param', param: 'id', value: 'abc123' }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
         gaps: [],
@@ -186,8 +186,8 @@ describe('paramTypeResolveBroker', () => {
         undriven: result.undriven,
       }).toStrictEqual({
         cases: [
-          { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'level', value: 'low' }], salient: true },
-          { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'level', value: 'high' }], salient: true },
+          { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'level', value: 'low' }], arms: [{ branchCoverageId: '*module*/shout/if:BinaryExpression,id:level,EqualsEqualsEqualsToken,str:low', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'level', value: 'high' }], arms: [{ branchCoverageId: '*module*/shout/if:BinaryExpression,id:level,EqualsEqualsEqualsToken,str:low', arm: 'else' }], driven: true, fewestRuns: true },
         ],
         gaps: [],
         undriven: [],
@@ -228,12 +228,12 @@ describe('paramTypeResolveBroker', () => {
           {
             reachesPath: ['*module*/isHigh/return@top'],
             arrange: [{ kind: 'param', param: 'level', value: 'high' }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/isHigh/predicate#leaf', arm: 'return-true' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/isHigh/return@top'],
             arrange: [{ kind: 'param', param: 'level', value: 'low' }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/isHigh/predicate#leaf', arm: 'return-false' }], driven: true, fewestRuns: true,
           },
         ],
         gapsBefore: ['isHigh'],
@@ -287,24 +287,25 @@ describe('paramTypeResolveBroker', () => {
         ],
       });
 
-      // The derived CASES keep the unconstrained fallback case — full steering of the object-member
-      // entry is `stub-realize`'s payoff, run separately; the fallback else case runs.
+      // Both routes through the object-member branch are declared, and neither is driven: this per-file
+      // analysis cannot steer `config.mode`, so no case claims an arm its object would take. Steering it
+      // is `stub-realize`'s payoff, run separately.
+      const BRANCH = '*module*/decideA/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a';
+      
       expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([
         {
-          arrange: [
-            {
-              kind: 'object',
-              param: 'config',
-              value: {
-                mode: 'abc123',
-                region: 'abc123',
-              },
-            },
-          ],
-          reachesPath: [
-            '*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else',
-          ],
-          salient: true,
+          arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123' } }],
+          reachesPath: [`${BRANCH.replace('/if:', '/return@if:')}#then`],
+          arms: [{ branchCoverageId: BRANCH, arm: 'then' }],
+          driven: false,
+          fewestRuns: true,
+        },
+        {
+          arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123' } }],
+          reachesPath: [`${BRANCH.replace('/if:', '/return@if:')}#else`],
+          arms: [{ branchCoverageId: BRANCH, arm: 'else' }],
+          driven: false,
+          fewestRuns: true,
         },
       ]);
     });

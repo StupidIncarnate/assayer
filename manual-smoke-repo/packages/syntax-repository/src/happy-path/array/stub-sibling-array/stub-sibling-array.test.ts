@@ -31,12 +31,12 @@ describe('array / stub-sibling-array — a sibling ARRAY param of a stub-realize
       {
         reachesPath: [THEN],
         arrange: [{ kind: 'object', param: 'config', value: { mode: 'a' } }, EXTRA_FILL],
-        salient: true,
+        arms: [{ branchCoverageId: '*module*/merge/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'then' }], driven: true, fewestRuns: true,
       },
       {
         reachesPath: [ELSE],
         arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }, EXTRA_FILL],
-        salient: true,
+        arms: [{ branchCoverageId: '*module*/merge/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'else' }], driven: true, fewestRuns: true,
       },
     ]);
   });

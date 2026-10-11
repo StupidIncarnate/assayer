@@ -25,6 +25,12 @@ const CB_THEN = `${CB_PATH}/return@${GT100}#then`;
 const CB_ELSE = `${CB_PATH}/return@${GT100}#else`;
 const SURFACE_EXIT = '*module*/scaleAndAppend/return@top';
 
+// The callback's branch, and its iteration: whether the callback's body runs is an arm of scaleAndAppend,
+// skipped over an empty array and run over any other.
+const GT100_BRANCH = `${CB_PATH}/${GT100}`;
+const ITERATES = `${CB_PATH}/iterates`;
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
+
 // The sibling `extra` fill that IS the point of this specimen: a REAL one-element array of the element
 // type, laid into every funnel case unchanged. `extra` is a `number[]` param the funnel does not steer,
 // so it is FILLED — and an array param must be filled with an array, never a scalar `'abc123'` string
@@ -50,13 +56,27 @@ describe('array / sibling-fill — `scaleAndAppend` maps a branching callback ov
         label: undefined,
         access: { kind: 'named' },
         cases: [
-          { reachesPath: [SURFACE_EXIT], arrange: [{ kind: 'array', param: 'values', value: [] }, EXTRA_FILL], salient: true },
-          { reachesPath: [CB_THEN, SURFACE_EXIT], arrange: [{ kind: 'array', param: 'values', value: [101] }, EXTRA_FILL], salient: true },
-          { reachesPath: [CB_ELSE, SURFACE_EXIT], arrange: [{ kind: 'array', param: 'values', value: [100] }, EXTRA_FILL], salient: true },
+          { reachesPath: [SURFACE_EXIT], arrange: [{ kind: 'array', param: 'values', value: [] }, EXTRA_FILL], arms: [step(ITERATES, 'skipped')], driven: true, fewestRuns: true },
+          {
+            reachesPath: [CB_THEN, SURFACE_EXIT],
+            arrange: [{ kind: 'array', param: 'values', value: [101] }, EXTRA_FILL],
+            arms: [step(ITERATES, 'runs'), step(GT100_BRANCH, 'then')],
+            driven: true,
+            fewestRuns: false,
+          },
+          {
+            reachesPath: [CB_ELSE, SURFACE_EXIT],
+            arrange: [{ kind: 'array', param: 'values', value: [100] }, EXTRA_FILL],
+            arms: [step(ITERATES, 'runs'), step(GT100_BRANCH, 'else')],
+            driven: true,
+            fewestRuns: false,
+          },
           {
             reachesPath: [CB_THEN, CB_ELSE, SURFACE_EXIT],
             arrange: [{ kind: 'array', param: 'values', value: [101, 100] }, EXTRA_FILL],
-            salient: true,
+            arms: [step(ITERATES, 'runs'), step(GT100_BRANCH, 'then'), step(GT100_BRANCH, 'else')],
+            driven: true,
+            fewestRuns: true,
           },
         ],
       },

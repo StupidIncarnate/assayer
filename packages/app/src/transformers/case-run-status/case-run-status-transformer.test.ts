@@ -33,12 +33,12 @@ describe('caseRunStatusTransformer', () => {
       expect(result).toBe('errored');
     });
 
-    // salient is a must-run display opinion, not identity: an all-salient blob still matches a run
-    // whose case carries the same exit and arrange, so a query differing ONLY in salient resolves.
-    it('VALID: {run case salient, query not-salient, same exit+arrange} => matches, ignoring salient', () => {
-      const run = RunResultStub({ cases: [CaseResultStub({ testCase: DerivedTestCaseStub({ salient: true }) })] });
+    // fewestRuns, driven and arms are not identity: a stale blob still matches a run
+    // whose case carries the same exit and arrange, so a query differing ONLY in them resolves.
+    it('VALID: {run case and query differing only in arms, same exit+arrange} => matches, ignoring arms', () => {
+      const run = RunResultStub({ cases: [CaseResultStub({ testCase: DerivedTestCaseStub({ arms: [] }) })] });
 
-      const result = caseRunStatusTransformer({ run, testCase: DerivedTestCaseStub({ salient: false }) });
+      const result = caseRunStatusTransformer({ run, testCase: DerivedTestCaseStub({ arms: [{ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'then' }] }) });
 
       expect(result).toBe('passed');
     });

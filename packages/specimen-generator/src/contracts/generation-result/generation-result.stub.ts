@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { GeneratedFileStub } from '../generated-file/generated-file.stub';
 import { ManifestEntryStub } from '../manifest-entry/manifest-entry.stub';

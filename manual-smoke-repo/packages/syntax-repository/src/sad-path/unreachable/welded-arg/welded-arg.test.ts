@@ -34,7 +34,7 @@ describe('unreachable / welded-arg — a private whose branch a surface welds a 
       {
         name: 'report',
         access: { kind: 'named' },
-        cases: [{ reachesPath: [DECIDE_ELSE, REPORT_RETURN], arrange: [], salient: true }],
+        cases: [{ reachesPath: [DECIDE_ELSE, REPORT_RETURN], arrange: [], arms: [{ branchCoverageId: '*module*/decide/if:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true }],
       },
     ]);
   });

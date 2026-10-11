@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { lineEnrichmentContract } from './line-enrichment-contract';
 import type { LineEnrichment } from './line-enrichment-contract';

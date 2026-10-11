@@ -1,4 +1,5 @@
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
+import { GuardStepStub } from '@assayer/shared/contracts/guard-step/guard-step.stub';
 import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 
 import { caseTouchedLinesTransformer } from './case-touched-lines-transformer';
@@ -17,6 +18,20 @@ describe('caseTouchedLinesTransformer', () => {
     });
   });
 
+  describe('a case whose arms name a branch', () => {
+    it('VALID: {arms on the shared guard} => the arm branch line is touched once beside the exit and guard lines', () => {
+      const functionAnalysis = FunctionAnalysisStub();
+
+      const result = caseTouchedLinesTransformer({
+        functionAnalysis,
+        reachesPath: [CoverageIdStub({ value: 'formatGreeting/return@if-then' })],
+        arms: [GuardStepStub({ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'then' })],
+      });
+
+      expect(result).toStrictEqual([3, 2]);
+    });
+  });
+
   describe('an unknown exit', () => {
     it('EMPTY: {reachesPath id not found} => no touched lines', () => {
       const functionAnalysis = FunctionAnalysisStub();
@@ -27,6 +42,18 @@ describe('caseTouchedLinesTransformer', () => {
       });
 
       expect(result).toStrictEqual([]);
+    });
+
+    it('VALID: {reachesPath id not found, arms name a branch} => only the arm branch line', () => {
+      const functionAnalysis = FunctionAnalysisStub();
+
+      const result = caseTouchedLinesTransformer({
+        functionAnalysis,
+        reachesPath: [CoverageIdStub({ value: 'nope/exit@x' })],
+        arms: [GuardStepStub({ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'else' })],
+      });
+
+      expect(result).toStrictEqual([2]);
     });
   });
 });

@@ -32,6 +32,46 @@ const B_THEN = `${CB_B_PATH}/return@${LT0}#then`;
 const B_ELSE = `${CB_B_PATH}/return@${LT0}#else`;
 const PIPELINE_EXIT = '*module*/pipeline/return@top';
 
+// Each callback's branch and iteration. Whether a callback's body runs is an arm of pipeline: skipped over an
+// empty array and run over any other.
+const A_BRANCH = `${CB_A_PATH}/${GT100}`;
+const B_BRANCH = `${CB_B_PATH}/${LT0}`;
+const A_ITERATES = `${CB_A_PATH}/iterates`;
+const B_ITERATES = `${CB_B_PATH}/iterates`;
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
+
+// The four shapes each array fans over (empty, the `then` element, the `else` element, the arm-crossing pair),
+// with the exits a callback reaches and the arms it takes on each.
+const A_SHAPES = [
+  { value: [] as number[], path: [] as string[], arms: [step(A_ITERATES, 'skipped')] },
+  { value: [101], path: [A_THEN], arms: [step(A_ITERATES, 'runs'), step(A_BRANCH, 'then')] },
+  { value: [100], path: [A_ELSE], arms: [step(A_ITERATES, 'runs'), step(A_BRANCH, 'else')] },
+  { value: [101, 100], path: [A_THEN, A_ELSE], arms: [step(A_ITERATES, 'runs'), step(A_BRANCH, 'then'), step(A_BRANCH, 'else')] },
+];
+const B_SHAPES = [
+  { value: [] as number[], path: [] as string[], arms: [step(B_ITERATES, 'skipped')] },
+  { value: [-1], path: [B_THEN], arms: [step(B_ITERATES, 'runs'), step(B_BRANCH, 'then')] },
+  { value: [0], path: [B_ELSE], arms: [step(B_ITERATES, 'runs'), step(B_BRANCH, 'else')] },
+  { value: [-1, 0], path: [B_THEN, B_ELSE], arms: [step(B_ITERATES, 'runs'), step(B_BRANCH, 'then'), step(B_BRANCH, 'else')] },
+];
+
+// The every-route set is the cartesian of the two (A outermost). The fewest runs are the first, where both
+// callbacks are skipped, and the last, where both run on their arm-crossing pair: those two take all eight
+// arms, and no single case does, so no smaller set exists.
+const FEWEST_RUNS = new Set([0, 15]);
+const EXPECTED_CASES = A_SHAPES.flatMap((a, aIndex) =>
+  B_SHAPES.map((b, bIndex) => ({
+    reachesPath: [...a.path, ...b.path, PIPELINE_EXIT],
+    arrange: [
+      { kind: 'array', param: 'xs', value: a.value },
+      { kind: 'array', param: 'ys', value: b.value },
+    ],
+    arms: [...a.arms, ...b.arms],
+    driven: true,
+    fewestRuns: FEWEST_RUNS.has(aIndex * B_SHAPES.length + bIndex),
+  })),
+);
+
 describe('array / two-maps — `pipeline` maps TWO branching callbacks over TWO array params, funnelled as the CARTESIAN of both', () => {
   // THE capability. Neither callback can be reached without calling `pipeline` — calling it runs both
   // `.map`s, which run each callback per element — so neither is a separate entry: BOTH funnel into
@@ -54,32 +94,7 @@ describe('array / two-maps — `pipeline` maps TWO branching callbacks over TWO 
         name: 'pipeline',
         label: undefined,
         access: { kind: 'named' },
-        cases: [
-          // A empty × B {empty, then, else, pair}
-          { reachesPath: [PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [] }, { kind: 'array', param: 'ys', value: [] }], salient: true },
-          { reachesPath: [B_THEN, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [] }, { kind: 'array', param: 'ys', value: [-1] }], salient: true },
-          { reachesPath: [B_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [] }, { kind: 'array', param: 'ys', value: [0] }], salient: true },
-          { reachesPath: [B_THEN, B_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [] }, { kind: 'array', param: 'ys', value: [-1, 0] }], salient: true },
-          // A then (101) × B {empty, then, else, pair}
-          { reachesPath: [A_THEN, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [101] }, { kind: 'array', param: 'ys', value: [] }], salient: true },
-          { reachesPath: [A_THEN, B_THEN, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [101] }, { kind: 'array', param: 'ys', value: [-1] }], salient: true },
-          { reachesPath: [A_THEN, B_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [101] }, { kind: 'array', param: 'ys', value: [0] }], salient: true },
-          { reachesPath: [A_THEN, B_THEN, B_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [101] }, { kind: 'array', param: 'ys', value: [-1, 0] }], salient: true },
-          // A else (100) × B {empty, then, else, pair}
-          { reachesPath: [A_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [100] }, { kind: 'array', param: 'ys', value: [] }], salient: true },
-          { reachesPath: [A_ELSE, B_THEN, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [100] }, { kind: 'array', param: 'ys', value: [-1] }], salient: true },
-          { reachesPath: [A_ELSE, B_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [100] }, { kind: 'array', param: 'ys', value: [0] }], salient: true },
-          { reachesPath: [A_ELSE, B_THEN, B_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [100] }, { kind: 'array', param: 'ys', value: [-1, 0] }], salient: true },
-          // A pair (101, 100) × B {empty, then, else, pair}
-          { reachesPath: [A_THEN, A_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [101, 100] }, { kind: 'array', param: 'ys', value: [] }], salient: true },
-          { reachesPath: [A_THEN, A_ELSE, B_THEN, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [101, 100] }, { kind: 'array', param: 'ys', value: [-1] }], salient: true },
-          { reachesPath: [A_THEN, A_ELSE, B_ELSE, PIPELINE_EXIT], arrange: [{ kind: 'array', param: 'xs', value: [101, 100] }, { kind: 'array', param: 'ys', value: [0] }], salient: true },
-          {
-            reachesPath: [A_THEN, A_ELSE, B_THEN, B_ELSE, PIPELINE_EXIT],
-            arrange: [{ kind: 'array', param: 'xs', value: [101, 100] }, { kind: 'array', param: 'ys', value: [-1, 0] }],
-            salient: true,
-          },
-        ],
+        cases: EXPECTED_CASES,
       },
     ]);
   });

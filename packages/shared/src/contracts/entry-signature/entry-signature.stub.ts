@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { entrySignatureContract } from './entry-signature-contract';
 import type { EntrySignature } from './entry-signature-contract';

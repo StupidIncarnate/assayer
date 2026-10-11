@@ -52,6 +52,7 @@ describe('ternary / arg-position — a ternary in a CALL ARGUMENT', () => {
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 6,
               endLine: 6,
             },

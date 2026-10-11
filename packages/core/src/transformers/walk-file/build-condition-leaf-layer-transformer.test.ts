@@ -3,6 +3,7 @@ import { CompilerOptionsStub } from '#gateway/npm/typescript/compiler-options/co
 
 import { CoverageIdStub } from '@assayer/shared/contracts/coverage-id/coverage-id.stub';
 import { PredicateStub } from '@assayer/shared/contracts/predicate/predicate.stub';
+import { ValueExprStub } from '@assayer/shared/contracts/value-expr/value-expr.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { buildConditionLeafLayerTransformer } from './build-condition-leaf-layer-transformer';
@@ -289,6 +290,64 @@ describe('buildConditionLeafLayerTransformer', () => {
         operandCallPosition: { line: 2, column: 5 },
         operandType: { kind: 'boolean' },
         predicate: { kind: 'truthy' },
+      });
+    });
+  });
+
+  describe('a local variable operand', () => {
+    const SOURCE = "declare const n: string;\nlet data = n;\nif (data === 'None') {}\n";
+
+    it('VALID: {data, tracked by the walk} => the leaf carries what the variable holds as its flow', () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', SOURCE);
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+      const key = String(sourceFile.getVariableDeclarationOrThrow('data').getPos());
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: { operandNode, operandName: 'data', predicate: PredicateStub({ kind: 'eq', literal: 'None' }) },
+        context: WalkContextStub({
+          scopePath: ['*module*'],
+          guardPath: [],
+          params: [],
+          exported: true,
+          bindings: { [key]: ValueExprStub({ kind: 'param', name: 'n' }) },
+        }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'data',
+        operandType: { kind: 'string' },
+        operandFlow: { kind: 'param', name: 'n' },
+        predicate: { kind: 'eq', literal: 'None' },
+      });
+    });
+
+    it('EMPTY: {data, with no binding in the context} => the leaf carries no flow', () => {
+      buildConditionLeafLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', SOURCE);
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+      const operandNode = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
+
+      const result = buildConditionLeafLayerTransformer({
+        readout: { operandNode, operandName: 'data', predicate: PredicateStub({ kind: 'eq', literal: 'None' }) },
+        context: WalkContextStub({ scopePath: ['*module*'], guardPath: [], params: [], exported: true }),
+        id: LEAF_ID,
+        site: condition,
+      });
+
+      expect(result.condition).toStrictEqual({
+        kind: 'leaf',
+        id: 'B#leaf',
+        operandParamName: 'data',
+        operandType: { kind: 'string' },
+        predicate: { kind: 'eq', literal: 'None' },
       });
     });
   });

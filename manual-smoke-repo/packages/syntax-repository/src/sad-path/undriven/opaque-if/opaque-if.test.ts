@@ -12,8 +12,7 @@ const relPath = 'src/sad-path/undriven/opaque-if/opaque-if.ts';
 // actually said about a real file, which is the only way the two can disagree.
 const BRANCH_REASON =
   '`opaqueIf` has a branch on line 6 whose deciding value is neither one of its parameters nor an ' +
-  'environment variable, so no case can steer which arm runs: with nothing to vary, both arms would ' +
-  'arrange the same inputs and one would fail against correct code. Assayer understood the branch — ' +
+  'environment variable, so no case can steer which arm runs: Assayer declares a route for each arm and does not run them. Assayer understood the branch — ' +
   'this is not syntax it missed — but its execution model cannot set the value that decides it. Make ' +
   'the deciding value a parameter, or read it from the environment in a module scope, and each arm ' +
   'becomes a case Assayer drives.';
@@ -30,13 +29,24 @@ describe('undriven / opaque-if — an `if` whose deciding value is a same-file c
     ]);
   });
 
-  // WHY the admission is owed, stated as evidence: both arms would arrange the SAME (empty) inputs, so
-  // the derivation emits NO case rather than two that misclaim their exits. That is what "undriven"
-  // means here, and why a run reports 0/0 rather than failing a case against correct code.
-  it('VALID: {an un-steerable guard} => no case is derived, since nothing can choose an arm', () => {
+  // WHY the admission is owed, stated as evidence: both arms would arrange the SAME (empty) inputs, so no
+  // input chooses between them. Each arm is still a route, so each is declared as a case, marked undriven
+  // and never run: the case's arm label is the route it names, never an arm picked to stand in for the
+  // other. That is why a run reports 0/0 rather than failing a case against correct code.
+  it('VALID: {an un-steerable guard} => both routes are declared, undriven, and neither is in a run', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'opaque-if.ts') }) });
 
-    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+    expect(
+      analysis.functions.flatMap((fn) => fn.cases).map((testCase) => ({
+        reachesPath: testCase.reachesPath,
+        arrange: testCase.arrange,
+        arms: testCase.arms.map((step) => String(step.arm)),
+        driven: testCase.driven,
+      })),
+    ).toStrictEqual([
+      { reachesPath: ['*module*/opaqueIf/return@if:CallExpression,id:decide#then'], arrange: [], arms: ['then'], driven: false },
+      { reachesPath: ['*module*/opaqueIf/return@if:CallExpression,id:decide#else'], arrange: [], arms: ['else'], driven: false },
+    ]);
   });
 
   // NOT a dark spot: the walk read this `if` and both arms perfectly. It is understood and simply

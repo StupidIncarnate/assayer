@@ -10,8 +10,7 @@ const relPath = 'src/sad-path/undriven/enum-case/enum-case.ts';
 const BRANCH_REASON =
   '`rank` has a branch on line 8 that compares `severity` against a value Assayer could not read as ' +
   'a literal — an enum member, an imported or computed constant, or a property of another object — ' +
-  'so it has no value that satisfies the comparison and none that violates it: with nothing to vary, ' +
-  'both arms would arrange the same inputs and one would fail against correct code. Assayer ' +
+  'so it has no value that satisfies the comparison and none that violates it: Assayer declares a route for each arm and does not run them. Assayer ' +
   'understood the branch — this is not syntax it missed — but it cannot yet name the value on the ' +
   'other side of the comparison. Compare against a literal and each arm becomes a case Assayer drives.';
 
@@ -31,9 +30,16 @@ describe('undriven / enum-case — a `case` whose expression is an enum member, 
     expect(analysis.undriven).toStrictEqual([{ name: 'rank', reason: BRANCH_REASON, startLine: 8, endLine: 8 }]);
   });
 
-  it('VALID: {an unreadable case expression} => no case is derived, so nothing errors against correct code', () => {
+  // Both routes through the clause are declared, and neither is driven: nothing can say which side of an
+  // enum-member comparison an input lands on, so no case names an arm its input might not take.
+  it('VALID: {an unreadable case expression} => the case clause and the default are two undriven routes', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'enum-case.ts') }) });
 
-    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+    expect(
+      analysis.functions.flatMap((fn) => fn.cases).map((testCase) => ({ arms: testCase.arms.map((step) => String(step.arm)), driven: testCase.driven })),
+    ).toStrictEqual([
+      { arms: ['then'], driven: false },
+      { arms: ['else'], driven: false },
+    ]);
   });
 });

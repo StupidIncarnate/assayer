@@ -1,6 +1,6 @@
 import type { CompilerOptions } from '#gateway/npm/typescript';
 import { impliedNodeFormatProxy } from '#gateway/npm/typescript/implied-node-format/implied-node-format.proxy';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 import { tsconfigOwnerBrokerProxy } from '../../tsconfig/owner/tsconfig-owner-broker.proxy';
 

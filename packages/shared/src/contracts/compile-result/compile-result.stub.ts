@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { compileResultContract } from './compile-result-contract';
 import type { CompileResult } from './compile-result-contract';

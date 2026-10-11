@@ -46,6 +46,7 @@ describe('unreachable / cross-file-guards — two imported predicates guarding o
           operandType: { kind: 'number' },
           predicate: { kind: 'gt', literal: 50 },
         },
+        guardPath: [],
         startLine: 5,
         endLine: 7,
       },
@@ -59,6 +60,7 @@ describe('unreachable / cross-file-guards — two imported predicates guarding o
           operandType: { kind: 'number' },
           predicate: { kind: 'gt', literal: 100 },
         },
+        guardPath: [{ branchCoverageId: '*module*/upload/if:CallExpression,id:exceedsLimit,id:size', arm: 'else' }],
         startLine: 9,
         endLine: 11,
       },
@@ -77,14 +79,14 @@ describe('unreachable / cross-file-guards — two imported predicates guarding o
     ]);
   });
 
-  // With both thresholds in the model, derive-cases yields the full input-bucket set. The first exit
-  // (`rejected`, line 6) is reached by TWO buckets: 101 (both guards would hold) and 100 (the off-path
-  // bucket where `withinBudget` fails but `upload` has already returned before it runs) — same exit,
-  // same value, so 101 is salient and 100 is the grayed breadth twin. The last exit (`queued`, line 13)
-  // takes 50. The middle exit is UNREACHABLE — dead code the repo owns, so it rides the LINT channel
-  // with the two guard lines that contradict. Nothing is admitted on the other channels: the guards are
+  // With both thresholds in the model, derive-cases yields the every-route set. `withinBudget` is met only on
+  // the route where `exceedsLimit` failed, because `upload` has already returned before it runs otherwise.
+  // So two routes can run: `exceedsLimit` holds (size 51 or more), or both fail (size 50). The third, where
+  // `exceedsLimit` fails and `withinBudget` holds, needs a size of at most 50 and above 100, so the middle
+  // exit (`priority`, line 10) is UNREACHABLE: dead code the repo owns, so it rides the LINT channel with
+  // the two guard lines that contradict. Nothing is admitted on the other channels: the guards are
   // understood perfectly, so no dark spot and no undriven entry.
-  it('VALID: {the composed guards} => three cases (one grayed) and an unreachable-exit lint, no other admission', () => {
+  it('VALID: {the composed guards} => two routes that run and an unreachable-exit lint, no other admission', () => {
     expect({
       arranged: upload.cases,
       darkSpots: analysis.darkSpots,
@@ -94,18 +96,20 @@ describe('unreachable / cross-file-guards — two imported predicates guarding o
       arranged: [
         {
           reachesPath: ['*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#then'],
-          arrange: [{ kind: 'param', param: 'size', value: 101 }],
-          salient: true,
-        },
-        {
-          reachesPath: ['*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#then'],
-          arrange: [{ kind: 'param', param: 'size', value: 100 }],
-          salient: false,
+          arrange: [{ kind: 'param', param: 'size', value: 51 }],
+          arms: [{ branchCoverageId: '*module*/upload/if:CallExpression,id:exceedsLimit,id:size', arm: 'then' }],
+          driven: true,
+          fewestRuns: true,
         },
         {
           reachesPath: ['*module*/upload/return@if:CallExpression,id:exceedsLimit,id:size#else/if:CallExpression,id:withinBudget,id:size#else'],
           arrange: [{ kind: 'param', param: 'size', value: 50 }],
-          salient: true,
+          arms: [
+            { branchCoverageId: '*module*/upload/if:CallExpression,id:exceedsLimit,id:size', arm: 'else' },
+            { branchCoverageId: '*module*/upload/if:CallExpression,id:withinBudget,id:size', arm: 'else' },
+          ],
+          driven: true,
+          fewestRuns: true,
         },
       ],
       darkSpots: [],

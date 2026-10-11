@@ -13,8 +13,7 @@ const relPath = 'src/sad-path/undriven/const-comparand/const-comparand.ts';
 const BRANCH_REASON =
   '`pick` has a branch on line 4 that compares `mode` against a value Assayer could not read as a ' +
   'literal — an enum member, an imported or computed constant, or a property of another object — so ' +
-  'it has no value that satisfies the comparison and none that violates it: with nothing to vary, ' +
-  'both arms would arrange the same inputs and one would fail against correct code. Assayer ' +
+  'it has no value that satisfies the comparison and none that violates it: Assayer declares a route for each arm and does not run them. Assayer ' +
   'understood the branch — this is not syntax it missed — but it cannot yet name the value on the ' +
   'other side of the comparison. Compare against a literal and each arm becomes a case Assayer drives.';
 
@@ -30,10 +29,15 @@ describe('undriven / const-comparand — `mode === TARGET`, an operand a case CA
 
   // The defect this pins is a FALSE RED: with the predicate constraining neither arm, both cases were
   // arranged `pick('abc123')` and whichever one predicted `#then` failed against correct code.
-  it('VALID: {an unreadable comparison} => no case is derived, so nothing fails against correct code', () => {
+  it('VALID: {an unreadable comparison} => both arms are undriven routes, so nothing fails against correct code', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-comparand.ts') }) });
 
-    expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+    expect(
+      analysis.functions.flatMap((fn) => fn.cases).map((testCase) => ({ arms: testCase.arms.map((step) => String(step.arm)), driven: testCase.driven })),
+    ).toStrictEqual([
+      { arms: ['then'], driven: false },
+      { arms: ['else'], driven: false },
+    ]);
   });
 
   // NOT a dark spot: the walk read the `if`, both arms, and the operand. Only the comparand is beyond

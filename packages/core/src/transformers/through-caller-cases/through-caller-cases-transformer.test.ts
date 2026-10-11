@@ -63,8 +63,8 @@ describe('throughCallerCasesTransformer', () => {
       const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-        { reachesPath: ['inner/return@else'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+        { reachesPath: ['inner/return@then'], arrange: [{ kind: 'param', param: 'value', value: 6 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: true },
+        { reachesPath: ['inner/return@else'], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true },
       ]);
     });
 
@@ -136,7 +136,7 @@ describe('throughCallerCasesTransformer', () => {
               { kind: 'param', param: 'value', value: 6 },
               { kind: 'harness', param: 'cb', key: 'inputs.inner.cb' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['inner/return@else'],
@@ -144,7 +144,7 @@ describe('throughCallerCasesTransformer', () => {
               { kind: 'param', param: 'value', value: 5 },
               { kind: 'harness', param: 'cb', key: 'inputs.inner.cb' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         unfillable: [],
@@ -173,7 +173,7 @@ describe('throughCallerCasesTransformer', () => {
             { kind: 'param', param: 'value', value: 6 },
             { kind: 'param', param: 'extra', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['inner/return@else'],
@@ -181,7 +181,7 @@ describe('throughCallerCasesTransformer', () => {
             { kind: 'param', param: 'value', value: 5 },
             { kind: 'param', param: 'extra', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ]);
     });
@@ -201,7 +201,7 @@ describe('throughCallerCasesTransformer', () => {
       const result = throughCallerCasesTransformer({ callee: CALLEE, caller: CALLER, call: CALL });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['inner/return@else'], arrange: [{ kind: 'param', param: 'value', value: 7 }], salient: true },
+        { reachesPath: ['inner/return@else'], arrange: [{ kind: 'param', param: 'value', value: 7 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true },
       ]);
     });
 
@@ -255,8 +255,20 @@ describe('throughCallerCasesTransformer', () => {
       const result = throughCallerCasesTransformer({ callee: PREDICATE_CALLEE, caller: CALLER, call: CALL });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['inner/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-        { reachesPath: ['inner/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+        {
+          reachesPath: ['inner/return@top'],
+          arrange: [{ kind: 'param', param: 'value', value: 6 }],
+          arms: [{ branchCoverageId: 'inner/return#leaf', arm: 'return-true' }],
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['inner/return@top'],
+          arrange: [{ kind: 'param', param: 'value', value: 5 }],
+          arms: [{ branchCoverageId: 'inner/return#leaf', arm: 'return-false' }],
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
   });

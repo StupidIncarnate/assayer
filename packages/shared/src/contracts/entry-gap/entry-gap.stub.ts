@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { entryGapContract } from './entry-gap-contract';
 import type { EntryGap } from './entry-gap-contract';

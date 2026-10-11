@@ -86,10 +86,17 @@ const DECLARATIONS = {
   // else the `then` arm's fallthrough and the missing else converge on the exact same physical
   // continuation — the enclosing scope's own unaccounted-for exit — so `handle-if` mints NO completion
   // of its own here; both buckets (condition true, condition false) predict that ONE exit, the first
-  // salient and the second the grayed twin. Before the fix `handle-if` minted a SECOND, always-firing
+  // fewest-runs case and the second an every-route case. Before the fix `handle-if` minted a SECOND, always-firing
   // completion for the `then` arm, so a real run observed both probes and the `then` case failed
   // against correct code — this is the specimen that pins the defect stays fixed.
   [`${CATALOGUE}/happy-path/if/no-else/no-else.ts`]: ['access:named', 'branch:if'],
+
+  // routes: every arm of every branch is a route. `side-effect-if` is the smallest case, an `if` whose body
+  // only fires a side effect: two arms, so two cases. `worked-example` is four branches in sequence, a
+  // ternary that picks the value the other three read: sixteen combinations of arms, eleven contradict
+  // themselves, five routes run, and the fewest-runs set is three of them.
+  [`${CATALOGUE}/happy-path/routes/side-effect-if/side-effect-if.ts`]: ['access:named', 'branch:if'],
+  [`${CATALOGUE}/happy-path/routes/worked-example/worked-example.ts`]: ['access:named', 'branch:if', 'branch:ternary'],
 
   // if-else. A class method is reached through an INSTANCE, not as a module property.
   [`${CATALOGUE}/happy-path/if-else/in-class/in-class.ts`]: ['access:method', 'branch:if'],
@@ -153,7 +160,7 @@ const DECLARATIONS = {
   [`${CATALOGUE}/happy-path/array/element-length/element-length.ts`]: ['access:named', 'param:array'],
   // Array-OPERATION rungs — the same `number[]` param read structurally, consumed by every everyday
   // array operation. Each is branchless, and an array param FANS OUT over cardinality (empty/one/many),
-  // so each derives THREE cases reaching one exit — the salient `[7]` plus the grayed `[]`/`[7,7]` twins;
+  // so each derives THREE cases reaching one exit, all on one route, so only the first runs;
   // a two-param op fixes its scalar across the three. A builtin method or index op is not a reportable
   // callee and no object shape is declared, so each owes only `access:named` + `param:array` and admits
   // nothing. `pop`/`shift`/`at` annotate `number | undefined`; the walk reads that as a real two-member
@@ -439,8 +446,8 @@ const DECLARATIONS = {
   // The switch twin of `if/no-else`: a tail switch with NO default, whose case clauses fall through
   // rather than returning. With no default every clause's fallthrough and the wholly-unmatched path
   // converge on the SAME physical continuation, so `handle-switch` mints no per-clause completion
-  // either — both cases (`'get'`, `'post'`) predict the one enclosing `exit@top`, the first salient
-  // and the second grayed. Before the fix each clause got its own always-firing completion stacked on
+  // either — both cases (`'get'`, `'post'`) predict the one enclosing `exit@top`, the first in
+  // the fewest-runs set and the second not. Before the fix each clause got its own always-firing completion stacked on
   // top of the enclosing one, so a real run observed both probes and every case failed against correct
   // code.
   [`${CATALOGUE}/happy-path/switch/no-default/no-default.ts`]: ['access:named', 'branch:switch', 'param:union'],

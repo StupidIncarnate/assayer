@@ -34,12 +34,14 @@ export const predicateTransformer = ({
   isLengthAccess,
   isTypeofAccess,
   isUndefinedComparison,
+  includesText,
   rightLiteral,
 }: {
   opKind: string;
   isLengthAccess: boolean;
   isTypeofAccess: boolean;
   isUndefinedComparison?: boolean;
+  includesText?: string;
   rightLiteral?: RepresentativeValue;
 }): Predicate => {
   // No operator at all (`if (flag)`) is a TRUTHINESS test on the operand — not an unclassifiable
@@ -51,6 +53,11 @@ export const predicateTransformer = ({
   // A bare `.length` (`if (xs.length)`) is the same truthiness test one axis over: a length is a count,
   // and a count is falsy exactly at zero, so it reads as `length-neq` carrying 0. Read as `truthy` on
   // the value axis instead, it would ask for a truthy ARRAY, which every array already is.
+  // `x.includes('text')` is a substring test on `x`: its own kind, carrying the text.
+  if (includesText !== undefined) {
+    return predicateContract.parse({ kind: 'includes', literal: includesText });
+  }
+
   if (opKind === '') {
     return predicateContract.parse(isLengthAccess ? { kind: 'length-neq', literal: 0 } : { kind: 'truthy' });
   }

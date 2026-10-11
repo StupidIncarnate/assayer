@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { resolvedEdgeContract } from './resolved-edge-contract';
 import type { ResolvedEdge } from './resolved-edge-contract';

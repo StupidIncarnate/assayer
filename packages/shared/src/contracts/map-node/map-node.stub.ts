@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { mapNodeContract } from './map-node-contract';
 import type { MapNode } from './map-node-contract';

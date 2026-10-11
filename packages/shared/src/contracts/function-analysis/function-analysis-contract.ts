@@ -1,7 +1,8 @@
 /**
  * PURPOSE: Contract for a function analysis — the full analyzed model of one exported entry: its
- *   signature, its branch nodes, its exit nodes, and the salient derived test cases (one per
- *   reachable exit). Persisted in the cache blob and rendered in the detail-view tabs.
+ *   signature, its branch nodes, its exit nodes, and its derived test cases: the EVERY-ROUTE set, one
+ *   case per route that can actually run, each marked `driven` or undriven and `fewestRuns` or not (the
+ *   fewest-runs subset takes every reachable arm at least once). Persisted in the cache blob and rendered in the detail-view tabs.
  *
  *   `predicateSignature` is the entry's own return comparison, present when its whole body returns one
  *   condition every leaf of which is a real comparison (`(n) => n > 50`). It is an axis of the case set

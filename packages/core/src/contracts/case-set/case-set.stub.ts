@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { caseSetContract } from './case-set-contract';
 import type { CaseSet } from './case-set-contract';

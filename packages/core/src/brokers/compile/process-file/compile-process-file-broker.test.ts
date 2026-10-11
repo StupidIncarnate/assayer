@@ -178,9 +178,9 @@ describe('compileProcessFileBroker', () => {
                 branches: [],
                 exits: [{ coverageId: '*module*/last/return@top', kind: 'return', guardPath: [], line: 1 }],
                 cases: [
-                  { arrange: [{ kind: 'array', param: 'xs', value: [] }], reachesPath: ['*module*/last/return@top'], salient: true },
-                  { arrange: [{ kind: 'array', param: 'xs', value: [7] }], reachesPath: ['*module*/last/return@top'], salient: false },
-                  { arrange: [{ kind: 'array', param: 'xs', value: [7, 8] }], reachesPath: ['*module*/last/return@top'], salient: false },
+                  { arrange: [{ kind: 'array', param: 'xs', value: [] }], reachesPath: ['*module*/last/return@top'], arms: [], driven: true, fewestRuns: true },
+                  { arrange: [{ kind: 'array', param: 'xs', value: [7] }], reachesPath: ['*module*/last/return@top'], arms: [], driven: true, fewestRuns: false },
+                  { arrange: [{ kind: 'array', param: 'xs', value: [7, 8] }], reachesPath: ['*module*/last/return@top'], arms: [], driven: true, fewestRuns: false },
                 ],
               },
             ],

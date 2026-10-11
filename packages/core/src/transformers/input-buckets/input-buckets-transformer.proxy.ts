@@ -1,1 +1,4 @@
-export const inputBucketsTransformerProxy = (): Record<PropertyKey, never> => ({});
+export const inputBucketsTransformerProxy = (): Record<
+  PropertyKey,
+  never
+> => ({});

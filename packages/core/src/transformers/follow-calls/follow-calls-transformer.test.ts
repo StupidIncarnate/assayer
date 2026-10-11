@@ -136,6 +136,53 @@ describe('followCallsTransformer', () => {
       });
     });
 
+    // `(() => { if (!Number(process.argv[2])) … })()`: the run worker passes no argument, so one arm runs
+    // and the other is an undriven route. The IIFE is driven, and the branch no case steers is admitted.
+    it('VALID: {an IIFE branching on process.argv} => a module-driven entry, and an undriven admission on the branch line', () => {
+      const walked = WalkFileResultStub({
+        scopes: [
+          ScopeRecordStub({
+            scopePath: ['*module*', 'arrow'],
+            name: 'arrow',
+            exported: false,
+            access: { kind: 'unreachable' },
+            params: [],
+            startLine: 2,
+            endLine: 7,
+            branches: [
+              BranchNodeStub({
+                coverageId: 'arrow/if:argv',
+                startLine: 3,
+                condition: {
+                  kind: 'not',
+                  operand: {
+                    kind: 'leaf',
+                    id: 'arrow/if:argv#leaf',
+                    operandArgvRead: { shape: 'element', index: 2, steps: [{ kind: 'number' }] },
+                    operandType: { kind: 'unknown', text: 'any' },
+                    predicate: { kind: 'truthy' },
+                  },
+                },
+              }),
+            ],
+            exits: [
+              ExitNodeStub({ coverageId: 'arrow/return@then', guardPath: [{ branchCoverageId: 'arrow/if:argv', arm: 'then' }], line: 4 }),
+              ExitNodeStub({ coverageId: 'arrow/return@else', guardPath: [{ branchCoverageId: 'arrow/if:argv', arm: 'else' }], line: 6 }),
+            ],
+          }),
+        ],
+        reachedFns: [2],
+        invokedFns: [InvokedFnStub({ startLine: 2, args: [] })],
+      });
+
+      const result = followCallsTransformer({ walked });
+
+      expect({
+        followed: result.followedEntries.map((fn) => fn.entry.access),
+        undriven: result.undriven.map((entry) => ({ name: entry.name, startLine: entry.startLine })),
+      }).toStrictEqual({ followed: [{ kind: 'module' }], undriven: [{ name: 'arrow', startLine: 3 }] });
+    });
+
     // A returned closure (in reachedFns but NOT invokedFns) is applied by an external caller, so it stays
     // UNDRIVEN — the IIFE drive must not bleed into it.
     it('VALID: {a returned closure, not invoked in place} => stays undriven, not driven', () => {
@@ -224,13 +271,13 @@ describe('followCallsTransformer', () => {
             host: 'rescale',
             hostLine: 1,
             cases: [
-              { reachesPath: ['rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
-              { reachesPath: ['inner/return@then', 'rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
-              { reachesPath: ['inner/return@else', 'rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
+              { reachesPath: ['rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], arms: [{ branchCoverageId: '*module*/outer/cb/iterates', arm: 'skipped' }], driven: true, fewestRuns: true },
+              { reachesPath: ['inner/return@then', 'rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], arms: [{ branchCoverageId: '*module*/outer/cb/iterates', arm: 'runs' }, { branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: false },
+              { reachesPath: ['inner/return@else', 'rescale/return@top'], arrange: [{ kind: 'array', param: 'items', value: [5] }], arms: [{ branchCoverageId: '*module*/outer/cb/iterates', arm: 'runs' }, { branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: false },
               {
                 reachesPath: ['inner/return@then', 'inner/return@else', 'rescale/return@top'],
                 arrange: [{ kind: 'array', param: 'items', value: [6, 5] }],
-                salient: true,
+                arms: [{ branchCoverageId: '*module*/outer/cb/iterates', arm: 'runs' }, { branchCoverageId: 'inner/if:n', arm: 'then' }, { branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true,
               },
             ],
             // A callback funnel welds nothing, so it carries no unreachable-exit for a lint.
@@ -298,8 +345,8 @@ describe('followCallsTransformer', () => {
             host: 'outer',
             hostLine: 1,
             cases: [
-              { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-              { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+              { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: true },
+              { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true },
             ],
             unreachable: [],
           },

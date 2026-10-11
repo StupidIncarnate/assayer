@@ -892,7 +892,7 @@ describe('causeArrangeTransformer', () => {
   describe('an array param fans out over cardinality', () => {
     // A scalar fill hands the string placeholder to code that operates on the array (`items.pop()`),
     // which throws — so an array param falls to `array-arrange` and fans out over its size classes:
-    // empty (`[]`) leads as the salient representative, then one (`[7]`), then many (`[7,7]`). Each is
+    // empty (`[]`) leads as the fewest-runs representative, then one (`[7]`), then many (`[7,7]`). Each is
     // an `array` binding, set positionally like any argument.
     it('VALID: {an unconstrained number[] param} => three array bindings, empty/one/many, not a string fill', () => {
       const result = causeArrangeTransformer({
@@ -1138,6 +1138,59 @@ describe('causeArrangeTransformer', () => {
         'cause-arrange built a `param` value for `score` that does not satisfy its own declared type `string`: 6. ' +
           "Assayer contradicted a type it read itself — its own invariant broken, never the reader's debt.",
       );
+    });
+  });
+
+  describe('the parameters a caller asks to have decided (pinParams)', () => {
+    const EQ_LEAF = ConditionLeafStub({
+      id: 'x#leaf.eq',
+      operandParamName: 'score',
+      operandType: { kind: 'number' },
+      predicate: { kind: 'eq', literal: 7 },
+    });
+    const SCORE_PARAMS = [ParamDescriptorStub({ name: 'score', type: { kind: 'number' } })];
+
+    it('VALID: {score === 7 wanted, pinParams: [score]} => score is pinned, since its domain is the one member 7', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: EQ_LEAF, want: true }] }),
+        params: SCORE_PARAMS,
+        envDrivable: false,
+        pinParams: ['score'],
+      });
+
+      expect(result.pinned).toStrictEqual(['score']);
+    });
+
+    it('VALID: {score === 7 wanted, no pinParams} => nothing is reported pinned, since nobody asked', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: EQ_LEAF, want: true }] }),
+        params: SCORE_PARAMS,
+        envDrivable: false,
+      });
+
+      expect(result.pinned).toBe(undefined);
+    });
+
+    it('VALID: {score > 5 wanted, pinParams: [score]} => score is chosen, not decided, so it is not pinned', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: SCORE_LEAF, want: true }] }),
+        params: SCORE_PARAMS,
+        envDrivable: false,
+        pinParams: ['score'],
+      });
+
+      expect(result.pinned).toBe(undefined);
+    });
+
+    it('VALID: {score === 7 wanted, pinParams names a different parameter} => nothing is pinned', () => {
+      const result = causeArrangeTransformer({
+        ...ConditionCauseStub({ requirements: [{ leaf: EQ_LEAF, want: true }] }),
+        params: SCORE_PARAMS,
+        envDrivable: false,
+        pinParams: ['bonus'],
+      });
+
+      expect(result.pinned).toBe(undefined);
     });
   });
 });

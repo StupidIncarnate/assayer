@@ -71,14 +71,28 @@ export const readConditionLayerTransformer = ({ condition }: { condition: Node }
   // the LEFT node before the unwrap, so it survives even though `operandNode` becomes what `typeof`
   // applies to, not the `typeof` expression itself.
   const typeOfExpr = left !== undefined && Node.isTypeOfExpression(left) ? left : undefined;
+  // `data.includes('on')`: a substring test, read as a predicate on the receiver. Only a call with one
+  // string literal argument names a text to look for; any other call stays the opaque call it is.
+  const callee = Node.isCallExpression(condition) ? condition.getExpression() : undefined;
+  const includesAccess =
+    callee !== undefined && Node.isPropertyAccessExpression(callee) && callee.getName() === 'includes' ? callee : undefined;
+  const [includesArgument] = Node.isCallExpression(condition) ? condition.getArguments() : [];
+  const includesLiteral =
+    includesAccess === undefined || includesArgument === undefined
+      ? undefined
+      : readLiteralValueLayerTransformer({ node: includesArgument });
+  const includesText = typeof includesLiteral === 'string' ? includesLiteral : undefined;
+  const includesReceiver = includesAccess === undefined || includesText === undefined ? undefined : includesAccess.getExpression();
   const operandNode: Node =
-    lengthAccess === undefined
-      ? left === undefined
-        ? condition
-        : typeOfExpr === undefined
-          ? left
-          : typeOfExpr.getExpression()
-      : lengthAccess.getExpression();
+    includesReceiver === undefined
+      ? lengthAccess === undefined
+        ? left === undefined
+          ? condition
+          : typeOfExpr === undefined
+            ? left
+            : typeOfExpr.getExpression()
+        : lengthAccess.getExpression()
+      : includesReceiver;
   const rightLiteral = right === undefined ? undefined : readLiteralValueLayerTransformer({ node: right });
   const operandName = Node.isIdentifier(operandNode) ? operandNode.getText() : undefined;
   const operandIsTypeof = typeOfExpr === undefined ? undefined : true;
@@ -107,6 +121,7 @@ export const readConditionLayerTransformer = ({ condition }: { condition: Node }
       opKind,
       isLengthAccess,
       isTypeofAccess: typeOfExpr !== undefined,
+      ...(includesText === undefined || includesReceiver === undefined ? {} : { includesText }),
       isUndefinedComparison: right !== undefined && isGlobalUndefinedGuard({ node: right }),
       ...(rightLiteral === undefined ? {} : { rightLiteral }),
     }),

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { conditionNodeContract } from './condition-node-contract';
 import type { ConditionNode } from './condition-node-contract';

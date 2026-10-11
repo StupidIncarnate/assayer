@@ -3,7 +3,7 @@ import { readdirSyncProxy } from '#gateway/node/fs/readdir-sync/readdir-sync.pro
 import { join } from '#gateway/node/path';
 import { readTsconfigProxy } from '#gateway/npm/typescript/read-tsconfig/read-tsconfig.proxy';
 
-import { requireActual } from '@dungeonmaster/testing/register-mock';
+import { requireActual } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 import { generatorLayoutStatics } from '../../../statics/generator-layout/generator-layout-statics';
 import { typescriptLibLocateBrokerProxy } from '../../typescript-lib/locate/typescript-lib-locate-broker.proxy';
@@ -48,7 +48,7 @@ export const declarationsLoadBrokerProxy = (): {
       tsconfigs.tsconfigAt({
         configFilePath: join(declarationsRoot, tsconfigFile),
         fileNames: files.map(({ relPath }) => join(declarationsRoot, relPath)),
-        options: { strict: true, noEmit: true, lib: ['lib.es2022.d.ts'], types: [] },
+        options: { strict: true, noEmit: true, lib: ['lib.es5.d.ts'], types: [] },
       });
       for (const { relPath, content } of files) {
         reads.returns({ path: join(declarationsRoot, relPath), contents: content });

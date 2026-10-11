@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { valueUseContract } from './value-use-contract';
 import type { ValueUse } from './value-use-contract';

@@ -34,7 +34,7 @@ describe('object / cross-file-reader — settings.ts, the CHILD that declares th
         {
           reachesPath: ['*module*/withDefaults/return@top'],
           arrange: [{ kind: 'object', param: 'settings', value: { label: 'abc123', timeout: 7 } }],
-          salient: true,
+          arms: [], driven: true, fewestRuns: true,
         },
       ],
       gaps: [],

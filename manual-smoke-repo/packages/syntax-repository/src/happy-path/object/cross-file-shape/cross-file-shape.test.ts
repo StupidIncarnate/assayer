@@ -42,6 +42,7 @@ describe('object / cross-file-shape — decideA reads config.mode off an IMPORTE
               operandType: { kind: 'unknown', text: 'any' },
               predicate: { kind: 'eq', literal: 'a' },
             },
+            guardPath: [],
             startLine: 4,
             endLine: 6,
           },
@@ -90,12 +91,12 @@ describe('object / cross-file-shape — decideA reads config.mode off an IMPORTE
         {
           reachesPath: ['*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#then'],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'a', region: 'abc123', retries: 7 } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/decideA/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['*module*/decideA/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a#else'],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123', retries: 7 } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/decideA/if:BinaryExpression,PropertyAccessExpression,id:config,id:mode,EqualsEqualsEqualsToken,str:a', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ],
       undriven: [],

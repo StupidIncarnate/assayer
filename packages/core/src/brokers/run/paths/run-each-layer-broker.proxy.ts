@@ -1,4 +1,4 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { RunResultStub } from '@assayer/shared/contracts/run-result/run-result.stub';
 
 import { runIdBrokerProxy } from '../id/run-id-broker.proxy';

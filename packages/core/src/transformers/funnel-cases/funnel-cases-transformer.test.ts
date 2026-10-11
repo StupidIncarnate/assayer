@@ -52,13 +52,13 @@ describe('funnelCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-        { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
-        { reachesPath: ['cb/return@then', 'run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
-        { reachesPath: ['cb/return@else', 'run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
+        { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'skipped' }], driven: true, fewestRuns: true },
+        { reachesPath: ['cb/return@then', 'run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }], driven: true, fewestRuns: false },
+        { reachesPath: ['cb/return@else', 'run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [5] }], arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: false },
         {
           reachesPath: ['cb/return@then', 'cb/return@else', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [6, 5] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }, { branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: true,
         },
         ],
         unfillable: [],
@@ -89,21 +89,21 @@ describe('funnelCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [], rest: true }], salient: true },
+          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [], rest: true }], arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'skipped' }], driven: true, fewestRuns: true },
           {
             reachesPath: ['cb/return@then', 'run/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [6], rest: true }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['cb/return@else', 'run/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [5], rest: true }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['cb/return@then', 'cb/return@else', 'run/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [6, 5], rest: true }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }, { branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         unfillable: [],
@@ -153,7 +153,7 @@ describe('funnelCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
+          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'skipped' }], driven: true, fewestRuns: true },
         ],
         unfillable: [{ param: 'sink', type: '(m: string) => void', owner: 'run › items.map((sink) => …) L2' }],
       });
@@ -167,7 +167,7 @@ describe('funnelCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
+          { reachesPath: ['run/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }], arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'skipped' }], driven: true, fewestRuns: true },
         ],
         unfillable: [{ param: 'sink', type: '(m: string) => void', owner: 'cb' }],
       });
@@ -200,7 +200,7 @@ describe('funnelCasesTransformer', () => {
             { kind: 'array', param: 'items', value: [] },
             { kind: 'param', param: 'factor', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'skipped' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['cb/return@then', 'run/return@top'],
@@ -208,7 +208,7 @@ describe('funnelCasesTransformer', () => {
             { kind: 'array', param: 'items', value: [6] },
             { kind: 'param', param: 'factor', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@else', 'run/return@top'],
@@ -216,7 +216,7 @@ describe('funnelCasesTransformer', () => {
             { kind: 'array', param: 'items', value: [5] },
             { kind: 'param', param: 'factor', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@then', 'cb/return@else', 'run/return@top'],
@@ -224,7 +224,7 @@ describe('funnelCasesTransformer', () => {
             { kind: 'array', param: 'items', value: [6, 5] },
             { kind: 'param', param: 'factor', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }, { branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: true,
         },
         ],
         unfillable: [],
@@ -346,42 +346,42 @@ describe('funnelCasesTransformer', () => {
         {
           reachesPath: ['run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'array', param: 'others', value: [] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'skipped' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'skipped' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['cbb/return@top', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'array', param: 'others', value: [7] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'skipped' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'runs' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@then', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [6] }, { kind: 'array', param: 'others', value: [] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'skipped' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@then', 'cbb/return@top', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [6] }, { kind: 'array', param: 'others', value: [7] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'runs' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@else', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [5] }, { kind: 'array', param: 'others', value: [] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'else' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'skipped' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@else', 'cbb/return@top', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [5] }, { kind: 'array', param: 'others', value: [7] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'else' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'runs' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@then', 'cb/return@else', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [6, 5] }, { kind: 'array', param: 'others', value: [] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }, { branchCoverageId: 'cb/if:n', arm: 'else' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'skipped' }], driven: true, fewestRuns: false,
         },
         {
           reachesPath: ['cb/return@then', 'cb/return@else', 'cbb/return@top', 'run/return@top'],
           arrange: [{ kind: 'array', param: 'items', value: [6, 5] }, { kind: 'array', param: 'others', value: [7] }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/run/cb/iterates', arm: 'runs' }, { branchCoverageId: 'cb/if:n', arm: 'then' }, { branchCoverageId: 'cb/if:n', arm: 'else' }, { branchCoverageId: '*module*/run/cbb/iterates', arm: 'runs' }], driven: true, fewestRuns: true,
         },
         ],
         unfillable: [],

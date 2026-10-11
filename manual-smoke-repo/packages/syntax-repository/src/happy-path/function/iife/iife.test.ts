@@ -29,8 +29,8 @@ describe('function / iife — an immediately-invoked function expression driven 
       {
         access: { kind: 'module' },
         cases: [
-          { reachesPath: [THEN], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], salient: true },
-          { reachesPath: [ELSE], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], salient: true },
+          { reachesPath: [THEN], arrange: [{ kind: 'env', name: 'SIZE', value: '6' }], arms: [{ branchCoverageId: '*module*/fn:ArrowFunction,StringKeyword,EqualsGreaterThanToken,Block,VariableStatement,VariableDeclarationList,VariableDeclaration,id:size,CallExpression,id:Number,PropertyAccessExpression,PropertyAccessExpression,id:process,id:env,id:SIZE,IfStatement,BinaryExpression,id:size,GreaterThanToken,num:5,Block,ReturnStatement,str:big,ReturnStatement,str:small/if:BinaryExpression,id:size,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: [ELSE], arrange: [{ kind: 'env', name: 'SIZE', value: '5' }], arms: [{ branchCoverageId: '*module*/fn:ArrowFunction,StringKeyword,EqualsGreaterThanToken,Block,VariableStatement,VariableDeclarationList,VariableDeclaration,id:size,CallExpression,id:Number,PropertyAccessExpression,PropertyAccessExpression,id:process,id:env,id:SIZE,IfStatement,BinaryExpression,id:size,GreaterThanToken,num:5,Block,ReturnStatement,str:big,ReturnStatement,str:small/if:BinaryExpression,id:size,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true },
         ],
       },
     ]);

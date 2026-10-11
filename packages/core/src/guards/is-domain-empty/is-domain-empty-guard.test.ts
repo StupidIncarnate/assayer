@@ -159,4 +159,42 @@ describe('isDomainEmptyGuard', () => {
       expect(result).toBe(false);
     });
   });
+
+  describe('the text axis', () => {
+    it('VALID: {required text that contains forbidden text} => empty', () => {
+      const result = isDomainEmptyGuard({ domain: ValueDomainStub({ includes: ['on'], notIncludes: ['o'] }) });
+
+      expect(result).toBe(true);
+    });
+
+    it('VALID: {required text longer than the longest allowed length} => empty', () => {
+      const result = isDomainEmptyGuard({ domain: ValueDomainStub({ includes: ['none'], lengthMax: 3 }) });
+
+      expect(result).toBe(true);
+    });
+
+    it('VALID: {required text longer than an exclusive length ceiling allows} => empty', () => {
+      const result = isDomainEmptyGuard({ domain: ValueDomainStub({ includes: ['abc'], lengthMax: 3, lengthMaxExclusive: true }) });
+
+      expect(result).toBe(true);
+    });
+
+    it('VALID: {every listed member lacks the required text} => empty', () => {
+      const result = isDomainEmptyGuard({ domain: ValueDomainStub({ members: ['No', 'abc'], includes: ['on'] }) });
+
+      expect(result).toBe(true);
+    });
+
+    it('EDGE: {required text that fits and forbidden text it avoids} => not empty', () => {
+      const result = isDomainEmptyGuard({ domain: ValueDomainStub({ includes: ['on'], notIncludes: ['x'], lengthMax: 5 }) });
+
+      expect(result).toBe(false);
+    });
+
+    it('EDGE: {a member that holds the required text} => not empty', () => {
+      const result = isDomainEmptyGuard({ domain: ValueDomainStub({ members: ['No', 'on'], includes: ['on'] }) });
+
+      expect(result).toBe(false);
+    });
+  });
 });

@@ -41,10 +41,9 @@ describe('unreachable / sequential-guards — two guards on one value whose else
   // THE PAYOFF. `'impossible'` needs a value both under 1 and over 1, so it gets NO case and is named
   // instead. The reachable exits still get theirs, arranged from the intersected guard path.
   //
-  // The first exit (`value >= 1`) is reached by two input buckets: value 1 satisfies the on-path guard
-  // directly, and value 2 is the off-path bucket where the SECOND guard's else-arm also holds even
-  // though the early return means its flow never reaches it. Both reach the same exit and return the
-  // same value, so value 1 is the salient representative and value 2 is the grayed breadth twin.
+  // The first exit (`value >= 1`) gets ONE case. The second guard sits after the early return, so a route
+  // meets it only when the first guard failed: there is no route that takes the first guard's `then` arm
+  // and also an arm of the second, and so no off-path case for value 2.
   //
   // The middle exit gets ONE case. Its `||` holds two ways on paper — left true, or left false and
   // right true — but the second needs `value > 1` and `value === 0` at once, so that route is
@@ -53,15 +52,16 @@ describe('unreachable / sequential-guards — two guards on one value whose else
     expect({
       caseTargets: classify.cases.map((testCase) => classify.exits.findIndex((exit) => exit.coverageId === testCase.reachesPath[0])),
       arranged: classify.cases.map((testCase) => testCase.arrange),
+      arms: classify.cases.map((testCase) => testCase.arms.map((step) => String(step.arm))),
       darkSpots: analysis.darkSpots,
       undriven: analysis.undriven,
     }).toStrictEqual({
-      caseTargets: [0, 0, 1],
+      caseTargets: [0, 1],
       arranged: [
         [{ kind: 'param', param: 'value', value: 1 }],
-        [{ kind: 'param', param: 'value', value: 2 }],
         [{ kind: 'param', param: 'value', value: 0 }],
       ],
+      arms: [['then'], ['else', 'then']],
       darkSpots: [],
       undriven: [],
     });

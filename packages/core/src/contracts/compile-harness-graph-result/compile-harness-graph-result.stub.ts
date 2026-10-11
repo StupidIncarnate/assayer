@@ -5,7 +5,7 @@
  * CompileHarnessGraphResultStub();
  * // Returns a valid CompileHarnessGraphResult
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 import { HarnessIndexStub } from "@assayer/shared/contracts/harness-index/harness-index.stub";
 
 import { compileHarnessGraphResultContract } from "./compile-harness-graph-result-contract";

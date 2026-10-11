@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { windowStateContract } from './window-state-contract';
 import type { WindowState } from './window-state-contract';

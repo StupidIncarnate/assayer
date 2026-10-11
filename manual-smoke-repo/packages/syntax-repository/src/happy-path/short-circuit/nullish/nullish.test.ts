@@ -46,6 +46,7 @@ describe('short-circuit / nullish — a `??` in a block return', () => {
                 operandType: NULLABLE_STRING,
                 predicate: { kind: 'non-nullish' },
               },
+              guardPath: [],
               startLine: 2,
               endLine: 2,
             },

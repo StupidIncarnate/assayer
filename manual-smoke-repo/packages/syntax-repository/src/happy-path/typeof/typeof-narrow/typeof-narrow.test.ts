@@ -37,14 +37,14 @@ describe('typeof / typeof-narrow — `typeof target === \'string\'` narrows a un
             '*module*/checkTypeof/return@if:BinaryExpression,TypeOfExpression,id:target,EqualsEqualsEqualsToken,str:string#then',
           ],
           arrange: [{ kind: 'param', param: 'target', value: 'abc123' }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/checkTypeof/if:BinaryExpression,TypeOfExpression,id:target,EqualsEqualsEqualsToken,str:string', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: [
             '*module*/checkTypeof/return@if:BinaryExpression,TypeOfExpression,id:target,EqualsEqualsEqualsToken,str:string#else',
           ],
           arrange: [{ kind: 'param', param: 'target', value: 7 }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/checkTypeof/if:BinaryExpression,TypeOfExpression,id:target,EqualsEqualsEqualsToken,str:string', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ],
       gaps: [],

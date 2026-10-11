@@ -54,12 +54,12 @@ describe('object / cross-file-shape — reader-b.ts, the SECOND reader of Config
         {
           reachesPath: ['*module*/decideB/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:region,EqualsEqualsEqualsToken,str:us#then'],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'us', retries: 7 } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/decideB/if:BinaryExpression,PropertyAccessExpression,id:config,id:region,EqualsEqualsEqualsToken,str:us', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: ['*module*/decideB/return@if:BinaryExpression,PropertyAccessExpression,id:config,id:region,EqualsEqualsEqualsToken,str:us#else'],
           arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123', region: 'abc123', retries: 7 } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/decideB/if:BinaryExpression,PropertyAccessExpression,id:config,id:region,EqualsEqualsEqualsToken,str:us', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ],
       undriven: [],

@@ -15,6 +15,11 @@ const MIDDLE_THEN = '*module*/middle/return@if:BinaryExpression,id:m,GreaterThan
 const MIDDLE_ELSE = '*module*/middle/return@if:BinaryExpression,id:m,GreaterThanToken,num:5#else';
 const OUTER_RETURN = '*module*/outer/return@top';
 
+// The two branches a route meets, `middle`'s first and then the `inner` it calls.
+const MIDDLE_BRANCH = '*module*/middle/if:BinaryExpression,id:m,GreaterThanToken,num:5';
+const INNER_BRANCH = '*module*/middle/inner/if:BinaryExpression,id:i,GreaterThanToken,num:10';
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
+
 describe('function / deep-nested — a private returning a private funnelled TRANSITIVELY through the surface', () => {
   // THE transitive capability — a function in a function in a function. `outer` returns `middle(value)`
   // and `middle` returns `inner(m)`, so neither private can be reached without calling `outer`: BOTH
@@ -33,9 +38,9 @@ describe('function / deep-nested — a private returning a private funnelled TRA
         access: { kind: 'named' },
         branches: [],
         cases: [
-          { reachesPath: [INNER_THEN, MIDDLE_THEN, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 11 }], salient: true },
-          { reachesPath: [INNER_ELSE, MIDDLE_THEN, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 10 }], salient: true },
-          { reachesPath: [MIDDLE_ELSE, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+          { reachesPath: [INNER_THEN, MIDDLE_THEN, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 11 }], arms: [step(MIDDLE_BRANCH, 'then'), step(INNER_BRANCH, 'then')], driven: true, fewestRuns: true },
+          { reachesPath: [INNER_ELSE, MIDDLE_THEN, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 10 }], arms: [step(MIDDLE_BRANCH, 'then'), step(INNER_BRANCH, 'else')], driven: true, fewestRuns: true },
+          { reachesPath: [MIDDLE_ELSE, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [step(MIDDLE_BRANCH, 'else')], driven: true, fewestRuns: true },
         ],
       },
     ]);

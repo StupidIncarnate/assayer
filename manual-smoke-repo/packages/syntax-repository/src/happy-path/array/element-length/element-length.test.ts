@@ -11,7 +11,7 @@ describe('array / element-length — a branchless function over an array param',
   // The param types as an ARRAY of number: the walk reads `number[]` structurally rather than dropping
   // it into an opaque `unknown`. Branchless, so all cases reach the one exit — but the array param FANS
   // OUT over cardinality: `derive-cases` emits THREE cases, one per input-breadth an array has. Emit
-  // order is `empty, one, many`, so the salient representative is the empty `[]` and the two grayed
+  // order is `empty, one, many`, so the fewest-runs representative is the empty `[]` and the two every-route-only
   // twins are the single `[7]` and the many `[7,7]`. Each arranges a REAL array of the element type —
   // not a scalar placeholder — so `items.length` runs on an actual array. The values are INPUTS (P4);
   // every case asserts only that the flow REACHES the exit.
@@ -34,17 +34,17 @@ describe('array / element-length — a branchless function over an array param',
           {
             reachesPath: ['*module*/count/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/count/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/count/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

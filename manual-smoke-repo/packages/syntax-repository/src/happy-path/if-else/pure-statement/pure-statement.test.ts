@@ -46,6 +46,7 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 3,
               endLine: 7,
             },
@@ -96,8 +97,8 @@ describe('if-else / pure-statement — bare top-level if/else on an operand read
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'pure-statement.ts') }) });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [THEN], arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], salient: true },
-      { reachesPath: [ELSE], arrange: [{ kind: 'env', name: 'VALUE', value: '5' }], salient: true },
+      { reachesPath: [THEN], arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: true },
+      { reachesPath: [ELSE], arrange: [{ kind: 'env', name: 'VALUE', value: '5' }], arms: [{ branchCoverageId: BRANCH, arm: 'else' }], driven: true, fewestRuns: true },
     ]);
   });
 

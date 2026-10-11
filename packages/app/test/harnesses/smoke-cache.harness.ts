@@ -5,9 +5,7 @@
  *   serves the whole suite: the e2e fixture launches ONE Electron process against this dir and reloads
  *   the renderer per test instead of paying a fresh ~10s CLI compile and ~8s cold launch each time.
  *
- *   `runMode` is display-only (excluded from the cache + manifest hash) and is re-read from the config
- *   on every `assayer:status` IPC call, so a test that needs the `intelligent` gray-out just rewrites
- *   the config field and reloads — no recompile. Saved runs are the sole per-test cache mutation, and a
+ *   Saved runs are the sole per-test cache mutation, and a
  *   run is a whole DIRECTORY under `.assayer/cache/runs/` — its verdicts and the report the CLI wrote
  *   beside them. `resetSmokeCache` purges that tree, so every file reads "not run" again AND shows no
  *   run console, without invalidating the compiled surface.
@@ -21,7 +19,7 @@
  * // globalSetup, after `npm run build`:
  * await compileSmokeCache();
  * // per test (the e2e fixture does this before reloading the warm window):
- * resetSmokeCache({ runMode: 'thorough' });
+ * resetSmokeCache();
  */
 import { join } from '#gateway/node/path';
 import { tmpdir } from '#gateway/node/os';
@@ -42,16 +40,14 @@ export const smokeCacheConfigDir = join(smokeCacheParent, 'assayer');
 const smokeConfigPath = join(smokeCacheConfigDir, 'assayer.config.json');
 const smokeRunsDir = join(smokeCacheConfigDir, '.assayer', 'cache', 'runs');
 
-// The minimal config a single per-test compile used to write and restore. `runMode` is display-only, so
-// including it changes neither the cache nor the manifest — only which cases the panel grays.
-const writeConfig = ({ runMode }: { runMode: 'thorough' | 'intelligent' }): void => {
+// The minimal config a single per-test compile used to write and restore.
+const writeConfig = (): void => {
   writeFileSync(
     smokeConfigPath,
     JSON.stringify({
       repoRoot: smokeRepoPath,
       exclude: [],
       stableBranch: 'master',
-      ...(runMode === 'intelligent' ? { runMode: 'intelligent' } : {}),
     }),
   );
 };
@@ -59,7 +55,7 @@ const writeConfig = ({ runMode }: { runMode: 'thorough' | 'intelligent' }): void
 export const compileSmokeCache = async (): Promise<void> => {
   rmSync(smokeCacheParent, { recursive: true, force: true });
   ensureDirSync(smokeCacheConfigDir);
-  writeConfig({ runMode: 'thorough' });
+  writeConfig();
 
   await new Promise<void>((resolve, reject) => {
     const child = spawn(execPath, [cliEntry, 'status'], { cwd: smokeCacheConfigDir, stdio: 'ignore' });
@@ -67,7 +63,7 @@ export const compileSmokeCache = async (): Promise<void> => {
     child.on('close', (code, signal) => {
       // The precheck mutates the config in place (fills schema defaults); rewrite the minimal form so the
       // desktop reads exactly what a single per-test compile used to leave behind.
-      writeConfig({ runMode: 'thorough' });
+      writeConfig();
       if (code === null) {
         reject(
           new Error(
@@ -90,9 +86,9 @@ export const compileSmokeCache = async (): Promise<void> => {
 };
 
 // Reset the shared cache's per-test mutable state: purge saved runs — verdicts and saved reports alike,
-// since both live in the run's own directory — and set the display-only runMode. Never touches the
-// compiled blobs, so no recompile is needed.
-export const resetSmokeCache = ({ runMode }: { runMode: 'thorough' | 'intelligent' }): void => {
+// since both live in the run's own directory. Never touches the compiled blobs, so no recompile is
+// needed.
+export const resetSmokeCache = (): void => {
   rmSync(smokeRunsDir, { recursive: true, force: true });
-  writeConfig({ runMode });
+  writeConfig();
 };

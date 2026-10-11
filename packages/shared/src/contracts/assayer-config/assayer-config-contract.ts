@@ -1,13 +1,8 @@
 /**
  * PURPOSE: Contract for the assayer repo-level configuration file — the schema version
  *   literal, the repo root, glob exclusions, the optional stable-branch override used
- *   for ref-to-ref diffing, how loudly unhandled syntax is reported, and `runMode`.
+ *   for ref-to-ref diffing, and how loudly unhandled syntax is reported.
  *   Defaults apply when a field is omitted.
- *
- *   `runMode` is DISPLAY-ONLY: `thorough` (the default) shows every derived case live; `intelligent`
- *   grays the non-salient breadth so a reviewer reads only the execution subset. It changes nothing
- *   that runs — the run engine always executes the full set — and is deliberately absent from
- *   `configHashBroker`, so flipping it never invalidates a content-keyed cache blob.
  *
  *   `darkSpots` defaults to `warn` because a dark spot is ASSAYER's debt, not the repo's: it means
  *   the analyzer has no handler for some syntax, and failing a build over work only Assayer can do
@@ -49,7 +44,6 @@ export const assayerConfigContract = z.object({
   darkSpots: z.enum(['warn', 'error']).default('warn'),
   deadSurface: z.enum(['off', 'warn', 'error']).default('error'),
   inputGaps: z.enum(['off', 'warn', 'error']).default('error'),
-  runMode: z.enum(['thorough', 'intelligent']).default('thorough'),
 }).brand<'AssayerConfig'>();
 
 export type AssayerConfig = z.infer<typeof assayerConfigContract>;

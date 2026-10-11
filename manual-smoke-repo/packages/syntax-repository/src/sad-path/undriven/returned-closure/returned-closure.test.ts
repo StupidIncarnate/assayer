@@ -50,7 +50,7 @@ describe('undriven / returned-closure — a function that RETURNS a branching cl
             {
               reachesPath: ['*module*/makeClassifier/return@top'],
               arrange: [{ kind: 'param', param: 'threshold', value: 7 }],
-              salient: true,
+              arms: [], driven: true, fewestRuns: true,
             },
           ],
         },

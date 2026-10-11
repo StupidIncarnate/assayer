@@ -5,7 +5,7 @@
  * UseCompiledTreeResultStub();
  * // Returns a valid UseCompiledTreeResult
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 import { CompiledTreeStub } from "@assayer/shared/contracts/compiled-tree/compiled-tree.stub";
 
 import { useCompiledTreeResultContract } from "./use-compiled-tree-result-contract";

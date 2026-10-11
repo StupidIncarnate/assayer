@@ -1,7 +1,7 @@
 /**
  * PURPOSE: Turns a walked file into its FileAnalysis — projecting the entries, deriving the full
  *   input-bucket case set per entry (one case per distinguished input combination, each marked
- *   `salient` or grayed), building the per-line enrichment (each param's type on the entry line; each
+ *   driven or not, and in the fewest-runs set or not), building the per-line enrichment (each param's type on the entry line; each
  *   branch operand's type + representative value range on the branch line), and carrying through both
  *   of the walk's admissions: the dark spots it could not follow, and the branching scopes it read
  *   perfectly but nothing can drive.
@@ -104,7 +104,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
         // environment. A function is driven by calling it, long after its module ran and froze them.
         envDrivable: fn.entry.access.kind === 'module',
         // A branchless boolean predicate (`function tooBig(n){ return n > 50 }`) carries its return
-        // comparison here so derive-cases splits its true/false return into two salient cases.
+        // comparison here so derive-cases splits its true/false return into two cases.
         ...(fn.predicateSignature === undefined ? {} : { returnPredicate: fn.predicateSignature }),
         ...(scope === undefined || scope.indexDemands.length === 0 ? {} : { indexDemands: scope.indexDemands }),
         // The scope's fall-through arms, so an arm a welded constant kills is linted even though it owns
@@ -193,7 +193,7 @@ export const analyzeFileBroker = ({ walked, relPath }: { walked: WalkFileResult;
   // same steerability gate, so `undrivenBranches` can never be empty here — the FIRST one, in the walk's
   // own encounter order, is the exemplar the module-level reason is built from.
   const whollyUndrivenModules = derived.flatMap(({ fn, result }) => {
-    if (fn.entry.access.kind !== 'module' || fn.branches.length === 0 || result.cases.length > 0 || result.unreachableExits.length > 0) {
+    if (fn.entry.access.kind !== 'module' || fn.branches.length === 0 || result.cases.some((testCase) => testCase.driven) || result.unreachableExits.length > 0) {
       return [];
     }
 

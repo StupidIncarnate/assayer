@@ -5,7 +5,7 @@
  * FindReturnedPrivateStub();
  * // Returns a valid FindReturnedPrivate
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 import { ScopeRecordStub } from "../scope-record/scope-record.stub";
 import { CallSiteStub } from "../call-site/call-site.stub";
 

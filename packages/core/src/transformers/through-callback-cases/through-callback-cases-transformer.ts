@@ -128,7 +128,7 @@ export const throughCallbackCasesTransformer = ({
     });
 
     return arrange.length === entryParams.length
-      ? [derivedTestCaseContract.parse({ reachesPath: testCase.reachesPath, salient: testCase.salient, arrange })]
+      ? [derivedTestCaseContract.parse({ reachesPath: testCase.reachesPath, arms: testCase.arms, driven: testCase.driven, fewestRuns: testCase.fewestRuns, arrange })]
       : [];
   });
 

@@ -1,48 +1,61 @@
-import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
-import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
+import { BranchNodeStub } from "@assayer/shared/contracts/branch-node/branch-node.stub";
+import { GuardStepStub } from "@assayer/shared/contracts/guard-step/guard-step.stub";
+import { ConditionNodeStub } from "@assayer/shared/contracts/condition-node/condition-node.stub";
 
-import { inputBucketsTransformer } from './input-buckets-transformer';
+import { inputBucketsTransformer } from "./input-buckets-transformer";
 
 const A_BRANCH = BranchNodeStub({
-  coverageId: 'f/if:a',
+  coverageId: "f/if:a",
   condition: {
-    kind: 'leaf',
-    id: 'f/if:a#leaf',
-    operandParamName: 'a',
-    operandType: { kind: 'number' },
-    predicate: { kind: 'gt', literal: 5 },
+    kind: "leaf",
+    id: "f/if:a#leaf",
+    operandParamName: "a",
+    operandType: { kind: "number" },
+    predicate: { kind: "gt", literal: 5 },
   },
 });
 
 const B_BRANCH = BranchNodeStub({
-  coverageId: 'f/if:b',
+  coverageId: "f/if:b",
   condition: {
-    kind: 'leaf',
-    id: 'f/if:b#leaf',
-    operandParamName: 'b',
-    operandType: { kind: 'number' },
-    predicate: { kind: 'gt', literal: 1 },
+    kind: "leaf",
+    id: "f/if:b#leaf",
+    operandParamName: "b",
+    operandType: { kind: "number" },
+    predicate: { kind: "gt", literal: 1 },
   },
 });
 
 const AND_BRANCH = BranchNodeStub({
-  coverageId: 'g/if:and',
+  coverageId: "g/if:and",
   condition: {
-    kind: 'and',
+    kind: "and",
     left: {
-      kind: 'leaf',
-      id: 'g/if:and#leaf.0',
-      operandParamName: 'score',
-      operandType: { kind: 'number' },
-      predicate: { kind: 'gt', literal: 5 },
+      kind: "leaf",
+      id: "g/if:and#leaf.0",
+      operandParamName: "score",
+      operandType: { kind: "number" },
+      predicate: { kind: "gt", literal: 5 },
     },
     right: {
-      kind: 'leaf',
-      id: 'g/if:and#leaf.1',
-      operandParamName: 'bonus',
-      operandType: { kind: 'number' },
-      predicate: { kind: 'gt', literal: 1 },
+      kind: "leaf",
+      id: "g/if:and#leaf.1",
+      operandParamName: "bonus",
+      operandType: { kind: "number" },
+      predicate: { kind: "gt", literal: 1 },
     },
+  },
+});
+
+const NESTED_BRANCH = BranchNodeStub({
+  coverageId: "f/if:inner",
+  guardPath: [GuardStepStub({ branchCoverageId: "f/if:a", arm: "then" })],
+  condition: {
+    kind: "leaf",
+    id: "f/if:inner#leaf",
+    operandParamName: "b",
+    operandType: { kind: "number" },
+    predicate: { kind: "gt", literal: 1 },
   },
 });
 
@@ -50,44 +63,65 @@ const PREDICATE = ConditionNodeStub();
 
 // The compound and predicate cases are projected once at module scope so the assertions stay a single
 // map deep — keeping each `it` under the nesting ceiling while still asserting the whole shape.
-const COMPOUND = inputBucketsTransformer({ branches: [AND_BRANCH] }).map((bucket) => ({
-  arms: bucket.arms.map((step) => String(step.arm)),
-  leafWants: bucket.requirements.map((req) => ({ id: String(req.leaf.id), want: req.want })),
-}));
+const COMPOUND = inputBucketsTransformer({ branches: [AND_BRANCH] }).map(
+  (bucket) => ({
+    arms: bucket.arms.map((step) => String(step.arm)),
+    leafWants: bucket.requirements.map((req) => ({
+      id: String(req.leaf.id),
+      want: req.want,
+    })),
+  }),
+);
 
-const PREDICATE_ONLY = inputBucketsTransformer({ branches: [], returnPredicate: PREDICATE }).map((bucket) => ({
+const PREDICATE_ONLY = inputBucketsTransformer({
+  branches: [],
+  returnPredicate: PREDICATE,
+}).map((bucket) => ({
   arms: bucket.arms,
   leafWants: bucket.requirements.map((req) => ({ want: req.want })),
   predWant: bucket.predWant,
 }));
 
-const BRANCH_AND_PREDICATE = inputBucketsTransformer({ branches: [A_BRANCH], returnPredicate: PREDICATE }).map((bucket) => ({
+const BRANCH_AND_PREDICATE = inputBucketsTransformer({
+  branches: [A_BRANCH],
+  returnPredicate: PREDICATE,
+}).map((bucket) => ({
   arms: bucket.arms.map((step) => String(step.arm)),
   predWant: bucket.predWant,
 }));
 
-describe('inputBucketsTransformer', () => {
-  it('EMPTY: {no branches, no predicate} => one empty bucket', () => {
-    expect(inputBucketsTransformer({ branches: [] })).toStrictEqual([{ requirements: [], arms: [] }]);
+describe("inputBucketsTransformer", () => {
+  it("EMPTY: {no branches, no predicate} => one empty bucket", () => {
+    expect(inputBucketsTransformer({ branches: [] })).toStrictEqual([
+      { requirements: [], arms: [] },
+    ]);
   });
 
-  it('VALID: {a single leaf branch} => a then bucket and an else bucket', () => {
+  it("VALID: {a single leaf branch} => a then bucket and an else bucket", () => {
     expect(inputBucketsTransformer({ branches: [A_BRANCH] })).toStrictEqual([
-      { requirements: [{ leaf: A_BRANCH.condition, want: true }], arms: [{ branchCoverageId: 'f/if:a', arm: 'then' }] },
-      { requirements: [{ leaf: A_BRANCH.condition, want: false }], arms: [{ branchCoverageId: 'f/if:a', arm: 'else' }] },
+      {
+        requirements: [{ leaf: A_BRANCH.condition, want: true }],
+        arms: [{ branchCoverageId: "f/if:a", arm: "then" }],
+      },
+      {
+        requirements: [{ leaf: A_BRANCH.condition, want: false }],
+        arms: [{ branchCoverageId: "f/if:a", arm: "else" }],
+      },
     ]);
   });
 
-  it('VALID: {two single-leaf branches} => the four-bucket cross product', () => {
-    expect(inputBucketsTransformer({ branches: [A_BRANCH, B_BRANCH] })).toStrictEqual([
+  it("VALID: {two single-leaf branches} => the four-bucket cross product", () => {
+    expect(
+      inputBucketsTransformer({ branches: [A_BRANCH, B_BRANCH] }),
+    ).toStrictEqual([
       {
         requirements: [
           { leaf: A_BRANCH.condition, want: true },
           { leaf: B_BRANCH.condition, want: true },
         ],
         arms: [
-          { branchCoverageId: 'f/if:a', arm: 'then' },
-          { branchCoverageId: 'f/if:b', arm: 'then' },
+          { branchCoverageId: "f/if:a", arm: "then" },
+          { branchCoverageId: "f/if:b", arm: "then" },
         ],
       },
       {
@@ -96,8 +130,8 @@ describe('inputBucketsTransformer', () => {
           { leaf: B_BRANCH.condition, want: false },
         ],
         arms: [
-          { branchCoverageId: 'f/if:a', arm: 'then' },
-          { branchCoverageId: 'f/if:b', arm: 'else' },
+          { branchCoverageId: "f/if:a", arm: "then" },
+          { branchCoverageId: "f/if:b", arm: "else" },
         ],
       },
       {
@@ -106,8 +140,8 @@ describe('inputBucketsTransformer', () => {
           { leaf: B_BRANCH.condition, want: true },
         ],
         arms: [
-          { branchCoverageId: 'f/if:a', arm: 'else' },
-          { branchCoverageId: 'f/if:b', arm: 'then' },
+          { branchCoverageId: "f/if:a", arm: "else" },
+          { branchCoverageId: "f/if:b", arm: "then" },
         ],
       },
       {
@@ -116,46 +150,73 @@ describe('inputBucketsTransformer', () => {
           { leaf: B_BRANCH.condition, want: false },
         ],
         arms: [
-          { branchCoverageId: 'f/if:a', arm: 'else' },
-          { branchCoverageId: 'f/if:b', arm: 'else' },
+          { branchCoverageId: "f/if:a", arm: "else" },
+          { branchCoverageId: "f/if:b", arm: "else" },
         ],
       },
     ]);
   });
 
-  it('VALID: {a && b} => then holds one way, else fans out per short-circuit reason', () => {
+  it("VALID: {a && b} => then holds one way, else fans out per short-circuit reason", () => {
     expect(COMPOUND).toStrictEqual([
       {
-        arms: ['then'],
+        arms: ["then"],
         leafWants: [
-          { id: 'g/if:and#leaf.0', want: true },
-          { id: 'g/if:and#leaf.1', want: true },
+          { id: "g/if:and#leaf.0", want: true },
+          { id: "g/if:and#leaf.1", want: true },
         ],
       },
-      { arms: ['else'], leafWants: [{ id: 'g/if:and#leaf.0', want: false }] },
+      { arms: ["else"], leafWants: [{ id: "g/if:and#leaf.0", want: false }] },
       {
-        arms: ['else'],
+        arms: ["else"],
         leafWants: [
-          { id: 'g/if:and#leaf.0', want: true },
-          { id: 'g/if:and#leaf.1', want: false },
+          { id: "g/if:and#leaf.0", want: true },
+          { id: "g/if:and#leaf.1", want: false },
         ],
       },
     ]);
   });
 
-  it('VALID: {a branchless predicate} => a true bucket and a false bucket, carrying no arm', () => {
+  it("VALID: {a branchless predicate} => a true bucket and a false bucket, carrying no arm", () => {
     expect(PREDICATE_ONLY).toStrictEqual([
       { arms: [], leafWants: [{ want: true }], predWant: true },
       { arms: [], leafWants: [{ want: false }], predWant: false },
     ]);
   });
 
-  it('VALID: {one branch and a predicate} => the branch arms crossed with the predicate true/false', () => {
+  it("VALID: {one branch and a predicate} => the branch arms crossed with the predicate true/false", () => {
     expect(BRANCH_AND_PREDICATE).toStrictEqual([
-      { arms: ['then'], predWant: true },
-      { arms: ['then'], predWant: false },
-      { arms: ['else'], predWant: true },
-      { arms: ['else'], predWant: false },
+      { arms: ["then"], predWant: true },
+      { arms: ["then"], predWant: false },
+      { arms: ["else"], predWant: true },
+      { arms: ["else"], predWant: false },
+    ]);
+  });
+
+  it("VALID: {a branch nested in the then arm} => the inner branch splits only the route that took then", () => {
+    expect(
+      inputBucketsTransformer({ branches: [A_BRANCH, NESTED_BRANCH] }).map(
+        (bucket) =>
+          bucket.arms.map(
+            (step) => `${String(step.branchCoverageId)}:${String(step.arm)}`,
+          ),
+      ),
+    ).toStrictEqual([
+      ["f/if:a:then", "f/if:inner:then"],
+      ["f/if:a:then", "f/if:inner:else"],
+      ["f/if:a:else"],
+    ]);
+  });
+
+  it("VALID: {an unsteerable branch} => both arms are routes with no requirement on either", () => {
+    expect(
+      inputBucketsTransformer({
+        branches: [A_BRANCH],
+        unsteerable: new Set(["f/if:a"]),
+      }),
+    ).toStrictEqual([
+      { requirements: [], arms: [{ branchCoverageId: "f/if:a", arm: "then" }] },
+      { requirements: [], arms: [{ branchCoverageId: "f/if:a", arm: "else" }] },
     ]);
   });
 });

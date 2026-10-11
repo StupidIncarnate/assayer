@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { branchNodeContract } from './branch-node-contract';
 import type { BranchNode } from './branch-node-contract';

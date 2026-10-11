@@ -1,16 +1,20 @@
 /**
  * PURPOSE: One case row of the Tests tab — its run status marker, what the runner calls with which
- *   arrange values, the exit line and return value, the INTELLIGENT badge on a salient case, and
- *   under a case the run did not pass, WHY it did not. The row dims when another line is hovered or
- *   when runMode is `intelligent` and the case is not salient.
+ *   arrange values, the arms the route takes (`L2 then · L5 else`), the exit line and return value,
+ *   an `undriven` marker when Assayer cannot steer a branch on the route, and under a case the run did
+ *   not pass, WHY it did not. Only a driven case in the fewest-runs set is run: every other row is
+ *   listed with `data-running="false"` and dims, as it also does when another line is hovered.
+ *
+ *   The `set` prop says which of an entry's two sets the row sits in. The Fewest runs set shows the
+ *   compact form (status, call, arms, undriven marker); the Every route set shows the whole row.
  *
  * USAGE:
  * <TestCaseLayerWidget fn={fn} testCase={testCase} driver={driver} entryLabel={entryLabel} isModule={false} />
  * // Renders `<marker> <driver>(<arrange>)` over `  => <line>: <returnValue>`
  */
-import { memo, useMemo, useState } from '#gateway/npm/react';
+import { memo, useMemo } from '#gateway/npm/react';
 import type { ReactElement } from '#gateway/npm/react';
-import { ActionIcon, Box, Group, Popover, Text } from '#gateway/npm/mantine__core';
+import { Box, Group, Text } from '#gateway/npm/mantine__core';
 import type { FunctionAnalysis, RunResult } from '@assayer/shared/contracts';
 import { arrangeTextTransformer } from '@assayer/shared/transformers';
 
@@ -18,8 +22,15 @@ import { caseRunResultTransformer } from '../../transformers/case-run-result/cas
 import { caseRunStatusTransformer } from '../../transformers/case-run-status/case-run-status-transformer';
 import { caseTouchedLinesTransformer } from '../../transformers/case-touched-lines/case-touched-lines-transformer';
 import { runStatusStatics } from '../../statics/run-status/run-status-statics';
-import { runModeStatics } from '../../statics/run-mode/run-mode-statics';
-import type { RunMode } from '../../contracts/status-view/status-view-contract';
+import { caseSetStatics } from '../../statics/case-set/case-set-statics';
+
+// The Every route set carries the whole row (status, call, arms, undriven marker, the exit it reaches and
+// why a case did not pass). The Fewest runs set re-lists a subset of the same cases as a compact
+// row under its own test ids, so each id stays unique on the panel.
+const TEST_IDS = {
+  'every-route': { row: 'TEST_CASE_ROW', status: 'CASE_STATUS', arms: 'CASE_ARMS', undriven: 'CASE_UNDRIVEN' },
+  'fewest-runs': { row: 'FEWEST_RUNS_ROW', status: 'FEWEST_RUNS_STATUS', arms: 'FEWEST_RUNS_ARMS', undriven: 'FEWEST_RUNS_UNDRIVEN' },
+} as const;
 
 export interface TestCaseLayerWidgetProps {
   fn: FunctionAnalysis;
@@ -30,7 +41,7 @@ export interface TestCaseLayerWidgetProps {
   hoveredLine?: number | null | undefined;
   onLineHover?: ((line: number | null) => void) | undefined;
   run?: RunResult | undefined;
-  runMode?: RunMode | undefined;
+  set?: 'every-route' | 'fewest-runs' | undefined;
 }
 
 export const TestCaseLayerWidget = memo(
@@ -43,9 +54,8 @@ export const TestCaseLayerWidget = memo(
   hoveredLine,
   onLineHover,
   run,
-  runMode,
+  set,
 }: TestCaseLayerWidgetProps): ReactElement => {
-  const [opened, setOpened] = useState(false);
   const active = hoveredLine !== undefined && hoveredLine !== null;
   const exit = useMemo(
     () => fn.exits.find((candidate) => candidate.coverageId === testCase.reachesPath[0]),
@@ -56,8 +66,9 @@ export const TestCaseLayerWidget = memo(
       caseTouchedLinesTransformer({
         functionAnalysis: fn,
         reachesPath: testCase.reachesPath,
+        arms: testCase.arms,
       }),
-    [fn, testCase.reachesPath],
+    [fn, testCase.reachesPath, testCase.arms],
   );
   const isMatch = active && touched.some((line) => line === hoveredLine);
   const status = useMemo(() => caseRunStatusTransformer({ run, testCase }), [run, testCase]);
@@ -79,10 +90,16 @@ export const TestCaseLayerWidget = memo(
     .map((id) => `L${String(fn.exits.find((candidate) => candidate.coverageId === id)?.line ?? '?')}`)
     .join(' → ');
   const outcome = result?.message ?? (observed === '' ? 'reached no exit' : `reached ${observed}`);
-  // Display-only: under 'intelligent' the non-salient breadth grays out; 'thorough'
-  // (the default, and any runMode the panel is not told) leaves every row live. This
-  // never changes what the run engine executes — only how a reviewer reads the set.
-  const grayed = runMode === 'intelligent' && !testCase.salient;
+  // Only a driven case in the fewest-runs set is executed. Every other row is listed and dimmed, so a
+  // reviewer can read the whole route set while seeing which cases actually run.
+  const ids = TEST_IDS[set ?? 'every-route'];
+  const compact = set === 'fewest-runs';
+  const running = testCase.driven && testCase.fewestRuns;
+  const grayed = !running;
+  // The route, in this panel's own L-number vocabulary: one `L<branch line> <arm>` per branch it takes.
+  const armsText = testCase.arms
+    .map((step) => `L${String(fn.branches.find((candidate) => candidate.coverageId === step.branchCoverageId)?.startLine ?? '?')} ${String(step.arm)}`)
+    .join(' · ');
 
   return (
     <Box
@@ -97,10 +114,12 @@ export const TestCaseLayerWidget = memo(
     >
       <Group gap={6} wrap="nowrap" align="baseline">
         <Text
-          data-testid="TEST_CASE_ROW"
+          data-testid={ids.row}
           data-match={isMatch ? 'true' : 'false'}
           data-status={status}
-          data-running={grayed ? 'false' : 'true'}
+          data-running={running ? 'true' : 'false'}
+          data-driven={testCase.driven ? 'true' : 'false'}
+          data-set={set}
           ff="monospace"
           fz="xs"
           c={grayed || (active && !isMatch) ? 'dark.3' : 'gray.4'}
@@ -112,7 +131,7 @@ export const TestCaseLayerWidget = memo(
         >
           <Text
             span
-            data-testid="CASE_STATUS"
+            data-testid={ids.status}
             fz="xs"
             fw={600}
             c={runStatusStatics.colour[status]}
@@ -125,53 +144,27 @@ export const TestCaseLayerWidget = memo(
                 arrange: testCase.arrange,
               })})`}
         </Text>
-        {/* The salient (must-run) marker — its own inline span like CASE_STATUS, but a
-            SIBLING of the row so it never enters the row's asserted text. It rides every
-            salient row regardless of runMode; a non-salient row shows none. */}
-        {testCase.salient ? (
-          <Group gap={4} wrap="nowrap" align="center">
-            <Text span data-testid="INTELLIGENT_BADGE" fz="xs" fw={600} c={runModeStatics.colour.intelligent}>
-              {runModeStatics.marker.intelligent}
-            </Text>
-            <Popover
-              width={320}
-              position="bottom-start"
-              withArrow
-              shadow="md"
-              withinPortal={false}
-              transitionProps={{ duration: 0 }}
-              opened={opened}
-              onChange={setOpened}
-            >
-              <Popover.Target>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="xs"
-                  aria-label="Explain intelligent badge"
-                  data-testid="INTELLIGENT_INFO_ICON"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setOpened((prev) => !prev);
-                  }}
-                >
-                  <Text span fz="xs" c="dimmed">
-                    ⓘ
-                  </Text>
-                </ActionIcon>
-              </Popover.Target>
-              <Popover.Dropdown
-                data-testid="INTELLIGENT_EXPLANATION"
-                onClick={(event) => {
-                  event.stopPropagation();
-                }}
-              >
-                <Text fz="xs">{runModeStatics.explanation.intelligent}</Text>
-              </Popover.Dropdown>
-            </Popover>
-          </Group>
-        ) : null}
+        {/* The route's arms and the undriven marker — their own inline spans, SIBLINGS of the row so
+            they never enter the row's asserted text. */}
+        {armsText === '' ? null : (
+          <Text span data-testid={ids.arms} ff="monospace" fz="xs" c="dimmed">
+            {armsText}
+          </Text>
+        )}
+        {testCase.driven ? null : (
+          <Text
+            span
+            data-testid={ids.undriven}
+            fz="xs"
+            fw={600}
+            c={caseSetStatics.undrivenColour}
+            title={caseSetStatics.undrivenExplanation}
+          >
+            {caseSetStatics.undrivenMarker}
+          </Text>
+        )}
       </Group>
+      {compact ? null : (
       <Text
         data-testid="CASE_RETURN"
         ff="monospace"
@@ -186,12 +179,13 @@ export const TestCaseLayerWidget = memo(
       >
         {`  => ${exit?.line ?? '?'}: ${returnValue}`}
       </Text>
+      )}
       {/* WHY it did not pass, on the row itself. Without this the tab shows that a case
           failed and never what went wrong, so the reason lives only in the run console —
           a panel that opens on Run, can be dismissed, and is empty for a run someone did
           in a terminal. A case that threw is exactly the one a reader must not have to
           re-run to understand. */}
-      {settled ? (
+      {settled && !compact ? (
         <Text
           data-testid="CASE_OUTCOME"
           ff="monospace"

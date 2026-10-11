@@ -27,6 +27,12 @@
  *   drivable. It tells the derivation which arm an un-steerable branch takes when a case runs, because
  *   the run worker starts with no command-line arguments of its own.
  *
+ *   `operandFlow` records what a LOCAL variable operand holds at the point the branch reads it, as an
+ *   expression over the entry's parameters (`value-expr-contract`): the choice a ternary made, the value
+ *   an earlier assignment gave it, the result of a same-file call. It is present only when every part of
+ *   that value is one Assayer can evaluate, so a route that knows which arms it took can resolve the leaf
+ *   to a parameter, a constant, or a function of parameters. A leaf without it keeps reading as before.
+ *
  *   `operandCallPosition` anchors WHERE a call operand is written, keyed to the same source coordinate
  *   the call site records. It appears when the operand is a CALL (`if (tooBig(x))`), whose predicate
  *   reads as bare `truthy` because a single-file parse cannot type the callee. The position is the
@@ -73,6 +79,7 @@ import { argvReadContract } from '../argv-read/argv-read-contract';
 import { envStepContract } from '../env-step/env-step-contract';
 import { predicateContract } from '../predicate/predicate-contract';
 import { representativeValueContract } from '../representative-value/representative-value-contract';
+import { valueExprContract } from '../value-expr/value-expr-contract';
 import { typeDescriptorContract } from '../type-descriptor/type-descriptor-contract';
 import { coverageContract } from '../coverage/coverage-contract';
 
@@ -88,6 +95,7 @@ export const conditionLeafContract = z.object({
   operandConstValue: representativeValueContract.optional(),
   operandConstLength: z.number().int().nonnegative().brand<'ConditionLeafOperandConstLength'>().optional(),
   operandCallPosition: z.object({ line: z.number().int().positive().brand<'ConditionLeafOperandCallPositionLine'>(), column: z.number().int().positive().brand<'ConditionLeafOperandCallPositionColumn'>() }).brand<'ConditionLeafOperandCallPosition'>().optional(),
+  operandFlow: valueExprContract.optional(),
   operandIsTypeof: z.literal(true).optional(),
   operandType: typeDescriptorContract,
   predicate: predicateContract,

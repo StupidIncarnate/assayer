@@ -60,7 +60,7 @@ describe('object / cross-file-reader — a reader that USES an imported shape an
         {
           reachesPath: ['*module*/readTimeout/return@top'],
           arrange: [{ kind: 'object', param: 'settings', value: { label: 'abc123', timeout: 7 } }],
-          salient: true,
+          arms: [], driven: true, fewestRuns: true,
         },
       ],
       gaps: [],

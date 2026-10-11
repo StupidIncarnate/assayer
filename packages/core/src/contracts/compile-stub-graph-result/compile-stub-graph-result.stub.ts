@@ -5,7 +5,7 @@
  * CompileStubGraphResultStub();
  * // Returns a valid CompileStubGraphResult
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 import { StubIndexStub } from "@assayer/shared/contracts/stub-index/stub-index.stub";
 
 import { compileStubGraphResultContract } from "./compile-stub-graph-result-contract";

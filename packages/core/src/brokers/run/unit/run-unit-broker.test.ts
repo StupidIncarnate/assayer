@@ -363,8 +363,8 @@ describe('runUnitBroker', () => {
             access: { kind: 'named' },
             exitIds: [FUNNELLED_AUDIT_TOP, FUNNELLED_THEN, FUNNELLED_ELSE],
             cases: [
-              { reachesPath: [FUNNELLED_THEN, FUNNELLED_AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
-              { reachesPath: [FUNNELLED_ELSE, FUNNELLED_AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+              { reachesPath: [FUNNELLED_THEN, FUNNELLED_AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 11 }], arms: [{ branchCoverageId: '*module*/build/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'then' }], driven: true, fewestRuns: true },
+              { reachesPath: [FUNNELLED_ELSE, FUNNELLED_AUDIT_TOP], arrange: [{ kind: 'param', param: 'size', value: 10 }], arms: [{ branchCoverageId: '*module*/build/if:BinaryExpression,id:size,GreaterThanToken,num:10', arm: 'else' }], driven: true, fewestRuns: true },
             ],
           },
         ],

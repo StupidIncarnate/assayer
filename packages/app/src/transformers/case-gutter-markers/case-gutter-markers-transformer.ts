@@ -20,9 +20,11 @@ export const caseGutterMarkersTransformer = ({
   functions: readonly FunctionAnalysis[];
 }): readonly GutterMarker[] => {
   const touchedLines = functions.flatMap((fn) =>
-    fn.cases.flatMap((testCase) =>
-      caseTouchedLinesTransformer({ functionAnalysis: fn, reachesPath: testCase.reachesPath }),
-    ),
+    fn.cases
+      .filter((testCase) => testCase.driven && testCase.fewestRuns)
+      .flatMap((testCase) =>
+        caseTouchedLinesTransformer({ functionAnalysis: fn, reachesPath: testCase.reachesPath, arms: testCase.arms }),
+      ),
   );
 
   return [...new Set(touchedLines)].map((line) =>

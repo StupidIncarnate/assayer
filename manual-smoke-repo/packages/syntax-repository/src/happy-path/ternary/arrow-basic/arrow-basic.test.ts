@@ -35,6 +35,7 @@ describe('ternary / arrow-basic — a concise-arrow body that IS a ternary', () 
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 1,
               endLine: 1,
             },

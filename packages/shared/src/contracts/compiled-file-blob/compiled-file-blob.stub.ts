@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { compiledFileBlobContract } from './compiled-file-blob-contract';
 import type { CompiledFileBlob } from './compiled-file-blob-contract';

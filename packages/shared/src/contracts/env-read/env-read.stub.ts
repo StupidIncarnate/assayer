@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { envReadContract } from './env-read-contract';
 import type { EnvRead } from './env-read-contract';

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { sourcePositionContract } from './source-position-contract';
 import type { SourcePosition } from './source-position-contract';

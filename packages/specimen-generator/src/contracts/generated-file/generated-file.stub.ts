@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { generatedFileContract } from './generated-file-contract';
 import type { GeneratedFile } from './generated-file-contract';

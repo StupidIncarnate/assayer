@@ -1,7 +1,7 @@
-import { TestCaseLayerWidgetProxy } from './test-case-layer-widget.proxy';
+import { CaseSetLayerWidgetProxy } from './case-set-layer-widget.proxy';
 
 export const TestEntryLayerWidgetProxy = (): Record<PropertyKey, never> => {
-  TestCaseLayerWidgetProxy();
+  CaseSetLayerWidgetProxy();
 
   return {};
 };

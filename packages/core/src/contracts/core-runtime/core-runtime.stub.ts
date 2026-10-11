@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { coreRuntimeContract } from './core-runtime-contract';
 import type { CoreRuntime } from './core-runtime-contract';

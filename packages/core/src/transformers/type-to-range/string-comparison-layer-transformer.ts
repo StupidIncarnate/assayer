@@ -6,33 +6,33 @@
  * stringComparisonLayerTransformer({ predicateKind: 'gt', literal: 'm' });
  * // Returns { satisfying: { members: ['ma'] }, violating: { members: ['m'] } }
  */
-import { armValuesContract } from '../../contracts/arm-values/arm-values-contract';
-import type { ArmValues } from '../../contracts/arm-values/arm-values-contract';
+import { armValuesContract } from "../../contracts/arm-values/arm-values-contract";
+import type { ArmValues } from "../../contracts/arm-values/arm-values-contract";
 
 export const stringComparisonLayerTransformer = ({
   predicateKind,
   literal,
 }: {
-  predicateKind: 'gt' | 'gte' | 'lt' | 'lte';
+  predicateKind: "gt" | "gte" | "lt" | "lte";
   literal: string;
 }): ArmValues => {
   switch (predicateKind) {
-    case 'gt':
+    case "gt":
       return armValuesContract.parse({
         satisfying: { members: [`${literal}a`] },
         violating: { members: [literal] },
       });
-    case 'gte':
+    case "gte":
       return armValuesContract.parse({
         satisfying: { members: [literal] },
-        violating: { members: literal === '' ? [] : [''] },
+        violating: { members: literal === "" ? [] : [""] },
       });
-    case 'lt':
+    case "lt":
       return armValuesContract.parse({
-        satisfying: { members: literal === '' ? [] : [''] },
+        satisfying: { members: literal === "" ? [] : [""] },
         violating: { members: [literal] },
       });
-    case 'lte':
+    case "lte":
       return armValuesContract.parse({
         satisfying: { members: [literal] },
         violating: { members: [`${literal}a`] },

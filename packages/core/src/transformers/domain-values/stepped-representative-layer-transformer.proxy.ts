@@ -1,1 +1,4 @@
-export const steppedRepresentativeLayerTransformerProxy = (): Record<PropertyKey, never> => ({});
+export const steppedRepresentativeLayerTransformerProxy = (): Record<
+  PropertyKey,
+  never
+> => ({});

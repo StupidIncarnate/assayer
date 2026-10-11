@@ -1,3 +1,4 @@
+import { DerivedTestCaseStub } from '@assayer/shared/contracts/derived-test-case/derived-test-case.stub';
 import { FileAnalysisStub } from '@assayer/shared/contracts/file-analysis/file-analysis.stub';
 import { FunctionAnalysisStub } from '@assayer/shared/contracts/function-analysis/function-analysis.stub';
 
@@ -31,7 +32,7 @@ describe('caseSetProjectionTransformer', () => {
             name: 'formatGreeting',
             access: { kind: 'named' },
             exitIds: ['formatGreeting/return@if-then'],
-            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], arms: [], driven: true, fewestRuns: true }],
           },
         ],
         gaps: [],
@@ -96,7 +97,7 @@ describe('caseSetProjectionTransformer', () => {
           name: 'classify',
           access: { kind: 'method', className: 'Classifier', constructable: true },
           exitIds: ['formatGreeting/return@if-then'],
-          cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+          cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], arms: [], driven: true, fewestRuns: true }],
         },
       ]);
     });
@@ -118,7 +119,7 @@ describe('caseSetProjectionTransformer', () => {
             },
             branches: [],
             exits: [{ coverageId: '*module*/exit@top', kind: 'implicit', guardPath: [], line: 4 }],
-            cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], salient: true }],
+            cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], arms: [], driven: true, fewestRuns: true }],
           }),
         ],
       });
@@ -134,7 +135,7 @@ describe('caseSetProjectionTransformer', () => {
           name: '*module*',
           access: { kind: 'module' },
           exitIds: ['*module*/exit@top'],
-          cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], salient: true }],
+          cases: [{ reachesPath: ['*module*/exit@top'], arrange: [], arms: [], driven: true, fewestRuns: true }],
         },
       ]);
     });
@@ -157,7 +158,7 @@ describe('caseSetProjectionTransformer', () => {
             },
             branches: [],
             exits: [{ coverageId: '*module*/exit@if-then', kind: 'implicit', guardPath: [], line: 3 }],
-            cases: [{ reachesPath: ['*module*/exit@if-then'], arrange: [], salient: true }],
+            cases: [{ reachesPath: ['*module*/exit@if-then'], arrange: [], arms: [], driven: true, fewestRuns: true }],
           }),
         ],
       });
@@ -173,7 +174,7 @@ describe('caseSetProjectionTransformer', () => {
           name: '*module*',
           access: { kind: 'module' },
           exitIds: ['*module*/exit@if-then'],
-          cases: [{ reachesPath: ['*module*/exit@if-then'], arrange: [], salient: true }],
+          cases: [{ reachesPath: ['*module*/exit@if-then'], arrange: [], arms: [], driven: true, fewestRuns: true }],
         },
       ]);
     });
@@ -392,7 +393,7 @@ describe('caseSetProjectionTransformer', () => {
             name: 'parse',
             access: { kind: 'method', className: 'Repo', constructable: false, static: true },
             exitIds: ['formatGreeting/return@if-then'],
-            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], arms: [], driven: true, fewestRuns: true }],
           },
         ],
         gaps: [],
@@ -430,7 +431,7 @@ describe('caseSetProjectionTransformer', () => {
             name: 'constructor',
             access: { kind: 'constructor', className: 'Gauge' },
             exitIds: ['formatGreeting/return@if-then'],
-            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+            cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], arms: [], driven: true, fewestRuns: true }],
           },
         ],
         gaps: [],
@@ -466,7 +467,7 @@ describe('caseSetProjectionTransformer', () => {
           name: 'run',
           access: { kind: 'object-member', objectName: 'api', property: 'run' },
           exitIds: ['formatGreeting/return@if-then'],
-          cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true }],
+          cases: [{ reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], arms: [], driven: true, fewestRuns: true }],
         },
       ]);
     });
@@ -548,6 +549,43 @@ describe('caseSetProjectionTransformer', () => {
       expect(result.entries).toStrictEqual([]);
     });
 
+    it('VALID: {a driven fewest-runs case, a driven case outside it, and an undriven one} => only the first is run', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            cases: [
+              DerivedTestCaseStub({ reachesPath: ['f/return@a'], arrange: [], arms: [], driven: true, fewestRuns: true }),
+              DerivedTestCaseStub({ reachesPath: ['f/return@b'], arrange: [], arms: [], driven: true, fewestRuns: false }),
+              DerivedTestCaseStub({ reachesPath: ['f/return@c'], arrange: [], arms: [], driven: false, fewestRuns: true }),
+            ],
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({ analysis, relPath: 'src/f.ts', modulePath: '/abs/src/f.ts' });
+
+      expect(result.entries.map((entry) => entry.cases)).toStrictEqual([
+        [{ reachesPath: ['f/return@a'], arrange: [], arms: [], driven: true, fewestRuns: true }],
+      ]);
+    });
+
+    it('EMPTY: {an entry whose every case is undriven} => dropped, since none of its cases can run', () => {
+      const analysis = FileAnalysisStub({
+        functions: [
+          FunctionAnalysisStub({
+            cases: [
+              DerivedTestCaseStub({ reachesPath: ['f/return@a'], arrange: [], arms: [], driven: false, fewestRuns: true }),
+              DerivedTestCaseStub({ reachesPath: ['f/return@b'], arrange: [], arms: [], driven: false, fewestRuns: false }),
+            ],
+          }),
+        ],
+      });
+
+      const result = caseSetProjectionTransformer({ analysis, relPath: 'src/f.ts', modulePath: '/abs/src/f.ts' });
+
+      expect(result.entries).toStrictEqual([]);
+    });
+
     it('EMPTY: {no functions at all} => an empty set rather than nothing', () => {
       const result = caseSetProjectionTransformer({
         analysis: FileAnalysisStub({ functions: [] }),
@@ -570,7 +608,7 @@ describe('caseSetProjectionTransformer', () => {
               {
                 reachesPath: ['formatGreeting/return@if-then'],
                 arrange: [{ kind: 'harness', param: 'report', key: 'inputs.formatGreeting.report' }],
-                salient: true,
+                arms: [], driven: true, fewestRuns: true,
               },
             ],
           }),

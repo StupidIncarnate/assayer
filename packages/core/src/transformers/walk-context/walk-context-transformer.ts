@@ -24,6 +24,7 @@ export const walkContextTransformer = ({
   exported,
   tail,
   enclosingClass,
+  bindings,
 }: {
   context: WalkContext;
   scopeSegment?: string;
@@ -32,9 +33,13 @@ export const walkContextTransformer = ({
   exported?: boolean;
   tail?: boolean;
   enclosingClass?: { name: string; constructable: boolean };
+  bindings?: WalkContext['bindings'];
 }): WalkContext => {
   // Same reset rule as guardPath, for the same reason: a class hands its identity to its MEMBERS,
   // but entering any other scope clears it — a function nested inside a method is not a method.
+  // Bindings follow the same rule as the guard path: an arm or a following statement extends what the
+  // walk carried down, and entering a scope starts again with none.
+  const nextBindings = scopeSegment === undefined ? (bindings === undefined ? context.bindings : bindings) : undefined;
   const nextClass = scopeSegment === undefined ? context.enclosingClass : enclosingClass;
 
   return walkContextContract.parse({
@@ -53,5 +58,6 @@ export const walkContextTransformer = ({
     // Omitted rather than set undefined: a context with no class must be strictly equal to one that
     // never had the key, or every golden assertion downstream churns.
     ...(nextClass === undefined ? {} : { enclosingClass: nextClass }),
+    ...(nextBindings === undefined || Object.keys(nextBindings).length === 0 ? {} : { bindings: nextBindings }),
   });
 };

@@ -32,7 +32,7 @@ describe('composition / through-caller — a private CALLED but not RETURNED, so
           {
             reachesPath: ['*module*/report/exit@top'],
             arrange: [{ kind: 'param', param: 'n', value: 7 }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },
@@ -56,6 +56,7 @@ describe('composition / through-caller — a private CALLED but not RETURNED, so
               operandType: { kind: 'number' },
               predicate: { kind: 'gt', literal: 5 },
             },
+            guardPath: [],
             startLine: 2,
             endLine: 4,
           },
@@ -78,12 +79,12 @@ describe('composition / through-caller — a private CALLED but not RETURNED, so
           {
             reachesPath: ['*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#then'],
             arrange: [{ kind: 'param', param: 'n', value: 6 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:BinaryExpression,id:n,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/classify/return@if:BinaryExpression,id:n,GreaterThanToken,num:5#else'],
             arrange: [{ kind: 'param', param: 'n', value: 5 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:BinaryExpression,id:n,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
       },

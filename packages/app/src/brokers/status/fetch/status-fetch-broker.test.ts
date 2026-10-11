@@ -15,7 +15,6 @@ describe('statusFetchBroker', () => {
         version: '1.0.0',
         message: 'Assayer core ready',
         repoPath: '/home/user/project',
-        runMode: 'thorough',
       });
     });
   });

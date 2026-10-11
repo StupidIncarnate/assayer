@@ -36,6 +36,7 @@ describe('analyzeExtractBroker', () => {
                   predicate: { kind: 'gt', literal: 5 },
                 },
                 startLine: 2,
+                guardPath: [],
                 endLine: 4,
               },
             ],

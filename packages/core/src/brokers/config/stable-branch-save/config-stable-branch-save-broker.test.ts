@@ -16,7 +16,7 @@ describe('configStableBranchSaveBroker', () => {
       });
 
       expect(proxy.getWrittenContentsFor({ path: '/repo/assayer.config.json' })).toStrictEqual([
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       ]);
       expect(result).toStrictEqual({
         version: '1',
@@ -26,7 +26,6 @@ describe('configStableBranchSaveBroker', () => {
         darkSpots: 'warn',
         deadSurface: 'error',
         inputGaps: 'error',
-        runMode: 'thorough',
       });
     });
 
@@ -45,7 +44,7 @@ describe('configStableBranchSaveBroker', () => {
       });
 
       expect(proxy.getWrittenContentsFor({ path: '/repo/assayer.config.json' })).toStrictEqual([
-        '{"version":"1","repoRoot":"./smoke-repo","exclude":["dist"],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":"./smoke-repo","exclude":["dist"],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       ]);
       expect(result).toStrictEqual({
         version: '1',
@@ -55,7 +54,6 @@ describe('configStableBranchSaveBroker', () => {
         darkSpots: 'warn',
         deadSurface: 'error',
         inputGaps: 'error',
-        runMode: 'thorough',
       });
     });
   });

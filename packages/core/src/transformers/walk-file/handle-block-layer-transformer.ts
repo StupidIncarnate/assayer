@@ -28,12 +28,13 @@ import { Node } from '#gateway/npm/ts-morph';
 import type { Node as TsNode, Statement } from '#gateway/npm/ts-morph';
 
 import { guardStepContract } from '@assayer/shared/contracts';
-import type { GuardStep } from '@assayer/shared/contracts';
+import type { GuardStep, ValueExpr } from '@assayer/shared/contracts';
 
 import type { WalkContext } from '../../contracts/walk-context/walk-context-contract';
 import { walkContextTransformer } from '../walk-context/walk-context-transformer';
 import { deriveBranchIdLayerTransformer } from './derive-branch-id-layer-transformer';
 import { handlerResultLayerTransformer } from './handler-result-layer-transformer';
+import { readStatementBindingsLayerTransformer } from './read-statement-bindings-layer-transformer';
 import { readTerminalLayerTransformer } from './read-terminal-layer-transformer';
 import { readValueFlowExitLayerTransformer } from './read-value-flow-exit-layer-transformer';
 
@@ -44,6 +45,17 @@ export const handleBlockLayerTransformer = ({
   statements: Statement[];
   context: WalkContext;
 }): ReturnType<typeof handlerResultLayerTransformer> => {
+  // What each local variable holds as execution reaches each statement: the bindings in effect before
+  // statement `index` are the block's own, carried through every statement before it. A branch that reads a
+  // variable then reads the value it has THERE, which is what lets a route resolve it.
+  const bindingsBefore = statements.reduce<Record<string, ValueExpr>[]>(
+    (reached, statement, index) => [
+      ...reached,
+      readStatementBindingsLayerTransformer({ statements: [statement], bindings: reached[index] ?? {}, context }),
+    ],
+    [context.bindings ?? {}],
+  );
+
   const descents = statements.map((statement, index) => {
     const negations = statements.slice(0, index).flatMap<GuardStep>((earlier) => {
       if (!Node.isIfStatement(earlier)) {
@@ -68,6 +80,7 @@ export const handleBlockLayerTransformer = ({
         context,
         guardSteps: negations,
         tail: context.tail && index === statements.length - 1,
+        bindings: bindingsBefore[index] ?? {},
       }),
     };
   });

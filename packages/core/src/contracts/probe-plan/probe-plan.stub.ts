@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { probePlanContract } from './probe-plan-contract';
 import type { ProbePlan } from './probe-plan-contract';

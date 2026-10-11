@@ -11,8 +11,8 @@ describe('array / spread — a branchless function returning `[...items]`', () =
   // `copy` spreads its array param into a fresh array, so both the param and the return read
   // structurally as `{ kind: 'array', element: { kind: 'number' } }`. Branchless, so all cases reach
   // the one exit — but an array param FANS OUT over cardinality: empty / one / many. Three cases arrange
-  // `items` as REAL arrays of the element type — the salient representative `[]` (empty), then the grayed
-  // twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the salient case is the empty
+  // `items` as REAL arrays of the element type — the fewest-runs representative `[]` (empty), then the every-route-only
+  // twins `[7]` (one) and `[7, 7]` (many). Emit order is empty/one/many so the fewest-runs case is the empty
   // array; all three RUN, `intelligent` grays the two twins. The values are INPUTS (P4); each case
   // asserts only that the flow REACHES the exit.
   it('VALID: {export function copy(items: number[]): number[] { return [...items] }} => array-of-number param and return, three cardinality cases', () => {
@@ -34,17 +34,17 @@ describe('array / spread — a branchless function returning `[...items]`', () =
           {
             reachesPath: ['*module*/copy/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/copy/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/copy/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

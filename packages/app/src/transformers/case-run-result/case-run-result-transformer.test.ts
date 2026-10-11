@@ -20,14 +20,14 @@ describe('caseRunResultTransformer', () => {
       expect(result).toStrictEqual(errored);
     });
 
-    // salient is a must-run display opinion, not identity: an all-salient blob still matches a run
-    // whose case carries the same exit and arrange, so a query differing ONLY in salient resolves.
-    it('VALID: {run case salient, query not-salient, same exit+arrange} => matches, ignoring salient', () => {
-      const stored = CaseResultStub({ testCase: DerivedTestCaseStub({ salient: true }) });
+    // fewestRuns, driven and arms are not identity: a stale blob still matches a run
+    // whose case carries the same exit and arrange, so a query differing ONLY in them resolves.
+    it('VALID: {run case and query differing only in arms, same exit+arrange} => matches, ignoring arms', () => {
+      const stored = CaseResultStub({ testCase: DerivedTestCaseStub({ arms: [] }) });
 
       const result = caseRunResultTransformer({
         run: RunResultStub({ cases: [stored] }),
-        testCase: DerivedTestCaseStub({ salient: false }),
+        testCase: DerivedTestCaseStub({ arms: [{ branchCoverageId: 'formatGreeting/if:name.length===0', arm: 'then' }] }),
       });
 
       expect(result).toStrictEqual(stored);
@@ -61,6 +61,30 @@ describe('caseRunResultTransformer', () => {
             ],
           },
         }).testCase,
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    // Only the run set is executed. An undriven case or one outside the fewest-runs set is listed and
+    // never run, so even a run result sharing its exit and arrange is not its result.
+    it('VALID: {undriven case sharing exit and arrange with a run case} => undefined, it is never run', () => {
+      const stored = CaseResultStub();
+
+      const result = caseRunResultTransformer({
+        run: RunResultStub({ cases: [stored] }),
+        testCase: DerivedTestCaseStub({ ...stored.testCase, driven: false }),
+      });
+
+      expect(result).toBe(undefined);
+    });
+
+    it('VALID: {case outside the fewest-runs set sharing exit and arrange} => undefined, it is never run', () => {
+      const stored = CaseResultStub();
+
+      const result = caseRunResultTransformer({
+        run: RunResultStub({ cases: [stored] }),
+        testCase: DerivedTestCaseStub({ ...stored.testCase, fewestRuns: false }),
       });
 
       expect(result).toBe(undefined);

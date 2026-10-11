@@ -1,4 +1,4 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { z } from '#gateway/npm/zod';
 
 import { runExecuteCasesBrokerProxy } from '../execute-cases/run-execute-cases-broker.proxy';

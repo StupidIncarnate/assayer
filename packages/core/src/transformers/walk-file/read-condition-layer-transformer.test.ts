@@ -398,5 +398,28 @@ describe('readConditionLayerTransformer', () => {
 
       expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'eq', literal: 3 });
     });
+
+    it("VALID: {data.includes('on')} => an includes predicate carrying the text, and the operand is data itself", () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', "if (data.includes('on')) {}\n");
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      const result = readConditionLayerTransformer({ condition });
+
+      expect({ predicate: result.predicate, operand: result.operandName }).toStrictEqual({
+        predicate: { kind: 'includes', literal: 'on' },
+        operand: 'data',
+      });
+    });
+
+    it('EDGE: {data.includes(other)} => a non-literal argument is not a substring test, so it stays an opaque call', () => {
+      readConditionLayerTransformerProxy();
+      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
+      const sourceFile = project.createSourceFile('src/f.ts', 'if (data.includes(other)) {}\n');
+      const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
+
+      expect(readConditionLayerTransformer({ condition }).predicate).toStrictEqual({ kind: 'truthy' });
+    });
   });
 });

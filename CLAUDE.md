@@ -48,9 +48,11 @@ Assayer that does the AST and type-graph work.
 
 ## Local setup
 
-`@dungeonmaster/*` packages are `file:` dependencies. That means
-`codex-of-consentient-craft` must be checked out as a sibling directory, next
-to this repo, on disk.
+The `@legendscribe/lockdown-kit-*` and `@legendscribe/brutalpit-*` packages are
+`file:` dependencies. That means the `lockdown-kit` and `brutalpit` repos must be
+checked out as sibling directories, next to this repo, on disk, and built.
+`npm run init` runs `lockdown-kit init && brutalpit init` to install their hooks,
+MCP servers and settings into this repo.
 
 Verify a change with `npm run ward`, `npm run test:syntax` and
 `npm run test:generated`. Run all three commands. Neither specimen catalogue
@@ -234,7 +236,7 @@ TypeScript's type graph, the checker's own model of how types and symbols
 connect across the code.
 
 Assayer must work standalone in any TypeScript repo. A repo that follows the
-dungeonmaster conventions is a best-case input. It is never a required
+lockdown-kit conventions is a best-case input. It is never a required
 input. The full requirement is P3 in `plan/requirements.md`.
 
 ### Degrade gracefully between two tiers of test generation
@@ -573,7 +575,7 @@ requirement is R17 in `plan/requirements.md`.
 ### Assayer tests itself the ordinary way
 
 Assayer's own test suite is plain Jest and Playwright, following the same
-dungeonmaster testing standards used elsewhere. Assayer never verifies
+lockdown-kit testing standards used elsewhere. Assayer never verifies
 itself using its own config format, because that would let a bug in the
 format hide from its own tests. Its integration tests run the CLI and the
 analyzer against fixture repos, and assert on the output: the generated
@@ -660,6 +662,69 @@ private function some caller can steer is simply driven.
 Never write an admission that reads as permanent if a future feature could
 close it. Never write one that promises a feature Assayer cannot actually
 build.
+
+### Two case sets per entry: every route, and the fewest runs
+
+A route is one way execution can travel through an entry, start to end,
+taking one arm at every branch it meets. An arm counts whether it returns,
+fires a side effect, or does nothing. An `if` with no `else` still has two
+arms: the body runs, or it doesn't. So `if (data) showModal()` is two cases.
+
+Assayer combines the arms of every branch in an entry, both branches in
+sequence and nested ones. It then drops every combination that contradicts
+itself. For example, `data` cannot equal both `'bro'` and `'No'`. To find the
+contradictions, Assayer follows values through assignments and same-file
+calls, the same way it handles welded branches.
+
+From what is left, Assayer builds two sets for each entry:
+
+| Set | What it holds |
+|---|---|
+| Every route | One case for every route that can actually run. |
+| Fewest runs | The smallest subset of every route in which each reachable arm is taken by at least one case. When two subsets tie, Assayer picks the same one every time. |
+
+The detail panel shows both sets, each labelled, so a human can check that
+Assayer accounted for every path. Assayer runs the fewest-runs set.
+
+An arm that no route reaches is not a case. It is an "unreachable exit" lint.
+
+Assayer never invents a fallback or default arm. A case's arm labels must be
+the arms its arranged input actually takes. Never label the arm first and
+then pick an input on its own.
+
+When Assayer cannot steer a branch, for example a branch on an opaque call
+result, it still declares each route through that branch. It marks those
+cases undriven and does not run them.
+
+Worked example:
+
+```ts
+export const someFn = (dataOuter: string) => {
+  let data = dataOuter.length < 5 ? dataOuter : 'NoneTon';
+  if (data === 'None') data = removeFirstLastCharacter(data); // 'None' becomes 'on'
+  if (data === 'No') {
+    setModelTitle('Dont');
+    setModelSubHeader('Nill');
+  }
+  if (data.includes('on')) setModelTitle('On Time');
+  setModelTitleSubHeader('Off');
+};
+```
+
+The four branches make 16 combinations. Eleven of them contradict
+themselves, so every route holds 5 cases:
+
+| Case | `dataOuter` | Arms taken |
+|---|---|---|
+| 1 | `'None'` | short, `=== 'None'` true, `=== 'No'` false, includes `'on'` true |
+| 2 | `'No'` | short, `=== 'None'` false, `=== 'No'` true, includes `'on'` false |
+| 3 | `'on'` | short, `=== 'None'` false, `=== 'No'` false, includes `'on'` true |
+| 4 | `'abc'` | short, all three false |
+| 5 | `'abcde'` | long, `=== 'None'` false, `=== 'No'` false, includes `'on'` true |
+
+Fewest runs holds cases 1, 2 and 5. Case 1 is the only case that takes
+`=== 'None'` true. Case 2 is the only one that takes `=== 'No'` true. Case 5
+is the only one that takes the long arm. Together the three take all 8 arms.
 
 ### Resolving an import is a hard build error, not one of the four admissions
 

@@ -36,7 +36,7 @@ describe('function / declaration — a branchless named function declaration', (
               { kind: 'param', param: 'a', value: 7 },
               { kind: 'param', param: 'b', value: 7 },
             ],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

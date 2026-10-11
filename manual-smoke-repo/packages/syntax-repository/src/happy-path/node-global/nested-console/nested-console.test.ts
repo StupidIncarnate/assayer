@@ -55,7 +55,7 @@ describe('node-global / nested-console — an ambient console.log call inside a 
           {
             reachesPath: ['*module*/report/exit@top'],
             arrange: [{ kind: 'param', param: 'message', value: 'abc123' }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

@@ -15,8 +15,18 @@
  *   single-element one (the callback's exit, then the surface's). The first element is the case's
  *   DISTINGUISHING exit, the one a surface renders it by.
  *
- *   `salient` marks whether the case belongs to the intelligent (must-run) subset. It defaults to
- *   true so a cache blob written before the field existed reads back as all-salient.
+ *   `arms` is the route the case takes: one guard step (branch + arm) for every branch it meets, so a
+ *   case's arm labels are exactly the arms its arranged input takes. It is never filled in from a
+ *   fallback: a label is only ever the arm the arranged input actually reaches.
+ *
+ *   `driven` says whether Assayer can steer every branch on the route. A route through a branch it
+ *   cannot steer (an opaque call result, say) is still declared, as an UNDRIVEN case: it is listed and
+ *   never run. It defaults to true.
+ *
+ *   `fewestRuns` marks whether the case belongs to the FEWEST-RUNS set, the smallest subset of the
+ *   every-route set that takes every reachable arm at least once. The entry's `cases` list IS the
+ *   every-route set; this flag picks the fewest-runs subset out of it. It defaults to true so a cache
+ *   blob written before the field existed reads back as a single set.
  *
  * USAGE:
  * derivedTestCaseContract.parse({
@@ -27,17 +37,20 @@
  *   reachesPath: ['rescale/cb/return@then', 'rescale/return@top'],
  *   arrange: [{ kind: 'array', param: 'items', value: [101] }],
  * });
- * // Returns a validated DerivedTestCase (branded fields; salient defaults to true)
+ * // Returns a validated DerivedTestCase (branded fields; arms defaults to [], driven and fewestRuns to true)
  */
 import { z } from '#gateway/npm/zod';
 
 import { arrangeBindingContract } from '../arrange-binding/arrange-binding-contract';
 import { coverageContract } from '../coverage/coverage-contract';
+import { guardStepContract } from '../guard-step/guard-step-contract';
 
 export const derivedTestCaseContract = z.object({
   reachesPath: z.array(coverageContract.shape.id).min(1),
   arrange: z.array(arrangeBindingContract),
-  salient: z.boolean().default(true),
+  arms: z.array(guardStepContract).default([]),
+  driven: z.boolean().default(true),
+  fewestRuns: z.boolean().default(true),
 }).brand<'DerivedTestCase'>();
 
 export type DerivedTestCase = z.infer<typeof derivedTestCaseContract>;

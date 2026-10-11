@@ -55,8 +55,8 @@ describe('analyzeFileBroker', () => {
       const result = analyzeFileBroker({ walked });
 
       expect(result.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-        { reachesPath: [`${GREETING_BRANCH.replace('/if:', '/return@if:')}#then`], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
-        { reachesPath: [`${GREETING_BRANCH.replace('/if:', '/return@if:')}#else`], arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
+        { reachesPath: [`${GREETING_BRANCH.replace('/if:', '/return@if:')}#then`], arrange: [{ kind: 'param', param: 'name', value: '' }], arms: [{ branchCoverageId: GREETING_BRANCH, arm: 'then' }], driven: true, fewestRuns: true },
+        { reachesPath: [`${GREETING_BRANCH.replace('/if:', '/return@if:')}#else`], arrange: [{ kind: 'param', param: 'name', value: 'a' }], arms: [{ branchCoverageId: GREETING_BRANCH, arm: 'else' }], driven: true, fewestRuns: true },
       ]);
     });
 
@@ -127,6 +127,7 @@ describe('analyzeFileBroker', () => {
                   predicate: { kind: 'gt', literal: 5 },
                 },
                 startLine: 3,
+                guardPath: [],
                 endLine: 7,
               },
             ],
@@ -146,7 +147,7 @@ describe('analyzeFileBroker', () => {
             ],
             // The live `then` arm: importing the module runs it with `value` welded to 7, reaching that
             // exit. It arranges nothing — the welded value is fixed in the source, not a settable input.
-            cases: [{ reachesPath: [`${MODULE_BRANCH.replace('/if:', '/exit@if:')}#then`], arrange: [], salient: true }],
+            cases: [{ reachesPath: [`${MODULE_BRANCH.replace('/if:', '/exit@if:')}#then`], arrange: [], arms: [{ branchCoverageId: MODULE_BRANCH, arm: 'then' }], driven: true, fewestRuns: true }],
           },
         ],
         enrichment: [{ line: 3, symbol: 'value', typeText: 'number', range: [6, 5] }],
@@ -302,7 +303,8 @@ describe('analyzeFileBroker', () => {
 
       const result = analyzeFileBroker({ walked });
 
-      const innerBranch = '*module*/outer/inner/return@if:BinaryExpression,id:n,GreaterThanToken,num:5';
+      const innerExit = '*module*/outer/inner/return@if:BinaryExpression,id:n,GreaterThanToken,num:5';
+      const innerBranch = innerExit.replace('/return@if:', '/if:');
 
       expect({
         entries: result.functions.map((fn) => ({ name: fn.entry.name, access: fn.entry.access, cases: fn.cases })),
@@ -313,8 +315,8 @@ describe('analyzeFileBroker', () => {
             name: 'outer',
             access: { kind: 'named' },
             cases: [
-              { reachesPath: [`${innerBranch}#then`, '*module*/outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-              { reachesPath: [`${innerBranch}#else`, '*module*/outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+              { reachesPath: [`${innerExit}#then`, '*module*/outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], arms: [{ branchCoverageId: innerBranch, arm: 'then' }], driven: true, fewestRuns: true },
+              { reachesPath: [`${innerExit}#else`, '*module*/outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [{ branchCoverageId: innerBranch, arm: 'else' }], driven: true, fewestRuns: true },
             ],
           },
         ],
@@ -365,6 +367,7 @@ describe('analyzeFileBroker', () => {
                 predicate: { kind: 'gt', literal: 50 },
               },
               startLine: 6,
+              guardPath: [],
               endLine: 8,
             },
           ],
@@ -372,12 +375,16 @@ describe('analyzeFileBroker', () => {
             {
               reachesPath: ['*module*/classify/return@if:CallExpression,id:tooBig,id:x#then'],
               arrange: [{ kind: 'param', param: 'x', value: 51 }],
-              salient: true,
+              arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:tooBig,id:x', arm: 'then' }],
+              driven: true,
+              fewestRuns: true,
             },
             {
               reachesPath: ['*module*/classify/return@if:CallExpression,id:tooBig,id:x#else'],
               arrange: [{ kind: 'param', param: 'x', value: 50 }],
-              salient: true,
+              arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:tooBig,id:x', arm: 'else' }],
+              driven: true,
+              fewestRuns: true,
             },
           ],
         },
@@ -512,7 +519,9 @@ describe('analyzeFileBroker', () => {
               { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
               { kind: 'param', param: 'size', value: 2 },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/k/if:BinaryExpression,id:size,GreaterThanToken,num:1', arm: 'then' }],
+            driven: true,
+            fewestRuns: true,
           },
           {
             reachesPath: [`${ERROR_BRANCH}#else`],
@@ -520,7 +529,9 @@ describe('analyzeFileBroker', () => {
               { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
               { kind: 'param', param: 'size', value: 1 },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/k/if:BinaryExpression,id:size,GreaterThanToken,num:1', arm: 'else' }],
+            driven: true,
+            fewestRuns: true,
           },
         ],
         gaps: [],
@@ -545,7 +556,9 @@ describe('analyzeFileBroker', () => {
               { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
               { kind: 'param', param: 'size', value: 2 },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/k/if:BinaryExpression,id:size,GreaterThanToken,num:1', arm: 'then' }],
+            driven: true,
+            fewestRuns: true,
           },
           {
             reachesPath: [`${ERROR_BRANCH}#else`],
@@ -553,7 +566,9 @@ describe('analyzeFileBroker', () => {
               { kind: 'object', param: 'e', value: { message: 'abc123', name: 'abc123' } },
               { kind: 'param', param: 'size', value: 1 },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/k/if:BinaryExpression,id:size,GreaterThanToken,num:1', arm: 'else' }],
+            driven: true,
+            fewestRuns: true,
           },
         ],
         gaps: [],
@@ -720,12 +735,21 @@ describe('analyzeFileBroker', () => {
 
       const result = analyzeFileBroker({ walked, relPath: 'src/opaque-module.ts' });
 
+      // Both routes through the opaque `if` are declared, and neither is driven, so none runs. The module is
+      // admitted undriven once, however many routes it lists.
       expect({
         undriven: result.undriven.map((entry) => String(entry.name)),
         gaps: result.gaps,
         lints: result.lints,
-        cases: result.functions.flatMap((fn) => fn.cases),
-      }).toStrictEqual({ undriven: ['*module*'], gaps: [], lints: [], cases: [] });
+        arms: result.functions.flatMap((fn) => fn.cases).map((testCase) => testCase.arms),
+        driven: result.functions.flatMap((fn) => fn.cases).map((testCase) => testCase.driven),
+      }).toStrictEqual({
+        undriven: ['*module*'],
+        gaps: [],
+        lints: [],
+        arms: [[{ branchCoverageId: '*module*/if:id:flag', arm: 'then' }], [{ branchCoverageId: '*module*/if:id:flag', arm: 'else' }]],
+        driven: [false, false],
+      });
     });
   });
 
@@ -773,12 +797,16 @@ describe('analyzeFileBroker', () => {
               {
                 arrange: [{ kind: 'param', param: 'value', value: 6 }],
                 reachesPath: ['*module*/pick/exit@top'],
-                salient: true,
+                arms: [{ branchCoverageId: '*module*/pick/ternary:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'then' }],
+                driven: true,
+                fewestRuns: true,
               },
               {
                 arrange: [{ kind: 'param', param: 'value', value: 5 }],
                 reachesPath: ['*module*/pick/exit@top'],
-                salient: false,
+                arms: [{ branchCoverageId: '*module*/pick/ternary:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' }],
+                driven: true,
+                fewestRuns: true,
               },
             ],
           },
@@ -809,7 +837,15 @@ describe('analyzeFileBroker', () => {
           {
             name: 'constructor',
             access: { kind: 'constructor', className: 'Labeller' },
-            cases: [{ arrange: [], reachesPath: ['*module*/Labeller/constructor/exit@top'], salient: true }],
+            cases: [
+              {
+                arrange: [],
+                reachesPath: ['*module*/Labeller/constructor/exit@top'],
+                arms: [{ branchCoverageId: '*module*/Labeller/constructor/ternary:BinaryExpression,id:value,GreaterThanToken,num:5', arm: 'else' }],
+                driven: true,
+                fewestRuns: true,
+              },
+            ],
           },
         ],
         darkSpots: [],

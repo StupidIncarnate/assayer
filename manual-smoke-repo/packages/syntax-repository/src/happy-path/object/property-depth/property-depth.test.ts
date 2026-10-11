@@ -15,7 +15,7 @@ describe('object / property-depth — `config.db.retry`, a property path more th
   // The per-file walk reads `config.db.retry` past BOTH property accesses and records the full path on
   // the leaf — `operandPropertyPath: ['db', 'retry']` — the same fact a one-segment `config.mode` read
   // carries, just longer. Arranging an object param's property, at any depth, is a consume-time step, so
-  // the per-file blob still derives no case and the branch is still admitted undriven here.
+  // the per-file blob derives both routes as undriven cases and the branch is still admitted undriven here.
   it('VALID: {if (config.db.retry === 3)} => the leaf records the full two-segment path and the root type-ref', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'property-depth.ts') }), relPath });
 
@@ -57,6 +57,7 @@ describe('object / property-depth — `config.db.retry`, a property path more th
               operandType: { kind: 'number' },
               predicate: { kind: 'eq', literal: 3 },
             },
+            guardPath: [],
             startLine: 6,
             endLine: 8,
           },
@@ -89,7 +90,25 @@ describe('object / property-depth — `config.db.retry`, a property path more th
             line: 10,
           },
         ],
-        cases: [],
+        // Both routes through the object-member branch are declared. The per-file analysis cannot steer a property
+        // of an object param, so neither is driven and neither runs: the arranged object is a fill, not a value
+        // chosen to take its arm.
+        cases: [
+          {
+            reachesPath: ['*module*/checkDeep/return@if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3#then'],
+            arrange: [{ kind: 'object', param: 'config', value: { db: { retry: 7 } } }],
+            arms: [{ branchCoverageId: '*module*/checkDeep/if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3', arm: 'then' }],
+            driven: false,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: ['*module*/checkDeep/return@if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3#else'],
+            arrange: [{ kind: 'object', param: 'config', value: { db: { retry: 7 } } }],
+            arms: [{ branchCoverageId: '*module*/checkDeep/if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3', arm: 'else' }],
+            driven: false,
+            fewestRuns: true,
+          },
+        ],
       },
     ]);
   });
@@ -116,14 +135,14 @@ describe('object / property-depth — `config.db.retry`, a property path more th
             '*module*/checkDeep/return@if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3#then',
           ],
           arrange: [{ kind: 'object', param: 'config', value: { db: { retry: 3 } } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/checkDeep/if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: [
             '*module*/checkDeep/return@if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3#else',
           ],
           arrange: [{ kind: 'object', param: 'config', value: { db: { retry: 7 } } }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/checkDeep/if:BinaryExpression,PropertyAccessExpression,PropertyAccessExpression,id:config,id:db,id:retry,EqualsEqualsEqualsToken,num:3', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ],
       undriven: [],

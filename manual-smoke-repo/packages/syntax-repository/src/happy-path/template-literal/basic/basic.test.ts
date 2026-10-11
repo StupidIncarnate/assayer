@@ -40,7 +40,7 @@ describe('template-literal / basic — a branchless function over a template lit
           {
             reachesPath: ['*module*/idLength/return@top'],
             arrange: [{ kind: 'param', param: 't', value: 'id-abc123' }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

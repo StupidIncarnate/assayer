@@ -1,5 +1,6 @@
 import { GuardStepStub } from '@assayer/shared/contracts/guard-step/guard-step.stub';
 import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
+import { ValueExprStub } from '@assayer/shared/contracts/value-expr/value-expr.stub';
 
 import { WalkContextStub } from '../../contracts/walk-context/walk-context.stub';
 import { walkContextTransformer } from './walk-context-transformer';
@@ -95,6 +96,47 @@ describe('walkContextTransformer', () => {
       walkContextTransformer({ context, guardSteps: [guardStep] });
 
       expect(context.guardPath).toStrictEqual([]);
+    });
+  });
+
+  describe('the tracked bindings', () => {
+    it('VALID: {an arm and no new bindings} => the arm starts from the bindings the walk carried', () => {
+      const context = WalkContextStub({ bindings: { '12': ValueExprStub({ kind: 'param', name: 'n' }) } });
+
+      const result = walkContextTransformer({ context, guardSteps: [GuardStepStub()] });
+
+      expect(result.bindings).toStrictEqual({ '12': ValueExprStub({ kind: 'param', name: 'n' }) });
+    });
+
+    it('VALID: {new bindings} => replace the carried ones for the following statements', () => {
+      const context = WalkContextStub({ bindings: { '12': ValueExprStub({ kind: 'param', name: 'n' }) } });
+
+      const result = walkContextTransformer({
+        context,
+        bindings: { '12': ValueExprStub({ kind: 'lit', value: 'b' }) },
+      });
+
+      expect(result.bindings).toStrictEqual({ '12': ValueExprStub({ kind: 'lit', value: 'b' }) });
+    });
+
+    it('VALID: {entering a scope} => starts again with none, even when bindings are passed', () => {
+      const context = WalkContextStub({ bindings: { '12': ValueExprStub({ kind: 'param', name: 'n' }) } });
+
+      const result = walkContextTransformer({
+        context,
+        scopeSegment: 'inner',
+        bindings: { '12': ValueExprStub({ kind: 'lit', value: 'b' }) },
+      });
+
+      expect(result).toStrictEqual(WalkContextStub({ scopePath: [...context.scopePath, 'inner'], guardPath: [], tail: true }));
+    });
+
+    it('EMPTY: {empty bindings} => the key is omitted, so the context equals one that never had it', () => {
+      const context = WalkContextStub({ bindings: { '12': ValueExprStub({ kind: 'param', name: 'n' }) } });
+
+      const result = walkContextTransformer({ context, bindings: {} });
+
+      expect(result).toStrictEqual(WalkContextStub());
     });
   });
 });

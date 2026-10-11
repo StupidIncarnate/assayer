@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { conditionTreeReadoutContract } from './condition-tree-readout-contract';
 import type { ConditionTreeReadout } from './condition-tree-readout-contract';

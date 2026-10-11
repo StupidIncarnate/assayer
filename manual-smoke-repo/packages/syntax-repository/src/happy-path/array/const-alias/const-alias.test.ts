@@ -11,8 +11,8 @@ describe('array / const-alias — a branchless function aliasing its array param
   // `const aliased = items` binds the array param to a local; `aliased.length` reads it back. The alias
   // is pure passthrough — `aliased` IS `items` — so the function still DRIVES the array param, and the
   // param fans out over CARDINALITY: one branchless exit, three cases arranging `items` as empty / one /
-  // many. Emit order is `[]`, `[7]`, `[7,7]`, so the salient representative is the empty `[]` and the
-  // single + two-element twins are grayed (`salient:false`). The values are INPUTS (P4); each case
+  // many. Emit order is `[]`, `[7]`, `[7,7]`, so the fewest-runs representative is the empty `[]` and the
+  // single + two-element twins are every-route-only (`fewestRuns:false`). The values are INPUTS (P4); each case
   // asserts only that the flow REACHES the same single exit.
   it('VALID: {export function count(items: number[]): number { const aliased = items; return aliased.length }} => array-of-number param, one exit, three cardinality cases', () => {
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'const-alias.ts') }) });
@@ -33,17 +33,17 @@ describe('array / const-alias — a branchless function aliasing its array param
           {
             reachesPath: ['*module*/count/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [] }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/count/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/count/return@top'],
             arrange: [{ kind: 'array', param: 'items', value: [7, 8] }],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

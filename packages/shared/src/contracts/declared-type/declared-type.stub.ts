@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { declaredTypeContract } from './declared-type-contract';
 import type { DeclaredType } from './declared-type-contract';

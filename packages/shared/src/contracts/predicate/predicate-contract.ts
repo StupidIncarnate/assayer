@@ -9,6 +9,11 @@
  *   intersect. Every comparison operator exists on both axes, so the zero case is nothing special —
  *   `s.length === 0` is `length-eq` carrying 0, exactly as `s.length === 3` carries 3.
  *
+
+ *   `includes` is a substring test (`data.includes('on')`): the operand is a string and the literal is
+ *   the text it must contain. It narrows a domain with a required substring on the satisfying side and a
+ *   forbidden one on the violating side.
+ *
  *   `non-nullish` is the nullish-coalescing operand's test: `a ?? b` returns `a` when it is neither
  *   null nor undefined, and falls through to `b` otherwise. It carries no literal — it partitions the
  *   operand's declared type into its non-null values (satisfying) and null (violating).
@@ -52,6 +57,7 @@ export const predicateContract = z.object({
       'lte',
       'truthy',
       'falsy',
+      'includes',
       'non-nullish',
       'undefined-eq',
       'undefined-neq',

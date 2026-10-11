@@ -40,6 +40,13 @@ const ROUTE_CONTEXT = WalkContextStub({
   exported: true,
 });
 
+const BOOLEAN_NULLISH_CONTEXT = WalkContextStub({
+  scopePath: ['pick'],
+  guardPath: [],
+  params: [{ name: 'value', type: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'boolean' }] } }],
+  exported: true,
+});
+
 const NULLISH_CONTEXT = WalkContextStub({
   scopePath: ['pick'],
   guardPath: [],
@@ -417,7 +424,7 @@ describe('readConditionTreeLayerTransformer', () => {
   });
 
   describe('a `??` read as a condition', () => {
-    it('VALID: {value ?? 0, a falsy literal fallback} => the truthiness of value alone, its probe on value', () => {
+    it('VALID: {value ?? 0, a falsy literal fallback} => value non-nullish and value truthy, its probe on value', () => {
       readConditionTreeLayerTransformerProxy();
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: CompilerOptionsStub() });
       const sourceFile = project.createSourceFile('src/f.ts', 'declare const value: number | undefined;\nif (value ?? 0) {}\n');
@@ -428,11 +435,21 @@ describe('readConditionTreeLayerTransformer', () => {
 
       expect(result).toStrictEqual({
         condition: {
-          kind: 'leaf',
-          id: 'B#leaf.0',
-          operandParamName: 'value',
-          operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
-          predicate: { kind: 'truthy' },
+          kind: 'and',
+          left: {
+            kind: 'leaf',
+            id: 'B#leaf.1.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+            predicate: { kind: 'non-nullish' },
+          },
+          right: {
+            kind: 'leaf',
+            id: 'B#leaf.0',
+            operandParamName: 'value',
+            operandType: { kind: 'union', members: [{ kind: 'unknown', text: 'undefined' }, { kind: 'number' }] },
+            predicate: { kind: 'truthy' },
+          },
         },
         sites: [{ id: 'B#leaf.0', kind: 'cond', start: left.getStart(), end: left.getEnd() }],
       });
@@ -553,7 +570,7 @@ describe('readConditionTreeLayerTransformer', () => {
       const condition = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.IfStatement).getExpression();
       const left = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.BinaryExpression).getLeft();
 
-      const result = readConditionTreeLayerTransformer({ condition, context: NULLISH_CONTEXT, branchCoverageId: BRANCH, path: [] });
+      const result = readConditionTreeLayerTransformer({ condition, context: BOOLEAN_NULLISH_CONTEXT, branchCoverageId: BRANCH, path: [] });
 
       expect(result).toStrictEqual({
         condition: {

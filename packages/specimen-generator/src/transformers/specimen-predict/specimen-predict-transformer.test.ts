@@ -334,7 +334,7 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
-    it('VALID: {leaf from process.argv, in an arrow called where it is written, arms return} => the arms reach different exits, so the if never runs', () => {
+    it('VALID: {leaf from process.argv, in an arrow called where it is written, arms return} => the arms reach different exits, the arrow still earns a case, so the else arm the process takes is driven and the admission is on the if line', () => {
       const source = [
         'export const result = (() => {',
         '    if (Number(process.argv[2]) > 5) {',
@@ -350,16 +350,17 @@ describe('specimenPredictTransformer', () => {
         arms: ['then', 'else'],
         slotArm: 'return',
         provenances: ['external', 'literal'],
+        liveArm: 'else',
       });
 
       expect(result).toStrictEqual({
         branches: [
           { kind: 'if', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 1 }],
+        undriven: [{ startLine: 2 }],
         darkSpots: [],
         gaps: [],
       });
@@ -397,7 +398,7 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
-    it('VALID: {argv if and argv leaf ternary, in an arrow called where it is written, arms return} => the arrow is admitted once as a whole', () => {
+    it('VALID: {argv if and argv leaf ternary, in an arrow called where it is written, arms return} => the arrow earns a case, so each admission is on its own line', () => {
       const source = [
         'export const result = ((): string => {',
         '    if (((process.argv[2] === undefined ? undefined : Number(process.argv[2])) ?? 0) > 5) {',
@@ -413,18 +414,19 @@ describe('specimenPredictTransformer', () => {
         arms: ['then', 'else'],
         slotArm: 'return',
         provenances: ['external', 'literal', 'literal'],
+        liveArm: 'else',
       });
 
       expect(result).toStrictEqual({
         branches: [
           { kind: 'if', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'if', arm: 'else', line: 2, driven: 'never' },
-          { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
+          { kind: 'if', arm: 'else', line: 2, driven: 'driven' },
+          { kind: 'ternary', arm: 'then', line: 2, driven: 'driven' },
           { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
         ],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 1 }],
+        undriven: [{ startLine: 2 }, { startLine: 2 }],
         darkSpots: [],
         gaps: [],
       });
@@ -730,7 +732,7 @@ describe('specimenPredictTransformer', () => {
       });
     });
 
-    it('VALID: {ternary returned from an arrow called where it is written, leaf from process.argv} => the arrow is admitted as a whole on its first line', () => {
+    it('VALID: {ternary returned from an arrow called where it is written, leaf from process.argv} => the arrow earns a case, so the admission is on the ternary line', () => {
       const source = [
         'export const label = (() => {',
         '    return Number(process.argv[2]) > 5 ? "then" : "else";',
@@ -743,16 +745,17 @@ describe('specimenPredictTransformer', () => {
         arms: ['then', 'else'],
         slotArm: 'return',
         provenances: ['external', 'literal'],
+        liveArm: 'else',
       });
 
       expect(result).toStrictEqual({
         branches: [
           { kind: 'ternary', arm: 'then', line: 2, driven: 'never' },
-          { kind: 'ternary', arm: 'else', line: 2, driven: 'never' },
+          { kind: 'ternary', arm: 'else', line: 2, driven: 'driven' },
         ],
         caseFailures: [],
         lints: [],
-        undriven: [{ startLine: 1 }],
+        undriven: [{ startLine: 2 }],
         darkSpots: [],
         gaps: [],
       });

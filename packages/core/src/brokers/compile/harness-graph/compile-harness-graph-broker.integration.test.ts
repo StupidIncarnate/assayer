@@ -216,7 +216,7 @@ describe('compileHarnessGraphBroker (integration)', () => {
               { kind: 'harness', param: 'log', key: 'inputs.audit.log' },
               { kind: 'harness', param: 'sink', key: 'inputs.audit.sink' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:size,GreaterThanToken,num:3', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: [ELSE],
@@ -225,7 +225,7 @@ describe('compileHarnessGraphBroker (integration)', () => {
               { kind: 'harness', param: 'log', key: 'inputs.audit.log' },
               { kind: 'harness', param: 'sink', key: 'inputs.audit.sink' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/audit/if:BinaryExpression,id:size,GreaterThanToken,num:3', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         secondGaps: [],

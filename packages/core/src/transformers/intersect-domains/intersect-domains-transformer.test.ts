@@ -152,4 +152,33 @@ describe('intersectDomainsTransformer', () => {
       expect(result).toStrictEqual(ValueDomainStub());
     });
   });
+
+  describe('the text axis', () => {
+    it('VALID: {required text on both sides} => every required text, once each', () => {
+      const result = intersectDomainsTransformer({
+        left: ValueDomainStub({ includes: ['on', 'No'] }),
+        right: ValueDomainStub({ includes: ['on', 'x'] }),
+      });
+
+      expect(result).toStrictEqual(ValueDomainStub({ includes: ['on', 'No', 'x'] }));
+    });
+
+    it('VALID: {forbidden text on both sides} => every forbidden text, once each', () => {
+      const result = intersectDomainsTransformer({
+        left: ValueDomainStub({ notIncludes: ['o'] }),
+        right: ValueDomainStub({ notIncludes: ['o', 'q'] }),
+      });
+
+      expect(result).toStrictEqual(ValueDomainStub({ notIncludes: ['o', 'q'] }));
+    });
+
+    it('VALID: {required text on one side and a bound on the other} => both survive together', () => {
+      const result = intersectDomainsTransformer({
+        left: ValueDomainStub({ includes: ['on'] }),
+        right: ValueDomainStub({ lengthMax: 5 }),
+      });
+
+      expect(result).toStrictEqual(ValueDomainStub({ includes: ['on'], lengthMax: 5 }));
+    });
+  });
 });

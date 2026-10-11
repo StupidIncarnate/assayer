@@ -31,8 +31,8 @@ describe('function / nested — a nested function funnelled into the caller that
         access: { kind: 'named' },
         branches: [],
         cases: [
-          { reachesPath: [INNER_THEN, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-          { reachesPath: [INNER_ELSE, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+          { reachesPath: [INNER_THEN, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 6 }], arms: [{ branchCoverageId: '*module*/outer/inner/if:BinaryExpression,id:n,GreaterThanToken,num:5', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: [INNER_ELSE, OUTER_RETURN], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [{ branchCoverageId: '*module*/outer/inner/if:BinaryExpression,id:n,GreaterThanToken,num:5', arm: 'else' }], driven: true, fewestRuns: true },
         ],
       },
     ]);

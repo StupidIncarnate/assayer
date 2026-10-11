@@ -9,13 +9,13 @@
  */
 import type { ReactElement } from '#gateway/npm/react';
 import { Badge, Card, Group, Text } from '#gateway/npm/mantine__core';
-import type { EnvStub } from '@assayer/shared/contracts';
+import type { StubView } from '@assayer/shared/contracts';
 
 import { stubRepositoryStatics } from '../../statics/stub-repository/stub-repository-statics';
 import { StubReadersLayerWidget } from './stub-readers-layer-widget';
 
 export interface StubEnvCardLayerWidgetProps {
-  stub: EnvStub;
+  stub: StubView['envStubs'][number];
 }
 
 export const StubEnvCardLayerWidget = ({ stub }: StubEnvCardLayerWidgetProps): ReactElement => (

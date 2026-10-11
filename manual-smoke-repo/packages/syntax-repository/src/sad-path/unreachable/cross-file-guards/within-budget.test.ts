@@ -12,16 +12,16 @@ describe('unreachable / within-budget — the second predicate function, whose t
   // Identical in shape to `exceeds-limit`, and correct on its own terms: nothing here is wrong until
   // `upload` calls it after already returning for everything over 50. That separation is the point of
   // the rung — the contradiction exists in no single file, so no single-file pass can find it. Its
-  // branchless `size > 100` splits into two salient cases just as `exceeds-limit` does.
-  it('VALID: {return size > 100} => one entry, one exit, two salient cases (101 satisfies, 100 violates)', () => {
+  // branchless `size > 100` splits into two fewest-runs cases just as `exceeds-limit` does.
+  it('VALID: {return size > 100} => one entry, one exit, two fewest-runs cases (101 satisfies, 100 violates)', () => {
     expect(analysis.functions).toStrictEqual([
       expect.objectContaining({
         entry: expect.objectContaining({ name: 'withinBudget', access: { kind: 'named' } }),
         branches: [],
         exits: [expect.objectContaining({ kind: 'return', guardPath: [], line: 2 })],
         cases: [
-          { reachesPath: ['*module*/withinBudget/return@top'], arrange: [{ kind: 'param', param: 'size', value: 101 }], salient: true },
-          { reachesPath: ['*module*/withinBudget/return@top'], arrange: [{ kind: 'param', param: 'size', value: 100 }], salient: true },
+          { reachesPath: ['*module*/withinBudget/return@top'], arrange: [{ kind: 'param', param: 'size', value: 101 }], arms: [{ branchCoverageId: '*module*/withinBudget/predicate#leaf', arm: 'return-true' }], driven: true, fewestRuns: true },
+          { reachesPath: ['*module*/withinBudget/return@top'], arrange: [{ kind: 'param', param: 'size', value: 100 }], arms: [{ branchCoverageId: '*module*/withinBudget/predicate#leaf', arm: 'return-false' }], driven: true, fewestRuns: true },
         ],
       }),
     ]);

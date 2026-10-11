@@ -41,6 +41,7 @@ describe('handleTernaryLayerTransformer', () => {
               operandType: { kind: 'number' },
               predicate: { kind: 'eq', literal: 7 },
             },
+            guardPath: [],
             startLine: 3,
             endLine: 3,
           },

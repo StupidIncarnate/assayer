@@ -18,6 +18,12 @@ const HIGH_EXIT = `*module*/bandReading/return@${HIGH}#then`;
 const LOW_EXIT = `*module*/bandReading/return@${HIGH}#else/${LOW}#then`;
 const MID_EXIT = `*module*/bandReading/return@${HIGH}#else/${LOW}#else`;
 const READINGS_EXIT = '*module*/bandReadings/return@top';
+const HIGH_BRANCH = `*module*/bandReading/${HIGH}`;
+const LOW_BRANCH = `*module*/bandReading/${LOW}`;
+// Whether the mapped function's body runs is an arm of the host: skipped over an empty array, run over any other.
+const BAND_ITERATES = '*module*/bandReading/iterates';
+const OTHER_ITERATES = '*module*/otherReading/iterates';
+const step = (branchCoverageId: string, arm: string): { branchCoverageId: string; arm: string } => ({ branchCoverageId, arm });
 
 // The invoice VERBATIM — product surface. The gap is filed under the HOST (the only entry the fold
 // leaves) while the refusal and the harness snippet both name the SIBLING that declares the parameter.
@@ -51,11 +57,35 @@ describe('composeCrossFileMapBroker', () => {
         {
           name: 'bandReadings',
           cases: [
-            { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], salient: true },
-            { reachesPath: [HIGH_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [80] }], salient: true },
-            { reachesPath: [LOW_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [19] }], salient: true },
-            { reachesPath: [MID_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [79] }], salient: true },
-            { reachesPath: [HIGH_EXIT, LOW_EXIT, READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [80, 19] }], salient: true },
+            { reachesPath: [READINGS_EXIT], arrange: [{ kind: 'array', param: 'items', value: [] }], arms: [step(BAND_ITERATES, 'skipped')], driven: true, fewestRuns: true },
+            {
+              reachesPath: [HIGH_EXIT, READINGS_EXIT],
+              arrange: [{ kind: 'array', param: 'items', value: [80] }],
+              arms: [step(BAND_ITERATES, 'runs'), step(HIGH_BRANCH, 'then')],
+              driven: true,
+              fewestRuns: false,
+            },
+            {
+              reachesPath: [LOW_EXIT, READINGS_EXIT],
+              arrange: [{ kind: 'array', param: 'items', value: [19] }],
+              arms: [step(BAND_ITERATES, 'runs'), step(HIGH_BRANCH, 'else'), step(LOW_BRANCH, 'then')],
+              driven: true,
+              fewestRuns: false,
+            },
+            {
+              reachesPath: [MID_EXIT, READINGS_EXIT],
+              arrange: [{ kind: 'array', param: 'items', value: [79] }],
+              arms: [step(BAND_ITERATES, 'runs'), step(HIGH_BRANCH, 'else'), step(LOW_BRANCH, 'else')],
+              driven: true,
+              fewestRuns: true,
+            },
+            {
+              reachesPath: [HIGH_EXIT, LOW_EXIT, READINGS_EXIT],
+              arrange: [{ kind: 'array', param: 'items', value: [80, 19] }],
+              arms: [step(BAND_ITERATES, 'runs'), step(HIGH_BRANCH, 'then'), step(HIGH_BRANCH, 'else'), step(LOW_BRANCH, 'then')],
+              driven: true,
+              fewestRuns: true,
+            },
           ],
         },
       ]);
@@ -216,7 +246,9 @@ describe('composeCrossFileMapBroker', () => {
                 { kind: 'array', param: 'items', value: [] },
                 { kind: 'array', param: 'others', value: [] },
               ],
-              salient: true,
+              arms: [step(BAND_ITERATES, 'skipped'), step(OTHER_ITERATES, 'skipped')],
+              driven: true,
+              fewestRuns: true,
             },
             {
               reachesPath: [OTHER_EXIT, READINGS_EXIT],
@@ -224,7 +256,9 @@ describe('composeCrossFileMapBroker', () => {
                 { kind: 'array', param: 'items', value: [] },
                 { kind: 'array', param: 'others', value: [7] },
               ],
-              salient: true,
+              arms: [step(BAND_ITERATES, 'skipped'), step(OTHER_ITERATES, 'runs')],
+              driven: true,
+              fewestRuns: false,
             },
             {
               reachesPath: [BAND_EXIT, READINGS_EXIT],
@@ -232,7 +266,9 @@ describe('composeCrossFileMapBroker', () => {
                 { kind: 'array', param: 'items', value: [7] },
                 { kind: 'array', param: 'others', value: [] },
               ],
-              salient: true,
+              arms: [step(BAND_ITERATES, 'runs'), step(OTHER_ITERATES, 'skipped')],
+              driven: true,
+              fewestRuns: false,
             },
             {
               reachesPath: [BAND_EXIT, OTHER_EXIT, READINGS_EXIT],
@@ -240,7 +276,9 @@ describe('composeCrossFileMapBroker', () => {
                 { kind: 'array', param: 'items', value: [7] },
                 { kind: 'array', param: 'others', value: [7] },
               ],
-              salient: true,
+              arms: [step(BAND_ITERATES, 'runs'), step(OTHER_ITERATES, 'runs')],
+              driven: true,
+              fewestRuns: true,
             },
           ],
         },

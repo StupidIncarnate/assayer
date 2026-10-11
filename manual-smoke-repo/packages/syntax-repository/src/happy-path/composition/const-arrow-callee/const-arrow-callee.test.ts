@@ -39,7 +39,7 @@ describe('composition / const-arrow-callee — a private declared as a CONST-BOU
             '*module*/report/return@top',
           ],
           arrange: [{ kind: 'param', param: 'n', value: 4 }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/classify/if:BinaryExpression,id:n,GreaterThanToken,num:3', arm: 'then' }], driven: true, fewestRuns: true,
         },
         {
           reachesPath: [
@@ -47,7 +47,7 @@ describe('composition / const-arrow-callee — a private declared as a CONST-BOU
             '*module*/report/return@top',
           ],
           arrange: [{ kind: 'param', param: 'n', value: 3 }],
-          salient: true,
+          arms: [{ branchCoverageId: '*module*/classify/if:BinaryExpression,id:n,GreaterThanToken,num:3', arm: 'else' }], driven: true, fewestRuns: true,
         },
       ],
     });

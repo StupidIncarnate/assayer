@@ -45,6 +45,7 @@ describe('optional-chain / basic — a single-level `a?.b` in a block return', (
                 operandType: NULLABLE_STRING,
                 predicate: { kind: 'non-nullish' },
               },
+              guardPath: [],
               startLine: 2,
               endLine: 2,
             },

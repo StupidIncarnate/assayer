@@ -33,6 +33,7 @@ describe('if-else / in-function — if/else inside an exported function', () => 
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 2,
               endLine: 4,
             },

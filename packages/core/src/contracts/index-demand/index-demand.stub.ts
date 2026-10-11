@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { indexDemandContract } from './index-demand-contract';
 import type { IndexDemand } from './index-demand-contract';

@@ -98,6 +98,7 @@ describe('composePredicatesTransformer', () => {
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 50 },
               },
+              guardPath: [],
               startLine: 6,
               endLine: 8,
             },

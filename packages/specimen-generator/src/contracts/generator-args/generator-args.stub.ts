@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { generatorArgsContract } from './generator-args-contract';
 import type { GeneratorArgs } from './generator-args-contract';

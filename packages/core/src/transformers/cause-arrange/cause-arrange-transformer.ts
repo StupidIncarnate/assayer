@@ -81,6 +81,10 @@
  *   from. A violation THROWS — Assayer contradicting a type it read itself, never the reader's debt, so
  *   there is no admission channel for it.
  *
+ *   `pinParams` names the parameters the caller wants decided-ness for: the result's `pinned` lists those whose
+ *   domain, after every guard, is an enumeration of exactly one member, so the value is decided rather than
+ *   chosen. A guard over a function of parameters is settled on such values.
+ *
  * USAGE:
  * causeArrangeTransformer({ requirements: cause.requirements, params, envDrivable: false });
  * // Returns { unreachable: false, unfillable: [],
@@ -105,7 +109,7 @@ import { arrayArrangeTransformer } from '../array-arrange/array-arrange-transfor
 import { domainValuesTransformer } from '../domain-values/domain-values-transformer';
 import { envSolveTransformer } from '../env-solve/env-solve-transformer';
 import { envStepsDomainTransformer } from '../env-steps-domain/env-steps-domain-transformer';
-import { evaluateConstPredicateLayerTransformer } from './evaluate-const-predicate-layer-transformer';
+import { evaluateConstPredicateTransformer } from '../evaluate-const-predicate/evaluate-const-predicate-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { harnessKeyPathTransformer } from '../harness-key-path/harness-key-path-transformer';
 import { intersectDomainsTransformer } from '../intersect-domains/intersect-domains-transformer';
@@ -125,12 +129,14 @@ export const causeArrangeTransformer = ({
   envDrivable,
   harness,
   indexDemands,
+  pinParams,
 }: {
   requirements: ConditionCause['requirements'];
   params: ParamDescriptor[];
   envDrivable: boolean;
   harness?: { entry: string; params: readonly string[] } | undefined;
   indexDemands?: IndexDemand[];
+  pinParams?: readonly string[];
 }): CauseArrange => {
   // A WELDED operand is a single-value domain to start from — `{members:[7]}` for a scalar const,
   // `{lengthMin:3, lengthMax:3}` for an array const's length. The guard arm values below intersect onto
@@ -171,7 +177,7 @@ export const causeArrangeTransformer = ({
     }
 
     if (requirement.leaf.operandConstValue !== undefined) {
-      const satisfied = evaluateConstPredicateLayerTransformer({
+      const satisfied = evaluateConstPredicateTransformer({
         value: requirement.leaf.operandConstValue,
         predicateKind: requirement.leaf.predicate.kind,
         ...(requirement.leaf.predicate.literal === undefined ? {} : { literal: requirement.leaf.predicate.literal }),
@@ -511,5 +517,14 @@ export const causeArrangeTransformer = ({
     }),
   );
 
-  return causeArrangeContract.parse({ unreachable: false, unfillable: [], arrangements });
+  // A named parameter is PINNED when its domain is an enumeration of one member, so every arrangement holds
+  // that value for it. Only asked of the parameters the caller names (`pinParams`): it is how a guard over a
+  // function of parameters is settled on values the other guards decided.
+  const pinned = [...domainWithIndexDemands.entries()].flatMap(([operand, domain]) =>
+    (pinParams ?? []).includes(operand) && domain.members !== undefined && domainValuesTransformer({ domain }).length === 1
+      ? [operand]
+      : [],
+  );
+
+  return causeArrangeContract.parse({ unreachable: false, unfillable: [], arrangements, ...(pinned.length === 0 ? {} : { pinned }) });
 };

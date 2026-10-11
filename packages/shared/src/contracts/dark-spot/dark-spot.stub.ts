@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { darkSpotContract } from './dark-spot-contract';
 import type { DarkSpot } from './dark-spot-contract';

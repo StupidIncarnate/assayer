@@ -47,7 +47,7 @@ describe('object / intersection — a branchless function over an intersection o
           {
             reachesPath: ['*module*/combine/return@top'],
             arrange: [{ kind: 'object', param: 'v', value: { a: 'abc123', b: 7 } }],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

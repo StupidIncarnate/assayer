@@ -40,6 +40,27 @@ describe('caseGutterMarkersTransformer', () => {
     });
   });
 
+  describe('cases that are not run', () => {
+    it('VALID: {an undriven case and a case outside the fewest-runs set} => neither adds a count', () => {
+      const functionAnalysis = FunctionAnalysisStub({
+        branches: [BranchNodeStub()],
+        exits: [ExitNodeStub()],
+        cases: [
+          DerivedTestCaseStub(),
+          DerivedTestCaseStub({ arrange: [{ kind: 'param', param: 'name', value: 'a' }], driven: false }),
+          DerivedTestCaseStub({ arrange: [{ kind: 'param', param: 'name', value: 'b' }], fewestRuns: false }),
+        ],
+      });
+
+      const result = caseGutterMarkersTransformer({ functions: [functionAnalysis] });
+
+      expect([...result].sort((first, second) => first.line - second.line)).toStrictEqual([
+        { line: 2, count: 1 },
+        { line: 3, count: 1 },
+      ]);
+    });
+  });
+
   describe('no analyzed functions', () => {
     it('EMPTY: {functions: []} => no markers', () => {
       const result = caseGutterMarkersTransformer({ functions: [] });

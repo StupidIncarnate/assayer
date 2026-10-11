@@ -39,7 +39,7 @@ export const DesktopMainBootResponder = async ({
     savedRunChannel: desktopBridgeStatics.channels.savedRun,
     savedConsoleChannel: desktopBridgeStatics.channels.savedConsole,
     runOutputChannel: desktopBridgeStatics.channels.runOutput,
-    resolveStatus: async () => statusResolveBroker({ repoPath }),
+    resolveStatus: () => statusResolveBroker({ repoPath }),
     resolveCompiledTree: async () => compiledTreeResolveBroker({ repoPath }),
     resolveCompiledFile: async ({ relPath }) =>
       compiledFileResolveBroker({

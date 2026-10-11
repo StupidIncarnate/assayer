@@ -33,28 +33,28 @@ describe('array / length-at — array parameter length flowing into .at() on an 
             arrange: [
               { kind: 'array', param: 'someArr', value: [] },
             ],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/pickByLength/return@top'],
             arrange: [
               { kind: 'array', param: 'someArr', value: [7] },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/pickByLength/return@top'],
             arrange: [
               { kind: 'array', param: 'someArr', value: [7, 8] },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
           {
             reachesPath: ['*module*/pickByLength/return@top'],
             arrange: [
               { kind: 'array', param: 'someArr', value: [7, 8, 9] },
             ],
-            salient: false,
+            arms: [], driven: true, fewestRuns: false,
           },
         ],
       },

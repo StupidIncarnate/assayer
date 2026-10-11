@@ -1,3 +1,4 @@
+import { ValueExprStub } from '@assayer/shared/contracts/value-expr/value-expr.stub';
 import { ParamDescriptorStub } from '@assayer/shared/contracts/param-descriptor/param-descriptor.stub';
 import { BranchNodeStub } from '@assayer/shared/contracts/branch-node/branch-node.stub';
 import { ConditionNodeStub } from '@assayer/shared/contracts/condition-node/condition-node.stub';
@@ -69,6 +70,10 @@ const NOT_BRANCH = BranchNodeStub({
   },
 });
 
+// The arms a route takes, in the order it meets the branches: one (branch, arm) step per branch.
+const taking = (...steps: [string, string][]): { branchCoverageId: string; arm: string }[] =>
+  steps.map(([branchCoverageId, arm]) => ({ branchCoverageId, arm }));
+
 describe('deriveCasesTransformer', () => {
   describe('guarded exits', () => {
     it('VALID: {if-then exit} => arranges the empty string reaching the then exit', () => {
@@ -80,7 +85,13 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ['formatGreeting/return@if-then'], arrange: [{ kind: 'param', param: 'name', value: '' }], salient: true },
+        {
+          reachesPath: ['formatGreeting/return@if-then'],
+          arrange: [{ kind: 'param', param: 'name', value: '' }],
+          arms: taking(['formatGreeting/if:name.length===0', 'then']),
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
 
@@ -99,7 +110,13 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ['formatGreeting/return@if-else'], arrange: [{ kind: 'param', param: 'name', value: 'a' }], salient: true },
+        {
+          reachesPath: ['formatGreeting/return@if-else'],
+          arrange: [{ kind: 'param', param: 'name', value: 'a' }],
+          arms: taking(['formatGreeting/if:name.length===0', 'else']),
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
   });
@@ -125,7 +142,9 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'score', value: 6 },
             { kind: 'param', param: 'bonus', value: 2 },
           ],
-          salient: true,
+          arms: taking(['grade/if:and', 'then']),
+          driven: true,
+          fewestRuns: true,
         },
       ]);
     });
@@ -133,8 +152,8 @@ describe('deriveCasesTransformer', () => {
     // The bug this whole decomposition exists for: read as ONE opaque operand, both arms derived the
     // SAME arrange values, so the then-case and the else-case were identical and one of them claimed
     // an exit its own values cannot reach. Two DISTINCT causes, two distinct arrangements — but both
-    // reach the same else exit and return the same value, so the first is salient and the second grayed.
-    it('VALID: {a && b, else} => TWO cases (second grayed): a failed (b never ran), or a held and b failed', () => {
+    // reach the same else exit and return the same value, so the first is in the fewest-runs set and the second is not.
+    it('VALID: {a && b, else} => TWO cases: a failed (b never ran), or a held and b failed', () => {
       const result = deriveCasesTransformer({
         params: NUMBER_PARAMS,
         branches: [AND_BRANCH],
@@ -156,7 +175,9 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'score', value: 5 },
             { kind: 'param', param: 'bonus', value: 7 },
           ],
-          salient: true,
+          arms: taking(['grade/if:and', 'else']),
+          driven: true,
+          fewestRuns: true,
         },
         {
           reachesPath: ['grade/return@else'],
@@ -164,12 +185,14 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'score', value: 6 },
             { kind: 'param', param: 'bonus', value: 1 },
           ],
-          salient: false,
+          arms: taking(['grade/if:and', 'else']),
+          driven: true,
+          fewestRuns: false,
         },
       ]);
     });
 
-    it('VALID: {a || b, then} => TWO cases (second grayed), since a disjunction holds two ways', () => {
+    it('VALID: {a || b, then} => TWO cases, since a disjunction holds two ways', () => {
       const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({ name: 'temp', type: { kind: 'number' } }),
@@ -192,7 +215,9 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'temp', value: 51 },
             { kind: 'param', param: 'smoke', value: false },
           ],
-          salient: true,
+          arms: taking(['alarm/if:or', 'then']),
+          driven: true,
+          fewestRuns: true,
         },
         {
           reachesPath: ['alarm/return@then'],
@@ -200,7 +225,9 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'temp', value: 50 },
             { kind: 'param', param: 'smoke', value: true },
           ],
-          salient: false,
+          arms: taking(['alarm/if:or', 'then']),
+          driven: true,
+          fewestRuns: false,
         },
       ]);
     });
@@ -228,7 +255,9 @@ describe('deriveCasesTransformer', () => {
             { kind: 'param', param: 'temp', value: 50 },
             { kind: 'param', param: 'smoke', value: false },
           ],
-          salient: true,
+          arms: taking(['alarm/if:or', 'else']),
+          driven: true,
+          fewestRuns: true,
         },
       ]);
     });
@@ -253,14 +282,26 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ['gate/return@then'], arrange: [{ kind: 'param', param: 'ready', value: false }], salient: true },
-        { reachesPath: ['gate/return@else'], arrange: [{ kind: 'param', param: 'ready', value: true }], salient: true },
+        {
+          reachesPath: ['gate/return@then'],
+          arrange: [{ kind: 'param', param: 'ready', value: false }],
+          arms: taking(['gate/if:not', 'then']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['gate/return@else'],
+          arrange: [{ kind: 'param', param: 'ready', value: true }],
+          arms: taking(['gate/if:not', 'else']),
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
   });
 
   describe('literal-union operand', () => {
-    it('VALID: {eq on a 3-member union} => then binds the member, else fans out one case per other member (second grayed)', () => {
+    it('VALID: {eq on a 3-member union} => then binds the member, else fans out one case per other member (second in the every-route set only)', () => {
       const unionType = TypeDescriptorStub({
         kind: 'union',
         members: [
@@ -297,9 +338,27 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ['classify/return@if-then'], arrange: [{ kind: 'param', param: 'status', value: 'a' }], salient: true },
-        { reachesPath: ['classify/return@if-else'], arrange: [{ kind: 'param', param: 'status', value: 'b' }], salient: true },
-        { reachesPath: ['classify/return@if-else'], arrange: [{ kind: 'param', param: 'status', value: 'c' }], salient: false },
+        {
+          reachesPath: ['classify/return@if-then'],
+          arrange: [{ kind: 'param', param: 'status', value: 'a' }],
+          arms: taking(["classify/if:status === 'a'", 'then']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['classify/return@if-else'],
+          arrange: [{ kind: 'param', param: 'status', value: 'b' }],
+          arms: taking(["classify/if:status === 'a'", 'else']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['classify/return@if-else'],
+          arrange: [{ kind: 'param', param: 'status', value: 'c' }],
+          arms: taking(["classify/if:status === 'a'", 'else']),
+          driven: true,
+          fewestRuns: false,
+        },
       ]);
     });
   });
@@ -325,9 +384,11 @@ describe('deriveCasesTransformer', () => {
           predicate: { kind: 'eq', literal: 'get' },
         },
       });
+      // A case is compared only when every earlier case missed, which is how the walk records it.
       const postBranch = BranchNodeStub({
         coverageId: "routeLabel/switch:method === 'post'",
         kind: 'switch',
+        guardPath: [{ branchCoverageId: "routeLabel/switch:method === 'get'", arm: 'else' }],
         condition: {
           kind: 'leaf',
           id: "routeLabel/switch:method === 'post'#leaf",
@@ -364,9 +425,27 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ["routeLabel/return@switch:'get'"], arrange: [{ kind: 'param', param: 'method', value: 'get' }], salient: true },
-        { reachesPath: ["routeLabel/return@switch:'post'"], arrange: [{ kind: 'param', param: 'method', value: 'post' }], salient: true },
-        { reachesPath: ['routeLabel/return@switch:default'], arrange: [{ kind: 'param', param: 'method', value: 'delete' }], salient: true },
+        {
+          reachesPath: ["routeLabel/return@switch:'get'"],
+          arrange: [{ kind: 'param', param: 'method', value: 'get' }],
+          arms: taking(["routeLabel/switch:method === 'get'", 'then']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ["routeLabel/return@switch:'post'"],
+          arrange: [{ kind: 'param', param: 'method', value: 'post' }],
+          arms: taking(["routeLabel/switch:method === 'get'", 'else'], ["routeLabel/switch:method === 'post'", 'then']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['routeLabel/return@switch:default'],
+          arrange: [{ kind: 'param', param: 'method', value: 'delete' }],
+          arms: taking(["routeLabel/switch:method === 'get'", 'else'], ["routeLabel/switch:method === 'post'", 'else']),
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
   });
@@ -380,7 +459,7 @@ describe('deriveCasesTransformer', () => {
         envDrivable: false,
       });
 
-      expect(result.cases).toStrictEqual([{ reachesPath: ['run/exit@implicit'], arrange: [], salient: true }]);
+      expect(result.cases).toStrictEqual([{ reachesPath: ['run/exit@implicit'], arrange: [], arms: [], driven: true, fewestRuns: true }]);
     });
   });
 
@@ -486,7 +565,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['gauge/return@else'], arrange: [], salient: true }],
+        cases: [{ reachesPath: ['gauge/return@else'], arrange: [], arms: taking(['gauge/if:level', 'else']), driven: true, fewestRuns: true }],
         unreachableExits: [{ line: 4, guardLines: [3], welded: { line: 3, operand: 'level', value: 7 } }],
         undrivenBranches: [],
         unfillable: [],
@@ -520,7 +599,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['label/return@else'], arrange: [], salient: true }],
+        cases: [{ reachesPath: ['label/return@else'], arrange: [], arms: taking(['label/if:s', 'else']), driven: true, fewestRuns: true }],
         unreachableExits: [{ line: 4, guardLines: [3], welded: { line: 3, operand: 's', length: 5 } }],
         undrivenBranches: [],
         unfillable: [],
@@ -560,7 +639,7 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['run/exit@complete'], arrange: [], salient: true }],
+        cases: [{ reachesPath: ['run/exit@complete'], arrange: [], arms: taking(['run/if:value', 'else']), driven: true, fewestRuns: true }],
         unreachableExits: [{ line: 4, armEndLine: 5, guardLines: [3], welded: { line: 3, operand: 'value', value: 3 } }],
         undrivenBranches: [],
         unfillable: [],
@@ -645,7 +724,9 @@ describe('deriveCasesTransformer', () => {
       ]);
     });
 
-    it('EMPTY: {a dead-looking arm behind an un-steerable branch} => no report, since nothing derives behind that branch', () => {
+    // The welded `3` rules the arm out whichever way the opaque branch goes, so no route reaches it. The
+    // routes through the opaque branch are declared (undriven), and none of them enters the dead arm.
+    it('VALID: {a dead arm behind an un-steerable branch} => still reported, since no route through either arm of the opaque branch reaches it', () => {
       const opaque = BranchNodeStub({
         coverageId: 'run/if:opaque',
         startLine: 2,
@@ -669,7 +750,9 @@ describe('deriveCasesTransformer', () => {
         ],
       });
 
-      expect(result.unreachableExits).toStrictEqual([]);
+      expect(result.unreachableExits).toStrictEqual([
+        { line: 4, armEndLine: 4, guardLines: [2, 3], welded: { line: 3, operand: 'value', value: 3 } },
+      ]);
     });
 
     it('EDGE: {an arm guarded by a branch the entry does not carry} => no report, since no bucket enters it', () => {
@@ -711,8 +794,20 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['route/return@then'], arrange: [{ kind: 'param', param: 'ok', value: true }], salient: true },
-          { reachesPath: ['route/return@else'], arrange: [{ kind: 'param', param: 'ok', value: false }], salient: true },
+          {
+            reachesPath: ['route/return@then'],
+            arrange: [{ kind: 'param', param: 'ok', value: true }],
+            arms: taking(['route/if:ok', 'then']),
+            driven: true,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: ['route/return@else'],
+            arrange: [{ kind: 'param', param: 'ok', value: false }],
+            arms: taking(['route/if:ok', 'else']),
+            driven: true,
+            fewestRuns: true,
+          },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -723,8 +818,9 @@ describe('deriveCasesTransformer', () => {
 
   describe('un-steerable branches — nothing can arrange which arm runs', () => {
     // `if (g())`: the leaf is a lone `truthy` over a call, with no param and no env operand. Both arms
-    // would arrange the SAME (empty) inputs, so neither exit can be told from the other — the bug this
-    // gate closes. The exits derive NOTHING and the branch is admitted undriven, its line named.
+    // would arrange the SAME (empty) inputs, so neither exit can be told from the other. Both routes are
+    // still declared, as UNDRIVEN cases: listed, never run, and neither is given a stand-in arm. The branch
+    // is admitted undriven, its line named.
     const OPAQUE_CALL_BRANCH = BranchNodeStub({
       coverageId: 'opaqueIf/if:call',
       startLine: 3,
@@ -736,7 +832,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {an opaque call guard} => fallback arm case, then arm dropped, and the branch admitted undriven with no operand', () => {
+    it('VALID: {an opaque call guard} => one undriven case per arm, and the branch admitted undriven with no operand', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [OPAQUE_CALL_BRANCH],
@@ -748,7 +844,10 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['opaqueIf/return@else'], arrange: [], salient: true }],
+        cases: [
+          { reachesPath: ['opaqueIf/return@then'], arrange: [], arms: taking(['opaqueIf/if:call', 'then']), driven: false, fewestRuns: true },
+          { reachesPath: ['opaqueIf/return@else'], arrange: [], arms: taking(['opaqueIf/if:call', 'else']), driven: false, fewestRuns: true },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
         unfillable: [],
@@ -756,7 +855,7 @@ describe('deriveCasesTransformer', () => {
     });
 
     // `if (!isReady())`: the call's value is not known when a case runs, so nothing proves which arm the
-    // code takes. The fallback stays `else`, the arm a case reaches when the call returns a truthy value.
+    // code takes. Both routes are declared undriven.
     const NOT_OPAQUE_CALL_BRANCH = BranchNodeStub({
       coverageId: 'opaqueIf/if:not-call',
       startLine: 3,
@@ -771,7 +870,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {!opaqueCall()} => else arm case derived as fallback, since the call has no known value', () => {
+    it('VALID: {!opaqueCall()} => one undriven case per arm, since the call has no known value', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [NOT_OPAQUE_CALL_BRANCH],
@@ -783,7 +882,10 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['opaqueIf/return@else'], arrange: [], salient: true }],
+        cases: [
+          { reachesPath: ['opaqueIf/return@then'], arrange: [], arms: taking(['opaqueIf/if:not-call', 'then']), driven: false, fewestRuns: true },
+          { reachesPath: ['opaqueIf/return@else'], arrange: [], arms: taking(['opaqueIf/if:not-call', 'else']), driven: false, fewestRuns: true },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
         unfillable: [],
@@ -791,7 +893,8 @@ describe('deriveCasesTransformer', () => {
     });
 
     // `if (!Number(process.argv[2]))`: the run worker has no argument at index 2, so `Number` gives NaN,
-    // and the negation is true. The fallback is the `then` arm, the arm the code really takes.
+    // and the negation is true. The `then` arm is the one a run takes, so its route is driven; `else` is
+    // reachable in real use, where an argument is given, but nothing here can steer it: an undriven route.
     const NOT_ARGV_NUMBER_BRANCH = BranchNodeStub({
       coverageId: 'argvIf/if:not-argv',
       startLine: 3,
@@ -807,7 +910,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {!Number(process.argv[2])} => then arm case derived as fallback, since the condition is true when a case runs', () => {
+    it('VALID: {!Number(process.argv[2])} => the then route is driven, since the condition is true when a case runs, and the else route is undriven', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [NOT_ARGV_NUMBER_BRANCH],
@@ -819,7 +922,10 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['argvIf/return@then'], arrange: [], salient: true }],
+        cases: [
+          { reachesPath: ['argvIf/return@then'], arrange: [], arms: taking(['argvIf/if:not-argv', 'then']), driven: true, fewestRuns: true },
+          { reachesPath: ['argvIf/return@else'], arrange: [], arms: taking(['argvIf/if:not-argv', 'else']), driven: false, fewestRuns: true },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand' }],
         unfillable: [],
@@ -840,7 +946,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a non-param local operand} => fallback arm case, and the branch admitted undriven naming the operand', () => {
+    it('VALID: {a non-param local operand} => one undriven case per arm, and the branch admitted undriven naming the operand', () => {
       const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 's', type: { kind: 'number' } })],
         branches: [NON_PARAM_BRANCH],
@@ -854,9 +960,18 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [
           {
+            reachesPath: ['nonParam/return@then'],
+            arrange: [{ kind: 'param', param: 's', value: 7 }],
+            arms: taking(['nonParam/if:u', 'then']),
+            driven: false,
+            fewestRuns: true,
+          },
+          {
             reachesPath: ['nonParam/return@else'],
             arrange: [{ kind: 'param', param: 's', value: 7 }],
-            salient: true,
+            arms: taking(['nonParam/if:u', 'else']),
+            driven: false,
+            fewestRuns: true,
           },
         ],
         unreachableExits: [],
@@ -883,7 +998,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {an object-member operand over a param} => un-steerable, fallback case, admission names the property read', () => {
+    it('VALID: {an object-member operand over a param} => un-steerable, one undriven case per arm, admission names the property read', () => {
       const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 'config', type: { kind: 'object', typeName: 'Config', properties: [{ name: 'mode', type: { kind: 'string' } }] } })],
         branches: [OBJECT_MEMBER_BRANCH],
@@ -897,17 +1012,18 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [
           {
+            reachesPath: ['decide/return@then'],
+            arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
+            arms: taking(['decide/if:member', 'then']),
+            driven: false,
+            fewestRuns: true,
+          },
+          {
             reachesPath: ['decide/return@else'],
-            arrange: [
-              {
-                kind: 'object',
-                param: 'config',
-                value: {
-                  mode: 'abc123',
-                },
-              },
-            ],
-            salient: true,
+            arrange: [{ kind: 'object', param: 'config', value: { mode: 'abc123' } }],
+            arms: taking(['decide/if:member', 'else']),
+            driven: false,
+            fewestRuns: true,
           },
         ],
         unreachableExits: [],
@@ -933,7 +1049,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a typeof read of an opaque operand} => un-steerable, fallback case, cause names the typeof limit', () => {
+    it('VALID: {a typeof read of an opaque operand} => un-steerable, one undriven case per arm, cause names the typeof limit', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [TYPEOF_BRANCH],
@@ -945,7 +1061,10 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['checkTypeof/return@else'], arrange: [], salient: true }],
+        cases: [
+          { reachesPath: ['checkTypeof/return@then'], arrange: [], arms: taking(['checkTypeof/if:typeof', 'then']), driven: false, fewestRuns: true },
+          { reachesPath: ['checkTypeof/return@else'], arrange: [], arms: taking(['checkTypeof/if:typeof', 'else']), driven: false, fewestRuns: true },
+        ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-typeof' }],
         unfillable: [],
@@ -975,7 +1094,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a typeof narrowing a union with a non-scalar member} => un-steerable, fallback case, cause names the shape limit', () => {
+    it('VALID: {a typeof narrowing a union with a non-scalar member} => un-steerable, one undriven case per arm, cause names the shape limit', () => {
       const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({
@@ -997,17 +1116,18 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [
           {
+            reachesPath: ['choose/return@then'],
+            arrange: [{ kind: 'object', param: 'target', value: { label: 'abc123' } }],
+            arms: taking(['choose/if:typeof', 'then']),
+            driven: false,
+            fewestRuns: true,
+          },
+          {
             reachesPath: ['choose/return@else'],
-            arrange: [
-              {
-                kind: 'object',
-                param: 'target',
-                value: {
-                  label: 'abc123',
-                },
-              },
-            ],
-            salient: true,
+            arrange: [{ kind: 'object', param: 'target', value: { label: 'abc123' } }],
+            arms: taking(['choose/if:typeof', 'else']),
+            driven: false,
+            fewestRuns: true,
           },
         ],
         unreachableExits: [],
@@ -1049,12 +1169,16 @@ describe('deriveCasesTransformer', () => {
           {
             reachesPath: ['checkTypeof/return@then'],
             arrange: [{ kind: 'param', param: 'target', value: 'abc123' }],
-            salient: true,
+            arms: taking(['checkTypeof/if:typeof', 'then']),
+            driven: true,
+            fewestRuns: true,
           },
           {
             reachesPath: ['checkTypeof/return@else'],
             arrange: [{ kind: 'param', param: 'target', value: 7 }],
-            salient: true,
+            arms: taking(['checkTypeof/if:typeof', 'else']),
+            driven: true,
+            fewestRuns: true,
           },
         ],
         unreachableExits: [],
@@ -1082,7 +1206,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a property path more than one segment deep} => un-steerable, fallback case, same cause as a one-segment read', () => {
+    it('VALID: {a property path more than one segment deep} => un-steerable, one undriven case per arm, same cause as a one-segment read', () => {
       const result = deriveCasesTransformer({
         params: [
           ParamDescriptorStub({
@@ -1105,21 +1229,18 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [
           {
+            reachesPath: ['checkDeep/return@then'],
+            arrange: [{ kind: 'object', param: 'config', value: { db: { retry: { backoff: 7 } } } }],
+            arms: taking(['checkDeep/if:member', 'then']),
+            driven: false,
+            fewestRuns: true,
+          },
+          {
             reachesPath: ['checkDeep/return@else'],
-            arrange: [
-              {
-                kind: 'object',
-                param: 'config',
-                value: {
-                  db: {
-                    retry: {
-                      backoff: 7,
-                    },
-                  },
-                },
-              },
-            ],
-            salient: true,
+            arrange: [{ kind: 'object', param: 'config', value: { db: { retry: { backoff: 7 } } } }],
+            arms: taking(['checkDeep/if:member', 'else']),
+            driven: false,
+            fewestRuns: true,
           },
         ],
         unreachableExits: [],
@@ -1130,9 +1251,9 @@ describe('deriveCasesTransformer', () => {
 
     // `const TARGET = 'a'; if (m === TARGET)`: the operand `m` IS a param and IS arrangeable, but the
     // right-hand side is an identifier the parse cannot read as a value, so the predicate is
-    // `unrecognized` and narrows NEITHER arm. Both arms would arrange `m` from its bare type, so one of
-    // the two cases must predict an arm it cannot reach — a build failing over correct code. The branch
-    // is admitted undriven instead, and the cause says which of the two blockers it hit.
+    // `unrecognized` and narrows NEITHER arm. Both arms would arrange `m` from its bare type, so whichever
+    // arm a case claimed, the input could not be said to take it. Both routes are declared undriven
+    // instead, and the cause says which of the two blockers it hit.
     const UNREAD_COMPARISON_BRANCH = BranchNodeStub({
       coverageId: 'pick/if:target',
       startLine: 4,
@@ -1145,7 +1266,7 @@ describe('deriveCasesTransformer', () => {
       },
     });
 
-    it('VALID: {a param compared against a non-literal} => un-steerable, fallback case, and the cause is the comparison', () => {
+    it('VALID: {a param compared against a non-literal} => un-steerable, one undriven case per arm, and the cause is the comparison', () => {
       const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 'm', type: { kind: 'string' } })],
         branches: [UNREAD_COMPARISON_BRANCH],
@@ -1159,15 +1280,18 @@ describe('deriveCasesTransformer', () => {
       expect(result).toStrictEqual({
         cases: [
           {
+            reachesPath: ['pick/return@then'],
+            arrange: [{ kind: 'param', param: 'm', value: 'abc123' }],
+            arms: taking(['pick/if:target', 'then']),
+            driven: false,
+            fewestRuns: true,
+          },
+          {
             reachesPath: ['pick/return@else'],
-            arrange: [
-              {
-                kind: 'param',
-                param: 'm',
-                value: 'abc123',
-              },
-            ],
-            salient: true,
+            arrange: [{ kind: 'param', param: 'm', value: 'abc123' }],
+            arms: taking(['pick/if:target', 'else']),
+            driven: false,
+            fewestRuns: true,
           },
         ],
         unreachableExits: [],
@@ -1179,7 +1303,7 @@ describe('deriveCasesTransformer', () => {
     // A WELDED constant is arrangeable without an input, but weldedness only says what the operand IS —
     // it says nothing about what the comparison DEMANDS. With an unreadable right-hand side there is
     // still no arm to prefer, so the single-value domain reaches both and the branch stays undriven.
-    it('VALID: {a welded const compared against a non-literal} => un-steerable, fallback case over one value', () => {
+    it('VALID: {a welded const compared against a non-literal} => un-steerable, one undriven case per arm over one value', () => {
       const result = deriveCasesTransformer({
         params: [],
         branches: [
@@ -1205,11 +1329,8 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          {
-            reachesPath: ['weld/return@else'],
-            arrange: [],
-            salient: true,
-          },
+          { reachesPath: ['weld/return@then'], arrange: [], arms: taking(['weld/if:target', 'then']), driven: false, fewestRuns: true },
+          { reachesPath: ['weld/return@else'], arrange: [], arms: taking(['weld/if:target', 'else']), driven: false, fewestRuns: true },
         ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unread-comparison', operand: 'level' }],
@@ -1241,8 +1362,20 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['mod/exit@then'], arrange: [{ kind: 'env', name: 'VALUE', value: '6' }], salient: true },
-          { reachesPath: ['mod/exit@else'], arrange: [{ kind: 'env', name: 'VALUE', value: '5' }], salient: true },
+          {
+            reachesPath: ['mod/exit@then'],
+            arrange: [{ kind: 'env', name: 'VALUE', value: '6' }],
+            arms: taking(['mod/if:value', 'then']),
+            driven: true,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: ['mod/exit@else'],
+            arrange: [{ kind: 'env', name: 'VALUE', value: '5' }],
+            arms: taking(['mod/if:value', 'else']),
+            driven: true,
+            fewestRuns: true,
+          },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -1252,16 +1385,13 @@ describe('deriveCasesTransformer', () => {
 
     // The SAME branch is un-steerable when the entry is NOT env-driven — a function's captured `const`
     // is frozen by the time it is called, so setting the variable then changes nothing.
-    it('VALID: {an env operand, NOT envDrivable} => un-steerable, fallback case and the branch admitted undriven', () => {
+    it('VALID: {an env operand, NOT envDrivable} => un-steerable, one undriven case per arm and the branch admitted undriven', () => {
       const result = deriveCasesTransformer({ params: [], branches: [ENV_BRANCH], exits: ENV_EXITS, envDrivable: false });
 
       expect(result).toStrictEqual({
         cases: [
-          {
-            reachesPath: ['mod/exit@else'],
-            arrange: [],
-            salient: true,
-          },
+          { reachesPath: ['mod/exit@then'], arrange: [], arms: taking(['mod/if:value', 'then']), driven: false, fewestRuns: true },
+          { reachesPath: ['mod/exit@else'], arrange: [], arms: taking(['mod/if:value', 'else']), driven: false, fewestRuns: true },
         ],
         unreachableExits: [],
         undrivenBranches: [{ line: 3, cause: 'unarrangeable-operand', operand: 'value' }],
@@ -1275,9 +1405,9 @@ describe('deriveCasesTransformer', () => {
 
     // A branchless boolean predicate has ONE exit for both return values, so a single representative
     // fill could never show `size > 50` distinguishing anything. The returnPredicate axis splits the
-    // one exit into two cases — the satisfying side and the violating side — and both are salient,
-    // because they return DIFFERENT booleans out of the same exit.
-    it('VALID: {return size > 50} => two salient cases, one per side of the comparison', () => {
+    // one exit into two cases — the satisfying side and the violating side — and both are in the
+    // fewest-runs set, because they return DIFFERENT booleans out of the same exit.
+    it('VALID: {return size > 50} => two fewest-runs cases, one per side of the comparison', () => {
       const result = deriveCasesTransformer({
         params: [ParamDescriptorStub({ name: 'size', type: { kind: 'number' } })],
         branches: [],
@@ -1287,8 +1417,20 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 51 }], salient: true },
-        { reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 50 }], salient: true },
+        {
+          reachesPath: ['pred/return@top'],
+          arrange: [{ kind: 'param', param: 'size', value: 51 }],
+          arms: taking(['pred#leaf', 'return-true']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['pred/return@top'],
+          arrange: [{ kind: 'param', param: 'size', value: 50 }],
+          arms: taking(['pred#leaf', 'return-false']),
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
 
@@ -1305,7 +1447,9 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        cases: [
+          { reachesPath: ['pred/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], arms: [], driven: true, fewestRuns: true },
+        ],
         unreachableExits: [],
         undrivenBranches: [],
         unfillable: [],
@@ -1411,8 +1555,20 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['maybe/return@then'], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
-          { reachesPath: ['maybe/return@else'], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+          {
+            reachesPath: ['maybe/return@then'],
+            arrange: [{ kind: 'param', param: 'size', value: 11 }],
+            arms: taking(['maybe/if', 'then']),
+            driven: true,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: ['maybe/return@else'],
+            arrange: [{ kind: 'param', param: 'size', value: 10 }],
+            arms: taking(['maybe/if', 'else']),
+            driven: true,
+            fewestRuns: true,
+          },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -1438,8 +1594,20 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['maybe/return@then'], arrange: [{ kind: 'param', param: 'size', value: 11 }], salient: true },
-          { reachesPath: ['maybe/return@else'], arrange: [{ kind: 'param', param: 'size', value: 10 }], salient: true },
+          {
+            reachesPath: ['maybe/return@then'],
+            arrange: [{ kind: 'param', param: 'size', value: 11 }],
+            arms: taking(['maybe/if', 'then']),
+            driven: true,
+            fewestRuns: true,
+          },
+          {
+            reachesPath: ['maybe/return@else'],
+            arrange: [{ kind: 'param', param: 'size', value: 10 }],
+            arms: taking(['maybe/if', 'else']),
+            driven: true,
+            fewestRuns: true,
+          },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -1448,13 +1616,11 @@ describe('deriveCasesTransformer', () => {
     });
   });
 
-  describe('converging branches — off-path buckets on one exit', () => {
-    // Two independent guards that both fall through to the SAME trailing return. The cross product is
-    // four input buckets — each a distinct combination the logic can tell apart — but they all reach
-    // the one exit and return the same value, so exactly ONE is salient and the other three are the
-    // grayed breadth. Constraining a branch whose flow the trailing return never depends on is a SOUND
-    // off-path arm.
-    it('VALID: {two converging guards} => four cases on one exit, exactly one salient', () => {
+  describe('converging branches — one route per combination of arms', () => {
+    // Two independent guards that both fall through to the SAME trailing return. Each guard has two arms
+    // and both are always met, so there are four routes, all reaching the one exit. The fewest-runs set is
+    // the smallest subset taking all four arms: the first route (both then) and the last (both else).
+    it('VALID: {two converging guards} => four every-route cases on one exit, and the fewest runs are the first and last', () => {
       const aBranch = BranchNodeStub({
         coverageId: 'tally/if:a',
         startLine: 2,
@@ -1474,10 +1640,34 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 6 }], salient: true },
-        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
-        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 6 }], salient: false },
-        { reachesPath: ['tally/return@top'], arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 5 }], salient: false },
+        {
+          reachesPath: ['tally/return@top'],
+          arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 6 }],
+          arms: taking(['tally/if:a', 'then'], ['tally/if:b', 'then']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['tally/return@top'],
+          arrange: [{ kind: 'param', param: 'a', value: 6 }, { kind: 'param', param: 'b', value: 5 }],
+          arms: taking(['tally/if:a', 'then'], ['tally/if:b', 'else']),
+          driven: true,
+          fewestRuns: false,
+        },
+        {
+          reachesPath: ['tally/return@top'],
+          arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 6 }],
+          arms: taking(['tally/if:a', 'else'], ['tally/if:b', 'then']),
+          driven: true,
+          fewestRuns: false,
+        },
+        {
+          reachesPath: ['tally/return@top'],
+          arrange: [{ kind: 'param', param: 'a', value: 5 }, { kind: 'param', param: 'b', value: 5 }],
+          arms: taking(['tally/if:a', 'else'], ['tally/if:b', 'else']),
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
   });
@@ -1505,7 +1695,9 @@ describe('deriveCasesTransformer', () => {
               { kind: 'param', param: 'name', value: '' },
               { kind: 'harness', param: 'report', key: 'inputs.formatGreeting.report' },
             ],
-            salient: true,
+            arms: taking(['formatGreeting/if:name.length===0', 'then']),
+            driven: true,
+            fewestRuns: true,
           },
         ],
         unfillable: [],
@@ -1559,7 +1751,9 @@ describe('deriveCasesTransformer', () => {
               { kind: 'param', param: 'size', value: 7 },
               { kind: 'harness', param: 'sinks', key: 'inputs.collect.sinks', rest: true },
             ],
-            salient: true,
+            arms: [],
+            driven: true,
+            fewestRuns: true,
           },
         ],
         unfillable: [],
@@ -1584,7 +1778,9 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect({ cases: result.cases, unfillable: result.unfillable }).toStrictEqual({
-        cases: [{ reachesPath: ['collect/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], salient: true }],
+        cases: [
+          { reachesPath: ['collect/return@top'], arrange: [{ kind: 'param', param: 'size', value: 7 }], arms: [], driven: true, fewestRuns: true },
+        ],
         unfillable: [],
       });
     });
@@ -1605,15 +1801,15 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 0 }], salient: true },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 0 }], salient: false },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 0 }], salient: false },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: -1 }], salient: false },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: -1 }], salient: false },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: -1 }], salient: false },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 7 }], salient: false },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 7 }], salient: false },
-          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 7 }], salient: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 0 }], arms: [], driven: true, fewestRuns: true },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 0 }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 0 }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: -1 }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: -1 }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: -1 }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [] }, { kind: 'param', param: 'index', value: 7 }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7] }, { kind: 'param', param: 'index', value: 7 }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['elementAt/return@top'], arrange: [{ kind: 'array', param: 'items', value: [7, 8] }, { kind: 'param', param: 'index', value: 7 }], arms: [], driven: true, fewestRuns: false },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -1636,10 +1832,10 @@ describe('deriveCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [] }], salient: true },
-          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7] }], salient: false },
-          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7, 8] }], salient: false },
-          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7, 8, 9] }], salient: false },
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [] }], arms: [], driven: true, fewestRuns: true },
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7] }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7, 8] }], arms: [], driven: true, fewestRuns: false },
+          { reachesPath: ['lengthAt/return@top'], arrange: [{ kind: 'array', param: 'arr', value: [7, 8, 9] }], arms: [], driven: true, fewestRuns: false },
         ],
         unreachableExits: [],
         undrivenBranches: [],
@@ -1692,9 +1888,261 @@ describe('deriveCasesTransformer', () => {
       });
 
       expect(result.cases).toStrictEqual([
-        { reachesPath: ['decide/return@then'], arrange: [{ kind: 'param', param: 'value', value: true }], salient: true },
-        { reachesPath: ['decide/return@else'], arrange: [{ kind: 'param', param: 'value', value: null }], salient: true },
-        { reachesPath: ['decide/return@else'], arrange: [{ kind: 'param', param: 'value', value: false }], salient: false },
+        {
+          reachesPath: ['decide/return@then'],
+          arrange: [{ kind: 'param', param: 'value', value: true }],
+          arms: taking(['decide/if:nullish', 'then']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['decide/return@else'],
+          arrange: [{ kind: 'param', param: 'value', value: null }],
+          arms: taking(['decide/if:nullish', 'else']),
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['decide/return@else'],
+          arrange: [{ kind: 'param', param: 'value', value: false }],
+          arms: taking(['decide/if:nullish', 'else']),
+          driven: true,
+          fewestRuns: false,
+        },
+      ]);
+    });
+  });
+
+  describe('a route meets only the branches its arms reach', () => {
+    const OUTER = BranchNodeStub({
+      coverageId: 'nest/if:a',
+      startLine: 2,
+      condition: { kind: 'leaf', id: 'nest/if:a#leaf', operandParamName: 'a', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 5 } },
+    });
+    const INNER = BranchNodeStub({
+      coverageId: 'nest/if:b',
+      startLine: 3,
+      guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'then' }],
+      condition: { kind: 'leaf', id: 'nest/if:b#leaf', operandParamName: 'b', operandType: { kind: 'number' }, predicate: { kind: 'gt', literal: 1 } },
+    });
+    const PARAMS = [ParamDescriptorStub({ name: 'a', type: { kind: 'number' } }), ParamDescriptorStub({ name: 'b', type: { kind: 'number' } })];
+
+    // `if (a > 5) { if (b > 1) … else … } else …` has three routes, not four: when `a > 5` fails the inner
+    // branch is never reached, so no route takes an arm there and none claims one it cannot reach.
+    it('VALID: {an if nested in the then arm} => three routes, and none names an inner arm on the outer else', () => {
+      const result = deriveCasesTransformer({
+        params: PARAMS,
+        branches: [OUTER, INNER],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'nest/return@inner-then',
+            guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'then' }, { branchCoverageId: 'nest/if:b', arm: 'then' }],
+          }),
+          ExitNodeStub({
+            coverageId: 'nest/return@inner-else',
+            guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'then' }, { branchCoverageId: 'nest/if:b', arm: 'else' }],
+          }),
+          ExitNodeStub({ coverageId: 'nest/return@outer-else', guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'else' }] }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result.cases.map((testCase) => testCase.arms)).toStrictEqual([
+        [
+          { branchCoverageId: 'nest/if:a', arm: 'then' },
+          { branchCoverageId: 'nest/if:b', arm: 'then' },
+        ],
+        [
+          { branchCoverageId: 'nest/if:a', arm: 'then' },
+          { branchCoverageId: 'nest/if:b', arm: 'else' },
+        ],
+        [{ branchCoverageId: 'nest/if:a', arm: 'else' }],
+      ]);
+    });
+
+    it('VALID: {an opaque if nested in the then arm} => its two routes are undriven, the outer else route is driven', () => {
+      const opaque = BranchNodeStub({
+        coverageId: 'nest/if:call',
+        startLine: 3,
+        guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'then' }],
+        condition: { kind: 'leaf', id: 'nest/if:call#leaf', operandType: { kind: 'boolean' }, predicate: { kind: 'truthy' } },
+      });
+
+      const result = deriveCasesTransformer({
+        params: [ParamDescriptorStub({ name: 'a', type: { kind: 'number' } })],
+        branches: [OUTER, opaque],
+        exits: [
+          ExitNodeStub({
+            coverageId: 'nest/return@inner-then',
+            guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'then' }, { branchCoverageId: 'nest/if:call', arm: 'then' }],
+          }),
+          ExitNodeStub({
+            coverageId: 'nest/return@inner-else',
+            guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'then' }, { branchCoverageId: 'nest/if:call', arm: 'else' }],
+          }),
+          ExitNodeStub({ coverageId: 'nest/return@outer-else', guardPath: [{ branchCoverageId: 'nest/if:a', arm: 'else' }] }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result.cases.map((testCase) => [testCase.reachesPath[0], testCase.driven])).toStrictEqual([
+        ['nest/return@inner-then', false],
+        ['nest/return@inner-else', false],
+        ['nest/return@outer-else', true],
+      ]);
+    });
+  });
+
+  describe('a local variable the walk followed', () => {
+    // `let x = n.length < 5 ? n : 'NoneTon'; if (x === 'NoneTon') …`. Four combinations of arms; two
+    // contradict themselves. A short `n` makes `x` that same short `n`, which cannot be the seven-letter
+    // text, and a long `n` makes `x` the constant, which is that text.
+    const LENGTH = BranchNodeStub({
+      coverageId: 'pick/ternary:length',
+      kind: 'ternary',
+      startLine: 2,
+      condition: { kind: 'leaf', id: 'pick/ternary:length#leaf', operandParamName: 'n', operandType: { kind: 'string' }, predicate: { kind: 'length-lt', literal: 5 } },
+    });
+    const FLOW = ValueExprStub({
+      kind: 'select',
+      branch: 'pick/ternary:length',
+      then: { kind: 'param', name: 'n' },
+      else: { kind: 'lit', value: 'NoneTon' },
+    });
+    const MATCH = BranchNodeStub({
+      coverageId: 'pick/if:match',
+      startLine: 3,
+      condition: {
+        kind: 'leaf',
+        id: 'pick/if:match#leaf',
+        operandParamName: 'x',
+        operandType: { kind: 'string' },
+        operandFlow: FLOW,
+        predicate: { kind: 'eq', literal: 'NoneTon' },
+      },
+    });
+    const STRING_PARAMS = [ParamDescriptorStub({ name: 'n', type: { kind: 'string' } })];
+    const MATCH_EXITS = [
+      ExitNodeStub({ coverageId: 'pick/return@match', guardPath: [{ branchCoverageId: 'pick/if:match', arm: 'then' }] }),
+      ExitNodeStub({ coverageId: 'pick/return@miss', guardPath: [{ branchCoverageId: 'pick/if:match', arm: 'else' }] }),
+    ];
+
+    it('VALID: {a ternary-assigned variable} => the two combinations that contradict are dropped, and the rest are driven', () => {
+      const result = deriveCasesTransformer({ params: STRING_PARAMS, branches: [LENGTH, MATCH], exits: MATCH_EXITS, envDrivable: false });
+
+      expect(result.cases.map((testCase) => ({ arms: testCase.arms, driven: testCase.driven }))).toStrictEqual([
+        {
+          arms: [
+            { branchCoverageId: 'pick/ternary:length', arm: 'then' },
+            { branchCoverageId: 'pick/if:match', arm: 'else' },
+          ],
+          driven: true,
+        },
+        {
+          arms: [
+            { branchCoverageId: 'pick/ternary:length', arm: 'else' },
+            { branchCoverageId: 'pick/if:match', arm: 'then' },
+          ],
+          driven: true,
+        },
+      ]);
+    });
+
+    it('VALID: {a ternary-assigned variable} => no exit is reported unreachable, since each arm of the if is reached by some route', () => {
+      const result = deriveCasesTransformer({ params: STRING_PARAMS, branches: [LENGTH, MATCH], exits: MATCH_EXITS, envDrivable: false });
+
+      expect(result.unreachableExits).toStrictEqual([]);
+    });
+
+    // A function of a parameter cannot narrow the parameter's domain, so it is settled on the values the
+    // other guards decided: `n === 'None'` pins `n`, and `slice(1, -1)` of `'None'` is `'on'`.
+    it('VALID: {a derived guard over a pinned parameter} => settled on the pinned value, so the impossible route is dropped', () => {
+      const pinned = BranchNodeStub({
+        coverageId: 'trim/if:none',
+        startLine: 2,
+        condition: { kind: 'leaf', id: 'trim/if:none#leaf', operandParamName: 'n', operandType: { kind: 'string' }, predicate: { kind: 'eq', literal: 'None' } },
+      });
+      const sliced = BranchNodeStub({
+        coverageId: 'trim/if:no',
+        startLine: 3,
+        condition: {
+          kind: 'leaf',
+          id: 'trim/if:no#leaf',
+          operandParamName: 'x',
+          operandType: { kind: 'string' },
+          operandFlow: {
+            kind: 'select',
+            branch: 'trim/if:none',
+            then: { kind: 'method', name: 'slice', receiver: { kind: 'param', name: 'n' }, args: [{ kind: 'lit', value: 1 }, { kind: 'lit', value: -1 }] },
+            else: { kind: 'param', name: 'n' },
+          },
+          predicate: { kind: 'eq', literal: 'on' },
+        },
+      });
+
+      const result = deriveCasesTransformer({
+        params: STRING_PARAMS,
+        branches: [pinned, sliced],
+        exits: [
+          ExitNodeStub({ coverageId: 'trim/return@on', guardPath: [{ branchCoverageId: 'trim/if:no', arm: 'then' }] }),
+          ExitNodeStub({ coverageId: 'trim/return@other', guardPath: [{ branchCoverageId: 'trim/if:no', arm: 'else' }] }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result.cases.map((testCase) => ({ arms: testCase.arms, arrange: testCase.arrange }))).toStrictEqual([
+        {
+          arms: [
+            { branchCoverageId: 'trim/if:none', arm: 'then' },
+            { branchCoverageId: 'trim/if:no', arm: 'then' },
+          ],
+          arrange: [{ kind: 'param', param: 'n', value: 'None' }],
+        },
+        {
+          arms: [
+            { branchCoverageId: 'trim/if:none', arm: 'else' },
+            { branchCoverageId: 'trim/if:no', arm: 'then' },
+          ],
+          arrange: [{ kind: 'param', param: 'n', value: 'on' }],
+        },
+        {
+          arms: [
+            { branchCoverageId: 'trim/if:none', arm: 'else' },
+            { branchCoverageId: 'trim/if:no', arm: 'else' },
+          ],
+          arrange: [{ kind: 'param', param: 'n', value: 'abc123' }],
+        },
+      ]);
+    });
+
+    // When the parameter is not decided the answer is unknown, and unknown keeps the route, undriven.
+    it('VALID: {a derived guard over a free parameter that no value meets} => the route is kept and undriven, never dropped', () => {
+      const derivedOnly = BranchNodeStub({
+        coverageId: 'free/if:no',
+        startLine: 2,
+        condition: {
+          kind: 'leaf',
+          id: 'free/if:no#leaf',
+          operandParamName: 'x',
+          operandType: { kind: 'string' },
+          operandFlow: { kind: 'method', name: 'toUpperCase', receiver: { kind: 'param', name: 'n' }, args: [] },
+          predicate: { kind: 'eq', literal: 'on' },
+        },
+      });
+
+      const result = deriveCasesTransformer({
+        params: STRING_PARAMS,
+        branches: [derivedOnly],
+        exits: [
+          ExitNodeStub({ coverageId: 'free/return@then', guardPath: [{ branchCoverageId: 'free/if:no', arm: 'then' }] }),
+          ExitNodeStub({ coverageId: 'free/return@else', guardPath: [{ branchCoverageId: 'free/if:no', arm: 'else' }] }),
+        ],
+        envDrivable: false,
+      });
+
+      expect(result.cases.map((testCase) => [testCase.reachesPath[0], testCase.driven])).toStrictEqual([
+        ['free/return@then', false],
+        ['free/return@else', true],
       ]);
     });
   });

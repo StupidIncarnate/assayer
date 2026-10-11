@@ -64,6 +64,7 @@ import { funnelCasesTransformer } from '../funnel-cases/funnel-cases-transformer
 import { funnelNamedCasesTransformer } from '../funnel-named-cases/funnel-named-cases-transformer';
 import { throughCallbackCasesTransformer } from '../through-callback-cases/through-callback-cases-transformer';
 import { throughCallerCasesTransformer } from '../through-caller-cases/through-caller-cases-transformer';
+import { undrivenBranchTransformer } from '../undriven-branch/undriven-branch-transformer';
 import { throughInvocationCasesTransformer } from '../through-invocation-cases/through-invocation-cases-transformer';
 
 // Array iteration methods whose callback's FIRST parameter is the element (`map`, `filter`, `forEach`,
@@ -266,7 +267,7 @@ export const followCallsTransformer = ({
       // undriven like a returned closure.
       const invoked = invokedFns.find((entry) => String(entry.startLine) === String(callee.startLine));
       const invocation = invoked !== undefined && callbackReach === undefined ? throughInvocationCasesTransformer({ arrow: callee, args: invoked.args }) : undefined;
-      const invocationDrives = invocation !== undefined && (invocation.analysis.cases.length > 0 || invocation.unreachableExits.length > 0);
+      const invocationDrives = invocation !== undefined && (invocation.analysis.cases.some((testCase) => testCase.driven) || invocation.unreachableExits.length > 0);
 
       // An anonymous scope's `name` is its structural projection — a key, and no surface may print one.
       // The reach just established above is also the only handle a reader has on such a scope, so the
@@ -471,7 +472,7 @@ export const followCallsTransformer = ({
     ),
     // Reached but unsteerable: understood, not drivable — Assayer's admission. Both the not-yet-steerable
     // callback and a private reached through an unresolvable argument ride here, each worded by WHY.
-    undriven: results.flatMap(({ callee, label, callbackReach, callbackDrivable, reachedFn, invocationDrives, driver, isCalled }) => {
+    undriven: results.flatMap(({ callee, label, callbackReach, callbackDrivable, reachedFn, invocation, invocationDrives, driver, isCalled }) => {
       if (callbackReach !== undefined) {
         return callbackDrivable
           ? []
@@ -484,6 +485,11 @@ export const followCallsTransformer = ({
                 reason: CALLBACK_UNDRIVEN_REASON,
               }),
             ];
+      }
+      // A driven IIFE is a followed entry, but a branch in it no case can steer is still admitted, on its
+      // own line, exactly as a named entry's is: its undriven arm route is declared and never run.
+      if (invocationDrives && invocation !== undefined) {
+        return undrivenBranchTransformer({ entryName: callee.name, undrivenBranches: invocation.undrivenBranches });
       }
       // Reached by return or immediate invocation but NOT driven: a returned closure (applied by an
       // external caller), or an IIFE whose invocation argument v1 cannot propagate (an env-sourced or

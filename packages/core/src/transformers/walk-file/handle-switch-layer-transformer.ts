@@ -80,10 +80,20 @@ export const handleSwitchLayerTransformer = ({
   // analysis model but not in the source, so there is no expression to wrap. Exits inside the clauses
   // are still probed, so a switch runs and reports normally; only per-case condition ATTRIBUTION is
   // absent. Probing the discriminant once would recover it, and is a follow-on rather than a fudge.
-  const branches = desugared.caseInfos.map((caseInfo) =>
+  //
+  // A case is compared only when every earlier case missed, so its branch is MET only under the else arm
+  // of each earlier one. That is what keeps two cases of one discriminant from both being taken on a route
+  // when nothing could steer the discriminant to show they contradict.
+  const branches = desugared.caseInfos.map((caseInfo, index) =>
     branchNodeContract.parse({
       coverageId: caseInfo.branchCoverageId,
       kind: 'switch',
+      guardPath: [
+        ...context.guardPath,
+        ...desugared.caseInfos
+          .slice(0, index)
+          .map((earlier) => guardStepContract.parse({ branchCoverageId: earlier.branchCoverageId, arm: 'else' })),
+      ],
       condition: {
         kind: 'leaf',
         id: `${caseInfo.branchCoverageId}#leaf`,

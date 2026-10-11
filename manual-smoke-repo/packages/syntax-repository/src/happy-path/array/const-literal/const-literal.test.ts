@@ -32,7 +32,7 @@ describe('array / const-literal — a branchless function over a LOCAL const arr
           {
             reachesPath: ['*module*/three/return@top'],
             arrange: [],
-            salient: true,
+            arms: [], driven: true, fewestRuns: true,
           },
         ],
       },

@@ -112,7 +112,7 @@ export const throughCallerCasesTransformer = ({
     });
 
     return arrange.length === callerParams.length
-      ? [derivedTestCaseContract.parse({ reachesPath: testCase.reachesPath, arrange })]
+      ? [derivedTestCaseContract.parse({ reachesPath: testCase.reachesPath, arms: testCase.arms, driven: testCase.driven, fewestRuns: testCase.fewestRuns, arrange })]
       : [];
   });
 

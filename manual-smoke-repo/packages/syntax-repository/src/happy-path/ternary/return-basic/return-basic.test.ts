@@ -35,6 +35,7 @@ describe('ternary / return-basic — a ternary in a block return', () => {
                 operandType: { kind: 'number' },
                 predicate: { kind: 'gt', literal: 5 },
               },
+              guardPath: [],
               startLine: 2,
               endLine: 2,
             },

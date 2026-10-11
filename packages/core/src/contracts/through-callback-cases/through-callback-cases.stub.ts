@@ -5,7 +5,7 @@
  * ThroughCallbackCasesStub();
  * // Returns a valid ThroughCallbackCases
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 import { FunctionAnalysisStub } from "@assayer/shared/contracts/function-analysis/function-analysis.stub";
 
 import { throughCallbackCasesContract } from "./through-callback-cases-contract";

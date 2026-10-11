@@ -44,8 +44,8 @@ describe('null / eq-null — an explicit equality against the literal null', () 
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'eq-null.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'v', value: null }], salient: true },
-      { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'v', value: 'abc123' }], salient: true },
+      { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'v', value: null }], arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: true },
+      { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'v', value: 'abc123' }], arms: [{ branchCoverageId: BRANCH, arm: 'else' }], driven: true, fewestRuns: true },
     ]);
   });
 

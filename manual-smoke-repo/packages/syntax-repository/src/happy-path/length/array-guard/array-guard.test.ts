@@ -38,9 +38,9 @@ describe('length / array-guard — a `.length` comparison on an ARRAY param, the
       {
         reachesPath: [THEN],
         arrange: [{ kind: 'array', param: 'xs', value: ['abc123', 'abc123_1', 'abc123_2', 'abc123_3'] }],
-        salient: true,
+        arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: true,
       },
-      { reachesPath: [ELSE], arrange: [{ kind: 'array', param: 'xs', value: [] }], salient: true },
+      { reachesPath: [ELSE], arrange: [{ kind: 'array', param: 'xs', value: [] }], arms: [{ branchCoverageId: BRANCH, arm: 'else' }], driven: true, fewestRuns: true },
     ]);
   });
 

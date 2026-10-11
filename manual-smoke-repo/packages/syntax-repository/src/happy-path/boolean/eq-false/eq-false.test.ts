@@ -35,8 +35,8 @@ describe('boolean / eq-false — an explicit equality against the literal false'
     const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'eq-false.ts') }), relPath });
 
     expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([
-      { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'active', value: false }], salient: true },
-      { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'active', value: true }], salient: true },
+      { reachesPath: [THEN], arrange: [{ kind: 'param', param: 'active', value: false }], arms: [{ branchCoverageId: BRANCH, arm: 'then' }], driven: true, fewestRuns: true },
+      { reachesPath: [ELSE], arrange: [{ kind: 'param', param: 'active', value: true }], arms: [{ branchCoverageId: BRANCH, arm: 'else' }], driven: true, fewestRuns: true },
     ]);
   });
 

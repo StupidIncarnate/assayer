@@ -51,8 +51,8 @@ describe('funnelNamedCasesTransformer', () => {
 
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-          { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+          { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true },
         ],
         unreachable: [],
         consumed: [{ name: 'inner', startLine: 2, params: [{ name: 'n', type: { kind: 'number' } }] }],
@@ -149,8 +149,8 @@ describe('funnelNamedCasesTransformer', () => {
       // whenever the compiled code runs, harness or not.
       expect(result).toStrictEqual({
         cases: [
-          { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], salient: true },
-          { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+          { reachesPath: ['inner/return@then', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 6 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: ['inner/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true },
         ],
         unreachable: [],
         consumed: [
@@ -220,7 +220,7 @@ describe('funnelNamedCasesTransformer', () => {
               { kind: 'param', param: 'value', value: 6 },
               { kind: 'harness', param: 'sink', key: 'inputs.inner.cb' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: 'inner/if:n', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['inner/return@else', 'passthroughOuter/return@top'],
@@ -228,7 +228,7 @@ describe('funnelNamedCasesTransformer', () => {
               { kind: 'param', param: 'value', value: 5 },
               { kind: 'harness', param: 'sink', key: 'inputs.inner.cb' },
             ],
-            salient: true,
+            arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         unreachable: [],
@@ -271,7 +271,7 @@ describe('funnelNamedCasesTransformer', () => {
       const result = funnelNamedCasesTransformer({ scope: report, scopes: [report, INNER], welds: new Map() });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['inner/return@else', 'report/return@top'], arrange: [], salient: true }],
+        cases: [{ reachesPath: ['inner/return@else', 'report/return@top'], arrange: [], arms: [{ branchCoverageId: 'inner/if:n', arm: 'else' }], driven: true, fewestRuns: true }],
         unreachable: [{ line: 3, guardLines: [2], welded: { line: 2, operand: 'n', value: 3 }, displayName: 'inner' }],
         consumed: [{ name: 'inner', startLine: 2, params: [{ name: 'n', type: { kind: 'number' } }] }],
         unfillable: [],
@@ -355,14 +355,14 @@ describe('funnelNamedCasesTransformer', () => {
           {
             reachesPath: ['middle/inner/return@then', 'middle/return@then', 'outer/return@top'],
             arrange: [{ kind: 'param', param: 'value', value: 11 }],
-            salient: true,
+            arms: [{ branchCoverageId: 'middle/if:m', arm: 'then' }, { branchCoverageId: 'middle/inner/if:i', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['middle/inner/return@else', 'middle/return@then', 'outer/return@top'],
             arrange: [{ kind: 'param', param: 'value', value: 10 }],
-            salient: true,
+            arms: [{ branchCoverageId: 'middle/if:m', arm: 'then' }, { branchCoverageId: 'middle/inner/if:i', arm: 'else' }], driven: true, fewestRuns: true,
           },
-          { reachesPath: ['middle/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], salient: true },
+          { reachesPath: ['middle/return@else', 'outer/return@top'], arrange: [{ kind: 'param', param: 'value', value: 5 }], arms: [{ branchCoverageId: 'middle/if:m', arm: 'else' }], driven: true, fewestRuns: true },
         ],
         unreachable: [],
         consumed: [
@@ -458,12 +458,12 @@ describe('funnelNamedCasesTransformer', () => {
           {
             reachesPath: ['middle/inner/return@else', 'middle/return@then', 'outer/return@top'],
             arrange: [{ kind: 'param', param: 'flag', value: true }],
-            salient: true,
+            arms: [{ branchCoverageId: 'middle/if:flag', arm: 'then' }, { branchCoverageId: 'middle/inner/if:i', arm: 'else' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['middle/return@else', 'outer/return@top'],
             arrange: [{ kind: 'param', param: 'flag', value: false }],
-            salient: true,
+            arms: [{ branchCoverageId: 'middle/if:flag', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         unreachable: [{ line: 10, guardLines: [9], welded: { line: 9, operand: 'i', value: 3 }, displayName: 'inner' }],
@@ -500,7 +500,7 @@ describe('funnelNamedCasesTransformer', () => {
       const result = funnelNamedCasesTransformer({ scope: plain, scopes: [plain], welds: new Map() });
 
       expect(result).toStrictEqual({
-        cases: [{ reachesPath: ['plain/return@top'], arrange: [], salient: true }],
+        cases: [{ reachesPath: ['plain/return@top'], arrange: [], arms: [], driven: true, fewestRuns: true }],
         unreachable: [],
         consumed: [],
         unfillable: [],

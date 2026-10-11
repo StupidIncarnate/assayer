@@ -53,8 +53,8 @@ describe('throughCallbackCasesTransformer', () => {
       const result = throughCallbackCasesTransformer({ callback: CALLBACK, entry: ENTRY, arrayParam: 'items' });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
-        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6] }], arms: [{ branchCoverageId: 'cb/if:n', arm: 'then' }], driven: true, fewestRuns: true },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [5] }], arms: [{ branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: true },
       ]);
     });
   });
@@ -78,8 +78,8 @@ describe('throughCallbackCasesTransformer', () => {
       });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6], rest: true }], salient: true },
-        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [5], rest: true }], salient: true },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [6], rest: true }], arms: [{ branchCoverageId: 'cb/if:n', arm: 'then' }], driven: true, fewestRuns: true },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [5], rest: true }], arms: [{ branchCoverageId: 'cb/if:n', arm: 'else' }], driven: true, fewestRuns: true },
       ]);
     });
   });
@@ -162,8 +162,20 @@ describe('throughCallbackCasesTransformer', () => {
       const result = throughCallbackCasesTransformer({ callback: PREDICATE_CALLBACK, entry: ENTRY, arrayParam: 'items' });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['cb/return@top'], arrange: [{ kind: 'array', param: 'items', value: [6] }], salient: true },
-        { reachesPath: ['cb/return@top'], arrange: [{ kind: 'array', param: 'items', value: [5] }], salient: true },
+        {
+          reachesPath: ['cb/return@top'],
+          arrange: [{ kind: 'array', param: 'items', value: [6] }],
+          arms: [{ branchCoverageId: 'cb/return#leaf', arm: 'return-true' }],
+          driven: true,
+          fewestRuns: true,
+        },
+        {
+          reachesPath: ['cb/return@top'],
+          arrange: [{ kind: 'array', param: 'items', value: [5] }],
+          arms: [{ branchCoverageId: 'cb/return#leaf', arm: 'return-false' }],
+          driven: true,
+          fewestRuns: true,
+        },
       ]);
     });
   });
@@ -228,8 +240,8 @@ describe('throughCallbackCasesTransformer', () => {
       });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [{ label: 'abc123' }] }], salient: true },
-        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [{ label: 'abc123' }] }], salient: true },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [{ label: 'abc123' }] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'then' }], driven: true, fewestRuns: true },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [{ label: 'abc123' }] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'else' }], driven: true, fewestRuns: true },
       ]);
     });
   });
@@ -288,12 +300,12 @@ describe('throughCallbackCasesTransformer', () => {
       });
 
       expect(result.analysis.cases).toStrictEqual([
-        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[]] }], salient: true },
-        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[7]] }], salient: false },
-        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[7, 8]] }], salient: false },
-        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[]] }], salient: true },
-        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[7]] }], salient: false },
-        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[7, 8]] }], salient: false },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[]] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'then' }], driven: true, fewestRuns: true },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[7]] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'then' }], driven: true, fewestRuns: false },
+        { reachesPath: ['cb/return@then'], arrange: [{ kind: 'array', param: 'items', value: [[7, 8]] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'then' }], driven: true, fewestRuns: false },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[]] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'else' }], driven: true, fewestRuns: true },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[7]] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'else' }], driven: true, fewestRuns: false },
+        { reachesPath: ['cb/return@else'], arrange: [{ kind: 'array', param: 'items', value: [[7, 8]] }], arms: [{ branchCoverageId: 'cb/if:idx', arm: 'else' }], driven: true, fewestRuns: false },
       ]);
     });
   });
@@ -319,7 +331,9 @@ describe('throughCallbackCasesTransformer', () => {
             { kind: 'array', param: 'items', value: [6] },
             { kind: 'param', param: 'factor', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: 'cb/if:n', arm: 'then' }],
+          driven: true,
+          fewestRuns: true,
         },
         {
           reachesPath: ['cb/return@else'],
@@ -327,7 +341,9 @@ describe('throughCallbackCasesTransformer', () => {
             { kind: 'array', param: 'items', value: [5] },
             { kind: 'param', param: 'factor', value: 7 },
           ],
-          salient: true,
+          arms: [{ branchCoverageId: 'cb/if:n', arm: 'else' }],
+          driven: true,
+          fewestRuns: true,
         },
       ]);
     });

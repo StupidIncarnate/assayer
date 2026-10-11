@@ -22,7 +22,7 @@
  */
 import { z } from '#gateway/npm/zod';
 
-import { guardStepContract, paramDescriptorContract } from '@assayer/shared/contracts';
+import { guardStepContract, paramDescriptorContract, valueExprContract } from '@assayer/shared/contracts';
 
 export const walkContextContract = z.object({
   scopePath: z.array(z.string().min(1).brand<'WalkContextScopePath'>()),
@@ -30,6 +30,10 @@ export const walkContextContract = z.object({
   params: z.array(paramDescriptorContract),
   exported: z.boolean(),
   tail: z.boolean(),
+  // What each local variable in reach holds right now, keyed by where it is declared and written as an
+  // expression over the scope's parameters. Statements that follow one another extend it, an arm of an
+  // `if` starts from the `if`'s own, and entering a scope clears it. Absent when nothing is tracked.
+  bindings: z.record(z.string(), valueExprContract).optional(),
   enclosingClass: z.object({ name: z.string().min(1).brand<'WalkContextEnclosingClassName'>(), constructable: z.boolean() }).brand<'WalkContextEnclosingClass'>().optional(),
 }).brand<'WalkContext'>();
 

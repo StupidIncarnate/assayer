@@ -12,8 +12,7 @@ const relPath = 'src/sad-path/undriven/typeof-narrow-member/typeof-narrow-member
 // actually said about a real file, which is the only way the two can disagree.
 const BRANCH_REASON =
   '`choose` has a branch on line 5 that reads `typeof target`, so no case can steer which arm runs: ' +
-  'with nothing to vary, both arms would arrange the same inputs and one would fail against correct ' +
-  'code. Assayer understood the branch and read the comparison: it narrows `target` to the union ' +
+  'Assayer declares a route for each arm and does not run them. Assayer understood the branch and read the comparison: it narrows `target` to the union ' +
   'member whose runtime type matches on one arm and to the rest on the other. On at least one side, ' +
   'every matching member is a shape Assayer cannot yet select on its own from a union with more than ' +
   'one member — building the object or array is not the gap, choosing WHICH member to build is. There ' +
@@ -35,10 +34,15 @@ describe(
 
     // No case is derived, so nothing fails against correct code — the same safety property every
     // undriven admission carries.
-    it('VALID: {a typeof-narrowed comparison Assayer cannot fully realize} => no case is derived', () => {
-      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-member.ts') }), relPath });
+    it('VALID: {a typeof-narrowed comparison Assayer cannot fully realize} => both arms are undriven routes, none claims an arm its input might not take', () => {
+      const analysis = analyzeFileBroker({ walked: walkFileTransformer({ source, relPath, absPath: join(__dirname, 'typeof-narrow-member.ts') }) });
 
-      expect(analysis.functions.flatMap((fn) => fn.cases)).toStrictEqual([]);
+      expect(
+        analysis.functions.flatMap((fn) => fn.cases).map((testCase) => ({ arms: testCase.arms.map((step) => String(step.arm)), driven: testCase.driven })),
+      ).toStrictEqual([
+        { arms: ['then'], driven: false },
+        { arms: ['else'], driven: false },
+      ]);
     });
 
     // NOT a dark spot: the walk read the ternary, both arms, and target's full union descriptor —

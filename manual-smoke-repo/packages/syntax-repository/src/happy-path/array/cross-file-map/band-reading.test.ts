@@ -30,9 +30,9 @@ describe('array / cross-file-map — band-reading, the imported callee driven as
         name: 'bandReading',
         access: { kind: 'named' },
         cases: [
-          { reachesPath: [HIGH_EXIT], arrange: [{ kind: 'param', param: 'n', value: 80 }], salient: true },
-          { reachesPath: [LOW_EXIT], arrange: [{ kind: 'param', param: 'n', value: 19 }], salient: true },
-          { reachesPath: [MID_EXIT], arrange: [{ kind: 'param', param: 'n', value: 79 }], salient: true },
+          { reachesPath: [HIGH_EXIT], arrange: [{ kind: 'param', param: 'n', value: 80 }], arms: [{ branchCoverageId: '*module*/bandReading/if:BinaryExpression,id:n,GreaterThanEqualsToken,num:80', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: [LOW_EXIT], arrange: [{ kind: 'param', param: 'n', value: 19 }], arms: [{ branchCoverageId: '*module*/bandReading/if:BinaryExpression,id:n,GreaterThanEqualsToken,num:80', arm: 'else' }, { branchCoverageId: '*module*/bandReading/if:BinaryExpression,id:n,LessThanToken,num:20', arm: 'then' }], driven: true, fewestRuns: true },
+          { reachesPath: [MID_EXIT], arrange: [{ kind: 'param', param: 'n', value: 79 }], arms: [{ branchCoverageId: '*module*/bandReading/if:BinaryExpression,id:n,GreaterThanEqualsToken,num:80', arm: 'else' }, { branchCoverageId: '*module*/bandReading/if:BinaryExpression,id:n,LessThanToken,num:20', arm: 'else' }], driven: true, fewestRuns: true },
         ],
       },
     ]);

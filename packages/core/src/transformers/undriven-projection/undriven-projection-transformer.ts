@@ -3,8 +3,8 @@
  *   entries — a module scope that runs at import time but whose top-level branching turns on a value
  *   the derivation can neither STEER (not a parameter, not read from the environment) nor EVALUATE
  *   (not a literal constant it can fold): an opaque call result, an imported value, a computed const.
- *   Importing it always takes the same arm and no case or evaluation can say another; a case that
- *   claimed one would fail against correct code.
+ *   Importing it always takes the same arm and no case or evaluation can say another; Assayer
+ *   declares no run for it.
  *
  *   WHICH module scopes those are, and WHY, is NOT decided here — it is decided by `derive-cases`, the
  *   single drivability owner (§5.12), and handed in as `undrivenModules`: one entry per wholly undriven

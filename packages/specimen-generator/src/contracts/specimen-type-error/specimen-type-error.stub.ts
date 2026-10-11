@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { specimenTypeErrorContract } from './specimen-type-error-contract';
 import type { SpecimenTypeError } from './specimen-type-error-contract';

@@ -57,6 +57,7 @@ import { caseSetContract } from '../../contracts/case-set/case-set-contract';
 import type { CaseSet } from '../../contracts/case-set/case-set-contract';
 import type { FileAnalysis } from '@assayer/shared/contracts';
 
+import { isRunCaseGuard } from '../../guards/is-run-case/is-run-case-guard';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { undrivenInstanceLayerTransformer } from './undriven-instance-layer-transformer';
@@ -78,7 +79,10 @@ export const caseSetProjectionTransformer = ({
   // arm (the dead arm rides `unreachable-exit`, never a bogus second case), or when it is a branchless
   // CONSUMPTION site whose single import/global call reaches its one exit. A module whose branch turns
   // on an opaque operand earns no case at all and is admitted in `undriven` instead.
-  const owed = analysis.functions.filter((fn) => fn.entry.access.kind !== 'unreachable' && fn.cases.length > 0);
+  const owed = analysis.functions
+    .filter((fn) => fn.entry.access.kind !== 'unreachable')
+    .map((fn) => ({ ...fn, cases: fn.cases.filter((testCase) => isRunCaseGuard({ testCase })) }))
+    .filter((fn) => fn.cases.length > 0);
 
   // An instance method of a class whose constructor needs arguments runs on an instance built from
   // those arguments, filled by the same seam that fills any parameter. It is driven when every argument

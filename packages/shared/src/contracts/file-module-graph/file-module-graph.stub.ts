@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { fileModuleGraphContract } from './file-module-graph-contract';
 import type { FileModuleGraph } from './file-module-graph-contract';

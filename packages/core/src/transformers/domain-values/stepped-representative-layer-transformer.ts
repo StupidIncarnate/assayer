@@ -12,9 +12,12 @@
  * steppedRepresentativeLayerTransformer({ type: { kind: 'number' }, excluded: [7] });
  * // Returns [8]
  */
-import type { RepresentativeValue, TypeDescriptor } from '@assayer/shared/contracts';
+import type {
+  RepresentativeValue,
+  TypeDescriptor,
+} from "@assayer/shared/contracts";
 
-import { representativeValueTransformer } from '../representative-value/representative-value-transformer';
+import { representativeValueTransformer } from "../representative-value/representative-value-transformer";
 
 export const steppedRepresentativeLayerTransformer = ({
   type,
@@ -32,10 +35,16 @@ export const steppedRepresentativeLayerTransformer = ({
   // One more offset than there are excluded points, so an open member (a number, a string) always
   // yields a value the exclusions cannot all cover. A union steps each member, because a literal member
   // ignores the offset and only a different member reaches a different value.
-  const members = type.kind === 'union' ? type.members : [type];
-  const candidates = Array.from({ length: excluded.length + 1 }, (_, offset) => offset).flatMap((offset) =>
+  const members = type.kind === "union" ? type.members : [type];
+  const candidates = Array.from(
+    { length: excluded.length + 1 },
+    (_, offset) => offset,
+  ).flatMap((offset) =>
     members.flatMap((member) => {
-      const candidate = representativeValueTransformer({ type: member, offset });
+      const candidate = representativeValueTransformer({
+        type: member,
+        offset,
+      });
 
       return candidate === undefined ? [] : [candidate];
     }),

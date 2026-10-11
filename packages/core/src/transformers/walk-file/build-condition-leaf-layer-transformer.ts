@@ -62,6 +62,15 @@ export const buildConditionLeafLayerTransformer = ({
   // wherever true; the derivation reads it as a single-value domain and drives the live arm.
   const constOperand = readConstOperandLayerTransformer({ node: readout.operandNode });
 
+  // What a LOCAL variable operand holds at this point, when the walk tracked it: the choice a ternary
+  // made, an earlier assignment, a same-file call. A welded constant already answers its own value, and a
+  // `typeof` read asks for a tag rather than the value, so neither carries one.
+  const operandDeclaration =
+    constOperand !== undefined || readout.operandIsTypeof === true || !Node.isIdentifier(readout.operandNode)
+      ? undefined
+      : readout.operandNode.getSymbol()?.getValueDeclaration();
+  const operandFlow = operandDeclaration === undefined ? undefined : context.bindings?.[String(operandDeclaration.getPos())];
+
   // A CALL operand reads as opaque `truthy` here, because a single-file parse cannot type the callee.
   // Anchoring the call's position — the SAME coordinate its call site records — is the foreign key a
   // later compose pass joins on to swap this leaf for the callee's own predicate.
@@ -93,6 +102,7 @@ export const buildConditionLeafLayerTransformer = ({
       ...(inPlaceEnv || readout.operandPropertyPath === undefined ? {} : { operandPropertyPath: readout.operandPropertyPath }),
       ...(inPlaceEnv || readout.operandTypeRef === undefined ? {} : { operandTypeRef: readout.operandTypeRef }),
       ...(readout.operandIsTypeof === undefined ? {} : { operandIsTypeof: readout.operandIsTypeof }),
+      ...(operandFlow === undefined ? {} : { operandFlow }),
       ...(envRead === undefined ? {} : { operandEnvVarName: envRead.name }),
       ...(envRead === undefined || envRead.steps.length === 0 ? {} : { operandEnvSteps: envRead.steps }),
       ...(argvRead === undefined ? {} : { operandArgvRead: argvRead }),

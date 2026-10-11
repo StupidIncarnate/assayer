@@ -5,7 +5,7 @@
  * CompilePlanStableResultStub();
  * // Returns a valid CompilePlanStableResult
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 import { CompileModeStub } from "@assayer/shared/contracts/compile-mode/compile-mode.stub";
 
 import { compilePlanStableResultContract } from "./compile-plan-stable-result-contract";

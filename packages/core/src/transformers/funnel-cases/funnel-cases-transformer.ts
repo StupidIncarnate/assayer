@@ -15,6 +15,11 @@
  *   - MULTIPLE — an arm-crossing pair of the first two distinguished elements in one array, so the
  *     callback fires once per element. Its sub-path is both callback exits, once each.
  *
+ *   Whether a callback's body runs is itself an arm of the host: skipped over an empty array, run over any
+ *   other. Each case names the arm it takes for every callback (`<callback scope>/iterates`, `skipped` or
+ *   `runs`) beside the callback's own branch arms, so the fewest-runs set keeps a run that skips each
+ *   callback and a run that executes it, even for a callback with no branch of its own.
+ *
  *   The surface's funnel is the CARTESIAN of every callback's contributions: the callbacks fire over
  *   INDEPENDENT array params, so every pairing of their shapes is a distinct input to the surface, and
  *   steering `xs` into one callback's arm while steering `ys` into another is the interesting
@@ -40,11 +45,13 @@
  */
 import { funnelCasesContract } from '../../contracts/funnel-cases/funnel-cases-contract';
 import type { FunnelCases } from '../../contracts/funnel-cases/funnel-cases-contract';
-import { arrangeBindingContract, derivedTestCaseContract } from '@assayer/shared/contracts';
-import type { ArrangeBinding, ArrangeValue, Coverage } from '@assayer/shared/contracts';
+import { arrangeBindingContract, derivedTestCaseContract, guardStepContract } from '@assayer/shared/contracts';
+import type { ArrangeBinding, ArrangeValue, Coverage, GuardStep } from '@assayer/shared/contracts';
 
 import type { ScopeRecord } from '../../contracts/scope-record/scope-record-contract';
 import { appliedParamsTransformer } from '../applied-params/applied-params-transformer';
+import { coverageIdTransformer } from '../coverage-id/coverage-id-transformer';
+import { fewestRunsTransformer } from '../fewest-runs/fewest-runs-transformer';
 import { fillParamTransformer } from '../fill-param/fill-param-transformer';
 import { throughCallbackCasesTransformer } from '../through-callback-cases/through-callback-cases-transformer';
 
@@ -79,8 +86,8 @@ export const funnelCasesTransformer = ({
     throughCallbackCasesTransformer({ callback, entry: surface, arrayParam, ...(label === undefined ? {} : { label }) }),
   );
 
-  const contributionLists: { arrayParam: string; value: ArrangeValue[]; subPath: Coverage['id'][] }[][] = ordered.map(
-    ({ arrayParam }, callbackIndex) => {
+  const contributionLists: { arrayParam: string; value: ArrangeValue[]; subPath: Coverage['id'][]; arms: GuardStep[]; driven: boolean }[][] = ordered.map(
+    ({ arrayParam, callback }, callbackIndex) => {
       // The callback's own per-element cases — each lays ONE steered element into the array param and
       // predicts the single callback exit that element reaches.
       const perElement = built[callbackIndex]?.analysis.cases ?? [];
@@ -95,6 +102,13 @@ export const funnelCasesTransformer = ({
       // it is a correct value for an array of ANY element type — including one the fill seam refuses.
       const emptyValue: ArrangeValue[] = [];
 
+      // Whether the callback's body runs is itself an arm of the host: the body is skipped over an empty
+      // array and runs over any other. A case names the arm it takes, so the fewest-runs set keeps a run
+      // that skips the callback and a run that executes it, even when the callback has no branch of its own.
+      const iterates = coverageIdTransformer({ scopePath: callback.scopePath.map(String), segment: 'iterates' });
+      const skipped = guardStepContract.parse({ branchCoverageId: iterates, arm: 'skipped' });
+      const runs = guardStepContract.parse({ branchCoverageId: iterates, arm: 'runs' });
+
       // The arm-crossing pair — the first two distinguished elements in one array, firing the callback
       // once per element. Absent when the callback distinguishes fewer than two.
       const [firstCase, secondCase] = perElement;
@@ -106,12 +120,20 @@ export const funnelCasesTransformer = ({
                 arrayParam,
                 value: [...(steered[0] ?? []), ...(steered[1] ?? [])],
                 subPath: [...firstCase.reachesPath, ...secondCase.reachesPath],
+                arms: [runs, ...firstCase.arms, ...secondCase.arms],
+                driven: firstCase.driven && secondCase.driven,
               },
             ];
 
       return [
-        { arrayParam, value: emptyValue, subPath: [] },
-        ...perElement.map((testCase, index) => ({ arrayParam, value: steered[index] ?? [], subPath: testCase.reachesPath })),
+        { arrayParam, value: emptyValue, subPath: [], arms: [skipped], driven: true },
+        ...perElement.map((testCase, index) => ({
+          arrayParam,
+          value: steered[index] ?? [],
+          subPath: testCase.reachesPath,
+          arms: [runs, ...testCase.arms],
+          driven: testCase.driven,
+        })),
         ...multiple,
       ];
     },
@@ -121,7 +143,7 @@ export const funnelCasesTransformer = ({
   // that callback's own funnel; for N it is every combination of the callbacks' array shapes, because the
   // callbacks fire over INDEPENDENT arrays and every pairing is a distinct input to the surface. The seed
   // carries the empty combination so the reduce folds each callback's list onto it in order.
-  const seed: { arrayParam: string; value: ArrangeValue[]; subPath: Coverage['id'][] }[][] = [[]];
+  const seed: { arrayParam: string; value: ArrangeValue[]; subPath: Coverage['id'][]; arms: GuardStep[]; driven: boolean }[][] = [[]];
   const combinations = contributionLists.reduce(
     (acc, list) => acc.flatMap((combo) => list.map((item) => [...combo, item])),
     seed,
@@ -157,12 +179,13 @@ export const funnelCasesTransformer = ({
             // then the surface returns. An all-empty combination adds no callback exits, so the path is
             // the surface's exit alone.
             reachesPath: [...combo.flatMap((contribution) => contribution.subPath), surfaceExit],
-            salient: true,
+            arms: combo.flatMap((contribution) => contribution.arms),
+            driven: combo.every((contribution) => contribution.driven),
             arrange,
           }),
         ]
       : [];
   });
 
-  return funnelCasesContract.parse({ cases, unfillable: built.flatMap((entry) => entry.unfillable) });
+  return funnelCasesContract.parse({ cases: fewestRunsTransformer({ cases }), unfillable: built.flatMap((entry) => entry.unfillable) });
 };

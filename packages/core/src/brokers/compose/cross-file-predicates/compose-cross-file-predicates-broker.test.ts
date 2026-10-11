@@ -56,6 +56,7 @@ describe('composeCrossFilePredicatesBroker', () => {
               operandType: { kind: 'number' },
               predicate: { kind: 'gt', literal: 50 },
             },
+            guardPath: [],
             startLine: 4,
             endLine: 6,
           },
@@ -64,12 +65,12 @@ describe('composeCrossFilePredicatesBroker', () => {
           {
             reachesPath: ['*module*/classify/return@if:CallExpression,id:big,id:n#then'],
             arrange: [{ kind: 'param', param: 'n', value: 51 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:big,id:n', arm: 'then' }], driven: true, fewestRuns: true,
           },
           {
             reachesPath: ['*module*/classify/return@if:CallExpression,id:big,id:n#else'],
             arrange: [{ kind: 'param', param: 'n', value: 50 }],
-            salient: true,
+            arms: [{ branchCoverageId: '*module*/classify/if:CallExpression,id:big,id:n', arm: 'else' }], driven: true, fewestRuns: true,
           },
         ],
         lints: [],
@@ -78,7 +79,7 @@ describe('composeCrossFilePredicatesBroker', () => {
   });
 
   describe('a caller whose two imported guards contradict', () => {
-    it('VALID: {over(n) > 50 then under(n) > 100} => the first exit takes two buckets, the middle is unreachable', () => {
+    it('VALID: {over(n) > 50 then under(n) > 100} => two routes run, and the middle exit is unreachable', () => {
       const proxy = composeCrossFilePredicatesBrokerProxy();
       proxy.callerWithoutOwner({ root: '/repo', relPath: 'src/pick.ts' });
       // Two distinct siblings resolve in this one test, so each is matched to the import specifier it
@@ -94,24 +95,26 @@ describe('composeCrossFilePredicatesBroker', () => {
         cases: result.functions.flatMap((fn) => fn.cases),
         lints: result.lints,
       }).toStrictEqual({
-        // `over(n)` returns 'a' before `under` runs, so the first exit is reached by two input buckets:
-        // n=101 (both guards would hold) and n=100 (the off-path bucket where under fails but is never
-        // reached). Same exit, same value, so n=101 is salient and n=100 the grayed breadth twin.
+        // `over(n)` returns 'a' before `under` runs, so `under` is met only on the route where `over` failed.
+        // There are two routes that can run: `over` holds, or neither does. The route where `over` fails and
+        // `under` holds needs n at most 50 and above 100, so it is dropped, and its exit is the lint below.
         cases: [
           {
             reachesPath: ['*module*/pick/return@if:CallExpression,id:over,id:n#then'],
-            arrange: [{ kind: 'param', param: 'n', value: 101 }],
-            salient: true,
-          },
-          {
-            reachesPath: ['*module*/pick/return@if:CallExpression,id:over,id:n#then'],
-            arrange: [{ kind: 'param', param: 'n', value: 100 }],
-            salient: false,
+            arrange: [{ kind: 'param', param: 'n', value: 51 }],
+            arms: [{ branchCoverageId: '*module*/pick/if:CallExpression,id:over,id:n', arm: 'then' }],
+            driven: true,
+            fewestRuns: true,
           },
           {
             reachesPath: ['*module*/pick/return@if:CallExpression,id:over,id:n#else/if:CallExpression,id:under,id:n#else'],
             arrange: [{ kind: 'param', param: 'n', value: 50 }],
-            salient: true,
+            arms: [
+              { branchCoverageId: '*module*/pick/if:CallExpression,id:over,id:n', arm: 'else' },
+              { branchCoverageId: '*module*/pick/if:CallExpression,id:under,id:n', arm: 'else' },
+            ],
+            driven: true,
+            fewestRuns: true,
           },
         ],
         lints: [
