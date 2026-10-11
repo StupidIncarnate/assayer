@@ -37,8 +37,18 @@ test.describe('Compiled Surface Explorer — shell + file tree', () => {
     // exact file leaves and the exact directory nodes derived from those relPaths — both walked off
     // disk, so this is the sole enumeration of the whole catalogue.
     await expect(window.getByTestId('FILE_TREE')).toBeVisible();
+    // A file with admissions carries a trailing `! <count>` badge inside its leaf, so the leaf text is the
+    // name plus that badge. The names are asserted with the badge removed, and the badges on their own below.
     const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
-    expect([...fileNames].sort()).toStrictEqual(surface.fileLeaves());
+    expect([...fileNames.map((name) => name.replace(/! \d+$/u, ''))].sort()).toStrictEqual(surface.fileLeaves());
+
+    // The error badge marks a file whose analysis admits something Assayer cannot test. A happy-path
+    // specimen runs clean by definition, so every badged leaf must live under sad-path.
+    const badgedPaths = await window
+      .locator('[data-testid="FILE_TREE_FILE"]:has([data-testid="FILE_TREE_FILE_ERROR_COUNT"])')
+      .evaluateAll((leaves) => leaves.map((leaf) => leaf.getAttribute('data-relpath') ?? ''));
+    expect(badgedPaths.length > 0).toBe(true);
+    expect(badgedPaths.filter((relPath) => !relPath.includes('/src/sad-path/'))).toStrictEqual([]);
     const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
     expect([...dirNames].sort()).toStrictEqual(surface.dirNames());
 

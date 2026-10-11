@@ -17,28 +17,20 @@ const DEAD_SURFACE_UNCALLED = 'packages/syntax-repository/src/sad-path/dead-surf
 const UNREACHABLE_WELDED_ARG = 'packages/syntax-repository/src/sad-path/unreachable/welded-arg/welded-arg.ts';
 const LOOP_IN_FUNCTION = 'packages/syntax-repository/src/sad-path/loop/in-function/in-function.ts';
 
-// The exact line the panel shows for sad-path/undriven/opaque-module/opaque-module.ts — `UNDRIVEN
-// <scope> — <reason>`, with the reason authored in core's undrivenProjectionTransformer. Asserted whole
-// for the same reason the namespace message is: this sentence is the entire content of the admission,
-// and it is the only thing standing between the reader and a file that reads as having nothing to test.
-const UNDRIVEN_OPAQUE_MODULE_LINE =
-  'UNDRIVEN opaque-module.ts — nothing about it varies, so no case could drive its branches anywhere they do ' +
-  'not already go: it runs at import time, and its top-level branching turns on a value the analyzer ' +
-  'can neither set nor resolve — not a parameter, not read from the environment, and not a literal ' +
-  'constant it can fold, but an opaque one (a call result, an imported value, a computed expression). ' +
-  'Read an operand from the environment instead and Assayer drives it: a top-level ' +
-  '`const x = Number(process.env.X)` makes X an input, and each arm becomes a case that sets it and ' +
-  'imports the module fresh.';
+// The exact row the panel shows for sad-path/undriven/opaque-module/opaque-module.ts: `L<line>: <label>`,
+// then a second line `↳ <terse reason>` (Playwright collapses the line break to a space) that the widget derives from the entry's undriven cause. The
+// full sentence core authors for the admission is the category's explanation, not this row.
+const UNDRIVEN_OPAQUE_MODULE_LINE = 'L1: opaque-module.ts ↳ Runs at import time (no entry parameters)';
 
-// The exact line the panel shows for sad-path/dead-surface/dead-surface.ts — `LINT <name> — <message>`,
-// with the message authored in core's followCallsTransformer. Asserted whole for the reason the
-// undriven line is: the sentence IS the admission, and it must cross core -> cache -> IPC intact.
+// The exact row the panel shows for sad-path/dead-surface/dead-surface.ts: `L<line>: <name> — <message>`,
+// with the message authored in core's followCallsTransformer. Asserted whole because the sentence IS the
+// admission, and it must cross core -> cache -> IPC intact.
 const DEAD_SURFACE_LINT_LINE =
-  'LINT unused — nothing in this file calls it, so it is dead surface: an unexported helper is ' +
+  'L1: unused — nothing in this file calls it, so it is dead surface: an unexported helper is ' +
   'reachable only from its own file, and nothing here reaches it. Delete it, or consume it from a ' +
   'caller that passes an input straight through — which the follower would then drive.';
 
-// The welded-ARGUMENT unreachable-exit LINT — `LINT <name> — <message>`, the message authored in core's
+// The welded-ARGUMENT unreachable-exit LINT row, `L<line>: <name> — <message>`, the message authored in core's
 // unreachableLintTransformer. Following `report(){ return decide(3) }` welds `3` into `decide`'s `value`,
 // so `decide`'s `> 5` arm is dead. `decide` FUNNELS into `report`, so the lint keys on `report` — the
 // SOLE entry that owns the dead code — while its message names where the dead arm lives (`decide`, on its
@@ -46,16 +38,14 @@ const DEAD_SURFACE_LINT_LINE =
 // rather than the scope's own source). Asserted whole for the same reason — the sentence IS the finding,
 // and it must cross core -> cache -> IPC intact.
 const UNREACHABLE_WELDED_ARG_LINE =
-  'LINT report — `decide` can never reach the exit on line 3: `value` is welded to `3`, so the branch ' +
+  'L3: report — `decide` can never reach the exit on line 3: `value` is welded to `3`, so the branch ' +
   'on line 2 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm ' +
   'should be deleted.';
 
-// The exact DARK SPOT line for sad-path/loop/in-function/in-function.ts — `DARK <kind> at L<a>-L<b> in <scope> — …`, worded by
-// core's dark-spot channel (the loop ratchet: no handler exists for `for…of` yet, so it is ADMITTED, not
-// skipped). The scope path joins with slashes, so it cannot be written in a doc comment.
-const LOOP_DARK_SPOT_LINE =
-  'DARK ForOfStatement at L4-L6 in *module*/sumAll — Assayer has no handler for it, so nothing inside it ' +
-  'is covered';
+// The exact DARK SPOT row for sad-path/loop/in-function/in-function.ts: `L<line>: <kind>`. Core's
+// dark-spot channel admits the loop (the loop ratchet: no handler exists for `for…of` yet), so it is
+// ADMITTED, not skipped.
+const LOOP_DARK_SPOT_LINE = 'L4: ForOfStatement';
 
 test.describe('Compiled Surface Explorer — admission rows', () => {
   test('VALID: {sad-path/undriven/opaque-module/opaque-module.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async ({ smokeWindow: window }) => {

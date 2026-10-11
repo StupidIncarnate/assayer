@@ -10,8 +10,7 @@
  *     ~8s a cold Electron launch costs. A spec just declares `async ({ smokeWindow: window }) => …` and
  *     gets a ready, isolated window; no compile, no launch, no teardown.
  *
- *   A test that needs the `intelligent` gray-out calls `reloadSmokeRunMode`. `wireHarnessLifecycle`
- *   remains for the no-tree terminal-states specs, which seed their own caches.
+ *   `wireHarnessLifecycle` remains for the no-tree terminal-states specs, which seed their own caches.
  *
  * USAGE:
  * import { test, expect } from '../../../test/harnesses/e2e-fixtures';
@@ -56,10 +55,10 @@ export const test = base.extend<SmokeFixtures, SmokeWorkerFixtures>({
     { scope: 'worker' },
   ],
 
-  // beforeEach: reset the shared cache to a clean thorough state (purge saved runs), clear the
+  // beforeEach: reset the shared cache to a clean state (purge saved runs), clear the
   // renderer's persisted UI state + route, and reload the warm window to a clean `/`.
   smokeWindow: async ({ smokeApp }, use): Promise<void> => {
-    resetSmokeCache({ runMode: 'thorough' });
+    resetSmokeCache();
     await smokeApp.window.evaluate(() => {
       sessionStorage.clear();
       localStorage.clear();
@@ -69,19 +68,6 @@ export const test = base.extend<SmokeFixtures, SmokeWorkerFixtures>({
     await use(smokeApp.window);
   },
 });
-
-// Re-point the shared cache's display-only runMode and reload the warm window — the one test that proves
-// the `intelligent` gray-out calls this instead of the default thorough reset the fixture applies.
-export const reloadSmokeRunMode = async ({
-  window,
-  runMode,
-}: {
-  window: Page;
-  runMode: 'thorough' | 'intelligent';
-}): Promise<void> => {
-  resetSmokeCache({ runMode });
-  await window.reload({ waitUntil: 'load' });
-};
 
 export const wireHarnessLifecycle = ({ harness }: { harness: HarnessLifecycle }): void => {
   test.afterEach(async () => {

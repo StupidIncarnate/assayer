@@ -29,7 +29,7 @@ const HARNESS_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/call
 // one rides the ANALYSIS, so the panel states it the moment the file is opened — verbatim, because it is
 // product surface an LLM acts on with no human.
 const INPUT_GAP_LINE =
-  'GAP audit — `audit` derives no case, because Assayer cannot construct an input it needs. It ' +
+  'audit — `audit` derives no case, because Assayer cannot construct an input it needs. It ' +
   'builds inputs out of declared DATA — a scalar, a union, an array, or an object shape whose every ' +
   'property is itself one — and refuses anything that bottoms out in a function or in a type carrying ' +
   'nothing but its name: `report: (message: string) => string`. Substituting a stand-in would be worse ' +
@@ -55,15 +55,26 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     // run-done: the UI's Run spawns the same binary a human types, so this is the ONE assertion that
     // proves that spawn actually terminates. Only an e2e can: the desktop's `process.execPath` is the
     // ELECTRON binary here, exactly as in production, where a unit test's mocked spawn would not be.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveCount(3);
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveCount(2);
     await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
 
-    // The verdict reaches the row it belongs to — not-run must not survive anywhere on the panel.
+    // The verdict reaches the rows of the run set. Assayer runs the fewest-runs set — grade(5, 7) and
+    // grade(6, 2), which together take both arms — so the Every route case outside it, grade(6, 1),
+    // still reads not run: it is listed and never executed.
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      "PASS grade(5, 7) → 'fail' (reaches L6)",
-      "PASS grade(6, 1) → 'fail' (reaches L6)",
-      "PASS grade(6, 2) → 'pass' (reaches L3)",
+      'PASS grade(5, 7)',
+      'PASS grade(6, 2)',
+      'not run grade(6, 1)',
+    ]);
+    expect([...(await window.getByTestId('FEWEST_RUNS_ROW').allTextContents())].sort()).toStrictEqual([
+      'PASS grade(5, 7)',
+      'PASS grade(6, 2)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      "  => 3: 'pass'",
+      "  => 6: (not run)",
+      "  => 6: 'fail'",
     ]);
 
     // A finished run must SAY it finished: the button leaves its loading state rather than spinning on.
@@ -73,7 +84,7 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     // streamed over the run-output channel. Anything less and the panel could disagree with the CLI.
     await expect(window.getByTestId('RUN_CONSOLE_STATUS')).toHaveText('Finished');
     await expect(window.getByTestId('RUN_CONSOLE_OUTPUT')).toContainText(
-      `${BOOLEAN_AND}  3/3 passed`,
+      `${BOOLEAN_AND}  2/2 passed`,
     );
 
     // The rightmost column, and WHOLLY on screen. Geometry rather than presence, because a
@@ -123,10 +134,16 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveCount(4);
     expect([...(await window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]').allTextContents())].sort()).toStrictEqual([
-      'PASS constructor("abc123") → undefined (reaches L6)',
-      "PASS find(0) → 'miss' (reaches L13)",
-      "PASS find(1) → 'hit' (reaches L10)",
-      'PASS tally(7) → 8 (reaches L2)',
+      'PASS constructor("abc123")',
+      'PASS find(0)',
+      'PASS find(1)',
+      'PASS tally(7)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      "  => 10: 'hit'",
+      "  => 13: 'miss'",
+      '  => 2: 8',
+      '  => 6: undefined',
     ]);
 
     // Nothing is admitted: the method has an instance to run on, so no gap and no undriven row appears.
@@ -163,8 +180,12 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
     const derivedRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...derivedRows].sort()).toStrictEqual([
-      'not run audit(10, <harness inputs.audit.report>) → reaches L6',
-      'not run audit(11, <harness inputs.audit.report>) → reaches L3',
+      'not run audit(10, <harness inputs.audit.report>)',
+      'not run audit(11, <harness inputs.audit.report>)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 3: (not run)',
+      '  => 6: (not run)',
     ]);
 
     await window.getByTestId('RUN_BUTTON').click();
@@ -179,8 +200,12 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
 
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      "PASS audit(10, <harness inputs.audit.report>) → 'audited:under' (reaches L6)",
-      "PASS audit(11, <harness inputs.audit.report>) → 'audited:over' (reaches L3)",
+      'PASS audit(10, <harness inputs.audit.report>)',
+      'PASS audit(11, <harness inputs.audit.report>)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      "  => 3: 'audited:over'",
+      "  => 6: 'audited:under'",
     ]);
 
     // The CLI report agrees, and still invoices nothing: a paid gap must not be reprinted beside the

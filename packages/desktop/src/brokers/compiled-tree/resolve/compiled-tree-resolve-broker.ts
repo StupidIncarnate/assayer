@@ -1,8 +1,10 @@
 /**
  * PURPOSE: Resolves the compiled file tree for the current namespace out of the on-disk cache
- *   manifest — loads the manifest, finds the current (commitless) namespace, reads cached blob
- *   analyses to tally per-file error counts, and builds the nested tree plus TS/TSX file-count
- *   summary consumed by the compiled-surface explorer. When no cache manifest exists yet (dev /
+ *   manifest — loads the manifest, finds the current (commitless) namespace, tallies per-file error
+ *   counts, and builds the nested tree plus TS/TSX file-count summary consumed by the compiled-surface
+ *   explorer. A file's error count is the number of admissions its detail panel lists, so it is counted
+ *   on the analysis after the consume-time overlays, never on the raw persisted blob: a harness, a stub
+ *   or a resolved import can close an admission the blob still carries. When no cache manifest exists yet (dev /
  *   first run before any `assayer` compile), returns a contract-valid EMPTY tree (placeholder
  *   summary, zero counts, no nodes) so the explorer renders its empty-state terminal cleanly
  *   instead of the desktop main throwing ENOENT.
@@ -13,22 +15,15 @@
  */
 import { compiledTreeContract } from '@assayer/shared/contracts';
 import type { CompiledTree } from '@assayer/shared/contracts';
-import { z } from '#gateway/npm/zod';
+import { compiledFileBlobContract } from '@assayer/shared/contracts';
 
 import { cacheLoadManifestBroker } from '../../cache/load-manifest/cache-load-manifest-broker';
+import { compiledAnalysisResolveBroker } from '../../compiled-analysis/resolve/compiled-analysis-resolve-broker';
+import { analysisErrorCountTransformer } from '../../../transformers/analysis-error-count/analysis-error-count-transformer';
 import { currentNamespaceTransformer } from '../../../transformers/current-namespace/current-namespace-transformer';
 import { treeNodesTransformer } from '../../../transformers/tree-nodes/tree-nodes-transformer';
 import { emptyCompiledTreeStatics } from '../../../statics/empty-compiled-tree/empty-compiled-tree-statics';
 import { pathExists, readJsonFile } from '#gateway/node/fs__promises';
-
-const blobAnalysisShapeContract = z.object({
-  analysis: z.object({
-    undriven: z.array(z.unknown()).optional(),
-    lints: z.array(z.unknown()).optional(),
-    darkSpots: z.array(z.unknown()).optional(),
-    gaps: z.array(z.unknown()).optional(),
-  }).optional(),
-}).loose();
 
 export const compiledTreeResolveBroker = async ({
   repoPath,
@@ -58,20 +53,21 @@ export const compiledTreeResolveBroker = async ({
   await Promise.all(
     files.map(async (file) => {
       try {
-        const raw = await readJsonFile(`${repoPath}/.assayer/cache/blobs/${file.analysisHash}.json`);
-        const parsed = blobAnalysisShapeContract.safeParse(raw);
-        if (parsed.success && parsed.data.analysis !== undefined) {
-          const count =
-            (parsed.data.analysis.undriven?.length ?? 0) +
-            (parsed.data.analysis.lints?.length ?? 0) +
-            (parsed.data.analysis.darkSpots?.length ?? 0) +
-            (parsed.data.analysis.gaps?.length ?? 0);
+        const blob = compiledFileBlobContract.parse(
+          await readJsonFile(`${repoPath}/.assayer/cache/blobs/${file.analysisHash}.json`),
+        );
+        // A blob with no admission has nothing an overlay could close, so only a blob that carries one
+        // pays for the overlays.
+        if (blob.analysis !== undefined && analysisErrorCountTransformer({ analysis: blob.analysis }) > 0) {
+          const analysis = await compiledAnalysisResolveBroker({ repoPath, relPath: file.relPath, blob });
+          const count = analysis === undefined ? 0 : analysisErrorCountTransformer({ analysis });
           if (count > 0) {
             errorCountsByPath.set(file.relPath, count);
           }
         }
       } catch {
-        // Blob missing or unreadable; skip gracefully as 0 errors
+        // Blob missing or unreadable, or its overlays cannot run; the file shows no badge. Opening the
+        // file surfaces the underlying error.
       }
     }),
   );

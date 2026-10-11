@@ -1,3 +1,4 @@
+import { compiledAnalysisResolveBrokerProxy } from '../../compiled-analysis/resolve/compiled-analysis-resolve-broker.proxy';
 import { cacheLoadManifestBrokerProxy } from '../../cache/load-manifest/cache-load-manifest-broker.proxy';
 import type { AssayerCacheManifestStub } from '@assayer/shared/contracts/assayer-cache-manifest/assayer-cache-manifest.stub';
 import { pathExistsProxy } from '#gateway/node/fs__promises/path-exists/path-exists.proxy';
@@ -16,10 +17,16 @@ export const compiledTreeResolveBrokerProxy = (): {
     blob: unknown;
   }) => void;
   missingBlob: (params: { repoPath: string; analysisHash: string }) => void;
+  sourceRootRepoRoot: (params: { repoPath: string; repoRoot: string }) => void;
+  sourceReads: (params: { root: string; relPath: string; content: string }) => void;
+  sourceMissing: (params: { root: string; relPath: string }) => void;
+  siblingResolvesTo: (params: { fileName: string; source: string; specifier: string }) => void;
+  harnessMissing: (params: { path: string }) => void;
 } => {
   const manifestProxy = cacheLoadManifestBrokerProxy();
   const existsProxy = pathExistsProxy();
   const readJsonGateway = readJsonFileProxy();
+  const analysisProxy = compiledAnalysisResolveBrokerProxy();
 
   return {
     setupManifest: ({ repoPath, manifest }): void => {
@@ -42,5 +49,10 @@ export const compiledTreeResolveBrokerProxy = (): {
     missingBlob: ({ repoPath, analysisHash }): void => {
       readJsonGateway.missing({ path: `${repoPath}/.assayer/cache/blobs/${analysisHash}.json` });
     },
+    sourceRootRepoRoot: analysisProxy.sourceRootRepoRoot,
+    sourceReads: analysisProxy.sourceReads,
+    sourceMissing: analysisProxy.sourceMissing,
+    siblingResolvesTo: analysisProxy.siblingResolvesTo,
+    harnessMissing: analysisProxy.harnessMissing,
   };
 };

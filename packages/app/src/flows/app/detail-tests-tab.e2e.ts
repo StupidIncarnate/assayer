@@ -6,23 +6,22 @@
  *   through. Covers the if-else / switch / boolean rungs and the nested-function funnel proof (the
  *   private inner driven through outer, folded into outer's single entry).
  *
- *   It also proves the display-only salient lens: the INTELLIGENT badge rides every salient row, and
- *   seeding `runMode: 'intelligent'` in the compiled config grays the non-salient breadth
- *   (`data-running="false"`) while the FULL case set and count stay put — the config travels to the
- *   renderer over the status payload, and nothing about what is derived or run changes.
+ *   It also proves the two labelled case sets: every entry lists "Every route" (one case per route that
+ *   can run, full rows) and "Fewest runs" (the smallest subset taking every reachable arm, the set Assayer
+ *   runs). Rows outside the run set read `data-running="false"`, and each row names the arms its route takes.
  *
  * USAGE:
  * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-tests-tab.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect, reloadSmokeRunMode } from '../../../test/harnesses/e2e-fixtures';
+import { test, expect } from '../../../test/harnesses/e2e-fixtures';
 
 const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
 const SWITCH_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/switch/in-function/in-function.ts';
 const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
 const NESTED_FUNCTION = 'packages/syntax-repository/src/happy-path/function/nested/nested.ts';
 // An array-param rung: branchless, but the array fans out over cardinality into three cases, proving the
-// cardinality matrix and its salient lens reach the renderer.
+// cardinality matrix and the fewest-runs set reach the renderer.
 const ARRAY_ELEMENT_LENGTH = 'packages/syntax-repository/src/happy-path/array/element-length/element-length.ts';
 
 // The remaining branch/pure rungs, each selected by exact relPath and asserted in ONE test on the shared
@@ -78,8 +77,12 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(entryTitle).toHaveText('classify(value) · 2 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'not run classify(5) → reaches L6',
-      'not run classify(6) → reaches L3',
+      'not run classify(5)',
+      'not run classify(6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 3: (not run)',
+      '  => 6: (not run)',
     ]);
 
     // Hover transition — before hover: no case row is highlighted.
@@ -88,10 +91,10 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     // Hover code line 3 (the then-return): its case row highlights (data-match=true); the L6 case dims.
     await codePanel.locator('.cm-line').nth(2).hover();
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
-      'not run classify(6) → reaches L3',
+      'not run classify(6)',
     );
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveText(
-      'not run classify(5) → reaches L6',
+      'not run classify(5)',
     );
   });
 
@@ -110,16 +113,21 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(entryTitle).toHaveText('routeLabel(method) · 3 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'not run routeLabel("delete") → reaches L8',
-      'not run routeLabel("get") → reaches L4',
-      'not run routeLabel("post") → reaches L6',
+      'not run routeLabel("delete")',
+      'not run routeLabel("get")',
+      'not run routeLabel("post")',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
+      '  => 6: (not run)',
+      '  => 8: (not run)',
     ]);
 
     // Hover the default return (L8): only the default's case (reaches L8) runs through it, so exactly
     // that one row highlights and the two labelled cases dim.
     await codePanel.locator('.cm-line').nth(7).hover();
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="true"]')).toHaveText(
-      'not run routeLabel("delete") → reaches L8',
+      'not run routeLabel("delete")',
     );
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-match="false"]')).toHaveCount(2);
   });
@@ -140,45 +148,33 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
       // score fails its own test, so bonus never evaluates and is left at its fill value.
-      'not run grade(5, 7) → reaches L6',
+      'not run grade(5, 7)',
       // score passes, so bonus is the operand that decides. Same else exit as grade(5, 7), so this is
-      // the grayed breadth twin — non-salient, hence no INTELLIGENT badge below.
-      'not run grade(6, 1) → reaches L6',
-      'not run grade(6, 2) → reaches L3',
+      // the breadth twin: in Every route only, so it is not run.
+      'not run grade(6, 1)',
+      'not run grade(6, 2)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 3: (not run)',
+      '  => 6: (not run)',
+      '  => 6: (not run)',
     ]);
 
-    // Default runMode is thorough (the harness seeds no runMode), so every derived case reads live and
-    // the salient subset — grade(6,2)→L3 and the first else grade(5,7)→L6 — is badged. The grayed twin
-    // grade(6,1) is non-salient and unbadged. The badge is a SIBLING of the row, so it never enters the
-    // case text asserted above.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(3);
-    await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
-  });
-
-  test('VALID: {and.ts under runMode intelligent} => the full breadth still renders but the non-salient twin grays out (data-running=false) while the salient rows stay live and badged', async ({ smokeWindow: window }) => {
-    // The ONLY difference from the thorough walk above is the display-only runMode — proof it is a
-    // display lens, not a change to what is derived or run. The title keeps the FULL count either way.
-    await reloadSmokeRunMode({ window, runMode: 'intelligent' });
-
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
-
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('grade(score, bonus) · 3 cases');
-    await expect(window.getByTestId('TEST_CASE_ROW')).toHaveCount(3);
-
-    // The one grayed breadth twin — grade(6, 1), the second case reaching the else exit — is the only
-    // row a reviewer reads as NOT running under intelligent mode; the two salient rows stay live.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="false"]')).toHaveText(
-      'not run grade(6, 1) → reaches L6',
-    );
+    // Two labelled sets. Every route holds all three cases; Fewest runs holds the two that together take
+    // every arm of `score > 5 && bonus > 1` — the then-case grade(6,2) and the first else, grade(5,7).
+    // grade(6,1) takes the same else arm as grade(5,7), so it is in Every route only and does not run.
+    await expect(window.getByTestId('CASE_SET_LABEL')).toHaveText(['Every route · 3', 'Fewest runs · 2']);
+    expect([...(await window.getByTestId('FEWEST_RUNS_ROW').allTextContents())].sort()).toStrictEqual([
+      'not run grade(5, 7)',
+      'not run grade(6, 2)',
+    ]);
     await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(2);
-
-    // The badge marks the salient (must-run) subset regardless of mode — the same two rows that stay live.
-    await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(2);
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="false"]')).toHaveText(
+      'not run grade(6, 1)',
+    );
   });
 
-  test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the empty [] salient', async ({ smokeWindow: window }) => {
+  test('VALID: {happy-path/array/element-length/element-length.ts selected} => the array param fans out to three cardinality cases (empty/one/many) reaching the one exit, only the empty [] in the fewest-runs set', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible();
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${ARRAY_ELEMENT_LENGTH}"]`).click();
 
@@ -187,21 +183,27 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
 
     // `count(items: number[])` is branchless, but the array param FANS OUT over cardinality: three cases
-    // reach the one exit (L2), each arranging a REAL array — the salient `[]` plus the grayed `[7]`/`[7,8]`
-    // breadth. The arrange renders as the array literal a reader would pass, positionally.
+    // reach the one exit (L2), each arranging a REAL array — the `[]` the fewest-runs set keeps plus the
+    // `[7]`/`[7,8]` breadth that only Every route lists. The arrange renders as the array literal a reader would pass, positionally.
     const entryTitle = window.getByTestId('TEST_ENTRY').locator('> *').first();
     await expect(entryTitle).toHaveText('count(items) · 3 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'not run count([7,8]) → reaches L2',
-      'not run count([7]) → reaches L2',
-      'not run count([]) → reaches L2',
+      'not run count([7,8])',
+      'not run count([7])',
+      'not run count([])',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
 
-    // Default runMode is thorough, so all three read live; only the empty `[]` is salient, so exactly one
-    // INTELLIGENT badge rides the set — the single and many twins are the grayed breadth.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(3);
-    await expect(window.getByTestId('INTELLIGENT_BADGE')).toHaveCount(1);
+    // Branchless: no arm to take, so the fewest-runs set is the one case at the front of the set, the
+    // empty `[]`. The single and many twins are listed in Every route and are not run.
+    await expect(window.getByTestId('CASE_SET_LABEL')).toHaveText(['Every route · 3', 'Fewest runs · 1']);
+    await expect(window.getByTestId('FEWEST_RUNS_ROW')).toHaveText(['not run count([])']);
+    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-running="true"]')).toHaveCount(1);
   });
 
   test('VALID: {happy-path/ternary/return-basic/return-basic.ts selected} => the exit-position ternary splits into a then/else return, one case per arm, and hovering the ternary line highlights both', async ({ smokeWindow: window }) => {
@@ -219,8 +221,12 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(entryTitle).toHaveText('classify(n) · 2 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'not run classify(5) → reaches L2',
-      'not run classify(6) → reaches L2',
+      'not run classify(5)',
+      'not run classify(6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
 
     // Hover transition — before hover: no case row is highlighted.
@@ -253,8 +259,12 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await expect(entryTitle).toHaveText('outer(value) · 2 cases');
     const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'not run outer(5) → reaches L7',
-      'not run outer(6) → reaches L4',
+      'not run outer(5)',
+      'not run outer(6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
+      '  => 7: (not run)',
     ]);
     await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
   });
@@ -267,44 +277,68 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_IN_CLASS}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('classify(value) · 2 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run classify(5) → reaches L7',
-      'not run classify(6) → reaches L4',
+      'not run classify(5)',
+      'not run classify(6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
+      '  => 7: (not run)',
     ]);
 
     // Class rung — a `switch` over a 3-member union in a method: one case per label + the default's member.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_CLASS}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('routeLabel(method) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run routeLabel("delete") → reaches L9',
-      'not run routeLabel("get") → reaches L5',
-      'not run routeLabel("post") → reaches L7',
+      'not run routeLabel("delete")',
+      'not run routeLabel("get")',
+      'not run routeLabel("post")',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 5: (not run)',
+      '  => 7: (not run)',
+      '  => 9: (not run)',
     ]);
 
     // Boolean `||` — the else exit owes one case per CAUSE that makes the OR false; the then folds to one.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_OR}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('alarmLevel(temp, smoke) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run alarmLevel(50, false) → reaches L6',
-      'not run alarmLevel(50, true) → reaches L3',
-      'not run alarmLevel(51, false) → reaches L3',
+      'not run alarmLevel(50, false)',
+      'not run alarmLevel(50, true)',
+      'not run alarmLevel(51, false)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 3: (not run)',
+      '  => 3: (not run)',
+      '  => 6: (not run)',
     ]);
 
     // Boolean `!` — a single negated operand, one case per arm.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_NOT}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('gate(ready) · 2 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run gate(false) → reaches L3',
-      'not run gate(true) → reaches L6',
+      'not run gate(false)',
+      'not run gate(true)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 3: (not run)',
+      '  => 6: (not run)',
     ]);
 
     // Boolean mixed `&&`/`||` — the compound condition fans out to four cause-distinct cases.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_MIXED}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('route(admin, level, owner) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run route(false, 7, false) → reaches L6',
-      'not run route(true, 3, false) → reaches L6',
-      'not run route(true, 3, true) → reaches L3',
-      'not run route(true, 4, false) → reaches L3',
+      'not run route(false, 7, false)',
+      'not run route(true, 3, false)',
+      'not run route(true, 3, true)',
+      'not run route(true, 4, false)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 3: (not run)',
+      '  => 3: (not run)',
+      '  => 6: (not run)',
+      '  => 6: (not run)',
     ]);
 
     // Composition — a `switch` nested inside an `if`: the FULL bucket set crosses `if (enabled)` with
@@ -312,10 +346,16 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_IF}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('route(enabled, method) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run route(false, "get") → reaches L11',
-      'not run route(false, "post") → reaches L11',
-      'not run route(true, "get") → reaches L5',
-      'not run route(true, "post") → reaches L7',
+      'not run route(false, "get")',
+      'not run route(false, "post")',
+      'not run route(true, "get")',
+      'not run route(true, "post")',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 11: (not run)',
+      '  => 11: (not run)',
+      '  => 5: (not run)',
+      '  => 7: (not run)',
     ]);
 
     // Composition — an `if` nested inside a `switch`: the FULL bucket set crosses the switch arms with
@@ -323,54 +363,81 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_IN_SWITCH}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('describeRoute(method, size) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run describeRoute("get", 5) → reaches L8',
-      'not run describeRoute("get", 6) → reaches L5',
-      'not run describeRoute("post", 5) → reaches L10',
-      'not run describeRoute("post", 6) → reaches L10',
+      'not run describeRoute("get", 5)',
+      'not run describeRoute("get", 6)',
+      'not run describeRoute("post", 5)',
+      'not run describeRoute("post", 6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 10: (not run)',
+      '  => 10: (not run)',
+      '  => 5: (not run)',
+      '  => 8: (not run)',
     ]);
 
     // Composition — a fall-through `switch` inside an `if`: read-accounted vs read-terminal keep it at one
     // convergent exit, but the FULL input-bucket set is the cross product of both branches' arms — four
-    // buckets, all reaching the one trailing `return 1` (L11). Exactly one is the salient representative;
+    // buckets, all reaching the one trailing `return 1` (L11). Fewest runs keeps the first.
     // the other three are the grayed breadth. The title carries the full count.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${FALLTHROUGH_IN_IF}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('tally(value, mode) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run tally(5, "a") → reaches L11',
-      'not run tally(5, "abc123") → reaches L11',
-      'not run tally(6, "a") → reaches L11',
-      'not run tally(6, "abc123") → reaches L11',
+      'not run tally(5, "a")',
+      'not run tally(5, "abc123")',
+      'not run tally(6, "a")',
+      'not run tally(6, "abc123")',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 11: (not run)',
+      '  => 11: (not run)',
+      '  => 11: (not run)',
+      '  => 11: (not run)',
     ]);
 
     // Branchless pure function — one exit, one derived case.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${PURE_FUNCTION}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('add(a, b) · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run add(7, 7) → reaches L2',
+      'not run add(7, 7)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
     ]);
 
     // Branchless constructable method — the zero-arg class means the runner can build one, so it is DRIVEN.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${PURE_CLASS}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('greet(name) · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run greet("abc123") → reaches L3',
+      'not run greet("abc123")',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 3: (not run)',
     ]);
 
     // Ternary in a block return — the condition is one branch, each arm a guarded return, both on L2.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_RETURN_BASIC}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('classify(n) · 2 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run classify(5) → reaches L2',
-      'not run classify(6) → reaches L2',
+      'not run classify(5)',
+      'not run classify(6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
 
     // Nested ternary in the else arm — `g >= 90 ? a : g >= 80 ? b : c` recurses into three per-leaf exits.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_RETURN_NESTED}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('grade(g) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run grade(79) → reaches L2',
-      'not run grade(89) → reaches L2',
-      'not run grade(90) → reaches L2',
+      'not run grade(79)',
+      'not run grade(89)',
+      'not run grade(90)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
 
     // Concise-arrow body that IS a ternary — the exit-owning arrow splits without ever reaching an exit
@@ -378,8 +445,12 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_ARROW_BASIC}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('classify(n) · 2 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run classify(5) → reaches L1',
-      'not run classify(6) → reaches L1',
+      'not run classify(5)',
+      'not run classify(6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 1: (not run)',
+      '  => 1: (not run)',
     ]);
 
     // Assumed ternary `||` chain — `a || b || 'default'` flattens its left spine to one branch per
@@ -388,10 +459,16 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_OR_CHAIN}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pick(a, b) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run pick("", "") → reaches L2',
-      'not run pick("", "abc123") → reaches L2',
-      'not run pick("abc123", "") → reaches L2',
-      'not run pick("abc123", "abc123") → reaches L2',
+      'not run pick("", "")',
+      'not run pick("", "abc123")',
+      'not run pick("abc123", "")',
+      'not run pick("abc123", "abc123")',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
 
     // Assumed ternary `&&` chain — the mirror: each operand's FALSY case short-circuits, the all-truthy
@@ -400,10 +477,16 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_AND_CHAIN}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('all(a, b, c) · 4 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run all(false, false, false) → reaches L2',
-      'not run all(false, true, false) → reaches L2',
-      'not run all(true, false, false) → reaches L2',
-      'not run all(true, true, false) → reaches L2',
+      'not run all(false, false, false)',
+      'not run all(false, true, false)',
+      'not run all(true, false, false)',
+      'not run all(true, true, false)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
 
     // Assumed ternary `??` — the operand's non-nullishness is the branch: non-null returns it, null/undefined
@@ -411,8 +494,12 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_NULLISH}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('orElse(a, b) · 2 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run orElse("abc123", "abc123") → reaches L2',
-      'not run orElse(null, "abc123") → reaches L2',
+      'not run orElse("abc123", "abc123")',
+      'not run orElse(null, "abc123")',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
 
     // Value-position value-flow — `const label = n > 5 ? a : b; return label` collapses to the same split
@@ -420,8 +507,12 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${TERNARY_VALUE_BASIC}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('classify(n) · 2 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run classify(5) → reaches L2',
-      'not run classify(6) → reaches L2',
+      'not run classify(5)',
+      'not run classify(6)',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 2: (not run)',
+      '  => 2: (not run)',
     ]);
   });
 
@@ -433,52 +524,76 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_PURE_STATEMENT}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pure-statement.ts · 2 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run pure-statement.ts → reaches L4',
-      'not run pure-statement.ts → reaches L6',
+      'not run pure-statement.ts',
+      'not run pure-statement.ts',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
+      '  => 6: (not run)',
     ]);
 
     // The switch equivalent, DRIVEN from `Number(process.env.CODE)`.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_PURE_STATEMENT}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pure-statement.ts · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run pure-statement.ts → reaches L11',
-      'not run pure-statement.ts → reaches L5',
-      'not run pure-statement.ts → reaches L8',
+      'not run pure-statement.ts',
+      'not run pure-statement.ts',
+      'not run pure-statement.ts',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 11: (not run)',
+      '  => 5: (not run)',
+      '  => 8: (not run)',
     ]);
 
     // Consumption: calls a LOCAL import (`greeting()`), labelled by its single export `message`.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${USES_GREETING}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('message · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run message → reaches L4',
+      'not run message',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
     ]);
 
     // Consumption: binds a node BUILTIN as a value (`const separator = sep`), labelled `separator`.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${USES_BUILTIN}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('separator · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run separator → reaches L4',
+      'not run separator',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
     ]);
 
     // Consumption: CALLS a node builtin (`join(...)`), labelled by its single export `full`.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${CALLS_JOIN}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('full · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run full → reaches L4',
+      'not run full',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
     ]);
 
     // Consumption: calls an external PACKAGE (`greet(...)`), labelled by its single export `hello`.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${USES_PACKAGE}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('hello · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run hello → reaches L4',
+      'not run hello',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
     ]);
 
     // Consumption: a side-effect `console.log(...)` with no export — labelled by its filename.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${USES_CONSOLE}"]`).click();
     await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('uses-console.ts · 1 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run uses-console.ts → reaches L4',
+      'not run uses-console.ts',
+    ]);
+    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+      '  => 4: (not run)',
     ]);
   });
 });
