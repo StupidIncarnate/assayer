@@ -59,30 +59,33 @@ test.describe('Compiled Surface Explorer — code view', () => {
     expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '1']);
   });
 
-  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the count gutter reads 2/1/2/1/1 across the discriminant and exit lines', async ({ smokeWindow: window }) => {
+  test('VALID: {happy-path/switch/in-function/in-function.ts selected} => the count gutter reads 3/1/2/1/1 across the discriminant and exit lines', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_FUNCTION}"]`).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
     await expect(codePanel.locator('.cm-editor')).toBeVisible();
 
-    // Gutter: each discriminant test line (L3 `case 'get'`, L5 `case 'post'`) is on 2 cases' paths (its
-    // own case + the default, which must fail every case); each exit line (L4/L6/L8) is on 1. In
-    // document order 3 < 4 < 5 < 6 < 8 the non-empty count cells read 2, 1, 2, 1, 1.
+    // Gutter: it counts the cases Assayer runs (the fewest-runs set), which here is all 3 routes. The
+    // `case 'get'` test (L3) is met by every route (3). The `case 'post'` test (L5) is met only by the
+    // routes that did not return at L4: post and default (2). Each exit line (L4/L6/L8) is on 1 route.
+    // In document order 3 < 4 < 5 < 6 < 8 the non-empty count cells read 3, 1, 2, 1, 1.
     const gutterTexts = await codePanel.locator('.cm-test-counts .cm-gutterElement').allTextContents();
-    expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '2', '1', '1']);
+    expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['3', '1', '2', '1', '1']);
   });
 
-  test('VALID: {happy-path/boolean/and/and.ts selected} => the count gutter reads 3/1/2 through the guard and both exits', async ({ smokeWindow: window }) => {
+  test('VALID: {happy-path/boolean/and/and.ts selected} => the count gutter reads 2/1/1 through the guard and both exits', async ({ smokeWindow: window }) => {
     await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
 
     const codePanel = window.getByTestId('EXPLORER_CODE');
     await expect(codePanel.locator('.cm-editor')).toBeVisible();
 
-    // Gutter: L2 (the `if`) is on all 3 cases' paths; L3 (then-return) on 1; L6 (else-return) on 2.
+    // Gutter: it counts the cases Assayer runs (the fewest-runs set). The `if` has two arms, so that set
+    // is 2 of the 3 routes: the one that returns 'pass' and one that returns 'fail'. L2 (the `if`) is on
+    // both (2); L3 (then-return) on 1; L6 (else-return) on 1.
     const gutterTexts = await codePanel.locator('.cm-test-counts .cm-gutterElement').allTextContents();
-    expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['3', '1', '2']);
+    expect(gutterTexts.filter((text) => text.trim() !== '')).toStrictEqual(['2', '1', '1']);
   });
 
   test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the for…of body (L4-L6) is shaded as a dark spot and its gutter icon carries the admission tooltip', async ({ smokeWindow: window }) => {

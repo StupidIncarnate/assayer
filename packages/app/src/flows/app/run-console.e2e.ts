@@ -73,8 +73,8 @@ test.describe('Compiled Surface Explorer — Run flow + console', () => {
     ]);
     expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
       "  => 3: 'pass'",
-      "  => 6: (not run)",
       "  => 6: 'fail'",
+      "  => 6: (not run)",
     ]);
 
     // A finished run must SAY it finished: the button leaves its loading state rather than spinning on.
